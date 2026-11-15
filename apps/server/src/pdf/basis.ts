@@ -128,7 +128,7 @@ export function mitVermerk<T>(vermerk: string | null, f: () => Promise<T>): Prom
 export async function erzeugePdf(
   titel: string,
   zeichne: (doc: Doc) => void | Promise<void>,
-  opts: { layout?: "portrait" | "landscape"; size?: string; margin?: number; margins?: { top: number; bottom: number; left: number; right: number } } = {},
+  opts: { layout?: "portrait" | "landscape"; /** Papiername („A4“) oder Breite × Höhe in Punkt (Endlospapier). */ size?: string | [number, number]; margin?: number; margins?: { top: number; bottom: number; left: number; right: number } } = {},
 ): Promise<Buffer> {
   const doc = new PDFDocument({
     size: opts.size ?? "A4",

@@ -67,6 +67,32 @@ Datenschutz und Anbieterkennzeichnung: Speicherfristen und Mustertexte für Impr
 - `aufbewahrenBis()` – Bis wann die Daten eines Ausstellers aufbewahrt werden müssen: Verkaufsaufzeichnungen ab Verkauf, Belege (Zahlungen, Auszahlungen, Kaufbelege) bis …
 - Typen: `Vereinsangaben`, `Textabschnitt`
 
+### druckvorlage.ts (260 Z.)
+Tests: `druckvorlage.test.ts`
+
+- `MM_JE_ZOLL` – Druckvorlage der Bewertungskarte: welches Papier, wie viele Karten je Bogen, was auf der Karte steht und wo.
+- `ENDLOS_12_ZOLL` – Übliche Bogenlängen von Endlospapier: 12 Zoll und 6 Zoll (in mm, gerundet wie auf den Packungen).
+- `ENDLOS_6_ZOLL`
+- `PAPIER` – Papierformate in Millimetern (hochkant).
+- `KartenFormat` (Typ) – Wie die Karten auf dem Bogen liegen.
+- `KARTEN_FORMAT_LABEL`
+- `Druckeinstellung` (Typ) – Feinabstimmung für den Drucker: Versatz der ganzen Seite und Längenkorrektur (Endlospapier rutscht über viele Bögen).
+- `Nutzen` (Typ) – Eine Karte auf dem Bogen (mm, Ursprung oben links).
+- `bogen()` – Bogengröße und Lage aller Karten auf einem Bogen.
+- `korrigiert()` – Wendet Versatz und Längenkorrektur auf eine Stelle an (mm auf dem Bogen).
+- `KARTEN_BAUSTEINE` – ── Bausteine der eigenen Karte ───────────────────────────────────────────
+- `KARTEN_BAUSTEIN_LABEL`
+- `KARTEN_RAND` – Rand der Karte rundum (A6, 100 %).
+- `VordruckFeld` (Typ) – Feld auf einem Vordruck: Lage in mm ab der oberen linken Ecke der Karte, Schriftgröße in pt.
+- `VORDRUCK_FELDER`
+- `VORDRUCK_FELD_LABEL`
+- `KARTEN_VORGABE` – Die Karte, wie SchauFUCHS sie bisher gedruckt hat: A6, vier je A4, alle Bausteine außer dem eigenen Text.
+- `kartenMassstab()` – Maßstab der Karte gegenüber A6 bei 100 % (A5 ≈ 1,41, A4 = 2).
+- `kartenLayout()` – Lage der eingeschalteten Bausteine auf einer Karte (mm ab Kartenoberkante, innerhalb des Rands).
+- `vordruckFelderAusLayout()` – Feldlagen für den Vordruck-Modus, abgeleitet aus der eigenen A6-Karte – Ausgangspunkt zum Verschieben.
+- `kartenVorlageLesen()` – Gespeicherten Wert (jsonb, ggf. alt oder unvollständig) in eine gültige Vorlage bringen; Unbekanntes gilt als Vorgabe.
+- Typen: `KartenBaustein`, `VordruckFeldId`, `KartenVorlage`
+
 ### einteilung.ts (99 Z.)
 Preisrichter-Einteilung nach Rassen: Vor der Nummernvergabe teilt die Ausstellungsleitung die Preisrichter nach Sparte, Rasse und – wo eine Rasse g …
 Tests: `einteilung.test.ts`
@@ -293,7 +319,7 @@ Hallenplan: Wie stehen die Käfige in der Halle?
 - `frontFehler()` – Käfigfronten, die nicht zu einem Gang zeigen: Die Front (Gitter) eines Käfigs ist offen, Rück- und Seitenwände sind dicht – vor jeder Front muss ei …
 - Typen: `HallenFlaeche`, `Halle`, `Drehung`, `HallenObjekt`, `Hauptgang`, `PlanKaefig`, `Reihe`, `FreierPlatz`, `PlanPlatte`, `PlanObjekt`, `Hallenplan`
 
-### index.ts (36 Z.)
+### index.ts (37 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -602,6 +628,17 @@ Setzt Teile zu einem Router zusammen.
 - `richter.preisVergeben` mutation · richter
 - `richter.preisEntfernen` mutation · richter
 - `richter.obmannBestaetigen` mutation · richter
+
+### routers/druckvorlage.ts (111 Z.) → `druckvorlage`
+Druckvorlagen (vorerst Bewertungskarte): Vorlagen des Vereins anlegen, ändern, löschen; je Schau eine auswählen oder für die Schau abwandeln (eigen …
+
+- `druckvorlage.liste` query · admin – Alle Kartenvorlagen des Vereins: die allgemeinen und die für einzelne Schauen abgewandelten.
+- `druckvorlage.vorgabe` query · admin – Vorgabe (so druckt SchauFUCHS ohne eigene Vorlage) – Ausgangspunkt für eine neue Vorlage.
+- `druckvorlage.speichern` mutation · admin
+- `druckvorlage.loeschen` mutation · admin – Löschen: Schauen, die sie nutzen, drucken danach wieder mit der Vorgabe.
+- `druckvorlage.fuerSchau` query · admin – Welche Vorlage eine Schau nutzt (null = Vorgabe) und welche zur Wahl stehen.
+- `druckvorlage.waehlen` mutation · admin – Vorlage für eine Schau wählen (Vereinsvorlage oder die eigene Fassung dieser Schau; null = Vorgabe).
+- `druckvorlage.fuerSchauAnpassen` mutation · admin – Für diese Schau abwandeln: Kopie der gewählten Vorlage (oder der Vorgabe) nur für diese Schau, gleich gewählt.
 
 ### routers/kasse.ts (714 Z. ⚠) → `kasse`
 
@@ -934,7 +971,8 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 - `auskunft.ts` (243 Z.) · auskunftPdf
 - `basis.ts` (404 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, seitenzahlen, tabelle, textImFeld, angaben, hinweisKasten, unterschrift, ueberschrift, datumDe
-- `dokumente.ts` (1.268 Z. ⚠) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf, kaufbelegPdf, verkaufslistePdf, tierlistePdf, kassenberichtPdf, kassenbelegPdf
+- `bewertungskarte.ts` (325 Z.) – Bewertungskarten nach der Druckvorlage der Schau (Format, Bausteine oder Vordruck-Felder, Versatz) – dazu die Vorschau für den Designer und der Pro … · ladeKartenVorlage, kartenKopf, bewertungskartenPdf, BEISPIEL_KARTEN, zeichneKartenPdf, probedruckPdf
+- `dokumente.ts` (1.128 Z. ⚠) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf, kaufbelegPdf, verkaufslistePdf, tierlistePdf, kassenberichtPdf, kassenbelegPdf
 - `hallenplan.ts` (403 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog.ts` (1.493 Z. ⚠) · KURZ_JE_ABTEILUNG, kurzauswahl, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis, katalogPdf
@@ -944,17 +982,18 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `client.ts` (11 Z.) · sql, db
 - `geheim-bestand.ts` (61 Z.) – Stellt Altbestand im Klartext auf verschlüsselte Spalten um (läuft bei jedem Start nach den Migrationen; findet es nichts mehr, tut es nichts). · pruefeDatenschluessel, verschluesseleBestand
 - `geheim.ts` (99 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, entschluessele, geheimText, geheimJson
-- `schema.ts` (1.003 Z. ⚠) · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum, organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag, schau, gebuehr, preisart, aussteller, meldung, zahlung, katalogeintrag, vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein, stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung, aenderung, postausgang, KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, katalogGestaltung, TERMIN_STATUS, terminabo, schautermin, bild, rassebild, katalogBeitrag, KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, aenderungKette, aenderungGeloescht, aenderungAnonymisiert, sepaLauf
+- `schema.ts` (1.021 Z. ⚠) · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum, organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag, schau, gebuehr, preisart, aussteller, meldung, zahlung, katalogeintrag, vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein, stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung, aenderung, postausgang, KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, druckvorlage, katalogGestaltung, TERMIN_STATUS, terminabo, schautermin, bild, rassebild, katalogBeitrag, KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, aenderungKette, aenderungGeloescht, aenderungAnonymisiert, sepaLauf
 - `schutz.ts` (15 Z.) – Spielt die Schutz-Trigger (schutz.sql) ein: nach Migrationen, nach db:push und in den Tests. · schutzEinspielen
 
 ### Server sonst `apps/server/src`
 
 - `auth.ts` (189 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
 - `config.ts` (30 Z.) · config
-- `index.ts` (932 Z. ⚠)
+- `datei-druckvorlage.ts` (66 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien
+- `index.ts` (935 Z. ⚠)
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
-- `router.ts` (36 Z.) · appRouter
+- `router.ts` (38 Z.) · appRouter
 - `seed.ts` (543 Z.) – Demo-Daten für Entwicklung, Tests und Vorführung. · DEMO, demoEntfernen, seed, bisZurBewertung, komplett
 - `testschau.ts` (503 Z.) – Testdaten für eine vorhandene, leere Schau: füllt sie wie eine echte Lokalschau bis nach der Einlieferung, damit die Ausstellungsleitung den Rest ( … · MERKMAL, DEMO_TIERE_HOECHSTENS, mitDemoSperre, fuellen, zuruecksetzen, entfernen
 - `trpc.ts` (290 Z.) · kurzerPruefText, pruefeMeta, pruefeUmfang, strukturZuGross, sqlZustand, router, publicProcedure, fehler, dbId, kalenderdatum, benutzerProcedure, adminProcedure, richterProcedure, oeffentlichSichtbarProcedure, ladeSchau, pruefeNachFreigabe
@@ -1025,5 +1064,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `44-pruefliste-hallenplan.ts` (60 Z.) – Prüfliste ab der Phase „Katalog & Halle“: Hinweise zum Hallenplan (Tiere ohne Platz, Käfigfront zur Wand oder zu einer Reihe, Nummern nicht in Plan …
 - `45-hallenplan-tier-versetzen.ts` (163 Z.) – Tiere im Halleneditor versetzen (Rückmeldung 15.11.2026: „ich will auch käfige frei zuordnen können im halleneditor und ggf tiere versetzen“): nur …
 - `46-automatische-abmeldung.ts` (64 Z.) – Automatische Abmeldung nach Untätigkeit (Rückmeldung 15.11.2026): Frist je Rolle unter „Verein und Datenschutz“, nur die angebotenen Minuten, Proto …
+- `47-druckvorlagen.ts` (86 Z.) – Druckvorlagen für Bewertungskarten: Vorlagen des Vereins speichern, je Schau wählen, für eine Schau abwandeln, löschen (Schau druckt dann wieder mi …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

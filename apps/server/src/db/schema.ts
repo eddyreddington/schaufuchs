@@ -265,6 +265,8 @@ export const schau = pgTable("schau", {
   hallenplanFest: jsonb("hallenplan_fest").$type<FesterPlan | null>(),
   /** Aufsteller (Gestelle unter den Grundplatten): Höhe in cm; null = Vorgabe. Für die 3D-Ansicht des Hallenplans. */
   aufsteller: jsonb("aufsteller").$type<Aufsteller | null>(),
+  /** Druckvorlage der Bewertungskarten; null = Vorgabe (A6, vier je A4). */
+  vorlageBewertungskarteId: integer("vorlage_bewertungskarte_id").references((): AnyPgColumn => druckvorlage.id, { onDelete: "set null" }),
   createdAt: created(),
 });
 
@@ -732,6 +734,22 @@ export const BEITRAG_ARTEN = ["grusswort", "anzeige", "seite"] as const;
 export const ANZEIGE_GROESSEN = ["ganz", "halb", "viertel"] as const;
 
 /** Angaben für Titel und Vorspann des gedruckten Katalogs (eine Zeile je Schau). */
+/**
+ * Druckvorlagen des Vereins (Bewertungskarte, später Briefe). Mit schauId: die für eine Schau abgewandelte Fassung.
+ * Der Inhalt (daten) wird immer über kartenVorlageLesen() in packages/domain/src/druckvorlage.ts gelesen.
+ */
+export const druckvorlage = pgTable("druckvorlage", {
+  id: serial("id").primaryKey(),
+  organisationId: integer("organisation_id")
+    .notNull()
+    .references(() => organisation.id, { onDelete: "cascade" }),
+  schauId: integer("schau_id").references((): AnyPgColumn => schau.id, { onDelete: "cascade" }),
+  art: text("art", { enum: ["bewertungskarte", "brief"] }).notNull(),
+  name: text("name").notNull(),
+  daten: jsonb("daten").notNull().default({}),
+  createdAt: created(),
+});
+
 export const katalogGestaltung = pgTable("katalog_gestaltung", {
   schauId: integer("schau_id")
     .primaryKey()

@@ -38,6 +38,7 @@ import { kurzerFehler } from "./services/fehlertext";
 import { starteMailversand } from "./services/post";
 import { eigeneSchauenFuerKalender, starteTerminabruf } from "./services/termine";
 import { adressSchluessel, Bremse } from "./services/bremse";
+import { druckvorlageDateien } from "./datei-druckvorlage";
 import { archiviereKassenbeleg, archiviereKaufbeleg, archiviereQuittung, ladeBeleg, ladeKassenbuch, type Belegart } from "./services/kassenbuch";
 import { ladeEintraege, skalaVon, verdeckeNamen } from "./services/eintraege";
 import { ladeTierliste } from "./services/tierliste";
@@ -377,6 +378,8 @@ app.post("/datei/:schauId/katalog-vorschau.pdf", async (c) => {
     if (vorschauNeueste.get(wer) === nr) vorschauNeueste.delete(wer);
   }
 });
+
+druckvorlageDateien(app);
 
 app.get("/datei/:schauId/bewertungskarten.pdf", async (c) => {
   const s = await schauFuer(c);

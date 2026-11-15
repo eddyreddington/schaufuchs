@@ -34,3 +34,4 @@ export * from "./hallenplan-wandfront";
 export * from "./hallenplan-versetzen";
 export * from "./ruecksprung";
 export * from "./abmeldung";
+export * from "./druckvorlage";

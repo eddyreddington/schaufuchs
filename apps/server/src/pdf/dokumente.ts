@@ -1,11 +1,11 @@
-import { betragInWorten, bewertungsText, brauchtObmann, formatEuro, formatIban, formatKatalognummer, MELDEART_LABEL, oeffnungszeitenZeilen, STANDARD_NOTENSKALA } from "@schau/domain";
-import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { betragInWorten, formatEuro, formatIban, formatKatalognummer, MELDEART_LABEL, oeffnungszeitenZeilen } from "@schau/domain";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { config } from "../config";
 import { db } from "../db/client";
-import { aussteller, bewertung, bild, kassenbewegung, katalogeintrag, meldung, preisrichter, prEinteilung, verkauf, zahlung, type schau } from "../db/schema";
+import { aussteller, bild, kassenbewegung, katalogeintrag, meldung, preisrichter, prEinteilung, verkauf, zahlung, type schau } from "../db/schema";
 import { ladeGestaltung } from "../routers/katalog-gestaltung";
 import { abrechnungListe } from "../routers/kasse";
-import { ladeEintraege, meldebetrag, skalaVon, type Eintrag } from "../services/eintraege";
+import { ladeEintraege, meldebetrag, type Eintrag } from "../services/eintraege";
 import { zuteilung } from "../services/pruefung";
 import { ladeKassenbuch } from "../services/kassenbuch";
 import { eigenerKopf } from "../services/protokoll-suche";
@@ -35,6 +35,7 @@ import {
   TINTE,
   unterschrift,
 } from "./basis";
+import { bewertungskartenPdf as kartenNachVorlagePdf } from "./bewertungskarte";
 
 type Schau = typeof schau.$inferSelect;
 
@@ -68,150 +69,9 @@ function feld(doc: Doc, d: Design, x: number, y: number, w: number, h: number, t
 
 // ── Bewertungskarten ──────────────────────────────────────────────────────
 
-/**
- * Bewertungskarten im Format des BDRG-Vordrucks: DIN A6 hoch, vier Karten je A4-Bogen – passt in die Kartenhalter am Käfig.
- * Anonym (ohne Ausstellernamen). Bereits erfasste Bewertungen werden eingedruckt, leere Felder bekommen Schreiblinien.
- * Bei v und u.M. (und auf leeren Karten) ein Feld für die Obmann-Unterschrift; unten die Notenlegende.
- */
+/** Bewertungskarten nach der Druckvorlage der Schau (Format, Bausteine, Vordruck) – gezeichnet in pdf/bewertungskarte.ts. */
 export async function bewertungskartenPdf(s: Schau, nurPreisrichterId?: number) {
-  const [eintraege, einteilung, richter, obmaenner, d] = await Promise.all([
-    ladeEintraege(s.id, { nurBestaetigt: true }),
-    db.select().from(prEinteilung).where(eq(prEinteilung.schauId, s.id)),
-    db.select().from(preisrichter).where(eq(preisrichter.schauId, s.id)),
-    db
-      .select({ katalogeintragId: bewertung.katalogeintragId, von: bewertung.obmannBestaetigtVon })
-      .from(bewertung)
-      .innerJoin(katalogeintrag, eq(katalogeintrag.id, bewertung.katalogeintragId))
-      .where(and(eq(katalogeintrag.schauId, s.id), isNotNull(bewertung.obmannBestaetigtVon))),
-    ladeDesign(s),
-  ]);
-  const zu = zuteilung(eintraege, einteilung);
-  const obmannVon = new Map(obmaenner.map((o) => [o.katalogeintragId, o.von]));
-  const karten = eintraege.filter((e) => e.katalogNr != null && (nurPreisrichterId == null || zu.get(e.id) === nurPreisrichterId));
-  const skala = skalaVon(s);
-  const unterzeile = [s.name, s.ort, s.bewertungAm ? `Bewertung am ${datumDe(s.bewertungAm)}` : ""].filter(Boolean).join(" · ");
-  // Legende wie auf dem Vordruck: „97 v · 96 hv · 95–93 sg …“
-  const legende = [
-    ...(skala ?? STANDARD_NOTENSKALA).map((n) => {
-      const p = [...n.punkte].sort((x, y) => y - x);
-      return `${p.length > 1 ? `${p[0]}–${p[p.length - 1]}` : p[0]} ${n.kuerzel}`;
-    }),
-    "0 u",
-    "o.B. · u.M. · n.a.",
-  ].join(" · ");
-  return erzeugePdf(
-    `Bewertungskarten ${s.name}`,
-    (doc) => {
-      const kw = doc.page.width / 2;
-      const kh = doc.page.height / 2;
-      const schnitt = () => {
-        doc.save().lineWidth(0.3).strokeColor(HAARLINIE).dash(2, { space: 2.5 });
-        doc.moveTo(kw, 0).lineTo(kw, doc.page.height).stroke();
-        doc.moveTo(0, kh).lineTo(doc.page.width, kh).stroke();
-        doc.undash().restore();
-      };
-      karten.forEach((e, i) => {
-        if (i > 0 && i % 4 === 0) doc.addPage();
-        if (i % 4 === 0) schnitt();
-        karte(doc, e, (i % 2) * kw, Math.floor((i % 4) / 2) * kh, kw, kh);
-      });
-      if (karten.length === 0) doc.font(SANS).fontSize(10).text("Keine Tiere mit Katalognummer.", 20 * MM, 20 * MM);
-    },
-    { margin: 0 },
-  );
-
-  function karte(doc: Doc, e: Eintrag, x0: number, y0: number, w: number, h: number) {
-    const m = 6 * MM;
-    const x = x0 + m;
-    const b = w - 2 * m;
-    let y = y0 + m;
-    // Kopf: links Karte und Schau, rechts die Katalognummer groß im Farbfeld.
-    const nrB = 25 * MM;
-    const nrH = 14 * MM;
-    kicker(doc, "Bewertungskarte", x, y, d.farbe, b - nrB);
-    doc.font(SANS).fontSize(6.5).fillColor(GRAU).text(unterzeile, x, y + 9, { width: b - nrB - 2 * MM, height: 19, ellipsis: true });
-    doc.save().rect(x + b - nrB, y - 1, nrB, nrH).fill(d.flaeche).restore();
-    doc.font(SANS_FETT).fontSize(5.5).fillColor("#ffffff").text("KATALOG-NR.", x + b - nrB, y + 0.8 * MM, { width: nrB, align: "center", characterSpacing: 0.6 });
-    textImFeld(doc, nr(e), x + b - nrB + 1.5 * MM, y + 3.8 * MM, { breite: nrB - 3 * MM, groesse: 22, min: 12, schrift: SANS_FETT, farbe: "#ffffff", align: "center" });
-    y += nrH + 2 * MM;
-    // Tier: Rasse und Farbenschlag, darunter Klasse und ggf. Käfig.
-    textImFeld(doc, e.bezeichnung, x, y, { breite: b, groesse: 12, min: 8, schrift: SERIF, farbe: TINTE });
-    y += 6 * MM;
-    const kaefig = e.kaefig && e.kaefig !== String(e.katalogNr) ? `Käfig ${e.kaefig}` : "";
-    doc.font(SANS_FETT).fontSize(8.5).fillColor(d.farbe).text(tier(e), x, y, { lineBreak: false });
-    if (kaefig) doc.font(SANS).fontSize(8.5).fillColor(GRAU).text(kaefig, x, y, { width: b, align: "right", lineBreak: false });
-    y += 5 * MM;
-    // Ring-Nr.: eingedruckt oder zum Eintragen.
-    doc.font(SANS_FETT).fontSize(6).fillColor(d.farbe).text("RING-NR.", x, y + 1.2, { lineBreak: false, characterSpacing: 0.6 });
-    if (e.ringnummern) doc.font(SANS).fontSize(8.5).fillColor(TINTE).text(e.ringnummern, x + 13 * MM, y, { width: b - 13 * MM, lineBreak: false, ellipsis: true });
-    doc.save().lineWidth(0.4).strokeColor(HAARLINIE).moveTo(x + 13 * MM, y + 9).lineTo(x + b, y + 9).stroke().restore();
-    y += 5 * MM;
-
-    // Vorzüge, Wünsche, Mängel als gerahmte Felder.
-    const pr = richter.find((r) => r.id === zu.get(e.id));
-    const wert = { punkte: e.punkte, sondernote: e.sondernote };
-    const mitObmann = !e.bewertet || brauchtObmann(wert, skala);
-    const fussY = y0 + h - m - 4 * MM - 26 * MM; // Note-Zeile + Unterschriften + Legende
-    const hakenH = 4.5 * MM;
-    const texte: [string, string | null][] = [
-      ["Vorzüge", e.vorzuege],
-      ["Wünsche", e.wuensche],
-      ["Mängel", e.maengel],
-    ];
-    // Höhe nach Bedarf verteilen: langer Text bekommt mehr Platz, leere Felder behalten zwei Schreiblinien.
-    const verfuegbar = fussY - hakenH - y;
-    const rand = 6.5 * MM;
-    doc.font(SANS).fontSize(7.5);
-    const bedarf = texte.map(([, t]) => (t ? Math.max(11 * MM, doc.heightOfString(t, { width: b - 4 * MM }) + rand) : 14 * MM));
-    const summe = bedarf.reduce((n, v) => n + v, 0);
-    const hoehen = summe <= verfuegbar ? bedarf.map((v) => v + (verfuegbar - summe) / 3) : bedarf.map((v) => (v / summe) * verfuegbar);
-    let fy0 = y;
-    texte.forEach(([titel, text], f) => {
-      const fh = hoehen[f]!;
-      const fy = fy0;
-      fy0 += fh;
-      feld(doc, d, x, fy, b, fh - 1.2 * MM, titel);
-      if (text) textImFeld(doc, text, x + 2 * MM, fy + 4.6 * MM, { breite: b - 4 * MM, hoehe: fh - rand, groesse: 9, min: 6, schrift: SANS, farbe: TINTE });
-      // Schreiblinien nur in leeren Feldern, sonst streichen sie den eingedruckten Text durch.
-      else
-        for (let ly = fy + 9 * MM; ly < fy + fh - 2.5 * MM; ly += 5.5 * MM)
-          doc.save().lineWidth(0.3).strokeColor(HAARLINIE).moveTo(x + 2 * MM, ly).lineTo(x + b - 2 * MM, ly).stroke().restore();
-    });
-    // Ankreuzfeld wie auf dem Vordruck.
-    const hy = fy0 - 0.4 * MM;
-    doc.save().lineWidth(0.5).strokeColor(TINTE).rect(x, hy, 2.6 * MM, 2.6 * MM).stroke().restore();
-    doc.font(SANS).fontSize(6.5).fillColor(TINTE).text("Ausschließende Mängel in Kondition und/oder Pflege", x + 4 * MM, hy + 0.3 * MM, { width: b - 4 * MM, lineBreak: false });
-
-    // Note | Punkte | Preis.
-    let fy = fussY;
-    const zellen: [string, string, number][] = (() => {
-      const t = e.bewertet ? bewertungsText(wert, skala) : "";
-      const m2 = /^(\d+) (.+)$/.exec(t);
-      return [
-        ["Note", m2 ? m2[2]! : t, 0.34],
-        ["Punkte", m2 ? m2[1]! : "", 0.3],
-        ["Preis", e.preise.map((p) => p.kuerzel).join(" "), 0.36],
-      ];
-    })();
-    let zx = x;
-    zellen.forEach(([titel, wertText, anteil], i) => {
-      const zb = b * anteil - (i < 2 ? 1.2 * MM : 0);
-      feld(doc, d, zx, fy, zb, 11 * MM, titel);
-      if (wertText) textImFeld(doc, wertText, zx + 2 * MM, fy + 4 * MM, { breite: zb - 4 * MM, groesse: 15, min: 8, schrift: SANS_FETT, farbe: titel === "Preis" ? d.farbe : TINTE });
-      zx += b * anteil;
-    });
-    fy += 11 * MM + 3.5 * MM;
-    // Unterschriften: Preisrichter (Name/Stempel), bei Bedarf Obmann.
-    const ub = mitObmann ? (b - 4 * MM) / 2 : b;
-    unterschrift(doc, x, fy + 8 * MM, ub, "Unterschrift Preisrichter", pr?.name ?? "");
-    if (mitObmann) {
-      const ob = richter.find((r) => r.id === obmannVon.get(e.id));
-      unterschrift(doc, x + ub + 4 * MM, fy + 8 * MM, ub, e.bewertet ? "Unterschrift Obmann" : "Unterschrift Obmann (nur bei v und u.M.)", ob?.name ?? "");
-    }
-    // Legende unten.
-    doc.font(SANS).fontSize(5.8).fillColor(GRAU).text(legende, x, y0 + h - m - 1.5 * MM, { width: b, align: "center", lineBreak: false, ellipsis: true });
-    doc.fillColor(TINTE);
-  }
+  return kartenNachVorlagePdf(s, await ladeDesign(s), nurPreisrichterId);
 }
 
 // ── Bewertungsliste ───────────────────────────────────────────────────────
