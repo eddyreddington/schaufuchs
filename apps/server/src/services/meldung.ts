@@ -9,6 +9,7 @@ import { meldebetrag } from "./eintraege";
 import { offenerLauf, sperreKasse } from "./kasse";
 import { pruefeAusstellerZurSchau, sperreTestschauGeteilt, testSchauIdFuer } from "./testschau";
 import { protokolliere, type Akteur } from "./protokoll";
+import { meldungsspendeAnlegen } from "./spenden";
 
 /** Registriernummer nach § 26 ViehVerkV, einheitlich geschrieben; leer bleibt leer (Pflicht prüfen die Aufrufer). */
 export const registriernummerFeld = z
@@ -102,6 +103,8 @@ export const meldungEingabe = z.object({
   erklaerungen: z.boolean().default(false),
   positionen: z.array(positionEingabe).max(500),
   stiftung: z.object({ betragCent: z.number().int().min(0).max(10_000_000), vorgabe: z.string().max(500) }).nullable().optional(),
+  /** Freiwillige Spende für die Ausstellung (nie vorausgewählt, kein Meldegeld) – nur bei einer neuen Meldung. */
+  spende: z.object({ betragCent: z.number().int().min(0).max(10_000_000), nennen: z.boolean().default(false) }).nullable().optional(),
 });
 export type MeldungEingabe = z.infer<typeof meldungEingabe>;
 
@@ -158,6 +161,9 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
   // Kassensperre, Deckungsprüfung und Protokoll: preise.stiftungSpeichern. Die Oberfläche sendet hier keine Stiftung.
   if (vorherige && input.stiftung && input.stiftung.betragCent > 0) {
     throw fehler("BAD_REQUEST", "Eine Stiftung an einer bestehenden Meldung ändert die Ausstellungsleitung unter „Preise und Freigabe“.");
+  }
+  if (vorherige && input.spende && input.spende.betragCent > 0) {
+    throw fehler("BAD_REQUEST", "Eine Spende zu einer bestehenden Meldung erfasst die Ausstellungsleitung unter „Spenden“.");
   }
   // Nach einer Abrechnung (Quittung oder SEPA-Datei) und ab Phase „Abrechnung“ ändert Geld-Relevantes nur die
   // Ausstellungsleitung: Meldegeld, Tiere, Jugend, Preisrichter-Befreiung, Bankdaten. Die Kassensperre sorgt dafür,
@@ -391,6 +397,9 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
       vorgabe: input.stiftung.vorgabe,
     });
   }
+  if (!vorherige && input.spende && input.spende.betragCent > 0) {
+    await meldungsspendeAnlegen(tx, { organisationId, schauId: s.id, meldungId, ausstellerId: ausstellerId!, betragCent: input.spende.betragCent, nennen: input.spende.nennen, akteur });
+  }
 
   const betrag = await meldebetrag(tx, meldungId);
   if (vorherige && vorherBetrag) {
@@ -420,6 +429,7 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
       online: onlineWirksam,
       meldegeldCent: betrag.summeCent,
       ...(betrag.stiftungCent ? { stiftungCent: betrag.stiftungCent } : {}),
+      ...(betrag.spendeCent ? { spendeCent: betrag.spendeCent } : {}),
       jugend: input.istJugend,
       preisrichter: input.aussteller.istPreisrichter,
       ...(weg.length ? { entfernt: weg.map((v) => `${v.katalogNr != null ? `${v.katalogNr}${v.suffix}` : "ohne Nr."} ${v.art} ${v.geschlecht}`) } : {}),

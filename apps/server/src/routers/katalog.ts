@@ -1,4 +1,4 @@
-import { AUFSTELLER_STANDARD, VERKLEIDUNG_STANDARD, verkleidungVon, ETAGEN_MAX, etagenNormal, bewertungsText, neuSetzen, halleZumNeuSetzen, type Halle, mitWandreihe, reihenVersatzNachUmbau, festschreiben, plattenStand, pruefeEntfernt, pruefeTeileEntfernt, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HALLE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigName, kaefigTyp, planeHalle, vergleicheFolge, type PlanTier, kaefigVorschlag, nachmeldungsNummern, nummernBereiche, luekenlosAuffuellen, planFolge, planUnordnung, vergebeKatalognummern, stellVorschlaege, type KaefigTyp, type SortierSchritt, belegungImPlan, gleicherPlatz, platzImPlan, tierVersetzen, type KaefigPlatz } from "@schau/domain";
+import { AUFSTELLER_STANDARD, gefordertCent, VERKLEIDUNG_STANDARD, verkleidungVon, ETAGEN_MAX, etagenNormal, bewertungsText, neuSetzen, halleZumNeuSetzen, type Halle, mitWandreihe, reihenVersatzNachUmbau, festschreiben, plattenStand, pruefeEntfernt, pruefeTeileEntfernt, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HALLE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigName, kaefigTyp, planeHalle, vergleicheFolge, type PlanTier, kaefigVorschlag, nachmeldungsNummern, nummernBereiche, luekenlosAuffuellen, planFolge, planUnordnung, vergebeKatalognummern, stellVorschlaege, type KaefigTyp, type SortierSchritt, belegungImPlan, gleicherPlatz, platzImPlan, tierVersetzen, type KaefigPlatz } from "@schau/domain";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/client";
@@ -975,9 +975,9 @@ export const halleRouter = router({
             return { ...e, kaefigGroesse: typ ? kaefigName(typ, s.kaefigMasse) : null, kaefigTyp: typ, kaefigAuto: auto };
           });
         const m = meldungen.find((x) => x.id === id)!;
-        // Viele Vereine kassieren das Meldegeld bei der Einlieferung: offener Betrag (mit zugesagter Stiftung) gleich hier.
+        // Viele Vereine kassieren das Meldegeld bei der Einlieferung: offener Betrag (mit zugesagter Stiftung und Spende) gleich hier.
         const b = betraege.get(id)!;
-        const geld = { summeCent: b.summeCent, stiftungCent: b.stiftungCent, bezahltCent: b.bezahltCent, offenCent: b.summeCent + b.stiftungCent - b.bezahltCent };
+        const geld = { summeCent: b.summeCent, stiftungCent: b.stiftungCent, spendeCent: b.spendeCent, bezahltCent: b.bezahltCent, offenCent: gefordertCent(b) - b.bezahltCent };
         return { meldung: m, name: tiere[0]!.ausstellerName, ort: tiere[0]!.ort, tiere, geld, nachweise: nachweisStand(m, tiere.map((t) => t.tierart), s, tiere[0]?.registriernummer) };
       }),
     );

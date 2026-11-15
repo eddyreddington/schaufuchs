@@ -8,6 +8,7 @@ import { oeffneBild, type GeoeffnetesBild } from "../services/rassebild";
 import { ausstellerAnzeige, ladeEintraege, skalaVon, verdeckeNamen, type Eintrag } from "../services/eintraege";
 import { ladeVereinsangaben } from "../services/datenschutz";
 import { zuteilung } from "../services/pruefung";
+import { spenderFuerKatalog } from "../services/spenden";
 import { ladeKommende } from "../services/termine";
 import { datumDe, GRAU, HAARLINIE, kontrast, lesbareFarbe, MM, registriereSchriften, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, SERIF_KURSIV, textImFeld, TINTE } from "./basis";
 import { stichBild, stichFuer, type Stich } from "./illustrationen";
@@ -101,7 +102,7 @@ export async function katalogPdf(
   s: Schau,
   opts: { online?: boolean; vorschau?: KatalogVorschau; kurz?: boolean; gliederung?: (bereiche: KatalogSeitenbereich[]) => void } = {},
 ): Promise<Buffer> {
-  const [roh, gespeichert, beitraege, bilder, richter, einteilung, preisarten, stiftungen] = await Promise.all([
+  const [roh, gespeichert, beitraege, bilder, richter, einteilung, preisarten, stiftungen, spender] = await Promise.all([
     ladeEintraege(s.id, { nurBestaetigt: true }),
     ladeGestaltung(s.id),
     db.select().from(katalogBeitrag).where(eq(katalogBeitrag.schauId, s.id)).orderBy(asc(katalogBeitrag.folge), asc(katalogBeitrag.id)),
@@ -115,6 +116,8 @@ export async function katalogPdf(
     db.select().from(prEinteilung).where(eq(prEinteilung.schauId, s.id)).orderBy(asc(prEinteilung.vonNr)),
     db.select().from(preisart).where(eq(preisart.schauId, s.id)).orderBy(asc(preisart.folge), asc(preisart.id)),
     db.select().from(stiftung).where(eq(stiftung.schauId, s.id)).orderBy(asc(stiftung.stifter)),
+    // Spender nur im gedruckten Katalog: ihre Einwilligung gilt dem Katalog, nicht dem Internet.
+    opts.online ? Promise.resolve([] as string[]) : spenderFuerKatalog(s.id),
   ]);
   // Namen nur mit Zustimmung: gedruckt mit unterschriebenem Meldebogen, im Internet zusätzlich mit Online-Einwilligung.
   const alle = verdeckeNamen(roh, opts.online ? "online" : "druck");
@@ -601,7 +604,7 @@ export async function katalogPdf(
   }
 
   // ── Preise und Stifter ─────────────────────────────────────────────────
-  if ((preisarten.length || stiftungen.length) && !ohne.has("preise")) {
+  if ((preisarten.length || stiftungen.length || spender.length) && !ohne.has("preise")) {
     neueSeite();
     abschnitt("Preise und Stifter");
     marke("preise");
@@ -635,6 +638,12 @@ export async function katalogPdf(
         zwischentitel("Gestiftete Preise und ihre Gewinner");
         angaben(vergaben, 0.45);
       }
+    }
+    // Spender nur mit Einwilligung (Name, Betrag getrennt) – services/spenden.ts.
+    if (spender.length) {
+      doc.y += 10 * k;
+      zwischentitel("Wir danken unseren Spendern");
+      doc.font(SERIF).fontSize(9.5 * k).fillColor(TINTE).text(spender.join(" · "), L(), doc.y, { width: B(), align: "center", lineGap: 2 });
     }
   }
 

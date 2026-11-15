@@ -1,5 +1,6 @@
 import { authRouter } from "./routers/auth";
 import { druckvorlageRouter } from "./routers/druckvorlage";
+import { spendenRouter } from "./routers/spenden";
 import { bewertungRouter, richterRouter } from "./routers/bewertung";
 import { kasseRouter } from "./routers/kasse";
 import { halleRouter, katalogRouter } from "./routers/katalog";
@@ -23,6 +24,7 @@ export const appRouter = router({
   katalog: katalogRouter,
   katalogGestaltung: katalogGestaltungRouter,
   druckvorlage: druckvorlageRouter,
+  spenden: spendenRouter,
   termine: termineRouter,
   halle: halleRouter,
   preisrichter: preisrichterRouter,

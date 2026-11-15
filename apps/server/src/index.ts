@@ -39,7 +39,8 @@ import { starteMailversand } from "./services/post";
 import { eigeneSchauenFuerKalender, starteTerminabruf } from "./services/termine";
 import { adressSchluessel, Bremse } from "./services/bremse";
 import { briefDateien, druckvorlageDateien } from "./datei-druckvorlage";
-import { archiviereKassenbeleg, archiviereKaufbeleg, archiviereQuittung, ladeBeleg, ladeKassenbuch, type Belegart } from "./services/kassenbuch";
+import { spendenDateien } from "./datei-spenden";
+import { archiviereKassenbeleg, archiviereKaufbeleg, archiviereQuittung, archiviereSpendenquittung, ladeBeleg, ladeKassenbuch, type Belegart } from "./services/kassenbuch";
 import { ladeEintraege, skalaVon, verdeckeNamen } from "./services/eintraege";
 import { ladeTierliste } from "./services/tierliste";
 import { ladeVerkaufsliste } from "./services/verkaufsliste";
@@ -380,6 +381,7 @@ app.post("/datei/:schauId/katalog-vorschau.pdf", async (c) => {
 });
 
 druckvorlageDateien(app);
+spendenDateien(app);
 briefDateien(app);
 
 app.get("/datei/:schauId/bewertungskarten.pdf", async (c) => {
@@ -466,11 +468,12 @@ app.get("/datei/:schauId/beleg/:art{[a-z-]+}/:datei{[0-9]+\\.pdf}", async (c) =>
   if (!s) return c.text("Nicht angemeldet oder keine Berechtigung.", 403);
   const nummer = zahlAus(c.req.param("datei").replace(".pdf", ""));
   // Die Art genau prüfen: ein Muster mit Alternativen nahm „kaufbeleg-storno“ als „kaufbeleg“ und lieferte das Original.
-  if (!["kaufbeleg", "kaufbeleg-storno", "quittung", "quittung-storno", "einzahlung", "eigenbeleg"].includes(c.req.param("art"))) return c.text("Beleg nicht gefunden.", 404);
+  if (!["kaufbeleg", "kaufbeleg-storno", "quittung", "quittung-storno", "einzahlung", "eigenbeleg", "spende", "spende-storno"].includes(c.req.param("art"))) return c.text("Beleg nicht gefunden.", 404);
   const art = c.req.param("art") as Belegart;
   let b = nummer == null ? null : await ladeBeleg(s.id, art, nummer);
   // Kassenbelege, deren Ablage beim Buchen scheiterte, entstehen beim ersten Abruf (wie Quittungen und Kaufbelege).
   if (!b && nummer != null && (art === "einzahlung" || art === "eigenbeleg")) b = await archiviereKassenbeleg(s, art, nummer);
+  if (!b && nummer != null && (art === "spende" || art === "spende-storno")) b = await archiviereSpendenquittung(s, nummer, art === "spende-storno");
   if (!b) return c.text("Beleg nicht gefunden.", 404);
   return archivPdf(c, b, `${b.art}-${b.nummer}.pdf`);
 });
@@ -615,13 +618,14 @@ app.get("/datei/:schauId/abrechnung.csv", async (c) => {
   return datei(
     c,
     csv([
-      ["Aussteller", "Ort", "Tiere", "Meldegeld", "Stiftung", "bezahlt", "Preisgeld", "Verkauf", "Provision", "Saldo", "Quittung", "ausgezahlt", "Abweichung"],
+      ["Aussteller", "Ort", "Tiere", "Meldegeld", "Stiftung", "Spende", "bezahlt", "Preisgeld", "Verkauf", "Provision", "Saldo", "Quittung", "ausgezahlt", "Abweichung"],
       ...zeilen.map((z) => [
         z.name,
         z.ort,
         z.tiere,
         euro(z.meldebetragCent),
         euro(z.stiftungCent),
+        euro(z.spendeCent),
         euro(z.bezahltCent),
         euro(z.preisgeldCent),
         euro(z.verkaufCent),

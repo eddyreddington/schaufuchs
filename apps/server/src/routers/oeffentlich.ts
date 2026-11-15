@@ -74,6 +74,8 @@ const meldeEingabe = z.object({
   /** Pflichterklärungen der Schau (Herkunft nicht aus Sperrgebiet, Karenzzeit) – alle angekreuzt. */
   erklaerungen: z.boolean().default(false),
   stiftung: z.object({ betragCent: z.number().int().min(0).max(10_000_000), vorgabe: z.string().max(200) }).nullable(),
+  /** Freiwillige Spende für die Ausstellung; „nennen“: Name im Katalog als Spender (Einwilligung). */
+  spende: z.object({ betragCent: z.number().int().min(0).max(1_000_000), nennen: z.boolean() }).nullable().default(null),
   bemerkung: z.string().max(1000),
 });
 type MeldeInput = z.infer<typeof meldeEingabe>;
@@ -410,6 +412,7 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
         erklaerungen: !!s.erklaerungen.trim() && input.erklaerungen,
         positionen: input.positionen,
         stiftung: input.stiftung,
+        spende: input.spende,
       },
       { text: "Aussteller (online)" },
       { bestehendenNichtAendern: !!bekannt },
@@ -425,7 +428,7 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
     email,
     `Meldung ${s.name}`,
     // Anrede nur aus Buchstaben: sie ist frei eingegeben und ginge sonst mit Links als Werbung mit Vereinsabsender hinaus.
-    eingangsText(s, anrede(input.aussteller.vorname, input.aussteller.nachname), r.betrag.summeCent, link, input.onlineVeroeffentlichung, r.betrag.stiftungCent),
+    eingangsText(s, anrede(input.aussteller.vorname, input.aussteller.nachname), r.betrag.summeCent, link, input.onlineVeroeffentlichung, r.betrag.stiftungCent, r.betrag.spendeCent),
     r.ausstellerId,
   );
   return { token: m!.zugangsToken, betrag: r.betrag };

@@ -11,10 +11,10 @@
  * Die Aussteller sind erfunden und haben keine E-Mail-Adresse (es geht keine Post hinaus). Erkennungsmerkmal: die
  * Registriernummer beginnt mit „276 16 999“ (Kreis 999 gibt es nicht) – daran findet --entfernen sie wieder.
  */
-import { halleOhneFestenPlan, standardBesatz } from "@schau/domain";
+import { gefordertCent, halleOhneFestenPlan, standardBesatz } from "@schau/domain";
 import { and, asc, eq, inArray, like, notExists, sql as sqlText } from "drizzle-orm";
 import { db, sql } from "./db/client";
-import { aussteller, benutzer, farbenschlag, gebuehr, katalogBeitrag, katalogGestaltung, meldung, preisrichter, rasse, schau, sparte, verkauf, katalogeintrag } from "./db/schema";
+import { aussteller, benutzer, farbenschlag, gebuehr, katalogBeitrag, katalogGestaltung, meldung, preisrichter, rasse, schau, sparte, spende, spender, verkauf, katalogeintrag, zuwendungsbestaetigung } from "./db/schema";
 import { meldebetrag } from "./services/eintraege";
 import { protokolliere } from "./services/protokoll";
 import { sperreTestschauExklusiv } from "./services/testschau";
@@ -298,7 +298,7 @@ export async function fuellen(slug: string, ziel?: number, opts: { wer?: Einspie
   const ueberwiesen = meldungen.filter((m) => m.nr % 3 === 1);
   for (const m of ueberwiesen) {
     const b = await meldebetrag(db, m.meldungId);
-    await api.meldung.zahlungErfassen({ meldungId: m.meldungId, betragCent: b.summeCent + b.stiftungCent, datum: tag(-zwischen(1, 8)), art: "ueberweisung" });
+    await api.meldung.zahlungErfassen({ meldungId: m.meldungId, betragCent: gefordertCent(b), datum: tag(-zwischen(1, 8)), art: "ueberweisung" });
   }
   log(`${ueberwiesen.length} Meldungen vorab überwiesen`);
 
@@ -357,7 +357,7 @@ export async function fuellen(slug: string, ziel?: number, opts: { wer?: Einspie
     // Bar kassieren, was offen ist (wie an der Einlieferung: mit dem angezeigten offenen Betrag).
     if (m === zahltSpaeter) continue;
     const b = await meldebetrag(db, m.meldungId);
-    const offen = b.summeCent + b.stiftungCent - b.bezahltCent;
+    const offen = gefordertCent(b) - b.bezahltCent;
     if (offen > 0) {
       const betrag = m === teilzahlung ? Math.round(offen / 2 / 100) * 100 : offen;
       await api.meldung.zahlungErfassen({ meldungId: m.meldungId, betragCent: betrag, erwartetOffenCent: offen, datum: heute(), art: "bar" });
@@ -433,6 +433,20 @@ export async function zuruecksetzen(slug: string, opts: { leise?: boolean } = {}
     await tx.execute(sqlText`delete from verkauf where katalogeintrag_id in (select id from katalogeintrag where schau_id = ${id})`);
     // Vergaben gestifteter Preise zeigen auf ihre Stiftung (RESTRICT): vor den Stiftungen löschen.
     await tx.execute(sqlText`delete from preisvergabe where katalogeintrag_id in (select id from katalogeintrag where schau_id = ${id})`);
+    // Spenden dieser Schau samt ihren Zuwendungsbestätigungen; Spender, die danach nichts mehr gespendet haben, auch.
+    const spenderIds = (await tx.select({ id: spende.spenderId }).from(spende).where(eq(spende.schauId, id))).map((x) => x.id);
+    await tx.execute(sqlText`delete from zuwendungsbestaetigung where id in (select bestaetigung_id from bestaetigung_spende where spende_id in (select id from spende where schau_id = ${id}))`);
+    await tx.delete(spende).where(eq(spende.schauId, id));
+    if (spenderIds.length)
+      await tx
+        .delete(spender)
+        .where(
+          and(
+            inArray(spender.id, spenderIds),
+            notExists(tx.select({ id: spende.id }).from(spende).where(eq(spende.spenderId, spender.id))),
+            notExists(tx.select({ id: zuwendungsbestaetigung.id }).from(zuwendungsbestaetigung).where(eq(zuwendungsbestaetigung.spenderId, spender.id))),
+          ),
+        );
     for (const t of ["gesundheit", "stiftung", "auszahlung", "beleg", "kassenbewegung", "kassenabschluss", "sepa_lauf", "pr_einteilung", "pr_zuteilung"]) {
       await tx.execute(sqlText`delete from ${sqlText.identifier(t)} where schau_id = ${id}`);
     }

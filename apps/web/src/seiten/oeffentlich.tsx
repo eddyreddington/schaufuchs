@@ -1,4 +1,4 @@
-import { GEBUEHR_LABEL, gruppenAbteilung, MELDEART_LABEL, oeffnungszeitenZeilen, type AdressVorschlaege, type KaefigMasse, type KaefigRegel } from "@schau/domain";
+import { GEBUEHR_LABEL, gefordertCent, gruppenAbteilung, MELDEART_LABEL, oeffnungszeitenZeilen, type AdressVorschlaege, type KaefigMasse, type KaefigRegel } from "@schau/domain";
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AusstellerFelder, leererAussteller } from "../komponenten/aussteller";
@@ -6,6 +6,13 @@ import { alsEingabe, neuePosition, PositionenEditor, pruefePositionen, type Posi
 import { datum, fehlerText, formatEuro, formatKatalognummer, parseEuro } from "../lib";
 import { trpc } from "../trpc";
 import { Abschnitt, Eingabe, Feld, Haken, Hinweis, Knopf, knopfKlasse, KnopfLink, Laden, LESEBREITE, Marke, Suchfeld, TabellenRahmen, useSeitentitel, useUngespeichertWarnung } from "../ui";
+
+/** Was eine Meldung fordert, aufgeschlüsselt (Meldegeld, zugesagte Stiftung und Spende). */
+type Betrag = { summeCent: number; stiftungCent: number; spendeCent: number };
+function betragText(b: Betrag) {
+  const zusatz = [b.stiftungCent > 0 && `Ehrenpreisstiftung ${formatEuro(b.stiftungCent)}`, b.spendeCent > 0 && `Spende ${formatEuro(b.spendeCent)}`].filter(Boolean);
+  return zusatz.length ? `Meldegeld ${formatEuro(b.summeCent)} + ${zusatz.join(" + ")} = ${formatEuro(gefordertCent(b))}` : formatEuro(b.summeCent);
+}
 
 const FUSS_LINK = "inline-flex min-h-9 items-center text-grau no-underline hover:text-tinte hover:underline";
 
@@ -66,7 +73,7 @@ export function Rechtstext({ art }: { art: "impressum" | "datenschutz" }) {
 export function OeffentlicheSchau() {
   const { slug = "" } = useParams();
   const s = trpc.oeffentlich.schau.useQuery({ slug });
-  const [gemeldet, setGemeldet] = useState<{ token: string; summeCent: number; stiftungCent: number } | null>(null);
+  const [gemeldet, setGemeldet] = useState<{ token: string; betrag: Betrag } | null>(null);
   if (s.isLoading) return <Laden />;
   if (s.error?.data?.code === "TOO_MANY_REQUESTS")
     return <OeffentlicherRahmen titel="Bitte kurz warten" ohneFuss><Hinweis ton="warnung">Gerade kommen sehr viele Anfragen. Bitte die Seite in einer Minute neu laden.</Hinweis></OeffentlicherRahmen>;
@@ -123,27 +130,23 @@ export function OeffentlicheSchau() {
       )}
       {gemeldet ? (
         <Abschnitt titel="Vielen Dank, Ihre Meldung ist eingegangen">
-          {gemeldet.summeCent + gemeldet.stiftungCent <= 0 ? (
+          {gefordertCent(gemeldet.betrag) <= 0 ? (
             <p className="text-lg">Kein Meldegeld. Die Ausstellungsleitung bestätigt die Meldung.</p>
           ) : (
             <p className="text-lg">
               {d.zahlungBeiEinlieferung ? "Zu zahlen bei der Einlieferung der Tiere: " : "Zu zahlen: "}
-              <b className="font-semibold tabular-nums">
-                {gemeldet.stiftungCent
-                  ? `Meldegeld ${formatEuro(gemeldet.summeCent)} + Ehrenpreisstiftung ${formatEuro(gemeldet.stiftungCent)} = ${formatEuro(gemeldet.summeCent + gemeldet.stiftungCent)}`
-                  : formatEuro(gemeldet.summeCent)}
-              </b>
+              <b className="font-semibold tabular-nums">{betragText(gemeldet.betrag)}</b>
               {d.zahlungBeiEinlieferung ? "." : ". Die Meldung wird erst nach Zahlungseingang bearbeitet."}
             </p>
           )}
-          {bankZeigen && gemeldet.summeCent + gemeldet.stiftungCent > 0 && <p className="mt-2">Bankverbindung: {d.bankverbindung}</p>}
+          {bankZeigen && gefordertCent(gemeldet.betrag) > 0 && <p className="mt-2">Bankverbindung: {d.bankverbindung}</p>}
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
             <p>Eine Bestätigung ist per E-Mail unterwegs.</p>
             <Link to={`meldung/${gemeldet.token}`} className={knopfKlasse("zweit")}>Meine Meldung und Ergebnisse</Link>
           </div>
         </Abschnitt>
       ) : d.meldung.offen ? (
-        <Meldeformular slug={slug} bestimmungen={d.bestimmungen} erklaerungen={d.erklaerungen} datenschutz={d.datenschutzKurz} kaefigRegeln={d.kaefigRegeln} kaefigMasse={d.kaefigMasse} vorschlaege={{ vereine: d.vereine, kreisverbaende: d.kreisverbaende }} fertig={(token, summeCent, stiftungCent) => { setGemeldet({ token, summeCent, stiftungCent }); window.scrollTo(0, 0); }} />
+        <Meldeformular slug={slug} bestimmungen={d.bestimmungen} erklaerungen={d.erklaerungen} datenschutz={d.datenschutzKurz} kaefigRegeln={d.kaefigRegeln} kaefigMasse={d.kaefigMasse} vorschlaege={{ vereine: d.vereine, kreisverbaende: d.kreisverbaende }} fertig={(token, betrag) => { setGemeldet({ token, betrag }); window.scrollTo(0, 0); }} />
       ) : (
         <Hinweis ton="warnung">{d.meldung.grund}</Hinweis>
       )}
@@ -169,7 +172,7 @@ function Meldeformular({
   kaefigRegeln: KaefigRegel[];
   kaefigMasse: KaefigMasse;
   vorschlaege: Pick<AdressVorschlaege, "vereine" | "kreisverbaende">;
-  fertig: (token: string, summeCent: number, stiftungCent: number) => void;
+  fertig: (token: string, betrag: Betrag) => void;
 }) {
   const [a, setA] = useState(leererAussteller());
   const [istJugend, setIstJugend] = useState(false);
@@ -181,13 +184,14 @@ function Meldeformular({
   const [erklaert, setErklaert] = useState<boolean[]>(() => erklaerungen.map(() => false));
   const [eltern, setEltern] = useState({ name: "", einverstanden: false });
   const [stiftung, setStiftung] = useState({ betrag: "", vorgabe: "" });
+  const [spende, setSpende] = useState({ betrag: "", nennen: false });
   const [bemerkung, setBemerkung] = useState("");
   const [fehler, setFehler] = useState<string[]>([]);
   const fehlerListe = useRef<HTMLDivElement>(null);
   // Lange Formulare: vor dem Verlassen mit Eingaben warnen (nach dem Absenden ist das Formular weg).
   useUngespeichertWarnung(() => !!(a.vorname || a.nachname || a.email || positionen.some((p) => p.farbenschlag != null || p.freitext)));
   const suche = (q: string) => trpc.oeffentlich.farbenschlagSuche.useQuery({ slug, q }, { enabled: q.trim().length >= 2 });
-  const melden = trpc.oeffentlich.melden.useMutation({ onSuccess: (r) => fertig(r.token, r.betrag.summeCent, r.betrag.stiftungCent) });
+  const melden = trpc.oeffentlich.melden.useMutation({ onSuccess: (r) => fertig(r.token, r.betrag) });
 
   const senden = (e: FormEvent) => {
     e.preventDefault();
@@ -197,6 +201,8 @@ function Meldeformular({
     if (istJugend && (eltern.name.trim().length < 3 || !eltern.einverstanden)) probleme.push("Bei einer Jugendmeldung bitte den Namen eines Erziehungsberechtigten angeben und sein Einverständnis bestätigen.");
     const stiftCent = stiftung.betrag.trim() ? parseEuro(stiftung.betrag) : 0;
     if (stiftCent == null) probleme.push("Betrag der Ehrenpreisstiftung ist ungültig.");
+    const spendeCent = spende.betrag.trim() ? parseEuro(spende.betrag) : 0;
+    if (spendeCent == null || spendeCent < 0) probleme.push("Betrag der Spende ist ungültig.");
     setFehler(probleme);
     if (probleme.length) {
       // Fokus auf die Fehlerliste, damit sie (auch per Screenreader) sofort bemerkt wird.
@@ -214,6 +220,7 @@ function Meldeformular({
       erklaerungen: erklaert.length > 0 && erklaert.every(Boolean),
       erziehungsberechtigter: istJugend ? eltern.name : "",
       stiftung: stiftCent ? { betragCent: stiftCent, vorgabe: stiftung.vorgabe } : null,
+      spende: spendeCent ? { betragCent: spendeCent, nennen: spende.nennen } : null,
       bemerkung,
     });
   };
@@ -246,6 +253,14 @@ function Meldeformular({
         <div className="grid gap-4 sm:grid-cols-[12rem_1fr]">
           <Feld label="Betrag (€)">{(id) => <Eingabe id={id} inputMode="decimal" value={stiftung.betrag} onChange={(e) => setStiftung({ ...stiftung, betrag: e.target.value })} />}</Feld>
           <Feld label="Wofür?">{(id) => <Eingabe id={id} value={stiftung.vorgabe} onChange={(e) => setStiftung({ ...stiftung, vorgabe: e.target.value })} placeholder="z. B. bestes Tier Orpington" />}</Feld>
+        </div>
+      </Abschnitt>
+      <Abschnitt titel="Spende für die Ausstellung (freiwillig)">
+        <div className="grid items-end gap-4 sm:grid-cols-[12rem_1fr]">
+          <Feld label="Betrag (€)">{(id) => <Eingabe id={id} inputMode="decimal" value={spende.betrag} onChange={(e) => setSpende({ ...spende, betrag: e.target.value })} />}</Feld>
+          <div className="pb-2">
+            <Haken label="Meinen Namen im gedruckten Katalog als Spender nennen" checked={spende.nennen} onChange={(nennen) => setSpende({ ...spende, nennen })} />
+          </div>
         </div>
         <Feld label="Bemerkung an die Ausstellungsleitung" className="mt-4">{(id) => <Eingabe id={id} value={bemerkung} onChange={(e) => setBemerkung(e.target.value)} />}</Feld>
       </Abschnitt>
@@ -302,7 +317,7 @@ export function MeineMeldung() {
   if (m.isLoading) return <Laden />;
   if (m.error || !m.data) return <OeffentlicherRahmen titel="Meldung nicht gefunden"><Hinweis ton="fehler">{m.error?.message}</Hinweis></OeffentlicherRahmen>;
   const d = m.data;
-  const offen = d.betrag.summeCent + d.betrag.stiftungCent - d.betrag.bezahltCent;
+  const offen = gefordertCent(d.betrag) - d.betrag.bezahltCent;
   return (
     <OeffentlicherRahmen titel={`Meldung von ${d.name}`} unter={d.schau.name} test={d.schau.test}>
       <Abschnitt>
@@ -311,7 +326,7 @@ export function MeineMeldung() {
             {d.status === "bestaetigt"
               ? "bestätigt"
               : d.status === "offen"
-                ? d.betrag.summeCent + d.betrag.stiftungCent <= 0
+                ? gefordertCent(d.betrag) <= 0
                   ? "wartet auf Bestätigung"
                   : d.schau.zahlungBeiEinlieferung
                     ? "eingegangen – Zahlung bei der Einlieferung"
@@ -320,7 +335,8 @@ export function MeineMeldung() {
           </Marke>
           <span className="tabular-nums">
             Meldegeld {formatEuro(d.betrag.summeCent)}
-            {d.betrag.stiftungCent > 0 && `, Ehrenpreisstiftung ${formatEuro(d.betrag.stiftungCent)}`}, bezahlt {formatEuro(d.betrag.bezahltCent)}
+            {d.betrag.stiftungCent > 0 && `, Ehrenpreisstiftung ${formatEuro(d.betrag.stiftungCent)}`}
+            {d.betrag.spendeCent > 0 && `, Spende ${formatEuro(d.betrag.spendeCent)}`}, bezahlt {formatEuro(d.betrag.bezahltCent)}
           </span>
           {offen > 0 && d.schau.bankverbindung && !d.schau.zahlungBeiEinlieferung && <span className="text-grau">Bitte überweisen an: {d.schau.bankverbindung}</span>}
         </div>

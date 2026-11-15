@@ -174,9 +174,11 @@ function AusstellerKarte({ t, schauId, modus }: { t: Treffer; schauId: number; m
     if (offen <= 0) return;
     if (!(await bestaetige({ titel: "Bar kassieren", text: `${formatEuro(offen)} von ${t.name} bar erhalten?`, knopf: "Bar erhalten" }))) return;
     // Der angezeigte offene Betrag geht mit: hat inzwischen jemand anders kassiert, lehnt der Server ab (kein Doppelkassieren).
-    // Mit zugesagter Stiftung den Anteil auf Quittung und im Kassenbuch ausweisen.
+    // Mit zugesagter Stiftung oder Spende die Anteile auf Quittung und im Kassenbuch ausweisen.
     const stiftung = Math.min(t.geld.stiftungCent, offen);
-    const grund = stiftung > 0 ? `davon Meldegeld ${formatEuro(offen - stiftung)}, Stiftung ${formatEuro(stiftung)}` : "";
+    const spende = Math.min(t.geld.spendeCent, offen - stiftung);
+    const teile = [stiftung > 0 && `Stiftung ${formatEuro(stiftung)}`, spende > 0 && `Spende ${formatEuro(spende)}`].filter(Boolean);
+    const grund = teile.length ? `davon Meldegeld ${formatEuro(offen - stiftung - spende)}, ${teile.join(", ")}` : "";
     kassieren.mutate({ meldungId: m.id, betragCent: offen, datum: heuteIso(), art: "bar", grund, erwartetOffenCent: offen });
   };
   const anzahl = (s: string) => tiere.filter((x) => x.status === s).length;
@@ -308,6 +310,12 @@ function AusstellerKarte({ t, schauId, modus }: { t: Treffer; schauId: number; m
                   <>
                     <dt className="text-grau">zugesagte Stiftung</dt>
                     <dd className="text-right tabular-nums">{formatEuro(t.geld.stiftungCent)}</dd>
+                  </>
+                )}
+                {t.geld.spendeCent > 0 && (
+                  <>
+                    <dt className="text-grau">zugesagte Spende</dt>
+                    <dd className="text-right tabular-nums">{formatEuro(t.geld.spendeCent)}</dd>
                   </>
                 )}
                 <dt className="text-grau">bezahlt</dt>

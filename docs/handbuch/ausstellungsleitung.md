@@ -342,6 +342,26 @@ Die Briefvorlage bestimmt, wie Briefe des Vereins aussehen: Meldebestätigung (B
 
 **Serienbrief erstellen:** Unten auf der Seite wählen Sie die Empfänger: „Vereinsmitglieder“, „Alle Aussteller“ oder „Aussteller einer Schau“ (alle mit bestätigter Meldung zu dieser Schau). Darunter steht, wie viele es sind und wie vielen eine vollständige Anschrift fehlt. Gesperrte und gelöschte Aussteller und Test-Aussteller bekommen keinen Brief. Betreff und Text können Sie für diesen Brief ändern, ohne die Vorlage zu ändern. „Serienbrief als PDF“ öffnet ein PDF mit einer Seite je Empfänger zum Drucken. Der Serienbrief nutzt immer die gespeicherte Vorlage; speichern Sie Änderungen am Briefbogen also vorher.
 
+### 3.10 Steuerliche Angaben
+
+Ohne diese Angaben stellt SchauFUCHS keine Zuwendungsbestätigungen aus. Sie stehen unter „Verein und Datenschutz“ im Abschnitt „Steuerliche Angaben“; jede Änderung steht im Protokoll.
+
+- „Der Verein ist als gemeinnützig anerkannt“ ankreuzen.
+- **Bescheid:** „Freistellungsbescheid“ (bzw. Anlage zum Körperschaftsteuerbescheid) oder „Feststellung nach § 60a AO“, dazu Finanzamt, Steuernummer und Datum des Bescheids, beim Freistellungsbescheid auch den letzten Veranlagungszeitraum (z. B. „2022“).
+- **Steuerbegünstigter Zweck:** so, wie er im Satz „Wir sind wegen Förderung … befreit“ stehen soll, also z. B. „der Tierzucht“.
+- **Ort für die Unterschrift:** steht über der Unterschriftszeile, zusammen mit dem Datum.
+
+SchauFUCHS sperrt Zuwendungsbestätigungen, solange Angaben fehlen, und wenn der Freistellungsbescheid älter als fünf Jahre bzw. die Feststellung nach § 60a AO älter als drei Jahre ist (§ 63 Abs. 5 AO). Tragen Sie dann den neuen Bescheid ein.
+
+### 3.11 Spenderverzeichnis
+
+Unter „Spender“ (linke Leiste) stehen alle Spender des Vereins, über alle Schauen. Spender entstehen beim Erfassen einer Spende in einer Schau oder durch eine Spende bei der Tiermeldung (dann mit Name und Anschrift des Ausstellers).
+
+- Anschrift, E-Mail und Notiz lassen sich ändern. Für eine Zuwendungsbestätigung braucht es Name, Straße, PLZ und Ort.
+- „Darf im gedruckten Katalog als Spender genannt werden“ und „… auch mit Betrag“ sind die Einwilligungen des Spenders. Nur dann steht er im gedruckten Katalog unter „Wir danken unseren Spendern“ (im Online-Katalog nie).
+- Unter „Spenden“ stehen alle Spenden dieses Spenders. „Sammelbestätigung 2026“ bestätigt alle Geldspenden eines Kalenderjahres, die noch keine Bestätigung haben, in einer Bestätigung mit Anlage. Sachspenden brauchen je eine eigene Bestätigung.
+- Unter „Zuwendungsbestätigungen“ stehen alle ausgestellten Bestätigungen zum erneuten Drucken. „Stornieren“ macht eine Bestätigung ungültig, zum Beispiel bei einem falschen Betrag; ihre Spenden lassen sich danach neu bestätigen. Das Doppel bleibt gespeichert.
+
 ## 4. Rassen und Farbenschläge
 
 Das Verzeichnis der Rassen und Farbenschläge bestimmt zweierlei: was Aussteller melden können und in welcher Reihenfolge der Katalog nummeriert wird (Ausstellungsfolge). Jede Schau nutzt **eine Version** des Verzeichnisses. So bleiben alte Kataloge stimmig, auch wenn im nächsten Jahr ein neues Verzeichnis kommt.
@@ -1428,6 +1448,28 @@ Ist die Reklamationsfrist abgelaufen und die Schau liegt über 8 Wochen zurück,
 
 ---
 
+### 5.20 Spenden
+
+Unter „Spenden“ (Abschnitt „Abschluss“ der Schau) erfassen Sie Geld- und Sachspenden für die Schau, zum Beispiel 100 € vom Bürgermeister. Mitarbeiter dürfen Spenden erfassen; bestätigen und stornieren darf nur die Ausstellungsleitung.
+
+**Spende erfassen:**
+1. Spender suchen (Name oder Ort) oder „Neuer Spender“ und Name und Anschrift eintragen.
+2. „Geld“ oder „Sache“ wählen, bei Geld „bar in die Kasse“ oder „Überweisung“.
+3. Betrag bzw. Wert eintragen. Bei Überweisung und Sache den Tag des Eingangs (leer: heute).
+4. Bei einer Sache genau bezeichnen (mit Alter, Zustand, Kaufpreis), die Herkunft wählen und angeben, ob Unterlagen zum Wert vorliegen (z. B. eine Rechnung).
+5. „Mit Gegenleistung“ ankreuzen, wenn der Spender etwas dafür bekommt, zum Beispiel eine Anzeige im Katalog. Das ist dann Sponsoring – dafür gibt es keine Zuwendungsbestätigung.
+6. „Spende bar buchen“ bzw. „Spende erfassen“.
+
+Eine Barspende steht sofort als Einnahme im Kassenbuch (Beleg S-…), und es gibt eine Spendenquittung zum Drucken. Die Quittung bestätigt den Empfang; sie ist keine Zuwendungsbestätigung.
+
+**Spende bei der Tiermeldung:** Im Meldeformular gibt es den freiwilligen Posten „Spende für die Ausstellung“. Der Betrag kommt zum Meldegeld dazu und wird mit ihm bezahlt; in der Liste steht er als „mit dem Meldegeld“. Er gilt als eingegangen, sobald die Meldung ganz bezahlt ist (oder bei der Abrechnung verrechnet wurde). Erst dann lässt er sich bestätigen. Wird die Meldung abgelehnt oder storniert, gilt er nicht mehr als eingegangen. Nach der Abrechnung des Ausstellers lässt er sich nicht mehr stornieren.
+
+**Zuwendungsbestätigung:** In einer Testschau gibt es keine. „Bestätigen“ stellt eine Bestätigung nach dem amtlichen Muster aus (Geld- oder Sachzuwendung), mit fortlaufender Nummer. Das PDF wird beim Ausstellen gespeichert und ist das Doppel, das der Verein aufbewahren muss. Drucken Sie es aus und unterschreiben Sie es von Hand. Steht statt „möglich“ ein Grund in der Spalte „Bestätigung“, geht es (noch) nicht – zum Beispiel ohne vollständige Anschrift, bei einer Gegenleistung, solange das Geld nicht eingegangen ist oder wenn die steuerlichen Angaben fehlen (siehe 3.10).
+
+**Storno:** Eine falsch erfasste Spende stornieren Sie mit Grund; eine Barspende geht dabei als Gegenbuchung aus dem Kassenbuch. Steht die Spende auf einer Zuwendungsbestätigung, stornieren Sie zuerst die Bestätigung (siehe 3.11).
+
+> **Hinweis:** Eine Ehrenpreisstiftung (Preise und Freigabe) ist keine Spende im Sinne dieser Seite und bekommt keine Zuwendungsbestätigung: Wer einen Preis stiftet, kann ihn oft selbst gewinnen. Fragen Sie im Zweifel Ihr Finanzamt.
+
 ## 6. Checkliste für den Schautag
 
 **Einige Tage vorher**
@@ -1549,6 +1591,8 @@ Ist die Reklamationsfrist abgelaufen und die Schau liegt über 8 Wochen zurück,
 | SEPA-Datei, Überweisung, Nachzahlung, Rückforderung, Quittungsstorno | – | ja |
 | Anfangsbestand, Einlage, Tagesabschluss, Nachtragsabschluss | ja | ja |
 | Entnahme aus der Kasse | – | ja |
+| Spende erfassen (bar, Überweisung, Sache), Spender anlegen | ja | ja |
+| Zuwendungsbestätigung, Sammelbestätigung, Spende oder Bestätigung stornieren, steuerliche Angaben | – | ja; Storno mit Grund |
 | Ringnummer nach Freigabe, Verkauf oder Abschluss | – | ja, mit Grund |
 
 ## Anhang B: Was ist in welcher Phase möglich?

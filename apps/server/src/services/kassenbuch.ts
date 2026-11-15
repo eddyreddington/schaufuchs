@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { and, asc, eq } from "drizzle-orm";
 import { db, type Tx } from "../db/client";
-import { auszahlung, beleg, kassenabschluss, kassenbewegung, katalogeintrag, meldung, verkauf, zahlung } from "../db/schema";
+import { auszahlung, beleg, kassenabschluss, kassenbewegung, katalogeintrag, meldung, spende, spender, verkauf, zahlung } from "../db/schema";
 import { heuteDe } from "./tiergesundheit";
 import { kurzerFehler } from "./fehlertext";
 import { mitVermerk } from "../pdf/basis";
@@ -15,21 +15,21 @@ export interface Bewegung {
   zeit: Date;
   /** Gebucht nach dem (ersten) Tagesabschluss dieses Tages – gehört in einen Nachtragsabschluss. */
   nachtrag?: boolean;
-  art: "verkauf" | "verkauf-storno" | "meldegeld" | "auszahlung" | "auszahlung-storno" | "anfangsbestand" | "einlage" | "entnahme";
+  art: "verkauf" | "verkauf-storno" | "meldegeld" | "auszahlung" | "auszahlung-storno" | "anfangsbestand" | "einlage" | "entnahme" | "spende" | "spende-storno";
   text: string;
   betragCent: number;
 }
 
 /**
  * Kassenbuch der Barkasse: alle Bargeldbewegungen nach Tagen, mit Anfangsbestand, Soll-Endbestand und Tagesabschluss.
- * Quelle sind die Buchungen selbst (Verkauf bar, Meldegeld bar, Barauszahlung, Einlage/Entnahme) – nichts wird doppelt
+ * Quelle sind die Buchungen selbst (Verkauf bar, Meldegeld bar, Barauszahlung, Einlage/Entnahme, Barspende) – nichts wird doppelt
  * erfasst. Der Anfangsbestand eines Tages ist der gezählte Bestand des letzten Abschlusses, sonst das Soll des Vortags.
  *
  * Barbuchungen bleiben auch nach dem Tagesabschluss möglich: Sie stehen als Nachtrag im Kassenbuch und bekommen einen
  * eigenen Nachtragsabschluss. Bestehende Abschlüsse bleiben unverändert (die Datenbank lässt sie nicht ändern).
  */
 export async function ladeKassenbuch(schauId: number, ex: Tx | typeof db = db) {
-  const [verk, zahl, ausz, bew, abschluesse] = await Promise.all([
+  const [verk, zahl, ausz, bew, abschluesse, spenden] = await Promise.all([
     ex
       .select({ v: verkauf, nr: katalogeintrag.katalogNr, suffix: katalogeintrag.suffix })
       .from(verkauf)
@@ -43,6 +43,11 @@ export async function ladeKassenbuch(schauId: number, ex: Tx | typeof db = db) {
     ex.select().from(auszahlung).where(and(eq(auszahlung.schauId, schauId), eq(auszahlung.art, "bar"))),
     ex.select().from(kassenbewegung).where(eq(kassenbewegung.schauId, schauId)),
     ex.select().from(kassenabschluss).where(eq(kassenabschluss.schauId, schauId)).orderBy(asc(kassenabschluss.datum), asc(kassenabschluss.nachtrag)),
+    ex
+      .select({ sp: spende, vorname: spender.vorname, nachname: spender.nachname, istFirma: spender.istFirma })
+      .from(spende)
+      .innerJoin(spender, eq(spender.id, spende.spenderId))
+      .where(and(eq(spende.schauId, schauId), eq(spende.weg, "bar"), eq(spende.art, "geld"))),
   ]);
   const b: Bewegung[] = [];
   for (const { v, nr, suffix } of verk) {
@@ -60,6 +65,11 @@ export async function ladeKassenbuch(schauId: number, ex: Tx | typeof db = db) {
   for (const k of bew) {
     const text = k.art === "anfangsbestand" ? "Anfangsbestand (Wechselgeld)" : k.art === "einlage" ? "Einlage" : "Entnahme";
     b.push({ zeit: k.createdAt, art: k.art, text: k.grund ? `${text}: ${k.grund}` : text, betragCent: k.art === "entnahme" ? -k.betragCent : k.betragCent });
+  }
+  for (const { sp, vorname, nachname, istFirma } of spenden) {
+    const wer = istFirma ? nachname : `${vorname} ${nachname}`.trim();
+    b.push({ zeit: sp.createdAt, art: "spende", text: `Spende Beleg S-${sp.id} (${wer})`, betragCent: sp.betragCent });
+    if (sp.storniertAm) b.push({ zeit: sp.storniertAm, art: "spende-storno", text: `Storno Spende S-${sp.id}: ${sp.stornoGrund}`, betragCent: -sp.betragCent });
   }
   b.sort((x, y) => x.zeit.getTime() - y.zeit.getTime());
 
@@ -205,6 +215,23 @@ export async function archiviereQuittung(s: { id: number }, ausstellerId: number
     return await archiviereBeleg(s.id, art, quittungNr, await mitVermerk(stand ? null : zweitschrift(z?.am), () => abrechnungPdf(voll!, ausstellerId, quittungNr, stand)));
   } catch (e) {
     console.error("[belege] Quittung nicht archiviert:", kurzerFehler(e));
+    return null;
+  }
+}
+
+/** Spendenquittung (Nummer = Spende) bzw. ihr Stornobeleg – abgelegt direkt nach dem Buchen, wie Kassenbelege. */
+export async function archiviereSpendenquittung(s: { id: number }, spendeId: number, storno = false) {
+  try {
+    const art = storno ? "spende-storno" : "spende";
+    const schon = await ladeBeleg(s.id, art, spendeId);
+    if (schon) return schon;
+    const { spendenquittung } = await import("./spenden-quittung");
+    const [sp] = await db.select({ am: storno ? spende.storniertAm : spende.createdAt }).from(spende).where(and(eq(spende.id, spendeId), eq(spende.schauId, s.id)));
+    if (!sp) return null;
+    const pdf = await mitVermerk(zweitschrift(sp.am), () => spendenquittung(s.id, spendeId, storno));
+    return pdf ? await archiviereBeleg(s.id, art, spendeId, pdf) : null;
+  } catch (e) {
+    console.error("[belege] Spendenquittung nicht archiviert:", kurzerFehler(e));
     return null;
   }
 }

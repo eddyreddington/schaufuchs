@@ -13,6 +13,8 @@ import { Hallenplan3DSeite } from "./seiten/hallenplan-3d-seite";
 import { Kaefige } from "./seiten/kaefige";
 import { Katalog } from "./seiten/katalog";
 import { Kassenbuch } from "./seiten/kassenbuch";
+import { Spenden } from "./seiten/spenden";
+import { SpenderSeite } from "./seiten/spender";
 import { KatalogGestalten } from "./seiten/katalog-gestalten";
 import { MeldungBearbeiten } from "./seiten/meldung-bearbeiten";
 import { Meldungen } from "./seiten/meldungen";
@@ -72,6 +74,7 @@ export const router = createBrowserRouter([
           { path: "verein/druckvorlagen/:vorlageId", element: <DruckvorlageSeite /> },
           { path: "verein/briefvorlage", element: <BriefvorlageSeite /> },
           { path: "aussteller", element: <AusstellerSeite /> },
+          { path: "spender", element: <SpenderSeite /> },
           {
             path: "schau/:schauId",
             element: <SchauRahmen />,
@@ -94,6 +97,7 @@ export const router = createBrowserRouter([
               { path: "verkauf", element: <Verkauf /> },
               { path: "abrechnung", element: <Abrechnung /> },
               { path: "kassenbuch", element: <Kassenbuch /> },
+              { path: "spenden", element: <Spenden /> },
               { path: "protokoll", element: <Protokoll /> },
               { path: "*", element: <FehlerSeite imRahmen /> },
             ],

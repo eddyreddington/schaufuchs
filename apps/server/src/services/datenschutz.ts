@@ -2,29 +2,7 @@ import { aufbewahrenBis, AUFBEWAHRUNG_BUECHER_JAHRE, AUFBEWAHRUNG_VERKAUF_JAHRE,
 import { and, count, eq, gte, inArray, isNotNull, isNull, lt, lte, ne, or, sql } from "drizzle-orm";
 import { zufallsToken } from "../auth";
 import { db, type Tx } from "../db/client";
-import {
-  aenderung,
-  aussteller,
-  auszahlung,
-  beleg,
-  bewertung,
-  gesundheit,
-  katalogeintrag,
-  meldung,
-  organisation,
-  postausgang,
-  preisart,
-  preisrichter,
-  preisvergabe,
-  prEinteilung,
-  prZuteilung,
-  schau,
-  sepaLauf,
-  sitzung,
-  stiftung,
-  verkauf,
-  zahlung,
-} from "../db/schema";
+import { aenderung, aussteller, auszahlung, beleg, bestaetigungSpende, bewertung, gesundheit, katalogeintrag, meldung, organisation, postausgang, prEinteilung, preisart, preisrichter, preisvergabe, prZuteilung, schau, sepaLauf, sitzung, spender, stiftung, verkauf, zahlung, zuwendungsbestaetigung } from "../db/schema";
 import { fehler } from "../trpc";
 import { ladeEintraege } from "./eintraege";
 import { protokolliere, type Akteur } from "./protokoll";
@@ -166,6 +144,7 @@ export async function ladeAuskunft(organisationId: number, ausstellerId: number)
       stiftungen: stiftungen.filter((x) => x.meldungId === m.id).map((x) => ({ stifter: x.stifter, anzahl: x.anzahl, betragCent: x.betragCent, vorgabe: x.vorgabe, eingegangenAm: x.eingegangenAm })),
     })),
     auszahlungen: auszahlungen.map((x) => ({ quittungNr: x.quittungNr, datum: x.createdAt, betragCent: x.betragCent, art: x.art, storniertAm: x.storniertAm })),
+    spenden: await spendenFuerAuskunft(a.id),
     belege,
     emails: post,
     protokoll,
@@ -393,6 +372,14 @@ export async function loescheAussteller(tx: Tx, organisationId: number, ausstell
     })
     .where(eq(aussteller.id, a.id));
   if (ids.length) await tx.update(stiftung).set({ stifter: "Gelöscht" }).where(inArray(stiftung.meldungId, ids));
+  // Spender-Kopie des Ausstellers: keine Nennung mehr; Name und Anschrift nur, solange ein Doppel einer
+  // Zuwendungsbestätigung aufbewahrt werden muss (die Bereinigung entfernt sie danach).
+  await tx.update(spender).set({ nennungName: false, nennungBetrag: false, email: "", notiz: "" }).where(eq(spender.ausstellerId, a.id));
+  await tx
+    .update(spender)
+    .set({ vorname: "", nachname: "Gelöscht", strasse: "", plz: "", ort: "", ausstellerId: null })
+    .where(and(eq(spender.ausstellerId, a.id), sql`not exists (select 1 from zuwendungsbestaetigung z where z.spender_id = "spender"."id")`));
+  await tx.update(spender).set({ ausstellerId: null }).where(eq(spender.ausstellerId, a.id));
   // Im Protokoll bleiben Zeitpunkt, Aktion und Bearbeiter – die Inhalte mit Namen, IBAN oder Beträgen fallen weg.
   await anonymisiereProtokoll(tx, a, ids);
   // Test-Aussteller: ins Protokoll ihrer Testschau (verschwindet mit ihr), echte ins Vereinsprotokoll.
@@ -412,7 +399,7 @@ const jahreZurueck = (jetzt: Date, jahre: number) => new Date(Date.UTC(jetzt.get
  */
 export async function bereinige(jetzt = new Date(), opts: { organisationId?: number } = {}) {
   const akteur: Akteur = { text: "Bereinigung (Speicherfrist)" };
-  const n = { sitzungen: 0, mails: 0, geburtsdaten: 0, preisrichter: 0, kaeufer: 0, protokoll: 0, belege: 0, journal: 0, nachweise: 0, anschriften: 0, geloescht: 0, gesperrt: 0, fehlgeschlagen: 0 };
+  const n = { sitzungen: 0, mails: 0, geburtsdaten: 0, preisrichter: 0, kaeufer: 0, spender: 0, protokoll: 0, belege: 0, journal: 0, nachweise: 0, anschriften: 0, geloescht: 0, gesperrt: 0, fehlgeschlagen: 0 };
   const org = opts.organisationId;
   const vereinSchau = (spalte: unknown) => (org ? sql`${spalte} in (select id from schau where organisation_id = ${org})` : sql`true`);
   if (!org) n.sitzungen = (await db.delete(sitzung).where(lt(sitzung.laeuftAb, jetzt)).returning({ id: sitzung.id })).length;
@@ -486,6 +473,27 @@ export async function bereinige(jetzt = new Date(), opts: { organisationId?: num
       .delete(beleg)
       .where(and(sql`date_trunc('year', ${beleg.createdAt}) + interval '9 years' <= now()`, vereinSchau(beleg.schauId)))
       .returning({ id: beleg.id })
+  ).length;
+  // Zuwendungsbestätigungen (Doppel, § 50 Abs. 7 EStDV) wie Belege; vorher ihre Zuordnung zu den Spenden.
+  const alteBestaetigung = sql`date_trunc('year', ${zuwendungsbestaetigung.createdAt}) + interval '9 years' <= now()`;
+  const vereinBestaetigung = org ? eq(zuwendungsbestaetigung.organisationId, org) : undefined;
+  await db.delete(bestaetigungSpende).where(inArray(bestaetigungSpende.bestaetigungId, db.select({ id: zuwendungsbestaetigung.id }).from(zuwendungsbestaetigung).where(and(alteBestaetigung, vereinBestaetigung))));
+  n.belege += (await db.delete(zuwendungsbestaetigung).where(and(alteBestaetigung, vereinBestaetigung)).returning({ id: zuwendungsbestaetigung.id })).length;
+  // Spender ohne Spende und Bestätigung innerhalb der Belegfrist: nur noch „Gelöscht“ (die Beträge bleiben für die Kasse).
+  n.spender = (
+    await db
+      .update(spender)
+      .set({ vorname: "", nachname: "Gelöscht", strasse: "", plz: "", ort: "", email: "", notiz: "", nennungName: false, nennungBetrag: false, ausstellerId: null })
+      .where(
+        and(
+          ne(spender.nachname, "Gelöscht"),
+          org ? eq(spender.organisationId, org) : undefined,
+          sql`date_trunc('year', ${spender.createdAt}) + interval '9 years' <= now()`,
+          sql`not exists (select 1 from spende x where x.spender_id = "spender"."id" and date_trunc('year', x.created_at) + interval '9 years' > now())`,
+          sql`not exists (select 1 from zuwendungsbestaetigung z where z.spender_id = "spender"."id")`,
+        ),
+      )
+      .returning({ id: spender.id })
   ).length;
 
   // Tierseuchenrechtliche Aufzeichnungen 3 Jahre nach der Schau: Gesundheitsjournal und Impf-/Tierarzt-Angaben.
@@ -567,4 +575,21 @@ export function starteBereinigung() {
       .catch((e) => console.error("[datenschutz] Bereinigung fehlgeschlagen:", kurzerFehler(e)));
   void lauf();
   setInterval(lauf, 86_400_000).unref?.();
+}
+
+/** Spenden eines Ausstellers (über seine Spender-Kopie) für die Auskunft nach Art. 15 DSGVO. */
+async function spendenFuerAuskunft(ausstellerId: number) {
+  const { ladeSpenden } = await import("./spenden");
+  const kopien = await db.select({ id: spender.id }).from(spender).where(eq(spender.ausstellerId, ausstellerId));
+  const zeilen = (await Promise.all(kopien.map((k) => ladeSpenden(db, { spenderId: k.id })))).flat();
+  return zeilen.map((z) => ({
+    datum: z.datum,
+    art: z.spende.art,
+    weg: z.spende.weg,
+    betragCent: z.spende.betragCent,
+    zweck: z.spende.zweck,
+    zuwendungsbestaetigung: z.bestaetigungNr,
+    imKatalogGenannt: z.spender.nennungName,
+    storniertAm: z.spende.storniertAm,
+  }));
 }

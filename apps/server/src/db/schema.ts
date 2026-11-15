@@ -1,7 +1,6 @@
 import { KATALOG_AUFTEILUNGEN, KATALOG_FUSSZEILEN, KATALOG_LINIEN, KATALOG_SCHRIFTEN, KATALOG_TITELBILDER, KATALOG_TITELHINTERGRUENDE, KATALOG_STILE, TERMIN_EBENEN, UNTERSUCHUNG_ARTEN, type Abweichung, type KatalogTeil, type SortierSchritt } from "@schau/domain";
 import {
   boolean,
-  customType,
   date,
   index,
   integer,
@@ -10,7 +9,6 @@ import {
   pgTable,
   serial,
   text,
-  timestamp,
   uniqueIndex,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
@@ -33,18 +31,12 @@ import {
   type KaefigMasse,
   type KaefigTyp,
   type NotenStufe,
+  type Steuerstatus,
 } from "@schau/domain";
 import { sql } from "drizzle-orm";
 import { geheimJson, geheimText } from "./geheim";
 
-const ts = (name: string) => timestamp(name, { withTimezone: true });
-const created = () => ts("created_at").notNull().defaultNow();
-/**
- * Zeitstempel von Kassenbuchungen und Tagesabschlüssen: Zeitpunkt des Einfügens (nach der Kassensperre), nicht der Beginn
- * der Transaktion – sonst sortiert eine Buchung, die auf die Sperre gewartet hat, vor einen Abschluss, der sie nicht zählte.
- */
-const createdNachSperre = () => ts("created_at").notNull().default(sql`clock_timestamp()`);
-const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" });
+import { bytea, created, createdNachSperre, ts } from "./spalten";
 
 export const phaseEnum = pgEnum("phase", PHASEN);
 export const meldeartEnum = pgEnum("meldeart", MELDEARTEN);
@@ -85,6 +77,8 @@ export const organisation = pgTable("organisation", {
   termineVeroeffentlichen: boolean("termine_veroeffentlichen").notNull().default(true),
   /** Automatische Abmeldung nach so vielen Minuten ohne Eingabe, je Rolle (packages/domain/src/abmeldung.ts); null = Vorgabe. */
   abmeldung: jsonb("abmeldung").$type<Partial<Record<"admin" | "mitarbeiter" | "preisrichter", number>>>(),
+  /** Steuerliche Angaben für Zuwendungsbestätigungen (packages/domain/src/spenden.ts); null = nicht eingetragen. */
+  steuer: jsonb("steuer").$type<Steuerstatus>(),
   createdAt: created(),
 });
 
@@ -969,7 +963,7 @@ export const beleg = pgTable(
   {
     id: serial("id").primaryKey(),
     schauId: integer("schau_id").notNull().references(() => schau.id, { onDelete: "cascade" }),
-    art: text("art", { enum: ["kaufbeleg", "kaufbeleg-storno", "quittung", "quittung-storno", "einzahlung", "eigenbeleg"] }).notNull(),
+    art: text("art", { enum: ["kaufbeleg", "kaufbeleg-storno", "quittung", "quittung-storno", "einzahlung", "eigenbeleg", "spende", "spende-storno"] }).notNull(),
     nummer: integer("nummer").notNull(),
     pdf: bytea("pdf").notNull(),
     sha256: text("sha256").notNull(),
@@ -1019,3 +1013,6 @@ export const sepaLauf = pgTable(
   },
   (t) => [uniqueIndex("sepa_lauf_nachricht").on(t.nachrichtId), uniqueIndex("sepa_lauf_offen").on(t.schauId).where(sql`status = 'offen'`)],
 );
+
+// Spenden: eigene Datei (Spender, Spenden, Zuwendungsbestätigungen).
+export * from "./schema-spenden";

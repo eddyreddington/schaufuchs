@@ -138,6 +138,34 @@ END $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS beleg_schutz_tr ON beleg;
 CREATE TRIGGER beleg_schutz_tr BEFORE UPDATE OR DELETE ON beleg FOR EACH ROW EXECUTE FUNCTION beleg_schutz_fn();
 
+-- Spenden und Zuwendungsbestätigungen (Entscheidung 013): nur Storno (einmalig), nie löschen – außer beim Löschen
+-- einer Schau bzw. des Demo-Vereins. Welche Spenden eine Bestätigung umfasst, steht fest.
+CREATE OR REPLACE FUNCTION storno_einmalig_fn() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' AND schau_loeschen_erlaubt() THEN RETURN OLD; END IF;
+  -- Zuwendungsbestätigungen nach der Aufbewahrungsfrist (wie Belege: Ende des Jahres + 8 Jahre).
+  IF TG_OP = 'DELETE' AND TG_TABLE_NAME = 'zuwendungsbestaetigung' AND date_trunc('year', OLD.created_at) + interval '9 years' <= now() THEN RETURN OLD; END IF;
+  IF TG_OP = 'DELETE' THEN RAISE EXCEPTION '% lassen sich nicht löschen – bitte stornieren.', TG_ARGV[0]; END IF;
+  IF (to_jsonb(NEW) - 'storniert_am' - 'storniert_von' - 'storno_grund') IS DISTINCT FROM (to_jsonb(OLD) - 'storniert_am' - 'storniert_von' - 'storno_grund')
+     OR OLD.storniert_am IS NOT NULL THEN
+    RAISE EXCEPTION '% lassen sich nicht ändern – nur einmal stornieren.', TG_ARGV[0];
+  END IF;
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS spende_schutz_tr ON spende;
+CREATE TRIGGER spende_schutz_tr BEFORE UPDATE OR DELETE ON spende FOR EACH ROW EXECUTE FUNCTION storno_einmalig_fn('Spenden');
+DROP TRIGGER IF EXISTS zuwendungsbestaetigung_schutz_tr ON zuwendungsbestaetigung;
+CREATE TRIGGER zuwendungsbestaetigung_schutz_tr BEFORE UPDATE OR DELETE ON zuwendungsbestaetigung FOR EACH ROW EXECUTE FUNCTION storno_einmalig_fn('Zuwendungsbestätigungen');
+-- Zuordnung Bestätigung → Spenden: fest; löschen nur mit der Schau oder wenn die Bestätigung ihre Frist hinter sich hat.
+CREATE OR REPLACE FUNCTION bestaetigung_spende_schutz_fn() RETURNS trigger AS $$
+BEGIN
+  IF TG_OP = 'DELETE' AND schau_loeschen_erlaubt() THEN RETURN OLD; END IF;
+  IF TG_OP = 'DELETE' AND EXISTS (SELECT 1 FROM zuwendungsbestaetigung z WHERE z.id = OLD.bestaetigung_id AND date_trunc('year', z.created_at) + interval '9 years' <= now()) THEN RETURN OLD; END IF;
+  RAISE EXCEPTION 'Die Spenden einer Zuwendungsbestätigung stehen fest.';
+END $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS bestaetigung_spende_schutz_tr ON bestaetigung_spende;
+CREATE TRIGGER bestaetigung_spende_schutz_tr BEFORE UPDATE OR DELETE ON bestaetigung_spende FOR EACH ROW EXECUTE FUNCTION bestaetigung_spende_schutz_fn();
+
 -- Testschauen: Test-Aussteller (aussteller.test_schau_id) nur in ihrer Testschau, echte nur in echten Schauen
 -- (services/testschau.ts). Die Anwendung prüft das selbst; der Trigger fängt jeden anderen Weg ab.
 CREATE OR REPLACE FUNCTION meldung_testschau_fn() RETURNS trigger AS $$
@@ -185,7 +213,7 @@ END $$ LANGUAGE plpgsql;
 DO $$
 DECLARE t text;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['aenderung', 'aenderung_geloescht', 'aenderung_anonymisiert', 'verkauf', 'verkauf_zahlungseingang', 'auszahlung', 'zahlung', 'kassenbewegung', 'kassenabschluss', 'beleg'] LOOP
+  FOREACH t IN ARRAY ARRAY['aenderung', 'aenderung_geloescht', 'aenderung_anonymisiert', 'verkauf', 'verkauf_zahlungseingang', 'auszahlung', 'zahlung', 'kassenbewegung', 'kassenabschluss', 'beleg', 'spende', 'zuwendungsbestaetigung', 'bestaetigung_spende'] LOOP
     EXECUTE format('DROP TRIGGER IF EXISTS %I ON %I', t || '_truncate_tr', t);
     EXECUTE format('CREATE TRIGGER %I BEFORE TRUNCATE ON %I FOR EACH STATEMENT EXECUTE FUNCTION kein_truncate_fn()', t || '_truncate_tr', t);
   END LOOP;

@@ -1,4 +1,4 @@
-import { betragInWorten, briefWerte, formatEuro, formatIban, fuelle, oeffnungszeitenZeilen } from "@schau/domain";
+import { betragInWorten, gefordertCent, briefWerte, formatEuro, formatIban, fuelle, oeffnungszeitenZeilen } from "@schau/domain";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { db } from "../db/client";
 import { aussteller, katalogeintrag, meldung, preisrichter, prEinteilung, verkauf, type schau } from "../db/schema";
@@ -136,7 +136,7 @@ export async function ausstellerUnterlagenPdf(s: Schau, meldungIds: number[]) {
     { margins: BRIEF_RAENDER },
   );
 
-  function bBogen(doc: Doc, m: typeof meldung.$inferSelect, a: typeof aussteller.$inferSelect, tiere: Eintrag[], b: { summeCent: number; bezahltCent: number; stiftungCent?: number }) {
+  function bBogen(doc: Doc, m: typeof meldung.$inferSelect, a: typeof aussteller.$inferSelect, tiere: Eintrag[], b: { summeCent: number; bezahltCent: number; stiftungCent: number; spendeCent: number }) {
     const x = doc.page.margins.left;
     const w = breite(doc);
     const werte = briefWerte(a, { verein: verein(s), schau: s.name, ort: s.ort, einlieferung: s.einlieferung, datum: heute });
@@ -176,13 +176,13 @@ export async function ausstellerUnterlagenPdf(s: Schau, meldungIds: number[]) {
       y = doc.page.margins.top;
     }
     kicker(doc, "Meldegeld", x, y, d.farbe, halb);
-    const stiftungCent = b.stiftungCent ?? 0;
-    const offen = b.summeCent + stiftungCent - b.bezahltCent;
+    const offen = gefordertCent(b) - b.bezahltCent;
     const yLinks = angaben(
       doc,
       [
         ["Meldegeld", formatEuro(b.summeCent)],
-        ...(stiftungCent ? ([["Ehrenpreisstiftung", formatEuro(stiftungCent)]] as [string, string][]) : []),
+        ...(b.stiftungCent ? ([["Ehrenpreisstiftung", formatEuro(b.stiftungCent)]] as [string, string][]) : []),
+        ...(b.spendeCent ? ([["Spende", formatEuro(b.spendeCent)]] as [string, string][]) : []),
         ["bezahlt", formatEuro(b.bezahltCent)],
         [offen > 0 ? "noch offen" : offen < 0 ? "zu viel gezahlt" : "Stand", offen === 0 ? "vollständig bezahlt" : formatEuro(Math.abs(offen))],
       ],
@@ -369,7 +369,7 @@ export async function abrechnungPdf(s: Schau, ausstellerId?: number, quittungNr?
         ["Preisgeld", z.preisgeldCent, ""],
         ["Verkaufserlös", z.verkaufCent, ""],
         [`Provision${prozent} vom Verkauf`, -z.provisionCent, ""],
-        [z.stiftungCent ? "offenes Meldegeld/Stiftung" : "offenes Meldegeld", -z.offenCent, ""],
+        [["offenes Meldegeld", z.stiftungCent && "Stiftung", z.spendeCent && "Spende"].filter(Boolean).join("/"), -z.offenCent, ""],
         ["zu viel gezahlt", z.ueberzahltCent, ""],
         // Richtung erkennbar: an den Aussteller ausgezahlt (positiv gebucht) oder vom Aussteller an den Verein gezahlt.
         ...frueher.map((b): [string, number, string] => [b.betragCent >= 0 ? `bereits ausgezahlt, Quittung ${b.quittungNr}` : `bereits vom Aussteller gezahlt, Quittung ${b.quittungNr}`, -b.betragCent, ""]),
@@ -495,7 +495,7 @@ export async function abrechnungPdf(s: Schau, ausstellerId?: number, quittungNr?
           ],
           zeilen.map((z) => [
             z.name,
-            formatEuro(z.meldebetragCent + z.stiftungCent),
+            formatEuro(z.meldebetragCent + z.stiftungCent + z.spendeCent),
             formatEuro(z.bezahltCent),
             formatEuro(z.preisgeldCent),
             formatEuro(z.verkaufCent),
@@ -514,7 +514,7 @@ export async function abrechnungPdf(s: Schau, ausstellerId?: number, quittungNr?
             streifen: d.flaeche,
             summe: [
               "Summe",
-              summe((z) => z.meldebetragCent + z.stiftungCent),
+              summe((z) => z.meldebetragCent + z.stiftungCent + z.spendeCent),
               summe((z) => z.bezahltCent),
               summe((z) => z.preisgeldCent),
               summe((z) => z.verkaufCent),

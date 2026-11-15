@@ -137,11 +137,12 @@ export function datenschutzAbschnitte(v: Vereinsangaben): Textabschnitt[] {
       ],
     },
     {
-      titel: "Käufer, Preisrichter und Stifter",
+      titel: "Käufer, Preisrichter, Stifter und Spender",
       absaetze: [
         `Von Käufern erfassen wir Name, Anschrift und Registriernummer, bei minderjährigen Käufern auch den Namen eines Erziehungsberechtigten, für Kaufbeleg und Verkaufsliste (Art. 6 Abs. 1 lit. b und c DSGVO). Die Verkaufsliste bewahren wir ${AUFBEWAHRUNG_VERKAUF_JAHRE} Jahre auf; der Kaufbeleg ist zugleich Buchungsbeleg und bleibt bis zum Ende des Jahres plus ${AUFBEWAHRUNG_BELEGE_JAHRE} Jahre. Der Kaufbeleg weist auf diese Hinweise hin.`,
         "Von Preisrichtern erfassen wir Name, Anschrift und Kontaktdaten für die Einteilung (Art. 6 Abs. 1 lit. b DSGVO). Im gedruckten Katalog steht der Name, die Anschrift nur mit Einverständnis des Preisrichters; im Internet nur der Name. Der Name bleibt als Teil von Katalog und Bewertungen dauerhaft erhalten.",
         "Stifter von Ehrenpreisen nennen wir im gedruckten Katalog. Im Internet erscheint ein Stifter nur mit Einwilligung – Aussteller mit ihrer Einwilligung in die Online-Veröffentlichung, andere Stifter, wenn sie zugestimmt haben (Art. 6 Abs. 1 lit. a und f DSGVO).",
+        `Von Spendern erfassen wir Name, Anschrift und die Spende für Spendenquittung, Zuwendungsbestätigung und Kassenbuch (Art. 6 Abs. 1 lit. b und c DSGVO, § 50 EStDV). Das Doppel der Zuwendungsbestätigung und die Belege bewahren wir bis zum Ende des Jahres plus ${AUFBEWAHRUNG_BELEGE_JAHRE} Jahre auf. Im gedruckten Katalog nennen wir einen Spender nur mit seiner Einwilligung, den Betrag nur, wenn er auch dem zugestimmt hat (Art. 6 Abs. 1 lit. a DSGVO); im Internet nie.`,
       ],
     },
     {

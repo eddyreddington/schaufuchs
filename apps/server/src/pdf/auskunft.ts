@@ -179,6 +179,26 @@ export function auskunftPdf(a: Auskunft, verein: Vereinsangaben) {
         { schrift: 8.5 },
       );
 
+    abschnitt(doc, "Spenden");
+    if (!a.spenden.length) leer(doc, "Keine Spenden.");
+    else
+      tabelle(
+        doc,
+        [
+          { titel: "Eingang", breite: 26 * MM },
+          { titel: "Art", breite: w - 26 * MM - 40 * MM - 30 * MM },
+          { titel: "Bestätigung", breite: 40 * MM },
+          { titel: "Betrag", breite: 30 * MM, align: "right" },
+        ],
+        a.spenden.map((x) => [
+          x.datum ? datumDe(x.datum) : "offen",
+          `${x.art === "sache" ? "Sache" : "Geld"}${x.zweck ? `, ${x.zweck}` : ""}${x.storniertAm ? " (storniert)" : ""}${x.imKatalogGenannt ? " · im Katalog genannt" : ""}`,
+          x.zuwendungsbestaetigung != null ? `Nr. ${x.zuwendungsbestaetigung}` : "–",
+          formatEuro(x.betragCent),
+        ]),
+        { schrift: 8.5 },
+      );
+
     abschnitt(doc, "Archivierte Belege");
     if (!a.belege.length) leer(doc, "Keine archivierten Belege.");
     else

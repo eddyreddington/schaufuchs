@@ -59,6 +59,7 @@ const GRUPPEN: { name: string | null; seiten: { pfad: string; label: string; sym
     seiten: [
       { pfad: "abrechnung", label: "Abrechnung", symbol: "abrechnung" },
       { pfad: "kassenbuch", label: "Kassenbuch", symbol: "kassenbuch" },
+      { pfad: "spenden", label: "Spenden", symbol: "spenden" },
     ],
   },
 ];
@@ -76,6 +77,7 @@ function seitenName(pfad: string, imSchau: boolean, istAdmin: boolean): string {
   if (pfad.startsWith("/stammdaten")) return "Rassen und Farbenschläge";
   if (pfad.startsWith("/benutzer")) return istAdmin ? "Benutzer" : "Mein Zugang";
   if (pfad.startsWith("/aussteller")) return "Aussteller";
+  if (pfad.startsWith("/spender")) return "Spender";
   if (pfad.startsWith("/verein")) return "Verein und Datenschutz";
   return "";
 }
@@ -154,7 +156,7 @@ export function AppRahmen() {
   const allgemein: { to: string; label: string; symbol: SymbolName; end?: boolean }[] = [
     { to: "/", label: "Alle Schauen", symbol: "schauen", end: true },
     { to: "/stammdaten", label: "Rassen und Farbenschläge", symbol: "stammdaten" },
-    ...(b.rolle === "admin" ? [{ to: "/aussteller", label: "Aussteller", symbol: "aussteller" as const }] : []),
+    ...(b.rolle === "admin" ? [{ to: "/aussteller", label: "Aussteller", symbol: "aussteller" as const }, { to: "/spender", label: "Spender", symbol: "spenden" as const }] : []),
     { to: "/benutzer", label: b.rolle === "admin" ? "Benutzer" : "Mein Zugang", symbol: "benutzer" },
     ...(b.rolle === "admin" ? [{ to: "/verein", label: "Verein und Datenschutz", symbol: "verein" as const }] : []),
   ];

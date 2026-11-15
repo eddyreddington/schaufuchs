@@ -3,7 +3,7 @@ import { fehlerText } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
 import { trpc, type Ausgabe } from "../trpc";
-import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, SEITE, Seitenkopf, TabellenRahmen, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
+import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, SEITE, Seitenkopf, Speicherleiste, TabellenRahmen, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
 
 type Richter = Ausgabe["preisrichter"]["liste"]["richter"][number];
 
@@ -223,7 +223,8 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
         .map((x) => [x.preisrichterId, Number(x.von), Number(x.bis)])
         .sort((a, b) => a[1]! - b[1]! || a[0]! - b[0]!),
     );
-  useUngespeichertWarnung(() => normal(zeilen) !== normal(start()));
+  const geaendert = normal(zeilen) !== normal(start());
+  useUngespeichertWarnung(() => geaendert);
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
@@ -246,6 +247,14 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
     },
   });
   const [fehlend, setFehlend] = useState<string[]>([]);
+  const speichernNummern = async () =>
+    (!mitRassen ||
+      (await bestaetige({
+        titel: "Einteilung speichern?",
+        text: "Die Einteilung nach Rassen gilt dann nicht mehr; die Bereiche folgen neuen Nummern nicht mehr von selbst.",
+        knopf: "Speichern",
+      }))) &&
+    speichern.mutate({ schauId, einteilung: zeilen.filter((z) => z.von && z.bis).map((z) => ({ preisrichterId: z.preisrichterId, vonNr: Number(z.von), bisNr: Number(z.bis) })) });
   const vorschlagen = async () => {
     const r = await vorschlag.refetch();
     if (r.data) {
@@ -308,23 +317,13 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
           </table>
           <div className="flex flex-wrap gap-2">
             <Knopf onClick={() => setZeilen([...zeilen, { preisrichterId: richter[0]!.id, von: "", bis: "" }])}>Bereich hinzufügen</Knopf>
-            <Knopf
-              variante="primaer"
-              laedt={speichern.isPending}
-              onClick={async () =>
-                (!mitRassen ||
-                  (await bestaetige({
-                    titel: "Einteilung speichern?",
-                    text: "Die Einteilung nach Rassen gilt dann nicht mehr; die Bereiche folgen neuen Nummern nicht mehr von selbst.",
-                    knopf: "Speichern",
-                  }))) &&
-                speichern.mutate({ schauId, einteilung: zeilen.filter((z) => z.von && z.bis).map((z) => ({ preisrichterId: z.preisrichterId, vonNr: Number(z.von), bisNr: Number(z.bis) })) })}
-            >
+            <Knopf variante="primaer" laedt={speichern.isPending} onClick={speichernNummern}>
               Einteilung speichern
             </Knopf>
           </div>
         </div>
       )}
+      <Speicherleiste sichtbar={geaendert} onVerwerfen={() => { setZeilen(start()); setFehlend([]); }} onSpeichern={speichernNummern} laedt={speichern.isPending} text="Einteilung nach Nummern geändert" knopf="Nummern-Einteilung speichern" />
     </Abschnitt>
   );
 }
@@ -349,7 +348,8 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
   const gespeichert = daten.data ? ausRegeln(daten.data.regeln) : {};
   const aktuell = wahl ?? gespeichert;
   const normal = (w: Record<string, Wahl>) => JSON.stringify(Object.entries(w).filter(([, v]) => v !== "").sort());
-  useUngespeichertWarnung(() => wahl != null && normal(wahl) !== normal(gespeichert));
+  const geaendert = wahl != null && normal(wahl) !== normal(gespeichert);
+  useUngespeichertWarnung(() => geaendert);
   const vorschlag = trpc.preisrichter.zuteilungVorschlagen.useQuery({ schauId }, { enabled: false });
   const speichern = trpc.preisrichter.zuteilungSetzen.useMutation({
     onSuccess: (x) => {
@@ -391,6 +391,21 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
       else last.set(r, (last.get(r) ?? 0) + f.anzahl);
     }
   const sparten = [...new Set(gruppen.map((g) => g.sparte))];
+  const speichernRassen = () =>
+    speichern.mutate({
+      schauId,
+      regeln: Object.entries(aktuell)
+        .filter(([, v]) => v !== "")
+        .map(([k, v]) => {
+          const [sparte, rasse, farbenschlag] = JSON.parse(k) as [string, string, string];
+          return { preisrichterId: v as number, sparte, rasse, farbenschlag };
+        }),
+    });
+  const verwerfen = () => {
+    setWahl(null);
+    setFehlend([]);
+    setOffen(null);
+  };
   const vorschlagen = async () => {
     const r = await vorschlag.refetch();
     if (!r.data) return;
@@ -487,27 +502,14 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
             ))}
           </div>
           <div className="flex flex-wrap gap-2">
-            <Knopf
-              variante="primaer"
-              laedt={speichern.isPending}
-              onClick={() =>
-                speichern.mutate({
-                  schauId,
-                  regeln: Object.entries(aktuell)
-                    .filter(([, v]) => v !== "")
-                    .map(([k, v]) => {
-                      const [sparte, rasse, farbenschlag] = JSON.parse(k) as [string, string, string];
-                      return { preisrichterId: v as number, sparte, rasse, farbenschlag };
-                    }),
-                })
-              }
-            >
+            <Knopf variante="primaer" laedt={speichern.isPending} onClick={speichernRassen}>
               Einteilung speichern
             </Knopf>
-            {wahl != null && <Knopf variante="leise" onClick={() => { setWahl(null); setFehlend([]); setOffen(null); }}>Verwerfen</Knopf>}
+            {wahl != null && <Knopf variante="leise" onClick={verwerfen}>Verwerfen</Knopf>}
           </div>
         </div>
       )}
+      <Speicherleiste sichtbar={geaendert} onVerwerfen={verwerfen} onSpeichern={speichernRassen} laedt={speichern.isPending} text="Einteilung nach Rassen geändert" knopf="Rassen-Einteilung speichern" />
     </Abschnitt>
   );
 }

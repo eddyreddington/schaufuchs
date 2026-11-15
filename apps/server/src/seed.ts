@@ -31,10 +31,12 @@ import {
   rasse,
   schau,
   sparte,
+  spender,
   stammdatenVersion,
   textbaustein,
   verkauf,
   zahlung,
+  zuwendungsbestaetigung,
 } from "./db/schema";
 import { meldebetrag } from "./services/eintraege";
 import { speichereMeldung } from "./services/meldung";
@@ -171,7 +173,10 @@ export async function demoEntfernen(): Promise<boolean> {
     await tx.delete(verkauf).where(
       inArray(verkauf.katalogeintragId, tx.select({ id: katalogeintrag.id }).from(katalogeintrag).innerJoin(schau, eq(schau.id, katalogeintrag.schauId)).where(eq(schau.organisationId, orgId))),
     );
+    // Zuwendungsbestätigungen hängen mit RESTRICT am Spender, Spenden an der Schau.
+    await tx.delete(zuwendungsbestaetigung).where(eq(zuwendungsbestaetigung.organisationId, orgId));
     await tx.delete(schau).where(eq(schau.organisationId, orgId));
+    await tx.delete(spender).where(eq(spender.organisationId, orgId));
     if (nutzerIds.length) await tx.delete(aenderung).where(and(isNull(aenderung.schauId), inArray(aenderung.benutzerId, nutzerIds)));
     await tx.delete(aussteller).where(eq(aussteller.organisationId, orgId));
     await tx.delete(textbaustein).where(eq(textbaustein.organisationId, orgId));

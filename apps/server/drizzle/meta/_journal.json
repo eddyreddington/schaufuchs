@@ -393,6 +393,13 @@
       "when": 1794741839927,
       "tag": "0055_druckvorlagen",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1794747110537,
+      "tag": "0056_spenden",
+      "breakpoints": true
     }
   ]
 }

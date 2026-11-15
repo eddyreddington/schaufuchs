@@ -13,6 +13,7 @@ import {
   preisvergabe,
   rasse,
   sparte,
+  spende,
   stiftung,
   verkauf,
   zahlung,
@@ -199,31 +200,37 @@ export async function meldebetrag(tx: Tx, meldungId: number) {
     .select({ schauId: meldung.schauId, istJugend: meldung.istJugend, istPreisrichter: meldung.istPreisrichter })
     .from(meldung)
     .where(eq(meldung.id, meldungId));
-  if (!m) return { zeilen: [], summeCent: 0, bezahltCent: 0, stiftungCent: 0 };
-  const [positionen, gebuehren, [bez], [stift]] = await Promise.all([
+  if (!m) return { zeilen: [], summeCent: 0, bezahltCent: 0, stiftungCent: 0, spendeCent: 0 };
+  const [positionen, gebuehren, [bez], [stift], [spend]] = await Promise.all([
     tx.select({ art: katalogeintrag.art }).from(katalogeintrag).where(eq(katalogeintrag.meldungId, meldungId)),
     tx.select().from(gebuehr).where(eq(gebuehr.schauId, m.schauId)),
     tx.select({ s: sum(zahlung.betragCent) }).from(zahlung).where(eq(zahlung.meldungId, meldungId)),
     tx.select({ s: sum(stiftung.betragCent) }).from(stiftung).where(eq(stiftung.meldungId, meldungId)),
+    tx.select({ s: sum(spende.betragCent) }).from(spende).where(and(eq(spende.meldungId, meldungId), isNull(spende.storniertAm))),
   ]);
   const b = berechneMeldebetrag(positionen, gebuehren, { istJugend: m.istJugend, istPreisrichter: m.istPreisrichter });
-  // Mit der Meldung zugesagte Ehrenpreisstiftung: wird mit dem Meldegeld gezahlt, ist aber kein Meldegeld.
-  return { ...b, bezahltCent: Number(bez?.s ?? 0), stiftungCent: Number(stift?.s ?? 0) };
+  // Mit der Meldung zugesagte Ehrenpreisstiftung und Spende: werden mit dem Meldegeld gezahlt, sind aber kein Meldegeld.
+  return { ...b, bezahltCent: Number(bez?.s ?? 0), stiftungCent: Number(stift?.s ?? 0), spendeCent: Number(spend?.s ?? 0) };
 }
 
 /**
- * Meldegeld für viele Meldungen einer Schau auf einmal (Einlieferungssuche): Gebühren einmal, Positionen, Zahlungen und
- * Stiftungen je eine Abfrage – gleiches Ergebnis wie meldebetrag je Meldung.
+ * Meldegeld für viele Meldungen einer Schau auf einmal (Einlieferungssuche): Gebühren einmal, Positionen, Zahlungen,
+ * Stiftungen und Spenden je eine Abfrage – gleiches Ergebnis wie meldebetrag je Meldung.
  */
 export async function meldebetraege(tx: Tx, schauId: number, meldungen: { id: number; istJugend: boolean; istPreisrichter: boolean }[]) {
   const ids = meldungen.map((m) => m.id);
   const ergebnis = new Map<number, Awaited<ReturnType<typeof meldebetrag>>>();
   if (!ids.length) return ergebnis;
-  const [positionen, gebuehren, bezahlt, gestiftet] = await Promise.all([
+  const [positionen, gebuehren, bezahlt, gestiftet, gespendet] = await Promise.all([
     tx.select({ meldungId: katalogeintrag.meldungId, art: katalogeintrag.art }).from(katalogeintrag).where(inArray(katalogeintrag.meldungId, ids)),
     tx.select().from(gebuehr).where(eq(gebuehr.schauId, schauId)),
     tx.select({ meldungId: zahlung.meldungId, s: sum(zahlung.betragCent) }).from(zahlung).where(inArray(zahlung.meldungId, ids)).groupBy(zahlung.meldungId),
     tx.select({ meldungId: stiftung.meldungId, s: sum(stiftung.betragCent) }).from(stiftung).where(inArray(stiftung.meldungId, ids)).groupBy(stiftung.meldungId),
+    tx
+      .select({ meldungId: spende.meldungId, s: sum(spende.betragCent) })
+      .from(spende)
+      .where(and(inArray(spende.meldungId, ids), isNull(spende.storniertAm)))
+      .groupBy(spende.meldungId),
   ]);
   for (const m of meldungen) {
     const b = berechneMeldebetrag(positionen.filter((p) => p.meldungId === m.id), gebuehren, { istJugend: m.istJugend, istPreisrichter: m.istPreisrichter });
@@ -231,6 +238,7 @@ export async function meldebetraege(tx: Tx, schauId: number, meldungen: { id: nu
       ...b,
       bezahltCent: Number(bezahlt.find((x) => x.meldungId === m.id)?.s ?? 0),
       stiftungCent: Number(gestiftet.find((x) => x.meldungId === m.id)?.s ?? 0),
+      spendeCent: Number(gespendet.find((x) => x.meldungId === m.id)?.s ?? 0),
     });
   }
   return ergebnis;

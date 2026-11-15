@@ -1,4 +1,4 @@
-import { formatEuro, MELDUNG_STATUS, mitVerzeichnis, verdeckeIban } from "@schau/domain";
+import { formatEuro, gefordertCent, MELDUNG_STATUS, mitVerzeichnis, verdeckeIban } from "@schau/domain";
 import { and, asc, desc, eq, ilike, inArray, isNull, or, sql, sum } from "drizzle-orm";
 import { z } from "zod";
 import { config } from "../config";
@@ -47,20 +47,21 @@ export function anrede(vorname: string, nachname: string) {
 }
 
 /** Was der Aussteller zahlt und wann – je nach Zahlungsweise der Schau (vorab per Überweisung oder bei der Einlieferung). */
-export function zahlungsZeilen(s: Pick<Schau, "bankverbindung" | "zahlungBeiEinlieferung">, betragCent: number, stiftungCent = 0): string[] {
-  const summe = betragCent + stiftungCent;
+export function zahlungsZeilen(s: Pick<Schau, "bankverbindung" | "zahlungBeiEinlieferung">, betragCent: number, stiftungCent = 0, spendeCent = 0): string[] {
+  const summe = betragCent + stiftungCent + spendeCent;
   if (summe <= 0) return ["Für diese Meldung fällt kein Meldegeld an. Die Ausstellungsleitung bestätigt sie."];
-  const betrag = stiftungCent > 0 ? `Meldegeld ${formatEuro(betragCent)} + Ehrenpreisstiftung ${formatEuro(stiftungCent)} = ${formatEuro(summe)}` : formatEuro(summe);
+  const zusatz = [stiftungCent > 0 && `Ehrenpreisstiftung ${formatEuro(stiftungCent)}`, spendeCent > 0 && `Spende ${formatEuro(spendeCent)}`].filter(Boolean);
+  const betrag = zusatz.length ? `Meldegeld ${formatEuro(betragCent)} + ${zusatz.join(" + ")} = ${formatEuro(summe)}` : formatEuro(summe);
   if (s.zahlungBeiEinlieferung) return [`Zu zahlen bei der Einlieferung der Tiere: ${betrag}`];
   return [`Zu zahlen: ${betrag}`, s.bankverbindung ? `Bankverbindung: ${s.bankverbindung}` : "", "Die Meldung wird erst nach Zahlungseingang bearbeitet."];
 }
 
-export function eingangsText(s: Schau, name: string, betragCent: number, link: string, online?: boolean, stiftungCent = 0) {
+export function eingangsText(s: Schau, name: string, betragCent: number, link: string, online?: boolean, stiftungCent = 0, spendeCent = 0) {
   return [
     name ? `Guten Tag ${name},` : "Guten Tag,",
     "",
     `Ihre Meldung zur Schau „${s.name}“ ist eingegangen.`,
-    ...zahlungsZeilen(s, betragCent, stiftungCent),
+    ...zahlungsZeilen(s, betragCent, stiftungCent, spendeCent),
     "",
     `Hier können Sie Ihre Meldung prüfen und später Ihre Ergebnisse sehen:`,
     link,
@@ -283,7 +284,7 @@ export const meldungRouter = router({
         await sperreKasse(tx, m.schauId);
         // Doppelt kassieren verhindern (zwei Helfer gleichzeitig, erneuter Klick nach Netzfehler): unter der Sperre neu rechnen.
         const b = await meldebetrag(tx, m.id);
-        const offen = b.summeCent + b.stiftungCent - b.bezahltCent;
+        const offen = gefordertCent(b) - b.bezahltCent;
         if (erwartetOffenCent !== undefined && offen !== erwartetOffenCent) {
           throw fehler("CONFLICT", `Das Meldegeld wurde inzwischen schon kassiert (offen jetzt ${(offen / 100).toFixed(2).replace(".", ",")} €). Bitte die Anzeige neu laden.`);
         }
@@ -404,7 +405,7 @@ export const meldungRouter = router({
       s.organisationId,
       a.email,
       `Meldung ${s.name}`,
-      eingangsText(s, anrede(a.vorname, a.nachname), b.summeCent, `${config.publicUrl}/s/${s.slug}/meldung/${m.zugangsToken}`, !!m.onlineZustimmungAm, b.stiftungCent),
+      eingangsText(s, anrede(a.vorname, a.nachname), b.summeCent, `${config.publicUrl}/s/${s.slug}/meldung/${m.zugangsToken}`, !!m.onlineZustimmungAm, b.stiftungCent, b.spendeCent),
       a.id,
     );
     return { ok: true };

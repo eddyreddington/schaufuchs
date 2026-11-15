@@ -1,4 +1,4 @@
-import { berechneAbrechnung, erzeugeSepaUeberweisung, imEwr, normalisiereRegistriernummer, provision, pruefeIban, REGISTRIERNUMMER_HINWEIS, verdeckeIban, type Phase } from "@schau/domain";
+import { berechneAbrechnung, gefordertCent, erzeugeSepaUeberweisung, imEwr, normalisiereRegistriernummer, provision, pruefeIban, REGISTRIERNUMMER_HINWEIS, verdeckeIban, type Phase } from "@schau/domain";
 import { and, asc, eq, gt, inArray, isNull, max, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Tx } from "../db/client";
@@ -107,10 +107,10 @@ export async function abrechnungListe(schauId: number, ex: Tx = db, opts: { nurA
       const tiere = eintraege.filter((e) => e.meldungId === m.id);
       const betrag = await meldebetrag(ex, m.id);
       const verkauft = verkaeufe.filter((v) => tiere.some((t) => t.id === v.v.katalogeintragId));
-      // Zugesagte Ehrenpreisstiftung gehört zu dem, was der Aussteller zahlt – bezahlt ist sie keine Überzahlung,
-      // offen wird sie wie offenes Meldegeld verrechnet.
+      // Zugesagte Ehrenpreisstiftung und Spende gehören zu dem, was der Aussteller zahlt – bezahlt sind sie keine
+      // Überzahlung, offen werden sie wie offenes Meldegeld verrechnet.
       const a = berechneAbrechnung({
-        meldebetragCent: betrag.summeCent + betrag.stiftungCent,
+        meldebetragCent: gefordertCent(betrag),
         bezahltCent: betrag.bezahltCent,
         preisgelderCent: tiere.flatMap((t) => t.preise.map((p) => p.betragCent)),
         verkaeufe: verkauft.map((v) => v.v),
@@ -135,10 +135,11 @@ export async function abrechnungListe(schauId: number, ex: Tx = db, opts: { nurA
         verkaufAusstehendCent: alleVerkaeufe.filter((x) => !bezahlt(x) && tiere.some((t) => t.id === x.v.katalogeintragId)).reduce((n, x) => n + x.v.preisCent, 0),
         meldebetragCent: betrag.summeCent,
         stiftungCent: betrag.stiftungCent,
+        spendeCent: betrag.spendeCent,
         bezahltCent: betrag.bezahltCent,
         ...a,
-        // Zu viel gezahlt (über Meldegeld und Stiftung hinaus): steckt wie in berechneAbrechnung im Saldo und wird für die Belege ausgewiesen.
-        ueberzahltCent: Math.max(0, betrag.bezahltCent - betrag.summeCent - betrag.stiftungCent),
+        // Zu viel gezahlt (über Meldegeld, Stiftung und Spende hinaus): steckt wie in berechneAbrechnung im Saldo und wird für die Belege ausgewiesen.
+        ueberzahltCent: Math.max(0, betrag.bezahltCent - gefordertCent(betrag)),
         /** Letzte gültige Buchung (für Anzeige und Quittung). */
         auszahlung: aus,
         buchungen,

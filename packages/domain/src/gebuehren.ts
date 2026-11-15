@@ -73,3 +73,11 @@ export function alterAm(geburtsdatum: string, stichtag: string): number {
 export function istJugendlich(geburtsdatum: string, stichtag: string, altersgrenze = JUGEND_ALTERSGRENZE): boolean {
   return alterAm(geburtsdatum, stichtag) < altersgrenze;
 }
+
+/**
+ * Was eine Meldung insgesamt fordert: Meldegeld plus die mit ihr zugesagte Ehrenpreisstiftung und Spende. Beide werden
+ * mit dem Meldegeld bezahlt, sind aber kein Meldegeld.
+ */
+export function gefordertCent(b: { summeCent: number; stiftungCent: number; spendeCent: number }): number {
+  return b.summeCent + b.stiftungCent + b.spendeCent;
+}

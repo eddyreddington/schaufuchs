@@ -1,3 +1,4 @@
+import { gefordertCent } from "@schau/domain";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AusstellerFelder, leererAussteller, type AusstellerDaten } from "../komponenten/aussteller";
@@ -95,7 +96,7 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
   const formRef = useRef<HTMLFormElement>(null);
   const ungespeichert = gespeichert.current !== stand;
   const b = vorhanden?.betrag;
-  const offen = b ? b.summeCent + b.stiftungCent - b.bezahltCent : 0;
+  const offen = b ? gefordertCent(b) - b.bezahltCent : 0;
 
   return (
     <div className={SEITE}>
@@ -121,7 +122,11 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
         <Kennzahlen
           werte={[
             { label: "Tiere", wert: vorhanden.eintraege.length },
-            { label: "Meldegeld", wert: formatEuro(b.summeCent), zusatz: b.stiftungCent > 0 ? `+ ${formatEuro(b.stiftungCent)} Stiftung` : undefined },
+            {
+              label: "Meldegeld",
+              wert: formatEuro(b.summeCent),
+              zusatz: [b.stiftungCent > 0 && `+ ${formatEuro(b.stiftungCent)} Stiftung`, b.spendeCent > 0 && `+ ${formatEuro(b.spendeCent)} Spende`].filter(Boolean).join(" ") || undefined,
+            },
             { label: "Bezahlt", wert: formatEuro(b.bezahltCent) },
             { label: "Offen", wert: formatEuro(Math.max(offen, 0)), zusatz: offen < 0 ? `${formatEuro(-offen)} zu viel` : undefined, ton: offen > 0 ? "warnung" : offen < 0 ? "warnung" : "ok" },
           ]}
@@ -252,7 +257,7 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const { eingabe, bestaetige } = useFrage();
-  const offen = daten.betrag.summeCent + daten.betrag.stiftungCent - daten.betrag.bezahltCent;
+  const offen = gefordertCent(daten.betrag) - daten.betrag.bezahltCent;
   // Storniert oder abgelehnt, aber Geld eingegangen: erstatten oder Verfall – sonst hält es den Abschluss auf.
   const ruht = m.status === "storniert" || m.status === "abgelehnt";
   const nochDa = daten.betrag.bezahltCent - m.verfallenCent;
@@ -331,6 +336,12 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
                 <tr>
                   <td className="py-0.5">+ Ehrenpreisstiftung (zugesagt)</td>
                   <td className="py-0.5 text-right">{formatEuro(daten.betrag.stiftungCent)}</td>
+                </tr>
+              )}
+              {daten.betrag.spendeCent > 0 && (
+                <tr>
+                  <td className="py-0.5">+ Spende für die Ausstellung (zugesagt)</td>
+                  <td className="py-0.5 text-right">{formatEuro(daten.betrag.spendeCent)}</td>
                 </tr>
               )}
             </tbody>

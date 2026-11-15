@@ -1,4 +1,4 @@
-import { type Phase, frontFehler, halleNormal, planeHalle, planUnordnung, gewichteteTierzahl, passtZuPreisart, ringjahrPasst, brauchtObmann, fehlendeVereinsangaben, formatKatalognummer, MELDEART_LABEL, normalisiereRegistriernummer, kontingent, type KontingentBasis, type Preisart, istAuslaendisch } from "@schau/domain";
+import { type Phase, gefordertCent, frontFehler, halleNormal, planeHalle, planUnordnung, gewichteteTierzahl, passtZuPreisart, ringjahrPasst, brauchtObmann, fehlendeVereinsangaben, formatKatalognummer, MELDEART_LABEL, normalisiereRegistriernummer, kontingent, type KontingentBasis, type Preisart, istAuslaendisch } from "@schau/domain";
 import { and, asc, count, eq, ne, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { aussteller, auszahlung, gebuehr, katalogeintrag, meldung, preisart, preisrichter, prEinteilung, schau, stiftung } from "../db/schema";
@@ -194,7 +194,7 @@ export async function checkliste(schauId: number): Promise<Punkt[]> {
   const abgerechnet = new Set(auszahlungen.filter((a) => !a.storniertAm).map((a) => a.ausstellerId));
   const rest = (
     await Promise.all(meldungen.filter((m) => m.status === "bestaetigt" && !abgerechnet.has(m.ausstellerId)).map(async (m) => ({ m, b: await meldebetrag(db, m.id) })))
-  ).filter((x) => x.b.bezahltCent < x.b.summeCent + x.b.stiftungCent);
+  ).filter((x) => x.b.bezahltCent < gefordertCent(x.b));
   if (rest.length) add("hinweis", `${anz(rest.length, "Meldung", "Meldungen")} mit offenem Restbetrag`, "meldungen");
   // Hallenkapazität: bestätigte Meldungen werden ohne Rücksicht auf die Kapazität bestätigt (bezahlt ist bezahlt).
   if (s.kapazitaet) {

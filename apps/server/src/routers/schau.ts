@@ -363,6 +363,7 @@ export const schauRouter = router({
         const hindernisse = [
           [await zahl(sql`select count(*)::int as n from meldung where schau_id = ${s.id}`), "Meldung(en)"],
           [await zahl(sql`select count(*)::int as n from stiftung where schau_id = ${s.id}`), "Stiftung(en)"],
+          [await zahl(sql`select count(*)::int as n from spende where schau_id = ${s.id}`), "Spende(n)"],
           [await zahl(sql`select count(*)::int as n from kassenbewegung where schau_id = ${s.id}`), "Kassenbuchung(en)"],
           [await zahl(sql`select count(*)::int as n from kassenabschluss where schau_id = ${s.id}`), "Tagesabschlüsse"],
           [await zahl(sql`select count(*)::int as n from auszahlung where schau_id = ${s.id}`), "Auszahlung(en)"],
