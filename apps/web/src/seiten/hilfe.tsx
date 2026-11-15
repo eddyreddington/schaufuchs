@@ -93,7 +93,7 @@ export function Hilfe() {
       <header className="nicht-drucken bg-kopf text-auf-kopf">
         <div className="flex w-full flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2 lg:px-6">
           <Link to={zurueck} className="flex items-center gap-2 font-semibold text-auf-kopf no-underline">
-            <img src="/icon.svg" alt="" className="size-6" />
+            <img src="/icon.svg" alt="" className="size-8" />
             Hilfe
           </Link>
           <nav aria-label="Handbücher" className="flex flex-wrap gap-0.5 text-sm sm:border-l sm:border-auf-kopf/15 sm:pl-4">

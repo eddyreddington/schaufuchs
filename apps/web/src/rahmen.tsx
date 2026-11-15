@@ -178,8 +178,8 @@ export function AppRahmen() {
   );
   const leiste = (
     <div className="flex min-h-full flex-col gap-4 px-2.5 py-3 text-[0.95rem]">
-      <Link to="/" className="flex items-center gap-2.5 px-2 py-1 font-display font-bold text-tinte no-underline [font-stretch:112%]">
-        <img src="/icon.svg" alt="" className="size-6" />
+      <Link to="/" className="flex items-center gap-3 px-1.5 py-1 font-display text-[1.15rem] font-bold text-tinte no-underline [font-stretch:112%]">
+        <img src="/icon.svg" alt="" className="size-11" />
         {status.data.appName}
       </Link>
       {schauId ? (
