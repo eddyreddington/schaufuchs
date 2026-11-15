@@ -37,3 +37,31 @@ export function berechneAbrechnung(e: AbrechnungEingabe): Abrechnung {
     saldoCent: preisgeldCent + verkaufCent - provisionCent - offenCent + ueberzahlt,
   };
 }
+
+/**
+ * Gesamtabrechnung eines Ausstellers als Rechenweg für die Quittung: alles, was er zahlt (Meldegeld, zugesagte
+ * Ehrenpreisstiftung und Spende), was er schon bezahlt hat, was er bekommt (Preisgeld, Verkaufserlös) und die
+ * Provision. Die Summe der Zeilen ist genau der Saldo aus berechneAbrechnung (−offen + zu viel gezahlt =
+ * −Meldegeld − Stiftung − Spende + bezahlt). Zeilen mit 0 € fallen weg.
+ */
+export function gesamtabrechnungZeilen(z: {
+  meldebetragCent: number;
+  stiftungCent: number;
+  spendeCent: number;
+  bezahltCent: number;
+  preisgeldCent: number;
+  verkaufCent: number;
+  provisionCent: number;
+  provisionText?: string;
+}): [string, number][] {
+  const zeilen: [string, number][] = [
+    ["Meldegeld", -z.meldebetragCent],
+    ["Ehrenpreisstiftung (zugesagt)", -z.stiftungCent],
+    ["Spende für die Ausstellung", -z.spendeCent],
+    ["bereits bezahlt", z.bezahltCent],
+    ["Preisgeld", z.preisgeldCent],
+    ["Verkaufserlös", z.verkaufCent],
+    [z.provisionText ?? "Provision vom Verkauf", -z.provisionCent],
+  ];
+  return zeilen.filter(([, c]) => c !== 0);
+}

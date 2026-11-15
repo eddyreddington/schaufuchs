@@ -122,6 +122,16 @@ describe("Spenden", () => {
     const nachher = (await liste()).find((z) => z.spende.meldungId === r.meldungId)!;
     expect(nachher.datum).toBe("2026-11-05");
     expect(nachher.sperren).toEqual([]);
+    // Gesamtabrechnung: Meldegeld, Spende und Bezahltes stehen einzeln auf der Quittung (abgerechnet werden bestätigte Meldungen).
+    await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
+    const { abrechnungPdf } = await import("../pdf/dokumente");
+    const [sch] = await m.db.select().from(m.schema.schau).where(m.eq(m.schema.schau.id, schauId));
+    const [meld] = await m.db.select().from(m.schema.meldung).where(m.eq(m.schema.meldung.id, r.meldungId));
+    const quittung = pdfText(await abrechnungPdf(sch!, meld!.ausstellerId)).replace(/\s+/g, " ");
+    expect(quittung).toContain("Gesamtabrechnung");
+    expect(quittung).toContain("Spende für die Ausstellung");
+    expect(quittung).toContain("bereits bezahlt");
+    expect(quittung).toContain("Meldegeld");
     // Im Katalog nur, wer eingewilligt hat (Sonja Spender ja, Bernd Bürger nicht).
     const { spenderFuerKatalog } = await import("../services/spenden");
     const genannt = await spenderFuerKatalog(schauId);

@@ -1,7 +1,7 @@
-import { betragInWorten, gefordertCent, briefWerte, formatEuro, formatIban, fuelle, oeffnungszeitenZeilen } from "@schau/domain";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { betragInWorten, gefordertCent, gesamtabrechnungZeilen, briefWerte, formatEuro, formatIban, fuelle, oeffnungszeitenZeilen } from "@schau/domain";
+import { and, asc, eq, isNull, ne } from "drizzle-orm";
 import { db } from "../db/client";
-import { aussteller, katalogeintrag, meldung, preisrichter, prEinteilung, verkauf, type schau } from "../db/schema";
+import { aussteller, katalogeintrag, meldung, prEinteilung, preisrichter, type schau, spende, spender, verkauf } from "../db/schema";
 import { abrechnungListe } from "../routers/kasse";
 import { ladeEintraege, meldebetrag, type Eintrag } from "../services/eintraege";
 import { zuteilung } from "../services/pruefung";
@@ -286,6 +286,13 @@ export async function abrechnungPdf(s: Schau, ausstellerId?: number, quittungNr?
   if (ausstellerId == null) return gesamtliste();
   const z = zeilen.find((x) => x.ausstellerId === ausstellerId);
   const [a] = z ? await db.select().from(aussteller).where(eq(aussteller.id, z.ausstellerId)) : [];
+  const eigeneSpenden = z
+    ? await db
+        .select({ id: spende.id, betragCent: spende.betragCent, art: spende.art })
+        .from(spende)
+        .innerJoin(spender, eq(spender.id, spende.spenderId))
+        .where(and(eq(spende.schauId, s.id), eq(spender.ausstellerId, z.ausstellerId), ne(spende.weg, "meldung"), isNull(spende.storniertAm)))
+    : [];
   const tiere = z ? (await ladeEintraege(s.id, { nurMeldungId: z.meldungId })).filter((e) => e.preise.length || e.verkauftAn) : [];
   const verkaeufe = z
     ? await db
@@ -320,7 +327,7 @@ export async function abrechnungPdf(s: Schau, ausstellerId?: number, quittungNr?
         titel: aus ? `${belegName} Nr. ${aus.quittungNr}` : "Vorläufige Abrechnung",
         unter: aus?.bezugQuittungNr
           ? `${aus.betragCent >= 0 ? "Nachzahlung" : "Rückforderung"} zu Quittung Nr. ${aus.bezugQuittungNr}`
-          : "Preisgeld und Verkaufserlöse aus der Schau",
+          : "Gesamtabrechnung: Meldegeld, Preise, Verkäufe und Spende",
         angaben: [
           ...(aus ? ([["Quittung", `Nr. ${aus.quittungNr}`]] as [string, string][]) : []),
           ["Datum", datumDe(aus?.createdAt ?? new Date())],
@@ -365,12 +372,9 @@ export async function abrechnungPdf(s: Schau, ausstellerId?: number, quittungNr?
       // Satz aus den Verkäufen selbst – eine spätere Änderung der Schau-Einstellung ändert keinen Beleg.
       const saetze = [...new Set(verkaeufe.map((v) => v.provisionBp ?? s.provisionBp))];
       const prozent = saetze.length === 1 ? ` ${(saetze[0]! / 100).toLocaleString("de-DE")} %` : "";
+      // Gesamtabrechnung: jeder Posten einzeln (Summe = Saldo, packages/domain/src/abrechnung.ts).
       const rechnung: [string, number, string][] = [
-        ["Preisgeld", z.preisgeldCent, ""],
-        ["Verkaufserlös", z.verkaufCent, ""],
-        [`Provision${prozent} vom Verkauf`, -z.provisionCent, ""],
-        [["offenes Meldegeld", z.stiftungCent && "Stiftung", z.spendeCent && "Spende"].filter(Boolean).join("/"), -z.offenCent, ""],
-        ["zu viel gezahlt", z.ueberzahltCent, ""],
+        ...gesamtabrechnungZeilen({ ...z, provisionText: `Provision${prozent} vom Verkauf` }).map(([t, c]): [string, number, string] => [t, c, ""]),
         // Richtung erkennbar: an den Aussteller ausgezahlt (positiv gebucht) oder vom Aussteller an den Verein gezahlt.
         ...frueher.map((b): [string, number, string] => [b.betragCent >= 0 ? `bereits ausgezahlt, Quittung ${b.quittungNr}` : `bereits vom Aussteller gezahlt, Quittung ${b.quittungNr}`, -b.betragCent, ""]),
       ];
@@ -429,7 +433,7 @@ export async function abrechnungPdf(s: Schau, ausstellerId?: number, quittungNr?
       // das Meldegeld), sondern ihren Bezug.
       const teile = aus?.bezugQuittungNr
         ? `Nachzahlung zu Quittung Nr. ${aus.bezugQuittungNr}`
-        : [z.preisgeldCent ? "Preisgeld" : "", z.verkaufCent ? "Verkaufserlöse" : ""].filter(Boolean).join(" und ") || "Abrechnung";
+        : "Gesamtabrechnung";
       const vereinskonto = s.vereinIban ? ` (IBAN ${formatIban(s.vereinIban)}${s.vereinKontoinhaber ? `, ${s.vereinKontoinhaber}` : ""})` : "";
       const anlass = aus?.bezugQuittungNr ? `Rückforderung zu Quittung Nr. ${aus.bezugQuittungNr}` : "Ausgleich der Abrechnung";
       const satz = storniert
@@ -446,6 +450,13 @@ export async function abrechnungPdf(s: Schau, ausstellerId?: number, quittungNr?
               ? `Der Betrag von ${formatEuro(betrag)} (${teile}, ${s.name}) wird auf das angegebene Konto überwiesen. Diese Zahlungsanzeige ist keine Empfangsbestätigung.`
               : `Den Betrag von ${formatEuro(betrag)} (${teile}, ${s.name}) habe ich bar erhalten.`;
       doc.font(SANS).fontSize(10).fillColor(TINTE).text(satz, x, y, { width: w });
+      // Spenden mit eigener Quittung (bar oder überwiesen, nicht über die Meldung): nur zur Übersicht, schon bezahlt.
+      if (eigeneSpenden.length)
+        doc
+          .font(SANS)
+          .fontSize(8.5)
+          .fillColor(GRAU)
+          .text(`Außerdem gespendet (mit eigener Quittung, nicht in dieser Rechnung): ${eigeneSpenden.map((x) => `${formatEuro(x.betragCent)}${x.art === "sache" ? " Sachspende" : ""}, Beleg S-${x.id}`).join("; ")}.`, x, doc.y + 2 * MM, { width: w });
       y = doc.y + 18 * MM;
       // Unterschriften nur bei Bargeld – bei Überweisungen gibt es keine Übergabe.
       if (aus && !storniert && aus.art === "bar") {

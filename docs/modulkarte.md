@@ -21,10 +21,11 @@ Tests: `abmeldung.test.ts`
 - `untaetigAbgelaufen()` – Ist die Sitzung wegen Untätigkeit abgelaufen?
 - Typen: `AbmeldungRolle`, `Abmeldung`
 
-### abrechnung.ts (39 Z.)
+### abrechnung.ts (67 Z.)
 
 - `provision()`
 - `berechneAbrechnung()`
+- `gesamtabrechnungZeilen()` – Gesamtabrechnung eines Ausstellers als Rechenweg für die Quittung: alles, was er zahlt (Meldegeld, zugesagte Ehrenpreisstiftung und Spende), was er …
 - Typen: `AbrechnungEingabe`, `Abrechnung`
 
 ### adressen.ts (152 Z.)
@@ -620,7 +621,7 @@ Tests: `zuwendungsbestaetigung.test.ts`
 - `betragFelder()` – Betrag in Ziffern und Buchstaben (BMF Nr. 5).
 - `sachSaetze()` – Text der Sachzuwendung: Bezeichnung und die zutreffenden Sätze zur Herkunft und zu den Unterlagen.
 
-Weitere Tests: `domain.test.ts`, `fristen.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `preisbindung.test.ts`, `stiftung.test.ts`
+Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `fristen.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `preisbindung.test.ts`, `stiftung.test.ts`
 
 ## tRPC-Prozeduren `apps/server/src/routers`
 
@@ -1105,7 +1106,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `dokumente-amt.ts` (245 Z.) – Listen für das Veterinäramt: abgegebene Tiere (Verkaufsliste) und Aussteller- und Tierliste. · verkaufslistePdf, tierlistePdf
 - `dokumente-gemeinsam.ts` (35 Z.) – Gemeinsame Hilfen der Dokumente einer Schau (dokumente.ts, dokumente-kasse.ts, dokumente-amt.ts): Design aus der Katalog-Gestaltung, Vereinsname, K … · nr, klasse, tier, A4_RAENDER, ladeDesign, verein, kopfzeile, fusstext, breite, unten
 - `dokumente-kasse.ts` (344 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
-- `dokumente.ts` (533 Z.) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf
+- `dokumente.ts` (544 Z.) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf
 - `hallenplan.ts` (403 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog.ts` (1.502 Z. ⚠) · KURZ_JE_ABTEILUNG, kurzauswahl, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis, katalogPdf
@@ -1207,7 +1208,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `46-automatische-abmeldung.ts` (64 Z.) – Automatische Abmeldung nach Untätigkeit (Rückmeldung 15.11.2026): Frist je Rolle unter „Verein und Datenschutz“, nur die angebotenen Minuten, Proto …
 - `47-druckvorlagen.ts` (112 Z.) – Druckvorlagen für Bewertungskarten: Vorlagen des Vereins speichern, je Schau wählen, für eine Schau abwandeln, löschen (Schau druckt dann wieder mi …
 - `48-briefvorlage.ts` (116 Z.) – Briefvorlage des Vereins: speichern (Protokoll), eigene Texte im B-Bogen, Serienbrief an Mitglieder, alle Aussteller oder die einer Schau – ohne ge …
-- `49-spenden.ts` (211 Z.) – Spenden (Entscheidung 013): steuerliche Angaben, Barspende mit Kassenbuch und Quittung, Spende bei der Meldung im offenen Betrag, Zuwendungsbestäti …
+- `49-spenden.ts` (221 Z.) – Spenden (Entscheidung 013): steuerliche Angaben, Barspende mit Kassenbuch und Quittung, Spende bei der Meldung im offenen Betrag, Zuwendungsbestäti …
 - `50-meisterschaften.ts` (60 Z.) – Meisterschaften (Entscheidung 014): Regeln speichern (Ausstellungsleitung, Protokoll), Wertung aus Katalog und Bewertung, PDF und CSV.
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
