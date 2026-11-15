@@ -89,12 +89,11 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
                 <Hinweis ton="warnung">Unbekannte Platzhalter bleiben so im Brief stehen: {falsch.map((f) => `{${f}}`).join(", ")}</Hinweis>
               </div>
             )}
-            <div className="flex flex-wrap items-center justify-end gap-3 bg-papier/60 px-5 py-3">
-              {speichern.error && <p role="alert" className="mr-auto text-sm font-semibold text-kamm">{fehlerText(speichern.error)}</p>}
-              <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>
-                Speichern
-              </Knopf>
-            </div>
+            {speichern.error && (
+              <p role="alert" className="px-5 py-3 text-sm font-semibold text-kamm">
+                {fehlerText(speichern.error)}
+              </p>
+            )}
           </Formular>
           <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setV(start)} onSpeichern={() => senden()} laedt={speichern.isPending} knopf="Vorlage speichern" />
         </form>

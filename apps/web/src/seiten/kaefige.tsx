@@ -337,11 +337,6 @@ function Grundplatten({ schauId, d, darf }: { schauId: number; d: Ausgabe["katal
         </table>
       </div>
       {halbVoll && <Hinweis className="mt-3">Plattenmaß: Länge und Tiefe angeben oder beide leer lassen.</Hinweis>}
-      {darf && d.hatHalle && (
-        <Knopf variante="primaer" className="mt-3" laedt={speichern.isPending} disabled={halbVoll} onClick={() => speichern.mutate({ schauId, platte, jePlatte, plattenMass, etagen })}>
-          Grundplatten speichern
-        </Knopf>
-      )}
       <Speicherleiste
         sichtbar={geaendert}
         onVerwerfen={() => {
@@ -408,11 +403,6 @@ function AufstellerFeld({ schauId, aufsteller, darf }: { schauId: number; aufste
         <Feld label="Farbe der Verkleidung">
           {(id) => <input id={id} type="color" value={farbe} onChange={(e) => setFarbe(e.target.value)} disabled={!darf || !an} className="h-10 w-16 cursor-pointer rounded border border-linie bg-weiss disabled:opacity-50" />}
         </Feld>
-        {darf && (
-          <Knopf variante="primaer" laedt={speichern.isPending} disabled={falsch || !geaendert} onClick={los}>
-            Aufsteller speichern
-          </Knopf>
-        )}
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <span className="text-sm font-semibold">Logo bzw. Banner der Verkleidung (z. B. vom Futtermittel-Sponsor)</span>

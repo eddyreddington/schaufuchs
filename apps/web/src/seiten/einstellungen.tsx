@@ -284,13 +284,7 @@ function Stammangaben({ schau: s }: { schau: Schau }) {
         </FormAbschnitt>
       </Formular>
       {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
-      {geaendert ? (
-        <Speicherleiste sichtbar onVerwerfen={() => setD(startwerte())} onSpeichern={() => speichern.mutate({ id: s.id, daten: d })} laedt={speichern.isPending} knopf="Einstellungen speichern" />
-      ) : (
-        <div>
-          <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>Einstellungen speichern</Knopf>
-        </div>
-      )}
+      <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setD(startwerte())} onSpeichern={() => speichern.mutate({ id: s.id, daten: d })} laedt={speichern.isPending} knopf="Einstellungen speichern" />
     </form>
   );
 }
@@ -403,7 +397,6 @@ function Gebuehren({ schau: s }: { schau: Schau }) {
             })}
           </tbody>
         </table>
-        <Knopf type="submit" variante="primaer" className="mt-4" laedt={speichern.isPending}>Gebühren speichern</Knopf>
         <Speicherleiste
           sichtbar={JSON.stringify(werte) !== JSON.stringify(start())}
           onVerwerfen={() => setWerte(start())}
@@ -607,7 +600,6 @@ function Notenskala({ schau: s }: { schau: Schau }) {
         </tbody>
       </table>
       <div className="mt-4 flex gap-2">
-        <Knopf variante="primaer" onClick={() => senden(false)} laedt={speichern.isPending}>Notenskala speichern</Knopf>
         <Speicherleiste
           sichtbar={JSON.stringify(zeilen) !== JSON.stringify(ausSchau())}
           onVerwerfen={() => setZeilen(ausSchau())}

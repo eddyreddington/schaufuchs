@@ -2,7 +2,7 @@ import { ABMELDUNG_MINUTEN, ABMELDUNG_ROLLEN, type Abmeldung } from "@schau/doma
 import { useState, type FormEvent } from "react";
 import { fehlerText } from "../lib";
 import { trpc } from "../trpc";
-import { Abschnitt, Auswahl, FehlerAnzeige, Feld, HilfeLink, Knopf, Laden, Speicherleiste, useMeldung } from "../ui";
+import { Abschnitt, Auswahl, FehlerAnzeige, Feld, HilfeLink, Laden, Speicherleiste, useMeldung } from "../ui";
 
 /** Automatische Abmeldung nach Untätigkeit, je Rolle (Verein und Datenschutz). */
 export function AutoAbmeldung() {
@@ -46,12 +46,7 @@ function AbmeldungFormular({ gespeichert }: { gespeichert: Abmeldung }) {
           </Feld>
         ))}
       </div>
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        {speichern.error && <p role="alert" className="mr-auto text-sm font-semibold text-kamm">{fehlerText(speichern.error)}</p>}
-        <Knopf type="submit" variante="primaer" laedt={speichern.isPending} disabled={!geaendert}>
-          Speichern
-        </Knopf>
-      </div>
+      {speichern.error && <p role="alert" className="text-sm font-semibold text-kamm">{fehlerText(speichern.error)}</p>}
       <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setWerte(gespeichert)} onSpeichern={() => speichern.mutate(werte)} laedt={speichern.isPending} knopf="Abmeldung speichern" />
     </form>
   );

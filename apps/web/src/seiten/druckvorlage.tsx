@@ -92,12 +92,11 @@ function Editor({ id, start, schauId, fuerSchau }: { id: number | null; start: {
               />
               {v.modus === "eigen" ? <EigeneKarte v={v} setze={setze} /> : <VordruckFelder felder={v.felder} setzen={(f) => setze("felder", f)} />}
             </FormAbschnitt>
-            <div className="flex flex-wrap items-center justify-end gap-3 bg-papier/60 px-5 py-3">
-              {speichern.error && <p role="alert" className="mr-auto text-sm font-semibold text-kamm">{fehlerText(speichern.error)}</p>}
-              <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>
-                Speichern
-              </Knopf>
-            </div>
+            {speichern.error && (
+              <p role="alert" className="px-5 py-3 text-sm font-semibold text-kamm">
+                {fehlerText(speichern.error)}
+              </p>
+            )}
           </Formular>
           <Speicherleiste sichtbar={geaendert} onVerwerfen={() => { setName(start.name); setV(start.daten); }} onSpeichern={() => senden()} laedt={speichern.isPending} knopf="Vorlage speichern" />
         </form>

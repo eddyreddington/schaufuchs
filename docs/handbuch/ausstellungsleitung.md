@@ -481,7 +481,7 @@ Käfige und Hallenplan stehen hinter den Meldungen: Erst mit den Meldungen steht
 
 Die allgemeinen Seiten („Alle Schauen“, „Rassen und Farbenschläge“ usw.) stehen darunter.
 
-**Speichern oben rechts:** Sobald Sie auf einer Seite etwas ändern (Einstellungen, Gebühren, Notenskala, Grundplatten, Katalog, Meldung, Verein, Benutzer), erscheinen oben rechts in der Kopfleiste „Verwerfen“ und der Speichern-Knopf des Formulars. Die Kopfleiste bleibt beim Scrollen stehen; Sie müssen also nicht nach unten. Haben mehrere Formulare einer Seite Ungespeichertes, steht für jedes ein eigener Knopf da (z. B. „Einstellungen speichern“ und „Gebühren speichern“). Wer die Seite mit Ungespeichertem verlässt, wird vorher gefragt.
+**Speichern oben rechts:** Gespeichert wird immer oben rechts. Sobald Sie auf einer Seite etwas ändern (Einstellungen, Gebühren, Notenskala, Grundplatten, Aufsteller, Preisrichter-Einteilung, Katalog, Meldung, Verein, steuerliche Angaben, Druck- und Briefvorlagen, Spender, Benutzer), erscheinen oben rechts in der Kopfleiste „Verwerfen“ und der Speichern-Knopf des Formulars. Nur in Fenstern (z. B. „Preisrichter bearbeiten“) und für eine einzelne Tabellenzeile (z. B. Bewertung am PC) steht „Speichern“ direkt dabei. Die Kopfleiste bleibt beim Scrollen stehen; Sie müssen also nicht nach unten. Haben mehrere Formulare einer Seite Ungespeichertes, steht für jedes ein eigener Knopf da (z. B. „Einstellungen speichern“ und „Gebühren speichern“). Wer die Seite mit Ungespeichertem verlässt, wird vorher gefragt.
 
 #### Punkte der Prüfliste
 
@@ -1061,13 +1061,13 @@ Die Seite „Preisrichter“ steht in der Seitenleiste bei der Vorbereitung (Pre
 2. Je Rasse einen Preisrichter wählen. Zur Auswahl stehen nur Preisrichter, die diese Sparte bewerten. Eine große Rasse teilen Sie mit „Farbenschläge“: Je Farbenschlag lässt sich ein anderer Preisrichter wählen, „wie die Rasse“ übernimmt den der Rasse.
 3. Oder „Gleichmäßig verteilen“: Die Software schlägt eine Einteilung vor. Sie trennt möglichst keine Rasse, beachtet die Sparten der Preisrichter, lässt eine Sparte möglichst bei einem und teilt eine Rasse nur, wenn es nicht anders geht (dann je Farbenschlag). Ein Obmann bekommt weniger Tiere: Verteilt wird im Verhältnis der Höchstzahlen aus den Einstellungen (Vorgabe 60 je Obmann zu 80 je Preisrichter). Bewertet niemand eine Sparte, steht „Kein Preisrichter für: …“ da; diese Tiere bleiben ohne Preisrichter. Ergänzen Sie dann bei einem Preisrichter die Sparte (siehe 5.7) oder legen Sie einen weiteren an. Derselbe Hinweis erscheint bei der Einteilung nach Nummern.
 4. Über der Tabelle steht, wie viele Tiere jeder Preisrichter hätte und wie viele noch ohne Preisrichter sind. Hat ein Preisrichter mehr Tiere als die Höchstzahl aus den Einstellungen (Stamm zählt 2, Voliere und Bruteier 3), nennt die Prüfliste ihn als gelben Hinweis.
-5. „Einteilung speichern“. Sind die Katalognummern schon vergeben, werden die Bereiche gleich neu berechnet.
+5. Oben rechts „Rassen-Einteilung speichern“. Sind die Katalognummern schon vergeben, werden die Bereiche gleich neu berechnet.
 
 Eine Nachmeldung mit Unternummer (24a) geht an den Preisrichter der Nummer 24 – gehörte sie nach ihrer Rasse zu einem anderen, nennt die Software die Nummer nach dem Speichern.
 
 #### Einteilung nach Nummern
 
-Darunter zeigt „Einteilung nach Nummern“ die Bereiche je Preisrichter, sobald Katalognummern vergeben sind. Hier lässt sich auch von Hand nach Nummern einteilen (ohne Einteilung nach Rassen, etwa in älteren Schauen): „Gleichmäßig verteilen“, Zeilen anpassen („von Nr.“, „bis Nr.“, „Bereich hinzufügen“, „✕“), „Einteilung speichern“. Ändern Sie die Bereiche hier, obwohl nach Rassen eingeteilt ist, fragt die Software nach: Die Einteilung nach Rassen gilt danach nicht mehr, und die Bereiche folgen neuen Nummern nicht mehr von selbst.
+Darunter zeigt „Einteilung nach Nummern“ die Bereiche je Preisrichter, sobald Katalognummern vergeben sind. Hier lässt sich auch von Hand nach Nummern einteilen (ohne Einteilung nach Rassen, etwa in älteren Schauen): „Gleichmäßig verteilen“, Zeilen anpassen („von Nr.“, „bis Nr.“, „Bereich hinzufügen“, „✕“), oben rechts „Nummern-Einteilung speichern“. Ändern Sie die Bereiche hier, obwohl nach Rassen eingeteilt ist, fragt die Software nach: Die Einteilung nach Rassen gilt danach nicht mehr, und die Bereiche folgen neuen Nummern nicht mehr von selbst.
 
 Bereiche dürfen sich nicht überschneiden. Gerät ein Bereich an einen Preisrichter, der eine der Sparten darin nicht bewertet, lehnt die Software das Speichern ab und nennt Preisrichter, Sparte und Nummern. Oben steht, wie viele Tiere „ohne Preisrichter“ sind – das muss vor der Bewertung 0 sein. Die Tabelle der Preisrichter zeigt je Person „Bereich“, „Tiere“ und „bewertet“.
 

@@ -2,7 +2,7 @@ import type { Steuerstatus } from "@schau/domain";
 import { useState, type FormEvent } from "react";
 import { fehlerText } from "../lib";
 import { trpc } from "../trpc";
-import { Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, Haken, HilfeLink, Hinweis, Knopf, Laden, Segmente, Speicherleiste, Textfeld, useAenderungenWarnen, useMeldung } from "../ui";
+import { Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, Haken, HilfeLink, Hinweis, Laden, Segmente, Speicherleiste, Textfeld, useAenderungenWarnen, useMeldung } from "../ui";
 
 /** Verein und Datenschutz, Abschnitt „Steuerliche Angaben“: Freistellungsbescheid für Zuwendungsbestätigungen. */
 export function SteuerAngaben() {
@@ -63,12 +63,11 @@ function SteuerFormular({ start, sperre }: { start: Steuerstatus; sperre: string
             </>
           )}
         </FormAbschnitt>
-        <div className="flex flex-wrap items-center justify-end gap-3 bg-papier/60 px-5 py-3">
-          {speichern.error && <p role="alert" className="mr-auto text-sm font-semibold text-kamm">{fehlerText(speichern.error)}</p>}
-          <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>
-            Speichern
-          </Knopf>
-        </div>
+        {speichern.error && (
+          <p role="alert" className="px-5 py-3 text-sm font-semibold text-kamm">
+            {fehlerText(speichern.error)}
+          </p>
+        )}
       </Formular>
       <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setSt(start)} onSpeichern={() => senden()} laedt={speichern.isPending} knopf="Steuerliche Angaben speichern" />
     </form>

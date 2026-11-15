@@ -88,12 +88,11 @@ function SpenderBearbeiten({ s }: { s: Details["spender"] }) {
           <Haken label="Darf im gedruckten Katalog als Spender genannt werden" checked={d.nennungName} onChange={(w) => setze({ nennungName: w, nennungBetrag: w && d.nennungBetrag })} />
           {d.nennungName && <Haken label="… auch mit Betrag" checked={d.nennungBetrag} onChange={(w) => setze({ nennungBetrag: w })} />}
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-3 md:col-span-2">
-          {speichern.error && <p role="alert" className="mr-auto text-sm font-semibold text-kamm">{fehlerText(speichern.error)}</p>}
-          <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>
-            Speichern
-          </Knopf>
-        </div>
+        {speichern.error && (
+          <p role="alert" className="px-5 py-3 text-sm font-semibold text-kamm">
+            {fehlerText(speichern.error)}
+          </p>
+        )}
       </form>
       <Speicherleiste sichtbar={JSON.stringify(d) !== JSON.stringify(start)} onVerwerfen={() => setD(start)} onSpeichern={() => senden()} laedt={speichern.isPending} knopf="Spender speichern" />
     </Abschnitt>

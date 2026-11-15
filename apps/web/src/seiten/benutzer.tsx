@@ -270,7 +270,6 @@ function Angaben({ b, selbst }: { b: Einzel; selbst: boolean }) {
           />
         )}
         {fehler && <Hinweis ton="fehler">{fehlerText(fehler)}</Hinweis>}
-        <div><Knopf type="submit" variante="primaer" disabled={!geaendert} laedt={speichern.isPending || rolleSetzen.isPending}>Speichern</Knopf></div>
         <Speicherleiste
           sichtbar={geaendert}
           onVerwerfen={() => {

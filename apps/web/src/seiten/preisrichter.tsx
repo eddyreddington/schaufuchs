@@ -317,9 +317,6 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
           </table>
           <div className="flex flex-wrap gap-2">
             <Knopf onClick={() => setZeilen([...zeilen, { preisrichterId: richter[0]!.id, von: "", bis: "" }])}>Bereich hinzufügen</Knopf>
-            <Knopf variante="primaer" laedt={speichern.isPending} onClick={speichernNummern}>
-              Einteilung speichern
-            </Knopf>
           </div>
         </div>
       )}
@@ -500,12 +497,6 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
                 </tbody>
               </table>
             ))}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Knopf variante="primaer" laedt={speichern.isPending} onClick={speichernRassen}>
-              Einteilung speichern
-            </Knopf>
-            {wahl != null && <Knopf variante="leise" onClick={verwerfen}>Verwerfen</Knopf>}
           </div>
         </div>
       )}

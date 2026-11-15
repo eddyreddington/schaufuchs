@@ -105,12 +105,11 @@ function Angabenformular({ daten }: { daten: Ausgabe["verein"]["get"] }) {
               )}
             </div>
           </FormAbschnitt>
-          <div className="flex flex-wrap items-center justify-end gap-3 bg-papier/60 px-5 py-3">
-            {speichern.error && <p role="alert" className="mr-auto text-sm font-semibold text-kamm">{fehlerText(speichern.error)}</p>}
-            <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>
-              Angaben speichern
-            </Knopf>
-          </div>
+          {speichern.error && (
+            <p role="alert" className="px-5 py-3 text-sm font-semibold text-kamm">
+              {fehlerText(speichern.error)}
+            </p>
+          )}
         </Formular>
         <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setA(daten.angaben)} onSpeichern={() => speichern.mutate(a)} laedt={speichern.isPending} knopf="Angaben speichern" />
       </form>
