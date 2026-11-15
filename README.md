@@ -41,12 +41,12 @@ und Preisrichter sind eingebaut.
 
 | | Voraussetzung |
 |---|---|
-| **Server-Betriebssystem** | Linux. Geprüft mit **Debian 12** und **Ubuntu 24.04 LTS** – auf einem gemieteten Server oder einem eigenen Rechner im Verein (Mini-PC, alter PC, Raspberry Pi 4/5 mit 64-Bit-System). Andere Linux-Systeme, auf denen Docker läuft, sollten gehen, sind aber nicht geprüft. |
-| **Prozessor** | 64 Bit, Intel/AMD (`amd64`) oder ARM (`arm64`, z. B. ARM-Cloud-Server). Fertige Images gibt es für beide. |
-| **Größe** | 2 CPU-Kerne, 4 GB Arbeitsspeicher, 40 GB Speicher – ein kleiner gemieteter Cloud-Server (rund 5 € im Monat) reicht. |
-| **Netz** | Eine eigene Adresse (z. B. `schau.example.org`), die per DNS (A, bei IPv6 auch AAAA) auf den Server zeigt; Ports 80 und 443 offen. |
+| **Rechner** | Ein eigener Rechner im Verein, der durchläuft (Mini-PC, alter PC, Raspberry Pi 4/5 mit 64-Bit-System), mit Linux. Geprüft mit **Debian 12** und **Ubuntu 24.04 LTS**; andere Linux-Systeme, auf denen Docker läuft, sollten gehen, sind aber nicht geprüft. |
+| **Prozessor** | 64 Bit, Intel/AMD (`amd64`) oder ARM (`arm64`, z. B. Raspberry Pi). Fertige Images gibt es für beide. |
+| **Größe** | 2 CPU-Kerne, 4 GB Arbeitsspeicher, 40 GB Speicher. |
+| **Netz** | Ein Internetanschluss mit öffentlicher IPv4-Adresse; im Router die Ports 80 und 443 an den Rechner weitergeleitet; eine eigene Adresse (z. B. `schau.example.org`), die per DNS auf den Anschluss zeigt (ohne feste IP über DynDNS). |
 | **Software** | Nur Docker mit `docker compose` – der Installer richtet es bei Bedarf selbst ein. |
-| **Laptop (Mac, Windows)** | Zum Ausprobieren, für Schulungen oder als Einzelplatz unter `https://localhost`: Mac mit Docker Desktop oder OrbStack (ab 1.2.1, geprüft mit OrbStack), Windows über WSL2 mit Ubuntu und Docker Desktop (nicht geprüft). Für eine Schau mit Online-Meldung und Tablets braucht es einen Server mit eigener Adresse. |
+| **Laptop (Mac, Windows)** | Zum Ausprobieren, für Schulungen oder als Einzelplatz unter `https://localhost`: Mac mit Docker Desktop oder OrbStack (ab 1.2.1, geprüft mit OrbStack), Windows über WSL2 mit Ubuntu und Docker Desktop (nicht geprüft). Für eine Schau mit Online-Meldung und Tablets braucht es den Rechner im Verein mit eigener Adresse. |
 | **Arbeitsplätze** | Jeder aktuelle Browser – auch auf Windows, macOS, iPad und Android-Tablets. |
 
 Benutzt wird SchauFUCHS nur im Browser; auf den Rechnern und Tablets des Vereins wird nichts installiert. Preisrichter
@@ -54,15 +54,15 @@ bewerten am Tablet auch ohne Netz (die Seite lässt sich als App auf den Startbi
 
 ### Installieren und in Betrieb nehmen
 
-Die [Anleitung](docs/installation.md) führt Schritt für Schritt vom leeren Server bis zur abgesicherten, erreichbaren
-Schau. In Kurzform:
+Die [Anleitung](docs/installation.md) führt Schritt für Schritt vom eigenen Rechner im Verein bis zur abgesicherten,
+erreichbaren Schau. Wer SchauFUCHS anders betreibt, passt die Schritte selbst an. In Kurzform:
 
 1. **SSH-Schlüssel** auf dem eigenen Computer erzeugen (`ssh-keygen -t ed25519`).
-2. **Server bereitstellen:** mieten (Ubuntu 24.04 oder Debian 12, Standort Deutschland/EU, mit
-   Auftragsverarbeitungsvertrag) oder einen eigenen Rechner im Verein nehmen (Portweiterleitung 80/443, ggf. DynDNS).
-3. **DNS-Eintrag** anlegen: `A` (und bei IPv6 `AAAA`) `schau` → Adresse des Servers. Das HTTPS-Zertifikat holt der
-   mitgelieferte Caddy danach selbst bei Let's Encrypt.
-4. **Eigenen Benutzer mit sudo** anlegen und den Schlüssel hinterlegen – gearbeitet wird nicht als root.
+2. **Rechner einrichten:** Ubuntu 24.04 oder Debian 12 mit SSH-Server und eigenem Benutzer, feste Adresse im
+   Vereinsnetz, Dauerbetrieb.
+3. **Adresse einrichten:** im Router Portweiterleitung 80/443 (ggf. DynDNS), DNS-Eintrag `schau` → Anschluss. Das
+   HTTPS-Zertifikat holt der mitgelieferte Caddy danach selbst bei Let's Encrypt.
+4. **Eigener Benutzer mit sudo:** den Schlüssel hinterlegen – gearbeitet wird nicht als root.
 5. **Absichern:** SSH nur mit Schlüssel und ohne root (`PermitRootLogin no`, `PasswordAuthentication no`), Firewall
    (ufw) nur für 22, 80 und 443, automatische Sicherheitsupdates (unattended-upgrades).
 6. **Installieren** – als eigener Benutzer, ein Befehl:
@@ -75,18 +75,18 @@ Schau. In Kurzform:
    alle Schlüssel, startet SchauFUCHS mit HTTPS und automatischen, verschlüsselten Sicherungen. Am Ende zeigt er die
    Adresse und einen Einrichtungscode. `sudo schaufuchs pruefen` fragt danach die Absicherung ab (ab 1.2.1).
 7. **Notfallblatt sichern:** `~/schaufuchs-notfallblatt.txt` (Schlüssel zum Wiederherstellen) in den Passwortmanager
-   oder ausdrucken, dann auf dem Server löschen.
+   oder ausdrucken, dann auf dem Rechner löschen.
 8. **Verein einrichten:** Adresse im Browser öffnen, mit dem Einrichtungscode den ersten Ausstellungsleiter anlegen,
    Zwei-Faktor-Anmeldung einrichten, Impressum und Datenschutzhinweise ausfüllen.
 9. **Optional Mailversand:** `sudo schaufuchs einstellungen` und `SMTP_URL` eintragen (siehe unten).
 
-Auf dem Laptop (Mac, Windows) geht es mit der Adresse `localhost` – siehe „Auf dem Laptop“ in der Anleitung.
+Auf dem Laptop (Mac, Windows) geht es mit der Adresse `localhost` – siehe „Zum Ausprobieren: auf dem Laptop“ in der Anleitung.
 Updates, Sicherung außer Haus, Wiederherstellung, Neustart, Meldungen und Notfälle stehen ebenfalls in der
 [Anleitung](docs/installation.md), Einzelheiten zu Sicherung und Hallenbetrieb in [docs/betrieb.md](docs/betrieb.md).
 
 ### Im Betrieb
 
-| Was | Befehl auf dem Server |
+| Was | Befehl auf dem Rechner |
 |---|---|
 | Läuft alles? | `sudo schaufuchs status` |
 | Neue Version einspielen (sichert vorher) | `sudo schaufuchs update` |

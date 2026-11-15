@@ -82,7 +82,7 @@ docker compose version > /dev/null 2>&1 || fehler "„docker compose“ fehlt. B
 
 # ── Fragen ────────────────────────────────────────────────────────────────
 echo "Unter welcher Adresse soll SchauFUCHS erreichbar sein? Beispiel: schau.example.org"
-echo "Die Adresse muss schon auf diesen Server zeigen (DNS-Eintrag beim Anbieter der Domain)."
+echo "Die Adresse muss schon auf diesen Rechner zeigen (DNS-Eintrag, im Router die Portweiterleitung für 80 und 443)."
 echo "Nur auf diesem Rechner ausprobieren: localhost"
 domain=$(printf '%s' "${SCHAUFUCHS_ADRESSE:-$(frage "Adresse:")}" | tr 'A-Z' 'a-z' | sed -E 's#^https?://##; s#/.*$##')
 [ -n "$domain" ] || fehler "Keine Adresse angegeben."
@@ -92,8 +92,8 @@ if [ "$domain" != "localhost" ]; then
     echo "Achtung: $domain ist (noch) nicht im DNS eingetragen. Ohne Eintrag gibt es kein HTTPS-Zertifikat."
     ja "Trotzdem fortfahren?" || fehler "Abgebrochen. Erst den DNS-Eintrag anlegen, dann neu starten."
   elif ! (hostname -I 2> /dev/null || true) | tr ' ' '\n' | grep -qx "$ziel_ip"; then
-    echo "Hinweis: $domain zeigt auf $ziel_ip – diese Adresse hat der Server selbst nicht. Das ist richtig, wenn ein"
-    echo "Router oder Anbieter die Anfragen weiterleitet; sonst stimmt der DNS-Eintrag nicht."
+    echo "Hinweis: $domain zeigt auf $ziel_ip – diese Adresse hat der Rechner selbst nicht. Das ist richtig, wenn der"
+    echo "Router die Anfragen weiterleitet (Portweiterleitung für 80 und 443); sonst stimmt der DNS-Eintrag nicht."
     ja "Fortfahren?" || fehler "Abgebrochen."
   fi
 fi
