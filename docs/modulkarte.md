@@ -142,7 +142,22 @@ Tests: `einteilung.test.ts`
 - `anteil()` – Prozentsatz in Basispunkten (1500 = 15 %), kaufmännisch gerundet auf Cent.
 - `betragInWorten()` – Betrag in Worten für Quittungen: 23550 → „zweihundertfünfunddreißig Euro und fünfzig Cent“.
 
-### hallenplan-3d.ts (543 Z.)
+### hallenplan-3d-rundgang.ts (65 Z.)
+Automatischer Rundgang durch die Halle (3D): die Gänge zwischen den Reihen in Schlangenlinie, in Augenhöhe.
+Tests: `hallenplan-3d-rundgang.test.ts`
+
+- `RUNDGANG_HOEHE` – Augenhöhe beim Rundgang (cm) und Höhe über einem Reihenende.
+- `RUNDGANG_UEBER`
+- `rundgang()` – Wegpunkte des Rundgangs in Szene-Koordinaten (cm; x entlang der Breite, z entlang der Länge, y Höhe), vor dem Drehen der Szene.
+- Typen: `RundgangPunkt`
+
+### hallenplan-3d-waende.ts (57 Z.)
+3D-Wände entlang eines freien Grundrisses (Entscheidung 019).
+
+- `ohneSeite()` – Die Seite gehört nur zu Wänden, nicht zur Türöffnung.
+- `waendeImGrundriss()` – Wände entlang eines freien Grundrisses (Entscheidung 019): je Kante ein Wandstück außen an der Kante, bis zum um die Wanddicke versetzten Umriss – …
+
+### hallenplan-3d.ts (561 Z.)
 Hallenplan räumlich: aus dem gerechneten Plan (`planeHalle`) die Körper für die 3D-Ansicht – Wände mit Türen, Aufsteller unter den Grundplatten, Kä …
 Tests: `hallenplan-3d.test.ts`
 
@@ -251,6 +266,40 @@ Tests: `hallenplan-neu.test.ts`
 - `fehlendeImPlan()` – Stellen für die Tiere ohne Platz – dieselbe Suche für „Plan neu setzen“ und den Knopf „Alle fehlenden Käfige einsetzen“ (siehe `fehlendeEinsetzen`) …
 - `vonHandGeplant()` – Steht im Plan etwas von Hand Geplantes, das beim Neu-Setzen wegfiele?
 
+### hallenplan-umriss-pruefen.ts (67 Z.)
+Prüfung einer Halle mit freiem Grundriss vor dem Speichern (Entscheidung 019): Grundriss gültig, Breite und Länge passen dazu, keine Fläche und kei …
+Tests: `hallenplan-umriss-pruefen.test.ts`
+
+- `pruefeHallenUmriss()` – Mit `vorher` (gespeicherte Halle) nur, was durch diese Änderung neu hinausragt: ein Teil, das schon vorher draußen stand (etwa nach einer größeren …
+- `grundrissUebernehmen()` – Einen bearbeiteten Grundriss in die Halle übernehmen: einheitlich schreiben (`umrissNormal`), Breite und Länge danach.
+
+### hallenplan-umriss.ts (295 Z.)
+Freier Grundriss der Halle (Entscheidung 019): ein rechtwinkliges Vieleck in Hallenkoordinaten (cm, x nach rechts entlang der Breite, y nach unten …
+Tests: `hallenplan-umriss.test.ts`
+
+- `WandAussen` (Typ) – Seite, nach der eine Wand außen zeigt (wie man auf den Plan schaut).
+- `UMRISS_MIN` – Mindestmaß des Grundrisses (cm), wie bei der rechteckigen Halle.
+- `rechteckUmriss()`
+- `umrissVon()` – Umriss einer Halle: der gezeichnete oder das Rechteck aus Breite und Länge.
+- `umlaufsinn()` – Umlaufsinn: 1 im Uhrzeigersinn auf dem Plan, −1 dagegen (eine über die Gegenwand gezogene Wand kehrt ihn um).
+- `WAND_MIN` – Kürzeste erlaubte Wand (cm): sonst entstünden Hallenarme, in denen nichts stehen kann.
+- `umrissFlaeche()`
+- `umrissMasse()`
+- `umrissNormal()` – Einheitliche Form: links oben bei 0/0, im Uhrzeigersinn, ohne doppelte Ecken und ohne Ecken mitten auf einer geraden Wand, Beginn an der obersten, …
+- `pruefeUmriss()` – Ist der Grundriss gültig?
+- `punktInUmriss()` – Liegt der Punkt in der Halle?
+- `umrissSperren()` – Was im umschließenden Rechteck außerhalb der Halle liegt, als möglichst wenige Rechtecke (Zeilen zusammengefasst, dann gleich breite Stücke unterei …
+- `umrissKanten()` – Wände des Grundrisses mit ihrer Außenseite (für Zeichnung, 3D und Türen).
+- `wandZiehen()` – Wand `i` (von Ecke i zu Ecke i+1) senkrecht verschieben: positiv nach innen, negativ nach außen.
+- `istRechteckUmriss()` – Ist der Grundriss ein einfaches Rechteck (oder keiner)?
+- `AUSSEN_NAME` – Name der Sperrflächen außerhalb des Grundrisses (in Meldungen beim Verschieben).
+- `mitUmrissSperren()` – Halle für die Planung: dazu die Sperrflächen außerhalb des Grundrisses (markiert mit `aussen`, nie gespeichert).
+- `wandTeilen()` – Wand `i` an der Stelle `bei` teilen (x bei waagrechter, y bei senkrechter Wand); ein Teilstück lässt sich dann ziehen.
+- `umrissVersetzt()` – Umriss um `d` nach außen versetzt (Außenkante der Wand bei Wanddicke `d`).
+- `tuerOeffnung()` – Öffnung in der Wand für einen Eingang `f` (Rechteck in der Halle, an einer Wand anliegend, `spiel` cm Toleranz): das Stück der Wand vor dem Eingang …
+- `eingangAnWand()` – Eingang an die Wand, die `mitte` am nächsten liegt: `laenge` cm entlang der Wand (ab `von`, sonst mittig um `mitte`), `tiefe` cm in die Halle hinei …
+- Typen: `Punkt`, `UmrissKante`
+
 ### hallenplan-versetzen.ts (171 Z.)
 Tiere im festen Hallenplan von Hand versetzen (Rückmeldung 15.11.2026: „ich will auch käfige frei zuordnen können im halleneditor und ggf tiere ver …
 Tests: `hallenplan-versetzen.test.ts`
@@ -284,7 +333,7 @@ Tests: `hallenplan-wandfront.test.ts`
 - `wandKandidaten()` – Kandidaten aus einem gerechneten Plan (Lage samt Versatz und Drehung): alle Grundplatten, Käfigblöcke und eingesetzten Volieren.
 - `wandDrehungenAnwenden()` – Drehungen in die Halle übernehmen: Grundplatten über ihre Drehung (um die eigene Mitte), Teile über ihre Front.
 
-### hallenplan.ts (1.557 Z. ⚠)
+### hallenplan.ts (1.580 Z. ⚠)
 Hallenplan: Wie stehen die Käfige in der Halle?
 
 - `EntfernterPlatz` (Typ) – Entfernte leere Grundplatte (Lage der Platte) bzw. entfernter freier Platz im festen Plan.
@@ -363,7 +412,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (46 Z.)
+### index.ts (49 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -680,7 +729,7 @@ Tests: `zuwendungsbestaetigung.test.ts`
 - `betragFelder()` – Betrag in Ziffern und Buchstaben (BMF Nr. 5).
 - `sachSaetze()` – Text der Sachzuwendung: Bezeichnung und die zutreffenden Sätze zur Herkunft und zu den Unterlagen.
 
-Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `fristen.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `preisbindung.test.ts`, `stiftung.test.ts`
+Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `preisbindung.test.ts`, `stiftung.test.ts`
 
 ## tRPC-Prozeduren `apps/server/src/routers`
 
@@ -821,7 +870,7 @@ Import aus Altprogrammen (Entscheidung 015), nur Administratoren: Datei lesen (C
 - `katalogGestaltung.beitragLoeschen` mutation · admin
 - `katalogGestaltung.beitraegeOrdnen` mutation · admin – Neue Reihenfolge einer Art (Grußworte, Anzeigen, Seiten) als Liste der IDs.
 
-### routers/katalog.ts (1.268 Z. ⚠) → `katalog`, `halle`
+### routers/katalog.ts (1.295 Z. ⚠) → `katalog`, `halle`
 
 - `katalog.kaefigbedarf` query · angemeldet – Käfigbedarf: je Käfiggröße die gemeldeten und bestätigten Tiere (ohne fehlende) und die Käfignummern (= Katalognummern) der bestätigten.
 - `katalog.aufstellerSetzen` mutation · admin – Höhe der Aufsteller (cm), auf denen die Grundplatten stehen; null = wieder Vorgabe.
@@ -1069,34 +1118,37 @@ Umgebung der 3D-Halle (nur zur Anschauung, ohne Maße): Himmel mit Wolken, Wiese
 Hallenplan in 3D als eigene Seite (eigener Browser-Tab, ohne Seitenleiste): zeigt den gespeicherten Stand des Plans.
 Prozeduren: auth.status, katalog.hallenplan, schau.get
 
-### hallenplan-3d.tsx (959 Z. ⚠)
+### hallenplan-3d.tsx (969 Z. ⚠)
 Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben oder im Gang in Augenhöhe.
 
 ### hallenplan-aktionen.ts (206 Z.)
 Werkzeuge des Hallenplan-Editors für die Auswahl und für neue Teile: am Raster ausrichten, drehen, an den Platz zurück, Leeres entfernen, Teile und …
 
-### hallenplan-befehle.ts (286 Z.)
+### hallenplan-befehle.ts (296 Z.)
 Befehle des Hallenplan-Editors, die über den Entwurf hinausgehen: Rückgängig/Wiederholen, Tier versetzen, nach Plan nummerieren, Einstellungen der …
 Prozeduren: katalog.nummernNachPlan, katalog.tierVersetzen, katalog.wandreiheStellen
 
 ### hallenplan-bild-bedienung.ts (307 Z.)
 Bedienung der Hallenplan-Zeichnung: Teile greifen, ziehen und loslassen (mit Prüfung gegen Wände und andere Teile), Auswahlrahmen, Fläche aufziehen …
 
-### hallenplan-bild.tsx (485 Z.)
+### hallenplan-bild.tsx (478 Z.)
 Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
 
-### hallenplan-eigenschaften.tsx (535 Z.)
+### hallenplan-eigenschaften.tsx (547 Z.)
 Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle (`HalleEigenschaften`) mit ihren Eingabefe …
 
 ### hallenplan-entwuerfe.tsx (162 Z.)
 Prozeduren: hallenentwurf.entscheiden, hallenentwurf.laden, hallenentwurf.liste, hallenentwurf.loeschen, hallenentwurf.speichern, hallenentwurf.umbenennen
 
-### hallenplan-entwurf.ts (145 Z.)
+### hallenplan-entwurf.ts (149 Z.)
 Entwurf des Hallenplan-Editors und alles, was ihn speichert: jede Änderung wirkt sofort im Entwurf und geht der Reihe nach an den Server (`kette`), …
 Prozeduren: katalog.halleSetzen, katalog.planFestschreiben, katalog.planNeuSetzen
 
-### hallenplan-geometrie.ts (530 Z.)
+### hallenplan-geometrie.ts (534 Z.)
 Reine Rechnungen des Hallenplan-Editors (ohne React): Auswahl und Teile, Lage und Versatz von Reihen, Platten und Objekten, Hindernisse (`planKoerp …
+
+### hallenplan-grundriss.tsx (199 Z.)
+Grundriss der Halle bearbeiten (Entscheidung 019): Wände ziehen (rechtwinklig, 10-cm-Raster), eine Wand per Doppelklick teilen, „Rechteck“ setzt zu …
 
 ### hallenplan-teile.tsx (229 Z.)
 Kleine Teile des Hallenplans: Muster und Legende, Tiere ohne Platz, Sparten in den Reihen, Angaben zu einem Käfig, Schalter „Automatisch planen“.
@@ -1115,7 +1167,7 @@ Bausteine der Werkzeugleiste im Hallenplan-Editor: Symbole, Werkzeugknöpfe mit 
 ### hallenplan-werkzeugleiste.tsx (206 Z.)
 Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen, Zoom, Menü „Plan“).
 
-### hallenplan.tsx (472 Z.) – `/schau/:schauId/hallenplan`
+### hallenplan.tsx (473 Z.) – `/schau/:schauId/hallenplan`
 Seite „Hallenplan“: neue Halle anlegen und der Editor (`Plan`) mit Speichern, Rückgängig, Auswahl und Tastatur.
 Prozeduren: katalog.halleSetzen, katalog.hallenplan
 
@@ -1262,7 +1314,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `dokumente-gemeinsam.ts` (35 Z.) – Gemeinsame Hilfen der Dokumente einer Schau (dokumente.ts, dokumente-kasse.ts, dokumente-amt.ts): Design aus der Katalog-Gestaltung, Vereinsname, K … · nr, klasse, tier, A4_RAENDER, ladeDesign, verein, kopfzeile, fusstext, breite, unten
 - `dokumente-kasse.ts` (344 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
 - `dokumente.ts` (544 Z.) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf
-- `hallenplan.ts` (403 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
+- `hallenplan.ts` (417 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog.ts` (1.511 Z. ⚠) · KURZ_JE_ABTEILUNG, kurzauswahl, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis, katalogPdf
 - `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
@@ -1374,5 +1426,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `53-teilschauen.ts` (103 Z.) – Teilschauen (Entscheidung 016): anlegen, umbenennen, nicht entfernen solange Meldungen daran hängen; Meldung intern und online einer Teilschau zuor …
 - `54-hallenentwuerfe.ts` (65 Z.) – Entwürfe des Hallenplans (Entscheidung 017): speichern, laden, umbenennen, löschen; entscheiden legt die übrigen ins Archiv; aus dem Archiv in eine …
 - `55-lastschrift.ts` (219 Z.) – SEPA-Lastschrift (Entscheidung 018): Gläubiger-ID, Mandate, Lastschriftdatei nur für offenes Meldegeld mit gültigem Mandat, Vorabankündigung, Sperr …
+- `56-grundriss.ts` (62 Z.) – Freier Grundriss der Halle (Entscheidung 019): speichern, prüfen (gültig, passt zu Breite/Länge, nichts außerhalb), ein Rechteck als Grundriss gilt …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

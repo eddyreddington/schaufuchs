@@ -10,6 +10,9 @@ import { BANK_HOEHE, blockPlatz, objektFront, etagenVon, frontDerReihe, istMoebe
 import { kaefigMass, type KaefigMasse, type KaefigTyp } from "./kaefige";
 import { artenDerSparte } from "./textbausteine";
 import { zeichnungDerHalle } from "./hallenplan-druck";
+import { rundgang, type RundgangPunkt } from "./hallenplan-3d-rundgang";
+import { ohneSeite, waendeImGrundriss } from "./hallenplan-3d-waende";
+import { istRechteckUmriss, type Punkt, umrissNormal } from "./hallenplan-umriss";
 
 /** Aufsteller (Gestelle, auf denen die Grundplatten mit den Käfigen stehen). */
 export interface Aufsteller {
@@ -88,6 +91,8 @@ export interface Quader {
   b: number;
   t: number;
   h: number;
+  /** Nur Wände: nach welcher Seite die Wand außen zeigt (beim freien Grundriss auch abseits des Hallenrands). */
+  seite?: SzeneSeite;
 }
 
 
@@ -149,6 +154,8 @@ export interface SzeneBeschriftung {
 export interface HallenSzene {
   breite: number;
   laenge: number;
+  /** Freier Grundriss (Entscheidung 019) in Szene-Koordinaten (x, z als x, y); fehlt bei rechteckiger Halle. */
+  umriss?: Punkt[];
   wandHoehe: number;
   wandDicke: number;
   waende: Quader[];
@@ -164,6 +171,8 @@ export interface HallenSzene {
   beschriftungen: SzeneBeschriftung[];
   /** Standpunkt für die Ansicht im Gang: Augenhöhe, Blick den Gang entlang. */
   gang: { von: { x: number; y: number; z: number }; nach: { x: number; y: number; z: number } };
+  /** Automatischer Rundgang: Wegpunkte durch die Gänge (cm), siehe hallenplan-3d-rundgang.ts. */
+  rundgang: RundgangPunkt[];
 }
 
 export const WAND_HOEHE = 350;
@@ -237,7 +246,8 @@ function tuerWand(halle: Pick<Halle, "breite" | "laenge">, f: Pick<HallenFlaeche
 }
 
 /** Wände um die Halle (außen anliegend), mit Öffnungen an den Türen und einem Sturz darüber. */
-function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen">): { waende: Quader[]; tueren: SzeneTuer[] } {
+function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen" | "umriss">): { waende: Quader[]; tueren: SzeneTuer[] } {
+  if (!istRechteckUmriss(halle.umriss)) return waendeImGrundriss(umrissNormal(halle.umriss!), halle.flaechen.filter((f) => !f.aussen), { dicke: WAND_DICKE, hoehe: WAND_HOEHE, tuerHoehe: TUER_HOEHE });
   const B = halle.breite, L = halle.laenge, d = WAND_DICKE;
   const oeffnungen: Record<"x0" | "x1" | "z0" | "z1", { von: number; bis: number; name: string }[]> = { x0: [], x1: [], z0: [], z1: [] };
   for (const f of halle.flaechen) {
@@ -253,10 +263,10 @@ function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen">): 
   const tueren: SzeneTuer[] = [];
   // Je Wand: Abschnitte zwischen den Öffnungen voll hoch, über den Öffnungen der Sturz. Die Wände an x laufen über die Ecken.
   const seiten = [
-    { w: "z0" as const, len: B, q: (a: number, b: number, y: number, h: number): Quader => ({ x: a, z: -d, y, b: b - a, t: d, h }) },
-    { w: "z1" as const, len: B, q: (a: number, b: number, y: number, h: number): Quader => ({ x: a, z: L, y, b: b - a, t: d, h }) },
-    { w: "x0" as const, len: L, q: (a: number, b: number, y: number, h: number): Quader => ({ x: -d, z: a, y, b: d, t: b - a, h }) },
-    { w: "x1" as const, len: L, q: (a: number, b: number, y: number, h: number): Quader => ({ x: B, z: a, y, b: d, t: b - a, h }) },
+    { w: "z0" as const, len: B, q: (a: number, b: number, y: number, h: number): Quader => ({ x: a, z: -d, y, b: b - a, t: d, h, seite: "z0" }) },
+    { w: "z1" as const, len: B, q: (a: number, b: number, y: number, h: number): Quader => ({ x: a, z: L, y, b: b - a, t: d, h, seite: "z1" }) },
+    { w: "x0" as const, len: L, q: (a: number, b: number, y: number, h: number): Quader => ({ x: -d, z: a, y, b: d, t: b - a, h, seite: "x0" }) },
+    { w: "x1" as const, len: L, q: (a: number, b: number, y: number, h: number): Quader => ({ x: B, z: a, y, b: d, t: b - a, h, seite: "x1" }) },
   ];
   for (const s of seiten) {
     const o = [...oeffnungen[s.w]].sort((a, b) => a.von - b.von);
@@ -266,7 +276,7 @@ function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen">): 
       const von = Math.max(pos, x.von);
       if (x.bis > von + 0.5) {
         waende.push(s.q(von, x.bis, TUER_HOEHE, WAND_HOEHE - TUER_HOEHE));
-        tueren.push({ q: s.q(von, x.bis, 0, TUER_HOEHE), name: x.name, notausgang: /not/.test(klein(x.name)) });
+        tueren.push({ q: ohneSeite(s.q(von, x.bis, 0, TUER_HOEHE)), name: x.name, notausgang: /not/.test(klein(x.name)) });
       }
       pos = Math.max(pos, x.bis);
     }
@@ -391,6 +401,7 @@ export function hallenSzene(
 
   const szene: HallenSzene = {
     breite: halle.breite,
+    ...(istRechteckUmriss(halle.umriss) ? {} : { umriss: umrissNormal(halle.umriss!) }),
     laenge: halle.laenge,
     wandHoehe: WAND_HOEHE,
     wandDicke: WAND_DICKE,
@@ -404,6 +415,7 @@ export function hallenSzene(
     schuerzen: verkleidungVon(aufsteller).an ? schuerzenFuer(sockel, Math.max(0, ah - PLATTEN_STAERKE)) : [],
     beschriftungen,
     gang: gangStandpunkt(halle, plan),
+    rundgang: rundgang(halle, plan),
   };
   // Wie der 2D-Plan: liegt die Halle dort quer (lange Seite waagrecht), sind x und y vertauscht – dieselbe Abbildung hier,
   // sonst wäre die Halle in 3D spiegelverkehrt.
@@ -415,7 +427,8 @@ export function hallenSzene(
  * gilt für die Szene: x nach rechts und z nach unten wie in der Zeichnung des Plans.
  */
 export function vertauscht(s: HallenSzene): HallenSzene {
-  const q = (a: Quader): Quader => ({ x: a.z, z: a.x, y: a.y, b: a.t, t: a.b, h: a.h });
+  const seite: Record<SzeneSeite, SzeneSeite> = { x0: "z0", x1: "z1", z0: "x0", z1: "x1" };
+  const q = (a: Quader): Quader => ({ x: a.z, z: a.x, y: a.y, b: a.t, t: a.b, h: a.h, ...(a.seite ? { seite: seite[a.seite] } : {}) });
   const r = (a: Rechteck): Rechteck => ({ x: a.y, y: a.x, b: a.h, h: a.b });
   const blick: Record<Blick, Blick> = { "x+": "z+", "x-": "z-", "z+": "x+", "z-": "x-" };
   const p = (a: { x: number; y: number; z: number }) => ({ x: a.z, y: a.y, z: a.x });
@@ -423,6 +436,7 @@ export function vertauscht(s: HallenSzene): HallenSzene {
     ...s,
     breite: s.laenge,
     laenge: s.breite,
+    ...(s.umriss ? { umriss: s.umriss.map((u) => ({ x: u.y, y: u.x })) } : {}),
     waende: s.waende.map(q),
     tueren: s.tueren.map((t) => ({ ...t, q: q(t.q) })),
     flaechen: s.flaechen.map((f) => ({ ...f, q: r(f.q) })),
@@ -433,6 +447,7 @@ export function vertauscht(s: HallenSzene): HallenSzene {
     schuerzen: s.schuerzen.map((m) => ({ ...m, q: q(m.q), aussen: blick[m.aussen] })),
     beschriftungen: s.beschriftungen.map((b) => ({ ...b, x: b.z, z: b.x })),
     gang: { von: p(s.gang.von), nach: p(s.gang.nach) },
+    rundgang: s.rundgang.map(p),
   };
 }
 
@@ -441,6 +456,7 @@ export type SzeneSeite = "x0" | "x1" | "z0" | "z1";
 
 /** An welchen Seiten ein Wandstück steht (eine Ecke an zweien). */
 export function wandSeiten(w: Quader, s: Pick<HallenSzene, "breite" | "laenge">): SzeneSeite[] {
+  if (w.seite) return [w.seite];
   const seiten: SzeneSeite[] = [];
   if (w.x + w.b <= 0.5) seiten.push("x0");
   if (w.x >= s.breite - 0.5) seiten.push("x1");
@@ -466,7 +482,9 @@ export const WAND_DURCHSICHTIG = 0.08;
 export function wandDeckkraft(w: Quader, s: Pick<HallenSzene, "breite" | "laenge" | "wandHoehe">, kamera: { x: number; y: number; z: number }, ziel: { x: number; y: number; z: number }): number {
   let deck = 1;
   for (const seite of wandSeiten(w, s)) {
-    const aussen = seite === "x0" ? -kamera.x : seite === "x1" ? kamera.x - s.breite : seite === "z0" ? -kamera.z : kamera.z - s.laenge;
+    // Abstand der Kamera vor der Innenfläche dieser Wand (nach außen positiv); ohne Seitenangabe der Hallenrand.
+    const innenX0 = w.seite ? w.x + w.b : 0, innenX1 = w.seite ? w.x : s.breite, innenZ0 = w.seite ? w.z + w.t : 0, innenZ1 = w.seite ? w.z : s.laenge;
+    const aussen = seite === "x0" ? innenX0 - kamera.x : seite === "x1" ? kamera.x - innenX1 : seite === "z0" ? innenZ0 - kamera.z : kamera.z - innenZ1;
     deck = Math.min(deck, 1 - (1 - WAND_DURCHSICHTIG) * weich(-20, 100, aussen));
   }
   if (kamera.y > s.wandHoehe) {

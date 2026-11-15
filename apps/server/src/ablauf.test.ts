@@ -88,3 +88,4 @@ import "./tests/52-import-befunde";
 import "./tests/53-teilschauen";
 import "./tests/54-hallenentwuerfe";
 import "./tests/55-lastschrift";
+import "./tests/56-grundriss";

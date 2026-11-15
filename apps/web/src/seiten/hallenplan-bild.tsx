@@ -1,7 +1,7 @@
 /**
  * Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
  */
-import { type Blick, blockPlatz, dreheBlick, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenObjekt, istMoebel, kaefigKanten, kaefigName, type KaefigPlatz, type KaefigTyp, type MoebelArt, moebelStuecke, objektFront, type PlanKaefig, type Rechteck, reihenSchilder, RICHTER_FARBE, richterFarbe, richterSchraffur, type Strecke, type WandSeite } from "@schau/domain";
+import { istRechteckUmriss, tuerOeffnung, umrissNormal, umrissSperren, umrissVersetzt, umrissVon, type Blick, blockPlatz, dreheBlick, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenObjekt, istMoebel, kaefigKanten, kaefigName, type KaefigPlatz, type KaefigTyp, type MoebelArt, moebelStuecke, objektFront, type PlanKaefig, type Rechteck, reihenSchilder, RICHTER_FARBE, richterFarbe, richterSchraffur, type Strecke, type WandSeite } from "@schau/domain";
 import { useLayoutEffect, useRef } from "react";
 import { type Aendern, BAU, type Daten, huelle, meter, objektLage, platzWeg, RAND_CM, RASTER, type Ziel, zielPlaetze, zuTeilen } from "./hallenplan-geometrie";
 import { usePlanBedienung } from "./hallenplan-bild-bedienung";
@@ -110,6 +110,11 @@ export function PlanBild({
   };
   /** Wandstärke in cm, außen an die Halle gesetzt (Innenmaße bleiben). */
   const wand = Math.min(24, Math.max(12, Math.max(W, H) * 0.008));
+  /** Grundriss (Entscheidung 019; ohne: das Rechteck) und was außerhalb davon liegt. */
+  const umriss = umrissVon(halle);
+  const aussen = istRechteckUmriss(halle.umriss) ? [] : umrissSperren(umrissNormal(umriss));
+  /** SVG-Pfad eines Umrisses (Hallenkoordinaten, in der Zeichnung ggf. quer). */
+  const pfad = (u: { x: number; y: number }[]) => `M${u.map((p) => (quer ? `${p.y} ${p.x}` : `${p.x} ${p.y}`)).join("L")}Z`;
 
 
   const kaefig = (k: PlanKaefig, lage?: Rechteck) => {
@@ -220,6 +225,10 @@ export function PlanBild({
         {Array.from({ length: Math.floor(H / 50) + 1 }, (_, n) => n * 50).map((y) => (
           <line key={`ry${y}`} x1={0} y1={y} x2={W} y2={y} stroke={y % 500 === 0 ? BAU.raster.fuenf : y % 100 === 0 ? BAU.raster.meter : BAU.raster.fein} strokeWidth={rand * (y % 100 === 0 ? 0.2 : 0.12)} />
         ))}
+        {/* Freier Grundriss: was außerhalb liegt, ist kein Hallenboden (kein Raster). */}
+        {aussen.map((q, i) => (
+          <rect key={`aussen${i}`} {...rr(q)} fill={BAU.aussen} stroke="none" />
+        ))}
         {/* Maßleisten in Metern: unten und links; die Reihennamen stehen oben (bzw. links neben der Meterleiste) am Rand. */}
         {Array.from({ length: Math.floor(W / 100) + 1 }, (_, n) => n * 100)
           .filter((x) => x % (W > 4000 ? 200 : 100) === 0)
@@ -238,31 +247,15 @@ export function PlanBild({
         <text x={W} y={H + RAND_CM * 0.85} fontSize={schrift * 0.55} textAnchor="end" dominantBaseline="central" fill={BAU.raster.text}>
           Meter
         </text>
-        {/* Wände: kräftig und außen um die Halle, an Eingängen offen. */}
-        <path
-          d={`M${-wand} ${-wand}H${W + wand}V${H + wand}H${-wand}Z M0 0V${H}H${W}V0Z`}
-          fill={BAU.wand}
-          fillRule="evenodd"
-        />
+        {/* Wände: kräftig und außen um die Halle entlang des Grundrisses, an Eingängen offen. */}
+        <path d={`${pfad(umrissVersetzt(umriss, wand))} ${pfad(umriss)}`} fill={BAU.wand} fillRule="evenodd" />
         {halle.flaechen.map((f: HallenFlaeche, i) => {
           if (f.art !== "eingang") return null;
-          // Gleiche Lage wie die Fläche darunter, auch während sie gezogen wird.
+          // Gleiche Lage wie die Fläche darunter, auch während sie gezogen wird. Die Tür öffnet genau eine Wand: die berührte,
+          // an der ihre lange Seite liegt (in einer Ecke nicht beide); nach außen 1 cm länger gegen Haarlinien.
           const v = versatz({ art: "flaeche", i }), gv = versatz({ art: "flaeche", i }, "groesse");
-          const g = r(f.x + v.dx, f.y + v.dy, Math.max(20, f.breite + gv.dx), Math.max(20, f.tiefe + gv.dy));
-          const n = RASTER; // cm Spiel: Eingang „an der Wand“ (auch wenn die Halle kein Vielfaches des Rasters ist)
-          // Entlang der Wand auf die Halle begrenzt (die Ecken bleiben stehen), nach außen 1 cm länger gegen Haarlinien.
-          const gx = Math.max(0, g.x), gy = Math.max(0, g.y);
-          const gb = Math.min(W, g.x + g.width) - gx, gh = Math.min(H, g.y + g.height) - gy;
-          // Eine Tür öffnet genau eine Wand: die berührte, an der ihre lange Seite liegt (in einer Ecke nicht beide).
-          const stehend = g.height > g.width;
-          const waende = [
-            { an: g.x <= n, laengs: stehend, o: { x: -wand - 1, y: gy, width: wand + 1, height: gh } },
-            { an: g.x + g.width >= W - n, laengs: stehend, o: { x: W, y: gy, width: wand + 1, height: gh } },
-            { an: g.y <= n, laengs: !stehend, o: { x: gx, y: -wand - 1, width: gb, height: wand + 1 } },
-            { an: g.y + g.height >= H - n, laengs: !stehend, o: { x: gx, y: H, width: gb, height: wand + 1 } },
-          ].filter((x) => x.an);
-          const offen = waende.find((x) => x.laengs) ?? waende[0];
-          return offen && offen.o.width > 0 && offen.o.height > 0 ? <rect key={`o${i}`} {...offen.o} fill={BAU.halle.fill} stroke="none" /> : null;
+          const q = tuerOeffnung(umriss, { x: f.x + v.dx, y: f.y + v.dy, b: Math.max(20, f.breite + gv.dx), h: Math.max(20, f.tiefe + gv.dy) }, wand + 1, RASTER);
+          return q && q.b > 0 && q.h > 0 ? <rect key={`o${i}`} {...rr(q)} fill={BAU.halle.fill} stroke="none" /> : null;
         })}
         {halle.flaechen.map((f: HallenFlaeche, i) => {
           const z: Ziel = { art: "flaeche", i };

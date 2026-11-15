@@ -3,7 +3,7 @@
  * darüber ein knapper Kopf (Schau, Halle, Stand), darunter eine kleine Legende. Große Hallen werden verkleinert, nie
  * abgeschnitten. Die Aufbauliste ist ein eigenes PDF.
  */
-import { reihenSchilder, frontDerReihe, kaefigKanten, type Blick, type Strecke, objektFront, blockPlatz, druckMassstab, etagenStreifen, etagenVon, istMoebel, kaefigName, moebelStuecke, nummernBereiche, planeHalle, richterFarbe, richterFolge, richterSchraffur, zeichnungDerHalle, type Hallenplan, type KaefigTyp, type PlanKaefig, type Rechteck } from "@schau/domain";
+import { istRechteckUmriss, tuerOeffnung, umrissVersetzt, umrissVon, reihenSchilder, frontDerReihe, kaefigKanten, type Blick, type Strecke, objektFront, blockPlatz, druckMassstab, etagenStreifen, etagenVon, istMoebel, kaefigName, moebelStuecke, nummernBereiche, planeHalle, richterFarbe, richterFolge, richterSchraffur, zeichnungDerHalle, type Hallenplan, type KaefigTyp, type PlanKaefig, type Rechteck } from "@schau/domain";
 import type { schau } from "../db/schema";
 import { planTiere } from "../routers/katalog";
 import { erzeugePdf, GRAU, MM, SANS, SANS_FETT, SERIF_FETT, tabelle, TINTE, type Doc } from "./basis";
@@ -95,9 +95,17 @@ function zeichne(doc: Doc, d: Daten, abb: Abb, g: { W: number; H: number; ox: nu
   const { plan, halle } = d;
   const farbIndex = new Map(d.richter.map((r, i) => [r.id, i]));
   const wand = Math.max(1.6, Math.min(4, 18 * g.m));
-  // Boden und Wände (außen um die Halle).
-  doc.save().rect(g.ox, g.oy, g.W, g.H).fill(BAU.boden).restore();
-  doc.save().lineWidth(wand).strokeColor(BAU.wand).rect(g.ox - wand / 2, g.oy - wand / 2, g.W + wand, g.H + wand).stroke().restore();
+  // Boden und Wände (außen um die Halle) – beim freien Grundriss (Entscheidung 019) entlang seiner Wände.
+  const frei = !istRechteckUmriss(halle.umriss);
+  const umriss = umrissVon(halle);
+  const punkte = (u: { x: number; y: number }[]) => u.map((p) => abb({ x: p.x, y: p.y, b: 0, h: 0 })).map((q) => [q.x, q.y] as [number, number]);
+  if (frei) {
+    doc.save().polygon(...punkte(umriss)).fill(BAU.boden).restore();
+    doc.save().polygon(...punkte(umrissVersetzt(umriss, wand / g.m))).polygon(...punkte(umriss)).fill(BAU.wand, "even-odd").restore();
+  } else {
+    doc.save().rect(g.ox, g.oy, g.W, g.H).fill(BAU.boden).restore();
+    doc.save().lineWidth(wand).strokeColor(BAU.wand).rect(g.ox - wand / 2, g.oy - wand / 2, g.W + wand, g.H + wand).stroke().restore();
+  }
   // Flächen: Eingänge als Öffnung in der Wand, freie Bereiche grau, Volierenbereiche grün gestrichelt.
   for (const f of halle.flaechen) {
     const q = abb({ x: f.x, y: f.y, b: f.breite, h: f.tiefe });
@@ -105,7 +113,13 @@ function zeichne(doc: Doc, d: Daten, abb: Abb, g: { W: number; H: number; ox: nu
       // Öffnung: die Wand an der berührten Seite aussparen.
       const n = 12 * g.m;
       doc.save().fillColor("#ffffff");
-      if (q.x <= g.ox + n) doc.rect(g.ox - wand - 0.5, q.y, wand + 1, q.h).fill();
+      const o = frei ? tuerOeffnung(umriss, { x: f.x, y: f.y, b: f.breite, h: f.tiefe }, wand / g.m + 1, 12) : null;
+      if (o) {
+        const r = abb(o);
+        doc.rect(r.x, r.y, r.b, r.h).fill();
+      } else if (frei) {
+        // an keiner Wand des Grundrisses: keine Öffnung
+      } else if (q.x <= g.ox + n) doc.rect(g.ox - wand - 0.5, q.y, wand + 1, q.h).fill();
       else if (q.x + q.b >= g.ox + g.W - n) doc.rect(g.ox + g.W - 0.5, q.y, wand + 1, q.h).fill();
       else if (q.y <= g.oy + n) doc.rect(q.x, g.oy - wand - 0.5, q.b, wand + 1).fill();
       else if (q.y + q.h >= g.oy + g.H - n) doc.rect(q.x, g.oy + g.H - 0.5, q.b, wand + 1).fill();

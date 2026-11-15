@@ -14,6 +14,7 @@
  * Platzreserve.
  */
 import { KAEFIG_TYP_LABEL, kaefigMass, kaefigName, type KaefigMasse, type KaefigTyp } from "./kaefige";
+import { istRechteckUmriss, mitUmrissSperren, type Punkt, tuerOeffnung, umrissNormal } from "./hallenplan-umriss";
 import { blockFolge } from "./hallenplan-folge";
 
 export interface HallenFlaeche {
@@ -26,6 +27,8 @@ export interface HallenFlaeche {
   tiefe: number;
   /** Nur intern: eingesetzte Voliere – wie ein Eingang mit einem Gang rundherum (sonst gilt das Teil als Freifläche). */
   mitGang?: boolean;
+  /** Nur intern: außerhalb des Grundrisses (Entscheidung 019) – Sperrfläche für die Planung, nie gespeichert oder gezeichnet. */
+  aussen?: boolean;
   /**
    * Nur intern: eingesetzter Käfigblock. Steht er ganz in einer Reihe, belegt er dort nur sein Stück – die Platten der Reihe
    * stehen davor und dahinter, die Abschnitte und damit die Folge der Sparten bleiben dieselben.
@@ -36,8 +39,14 @@ export interface HallenFlaeche {
 }
 
 export interface Halle {
+  /** Umschließendes Rechteck (cm); bei freiem Grundriss dessen Breite und Länge. */
   breite: number;
   laenge: number;
+  /**
+   * Freier, rechtwinkliger Grundriss (Entscheidung 019): Ecken in cm, links oben bei 0/0, im Uhrzeigersinn (`umrissNormal`).
+   * Fehlt er, ist die Halle das Rechteck aus Breite und Länge.
+   */
+  umriss?: Punkt[];
   /** Mindestbreite der Gänge (cm). */
   gang: number;
   /** „quer“: Reihen parallel zur kurzen Seite (üblich); „laengs“: parallel zur langen Seite. */
@@ -287,6 +296,8 @@ export function halleNormal(h: Halle): Halle {
     spartenStart: h.spartenStart ?? [],
     // Leer wie nicht da (ältere Hallen haben das Feld nicht; der Schlüssel bleibt derselbe).
     entfernt: h.entfernt?.length ? h.entfernt : undefined,
+    // Ein Rechteck als Grundriss ist wie keiner (die Halle bleibt dieselbe).
+    umriss: istRechteckUmriss(h.umriss) ? undefined : umrissNormal(h.umriss!),
   };
 }
 
@@ -319,8 +330,18 @@ export const VOLIEREN_GANG = 150;
  * Gang tief – seitlich daneben darf man bis an den Ausgang heran. In einer Ecke zählt die Wand, an der er flach anliegt.
  * Ein Eingang, der an keiner Wand liegt, behält einen Gang rundherum. Gilt in Hallen- wie im Reihensystem.
  */
-export function eingangsGang(halle: Pick<Halle, "breite" | "laenge" | "gang">, f: Pick<HallenFlaeche, "x" | "y" | "breite" | "tiefe">): Rechteck {
+export function eingangsGang(halle: Pick<Halle, "breite" | "laenge" | "gang" | "umriss">, f: Pick<HallenFlaeche, "x" | "y" | "breite" | "tiefe">): Rechteck {
   const g = Math.max(0, halle.gang);
+  // Freier Grundriss (Entscheidung 019): die Wand, an der der Eingang liegt (auch eine Innenwand), wie bei der Türöffnung.
+  if (!istRechteckUmriss(halle.umriss)) {
+    const o = tuerOeffnung(umrissNormal(halle.umriss!), { x: f.x, y: f.y, b: f.breite, h: f.tiefe }, 1);
+    if (o) {
+      if (o.y + o.h <= f.y + 0.5) return { x: f.x, y: f.y, b: f.breite, h: f.tiefe + g };
+      if (o.y >= f.y + f.tiefe - 0.5) return { x: f.x, y: f.y - g, b: f.breite, h: f.tiefe + g };
+      if (o.x + o.b <= f.x + 0.5) return { x: f.x, y: f.y, b: f.breite + g, h: f.tiefe };
+      return { x: f.x - g, y: f.y, b: f.breite + g, h: f.tiefe };
+    }
+  }
   const waende = [
     f.x <= 1 && { quer: f.breite, q: { x: f.x, y: f.y, b: f.breite + g, h: f.tiefe } },
     f.x + f.breite >= halle.breite - 1 && { quer: f.breite, q: { x: f.x - g, y: f.y, b: f.breite + g, h: f.tiefe } },
@@ -642,7 +663,7 @@ type Abschnitt = { von: number; bis: number };
 /** Was beim Festschreiben gilt: Hallenmaße, Reihen und Käfigmaße (nicht Flächen oder eingesetzte Teile). */
 export function festGeometrie(h: Halle, masse: KaefigMasse | null | undefined): string {
   const n = halleNormal(h);
-  return stabilerText({ breite: n.breite, laenge: n.laenge, richtung: n.richtung, gang: n.gang, wandreihen: n.wandreihen, wandreiheSeite: n.wandreihen ? n.wandreiheSeite : undefined, wandBuendig: n.wandBuendig, hauptgang: n.hauptgang, platte: n.platte, jePlatte: n.jePlatte, plattenMass: n.plattenMass, etagen: n.etagen, masse: masse ?? {} });
+  return stabilerText({ breite: n.breite, laenge: n.laenge, umriss: n.umriss, richtung: n.richtung, gang: n.gang, wandreihen: n.wandreihen, wandreiheSeite: n.wandreihen ? n.wandreiheSeite : undefined, wandBuendig: n.wandBuendig, hauptgang: n.hauptgang, platte: n.platte, jePlatte: n.jePlatte, plattenMass: n.plattenMass, etagen: n.etagen, masse: masse ?? {} });
 }
 
 /** Etage nur, wenn nicht unten (so bleiben Pläne ohne Etagen wie bisher). */
@@ -936,7 +957,9 @@ const m = (cm: number) => `${(cm / 100).toLocaleString("de-DE", { maximumFractio
  * Plan der Halle. Gerechnet wird im Reihensystem (x quer zu den Reihen, y entlang der Reihen); bei Reihen quer zur Halle
  * sind dafür Breite und Länge vertauscht. Die Rechtecke kommen in Hallenkoordinaten zurück.
  */
-export function planeHalle(halle: Halle, tiere: PlanTier[], masse: KaefigMasse | null | undefined, fest?: FesterPlan | null): Hallenplan {
+export function planeHalle(eingabe: Halle, tiere: PlanTier[], masse: KaefigMasse | null | undefined, fest?: FesterPlan | null): Hallenplan {
+  // Freier Grundriss: außerhalb wird Sperrfläche – die Reihen planen um sie herum wie um jede andere (Entscheidung 019).
+  const halle = mitUmrissSperren(eingabe);
   const quer = (halle.richtung ?? "quer") === "quer";
   const platte = halle.platte ?? GRUNDPLATTE_STANDARD;
 

@@ -1,4 +1,4 @@
-import { AUFSTELLER_STANDARD, gefordertCent, VERKLEIDUNG_STANDARD, verkleidungVon, ETAGEN_MAX, etagenNormal, bewertungsText, neuSetzen, halleZumNeuSetzen, type Halle, mitWandreihe, reihenVersatzNachUmbau, festschreiben, plattenStand, pruefeEntfernt, pruefeTeileEntfernt, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HALLE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigName, kaefigTyp, planeHalle, vergleicheFolge, type PlanTier, kaefigVorschlag, nachmeldungsNummern, nummernBereiche, luekenlosAuffuellen, planFolge, planUnordnung, vergebeKatalognummern, stellVorschlaege, type KaefigTyp, type SortierSchritt, belegungImPlan, gleicherPlatz, platzImPlan, tierVersetzen, type KaefigPlatz } from "@schau/domain";
+import { halleNormal, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, AUFSTELLER_STANDARD, gefordertCent, VERKLEIDUNG_STANDARD, verkleidungVon, ETAGEN_MAX, etagenNormal, bewertungsText, neuSetzen, halleZumNeuSetzen, type Halle, mitWandreihe, reihenVersatzNachUmbau, festschreiben, plattenStand, pruefeEntfernt, pruefeTeileEntfernt, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HALLE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigName, kaefigTyp, planeHalle, vergleicheFolge, type PlanTier, kaefigVorschlag, nachmeldungsNummern, nummernBereiche, luekenlosAuffuellen, planFolge, planUnordnung, vergebeKatalognummern, stellVorschlaege, type KaefigTyp, type SortierSchritt, belegungImPlan, gleicherPlatz, platzImPlan, tierVersetzen, type KaefigPlatz } from "@schau/domain";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/client";
@@ -44,6 +44,8 @@ const KAEFIG_PLATZ = z.discriminatedUnion("art", [
 export const HALLE_EINGABE = z.object({
   breite: z.number().min(100).max(50000),
   laenge: z.number().min(100).max(50000),
+  /** Freier, rechtwinkliger Grundriss (Entscheidung 019); geprüft in `mitGeprueftemUmriss`. */
+  umriss: z.array(z.object({ x: z.number().int().min(-50000).max(50000), y: z.number().int().min(-50000).max(50000) })).max(64).optional(),
   gang: z.number().min(50).max(1000),
   wandreihen: z.boolean(),
   wandreiheSeite: z.enum(["anfang", "ende"]).optional(),
@@ -129,6 +131,25 @@ export const HALLE_EINGABE = z.object({
 type Akteur = Parameters<typeof protokolliere>[1]["akteur"];
 
 /**
+ * Grundriss prüfen und einheitlich ablegen (Entscheidung 019): gültig, passend zu Breite und Länge, nichts außerhalb; ein
+ * Rechteck als Grundriss wird nicht gespeichert (die Halle bleibt eine gewöhnliche).
+ */
+function mitGeprueftemUmriss(halle: Halle, masse: Parameters<typeof pruefeHallenUmriss>[1], vorher?: Halle | null): Halle {
+  const f = pruefeHallenUmriss(halle, masse, vorher);
+  if (f) throw fehler("BAD_REQUEST", f);
+  return umrissEinheitlich(halle);
+}
+
+/** Grundriss einheitlich (normalisiert; ein Rechteck als keiner) – ohne die Prüfung der Flächen und Teile. */
+function umrissEinheitlich(halle: Halle): Halle {
+  const { umriss, ...rest } = halle;
+  if (istRechteckUmriss(umriss)) return rest;
+  const f = pruefeUmriss(umriss!);
+  if (f) throw fehler("BAD_REQUEST", f);
+  return { ...rest, umriss: umrissNormal(umriss!) };
+}
+
+/**
  * Plan neu setzen (siehe `neuSetzen` in der Domain): mit neuen Einstellungen der Halle (`halle`) oder ohne, in einem Schritt
  * unter Sperre. Verschobenes, entfernte Plätze und eingesetzte Teile der bisherigen Aufstellung fallen weg – auch belegte
  * Blöcke, ihre Tiere stellt der neue Plan; was nicht in die Reihen passt, bekommt Käfigblöcke. Der Plan ist danach nicht fest.
@@ -139,7 +160,10 @@ export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<type
     const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("update");
     if (e.basis !== undefined && e.basis !== halleSchluessel(aktuell?.halle ?? null))
       throw fehler("CONFLICT", "Die Halle wurde inzwischen von jemand anderem geändert – der Plan wird neu geladen, bitte die Änderung noch einmal machen.");
-    const roh: Halle | null = e.halle ? { ...e.halle, plattenMass: e.halle.plattenMass ?? aktuell?.halle?.plattenMass ?? {}, ...etagenAus(e.halle.etagen, aktuell?.halle) } : (aktuell?.halle ?? null);
+    const vorbereitet: Halle | null = e.halle ? { ...e.halle, plattenMass: e.halle.plattenMass ?? aktuell?.halle?.plattenMass ?? {}, ...etagenAus(e.halle.etagen, aktuell?.halle) } : null;
+    // Geprüft wird, was nach dem Neu-Setzen bleibt: eingesetzte Blöcke und Volieren fallen dabei weg, Flächen und Möbel nicht.
+    if (vorbereitet) mitGeprueftemUmriss(halleZumNeuSetzen(vorbereitet), s.kaefigMasse);
+    const roh: Halle | null = vorbereitet ? umrissEinheitlich(vorbereitet) : (aktuell?.halle ?? null);
     if (!roh) throw fehler("BAD_REQUEST", "Erst die Halle anlegen.");
     const { halle, eingesetzt, ohne } = neuSetzen(roh, tiere, s.kaefigMasse);
     await tx.update(schau).set({ halle, hallenplanFest: null }).where(eq(schau.id, s.id));
@@ -415,7 +439,7 @@ export const katalogRouter = router({
   stellVorschlaegeEntwurf: adminProcedure.input(z.object({ schauId: dbId, entwurf: HALLE_EINGABE })).mutation(async ({ ctx, input }) => {
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
     if (input.entwurf.breite * input.entwurf.laenge > 20_000 * 10_000) throw fehler("BAD_REQUEST", "Die Halle ist zu groß (höchstens 20.000 m²).");
-    const halle = { ...input.entwurf, plattenMass: input.entwurf.plattenMass ?? s.halle?.plattenMass ?? {}, ...etagenAus(input.entwurf.etagen, s.halle) };
+    const halle = umrissEinheitlich({ ...input.entwurf, plattenMass: input.entwurf.plattenMass ?? s.halle?.plattenMass ?? {}, ...etagenAus(input.entwurf.etagen, s.halle) });
     const { tiere } = await planTiere(s);
     return { ...stellVorschlaege(halle, tiere, s.kaefigMasse), basis: halleSchluessel(s.halle ?? null) };
   }),
@@ -613,7 +637,10 @@ export const katalogRouter = router({
         if (input.basis !== undefined && input.basis !== halleSchluessel(alt?.halle ?? null))
           throw fehler("CONFLICT", "Die Halle wurde inzwischen von jemand anderem geändert – der Plan wird neu geladen, bitte die Änderung noch einmal machen.");
         const { entfernt, ...rest } = input.halle;
-        const halle: Halle = { ...rest, plattenMass: input.halle.plattenMass ?? alt?.halle?.plattenMass ?? {}, ...etagenAus(rest.etagen, alt?.halle), ...(entfernt?.length ? { entfernt } : {}) };
+        const halle: Halle = mitGeprueftemUmriss({ ...rest, plattenMass: input.halle.plattenMass ?? alt?.halle?.plattenMass ?? {}, ...etagenAus(rest.etagen, alt?.halle), ...(entfernt?.length ? { entfernt } : {}) }, s.kaefigMasse, alt?.halle ?? null);
+        // Im festen Plan stehen die Platten fest – ein anderer Grundriss geht nur mit „Plan neu setzen“ (wie die Reihenrichtung).
+        if (alt?.fest && alt.halle && stabilerText(halleNormal(alt.halle).umriss ?? null) !== stabilerText(halleNormal(halle).umriss ?? null))
+          throw fehler("BAD_REQUEST", "Ein anderer Grundriss geht im festen Plan nur mit „Plan neu setzen“.");
         // Neu entfernte Platten und Plätze: nur leere im festen Plan (gerechnet mit den bisher entfernten). Wegfallende
         // Käfigblöcke und Volieren: nur leere (gerechnet mit der bisherigen Halle) – außer beim Zurücksetzen der Planung.
         const neuEntfernt = stabilerText(entfernt ?? []) !== stabilerText(alt?.halle?.entfernt ?? []);

@@ -3,7 +3,7 @@
  * zurück, Leeres entfernen, Teile und fehlende Käfige einsetzen, Fläche aufziehen; dazu die Aktionen für Leiste,
  * Eigenschaften und Tastenkürzel (`aktionen`).
  */
-import { type Belegt, fehlendeImPlan, freieStelle, type HallenFlaeche, type HallenObjekt, KAEFIG_TYP_MEHRZAHL, type KaefigTyp, leereEntfernen, MOEBEL_NAME, type MoebelArt, rasterAusrichten, type Rechteck, teilGroesse, type WandSeite } from "@schau/domain";
+import { eingangAnWand, istRechteckUmriss, ueberlappt, umrissNormal, umrissSperren, umrissVon, type Belegt, fehlendeImPlan, freieStelle, type HallenFlaeche, type HallenObjekt, KAEFIG_TYP_MEHRZAHL, type KaefigTyp, leereEntfernen, MOEBEL_NAME, type MoebelArt, rasterAusrichten, type Rechteck, teilGroesse, type WandSeite } from "@schau/domain";
 import { trpc } from "../trpc";
 import { useFrage, useMeldung } from "../ui";
 import { type HallenEntwurf } from "./hallenplan-entwurf";
@@ -173,19 +173,19 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     const klemme = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
     let f: { x: number; y: number; breite: number; tiefe: number };
     if (art === "eingang") {
-      const abstand = [cx, B - cx, cy, L - cy];
-      const wand = abstand.indexOf(Math.min(...abstand));
-      const entlangX = wand >= 2; // Wand vorn/hinten: der Eingang liegt entlang der Breite (x)
-      const lang = Math.min(entlangX ? B : L, klick ? 200 : Math.max(100, raster(entlangX ? q.b : q.h)));
-      const von = klick ? raster((entlangX ? cx : cy) - lang / 2) : raster(entlangX ? q.x : q.y);
-      const v = klemme(von, 0, (entlangX ? B : L) - lang);
-      f = entlangX
-        ? { x: v, y: wand === 2 ? 0 : L - EINGANG_TIEFE, breite: lang, tiefe: EINGANG_TIEFE }
-        : { x: wand === 0 ? 0 : B - EINGANG_TIEFE, y: v, breite: EINGANG_TIEFE, tiefe: lang };
+      // An die nächste Wand des Grundrisses (auch eine Innenwand), so lang wie aufgezogen bzw. 2 m bei einem Klick.
+      const u = umrissVon(entwurf);
+      const waagrecht = eingangAnWand(u, { x: cx, y: cy }, 200, null, EINGANG_TIEFE, RASTER).tiefe === EINGANG_TIEFE;
+      f = klick
+        ? eingangAnWand(u, { x: cx, y: cy }, 200, null, EINGANG_TIEFE, RASTER)
+        : eingangAnWand(u, { x: cx, y: cy }, Math.max(100, raster(waagrecht ? q.b : q.h)), raster(waagrecht ? q.x : q.y), EINGANG_TIEFE, RASTER);
     } else {
       const b = klick ? 400 : Math.max(50, raster(q.b)), t = klick ? 300 : Math.max(50, raster(q.h));
       f = { x: klemme(raster(klick ? cx - b / 2 : q.x), 0, Math.max(0, B - b)), y: klemme(raster(klick ? cy - t / 2 : q.y), 0, Math.max(0, L - t)), breite: Math.min(b, B), tiefe: Math.min(t, L) };
     }
+    // Freier Grundriss: nicht teils außerhalb der Halle (der Server lehnte sonst erst danach ab).
+    if (art !== "eingang" && !istRechteckUmriss(entwurf.umriss) && umrissSperren(umrissNormal(entwurf.umriss!)).some((a) => ueberlappt({ x: f.x, y: f.y, b: f.breite, h: f.tiefe }, a)))
+      return meldung("Die Fläche läge teils außerhalb der Halle – bitte innerhalb aufziehen.", "warnung");
     const anzahl = entwurf.flaechen.filter((x) => x.art === art).length;
     const name = art === "eingang" ? `Eingang${anzahl ? ` ${anzahl + 1}` : ""}` : art === "volieren" ? "Volieren" : "Freier Bereich";
     const neu = aendern((h) => ({ ...h, flaechen: [...h.flaechen, { name, art, ...f }] }), { was: "Fläche aufziehen" });

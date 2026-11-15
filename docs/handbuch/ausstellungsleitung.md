@@ -1010,6 +1010,17 @@ Das geht nur mit festgeschriebenem Plan, denn sonst würde die Software die Käf
 
 **Drucken:** „Plan drucken“ öffnet den Hallenplan als PDF auf genau einem Blatt DIN A4 – quer, wenn die Zeichnung breiter als hoch ist (das ist der Normalfall, die lange Seite liegt waagrecht), sonst hochkant. Der Plan füllt das Blatt; eine große Halle wird verkleinert, nie abgeschnitten. Die Reihennamen R1, R2 … stehen außerhalb der Halle am Rand (über der Wand bzw. links davor, neben der Meterleiste) – so verdecken sie im Plan nichts, auf dem Bildschirm wie im Druck. Darüber stehen nur Schau, Hallenmaße und Stand, darunter eine kleine Legende (Preisrichter-Farben, Eingang/Notausgang, freie Fläche, Volierenbereich, Grundplatte, freier Platz). „Aufbauliste“ öffnet die Aufbauliste je Reihe als eigenes PDF im Hochformat. Bevor die Katalognummern vergeben sind, stehen die Tiere in Ausstellungsfolge ohne Nummern; danach stimmt der Plan mit den Käfignummern überein. Abgelehnte und stornierte Meldungen fallen heraus; ein Tier, das bei der Einlieferung als fehlend gemeldet wird, behält seinen Käfig im Plan – die Reihen ordnen sich während der Schau nicht neu. Ein bei der Einlieferung anders gewählter Käfig erscheint im Plan in seiner gewählten Größe.
 
+#### Grundriss der Halle {#grundriss}
+
+Nicht jede Halle ist ein Rechteck. Unter „Einstellungen der Halle“ → **Grundriss bearbeiten** zeichnen Sie den Grundriss nach: L-, T- oder U-Form, Nischen, Bühnenvorbau, Anbau. Die Wände sind immer waagrecht oder senkrecht (rechtwinklig).
+
+- **Wand ziehen:** Eine Wand greifen und nach innen oder außen ziehen (in 10-cm-Schritten). Liegt daneben eine Wand in derselben Flucht, entsteht dazwischen eine neue Querwand – so wird aus dem Rechteck eine Nische oder ein Vorsprung.
+- **Wand teilen:** Doppelklick auf eine Wand teilt sie an dieser Stelle (auf 50 cm genau); danach lässt sich jedes Teilstück einzeln ziehen.
+- **Rechteck** setzt den Grundriss zurück, **Übernehmen** speichert ihn. An jeder Wand steht ihre Länge; Eingänge und Flächen sind zur Orientierung eingezeichnet.
+- Jede Wand ist mindestens 0,5 m lang, und keine Wand lässt sich über die gegenüberliegende hinaus ziehen. Läge eine Fläche oder ein Tisch danach außerhalb, steht der Grund unter der Zeichnung und „Übernehmen“ ist gesperrt.
+
+Breite und Länge der Halle ergeben sich danach aus dem Grundriss („freier Grundriss“ bei den Maßen). Wo die Halle nicht ist, stehen keine Käfige, Blöcke, Tische oder Bänke – die Planung stellt die Reihen nur im Hallenteil, beim Verschieben ist dort „Hallenwand“. Ein neuer Grundriss setzt den Plan neu (im festen Plan nach Rückfrage); liegt eine Fläche oder ein eingesetztes Teil danach außerhalb, lehnt die Software ab – erst verschieben. Wird die linke oder obere Wand nach außen gezogen, rücken Eingänge, Flächen und Teile mit, sie bleiben also, wo sie in der Halle stehen. Eingänge setzen Sie an jede Wand, auch an eine Innenwand einer Nische. Plan, Druck und 3D zeigen die Wände entlang des Grundrisses.
+
 #### Entwürfe und Archiv {#hallenplan-entwuerfe}
 
 Für eine Schau lassen sich mehrere Hallenpläne entwerfen und vergleichen. „Entwürfe“ (oben auf der Seite) öffnet die

@@ -2,12 +2,13 @@
  * Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle
  * (`HalleEigenschaften`) mit ihren Eingabefeldern.
  */
-import { type Halle, type HallenFlaeche, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, kaefigName, type KaefigTyp, MOEBEL_NAME, moebelMass, type WandSeite } from "@schau/domain";
+import { type Punkt, type Halle, type HallenFlaeche, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, kaefigName, type KaefigTyp, MOEBEL_NAME, moebelMass, type WandSeite } from "@schau/domain";
 import { type InputHTMLAttributes, type ReactNode, useEffect, useRef, useState } from "react";
 import { Auswahl, Eingabe, Feld, Haken, Knopf, Marke } from "../ui";
 import { WzSymbol } from "./hallenplan-werkzeuge";
 import { type Aendern, type Aktionen, BLOCK_TYPEN, type FehlendeSetzen, HAUPTGANG_LAGE, meter, type Plan, teilInfo, type TeilInfo, type Versetzen, wandText, type Ziel, zuCm } from "./hallenplan-geometrie";
 import { AutomatikSchalter, OhnePlatz } from "./hallenplan-teile";
+import { GrundrissKnopf } from "./hallenplan-grundriss";
 
 /**
  * Eigenschaften der Auswahl: was gewählt ist, Belegung, Lage, Größe, Drehung und die passenden Aktionen. `kompakt`: als
@@ -349,6 +350,7 @@ export function HalleEigenschaften({
   masse,
   platziert,
   aendernHalle,
+  grundriss,
   automatik,
   setzen,
   vorschlaege,
@@ -358,6 +360,8 @@ export function HalleEigenschaften({
   masse: KaefigMasse;
   platziert: number;
   aendernHalle: (patch: Partial<Halle>, was: string) => Promise<boolean>;
+  /** Grundriss bearbeiten (Entscheidung 019); fehlt, wenn die Halle nicht geändert werden darf. */
+  grundriss?: (roh: Punkt[], basis: string) => Promise<boolean>;
   automatik?: () => void;
   setzen?: FehlendeSetzen;
   vorschlaege: () => void;
@@ -378,10 +382,18 @@ export function HalleEigenschaften({
       </div>
       <div className={gruppe}>
         <Gruppenkopf>Maße</Gruppenkopf>
-        <div className="grid grid-cols-2 gap-2">
-          <MeterFeld label="Breite" cm={halle.breite} min={300} setzen={(v) => aendernHalle({ breite: v }, "Breite")} />
-          <MeterFeld label="Länge" cm={halle.laenge} min={300} setzen={(v) => aendernHalle({ laenge: v }, "Länge")} />
-        </div>
+        {halle.umriss ? (
+          // Freier Grundriss: Breite und Länge ergeben sich aus den Wänden.
+          <span className="text-sm tabular-nums">
+            {meter(halle.breite)} × {meter(halle.laenge)} m, freier Grundriss
+          </span>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <MeterFeld label="Breite" cm={halle.breite} min={300} setzen={(v) => aendernHalle({ breite: v }, "Breite")} />
+            <MeterFeld label="Länge" cm={halle.laenge} min={300} setzen={(v) => aendernHalle({ laenge: v }, "Länge")} />
+          </div>
+        )}
+        {grundriss && <GrundrissKnopf halle={halle} masse={masse} uebernehmen={grundriss} />}
       </div>
       <div className={gruppe}>
         <Gruppenkopf>Gänge</Gruppenkopf>

@@ -5,7 +5,7 @@
  *
  * Maßstab: die Szene in Metern (Fachlogik in cm). Gezeichnet wird nur bei Bedarf (Bewegung, Zeigen), nicht in Dauerschleife.
  */
-import { verkleidungsKachel, verkleidungVon, type Verkleidung, type SzeneSchuerze, hallenSzene, richterFarbe, wandDeckkraft, wandInnenseiten, type Quader, type WandInnenseite, type Blick, type Figur, type Halle, type HallenSzene, type Hallenplan, type KaefigMasse, type Aufsteller, type SzeneKaefig, type SzeneTier, KAEFIG_TYP_LABEL } from "@schau/domain";
+import { punktInUmriss, verkleidungsKachel, verkleidungVon, type Verkleidung, type SzeneSchuerze, hallenSzene, richterFarbe, wandDeckkraft, wandInnenseiten, type Quader, type WandInnenseite, type Blick, type Figur, type Halle, type HallenSzene, type Hallenplan, type KaefigMasse, type Aufsteller, type SzeneKaefig, type SzeneTier, KAEFIG_TYP_LABEL } from "@schau/domain";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -243,14 +243,24 @@ function baueWelt(kasten: HTMLDivElement, s: HallenSzene, richterIndex: Map<numb
 
   // Außen: Himmel, Wiese, Hof, Bäume und Hügel (hallenplan-3d-landschaft.ts); innen der Hallenboden mit Meterraster.
   baueLandschaft(scene, B, L, merk, vorneSeite(s));
-  const boden = new THREE.Mesh(merk(new THREE.PlaneGeometry(B, L)), merk(new THREE.MeshStandardMaterial({ color: "#ecdcbc" })));
-  boden.rotation.x = -Math.PI / 2;
-  boden.position.set(B / 2, 0, L / 2);
+  // Hallenboden: das Rechteck oder der freie Grundriss (Entscheidung 019); das Meterraster nur innerhalb.
+  const bodenStoff = merk(new THREE.MeshStandardMaterial({ color: "#ecdcbc" }));
+  let boden: THREE.Mesh;
+  if (s.umriss) {
+    const form = new THREE.Shape(s.umriss.map((p) => new THREE.Vector2(p.x * M, -p.y * M)));
+    boden = new THREE.Mesh(merk(new THREE.ShapeGeometry(form)), bodenStoff);
+    boden.rotation.x = -Math.PI / 2;
+  } else {
+    boden = new THREE.Mesh(merk(new THREE.PlaneGeometry(B, L)), bodenStoff);
+    boden.rotation.x = -Math.PI / 2;
+    boden.position.set(B / 2, 0, L / 2);
+  }
   boden.receiveShadow = true;
   modell.add(boden);
+  const drin = (x: number, z: number) => !s.umriss || punktInUmriss({ x: x / M, y: z / M }, s.umriss);
   const raster: number[] = [];
-  for (let x = 1; x < B; x++) raster.push(x, 0.002, 0, x, 0.002, L);
-  for (let z = 1; z < L; z++) raster.push(0, 0.002, z, B, 0.002, z);
+  for (let x = 1; x < B; x++) for (let z = 0; z < L; z++) if (drin(x, z + 0.5)) raster.push(x, 0.002, z, x, 0.002, Math.min(L, z + 1));
+  for (let z = 1; z < L; z++) for (let x = 0; x < B; x++) if (drin(x + 0.5, z)) raster.push(x, 0.002, z, Math.min(B, x + 1), 0.002, z);
   const rasterGeo = merk(new THREE.BufferGeometry());
   rasterGeo.setAttribute("position", new THREE.Float32BufferAttribute(raster, 3));
   scene.add(new THREE.LineSegments(rasterGeo, merk(new THREE.LineBasicMaterial({ color: "#dccaa5" }))));

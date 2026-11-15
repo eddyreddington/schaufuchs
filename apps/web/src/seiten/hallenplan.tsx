@@ -158,7 +158,7 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
     void warten().then(() => tab.location.replace(url));
   };
   const b = usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, setVersetzen });
-  const { rueckgaengig, wiederholen, zielGewaehlt, versetzenMut, nachPlan, nachPlanFragen, anWaendenAusrichten, neuSetzenFragen, automatikUmschalten, aendernHalle, wandreihe, anWandFragen } = b;
+  const { grundrissSetzen, rueckgaengig, wiederholen, zielGewaehlt, versetzenMut, nachPlan, nachPlanFragen, anWaendenAusrichten, neuSetzenFragen, automatikUmschalten, aendernHalle, wandreihe, anWandFragen } = b;
   const { aktionen, einsetzen, fehlendeSetzen, flaecheAufgezogen } = useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, zeichnen, setZeichnen, anWandFragen });
   const { ausrichten, drehen } = aktionen;
   const entfernenFragen = aktionen.entfernen;
@@ -228,6 +228,7 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
       masse={d.masse}
       platziert={platziert}
       aendernHalle={aendernHalle}
+      grundriss={kannPlanen && !d.abgeschlossen ? grundrissSetzen : undefined}
       automatik={kannPlanen && !d.abgeschlossen ? automatikUmschalten : undefined}
       setzen={bearbeiten ? fehlendeSetzen : undefined}
       vorschlaege={() => {

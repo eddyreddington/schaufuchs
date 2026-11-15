@@ -111,7 +111,9 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
    * Einstellungen der Halle – in einem Schritt, damit nie ein Plan mit Resten der alten Aufstellung entsteht.
    */
   const neuSetzen = trpc.katalog.planNeuSetzen.useMutation({ onError: (e) => meldung(fehlerText(e), "fehler") });
-  const neuSetzenMit = (ziel: Halle | null, grund: string) => {
+  /** Gibt zurück, ob der Server den neu gesetzten Plan gespeichert hat (nach der Antwort). */
+  const neuSetzenMit = (ziel: Halle | null, grund: string): Promise<boolean> => {
+    let gespeichert = false;
     const basis = halleSchluessel(entwurfRef.current);
     neuUnterwegs.current = true;
     if (ziel) {
@@ -123,6 +125,7 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
     kette.current = kette.current
       .then(() => neuSetzen.mutateAsync({ schauId, grund, ...(ziel ? { halle: vollstaendig(ziel), basis } : {}) }))
       .then((e) => {
+        gespeichert = true;
         // Der Verlauf gehörte zur alten Aufstellung.
         verlaufSetzen({ zurueck: [], vor: [] });
         const bloecke = e.eingesetzt ? `, ${anzahl(e.eingesetzt, "Käfigblock", "Käfigblöcke")} eingesetzt` : "";
@@ -140,6 +143,7 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
         }
         neuUnterwegs.current = false;
       });
+    return kette.current.then(() => gespeichert);
   };
   return { entwurf, entwurfRef, aendern, setzen, kette, offen, offenZahl, festUnterwegs, neuUnterwegs, verlauf, verlaufSetzen, festMachen, festschreiben, neuSetzen, neuSetzenMit };
 }

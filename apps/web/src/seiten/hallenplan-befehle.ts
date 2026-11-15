@@ -3,7 +3,7 @@
  * nummerieren, Einstellungen der Halle (mit „Plan neu setzen?“), Automatik an/aus, an den Wänden ausrichten und eine
  * Einzelreihe an der Wand. Jeder Befehl fragt nach, wo es nötig ist, und wartet auf laufende Speicherungen.
  */
-import { belegungImPlan, festGeometrie, type Halle, halleSchluessel, type KaefigPlatz, platzImPlan, vonHandGeplant, wandAusrichtung, wandDrehungenAnwenden, type WandSeite } from "@schau/domain";
+import { grundrissUebernehmen, type Punkt, belegungImPlan, festGeometrie, type Halle, halleSchluessel, type KaefigPlatz, platzImPlan, vonHandGeplant, wandAusrichtung, wandDrehungenAnwenden, type WandSeite } from "@schau/domain";
 import { fehlerText } from "../lib";
 import { trpc } from "../trpc";
 import { useFrage, useMeldung } from "../ui";
@@ -217,19 +217,20 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
       // Automatisch planen ist aus: die Einstellung gilt, die Käfige bleiben stehen. Nur die Reihenrichtung geht nicht ohne
       // neu gesetzten Plan (der feste Plan liegt in der alten Richtung).
       const richtungNeu = (f(entwurfRef.current).richtung ?? "quer") !== (entwurfRef.current.richtung ?? "quer");
-      if (!richtungNeu) {
+      // Ebenso ein anderer Grundriss (Entscheidung 019): die festen Plätze lägen sonst womöglich außerhalb der Wände.
+      const grundrissNeu = JSON.stringify(f(entwurfRef.current).umriss ?? null) !== JSON.stringify(entwurfRef.current.umriss ?? null);
+      if (!richtungNeu && !grundrissNeu) {
         aendern(f, { was: grund, grund });
         return true;
       }
-      if (!(await bestaetige({ titel: "Automatisch planen einschalten?", text: "Die Reihenrichtung ändert sich nur mit neu gesetztem Plan – alle Käfige werden neu aufgestellt.", knopf: "Einschalten und neu setzen", gefahr: true })))
+      const was = grundrissNeu ? "Ein anderer Grundriss geht" : "Die Reihenrichtung ändert sich";
+      if (!(await bestaetige({ titel: "Automatisch planen einschalten?", text: `${was} nur mit neu gesetztem Plan – alle Käfige werden neu aufgestellt.`, knopf: "Einschalten und neu setzen", gefahr: true })))
         return false;
-      neuSetzenMit(f(entwurfRef.current), grund);
-      return true;
+      return neuSetzenMit(f(entwurfRef.current), grund);
     }
     if (vonHandGeplant(entwurfRef.current) && !(await bestaetige({ titel: "Plan neu setzen?", text: "Mit den neuen Einstellungen der Halle werden alle Käfige neu aufgestellt.", knopf: "Neu setzen", gefahr: true })))
       return false;
-    neuSetzenMit(f(entwurfRef.current), grund);
-    return true;
+    return neuSetzenMit(f(entwurfRef.current), grund);
   };
   /**
    * Automatisch planen an/aus. Aus = Plan festschreiben: nichts stellt sich mehr von selbst um (Einstellungen, Nachmeldungen,
@@ -282,5 +283,14 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     await kette.current;
     wandreihe.mutate({ schauId, basis: halleSchluessel(entwurfRef.current), reihe: nr, seite, neuSetzen: !!plan.fest });
   };
-  return { rueckgaengig, wiederholen, zielGewaehlt, versetzenMut, nachPlan, nachPlanFragen, anWaendenAusrichten, neuSetzenFragen, automatikUmschalten, aendernHalle, wandreihe, anWandFragen, neuSetzenLaeuft: neuSetzen.isPending };
+  /** Bearbeiteter Grundriss (Entscheidung 019): wie jede Einstellung der Halle, dazu wandern Flächen und Teile mit. */
+  const grundrissSetzen = async (roh: Punkt[], basis: string): Promise<boolean> => {
+    // Der Grundriss ist in den Koordinaten der Halle beim Öffnen gezeichnet: hat sie inzwischen jemand anders geändert, nicht übernehmen.
+    if (halleSchluessel(entwurfRef.current) !== basis) {
+      meldung("Die Halle wurde inzwischen geändert – bitte den Grundriss noch einmal öffnen.", "warnung");
+      return false;
+    }
+    return halleNeuSetzen((h) => grundrissUebernehmen(h, roh), "Halle: Grundriss");
+  };
+  return { grundrissSetzen, rueckgaengig, wiederholen, zielGewaehlt, versetzenMut, nachPlan, nachPlanFragen, anWaendenAusrichten, neuSetzenFragen, automatikUmschalten, aendernHalle, wandreihe, anWandFragen, neuSetzenLaeuft: neuSetzen.isPending };
 }

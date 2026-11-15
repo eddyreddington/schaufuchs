@@ -2,7 +2,7 @@
  * Reine Rechnungen des Hallenplan-Editors (ohne React): Auswahl und Teile, Lage und Versatz von Reihen,
  * Platten und Objekten, Hindernisse (`planKoerper`), Texte zu Teilen. Die Fachregeln selbst stehen in packages/domain.
  */
-import { auswahlBereinigen, blockPlatz, dreheBlick, dreheRechteck, type Drehung, eingangsGang, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenTeil, istMoebel, type KaefigMasse, kaefigName, type KaefigPlatz, type KaefigTyp, mitteVon, MOEBEL_NAME, nummernBereiche, objektFront, type PlanAuswahlTeil, type PlanKaefig, type PlanKoerper, pruefeLage, type Rechteck, type Reihe, teilGroesse, teilSchluessel, type VerschiebePruefung, type WandKandidat, type WandSeite } from "@schau/domain";
+import { AUSSEN_NAME, istRechteckUmriss, umrissNormal, umrissSperren, auswahlBereinigen, blockPlatz, dreheBlick, dreheRechteck, type Drehung, eingangsGang, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenTeil, istMoebel, type KaefigMasse, kaefigName, type KaefigPlatz, type KaefigTyp, mitteVon, MOEBEL_NAME, nummernBereiche, objektFront, type PlanAuswahlTeil, type PlanKaefig, type PlanKoerper, pruefeLage, type Rechteck, type Reihe, teilGroesse, teilSchluessel, type VerschiebePruefung, type WandKandidat, type WandSeite } from "@schau/domain";
 import { type Ausgabe } from "../trpc";
 
 export type Daten = Ausgabe["katalog"]["hallenplan"];
@@ -15,6 +15,8 @@ export type Daten = Ausgabe["katalog"]["hallenplan"];
 export const BAU = {
   // Wie eine Bauzeichnung: kräftige Wände, feine dunkle Linien für alles, was in der Halle steht.
   halle: { fill: "#fbfbf9" },
+  /** Außerhalb eines freien Grundrisses (Entscheidung 019): wie der Rand um die Zeichnung. */
+  aussen: "#ffffff",
   wand: "#2b2f36",
   linie: "#3d4450",
   platte: { fill: "#ebe6dc", stroke: "#8f8676" },
@@ -273,6 +275,8 @@ export function planKoerper(halle: Halle, plan: NonNullable<Daten["plan"]>): Pla
   // Freie Bereiche und Eingänge sind Hindernisse (nicht füreinander); in den Volierenbereich gehören die Volieren. In freien
   // Bereichen dürfen Tische und Bänke stehen.
   halle.flaechen.forEach((f, i) => k.push({ teil: { art: "flaeche", i }, name: f.name, rechteck: flaecheRechteck(f), ...(f.art === "volieren" ? { nurGrenze: true } : { flaeche: true, ...(f.art === "sperre" ? { freiBereich: true } : {}) }) }));
+  // Freier Grundriss (Entscheidung 019): außerhalb ist Wand – für Käfige, Teile, Tische und Bänke.
+  if (!istRechteckUmriss(halle.umriss)) for (const q of umrissSperren(umrissNormal(halle.umriss!))) k.push({ teil: null, name: AUSSEN_NAME, rechteck: q });
   // Tische und Bänke stehen frei, auch im Gang vor den Käfigen (Rückmeldung 14.11.2026).
   // Vor Eingängen und Notausgängen bleibt ein Gang frei (in Fluchtrichtung, so breit wie der Ausgang): keine Reihe, Platte
   // oder eingesetztes Teil dort hinein. Seitlich daneben darf man bis an den Ausgang heran.

@@ -22,3 +22,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [016](016-teilschauen.md) | Teilschauen: Abteilungen einer Schau mit fortlaufenden Katalognummern |
 | [017](017-hallenplan-entwuerfe.md) | Hallenplan-Entwürfe und Archiv |
 | [018](018-sepa-lastschrift.md) | SEPA-Lastschrift für das Meldegeld |
+| [019](019-freier-grundriss.md) | Freier, rechtwinkliger Grundriss der Halle |
