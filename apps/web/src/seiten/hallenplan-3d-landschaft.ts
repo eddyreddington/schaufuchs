@@ -8,7 +8,8 @@ import * as THREE from "three";
 
 /** Mindestabstand der Bäume von der Hallenwand (m). */
 const ABSTAND = 6;
-const HORIZONT = "#dcebf5";
+const HORIZONT = "#e4ecf2";
+// Die Umgebung bleibt im Hintergrund (Rückmeldung 15.11.2026): blasse, wenig gesättigte Farben, die Halle steht im Fokus.
 
 /** Fest eingestellter Zufall (mulberry32): dieselbe Halle zeigt immer dieselbe Landschaft. */
 function zufall(saat: number): () => number {
@@ -69,7 +70,7 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
 
   // Dunst: erst weit hinter der Halle (die Kamera entfernt sich höchstens das Vierfache), am Rand der Wiese ganz Horizont.
   scene.background = new THREE.Color(HORIZONT);
-  scene.fog = new THREE.Fog(HORIZONT, groesse * 4.2, R * 1.02);
+  scene.fog = new THREE.Fog(HORIZONT, groesse * 1.8, R * 0.95);
 
   // Himmel: Kuppel mit Verlauf (oben kräftiges Blau, am Horizont hell), ohne Dunst.
   const himmel = new THREE.Mesh(
@@ -79,7 +80,7 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
         side: THREE.BackSide,
         depthWrite: false,
         fog: false,
-        uniforms: { oben: { value: new THREE.Color("#4f8fd0") }, horizont: { value: new THREE.Color(HORIZONT) }, unten: { value: new THREE.Color("#c9d6bd") } },
+        uniforms: { oben: { value: new THREE.Color("#9dbcd8") }, horizont: { value: new THREE.Color(HORIZONT) }, unten: { value: new THREE.Color("#d6ddd0") } },
         vertexShader: "varying vec3 p; void main() { p = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
         fragmentShader:
           "uniform vec3 oben; uniform vec3 horizont; uniform vec3 unten; varying vec3 p; void main() { float h = p.y; vec3 f = h > 0.0 ? mix(horizont, oben, pow(clamp(h * 1.6, 0.0, 1.0), 0.75)) : mix(horizont, unten, clamp(-h * 4.0, 0.0, 1.0)); gl_FragColor = vec4(f, 1.0); }",
@@ -103,7 +104,7 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
       }
     }),
   );
-  const wolkenStoff = merk(new THREE.SpriteMaterial({ map: wolkenBild, fog: false, depthWrite: false, transparent: true, opacity: 0.9 }));
+  const wolkenStoff = merk(new THREE.SpriteMaterial({ map: wolkenBild, fog: false, depthWrite: false, transparent: true, opacity: 0.7 }));
   for (let i = 0; i < 14; i++) {
     const w = (i / 14) * Math.PI * 2 + z() * 0.4;
     const hoehe = THREE.MathUtils.degToRad(10 + z() * 22);
@@ -118,12 +119,12 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
   // Wiese: Kreis bis zum Horizont, mit feiner Körnung (sonst wirkt sie wie Plastik).
   const gras = merk(
     kachel(256, (g, n) => {
-      g.fillStyle = "#8fb06b";
+      g.fillStyle = "#b3bfa5";
       g.fillRect(0, 0, n, n);
       const zg = zufall(7);
       for (let i = 0; i < 2600; i++) {
         const hell = zg() > 0.5;
-        g.fillStyle = hell ? `rgba(196,214,140,${0.25 + zg() * 0.3})` : `rgba(78,112,58,${0.2 + zg() * 0.3})`;
+        g.fillStyle = hell ? `rgba(210,218,196,${0.2 + zg() * 0.25})` : `rgba(130,148,118,${0.12 + zg() * 0.2})`;
         g.fillRect(zg() * n, zg() * n, 1 + zg() * 2, 1 + zg() * 3);
       }
     }),
@@ -137,7 +138,7 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
   scene.add(wiese);
 
   // Hof um die Halle (Pflaster), damit die Halle nicht direkt in der Wiese steht.
-  const hof = new THREE.Mesh(merk(new THREE.PlaneGeometry(B + 8, L + 8)), merk(new THREE.MeshStandardMaterial({ color: "#d3cbbb", roughness: 1 })));
+  const hof = new THREE.Mesh(merk(new THREE.PlaneGeometry(B + 8, L + 8)), merk(new THREE.MeshStandardMaterial({ color: "#dcd7cd", roughness: 1 })));
   hof.rotation.x = -Math.PI / 2;
   hof.position.set(mitte.x, -0.02, mitte.z);
   hof.receiveShadow = true;
@@ -145,7 +146,7 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
 
   // Hügel am Horizont: flache Kegel im Dunst.
   const huegelGeo = merk(new THREE.ConeGeometry(1, 1, 9, 1, true));
-  const huegelStoff = merk(new THREE.MeshStandardMaterial({ color: "#7e9a74", flatShading: true, roughness: 1 }));
+  const huegelStoff = merk(new THREE.MeshStandardMaterial({ color: "#aab7a6", flatShading: true, roughness: 1 }));
   const huegelZahl = 12;
   const huegel = new THREE.InstancedMesh(huegelGeo, huegelStoff, huegelZahl);
   const m = new THREE.Matrix4();
@@ -160,7 +161,7 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
   scene.add(huegel);
 
   const einheit = merk(new THREE.PlaneGeometry(1, 1));
-  const weiss = merk(new THREE.MeshStandardMaterial({ color: "#f4f4f0", roughness: 0.9 }));
+  const weiss = merk(new THREE.MeshStandardMaterial({ color: "#eceeea", roughness: 0.9 }));
   /** Weiße Linie am Boden von (x1, z1) nach (x2, z2), 12 cm breit (waagrecht oder senkrecht). */
   const linie = (g: THREE.Group, x1: number, z1: number, x2: number, z2: number, h: number) =>
     g.add(bodenStueck(Math.min(x1, x2) - (x1 === x2 ? 0.06 : 0), Math.min(z1, z2) - (z1 === z2 ? 0.06 : 0), Math.abs(x2 - x1) || 0.12, Math.abs(z2 - z1) || 0.12, weiss, h, einheit));
@@ -169,19 +170,19 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
   const park = anSeite(vorne, B, L);
   const parkBreite = Math.max(30, Math.round(park.laenge / 2.5) * 2.5);
   const p0 = park.laenge / 2 - parkBreite / 2;
-  park.gruppe.add(bodenStueck(p0 - 1, 5, parkBreite + 2, 20, merk(new THREE.MeshStandardMaterial({ color: "#62666b", roughness: 1 })), -0.012, einheit));
+  park.gruppe.add(bodenStueck(p0 - 1, 5, parkBreite + 2, 20, merk(new THREE.MeshStandardMaterial({ color: "#a9acaf", roughness: 1 })), -0.012, einheit));
   const stellplaetze = Math.floor(parkBreite / 2.5);
   for (let k = 0; k <= stellplaetze; k++) {
     linie(park.gruppe, p0 + k * 2.5, 6, p0 + k * 2.5, 11, -0.008);
     linie(park.gruppe, p0 + k * 2.5, 18, p0 + k * 2.5, 23, -0.008);
   }
-  const lackFarben = ["#b7312c", "#2f4f7f", "#d9d9d6", "#1d1f22", "#7b8288", "#355e3b", "#c9a227", "#8a8f94"];
+  const lackFarben = ["#b9a7a4", "#9eabbd", "#d6d6d2", "#8d9196", "#b4b8bb", "#a3b0a3", "#c8bfa0", "#c2c5c8"];
   const autos: { x: number; z: number; farbe: THREE.Color }[] = [];
   for (let k = 0; k < stellplaetze; k++)
     for (const zr of [8.5, 20.5]) if (z() < 0.45) autos.push({ x: p0 + k * 2.5 + 1.25, z: zr, farbe: new THREE.Color(lackFarben[Math.floor(z() * lackFarben.length)]!) });
-  const lackStoff = merk(new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.4, metalness: 0.2 }));
+  const lackStoff = merk(new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.6, metalness: 0 }));
   const karosserie = new THREE.InstancedMesh(merk(new THREE.BoxGeometry(1.8, 0.75, 4.3).translate(0, 0.55, 0)), lackStoff, Math.max(1, autos.length));
-  const kabine = new THREE.InstancedMesh(merk(new THREE.BoxGeometry(1.6, 0.6, 2.3).translate(0, 1.2, -0.2)), merk(new THREE.MeshStandardMaterial({ color: "#2b3138", roughness: 0.2, metalness: 0.4 })), Math.max(1, autos.length));
+  const kabine = new THREE.InstancedMesh(merk(new THREE.BoxGeometry(1.6, 0.6, 2.3).translate(0, 1.2, -0.2)), merk(new THREE.MeshStandardMaterial({ color: "#7e858c", roughness: 0.2, metalness: 0.4 })), Math.max(1, autos.length));
   karosserie.count = kabine.count = autos.length;
   autos.forEach((a, i) => {
     m.compose(new THREE.Vector3(a.x, 0, a.z), new THREE.Quaternion(), new THREE.Vector3(1, 1, 1));
@@ -198,8 +199,8 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
   // Sportplatz gegenüber: Rasenfeld 40 × 60 m mit Linien und Toren, rundherum eine rote Laufbahn (4 m).
   const sport = anSeite(GEGENUEBER[vorne], B, L);
   const sx = sport.laenge / 2, s0 = 14;
-  sport.gruppe.add(bodenStueck(sx - 24, s0, 48, 68, merk(new THREE.MeshStandardMaterial({ color: "#b0573f", roughness: 1 })), -0.014, einheit));
-  sport.gruppe.add(bodenStueck(sx - 20, s0 + 4, 40, 60, merk(new THREE.MeshStandardMaterial({ color: "#6fa451", roughness: 1 })), -0.012, einheit));
+  sport.gruppe.add(bodenStueck(sx - 24, s0, 48, 68, merk(new THREE.MeshStandardMaterial({ color: "#c8a597", roughness: 1 })), -0.014, einheit));
+  sport.gruppe.add(bodenStueck(sx - 20, s0 + 4, 40, 60, merk(new THREE.MeshStandardMaterial({ color: "#a9bc98", roughness: 1 })), -0.012, einheit));
   const h = -0.008, a0 = s0 + 4, a1 = s0 + 64, am = (a0 + a1) / 2;
   linie(sport.gruppe, sx - 20, a0, sx + 20, a0, h);
   linie(sport.gruppe, sx - 20, a1, sx + 20, a1, h);
@@ -242,12 +243,12 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
   const stammGeo = merk(new THREE.CylinderGeometry(0.16, 0.24, 2.4, 6).translate(0, 1.2, 0));
   const laubGeo = merk(new THREE.IcosahedronGeometry(1.7, 1).translate(0, 3.5, 0));
   const nadelGeo = merk(new THREE.ConeGeometry(1.5, 4.8, 8).translate(0, 4.2, 0));
-  const stammStoff = merk(new THREE.MeshStandardMaterial({ color: "#6b4f37", roughness: 1 }));
+  const stammStoff = merk(new THREE.MeshStandardMaterial({ color: "#9a8a79", roughness: 1 }));
   const kroneStoff = merk(new THREE.MeshStandardMaterial({ color: "#ffffff", flatShading: true, roughness: 0.95 }));
   const anzahl = Math.max(18, Math.min(45, Math.round(groesse * 0.8)));
   const orte: { x: number; z: number; s: number; nadel: boolean; farbe: THREE.Color }[] = [];
-  const laub = ["#5f8f45", "#6f9c4c", "#4f7d3c", "#7aa556", "#88a94f"];
-  const nadel = ["#3f6b45", "#36603d", "#4a7a50"];
+  const laub = ["#98ab88", "#a3b392", "#8fa27f", "#aab89a"];
+  const nadel = ["#86998a", "#7f9383", "#8ea091"];
   for (let versuch = 0; orte.length < anzahl && versuch < anzahl * 30; versuch++) {
     // Locker verteilt, eher am Rand des Geländes als dicht an der Halle.
     const w = z() * Math.PI * 2;

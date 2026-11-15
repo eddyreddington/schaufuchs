@@ -578,6 +578,11 @@ function baueWelt(kasten: HTMLDivElement, s: HallenSzene, richterIndex: Map<numb
     warten = requestAnimationFrame(() => {
       warten = 0;
       const weiter = waendeAnpassen();
+      // Dunst beginnt knapp hinter der Halle (wie weit die Kamera auch weg ist): die Halle bleibt scharf, die Umgebung tritt zurück.
+      if (scene.fog instanceof THREE.Fog) {
+        scene.fog.near = kamera.position.distanceTo(steuerung.target) + groesse * 0.7;
+        scene.fog.far = scene.fog.near + groesse * 2.8;
+      }
       renderer.render(scene, kamera);
       if (weiter) zeichne();
     });
