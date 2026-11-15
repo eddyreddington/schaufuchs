@@ -83,3 +83,5 @@ import "./tests/47-druckvorlagen";
 import "./tests/48-briefvorlage";
 import "./tests/49-spenden";
 import "./tests/50-meisterschaften";
+import "./tests/51-import";
+import "./tests/52-import-befunde";

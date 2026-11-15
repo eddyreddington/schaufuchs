@@ -41,6 +41,9 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
 | Datenschutz, Protokoll | `datenschutz.ts` | `services/datenschutz.ts`, `services/protokoll*.ts`, `db/schutz.sql` | `verein.tsx`, `protokoll.tsx` |
 | Anmeldung, Benutzer | – | `routers/auth/*`, `auth.ts` | `benutzer.tsx`, `rahmen.tsx` |
 | Kommende Schauen (Termine) | `termine.ts`, `kommende-schauen.ts` | `routers/termine.ts` | `kommende-schauen.tsx` |
+| Spenden, Zuwendungsbestätigung | `spenden.ts`, `zuwendungsbestaetigung.ts` | `routers/spenden.ts`, `services/spenden*.ts`, `pdf/spenden.ts` | `spenden.tsx`, `spender.tsx`, `verein-steuer.tsx` |
+| Meisterschaften | `meisterschaft.ts` | `routers/meisterschaft.ts`, `services/meisterschaften.ts` | `meisterschaften.tsx`, `einstellungen-meisterschaften.tsx` |
+| Import aus Altprogrammen | `import.ts` | `routers/import.ts` (`datenimport.*`), `services/import.ts`, `import/xlsx.ts` | `import.tsx` |
 
 Bedienung und Hintergründe für Anwender: `docs/handbuch/` (in der App unter `/hilfe`).
 

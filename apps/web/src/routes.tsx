@@ -16,6 +16,7 @@ import { Kassenbuch } from "./seiten/kassenbuch";
 import { Spenden } from "./seiten/spenden";
 import { Meisterschaften } from "./seiten/meisterschaften";
 import { SpenderSeite } from "./seiten/spender";
+import { ImportSeite } from "./seiten/import";
 import { KatalogGestalten } from "./seiten/katalog-gestalten";
 import { MeldungBearbeiten } from "./seiten/meldung-bearbeiten";
 import { Meldungen } from "./seiten/meldungen";
@@ -76,6 +77,7 @@ export const router = createBrowserRouter([
           { path: "verein/briefvorlage", element: <BriefvorlageSeite /> },
           { path: "aussteller", element: <AusstellerSeite /> },
           { path: "spender", element: <SpenderSeite /> },
+          { path: "import", element: <ImportSeite /> },
           {
             path: "schau/:schauId",
             element: <SchauRahmen />,

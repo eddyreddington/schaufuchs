@@ -18,3 +18,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [012](012-briefvorlage.md) | Briefvorlage: eine je Verein, Texte mit Platzhaltern |
 | [013](013-spenden.md) | Spenden: Spenderverzeichnis, Kassenbuch, Zuwendungsbestätigung nach amtlichem Muster |
 | [014](014-meisterschaften.md) | Meisterschaften: ein Regelmodell, Vorlagen statt fester Regeln |
+| [015](015-import.md) | Import aus Altprogrammen: zuordnen statt festes Format, nur über die normalen Wege |

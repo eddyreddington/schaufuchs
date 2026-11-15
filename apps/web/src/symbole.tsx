@@ -16,6 +16,7 @@ const PFADE = {
   kassenbuch: "M4 7h16v12H4zM4 7l2-3h12l2 3M15 13h2",
   meisterschaften: "M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4",
   spenden: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
+  import: "M12 4v11M7.5 10.5 12 15l4.5-4.5M4 16v4h16v-4",
   protokoll: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2",
   schauen: "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",
   stammdaten: "M5 5a1 1 0 0 1 1-1h12v13H7a2 2 0 0 0-2 2zM5 19a2 2 0 0 0 2 2h11v-4M9 8h6",

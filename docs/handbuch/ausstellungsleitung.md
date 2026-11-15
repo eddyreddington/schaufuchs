@@ -362,6 +362,20 @@ Unter „Spender“ (linke Leiste) stehen alle Spender des Vereins, über alle S
 - Unter „Spenden“ stehen alle Spenden dieses Spenders. „Sammelbestätigung 2026“ bestätigt alle Geldspenden eines Kalenderjahres, die noch keine Bestätigung haben, in einer Bestätigung mit Anlage. Sachspenden brauchen je eine eigene Bestätigung.
 - Unter „Zuwendungsbestätigungen“ stehen alle ausgestellten Bestätigungen zum erneuten Drucken. „Stornieren“ macht eine Bestätigung ungültig, zum Beispiel bei einem falschen Betrag; ihre Spenden lassen sich danach neu bestätigen. Das Doppel bleibt gespeichert.
 
+### 3.12 Import aus anderen Programmen {#import}
+
+Unter „Import“ (linke Leiste, nur Administratoren) übernehmen Sie Meldungen oder Aussteller aus einem anderen Programm, zum Beispiel aus einem älteren Schau- oder Vereinsprogramm. Es gibt dafür kein festes Format: Speichern Sie die Liste im alten Programm als Excel-Datei (.xlsx) oder als CSV- bzw. Textdatei (auch „Unicode-Text“ aus Excel). Das alte Excel-Format .xls wird nicht gelesen; öffnen Sie solche Dateien in Excel oder LibreOffice und speichern Sie sie als .xlsx. Eine Datei darf höchstens 8 MB und 5000 Zeilen haben. Steht über der Überschriftenzeile noch ein Titel, löschen Sie diese Zeile vorher in der Datei.
+
+1. **Datei:** Wählen Sie, was importiert wird: „Meldungen in eine Schau“ (dann die Schau, nur bis zur Phase „Katalog & Halle“) oder „Aussteller ins Verzeichnis“. Danach die Datei.
+2. **Spalten zuordnen:** Für jede Spalte steht dort, welches Feld SchauFUCHS darin vermutet, darunter die ersten Zeilen. Prüfen Sie die Zuordnung und ändern Sie sie, wo nötig. Spalten ohne Feld werden nicht übernommen. Ein Name in einer Spalte wird als „Nachname, Vorname“ gelesen; ohne Komma gilt der letzte Teil als Nachname. Gibt es daneben eine Spalte „Vorname“, gilt „Name“ als Nachname. Ebenso wird „PLZ und Ort“ in einer Spalte getrennt. Geschlecht wird als 1,0 / 0,1 (auch „Hahn“, „Henne“, „m“, „w“) gelesen, das Alter als jung oder alt (auch „J“, „A“, „Vj“). Ein Geschlecht wie 1,2 ergibt einen Stamm. Dann „Prüfen“.
+3. **Prüfen:** Oben stehen die Zahlen: Zeilen, übernehmbare Zeilen, Zeilen mit Fehlern, neue und vorhandene Aussteller. Zeilen mit Fehlern werden nicht übernommen; die Tabelle „Zeilen mit Fehlern oder Hinweisen“ nennt den Grund – etwa fehlender Vor- oder Nachname, unlesbares Geschlecht oder Alter, ein ausländischer Aussteller in einer Schau ohne Tiere aus dem Ausland, „Jugend“ bei einem Aussteller, der laut gespeichertem Geburtsdatum nicht mehr jugendlich ist. Was entbehrlich ist, wird mit Hinweis weggelassen: eine unlesbare E-Mail-Adresse, Telefonnummer oder Registriernummer. Eine vierstellige PLZ (Excel lässt die führende 0 weg) wird mit 0 ergänzt.
+4. **Rassen und Farbenschläge:** Steht eine Rasse genau so im Verzeichnis der Schau, ist sie zugeordnet („genau gefunden“). Sonst wählen Sie aus den Vorschlägen den richtigen Eintrag oder „auslassen“. Diese Wahl merkt sich SchauFUCHS für den Verein: Beim nächsten Import mit derselben Schreibweise steht sie schon da („wie beim letzten Import“).
+5. **Übernehmen** (oben rechts): Optional werden die Meldungen gleich bestätigt (ohne Bestätigungsmail). „Teilnahmebedingungen liegen unterschrieben vor“ kreuzen Sie nur an, wenn das für alle Meldungen der Datei stimmt.
+
+**Aussteller wiedererkennen:** Gibt es einen Aussteller schon (gleiche Registriernummer, sonst gleicher Vor- und Nachname und gleiche PLZ), wird die Meldung bei ihm angelegt. Seine gespeicherten Daten bleiben, wie sie sind, auch wenn die Datei eine andere Anschrift hat; ändern Sie sie bei Bedarf unter „Aussteller“. Steht in der Datei eine andere Registriernummer, ist es ein anderer Aussteller (etwa Vater und Sohn mit gleichem Namen). Passt eine Zeile ohne Registriernummer zu mehreren Nummern – in der Datei oder bei vorhandenen Ausstellern –, ist sie ein Fehler („Name passt zu mehreren Registriernummern“): Tragen Sie die Nummer in der Datei nach. Hat er in der Schau schon eine Meldung, wird er übersprungen. So entsteht nichts doppelt, wenn Sie dieselbe Datei zweimal importieren. Gesperrte und gelöschte Aussteller werden nicht importiert. In einer Testschau entstehen alle Aussteller als Test-Aussteller.
+
+**Zurücknehmen:** Unter „Frühere Importe“ steht jeder Import. „Zurücknehmen“ löscht seine Meldungen und die Aussteller, die er neu angelegt hat – nur bis zur Phase „Katalog & Halle“ und solange nichts weiter damit geschehen ist: niemand hat die Meldungen danach bearbeitet (auch nicht bestätigt), keine Zahlung, keine Katalognummern, keine Bewertung, kein Ehrenpreis, keine Spende, keine Abrechnung. Sonst bleibt alles stehen, und einzelne Meldungen stornieren Sie wie gewohnt. Ein neu angelegter Aussteller, den jemand danach bearbeitet hat oder der woanders gebraucht wird, bleibt erhalten. Import und Rücknahme stehen im Protokoll, die Rücknahme bei jeder Meldung.
+
 ## 4. Rassen und Farbenschläge
 
 Das Verzeichnis der Rassen und Farbenschläge bestimmt zweierlei: was Aussteller melden können und in welcher Reihenfolge der Katalog nummeriert wird (Ausstellungsfolge). Jede Schau nutzt **eine Version** des Verzeichnisses. So bleiben alte Kataloge stimmig, auch wenn im nächsten Jahr ein neues Verzeichnis kommt.
@@ -1623,6 +1637,7 @@ Einstellbar sind unter anderem:
 | Spende erfassen (bar, Überweisung, Sache), Spender anlegen | ja | ja |
 | Zuwendungsbestätigung, Sammelbestätigung, Spende oder Bestätigung stornieren, steuerliche Angaben | – | ja; Storno mit Grund |
 | Ringnummer nach Freigabe, Verkauf oder Abschluss | – | ja, mit Grund |
+| Import aus anderen Programmen, Import zurücknehmen | – | ja |
 
 ## Anhang B: Was ist in welcher Phase möglich?
 

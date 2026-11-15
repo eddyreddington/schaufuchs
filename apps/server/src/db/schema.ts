@@ -80,6 +80,11 @@ export const organisation = pgTable("organisation", {
   abmeldung: jsonb("abmeldung").$type<Partial<Record<"admin" | "mitarbeiter" | "preisrichter", number>>>(),
   /** Steuerliche Angaben für Zuwendungsbestätigungen (packages/domain/src/spenden.ts); null = nicht eingetragen. */
   steuer: jsonb("steuer").$type<Steuerstatus>(),
+  /**
+   * Gelernte Zuordnungen des Imports: Schreibweise aus der Datei (suchNorm von Rasse und Farbenschlag) → Rasse und
+   * Farbenschlag im Verzeichnis, mit Namen statt Nummern (die gelten je Verzeichnisversion).
+   */
+  importZuordnungen: jsonb("import_zuordnungen").$type<Record<string, { rasse: string; farbenschlag: string }>>().notNull().default({}),
   createdAt: created(),
 });
 
@@ -1019,3 +1024,5 @@ export const sepaLauf = pgTable(
 
 // Spenden: eigene Datei (Spender, Spenden, Zuwendungsbestätigungen).
 export * from "./schema-spenden";
+// Import aus Altprogrammen: Importläufe.
+export * from "./schema-import";

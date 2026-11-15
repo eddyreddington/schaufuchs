@@ -336,7 +336,26 @@ Hallenplan: Wie stehen die Käfige in der Halle?
 - `frontFehler()` – Käfigfronten, die nicht zu einem Gang zeigen: Die Front (Gitter) eines Käfigs ist offen, Rück- und Seitenwände sind dicht – vor jeder Front muss ei …
 - Typen: `HallenFlaeche`, `Halle`, `Drehung`, `HallenObjekt`, `Hauptgang`, `PlanKaefig`, `Reihe`, `FreierPlatz`, `PlanPlatte`, `PlanObjekt`, `Hallenplan`
 
-### index.ts (41 Z.)
+### import.ts (328 Z.)
+Import aus Altprogrammen (Entscheidung 015): Es gibt kein Standardformat – Programme wie Vereins- und Katalogprogramme exportieren Tabellen mit eig …
+Tests: `import.test.ts`
+
+- `IMPORT_FELDER`
+- `AUSSTELLER_FELDER`
+- `TIER_FELDER`
+- `csvLesen()` – CSV lesen: Trennzeichen (; , Tab) aus der ersten Zeile, Anführungszeichen nach RFC 4180, BOM weg, leere Zeilen weg.
+- `suchNorm()` – Kleinbuchstaben, Umlaute ausgeschrieben, ß → ss, Satzzeichen zu Leerzeichen.
+- `spaltenRaten()` – Für jede Spalte das wahrscheinliche Feld (oder null); jedes Feld höchstens einmal.
+- `geschlechtLesen()` – Geschlecht als „1,0“ usw.; null, wenn nicht lesbar.
+- `alterLesen()`
+- `preisLesen()` – Preis in Cent: „25“, „25,50“, „25,-“, „12,5 €“, „1.250,00“; leer, „-“ oder Text → null.
+- `ausstellerSchluessel()` – Wiedererkennen: gültige Registriernummer, sonst Vorname, Nachname und PLZ.
+- `aehnlichkeit()` – Ähnlichkeit zweier Texte (Dice-Koeffizient über Buchstabenpaare), 0 bis 1.
+- `rassenVorschlaege()` – Vorschläge aus dem Verzeichnis für Rasse und Farbenschlag aus der Datei; genaue Treffer zuerst.
+- `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
+- Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
+
+### index.ts (42 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -711,6 +730,15 @@ Druckvorlagen (vorerst Bewertungskarte): Vorlagen des Vereins anlegen, ändern, 
 - `druckvorlage.briefSpeichern` mutation · admin
 - `druckvorlage.serienbriefAnzahl` query · admin – Wie viele Empfänger ein Serienbrief mit dieser Auswahl hätte (vor dem Erzeugen anzeigen).
 
+### routers/import.ts (119 Z.) → `datenimport`
+Import aus Altprogrammen (Entscheidung 015), nur Administratoren: Datei lesen (CSV oder Excel), prüfen, übernehmen, Importläufe anzeigen und zurück …
+
+- `datenimport.lesen` mutation · admin – Datei lesen: Excel (.xlsx) oder CSV.
+- `datenimport.pruefen` mutation · admin
+- `datenimport.uebernehmen` mutation · admin
+- `datenimport.laeufe` query · admin
+- `datenimport.zuruecknehmen` mutation · admin
+
 ### routers/kasse.ts (715 Z. ⚠) → `kasse`
 
 - `kasse.tierSuchen` query · angemeldet
@@ -978,6 +1006,9 @@ Prozeduren: katalog.halleSetzen, katalog.hallenplan, katalog.kaefigInfo, katalog
 ### hilfe.tsx (182 Z.) – `/hilfe`, `/hilfe/:teil`
 Prozeduren: auth.status
 
+### import.tsx (421 Z.) – `/import`
+Prozeduren: datenimport.laeufe, datenimport.lesen, datenimport.pruefen, datenimport.uebernehmen, datenimport.zuruecknehmen, schau.liste
+
 ### kaefige.tsx (473 Z.) – `/schau/:schauId/kaefige`
 Prozeduren: katalog.aufstellerSetzen, katalog.kaefigMassSetzen, katalog.kaefigRegelSetzen, katalog.kaefigbedarf, katalog.plattenSetzen, katalog.sockelBildEntfernen, katalog.sockelBildSetzen
 
@@ -1072,6 +1103,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `einteilung.ts` (90 Z.) · sperreEinteilung, einteilTier, einteilSchluessel, ladeRegeln, bereicheDerSchau, rassenEinteilungAnwenden, einteilungNachStatus
 - `eintraege.ts` (249 Z.) · ladeEintraege, NICHT_VEROEFFENTLICHT, verdeckeNamen, ausstellerAnzeige, bezeichnung, alsFolge, meldebetrag, meldebetraege, skalaVon
 - `fehlertext.ts` (5 Z.) · kurzerFehler
+- `import.ts` (381 Z.) – Import aus Altprogrammen (Entscheidung 015): Tabelle prüfen (Zeilen, Aussteller wiedererkennen, Rassen abgleichen), übernehmen (über dieselben Wege … · rassenSchluessel, importPruefen, importUebernehmen, importZuruecknehmen, importLaeufe
 - `kasse.ts` (110 Z.) · sperreKasse, SEPA_ERSTELLT, SEPA_VERWORFEN, SEPA_GEBUCHT, offenerLauf, schliesseLauf, offeneStornoZahlungen, offeneUeberweisungsverkaeufe, pruefeNichtAbgeschlossen, pruefeNichtAbgerechnet
 - `kassenbuch.ts` (237 Z.) · tagDe, ladeKassenbuch, sollBestand, archiviereBeleg, ladeBeleg, zweitschrift, belegListe, archiviereKaufbeleg, archiviereKassenbeleg, archiviereQuittung, archiviereSpendenquittung
 - `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
@@ -1118,8 +1150,9 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `client.ts` (11 Z.) · sql, db
 - `geheim-bestand.ts` (61 Z.) – Stellt Altbestand im Klartext auf verschlüsselte Spalten um (läuft bei jedem Start nach den Migrationen; findet es nichts mehr, tut es nichts). · pruefeDatenschluessel, verschluesseleBestand
 - `geheim.ts` (99 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, entschluessele, geheimText, geheimJson
+- `schema-import.ts` (26 Z.) – Import aus Altprogrammen (Entscheidung 015): je Importlauf, was er angelegt hat – damit „Zurücknehmen“ genau das wieder entfernt, solange nichts we … · importlauf
 - `schema-spenden.ts` (115 Z.) – Spenden (Entscheidung 013): Spenderverzeichnis des Vereins, Spenden je Schau und Zuwendungsbestätigungen. · spender, spende, zuwendungsbestaetigung, bestaetigungSpende
-- `schema.ts` (1.021 Z. ⚠) · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum, organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag, schau, gebuehr, preisart, aussteller, meldung, zahlung, katalogeintrag, vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein, stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung, aenderung, postausgang, KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, druckvorlage, katalogGestaltung, TERMIN_STATUS, terminabo, schautermin, bild, rassebild, katalogBeitrag, KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, aenderungKette, aenderungGeloescht, aenderungAnonymisiert, sepaLauf
+- `schema.ts` (1.028 Z. ⚠) · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum, organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag, schau, gebuehr, preisart, aussteller, meldung, zahlung, katalogeintrag, vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein, stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung, aenderung, postausgang, KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, druckvorlage, katalogGestaltung, TERMIN_STATUS, terminabo, schautermin, bild, rassebild, katalogBeitrag, KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, aenderungKette, aenderungGeloescht, aenderungAnonymisiert, sepaLauf
 - `schutz.ts` (15 Z.) – Spielt die Schutz-Trigger (schutz.sql) ein: nach Migrationen, nach db:push und in den Tests. · schutzEinspielen
 - `spalten.ts` (12 Z.) – Spaltenarten, die mehrere Schemadateien nutzen (schema.ts, schema-spenden.ts). · ts, created, createdNachSperre, bytea
 
@@ -1134,8 +1167,8 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `index.ts` (930 Z. ⚠)
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
-- `router.ts` (42 Z.) · appRouter
-- `seed.ts` (548 Z.) – Demo-Daten für Entwicklung, Tests und Vorführung. · DEMO, demoEntfernen, seed, bisZurBewertung, komplett
+- `router.ts` (44 Z.) · appRouter
+- `seed.ts` (550 Z.) – Demo-Daten für Entwicklung, Tests und Vorführung. · DEMO, demoEntfernen, seed, bisZurBewertung, komplett
 - `testschau.ts` (517 Z.) – Testdaten für eine vorhandene, leere Schau: füllt sie wie eine echte Lokalschau bis nach der Einlieferung, damit die Ausstellungsleitung den Rest ( … · MERKMAL, DEMO_TIERE_HOECHSTENS, mitDemoSperre, fuellen, zuruecksetzen, entfernen
 - `trpc.ts` (290 Z.) · kurzerPruefText, pruefeMeta, pruefeUmfang, strukturZuGross, sqlZustand, router, publicProcedure, fehler, dbId, kalenderdatum, benutzerProcedure, adminProcedure, richterProcedure, oeffentlichSichtbarProcedure, ladeSchau, pruefeNachFreigabe
 - `vereinsverzeichnis-import.ts` (27 Z.) – Vereinsverzeichnis einspielen (Namen der Rassegeflügelzuchtvereine aus öffentlichen Verbandsseiten): bun src/vereinsverzeichnis-import.ts --datei < …
@@ -1149,10 +1182,10 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `main.tsx` (22 Z.)
 - `modus.ts` (46 Z.) · setzeFarbmodus, useFarbmodus
 - `pdf-anzeige.tsx` (43 Z.) – PDF im Browser anzeigen (pdf.js), gemeinsam für die Live-Vorschauen von Katalog und Druckvorlagen. · pdfjs, PdfSeite
-- `rahmen.tsx` (526 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
+- `rahmen.tsx` (527 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
 - `rolle.ts` (9 Z.) · useIstAdmin
-- `routes.tsx` (112 Z.) · router
-- `symbole.tsx` (43 Z.) · Symbol
+- `routes.tsx` (114 Z.) · router
+- `symbole.tsx` (44 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui.tsx` (621 Z. ⚠) · knopfKlasse, Knopf, KnopfLink, Feld, useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter, Eingabe, Textfeld, Auswahl, Haken, Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, SpeicherPlatz, Speicherleiste, Kennzahlen, Leer, Laden, FehlerAnzeige, Dialog, FragenAnbieter, useFrage, MeldungenAnbieter, useMeldung
 
@@ -1210,5 +1243,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `48-briefvorlage.ts` (116 Z.) – Briefvorlage des Vereins: speichern (Protokoll), eigene Texte im B-Bogen, Serienbrief an Mitglieder, alle Aussteller oder die einer Schau – ohne ge …
 - `49-spenden.ts` (221 Z.) – Spenden (Entscheidung 013): steuerliche Angaben, Barspende mit Kassenbuch und Quittung, Spende bei der Meldung im offenen Betrag, Zuwendungsbestäti …
 - `50-meisterschaften.ts` (60 Z.) – Meisterschaften (Entscheidung 014): Regeln speichern (Ausstellungsleitung, Protokoll), Wertung aus Katalog und Bewertung, PDF und CSV.
+- `51-import.ts` (116 Z.) – Import aus Altprogrammen (Entscheidung 015): Datei lesen (CSV in Windows-1252, altes .xls abgelehnt), prüfen (Aussteller wiedererkennen, Rassen zuo …
+- `52-import-befunde.ts` (153 Z.) – Import aus Altprogrammen, Befunde der Gegenprüfung (Entscheidung 015): große Dateien, einzelne fehlerhafte Zeilen, gleicher Name mit anderer Regist …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

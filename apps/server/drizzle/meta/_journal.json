@@ -407,6 +407,13 @@
       "when": 1794750474979,
       "tag": "0057_meisterschaften",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1794752544073,
+      "tag": "0058_import",
+      "breakpoints": true
     }
   ]
 }
