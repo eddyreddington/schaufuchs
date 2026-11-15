@@ -41,20 +41,23 @@ und Preisrichter sind eingebaut.
 
 | | Voraussetzung |
 |---|---|
-| **Server-Betriebssystem** | Linux. Geprüft mit **Debian 12** und **Ubuntu 24.04 LTS**. Andere Linux-Systeme, auf denen Docker läuft, sollten gehen, sind aber nicht geprüft. |
+| **Server-Betriebssystem** | Linux. Geprüft mit **Debian 12** und **Ubuntu 24.04 LTS** – auf einem gemieteten Server oder einem eigenen Rechner im Verein (Mini-PC, alter PC, Raspberry Pi 4/5 mit 64-Bit-System). Andere Linux-Systeme, auf denen Docker läuft, sollten gehen, sind aber nicht geprüft. |
 | **Prozessor** | 64 Bit, Intel/AMD (`amd64`) oder ARM (`arm64`, z. B. ARM-Cloud-Server). Fertige Images gibt es für beide. |
 | **Größe** | 2 CPU-Kerne, 4 GB Arbeitsspeicher, 40 GB Speicher – ein kleiner gemieteter Cloud-Server (rund 5 € im Monat) reicht. |
 | **Netz** | Eine eigene Adresse (z. B. `schau.mein-verein.de`), die per DNS auf den Server zeigt; Ports 80 und 443 offen. |
 | **Software** | Nur Docker mit `docker compose` – der Installer richtet es bei Bedarf selbst ein. |
-| **Windows, macOS** | Nicht als Server vorgesehen (der Installer läuft nur unter Linux). Als Arbeitsplatz genügt jeder aktuelle Browser – auch auf Windows, macOS, iPad und Android-Tablets. |
+| **Laptop (Mac, Windows)** | Zum Ausprobieren, für Schulungen oder als Einzelplatz unter `https://localhost`: Mac mit Docker Desktop oder OrbStack (ab 1.2.1, geprüft mit OrbStack), Windows über WSL2 mit Ubuntu und Docker Desktop (nicht geprüft). Für eine Schau mit Online-Meldung und Tablets braucht es einen Server mit eigener Adresse. |
+| **Arbeitsplätze** | Jeder aktuelle Browser – auch auf Windows, macOS, iPad und Android-Tablets. |
 
 Benutzt wird SchauFUCHS nur im Browser; auf den Rechnern und Tablets des Vereins wird nichts installiert. Preisrichter
 bewerten am Tablet auch ohne Netz (die Seite lässt sich als App auf den Startbildschirm legen).
 
 ### Installieren und in Betrieb nehmen
 
-1. **Server mieten** (Debian 12 oder Ubuntu 24.04, Standort Deutschland/EU, mit Auftragsverarbeitungsvertrag).
-2. **DNS-Eintrag** anlegen: `A`-Eintrag `schau` → IP-Adresse des Servers.
+1. **Server bereitstellen:** mieten (Debian 12 oder Ubuntu 24.04, Standort Deutschland/EU, mit
+   Auftragsverarbeitungsvertrag) oder einen eigenen Rechner im Verein mit Debian/Ubuntu nehmen (Ports 80 und 443 im
+   Router freigeben, ggf. DynDNS).
+2. **DNS-Eintrag** anlegen: `A`-Eintrag `schau` → IP-Adresse des Servers (bei DynDNS: `CNAME` auf die DynDNS-Adresse).
 3. **Anmelden:** `ssh root@IP-ADRESSE` (Windows: PowerShell, Mac: Terminal).
 4. **Installieren** – ein Befehl:
 
@@ -71,6 +74,7 @@ bewerten am Tablet auch ohne Netz (die Seite lässt sich als App auf den Startbi
    Zwei-Faktor-Anmeldung einrichten, Impressum und Datenschutzhinweise ausfüllen.
 7. **Optional Mailversand:** `schaufuchs einstellungen` und `SMTP_URL` eintragen (siehe unten).
 
+Auf dem Laptop (Mac, Windows) geht es mit der Adresse `localhost` – siehe „Auf dem Laptop“ in der Anleitung.
 Die ausführliche Anleitung mit allen Schritten steht in [docs/installation.md](docs/installation.md), der laufende Betrieb
 (Sicherungen, Notfälle, Hallenbetrieb) in [docs/betrieb.md](docs/betrieb.md).
 

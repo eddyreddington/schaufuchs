@@ -1,7 +1,9 @@
 #!/bin/sh
-# SchauFUCHS installieren – für einen Linux-Server (Debian oder Ubuntu) mit eigener Adresse.
+# SchauFUCHS installieren – auf einem Linux-Server (Debian oder Ubuntu) mit eigener Adresse, oder zum Ausprobieren
+# auf einem Mac (Docker Desktop oder OrbStack) bzw. unter Windows in WSL2 (Ubuntu) mit der Adresse „localhost“.
 #
-#   curl -fsSL https://raw.githubusercontent.com/eddyreddington/schaufuchs/main/deploy/install.sh | sudo sh
+#   Linux, Windows (WSL2):  curl -fsSL https://raw.githubusercontent.com/eddyreddington/schaufuchs/main/deploy/install.sh | sudo sh
+#   Mac:                    curl -fsSL https://raw.githubusercontent.com/eddyreddington/schaufuchs/main/deploy/install.sh | sh
 #
 # Fragt Adresse und E-Mail, installiert bei Bedarf Docker, erzeugt alle Schlüssel, startet SchauFUCHS mit HTTPS und
 # zeigt am Ende den Einrichtungscode und das Notfallblatt (Schlüssel zum Aufheben).
@@ -21,7 +23,9 @@ KONTO="eddyreddington"
 VERSION="${SCHAUFUCHS_VERSION:-1.2.0}"
 IMAGE="${SCHAUFUCHS_IMAGE:-ghcr.io/$KONTO/schaufuchs}"
 QUELLE="${SCHAUFUCHS_QUELLE:-https://raw.githubusercontent.com/$KONTO/schaufuchs/v$VERSION}"
-ZIEL="${SCHAUFUCHS_ZIEL:-/opt/schaufuchs}"
+SYSTEM="$(uname -s)"
+# Mac: im eigenen Benutzerordner, ohne root (Docker Desktop/OrbStack laufen als Benutzer).
+if [ "$SYSTEM" = "Darwin" ]; then ZIEL="${SCHAUFUCHS_ZIEL:-$HOME/SchauFUCHS}"; else ZIEL="${SCHAUFUCHS_ZIEL:-/opt/schaufuchs}"; fi
 
 fett() { printf '\033[1m%s\033[0m\n' "$*"; }
 fehler() { printf '\033[31mFehler:\033[0m %s\n' "$*" >&2; exit 1; }
@@ -38,14 +42,21 @@ ja() {
 zufall_hex() { od -An -tx1 -N"$1" /dev/urandom | tr -d ' \n'; }
 
 # ── Voraussetzungen ───────────────────────────────────────────────────────
-[ "$(id -u)" = "0" ] || fehler "Bitte mit sudo bzw. als root ausführen."
-[ "$(uname -s)" = "Linux" ] || fehler "Der Installer ist für Linux-Server (Debian, Ubuntu)."
+case "$SYSTEM" in
+  Linux) [ "$(id -u)" = "0" ] || fehler "Bitte mit sudo bzw. als root ausführen." ;;
+  Darwin) ;;
+  *) fehler "Dieses System wird nicht unterstützt. Unter Windows bitte in WSL2 (Ubuntu) ausführen – siehe Anleitung." ;;
+esac
 [ ! -f "$ZIEL/.env" ] || fehler "SchauFUCHS ist hier schon installiert ($ZIEL). Aktualisieren mit: schaufuchs update"
 
 fett "SchauFUCHS $VERSION – Installation"
 echo
 
-if ! command -v docker > /dev/null 2>&1; then
+if [ "$SYSTEM" = "Darwin" ]; then
+  # Auf dem Mac installiert der Installer Docker nicht selbst: Docker Desktop oder OrbStack vorher installieren und starten.
+  command -v docker > /dev/null 2>&1 || fehler "Docker fehlt. Bitte zuerst Docker Desktop (docker.com) oder OrbStack (orbstack.dev) installieren und starten."
+  docker info > /dev/null 2>&1 || fehler "Docker läuft nicht. Bitte Docker Desktop bzw. OrbStack starten und den Installer noch einmal aufrufen."
+elif ! command -v docker > /dev/null 2>&1; then
   echo "Docker ist nicht installiert. Es wird mit dem offiziellen Skript von docker.com installiert."
   ja "Docker jetzt installieren?" || fehler "Ohne Docker geht es nicht. Abgebrochen."
   command -v curl > /dev/null 2>&1 || { apt-get update -qq && apt-get install -y -qq curl; }
@@ -56,7 +67,8 @@ docker compose version > /dev/null 2>&1 || fehler "„docker compose“ fehlt. B
 # ── Fragen ────────────────────────────────────────────────────────────────
 echo "Unter welcher Adresse soll SchauFUCHS erreichbar sein? Beispiel: schau.mein-verein.de"
 echo "Die Adresse muss schon auf diesen Server zeigen (DNS-Eintrag beim Anbieter der Domain)."
-domain=$(printf '%s' "${SCHAUFUCHS_ADRESSE:-$(frage "Adresse:")}" | tr 'A-Z' 'a-z' | sed 's#^https\?://##; s#/.*$##')
+echo "Nur auf diesem Rechner ausprobieren: localhost"
+domain=$(printf '%s' "${SCHAUFUCHS_ADRESSE:-$(frage "Adresse:")}" | tr 'A-Z' 'a-z' | sed -E 's#^https?://##; s#/.*$##')
 [ -n "$domain" ] || fehler "Keine Adresse angegeben."
 if [ "$domain" != "localhost" ]; then
   ziel_ip=$(getent ahostsv4 "$domain" 2> /dev/null | awk 'NR==1{print $1}')
@@ -88,7 +100,14 @@ hole deploy/Caddyfile "$ZIEL/Caddyfile"
 hole deploy/schaufuchs "$ZIEL/schaufuchs"
 hole scripts/wiederherstellen.sh "$ZIEL/scripts/wiederherstellen.sh"
 chmod 755 "$ZIEL/schaufuchs"
-ln -sf "$ZIEL/schaufuchs" /usr/local/bin/schaufuchs
+# Befehl „schaufuchs“ überall aufrufbar – auf dem Mac nur, wenn /usr/local/bin ohne root beschreibbar ist.
+if [ "$SYSTEM" = "Linux" ] || [ -w /usr/local/bin ]; then
+  ln -sf "$ZIEL/schaufuchs" /usr/local/bin/schaufuchs
+  befehl="schaufuchs"
+else
+  befehl="$ZIEL/schaufuchs"
+fi
+if [ "$SYSTEM" = "Linux" ]; then befehl="sudo $befehl"; fi
 
 # ── Schlüssel ─────────────────────────────────────────────────────────────
 echo
@@ -142,10 +161,11 @@ for _ in $(seq 1 90); do
   sleep 2
 done
 echo
-[ -n "$bereit" ] || fehler "SchauFUCHS ist nicht gestartet. Hinweise: schaufuchs logs"
+[ -n "$bereit" ] || fehler "SchauFUCHS ist nicht gestartet. Hinweise: $befehl logs"
 
 # ── Notfallblatt ──────────────────────────────────────────────────────────
-blatt=/root/schaufuchs-notfallblatt.txt
+# Linux: im Ordner von root; Mac: im Installationsordner (nur für den Benutzer lesbar).
+if [ "$SYSTEM" = "Darwin" ]; then blatt="$ZIEL/notfallblatt.txt"; else blatt=/root/schaufuchs-notfallblatt.txt; fi
 umask 077
 cat > "$blatt" << BLATT
 SchauFUCHS – Notfallblatt für $domain (erstellt $(date '+%d.%m.%Y'))
@@ -176,5 +196,8 @@ echo "      cat $blatt      (anzeigen)"
 echo "      rm $blatt       (danach löschen)"
 echo "  Ohne diese Schlüssel lässt sich keine Sicherung zurückspielen."
 echo
-echo "  Weitere Befehle: schaufuchs hilfe"
+if [ "$domain" = "localhost" ]; then
+  echo "  Der Browser warnt einmal vor dem selbst ausgestellten Zertifikat – für localhost unbedenklich."
+fi
+echo "  Weitere Befehle: $befehl hilfe"
 }

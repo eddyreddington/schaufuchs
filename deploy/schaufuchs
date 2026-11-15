@@ -1,5 +1,5 @@
 #!/bin/sh
-# Verwaltung einer SchauFUCHS-Installation (angelegt von install.sh, liegt in /opt/schaufuchs).
+# Verwaltung einer SchauFUCHS-Installation (angelegt von install.sh; Linux: /opt/schaufuchs, Mac: ~/SchauFUCHS).
 # Aufruf: schaufuchs hilfe
 set -eu
 ZIEL="$(dirname "$(readlink -f "$0")")"
@@ -10,9 +10,16 @@ fett() { printf '\033[1m%s\033[0m\n' "$*"; }
 fehler() { printf '\033[31mFehler:\033[0m %s\n' "$*" >&2; exit 1; }
 wert() { sed -n "s/^$1=//p" .env | tail -n 1 | sed 's/^"//; s/"$//'; }
 setze() {
-  if grep -q "^$1=" .env; then sed -i "s#^$1=.*#$1=$2#" .env; else printf '%s=%s\n' "$1" "$2" >> .env; fi
+  # Ohne „sed -i“ (unterscheidet sich zwischen Linux und Mac); „cat >“ behält die Rechte der Datei.
+  if grep -q "^$1=" .env; then sed "s#^$1=.*#$1=$2#" .env > .env.neu && cat .env.neu > .env && rm -f .env.neu; else printf '%s=%s\n' "$1" "$2" >> .env; fi
 }
-[ "$(id -u)" = "0" ] || fehler "Bitte mit sudo ausführen: sudo schaufuchs $*"
+# Linux: als root (Docker und /opt gehören root). Mac: als Benutzer (Docker Desktop/OrbStack).
+if [ "$(uname -s)" = "Linux" ]; then
+  [ "$(id -u)" = "0" ] || fehler "Bitte mit sudo ausführen: sudo schaufuchs $*"
+  AUFRUF="sudo schaufuchs"
+else
+  AUFRUF="schaufuchs"
+fi
 [ -f .env ] || fehler "Keine Installation in $ZIEL gefunden."
 
 gesund() {
@@ -26,7 +33,9 @@ gesund() {
 # Privaten Sicherungsschlüssel abfragen und nur im Arbeitsspeicher ablegen (/dev/shm); gibt den Pfad aus.
 schluessel_abfragen() {
   # Im Arbeitsspeicher (/dev/shm), nie auf der Platte. SCHAUFUCHS_TMP nur für Probeläufe in Containern.
-  datei=$(mktemp "${SCHAUFUCHS_TMP:-/dev/shm}/schaufuchs-schluessel.XXXXXX")
+  # Ohne /dev/shm (Mac): im privaten temporären Ordner des Benutzers, nach Gebrauch gelöscht.
+  [ -d /dev/shm ] && tmp=/dev/shm || tmp="${TMPDIR:-/tmp}"
+  datei=$(mktemp "${SCHAUFUCHS_TMP:-$tmp}/schaufuchs-schluessel.XXXXXX")
   # Ohne Rückfrage (Automatisierung): SCHAUFUCHS_SCHLUESSEL=/pfad/zur/datei mit dem Schlüssel.
   if [ -n "${SCHAUFUCHS_SCHLUESSEL:-}" ]; then
     grep '^AGE-SECRET-KEY-' "$SCHAUFUCHS_SCHLUESSEL" > "$datei" || { rm -f "$datei"; fehler "Kein Sicherungsschlüssel in $SCHAUFUCHS_SCHLUESSEL."; }
@@ -85,7 +94,7 @@ case "$befehl" in
     if gesund 90; then
       fett "SchauFUCHS $neu läuft."
     else
-      echo "SchauFUCHS $neu startet nicht. Zurück auf $alt mit:  sudo schaufuchs zuruecknehmen" >&2
+      echo "SchauFUCHS $neu startet nicht. Zurück auf $alt mit:  $AUFRUF zuruecknehmen" >&2
       exit 1
     fi
     ;;
@@ -138,7 +147,7 @@ case "$befehl" in
 
   hilfe|*)
     cat << HILFE
-SchauFUCHS verwalten (immer mit sudo):
+SchauFUCHS verwalten (Linux: immer mit sudo):
 
   schaufuchs status              Läuft alles? Version, letzte Sicherung, freier Platz
   schaufuchs update [VERSION]    Auf die neueste (oder angegebene) Version aktualisieren – sichert vorher
