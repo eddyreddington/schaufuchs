@@ -38,6 +38,7 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
   // Preisrichter-Befreiung gilt je Meldung (eine spätere Meldung ändert ältere Abrechnungen nicht).
   const [istPreisrichter, setIstPreisrichter] = useState(vorhanden ? vorhanden.meldung.istPreisrichter : false);
   const [istJugend, setIstJugend] = useState(vorhanden?.meldung.istJugend ?? false);
+  const [teilschau, setTeilschau] = useState<string | null>(vorhanden?.meldung.teilschau ?? null);
   const [eingang, setEingang] = useState(vorhanden?.meldung.eingang ?? ("papier" as const));
   const [bemerkung, setBemerkung] = useState(vorhanden?.meldung.bemerkung ?? "");
   const [zustimmung, setZustimmung] = useState(!!vorhanden?.meldung.zustimmungAm);
@@ -50,7 +51,7 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
   const [positionen, setPositionen] = useState<Position[]>(() => (vorhanden ? vorhanden.eintraege.map(ausEintrag) : [neuePosition()]));
   const [fehler, setFehler] = useState<string[]>([]);
   // Ungespeicherte Änderungen: vor dem Verlassen nachfragen. Vergleich mit dem zuletzt gespeicherten Stand.
-  const stand = JSON.stringify({ a, istPreisrichter, istJugend, bemerkung, zustimmung, widerspruch, onlineZustimmung, erklaerungen, erziehungsberechtigter, positionen });
+  const stand = JSON.stringify({ a, istPreisrichter, istJugend, teilschau, bemerkung, zustimmung, widerspruch, onlineZustimmung, erklaerungen, erziehungsberechtigter, positionen });
   const gespeichert = useRef(stand);
   useUngespeichertWarnung(() => gespeichert.current !== stand);
 
@@ -79,6 +80,7 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
       aussteller: { ...a, id: ausstellerId, istPreisrichter },
       eingang,
       istJugend,
+      teilschau,
       bemerkung,
       zustimmung,
       namenWiderspruch: widerspruch,
@@ -150,6 +152,19 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
                 <Haken label="Jugendlicher" checked={istJugend} onChange={setIstJugend} />
                 <Haken label="Amtierender Preisrichter" checked={istPreisrichter} onChange={setIstPreisrichter} />
               </div>
+              {(schau.data?.teilschauen.length ?? 0) > 0 && (
+                <Feld label="Teilschau" className="max-w-md">
+                  {(id) => (
+                    <Auswahl id={id} value={teilschau ?? schau.data!.teilschauen[0]!.id} onChange={(e) => setTeilschau(e.target.value)}>
+                      {schau.data!.teilschauen.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </Auswahl>
+                  )}
+                </Feld>
+              )}
               {istJugend && (
                 <Feld label="Erziehungsberechtigter" hinweis={onlineZustimmung ? "Pflicht für die Veröffentlichung im Internet" : undefined} className="max-w-md">
                   {(id) => <Eingabe id={id} value={erziehungsberechtigter} onChange={(e) => setErziehungsberechtigter(e.target.value)} autoComplete="off" />}

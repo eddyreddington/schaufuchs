@@ -174,8 +174,7 @@ Demo-Liste ist ein kleiner Auszug zum Ausprobieren.
 
 ## Noch nicht enthalten
 
-Lastschrift für das Standgeld (braucht SEPA-Mandate), Druck auf Endlospapier, mehrere Teilschauen je Ausstellung,
-Meisterschaftswertungen, Import aus Altprogrammen. **Kasse:** Ob die Verkaufsstelle eine TSE braucht (§ 146a AO), klärt
+Lastschrift für das Standgeld (braucht SEPA-Mandate), Druck auf Endlospapier. **Kasse:** Ob die Verkaufsstelle eine TSE braucht (§ 146a AO), klärt
 jeder Verein mit seinem Steuerberater.
 
 ## Lizenz

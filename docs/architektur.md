@@ -44,6 +44,7 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
 | Spenden, Zuwendungsbestätigung | `spenden.ts`, `zuwendungsbestaetigung.ts` | `routers/spenden.ts`, `services/spenden*.ts`, `pdf/spenden.ts` | `spenden.tsx`, `spender.tsx`, `verein-steuer.tsx` |
 | Meisterschaften | `meisterschaft.ts` | `routers/meisterschaft.ts`, `services/meisterschaften.ts` | `meisterschaften.tsx`, `einstellungen-meisterschaften.tsx` |
 | Import aus Altprogrammen | `import.ts` | `routers/import.ts` (`datenimport.*`), `services/import.ts`, `import/xlsx.ts` | `import.tsx` |
+| Teilschauen (fortlaufende Katalognummern) | `teilschau.ts`, `katalog.ts` | `routers/schau.ts` (`teilschauenSetzen`), `services/eintraege.ts`, `pdf/katalog.ts` | `einstellungen-teilschauen.tsx` |
 
 Bedienung und Hintergründe für Anwender: `docs/handbuch/` (in der App unter `/hilfe`).
 

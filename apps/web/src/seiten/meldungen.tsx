@@ -16,6 +16,9 @@ export function Meldungen() {
   const [status, setStatus] = useState<MeldungStatus | "">("");
   // Ohne Statusfilter laden: die Zahlen je Status stehen im Umschalter, gefiltert wird hier.
   const alle = trpc.meldung.liste.useQuery({ schauId, q, status: null }, { placeholderData: (alt) => alt });
+  const teilschauen = trpc.schau.get.useQuery({ id: schauId }).data?.teilschauen ?? [];
+  // Mit Teilschauen steht sie bei jeder Meldung (ohne Angabe: die erste).
+  const teilschauName = (id: string | null) => (teilschauen.length ? (teilschauen.find((t) => t.id === id) ?? teilschauen[0])!.name : null);
   const liste = { ...alle, data: alle.data?.filter((m) => !status || m.status === status) };
   const anzahl = (s: MeldungStatus) => alle.data?.filter((m) => m.status === s).length ?? 0;
   const summe = (liste.data ?? []).reduce((s, m) => ({ tiere: s.tiere + m.tiere, betrag: s.betrag + m.betragCent, bezahlt: s.bezahlt + m.bezahltCent }), { tiere: 0, betrag: 0, bezahlt: 0 });
@@ -90,6 +93,7 @@ export function Meldungen() {
                       </Link>
                       <span className="block text-sm text-grau">
                         {m.ort}
+                        {teilschauName(m.teilschau) && `, ${teilschauName(m.teilschau)}`}
                         {m.istJugend && ", Jugend"}
                         {m.istPreisrichter && ", Preisrichter"}
                       </span>

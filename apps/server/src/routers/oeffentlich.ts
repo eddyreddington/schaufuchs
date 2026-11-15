@@ -1,5 +1,5 @@
 import { verzeichnisVorschlaegeZwischengespeichert } from "../services/vereinsverzeichnis";
-import { adressVorschlaege, mitVerzeichnis, bewertungsText, datenschutzAbschnitte, datenschutzKurz, fehlendeVereinsangaben, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, onlineAbgelaufen } from "@schau/domain";
+import { teilschauenLesen, adressVorschlaege, mitVerzeichnis, bewertungsText, datenschutzAbschnitte, datenschutzKurz, fehlendeVereinsangaben, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, onlineAbgelaufen } from "@schau/domain";
 import { heuteDe } from "../services/tiergesundheit";
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -65,6 +65,8 @@ const meldeEingabe = z.object({
     registriernummer: z.string().trim().min(1, "Die Registriernummer (Viehverkehrsordnung) ist Pflicht.").pipe(registriernummerFeld),
   }),
   istJugend: z.boolean(),
+  /** Teilschau, wenn die Schau welche hat (Kennung); fehlt bzw. null = die erste. */
+  teilschau: z.string().max(10).nullable().default(null),
   istPreisrichter: z.boolean(),
   positionen: z.array(positionEingabe).min(1, "Bitte mindestens ein Tier melden.").max(200),
   zustimmung: z.literal(true, { error: "Bitte die AAB und die Sonderbestimmungen anerkennen." }),
@@ -135,6 +137,8 @@ export const oeffentlichRouter = router({
       /** Für die Anzeige der Käfiggröße je Meldezeile. */
       kaefigRegeln: s.kaefigRegeln ?? [],
       kaefigMasse: s.kaefigMasse ?? {},
+      /** Teilschauen zur Auswahl im Formular (leer: keine Auswahl). */
+      teilschauen: teilschauenLesen(s.teilschauen),
       /** Vorschläge im Formular: Vereine (mit eindeutigem Kreisverband) und Kreisverbände. */
       vereine: vorschlag.vereine,
       kreisverbaende: vorschlag.kreisverbaende,
@@ -405,6 +409,7 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
         aussteller: { ...input.aussteller, email, istPreisrichter: input.istPreisrichter, ...(bekannt ? { id: bekannt.id } : {}) },
         eingang: "online",
         istJugend: input.istJugend,
+        teilschau: input.teilschau,
         bemerkung: input.bemerkung,
         zustimmung: true,
         onlineZustimmung: input.onlineVeroeffentlichung,

@@ -1,4 +1,4 @@
-import { berechneMeldebetrag, kaefigTyp, tierart, type FolgeEintrag, type KaefigRegel, type NotenStufe } from "@schau/domain";
+import { berechneMeldebetrag, kaefigTyp, teilschauenLesen, teilschauFolge, teilschauVon, tierart, type FolgeEintrag, type KaefigRegel, type NotenStufe } from "@schau/domain";
 import { and, asc, eq, inArray, isNull, sql, sum } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db, type Tx } from "../db/client";
@@ -10,6 +10,7 @@ import {
   katalogeintrag,
   meldung,
   preisart,
+  schau,
   preisvergabe,
   rasse,
   sparte,
@@ -71,6 +72,7 @@ export async function ladeEintraege(schauId: number, opts: { nurMeldungId?: numb
       // Herkunft (Viehverkehr): ausländische Nummer verlangt Gesundheitszertifikat und TRACES.
       registriernummer: aussteller.registriernummer,
       istJugend: meldung.istJugend,
+      teilschau: meldung.teilschau,
       meldungStatus: meldung.status,
       zustimmungAm: meldung.zustimmungAm,
       onlineZustimmungAm: meldung.onlineZustimmungAm,
@@ -125,8 +127,13 @@ export async function ladeEintraege(schauId: number, opts: { nurMeldungId?: numb
         .where(inArray(preisvergabe.katalogeintragId, ids))
     : [];
 
+  // Teilschauen der Schau: Stelle in der Katalogfolge und Name für Überschriften und Listen.
+  const [sch] = await ex.select({ teilschauen: schau.teilschauen }).from(schau).where(eq(schau.id, schauId));
+  const teilschauen = teilschauenLesen(sch?.teilschauen);
   return rows.map((r) => ({
     ...r,
+    teilschauFolge: teilschauFolge(teilschauen, r.teilschau),
+    teilschauName: teilschauVon(teilschauen, r.teilschau)?.name ?? null,
     // Freie Bezeichnung: Sparte der gewählten Rasse; AOC ans Ende der Rasse, Neuzüchtung ans Ende der Sparte.
     sparte: r.sparte ?? r.einordnungSparte,
     sparteFolge: r.sparteFolge ?? r.einordnungSparteFolge,
@@ -177,6 +184,7 @@ export function alsFolge(e: Eintrag, kaefigRegeln: KaefigRegel[] = []): FolgeEin
     // Ohne die Käfigwahl je Tier: sie ist eine Ausnahme in der Halle (bei der Einlieferung) und verschiebt keine Nummern.
     kaefigTyp: kaefigTyp({ art: e.art, sparte: e.sparte, rasse: e.rasse ?? e.einordnungRasse }, kaefigRegeln),
     id: e.id,
+    teilschauFolge: e.teilschauFolge,
     sparteFolge: e.sparteFolge,
     rasseFolge: e.rasseFolge,
     farbFolge: e.farbFolge,

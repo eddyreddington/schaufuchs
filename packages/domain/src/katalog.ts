@@ -4,6 +4,8 @@ import { MELDEARTEN, type Alter, type Meldeart } from "./types";
 /** Ein Katalogeintrag mit allem, was für die Ausstellungsfolge zählt. */
 export interface FolgeEintrag {
   id: number;
+  /** Stelle der Teilschau (siehe teilschau.ts); fehlt = 0. Die Nummern laufen erst durch die ganze erste Teilschau. */
+  teilschauFolge?: number;
   /** Reihenfolge aus den Stammdaten. null = nicht im Verzeichnis (AOC, Neuzüchtung). */
   sparteFolge: number | null;
   rasseFolge: number | null;
@@ -195,6 +197,7 @@ export function vergleicheFolge(a: FolgeEintrag, b: FolgeEintrag, opts: FolgeOpt
   // Stehen die Tiere eines Ausstellers nicht zusammen, gilt bei sonst Gleichem der Meldeeingang.
   const mitAussteller = schritte.some((s) => s.kriterium === "aussteller" || s.kriterium === "ausstellernummer");
   const keys = (e: FolgeEintrag): (number | string)[] => [
+    e.teilschauFolge ?? 0,
     opts.jugendSeparat ? (e.istJugend ? 1 : 0) : 0,
     blockFolge(e, opts.kaefigFolge),
     abteilungFolge(e.art, opts.staemmeVorn),

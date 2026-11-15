@@ -1,4 +1,4 @@
-import { ALTER, EINGANG, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, normalisiereIban, normalisiereRegistriernummer, pruefeGeschlecht, pruefeIban, REGISTRIERNUMMER_HINWEIS, istAuslaendisch } from "@schau/domain";
+import { ALTER, EINGANG, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, normalisiereIban, normalisiereRegistriernummer, pruefeGeschlecht, pruefeIban, REGISTRIERNUMMER_HINWEIS, istAuslaendisch, teilschauenLesen, teilschauVon } from "@schau/domain";
 import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import { z } from "zod";
 import { zufallsToken } from "../auth";
@@ -84,6 +84,8 @@ export const meldungEingabe = z.object({
   aussteller: ausstellerEingabe,
   eingang: z.enum(EINGANG),
   istJugend: z.boolean(),
+  /** Teilschau (Kennung aus den Einstellungen der Schau); null = die erste, fehlt = unverändert. */
+  teilschau: z.string().max(10).nullable().optional(),
   bemerkung: z.string().max(2_000),
   zustimmung: z.boolean(),
   /** Freiwillige Einwilligung in die Veröffentlichung im Internet. */
@@ -147,6 +149,9 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
     const stichtag = s.bewertungAm ?? new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
     if (!istJugendlich(adaten.geburtsdatum, stichtag)) throw fehler("BAD_REQUEST", `Laut Geburtsdatum am Bewertungstag nicht mehr jugendlich (unter ${JUGEND_ALTERSGRENZE} Jahre) – bitte ohne Jugend erfassen.`);
   }
+  // Teilschau: nur eine, die es in dieser Schau gibt.
+  const teilschauen = teilschauenLesen(s.teilschauen);
+  if (input.teilschau != null && !teilschauen.some((t) => t.id === input.teilschau)) throw fehler("BAD_REQUEST", "Diese Teilschau gibt es in der Schau nicht.");
   // Herkunft aus einem anderen Mitgliedstaat nur, wenn die Schau das zulässt (Gesundheitszertifikat, TRACES, Einlasskontrolle).
   if (!s.auslandZugelassen && istAuslaendisch(input.aussteller.registriernummer)) {
     throw fehler("BAD_REQUEST", "Diese Schau nimmt keine Tiere aus dem Ausland an (Registriernummer mit ausländischem Ländercode). Bitte bei der Ausstellungsleitung nachfragen.");
@@ -288,6 +293,7 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
       .update(meldung)
       .set({
         istJugend: input.istJugend,
+        ...(input.teilschau !== undefined ? { teilschau: input.teilschau } : {}),
         istPreisrichter: input.aussteller.istPreisrichter,
         bemerkung: input.bemerkung,
         zustimmungAm: input.zustimmung ? (m.zustimmungAm ?? new Date()) : null,
@@ -310,6 +316,7 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
         ausstellerId,
         eingang: input.eingang,
         istJugend: input.istJugend,
+        teilschau: input.teilschau ?? null,
         istPreisrichter: input.aussteller.istPreisrichter,
         bemerkung: input.bemerkung,
         zustimmungAm: input.zustimmung ? new Date() : null,
@@ -431,6 +438,7 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
       ...(betrag.stiftungCent ? { stiftungCent: betrag.stiftungCent } : {}),
       ...(betrag.spendeCent ? { spendeCent: betrag.spendeCent } : {}),
       jugend: input.istJugend,
+      ...(teilschauen.length ? { teilschau: teilschauVon(teilschauen, input.teilschau !== undefined ? input.teilschau : vorherige?.teilschau)?.name } : {}),
       preisrichter: input.aussteller.istPreisrichter,
       ...(weg.length ? { entfernt: weg.map((v) => `${v.katalogNr != null ? `${v.katalogNr}${v.suffix}` : "ohne Nr."} ${v.art} ${v.geschlecht}`) } : {}),
       ...(preisAenderungen.length

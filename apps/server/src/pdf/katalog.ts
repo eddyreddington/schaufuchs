@@ -881,17 +881,26 @@ export async function katalogPdf(
   type Nr = { katalogNr: number | null; suffix: string };
   const nrVergleich = (a: Nr, b: Nr) => a.katalogNr! - b.katalogNr! || a.suffix.localeCompare(b.suffix);
   const nrBereich = (von: Nr, bis: Nr) => (nrVergleich(von, bis) === 0 ? formatKatalognummer(von) : `${formatKatalognummer(von)}–${formatKatalognummer(bis)}`);
-  const register = new Map<string, { rasse: string; sparte: string; abteilung: string; seite: number; von: Nr; bis: Nr; anzahl: number; jugend: boolean }>();
+  const register = new Map<string, { rasse: string; sparte: string; abteilung: string; seite: number; von: Nr; bis: Nr; anzahl: number; zusatz: string }>();
 
   /** Abteilung im Tierteil: „Volieren“ und „Stämme“ vorn, wenn eingestellt – sonst die Sparte. */
   const abteilungVon = (e: Eintrag) => gruppenAbteilung(e.art, s.staemmeVorn) ?? e.sparte ?? "Sonstige";
 
-  const teilErwachsen = tierteilListe.filter((e) => !(s.jugendSeparat && e.istJugend));
-  const teilJugend = s.jugendSeparat ? tierteilListe.filter((e) => e.istJugend) : [];
-  tierteil(teilErwachsen, "");
-  if (teilJugend.length) {
-    imTierteil = false; // Jugendabteilung beginnt auf neuer Seite
-    tierteil(teilJugend, "Jugend");
+  // Teilschauen (Entscheidung 016) nacheinander, jede auf neuer Seite und mit ihrem Namen vor der Sparte; darin wie
+  // ohne Teilschauen erst die Senioren, dann die Jugend. Ohne Teilschauen ist es eine einzige Gruppe ohne Namen.
+  const teilschauGruppen = [...new Map(tierteilListe.map((e) => [e.teilschauFolge, e.teilschauName ?? ""] as const)).entries()].sort((a, b) => a[0] - b[0]);
+  for (const [folge, name] of teilschauGruppen) {
+    const liste = tierteilListe.filter((e) => e.teilschauFolge === folge);
+    const erwachsen = liste.filter((e) => !(s.jugendSeparat && e.istJugend));
+    const jugend = s.jugendSeparat ? liste.filter((e) => e.istJugend) : [];
+    if (erwachsen.length) {
+      imTierteil = false; // jede Teilschau beginnt auf neuer Seite
+      tierteil(erwachsen, name);
+    }
+    if (jugend.length) {
+      imTierteil = false; // Jugendabteilung beginnt auf neuer Seite
+      tierteil(jugend, [name, "Jugend"].filter(Boolean).join(" · "));
+    }
   }
 
   function tierteil(liste: Eintrag[], zusatz: string) {
@@ -925,7 +934,7 @@ export async function katalogPdf(
           if (nrVergleich(e, r.bis) > 0) r.bis = { katalogNr: e.katalogNr, suffix: e.suffix };
           if (nrVergleich(e, r.von) < 0) r.von = { katalogNr: e.katalogNr, suffix: e.suffix };
           r.anzahl++;
-        } else register.set(key, { rasse: ra, sparte: e.sparte ?? "Sonstige", abteilung: sp, seite: seitenNr(), von: { katalogNr: e.katalogNr, suffix: e.suffix }, bis: { katalogNr: e.katalogNr, suffix: e.suffix }, anzahl: 1, jugend: !!zusatz });
+        } else register.set(key, { rasse: ra, sparte: e.sparte ?? "Sonstige", abteilung: sp, seite: seitenNr(), von: { katalogNr: e.katalogNr, suffix: e.suffix }, bis: { katalogNr: e.katalogNr, suffix: e.suffix }, anzahl: 1, zusatz });
         rasse = ra;
         klasse = null;
         richterId = undefined;
@@ -1186,12 +1195,12 @@ export async function katalogPdf(
     abschnitt("Rassenverzeichnis");
     marke("rassenverzeichnis");
     seitentitel("Rassenverzeichnis", "von A bis Z, mit Katalognummern und Seite");
-    const zeilen = [...register.values()].sort((a, b) => a.rasse.localeCompare(b.rasse, "de") || Number(a.jugend) - Number(b.jugend) || nrVergleich(a.von, b.von));
+    const zeilen = [...register.values()].sort((a, b) => a.rasse.localeCompare(b.rasse, "de") || nrVergleich(a.von, b.von));
     for (const r of zeilen) {
       platz(11 * k);
       const y = doc.y;
       doc.font(SANS).fontSize(8.5 * k).fillColor(TINTE);
-      const name = `${r.rasse}${r.jugend ? " (Jugend)" : ""}`;
+      const name = `${r.rasse}${r.zusatz ? ` (${r.zusatz})` : ""}`;
       const nrText = nrBereich(r.von, r.bis);
       const w = doc.widthOfString(name);
       doc.text(name, L(), y, { lineBreak: false });

@@ -8,6 +8,7 @@ import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, Haken, Hinweis, Knopf, knopfKlasse, Laden, Seitenkopf, Speicherleiste, Textfeld, useAenderungenWarnen, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
 import { DruckAbschnitt } from "./einstellungen-druck";
 import { MeisterschaftenAbschnitt } from "./einstellungen-meisterschaften";
+import { TeilschauenAbschnitt } from "./einstellungen-teilschauen";
 
 type Schau = Ausgabe["schau"]["get"];
 
@@ -17,6 +18,7 @@ const ABSCHNITTE: [string, string][] = [
   ["termine", "Termine"],
   ["zahlung", "Meldegeld und Konto"],
   ["katalog", "Katalog und Preise"],
+  ["teilschauen", "Teilschauen"],
   ["bestimmungen", "Bestimmungen"],
   ["veterinaeramt", "Veterinäramt"],
   ["gebuehren", "Standgeld und Gebühren"],
@@ -55,6 +57,7 @@ export function Einstellungen() {
             <Preisarten schau={schau.data} />
             <Notenskala schau={schau.data} />
           </fieldset>
+          <TeilschauenAbschnitt schauId={schau.data.id} start={schau.data.teilschauen} darfAendern={istAdmin} />
           <MeisterschaftenAbschnitt schauId={schau.data.id} darfAendern={istAdmin} />
           <KaefigeUndHalle schauId={schau.data.id} />
           <DruckAbschnitt schauId={schau.data.id} darfAendern={istAdmin} />

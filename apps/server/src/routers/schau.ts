@@ -1,4 +1,4 @@
-import { type Aufsteller, GEBUEHR_ARTEN, KONTINGENT_BASEN, PREIS_ZIELGRUPPEN, normalisiereIban, PHASEN, PHASEN_LABEL, PREIS_QUELLEN, pruefeBic, pruefeIban, RUNDUNGEN, STANDARD_NOTENSKALA, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, halleOhneFestenPlan, fehlendeVereinsangaben, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal } from "@schau/domain";
+import { teilschauenLesen, TEILSCHAUEN_MAX, type Aufsteller, GEBUEHR_ARTEN, KONTINGENT_BASEN, PREIS_ZIELGRUPPEN, normalisiereIban, PHASEN, PHASEN_LABEL, PREIS_QUELLEN, pruefeBic, pruefeIban, RUNDUNGEN, STANDARD_NOTENSKALA, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, halleOhneFestenPlan, fehlendeVereinsangaben, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal } from "@schau/domain";
 import { and, asc, count, desc, eq, inArray, isNull, ne, sql, sum } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/client";
@@ -249,6 +249,7 @@ export const schauRouter = router({
               katalogStart: vorlage.katalogStart,
               jugendSeparat: vorlage.jugendSeparat,
               staemmeVorn: vorlage.staemmeVorn,
+              teilschauen: vorlage.teilschauen,
               kontingentJe: vorlage.kontingentJe,
               bestimmungen: vorlage.bestimmungen,
               bankverbindung: vorlage.bankverbindung,
@@ -499,6 +500,38 @@ export const schauRouter = router({
         if (JSON.stringify(alt) === JSON.stringify(neu)) return { ok: true, geaendert: false };
         await tx.update(schau).set({ katalogSortierung: neu }).where(eq(schau.id, geladen.id));
         await protokolliere(tx, { schauId: geladen.id, tabelle: "schau", datensatzId: geladen.id, aktion: "Reihenfolge der Katalognummern", alt: { sortierung: alt }, neu: { sortierung: neu }, akteur: ctx });
+        return { ok: true, geaendert: true };
+      });
+    }),
+
+  /**
+   * Teilschauen (Entscheidung 016) in Katalogfolge. Eine Teilschau mit Meldungen lässt sich nicht entfernen; nach dem
+   * Festschreiben der Katalognummern ändert sich nichts mehr an Folge und Zuordnung.
+   */
+  teilschauenSetzen: adminProcedure
+    .input(z.object({ id: dbId, teilschauen: z.array(z.object({ id: z.string().max(10).optional(), name: z.string().max(200) })).max(TEILSCHAUEN_MAX) }))
+    .mutation(async ({ ctx, input }) => {
+      const geladen = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.id));
+      const neu = teilschauenLesen(input.teilschauen);
+      return db.transaction(async (tx) => {
+        const [s] = await tx.select({ gedruckt: schau.katalogGedruckt, alt: schau.teilschauen }).from(schau).where(eq(schau.id, geladen.id)).for("update");
+        const alt = teilschauenLesen(s!.alt);
+        if (JSON.stringify(alt) === JSON.stringify(neu)) return { ok: true, geaendert: false };
+        if (s!.gedruckt && JSON.stringify(alt.map((t) => t.id)) !== JSON.stringify(neu.map((t) => t.id)))
+          throw fehler("BAD_REQUEST", "Die Katalognummern sind festgeschrieben – Teilschauen lassen sich nur noch umbenennen.");
+        // Meldungen ohne Angabe gehören zur bisher ersten Teilschau. Ändert sich die erste (Umsortieren, Entfernen),
+        // rutschten sie still in eine andere – deshalb vorher ausdrücklich der bisherigen zuordnen.
+        if (alt[0] && neu[0]?.id !== alt[0].id) {
+          await tx.update(meldung).set({ teilschau: alt[0].id }).where(and(eq(meldung.schauId, geladen.id), isNull(meldung.teilschau)));
+        }
+        // Meldungen einer entfernten Teilschau fielen still in die erste – deshalb erst umhängen.
+        const weg = alt.filter((t) => !neu.some((n) => n.id === t.id));
+        for (const t of weg) {
+          const [m] = await tx.select({ n: sql<number>`count(*)::int` }).from(meldung).where(and(eq(meldung.schauId, geladen.id), eq(meldung.teilschau, t.id)));
+          if (m!.n) throw fehler("BAD_REQUEST", `Zur Teilschau „${t.name}“ gehören noch ${m!.n} Meldungen – bitte erst einer anderen Teilschau zuordnen.`);
+        }
+        await tx.update(schau).set({ teilschauen: neu }).where(eq(schau.id, geladen.id));
+        await protokolliere(tx, { schauId: geladen.id, tabelle: "schau", datensatzId: geladen.id, aktion: "Teilschauen", alt: { teilschauen: alt }, neu: { teilschauen: neu }, akteur: ctx });
         return { ok: true, geaendert: true };
       });
     }),

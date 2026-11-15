@@ -109,6 +109,7 @@ export const meldungRouter = router({
           eingang: meldung.eingang,
           eingegangenAm: meldung.eingegangenAm,
           istJugend: meldung.istJugend,
+          teilschau: meldung.teilschau,
           istPreisrichter: meldung.istPreisrichter,
           vetGeprueftAm: meldung.vetGeprueftAm,
           ausstellerId: aussteller.id,

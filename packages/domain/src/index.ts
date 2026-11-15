@@ -40,3 +40,4 @@ export * from "./spenden";
 export * from "./zuwendungsbestaetigung";
 export * from "./meisterschaft";
 export * from "./import";
+export * from "./teilschau";

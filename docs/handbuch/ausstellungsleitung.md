@@ -683,6 +683,23 @@ Sie können Kürzel, Note und Punkte anpassen und mit „Notenskala speichern“
 
 Die Ehrentafel und der Fettdruck der Noten im Katalog richten sich nach der Skala: Sie umfassen die beiden obersten Stufen (bei der Standardskala „vorzüglich“ und „hervorragend“, also ab 96 Punkten).
 
+#### Abschnitt „Teilschauen“ {#teilschauen}
+
+Besteht die Ausstellung aus mehreren Teilschauen – zum Beispiel Landesschau, Kreisschau und Jugendschau in einer Halle –,
+tragen Sie sie hier in der Reihenfolge ein, in der sie im Katalog stehen sollen („Teilschau hinzufügen“, mit ↑ und ↓
+umsortieren). Ohne Einträge ist es eine Schau wie bisher.
+
+- Jede Meldung gehört zu einer Teilschau: Beim Erfassen wählen Sie sie im Feld „Teilschau“, im Online-Formular wählt der
+  Aussteller selbst (ab zwei Teilschauen). Ohne Angabe gehört die Meldung zur ersten. In der Liste der Meldungen steht die
+  Teilschau hinter dem Ort.
+- Die **Katalognummern laufen fortlaufend** über alle Teilschauen: erst alle Tiere der ersten Teilschau, dann die der
+  zweiten usw. Innerhalb einer Teilschau gilt die gewohnte Reihenfolge (Sparten, Rassen, Jugend dahinter).
+- Im gedruckten Katalog beginnt jede Teilschau auf einer neuen Seite, ihr Name steht vor der Sparte (z. B.
+  „Jugendschau: Hühner“); im Rassenverzeichnis steht er in Klammern hinter der Rasse.
+- Umbenennen geht jederzeit. Eine Teilschau, zu der noch Meldungen gehören, lässt sich nicht entfernen – ordnen Sie die
+  Meldungen erst einer anderen zu. Sind die Katalognummern festgeschrieben, lassen sich Teilschauen nur noch umbenennen.
+- Wechselt eine Meldung nach der Nummernvergabe die Teilschau, behält sie ihre Nummer; „Nummern vergeben“ ordnet neu.
+
 ### 5.4 Phase „Meldephase“
 
 Schalten Sie auf der Übersicht mit „Weiter zu: Meldephase“ um. **Erst jetzt ist das Online-Formular offen.**

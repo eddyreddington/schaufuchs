@@ -31,6 +31,7 @@ import {
   type KaefigMasse,
   type KaefigTyp,
   type MeisterschaftRegel,
+  type Teilschau,
   type NotenStufe,
   type Steuerstatus,
 } from "@schau/domain";
@@ -253,6 +254,8 @@ export const schau = pgTable("schau", {
   notenskala: jsonb("notenskala").$type<NotenStufe[] | null>(),
   /** Meisterschaftswertungen der Schau (packages/domain/src/meisterschaft.ts), in der Reihenfolge der Ausgabe. */
   meisterschaften: jsonb("meisterschaften").$type<MeisterschaftRegel[]>().notNull().default([]),
+  /** Teilschauen (Entscheidung 016) in Katalogfolge; leer = eine Schau ohne Teilschauen. */
+  teilschauen: jsonb("teilschauen").$type<Teilschau[]>().notNull().default([]),
   /** Abweichende Käfiggröße je Rasse (Einzeltiere), z. B. Brahma im Großkäfig. */
   kaefigRegeln: jsonb("kaefig_regeln").$type<KaefigRegel[]>().notNull().default([]),
   /** Katalognummern nach Käfigblöcken in dieser Reihenfolge (wie in der Halle); null = nach Sparten. */
@@ -354,6 +357,8 @@ export const meldung = pgTable(
     eingang: eingangEnum("eingang").notNull(),
     eingegangenAm: ts("eingegangen_am").notNull().defaultNow(),
     istJugend: boolean("ist_jugend").notNull().default(false),
+    /** Teilschau der Meldung (Kennung aus schau.teilschauen); leer bzw. unbekannt = die erste. */
+    teilschau: text("teilschau"),
     /** Preisrichter-Befreiung für genau diese Meldung (nicht am Stammsatz – sonst änderte sie frühere Schauen rückwirkend). */
     istPreisrichter: boolean("ist_preisrichter").notNull().default(false),
     /** Meldebogen unterschrieben bzw. AAB online anerkannt – Voraussetzung für den Namen im Katalog. */

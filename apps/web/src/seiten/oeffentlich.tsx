@@ -5,7 +5,7 @@ import { AusstellerFelder, leererAussteller } from "../komponenten/aussteller";
 import { alsEingabe, neuePosition, PositionenEditor, pruefePositionen, type Position } from "../komponenten/positionen";
 import { datum, fehlerText, formatEuro, formatKatalognummer, parseEuro } from "../lib";
 import { trpc } from "../trpc";
-import { Abschnitt, Eingabe, Feld, Haken, Hinweis, Knopf, knopfKlasse, KnopfLink, Laden, LESEBREITE, Marke, Suchfeld, TabellenRahmen, useSeitentitel, useUngespeichertWarnung } from "../ui";
+import { Abschnitt, Auswahl, Eingabe, Feld, Haken, Hinweis, Knopf, knopfKlasse, KnopfLink, Laden, LESEBREITE, Marke, Suchfeld, TabellenRahmen, useSeitentitel, useUngespeichertWarnung } from "../ui";
 
 /** Was eine Meldung fordert, aufgeschlüsselt (Meldegeld, zugesagte Stiftung und Spende). */
 type Betrag = { summeCent: number; stiftungCent: number; spendeCent: number };
@@ -146,7 +146,7 @@ export function OeffentlicheSchau() {
           </div>
         </Abschnitt>
       ) : d.meldung.offen ? (
-        <Meldeformular slug={slug} bestimmungen={d.bestimmungen} erklaerungen={d.erklaerungen} datenschutz={d.datenschutzKurz} kaefigRegeln={d.kaefigRegeln} kaefigMasse={d.kaefigMasse} vorschlaege={{ vereine: d.vereine, kreisverbaende: d.kreisverbaende }} fertig={(token, betrag) => { setGemeldet({ token, betrag }); window.scrollTo(0, 0); }} />
+        <Meldeformular slug={slug} bestimmungen={d.bestimmungen} erklaerungen={d.erklaerungen} datenschutz={d.datenschutzKurz} kaefigRegeln={d.kaefigRegeln} kaefigMasse={d.kaefigMasse} teilschauen={d.teilschauen} vorschlaege={{ vereine: d.vereine, kreisverbaende: d.kreisverbaende }} fertig={(token, betrag) => { setGemeldet({ token, betrag }); window.scrollTo(0, 0); }} />
       ) : (
         <Hinweis ton="warnung">{d.meldung.grund}</Hinweis>
       )}
@@ -162,6 +162,7 @@ function Meldeformular({
   datenschutz,
   kaefigRegeln,
   kaefigMasse,
+  teilschauen,
   vorschlaege,
   fertig,
 }: {
@@ -171,11 +172,13 @@ function Meldeformular({
   datenschutz: string[];
   kaefigRegeln: KaefigRegel[];
   kaefigMasse: KaefigMasse;
+  teilschauen: { id: string; name: string }[];
   vorschlaege: Pick<AdressVorschlaege, "vereine" | "kreisverbaende">;
   fertig: (token: string, betrag: Betrag) => void;
 }) {
   const [a, setA] = useState(leererAussteller());
   const [istJugend, setIstJugend] = useState(false);
+  const [teilschau, setTeilschau] = useState<string | null>(null);
   const [istPreisrichter, setIstPreisrichter] = useState(false);
   const [positionen, setPositionen] = useState<Position[]>([neuePosition()]);
   const [zustimmung, setZustimmung] = useState(false);
@@ -213,6 +216,7 @@ function Meldeformular({
       slug,
       aussteller: a,
       istJugend,
+      teilschau,
       istPreisrichter,
       positionen: positionen.map(alsEingabe),
       zustimmung: true,
@@ -234,6 +238,19 @@ function Meldeformular({
           <Haken label="Ich melde als Jugendlicher" checked={istJugend} onChange={setIstJugend} />
           <Haken label="Ich bin amtierender Preisrichter" checked={istPreisrichter} onChange={setIstPreisrichter} />
         </div>
+        {teilschauen.length > 1 && (
+          <Feld label="Teilschau" className="mt-4 max-w-md">
+            {(id) => (
+              <Auswahl id={id} value={teilschau ?? teilschauen[0]!.id} onChange={(e) => setTeilschau(e.target.value)}>
+                {teilschauen.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </Auswahl>
+            )}
+          </Feld>
+        )}
         {istJugend && (
           <div className="mt-4 grid gap-4 border-t border-linie pt-4 sm:grid-cols-2">
             <Feld label="Name eines Erziehungsberechtigten *" hinweis="Pflicht unter 18 Jahren">
