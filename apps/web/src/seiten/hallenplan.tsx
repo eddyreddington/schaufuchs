@@ -5,7 +5,7 @@ import { fehlerText } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
 import { trpc, type Ausgabe } from "../trpc";
-import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, KnopfLink, Laden, Leer, Marke, SEITE, Seitenkopf, TabellenRahmen, useFrage, useMeldung } from "../ui";
+import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, KnopfLink, Laden, Leer, Marke, SEITE, Seitenkopf, SpeicherStatus, type SpeicherStand, TabellenRahmen, useFrage, useMeldung } from "../ui";
 import { MenueEintrag, MenueKopf, MenueTrenner, strg, WzGruppe, WzKnopf, WzMenue, WzSymbol } from "./hallenplan-werkzeuge";
 
 type Daten = Ausgabe["katalog"]["hallenplan"];
@@ -200,6 +200,8 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
   const entwurfRef = useRef<Halle>(vollstaendig(halle));
   const [entwurf, setEntwurf] = useState<Halle>(entwurfRef.current);
   const offen = useRef(0);
+  /** Für die Anzeige oben rechts: wie viele Änderungen noch auf dem Weg sind (auch die, die in der Reihe warten). */
+  const [offenZahl, setOffenZahl] = useState(0);
   /** „Plan neu setzen“ ist unterwegs: der Server speichert eine andere Halle als den Entwurf (siehe `neuSetzenMit`). */
   const neuUnterwegs = useRef(false);
   const kette = useRef<Promise<unknown>>(Promise.resolve());
@@ -254,6 +256,7 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
     entwurfRef.current = neu;
     setEntwurf(neu);
     offen.current++;
+    setOffenZahl(offen.current);
     // Erstes Verschieben, Drehen oder Ausrichten von Reihen und Platten: vorher den gerechneten Plan festschreiben (sonst
     // stellte die Software die Käfige gleich wieder um). Die Nummern der Platten sind dabei dieselben.
     const vorher_fest = opt.festschreiben && !plan.fest && !festUnterwegs.current;
@@ -268,6 +271,7 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
       })
       .finally(async () => {
         offen.current--;
+        setOffenZahl(offen.current);
         if (offen.current > 0) return;
         await utils.katalog.hallenplan.invalidate();
         // Gespeicherten Stand übernehmen – nach einem Fehler springt der Entwurf so auf den Server zurück.
@@ -846,8 +850,15 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
   const gesamt = platziert + plan.nichtPlatziert.length;
   const plattenZusammen = plan.reihen.reduce((n, r) => n + r.platten.filter((pl) => !pl.entfernt).length, 0);
   const laengeZusammen = plan.reihen.reduce((n, r) => n + r.platten.filter((pl) => !pl.entfernt).reduce((m, pl) => m + pl.laenge, 0), 0);
+  // Der Editor speichert jede Änderung sofort – statt „Speichern“ steht oben rechts, ob alles gespeichert ist.
+  // Alle Wege, auf denen der Editor speichert; maßgeblich für „Nicht gespeichert“ ist der zuletzt abgeschickte.
+  const speicherwege = [setzen, festschreiben, nachPlan, neuSetzen, versetzenMut, wandreihe];
+  const zuletzt = speicherwege.reduce<(typeof speicherwege)[number] | null>((a, m) => (m.submittedAt > (a?.submittedAt ?? 0) ? m : a), null);
+  const speichertGerade = offenZahl > 0 || speicherwege.some((m) => m.isPending);
+  const speicherStand: SpeicherStand | null = !bearbeiten ? null : speichertGerade ? "speichert" : zuletzt?.isError ? "fehler" : "gespeichert";
   return (
     <>
+      <SpeicherStatus stand={speicherStand} />
       <Seitenkopf
         titel="Hallenplan"
         unter={`Halle ${meter(halle.breite)} × ${meter(halle.laenge)} m · Gänge ${meter(halle.gang)} m · ${anzahl(platziert, "Käfig", "Käfige")} gestellt`}
@@ -1034,6 +1045,8 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
                   Entfernt: <span className="text-tinte">{entferntZahl} leer</span>
                 </span>
               )}
+              {/* In der Vollansicht ist die Kopfleiste verdeckt: der Zustand steht dann auch hier. */}
+              {voll && <SpeicherStatus stand={speicherStand} eingebettet />}
               <span className="ml-auto">
                 <HilfeLink abschnitt="hallenplan-bearbeiten">Hilfe zum Editor</HilfeLink>
               </span>

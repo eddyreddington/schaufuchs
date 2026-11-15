@@ -418,6 +418,31 @@ export function Speicherleiste({ sichtbar, onVerwerfen, onSpeichern, laedt, text
   );
 }
 
+export type SpeicherStand = "speichert" | "gespeichert" | "fehler";
+const SPEICHER_STAND: Record<SpeicherStand, { text: string; farbe: string }> = {
+  speichert: { text: "Wird gespeichert …", farbe: "text-grau" },
+  gespeichert: { text: "Gespeichert", farbe: "text-stall" },
+  fehler: { text: "Nicht gespeichert", farbe: "text-kamm" },
+};
+
+/**
+ * Seiten, die jede Änderung sofort speichern (Hallenplan): oben rechts in der Kopfleiste steht statt „Speichern“, ob
+ * gespeichert ist – an derselben Stelle wie sonst der Knopf. `eingebettet`: zusätzlich an Ort und Stelle (Vollansicht).
+ */
+export function SpeicherStatus({ stand, eingebettet }: { stand: SpeicherStand | null; eingebettet?: boolean }) {
+  const platz = useContext(SpeicherPlatz);
+  if (!stand) return null;
+  const { text, farbe } = SPEICHER_STAND[stand];
+  const inhalt = (
+    <span role="status" aria-live="polite" className={cx("flex items-center gap-2 text-[0.93rem] font-semibold", farbe)}>
+      <span aria-hidden className={cx("size-2 rounded-full bg-current", stand === "speichert" && "animate-pulse")} />
+      {text}
+    </span>
+  );
+  if (eingebettet || !platz) return inhalt;
+  return createPortal(inhalt, platz);
+}
+
 /** Kennzahlen als Raster (Übersichten): Bezeichnung klein, Wert groß, optional grauer Zusatz. */
 export function Kennzahlen({ werte, spalten = 4 }: { werte: { label: string; wert: ReactNode; zusatz?: ReactNode; ton?: "ok" | "warnung" | "fehler" }[]; spalten?: 2 | 3 | 4 }) {
   return (

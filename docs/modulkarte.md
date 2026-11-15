@@ -1000,7 +1000,7 @@ Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben 
 ### hallenplan-werkzeuge.tsx (301 Z.)
 Bausteine der Werkzeugleiste im Hallenplan-Editor: Symbole, Werkzeugknöpfe mit Tooltip (Name und Tastenkürzel), Gruppen und aufklappbare Menüs.
 
-### hallenplan.tsx (3.577 Z. ⚠) – `/schau/:schauId/hallenplan`
+### hallenplan.tsx (3.590 Z. ⚠) – `/schau/:schauId/hallenplan`
 Prozeduren: katalog.halleSetzen, katalog.hallenplan, katalog.kaefigInfo, katalog.nummernNachPlan, katalog.planFestschreiben, katalog.planNeuSetzen, katalog.stellVorschlaege, katalog.stellVorschlaegeEntwurf, katalog.tierVersetzen, katalog.wandreiheStellen
 
 ### hilfe.tsx (182 Z.) – `/hilfe`, `/hilfe/:teil`
@@ -1188,7 +1188,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `seitenmenue.tsx` (187 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · SCHAU_GRUPPEN, allgemeineGruppen, useKlappzustand, MenueGruppen
 - `symbole.tsx` (44 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
-- `ui.tsx` (621 Z. ⚠) · knopfKlasse, Knopf, KnopfLink, Feld, useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter, Eingabe, Textfeld, Auswahl, Haken, Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, SpeicherPlatz, Speicherleiste, Kennzahlen, Leer, Laden, FehlerAnzeige, Dialog, FragenAnbieter, useFrage, MeldungenAnbieter, useMeldung
+- `ui.tsx` (646 Z. ⚠) · knopfKlasse, Knopf, KnopfLink, Feld, useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter, Eingabe, Textfeld, Auswahl, Haken, Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, SpeicherPlatz, Speicherleiste, SpeicherStatus, Kennzahlen, Leer, Laden, FehlerAnzeige, Dialog, FragenAnbieter, useFrage, MeldungenAnbieter, useMeldung
 
 ## Server-Tests `apps/server/src/tests`
 
