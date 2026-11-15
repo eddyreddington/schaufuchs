@@ -1,0 +1,1 @@
+ALTER TABLE "schau" ADD COLUMN "halle" jsonb;

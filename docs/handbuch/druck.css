@@ -1,0 +1,31 @@
+/* Druckbild der Handbücher (A4) – erzeugt mit scripts/handbuch.sh (pandoc + WeasyPrint). */
+@page {
+  size: A4;
+  margin: 20mm 18mm 22mm 18mm;
+  @bottom-left { content: string(titel); font: 8.5pt "Helvetica Neue", Arial, sans-serif; color: #6b6b6b; }
+  @bottom-right { content: "Seite " counter(page) " von " counter(pages); font: 8.5pt "Helvetica Neue", Arial, sans-serif; color: #6b6b6b; }
+}
+@page :first { @bottom-left { content: none; } }
+html { font: 10.5pt/1.5 "Helvetica Neue", Arial, sans-serif; color: #1c2321; }
+h1 { string-set: titel content(); font-size: 22pt; line-height: 1.2; color: #1e3a8a; margin: 0 0 2mm; }
+h1 + p { color: #6b6b6b; margin-top: 0; margin-bottom: 8mm; }
+h2 { font-size: 15pt; color: #1e3a8a; border-bottom: 1.5pt solid #1e3a8a; padding-bottom: 1mm; margin-top: 9mm; break-after: avoid; }
+h3 { font-size: 12pt; margin-top: 6mm; break-after: avoid; }
+h4 { font-size: 10.5pt; margin-top: 4mm; break-after: avoid; }
+p, li { orphans: 3; widows: 3; }
+ol, ul { padding-left: 6mm; }
+li { margin: 1mm 0; }
+blockquote { margin: 4mm 0; padding: 2.5mm 4mm; background: #eef2fb; border-left: 3pt solid #1e3a8a; break-inside: avoid; }
+blockquote p { margin: 0.5mm 0; }
+table { width: 100%; border-collapse: collapse; margin: 3mm 0; font-size: 9.5pt; break-inside: auto; }
+th, td { border: 0.6pt solid #c9ced6; padding: 1.5mm 2mm; vertical-align: top; text-align: left; }
+th { background: #eef2fb; }
+tr { break-inside: avoid; }
+code { font-family: Menlo, Consolas, monospace; font-size: 9pt; background: #f2f2f2; padding: 0 1mm; }
+a { color: #1e3a8a; text-decoration: none; }
+figure { margin: 4mm 0; break-inside: avoid; }
+img { max-width: 100%; max-height: 120mm; border: 0.6pt solid #c9ced6; border-radius: 2mm; }
+figcaption { font-size: 8.5pt; color: #6b6b6b; margin-top: 1mm; }
+hr { border: none; border-top: 0.6pt dashed #9aa3ad; margin: 8mm 0; }
+/* Kurzanleitung zum Ausschneiden beginnt auf neuer Seite */
+h2[id*="kurzanleitung"] { break-before: page; }

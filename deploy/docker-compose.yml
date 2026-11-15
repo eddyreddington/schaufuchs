@@ -1,0 +1,83 @@
+# SchauFUCHS für einen Verein: fertige Programme, PostgreSQL, Sicherung und HTTPS (Caddy).
+# Wird von install.sh nach /opt/schaufuchs gelegt; Einstellungen stehen in der .env daneben.
+# Starten/Aktualisieren über den Befehl „schaufuchs“ (siehe deploy/schaufuchs), nicht von Hand.
+name: schaufuchs
+
+x-logs: &logs
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+services:
+  app:
+    image: ${SCHAUFUCHS_IMAGE:-ghcr.io/eddyreddington/schaufuchs}:${SCHAUFUCHS_VERSION:?SCHAUFUCHS_VERSION fehlt in der .env}
+    restart: unless-stopped
+    init: true
+    mem_limit: ${APP_SPEICHER:-2g}
+    logging: *logs
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://schau:${POSTGRES_PASSWORD}@db:5432/schau
+      # Davor steht immer Caddy (unten); die App ist von außen nicht direkt erreichbar.
+      TRUST_PROXY: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+    restart: unless-stopped
+    logging: *logs
+    environment:
+      POSTGRES_USER: schau
+      POSTGRES_DB: schau
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - daten:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U schau"]
+      interval: 5s
+      retries: 10
+
+  # Verschlüsselte Sicherungen nach ./backups (Einzelheiten: scripts/backup.sh im Quellcode).
+  backup:
+    image: ${SCHAUFUCHS_IMAGE:-ghcr.io/eddyreddington/schaufuchs}-backup:${SCHAUFUCHS_VERSION}
+    restart: unless-stopped
+    logging: *logs
+    tmpfs:
+      - /arbeit:size=2g,mode=0700
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_EMPFAENGER: ${BACKUP_EMPFAENGER:-}
+      BACKUP_UNVERSCHLUESSELT: ${BACKUP_UNVERSCHLUESSELT:-0}
+      BACKUP_TAGE: ${BACKUP_TAGE:-30}
+      BACKUP_INTERVALL_MINUTEN: ${BACKUP_INTERVALL_MINUTEN:-120}
+      TZ: Europe/Berlin
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # HTTPS mit automatischem Zertifikat (Let's Encrypt) für SCHAUFUCHS_DOMAIN.
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    logging: *logs
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SCHAUFUCHS_DOMAIN: ${SCHAUFUCHS_DOMAIN:?SCHAUFUCHS_DOMAIN fehlt in der .env}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL fehlt in der .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_daten:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  daten:
+  caddy_daten:
+  caddy_config:

@@ -1,0 +1,1 @@
+ALTER TABLE "katalogeintrag" ADD COLUMN "kaefig_wahl" text;

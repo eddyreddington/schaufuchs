@@ -1,0 +1,2 @@
+ALTER TABLE "preisvergabe" ADD COLUMN "stiftung_id" integer;--> statement-breakpoint
+ALTER TABLE "preisvergabe" ADD CONSTRAINT "preisvergabe_stiftung_id_stiftung_id_fk" FOREIGN KEY ("stiftung_id") REFERENCES "public"."stiftung"("id") ON DELETE restrict ON UPDATE no action;

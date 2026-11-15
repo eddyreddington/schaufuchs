@@ -1,0 +1,1 @@
+ALTER TABLE "benutzer" ADD COLUMN "geloescht_am" timestamp with time zone;

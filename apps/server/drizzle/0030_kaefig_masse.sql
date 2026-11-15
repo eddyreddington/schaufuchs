@@ -1,0 +1,1 @@
+ALTER TABLE "schau" ADD COLUMN "kaefig_masse" jsonb DEFAULT '{}'::jsonb NOT NULL;

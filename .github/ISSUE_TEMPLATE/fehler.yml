@@ -1,0 +1,32 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie erwartet
+labels: [fehler]
+body:
+  - type: markdown
+    attributes:
+      value: "Bitte keine echten Namen, Anschriften oder Bankdaten von Ausstellern eintragen oder zeigen. Sicherheitslücken nicht hier, sondern wie in SECURITY.md beschrieben melden."
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Steht im Benutzermenü unten links, z. B. „SchauFUCHS 1.2.0“
+    validations:
+      required: true
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Was haben Sie getan?
+      description: Schritt für Schritt, z. B. „Hallenplan geöffnet, Reihe A verschoben, gespeichert“
+    validations:
+      required: true
+  - type: textarea
+    id: ergebnis
+    attributes:
+      label: Was ist passiert – und was hätten Sie erwartet?
+    validations:
+      required: true
+  - type: dropdown
+    id: geraet
+    attributes:
+      label: Gerät
+      options: [PC/Laptop, Tablet (Preisrichter), Handy, Server/Installation]

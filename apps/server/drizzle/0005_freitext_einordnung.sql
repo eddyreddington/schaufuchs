@@ -1,0 +1,2 @@
+ALTER TABLE "katalogeintrag" ADD COLUMN "rasse_id" integer;--> statement-breakpoint
+ALTER TABLE "katalogeintrag" ADD CONSTRAINT "katalogeintrag_rasse_id_rasse_id_fk" FOREIGN KEY ("rasse_id") REFERENCES "public"."rasse"("id") ON DELETE no action ON UPDATE no action;

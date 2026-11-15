@@ -1,0 +1,156 @@
+#!/bin/sh
+# Verwaltung einer SchauFUCHS-Installation (angelegt von install.sh, liegt in /opt/schaufuchs).
+# Aufruf: schaufuchs hilfe
+set -eu
+ZIEL="$(dirname "$(readlink -f "$0")")"
+cd "$ZIEL"
+KONTO="eddyreddington"
+
+fett() { printf '\033[1m%s\033[0m\n' "$*"; }
+fehler() { printf '\033[31mFehler:\033[0m %s\n' "$*" >&2; exit 1; }
+wert() { sed -n "s/^$1=//p" .env | tail -n 1 | sed 's/^"//; s/"$//'; }
+setze() {
+  if grep -q "^$1=" .env; then sed -i "s#^$1=.*#$1=$2#" .env; else printf '%s=%s\n' "$1" "$2" >> .env; fi
+}
+[ "$(id -u)" = "0" ] || fehler "Bitte mit sudo ausführen: sudo schaufuchs $*"
+[ -f .env ] || fehler "Keine Installation in $ZIEL gefunden."
+
+gesund() {
+  for _ in $(seq 1 "${1:-60}"); do
+    docker compose exec -T app bun -e "fetch('http://localhost:8787/api/gesund').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" > /dev/null 2>&1 && return 0
+    sleep 2
+  done
+  return 1
+}
+
+# Privaten Sicherungsschlüssel abfragen und nur im Arbeitsspeicher ablegen (/dev/shm); gibt den Pfad aus.
+schluessel_abfragen() {
+  # Im Arbeitsspeicher (/dev/shm), nie auf der Platte. SCHAUFUCHS_TMP nur für Probeläufe in Containern.
+  datei=$(mktemp "${SCHAUFUCHS_TMP:-/dev/shm}/schaufuchs-schluessel.XXXXXX")
+  # Ohne Rückfrage (Automatisierung): SCHAUFUCHS_SCHLUESSEL=/pfad/zur/datei mit dem Schlüssel.
+  if [ -n "${SCHAUFUCHS_SCHLUESSEL:-}" ]; then
+    grep '^AGE-SECRET-KEY-' "$SCHAUFUCHS_SCHLUESSEL" > "$datei" || { rm -f "$datei"; fehler "Kein Sicherungsschlüssel in $SCHAUFUCHS_SCHLUESSEL."; }
+    printf '%s' "$datei"
+    return
+  fi
+  printf 'Sicherungsschlüssel vom Notfallblatt (beginnt mit AGE-SECRET-KEY-): ' > /dev/tty
+  stty -echo < /dev/tty 2> /dev/null || true
+  read -r schluessel < /dev/tty
+  stty echo < /dev/tty 2> /dev/null || true
+  echo > /dev/tty
+  case "$schluessel" in AGE-SECRET-KEY-*) ;; *) rm -f "$datei"; fehler "Das ist kein Sicherungsschlüssel." ;; esac
+  printf '%s\n' "$schluessel" > "$datei"
+  printf '%s' "$datei"
+}
+
+neueste_version() {
+  curl -fsSL "https://api.github.com/repos/$KONTO/schaufuchs/releases/latest" 2> /dev/null | sed -n 's/.*"tag_name": *"v\{0,1\}\([^"]*\)".*/\1/p' | head -n 1
+}
+
+befehl="${1:-hilfe}"
+[ $# -gt 0 ] && shift
+case "$befehl" in
+  status)
+    fett "SchauFUCHS $(wert SCHAUFUCHS_VERSION) – $(wert PUBLIC_URL)"
+    docker compose ps --format 'table {{.Service}}\t{{.Status}}'
+    if gesund 1; then echo "Anwendung: läuft"; else echo "Anwendung: antwortet nicht (schaufuchs logs)"; fi
+    echo "Letzte Sicherung: $(ls -t backups/*.dump* 2> /dev/null | head -n 1 || echo keine)"
+    df -h "$ZIEL" | awk 'NR==2{print "Freier Platz: " $4}'
+    ;;
+
+  update)
+    alt=$(wert SCHAUFUCHS_VERSION)
+    neu="${1:-$(neueste_version)}"
+    [ -n "$neu" ] || fehler "Neueste Version nicht gefunden. Bitte angeben, z. B.: schaufuchs update 1.3.0"
+    if [ "$neu" = "$alt" ]; then echo "SchauFUCHS $alt ist aktuell."; exit 0; fi
+    fett "Update von $alt auf $neu"
+    echo "1. Sicherung des jetzigen Stands …"
+    docker compose run --rm --no-deps backup einmal vor-update
+    echo "2. Neue Dateien und Programme laden …"
+    # SCHAUFUCHS_QUELLE: lokales Repo statt GitHub (nur für Probeläufe).
+    quelle="${SCHAUFUCHS_QUELLE:-https://raw.githubusercontent.com/$KONTO/schaufuchs/v$neu}"
+    hole() { case "$quelle" in http*) curl -fsSL "$quelle/$1" -o "$2" ;; *) cp "$quelle/$1" "$2" ;; esac || fehler "Konnte $1 nicht laden – nichts verändert."; }
+    for d in docker-compose.yml Caddyfile schaufuchs; do hole "deploy/$d" "$d.neu"; done
+    hole scripts/wiederherstellen.sh scripts/wiederherstellen.sh.neu
+    case "$(wert SCHAUFUCHS_IMAGE)" in
+      */*) SCHAUFUCHS_VERSION="$neu" docker compose -f docker-compose.yml.neu pull -q || fehler "Programme $neu nicht gefunden – nichts verändert." ;;
+    esac
+    for d in docker-compose.yml Caddyfile schaufuchs; do mv "$d.neu" "$d"; done
+    mv scripts/wiederherstellen.sh.neu scripts/wiederherstellen.sh
+    chmod 755 schaufuchs
+    setze SCHAUFUCHS_VORHER "$alt"
+    setze SCHAUFUCHS_VERSION "$neu"
+    echo "3. Starten …"
+    docker compose up -d
+    if gesund 90; then
+      fett "SchauFUCHS $neu läuft."
+    else
+      echo "SchauFUCHS $neu startet nicht. Zurück auf $alt mit:  sudo schaufuchs zuruecknehmen" >&2
+      exit 1
+    fi
+    ;;
+
+  zuruecknehmen)
+    vorher=$(wert SCHAUFUCHS_VORHER)
+    [ -n "$vorher" ] || fehler "Keine vorherige Version bekannt."
+    sicherung=$(ls -t backups/*-vor-update.dump* 2> /dev/null | head -n 1 || true)
+    [ -n "$sicherung" ] || fehler "Keine Sicherung vor dem Update gefunden."
+    echo "Zurück auf Version $vorher mit der Sicherung $sicherung."
+    echo "Alles, was seit dem Update eingegeben wurde, geht dabei verloren."
+    schluessel=$(schluessel_abfragen)
+    trap 'rm -f "$schluessel"' EXIT
+    setze SCHAUFUCHS_VERSION "$vorher"
+    case "$(wert SCHAUFUCHS_IMAGE)" in */*) docker compose pull -q app backup || true ;; esac
+    sh scripts/wiederherstellen.sh --schluessel "$schluessel" "$sicherung"
+    ;;
+
+  sichern)
+    docker compose run --rm --no-deps backup einmal manuell
+    ls -t backups/*.dump* | head -n 1
+    ;;
+
+  sicherungen)
+    ls -lht backups/ | head -n "${1:-20}"
+    ;;
+
+  wiederherstellen)
+    datei="${1:-}"
+    [ -n "$datei" ] || fehler "Bitte die Sicherung angeben, z. B.: schaufuchs wiederherstellen backups/schau-2026-11-15-1200.dump.age  (Liste: schaufuchs sicherungen)"
+    case "$datei" in /*) ;; backups/*) datei="$ZIEL/$datei" ;; *) datei="$ZIEL/backups/$datei" ;; esac
+    schluessel=$(schluessel_abfragen)
+    trap 'rm -f "$schluessel"' EXIT
+    sh scripts/wiederherstellen.sh --schluessel "$schluessel" "$datei"
+    ;;
+
+  einstellungen)
+    "${EDITOR:-nano}" .env
+    docker compose up -d
+    ;;
+
+  neustart)
+    docker compose up -d --force-recreate
+    gesund 90 && echo "Läuft." || fehler "Startet nicht – schaufuchs logs"
+    ;;
+
+  logs)
+    docker compose logs --tail "${1:-200}" app caddy
+    ;;
+
+  hilfe|*)
+    cat << HILFE
+SchauFUCHS verwalten (immer mit sudo):
+
+  schaufuchs status              Läuft alles? Version, letzte Sicherung, freier Platz
+  schaufuchs update [VERSION]    Auf die neueste (oder angegebene) Version aktualisieren – sichert vorher
+  schaufuchs zuruecknehmen       Letztes Update zurücknehmen (braucht den Sicherungsschlüssel)
+  schaufuchs sichern             Jetzt eine Sicherung anlegen
+  schaufuchs sicherungen         Vorhandene Sicherungen anzeigen
+  schaufuchs wiederherstellen D  Sicherung D zurückspielen (braucht den Sicherungsschlüssel)
+  schaufuchs einstellungen       Einstellungen bearbeiten (z. B. Mailversand), danach Neustart
+  schaufuchs neustart            Alles neu starten
+  schaufuchs logs                Meldungen der Anwendung anzeigen
+
+Installation: $ZIEL · Sicherungen: $ZIEL/backups (bitte auch außer Haus kopieren)
+HILFE
+    ;;
+esac

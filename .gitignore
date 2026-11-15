@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.data/
+.env
+*.log
+.DS_Store
+apps/web/dev-dist/
+.claude/worktrees/
+
+# Lokale Daten, die nicht ins Repo dürfen (z. B. vollständiges Rassenverzeichnis aus öffentlichen Quellen)
+lokal/
+
+# Datenbank-Sicherungen (Dienst „backup“)
+backups/
+.claude/launch.json

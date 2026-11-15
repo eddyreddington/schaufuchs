@@ -1,0 +1,32 @@
+{
+  "name": "@schau/server",
+  "private": true,
+  "version": "1.2.0",
+  "license": "EUPL-1.2",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "NODE_ENV=production bun src/index.ts",
+    "db:push": "drizzle-kit push --force && bun src/db/schutz.ts",
+    "db:migrate": "bun src/migrate.ts",
+    "db:generate": "drizzle-kit generate",
+    "seed": "bun src/seed.ts",
+    "test": "bun test --timeout 30000"
+  },
+  "dependencies": {
+    "@hono/trpc-server": "^0.3.4",
+    "@schau/domain": "workspace:*",
+    "@trpc/server": "^11.0.0",
+    "drizzle-orm": "0.45.4",
+    "hono": "4.13.16",
+    "nodemailer": "10.1.7",
+    "pdfkit": "^0.15.0",
+    "postgres": "^3.4.0",
+    "superjson": "^2.2.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/pdfkit": "^0.13.0",
+    "drizzle-kit": "^0.31.0"
+  }
+}

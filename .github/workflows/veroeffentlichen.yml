@@ -1,0 +1,63 @@
+# Fertige Programme für Vereine: Bei einem Versions-Tag (v1.2.0) werden die Images für Intel/AMD- und ARM-Server
+# (z. B. Raspberry Pi 4/5) gebaut und in die GitHub-Registry geladen. install.sh und „schaufuchs update“ holen sie dort.
+name: Veröffentlichen
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions: {}
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Version aus dem Tag
+        id: v
+        run: |
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/$(echo '${{ github.repository_owner }}' | tr 'A-Z' 'a-z')/schaufuchs" >> "$GITHUB_OUTPUT"
+      - name: Anwendung
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ steps.v.outputs.image }}:${{ steps.v.outputs.version }}
+            ${{ steps.v.outputs.image }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=EUPL-1.2
+      - name: Sicherungsdienst
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: Dockerfile.backup
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ steps.v.outputs.image }}-backup:${{ steps.v.outputs.version }}
+            ${{ steps.v.outputs.image }}-backup:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=EUPL-1.2
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          hinweise="docs/versionshinweise-$(echo '${{ steps.v.outputs.version }}' | cut -d. -f1,2).md"
+          [ -f "$hinweise" ] || hinweise=/dev/null
+          gh release create "$GITHUB_REF_NAME" --title "SchauFUCHS ${{ steps.v.outputs.version }}" --notes-file "$hinweise"

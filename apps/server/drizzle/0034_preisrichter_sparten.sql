@@ -1,0 +1,1 @@
+ALTER TABLE "preisrichter" ADD COLUMN "sparten" jsonb DEFAULT '[]'::jsonb NOT NULL;

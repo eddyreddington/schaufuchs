@@ -1,0 +1,6 @@
+# Sicherungsdienst: PostgreSQL-Werkzeuge (pg_dump, pg_restore), age zum Verschlüsseln und das Sicherungsskript.
+# Das Skript steckt im Image (fertige Images für Vereine, deploy/); docker-compose.yml im Repo bindet es zusätzlich ein.
+FROM postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+RUN apk add --no-cache age && age --version
+COPY scripts/backup.sh /backup.sh
+ENTRYPOINT ["sh", "/backup.sh"]

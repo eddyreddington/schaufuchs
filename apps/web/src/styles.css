@@ -1,0 +1,371 @@
+@import "tailwindcss";
+
+/* Schrift: Archivo (Omnibus-Type, SIL OFL 1.1, siehe schriften/OFL.txt), variabel in Gewicht und Breite,
+   selbst gehostet. Ziffern sind von Haus aus gleich breit und die Null hat keinen Strich. */
+@font-face {
+  font-family: "Archivo";
+  src: url("./schriften/archivo-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Archivo";
+  src: url("./schriften/archivo-latin-ext.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Farben als Tokens („Werkbank“). Die Namen bleiben, die Werte wechseln im Dunkelmodus (unten).
+   weiss = Fläche, papier = zurückgesetzte Fläche (Seitenleiste, Felder in Feldern), tinte = Text, grau = Nebentext,
+   linie = Trennlinie, linie-stark = Rahmen von Knöpfen und Panels, feldrand = Rahmen von Eingaben (mind. 3:1, WCAG 1.4.11),
+   band = Akzent, auf-band = Schrift auf dem Akzent, stall/kamm/stroh = gut/Fehler/Hinweis,
+   kopf = dunkles Band (öffentliche Seite, Handbuch, Tablet-Anmeldung), in beiden Modi dunkel. */
+@theme {
+  --color-papier: #f6f7f9;
+  --color-weiss: #ffffff;
+  --color-tinte: #171b24;
+  --color-grau: #5f6776;
+  --color-linie: #e6e8ec;
+  --color-linie-stark: #d3d7de;
+  --color-feldrand: #868e9c;
+  --color-band: #2d4bd2;
+  --color-band-dunkel: #2340bd;
+  --color-band-hell: #eef1fd;
+  --color-auf-band: #ffffff;
+  --color-stall: #1d7a4b;
+  --color-stall-hell: #e6f4ec;
+  --color-kamm: #c3302a;
+  --color-kamm-hell: #fcebe9;
+  --color-stroh: #fbf2d9;
+  --color-stroh-dunkel: #8f6200;
+  --color-kopf: #171b24;
+  --color-auf-kopf: #ffffff;
+
+  --font-sans: "Archivo", system-ui, sans-serif;
+  --font-display: "Archivo", system-ui, sans-serif;
+}
+
+/* Dunkelmodus: folgt dem System, außer der Nutzer hat „Hell“ oder „Dunkel“ gewählt (data-modus am <html>).
+   Nur auf dem Bildschirm – gedruckt wird immer hell. */
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-modus="hell"]) {
+    --color-papier: #121418;
+    --color-weiss: #181b21;
+    --color-tinte: #e7e9ed;
+    --color-grau: #9aa1ad;
+    --color-linie: #262a32;
+    --color-linie-stark: #353a44;
+    --color-feldrand: #6a7282;
+    --color-band: #7189ff;
+    --color-band-dunkel: #8599ff;
+    --color-band-hell: #1f2644;
+    --color-auf-band: #0e1224;
+    --color-stall: #5fc48f;
+    --color-stall-hell: #15291f;
+    --color-kamm: #ff7f76;
+    --color-kamm-hell: #331b1a;
+    --color-stroh: #2b2414;
+    --color-stroh-dunkel: #e2b54d;
+    --color-kopf: #0b0d10;
+    --color-auf-kopf: #e7e9ed;
+    color-scheme: dark;
+  }
+}
+@media screen {
+  :root[data-modus="dunkel"] {
+    --color-papier: #121418;
+    --color-weiss: #181b21;
+    --color-tinte: #e7e9ed;
+    --color-grau: #9aa1ad;
+    --color-linie: #262a32;
+    --color-linie-stark: #353a44;
+    --color-feldrand: #6a7282;
+    --color-band: #7189ff;
+    --color-band-dunkel: #8599ff;
+    --color-band-hell: #1f2644;
+    --color-auf-band: #0e1224;
+    --color-stall: #5fc48f;
+    --color-stall-hell: #15291f;
+    --color-kamm: #ff7f76;
+    --color-kamm-hell: #331b1a;
+    --color-stroh: #2b2414;
+    --color-stroh-dunkel: #e2b54d;
+    --color-kopf: #0b0d10;
+    --color-auf-kopf: #e7e9ed;
+    color-scheme: dark;
+  }
+}
+
+/* „Hell“ gewählt bei dunklem System: auch Bedienelemente des Browsers hell. */
+:root[data-modus="hell"] {
+  color-scheme: light;
+}
+/* Flächen, die wie Papier immer hell bleiben (Hallenplan, Hallenskizze): helle Tokens im Teilbaum. */
+.immer-hell {
+  --color-papier: #f6f7f9;
+  --color-weiss: #ffffff;
+  --color-tinte: #171b24;
+  --color-grau: #5f6776;
+  --color-linie: #e6e8ec;
+  --color-linie-stark: #d3d7de;
+  --color-feldrand: #868e9c;
+  --color-band: #2d4bd2;
+  --color-band-dunkel: #2340bd;
+  --color-band-hell: #eef1fd;
+  --color-auf-band: #ffffff;
+  --color-stall: #1d7a4b;
+  --color-stall-hell: #e6f4ec;
+  --color-kamm: #c3302a;
+  --color-kamm-hell: #fcebe9;
+  --color-stroh: #fbf2d9;
+  --color-stroh-dunkel: #8f6200;
+  --color-kopf: #171b24;
+  --color-auf-kopf: #ffffff;
+  color-scheme: light;
+  color: var(--color-tinte);
+}
+
+@layer base {
+  html {
+    font-size: 15px;
+  }
+  /* Tablet: jeder Knopf mindestens 44 px hoch. */
+  html.tablet button {
+    min-height: 2.75rem;
+  }
+  /* Preisrichter-Tablet: größere Grundschrift, damit Ziele mindestens 44 px groß sind. */
+  html.tablet {
+    font-size: 17px;
+  }
+  body {
+    @apply bg-weiss text-tinte font-sans antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-tinte;
+    font-stretch: 112%;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-band);
+    outline-offset: 2px;
+  }
+  /* Auf dunklen Bändern ist der blaue Rahmen kaum zu sehen. */
+  .bg-kopf :focus-visible,
+  .bg-band :focus-visible {
+    outline-color: var(--color-auf-kopf);
+  }
+  a {
+    @apply text-band underline-offset-2;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-band) 25%, transparent);
+  }
+}
+
+@layer components {
+  .tabelle {
+    @apply w-full border-collapse text-left;
+  }
+  .tabelle th {
+    @apply border-b border-linie-stark px-3 py-2 text-sm font-semibold text-grau;
+  }
+  .tabelle td {
+    @apply border-b border-linie px-3 py-2.5 align-top;
+  }
+  .tabelle tbody tr:hover {
+    @apply bg-papier;
+  }
+  .tabelle tfoot td {
+    @apply border-t border-linie-stark px-3 py-2.5 font-semibold;
+  }
+  /* Im Tabellenrahmen: Außenspalten bündig mit dem Rahmen-Innenabstand, letzte Zeile ohne Linie. */
+  .tabellen-rahmen .tabelle th:first-child,
+  .tabellen-rahmen .tabelle td:first-child {
+    @apply pl-4;
+  }
+  .tabellen-rahmen .tabelle th:last-child,
+  .tabellen-rahmen .tabelle td:last-child {
+    @apply pr-4;
+  }
+  .tabellen-rahmen .tabelle tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .tabellen-rahmen .tabelle tfoot td {
+    @apply border-b-0;
+  }
+  /* Katalognummer: breit und fett */
+  .nummer {
+    @apply font-display font-bold tracking-tight;
+    font-stretch: 118%;
+  }
+}
+
+/* Tabellen, die auf dem Handy zu Karten werden (z. B. Tiere im Meldeformular) */
+@media (max-width: 767px) {
+  .tabelle-stapel thead {
+    display: none;
+  }
+  .tabelle-stapel,
+  .tabelle-stapel tbody,
+  .tabelle-stapel tr,
+  .tabelle-stapel td {
+    display: block;
+    width: 100%;
+  }
+  .tabelle-stapel tr {
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--color-linie);
+    border-radius: 0.5rem;
+    background: var(--color-weiss);
+    padding: 0.5rem;
+  }
+  .tabelle-stapel td {
+    border: none;
+    padding: 0.35rem 0.25rem;
+    text-align: left;
+  }
+  .tabelle-stapel td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-grau);
+  }
+}
+
+/* Tiere im Meldeformular: richtet sich nach dem Platz im Formular, nicht nach dem Bildschirm. Reicht die Breite nicht
+   für alle Spalten, wird jede Zeile zu einer Karte mit beschrifteten Feldern – nie waagerecht scrollen. */
+.tiere-rahmen {
+  container-type: inline-size;
+}
+@container (max-width: 1100px) {
+  .tabelle-tiere thead {
+    display: none;
+  }
+  .tabelle-tiere,
+  .tabelle-tiere tbody {
+    display: block;
+    width: 100%;
+  }
+  .tabelle-tiere tr {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.5rem 0.75rem;
+    align-items: start;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--color-linie);
+    border-radius: 0.5rem;
+    background: var(--color-weiss);
+    padding: 0.75rem;
+  }
+  .tabelle-tiere td {
+    display: block;
+    width: auto;
+    border: none;
+    padding: 0;
+    text-align: left;
+    grid-column: span 2;
+  }
+  .tabelle-tiere td:nth-child(1),
+  .tabelle-tiere td:nth-child(2),
+  .tabelle-tiere td:last-child {
+    grid-column: 1 / -1;
+  }
+  .tabelle-tiere td:last-child {
+    text-align: right;
+  }
+  .tabelle-tiere td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-grau);
+  }
+}
+@container (max-width: 520px) {
+  .tabelle-tiere td {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Hallenplan quer drucken (Plan und Aufbauliste mit allen Spalten). */
+@page quer {
+  size: A4 landscape;
+  margin: 10mm;
+}
+@media print {
+  .druck-quer {
+    page: quer;
+  }
+  .nicht-drucken {
+    display: none !important;
+  }
+  /* Handbuch drucken: nur der Text, ohne Rahmen; Bilder, Tabellen und Kästen nicht über Seiten zerreißen. */
+  .handbuch-seite { background: #fff !important; }
+  .handbuch-seite > div { padding: 0 !important; max-width: none !important; }
+  .handbuch { border: 0 !important; padding: 0 !important; font-size: 10.5pt; }
+  .handbuch figure, .handbuch blockquote, .handbuch tr, .handbuch img { break-inside: avoid; }
+  .handbuch h2, .handbuch h3 { break-after: avoid; }
+  .handbuch table { display: table !important; }
+}
+
+/* Sprunglink: erst bei Tastaturfokus sichtbar. */
+.sprunglink {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 60;
+  border-radius: 0.375rem;
+  background: var(--color-weiss);
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+}
+.sprunglink:focus {
+  top: 0.5rem;
+}
+
+/* Handbücher unter /hilfe (aus docs/handbuch, erzeugt mit scripts/handbuch.sh) */
+.handbuch { line-height: 1.6; color: var(--color-tinte); }
+.handbuch h1 { font-family: var(--font-display); font-size: 2rem; font-weight: 700; margin: 0 0 0.25rem; color: var(--color-band); }
+.handbuch h1 + p { color: var(--color-grau); margin-bottom: 2rem; }
+.handbuch h2 { font-family: var(--font-display); font-size: 1.45rem; font-weight: 700; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 2px solid var(--color-band); color: var(--color-band); scroll-margin-top: 1rem; }
+.handbuch h3 { font-size: 1.15rem; font-weight: 700; margin: 1.75rem 0 0.5rem; scroll-margin-top: 1rem; }
+.handbuch h4 { font-weight: 700; margin: 1.25rem 0 0.25rem; }
+.handbuch p { margin: 0.6rem 0; }
+.handbuch ul, .handbuch ol { margin: 0.6rem 0; padding-left: 1.5rem; }
+.handbuch ul { list-style: disc; }
+.handbuch ol { list-style: decimal; }
+.handbuch li { margin: 0.25rem 0; }
+.handbuch blockquote { margin: 1rem 0; padding: 0.75rem 1rem; background: var(--color-band-hell); border-left: 4px solid var(--color-band); border-radius: 0.25rem; }
+.handbuch blockquote p { margin: 0.2rem 0; }
+.handbuch table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+.handbuch th, .handbuch td { border: 1px solid var(--color-linie); padding: 0.4rem 0.6rem; text-align: left; vertical-align: top; }
+.handbuch th { background: var(--color-band-hell); }
+/* Schmale Bildschirme: breite Tabellen scrollen in sich, die Seite bleibt fest; lange Wörter dürfen umbrechen. */
+@media (max-width: 640px) {
+  .handbuch table { display: block; overflow-x: auto; font-size: 0.85rem; }
+  .handbuch th, .handbuch td { min-width: 7rem; overflow-wrap: anywhere; hyphens: auto; }
+}
+.handbuch code { font-family: ui-monospace, Menlo, monospace; font-size: 0.9em; background: var(--color-papier); padding: 0 0.25rem; border-radius: 0.2rem; }
+.handbuch figure { margin: 1.25rem 0; }
+.handbuch img { max-width: 100%; height: auto; border: 1px solid var(--color-linie); border-radius: 0.5rem; box-shadow: 0 1px 4px rgb(0 0 0 / 0.08); }
+.handbuch figcaption { font-size: 0.85rem; color: var(--color-grau); margin-top: 0.35rem; }
+.handbuch hr { border: 0; border-top: 1px dashed var(--color-linie); margin: 2rem 0; }
+.handbuch a { color: var(--color-band); }

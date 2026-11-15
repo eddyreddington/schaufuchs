@@ -1,0 +1,1 @@
+CREATE INDEX "farbenschlag_version_idx" ON "farbenschlag" USING btree ("version_id","folge");

@@ -1,0 +1,1 @@
+ALTER TABLE "postausgang" ADD COLUMN "versuche" integer DEFAULT 0 NOT NULL;

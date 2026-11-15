@@ -1,0 +1,52 @@
+# Prüfkette bei jedem Push und Pull Request: Typecheck, Modulkarte, Dateigrößen, Domain- und Server-Tests.
+# Läuft mit Gitea Actions (act_runner, Einrichtung in docs/architektur.md) und unverändert mit GitHub Actions
+# (Datei dafür nach .github/workflows/ kopieren). Der Job läuft im Container, damit die Datenbank auf beiden
+# unter dem Dienstnamen „postgres“ erreichbar ist.
+name: Prüfen
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    container: node:22-bookworm
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: schau
+          POSTGRES_DB: schau_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        options: >-
+          --health-cmd "pg_isready -U schau -d schau_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      CI: "true"
+      TZ: Europe/Berlin
+      TEST_DATABASE_URL: postgres://schau@postgres:5432/schau_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Werkzeuge (Bun, pdftotext für PDF-Tests)
+        run: |
+          npm install -g bun@1.3.14
+          apt-get update -qq && apt-get install -y -qq poppler-utils >/dev/null
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          bun --version
+
+      - name: Abhängigkeiten
+        run: bun install --frozen-lockfile
+
+      - name: Schema und Schutz einspielen
+        working-directory: apps/server
+        env:
+          DATABASE_URL: postgres://schau@postgres:5432/schau_test
+        run: bun run db:push
+
+      - name: Prüfen
+        run: bun run pruefen

@@ -1,0 +1,80 @@
+# Betrieb für einen Verein: Anwendung + PostgreSQL.
+# Start: docker compose up -d   (vorher .env aus .env.example anlegen)
+name: gefluegelschau
+
+# Protokolle begrenzen (sonst wachsen sie über die ganze Saison).
+x-logs: &logs
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    # init reicht SIGTERM an den Server weiter (sauberes Beenden); Speichergrenze schützt den Rechner bei Last.
+    # 2 GB reichen für Kataloge mit vielen Anzeigen (Bilder werden beim Hochladen verkleinert, Kataloge nacheinander erzeugt).
+    init: true
+    mem_limit: ${APP_SPEICHER:-2g}
+    logging: *logs
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://schau:${POSTGRES_PASSWORD}@db:5432/schau
+    ports:
+      # Nur lokal gebunden: sonst ginge der Zugriff am Reverse-Proxy vorbei (und X-Forwarded-For ließe sich fälschen).
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-8787}:8787"
+    labels:
+      # OrbStack: feste Adresse http://schau.orb.local (andere Docker-Umgebungen ignorieren das)
+      dev.orbstack.domains: schau.orb.local
+      dev.orbstack.http-port: "8787"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+    restart: unless-stopped
+    logging: *logs
+    environment:
+      POSTGRES_USER: schau
+      POSTGRES_DB: schau
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - daten:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U schau"]
+      interval: 5s
+      retries: 10
+
+  # Sicherung der Datenbank nach ./backups: 48 Stunden lang jede, danach eine je Tag bis BACKUP_TAGE (Standard 30).
+  # Zurückspielen und Prüfen: siehe README, Abschnitt Betrieb.
+  # Jede Sicherung wird mit age verschlüsselt (BACKUP_EMPFAENGER: öffentlicher Schlüssel). Der Klartext entsteht nur
+  # im Arbeitsspeicher (/arbeit), zum Prüfen vor dem Verschlüsseln. Den privaten Schlüssel hat der Server nicht.
+  backup:
+    build:
+      context: .
+      dockerfile: Dockerfile.backup
+    image: gefluegelschau-backup:latest
+    restart: unless-stopped
+    tmpfs:
+      - /arbeit:size=2g,mode=0700
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_EMPFAENGER: ${BACKUP_EMPFAENGER:-}
+      BACKUP_UNVERSCHLUESSELT: ${BACKUP_UNVERSCHLUESSELT:-0}
+      BACKUP_TAGE: ${BACKUP_TAGE:-30}
+      BACKUP_INTERVALL_MINUTEN: ${BACKUP_INTERVALL_MINUTEN:-120}
+      # Linux: Besitzer der Sicherungsdateien (sonst root), z. B. die eigene Kennung aus `id -u` bzw. `id -g`.
+      BACKUP_UID: ${BACKUP_UID:-}
+      BACKUP_GID: ${BACKUP_GID:-}
+      TZ: Europe/Berlin
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: ["sh", "/backup.sh"]
+    logging: *logs
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  daten:

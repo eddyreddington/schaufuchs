@@ -1,0 +1,34 @@
+# DEMO-Daten zum Ausprobieren. NICHT das offizielle BDRG-Verzeichnis.
+# Format: Sparte;Rasse;Farbenschlag – die Zeilenreihenfolge ist die Ausstellungsfolge.
+Sparte;Rasse;Farbenschlag
+Großgeflügel;Pommerngänse;grau
+Großgeflügel;Pommerngänse;weiß
+Großgeflügel;Bronzeputen;bronze
+Wassergeflügel;Pekingenten;weiß
+Wassergeflügel;Laufenten;wildfarbig
+Wassergeflügel;Laufenten;weiß
+Wassergeflügel;Laufenten;forellenfarbig
+Hühner;Brahma;hell
+Hühner;Brahma;dunkel
+Hühner;Orpington;schwarz
+Hühner;Orpington;gelb
+Hühner;Sussex;hell
+Hühner;Wyandotten;weiß
+Hühner;Wyandotten;schwarz
+Hühner;Wyandotten;silber-schwarzgesäumt
+Hühner;Italiener;rebhuhnfarbig
+Hühner;Italiener;weiß
+Hühner;Marans;schwarz-kupfer
+Zwerghühner;Zwerg-Wyandotten;weiß
+Zwerghühner;Zwerg-Wyandotten;blau-gesäumt
+Zwerghühner;Zwerg-Orpington;gelb
+Zwerghühner;Zwerg-Cochin;schwarz
+Zwerghühner;Zwerg-Cochin;gesperbert
+Zwerghühner;Federfüßige Zwerghühner;porzellanfarbig
+Zwerghühner;Seidenhühner;weiß
+Tauben;Strasser;blau mit schwarzen Binden
+Tauben;Strasser;rot
+Tauben;King;weiß
+Tauben;Deutsche Modeneser;gazzi blau
+Tauben;Altdeutsche Mövchen;blau mit schwarzen Binden
+Tauben;Indische Pfautauben;weiß

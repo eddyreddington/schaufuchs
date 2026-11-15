@@ -1,0 +1,9 @@
+# HTTPS für SchauFUCHS. Domain und E-Mail kommen aus der .env (SCHAUFUCHS_DOMAIN, ACME_EMAIL).
+{
+	email {$ACME_EMAIL}
+}
+
+{$SCHAUFUCHS_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:8787
+}

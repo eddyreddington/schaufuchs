@@ -1,0 +1,39 @@
+{
+  "name": "gefluegelschau",
+  "private": true,
+  "version": "1.2.0",
+  "license": "EUPL-1.2",
+  "description": "SchauFUCHS – Schauverwaltung für Rassegeflügelausstellungen",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "db:start": "./scripts/dev-db.sh start",
+    "db:stop": "./scripts/dev-db.sh stop",
+    "db:push": "cd apps/server && bun run db:push",
+    "db:seed": "cd apps/server && bun run seed",
+    "db:demo": "cd apps/server && bun src/seed.ts --bis-bewertung",
+    "db:demo:komplett": "cd apps/server && bun src/seed.ts --komplett",
+    "db:demo:entfernen": "cd apps/server && bun src/seed.ts --entfernen",
+    "db:migrate": "cd apps/server && bun run db:migrate",
+    "docker:start": "sh scripts/docker-start.sh",
+    "docker:stop": "docker compose stop",
+    "docker:demo": "sh scripts/docker-demo.sh",
+    "docker:demo:entfernen": "docker compose exec -T app sh -c 'cd apps/server && bun src/seed.ts --entfernen'",
+    "docker:logs": "docker compose logs -f app",
+    "dev:server": "cd apps/server && bun run dev",
+    "dev:web": "cd apps/web && bun run dev",
+    "build": "cd apps/web && bun run build",
+    "start": "cd apps/server && bun run start",
+    "test": "./scripts/dev-db.sh start >/dev/null && cd packages/domain && bun test && cd ../../apps/server && bun test --timeout 30000",
+    "typecheck": "tsc -p packages/domain && tsc -p apps/server && tsc -p apps/web && tsc -p scripts",
+    "modulkarte": "bun scripts/modulkarte.ts",
+    "pruefen": "./scripts/pruefen.sh",
+    "handbuch:bilder": "bun scripts/handbuch-bilder.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/bun": "latest"
+  }
+}

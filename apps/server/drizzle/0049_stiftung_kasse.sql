@@ -1,0 +1,2 @@
+ALTER TABLE "stiftung" ADD COLUMN "kassenbewegung_id" integer;--> statement-breakpoint
+ALTER TABLE "stiftung" ADD CONSTRAINT "stiftung_kassenbewegung_id_kassenbewegung_id_fk" FOREIGN KEY ("kassenbewegung_id") REFERENCES "public"."kassenbewegung"("id") ON DELETE restrict ON UPDATE no action;

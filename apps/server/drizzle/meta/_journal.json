@@ -1,0 +1,391 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793367924666,
+      "tag": "0000_start",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793368705643,
+      "tag": "0001_sondernoten",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793369008147,
+      "tag": "0002_kontingent_rundung",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793369149979,
+      "tag": "0003_sepa",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793394303600,
+      "tag": "0004_stammdaten_mandant",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793395405297,
+      "tag": "0005_freitext_einordnung",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793875485932,
+      "tag": "0006_katalog_gestaltung",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793958403770,
+      "tag": "0007_staemme_vorn",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793974078683,
+      "tag": "0008_auszahlung_storno",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793980376466,
+      "tag": "0009_datenschutz",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793982588124,
+      "tag": "0010_fachrecht",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793983878497,
+      "tag": "0011_kasse_gobd",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793988934291,
+      "tag": "0012_beta_behebung",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793990572419,
+      "tag": "0013_postausgang_versuche",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794002629594,
+      "tag": "0014_protokoll_vermerke",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1794003069036,
+      "tag": "0015_journal_aufhebung",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794003373917,
+      "tag": "0016_datenschutz_bezuege",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794006948232,
+      "tag": "0017_pin_8_ziffern",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794135903014,
+      "tag": "0018_sepa_verworfen_nachtrag",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794341241354,
+      "tag": "0019_textbausteine_grundbestand",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794342640319,
+      "tag": "0020_zwei_faktor",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794344413898,
+      "tag": "0021_benutzer_geloescht",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794345228997,
+      "tag": "0022_benutzer_einladung",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794345746062,
+      "tag": "0023_farbenschlag_version_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794346466105,
+      "tag": "0024_textbaustein_gruppe",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794395253967,
+      "tag": "0025_kassenabschluss_nachtrag",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794399145917,
+      "tag": "0026_zahlung_einlieferung_baustein_rasse",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794409831562,
+      "tag": "0027_kaefig_regeln",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794410709439,
+      "tag": "0028_kaefig_folge",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794411295528,
+      "tag": "0029_kaefig_wahl",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794411772158,
+      "tag": "0030_kaefig_masse",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794412740452,
+      "tag": "0031_kaefig_block",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794417861874,
+      "tag": "0032_halle",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794425501349,
+      "tag": "0033_kasse_zeitstempel",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794431144968,
+      "tag": "0034_preisrichter_sparten",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794431960840,
+      "tag": "0035_hallenplan_fest",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794433374501,
+      "tag": "0036_rassebild",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794466485241,
+      "tag": "0037_aussteller_mitglied",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794477272061,
+      "tag": "0038_testschau",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794495688181,
+      "tag": "0039_pr_zuteilung",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794555379652,
+      "tag": "0040_vereinsverzeichnis",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794580005023,
+      "tag": "0041_katalog_schrift_stil",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794582445745,
+      "tag": "0042_katalog_aufteilung",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794588440503,
+      "tag": "0043_verfall_zahlungseingang",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794588971856,
+      "tag": "0044_impressum_bildnachweis",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1794589598264,
+      "tag": "0045_tiergesundheit_absage",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1794591521170,
+      "tag": "0046_stiftung_vergabe",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1794592206899,
+      "tag": "0047_preisart_bindung",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1794592554508,
+      "tag": "0048_pr_hoechstzahl",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1794592680847,
+      "tag": "0049_stiftung_kasse",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1794602111976,
+      "tag": "0050_kommende_schauen",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1794654826883,
+      "tag": "0051_katalog_gestaltung_mehr",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1794669897380,
+      "tag": "0052_aufsteller",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1794694940555,
+      "tag": "0053_katalog_sortierung",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1794735162326,
+      "tag": "0054_abmeldung",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+<svg aria-label="SchauFUCHS" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+ <radialGradient id="bg" cx="50%" cy="42%" r="70%"><stop offset="0" stop-color="#FFF8EE"/><stop offset="1" stop-color="#FFE0BD"/></radialGradient>
+ <radialGradient id="or" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="#FFA552"/><stop offset="0.65" stop-color="#F47B26"/><stop offset="1" stop-color="#DE6418"/></radialGradient>
+ <linearGradient id="ws" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F3E9DC"/></linearGradient>
+ <linearGradient id="dk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E3B22"/><stop offset="1" stop-color="#4A2616"/></linearGradient>
+ <linearGradient id="holz" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D9A066"/><stop offset="1" stop-color="#B57A42"/></linearGradient>
+</defs>
+<rect width="512" height="512" rx="112" fill="url(#bg)"/>
+<circle cx="256" cy="250" r="200" fill="#FFD3A6" opacity="0.45"/>
+<ellipse cx="258" cy="470" rx="150" ry="14" fill="#E9B98A" opacity="0.6"/>
+
+<g stroke="#3B2314" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+ <!-- Schwanz -->
+ <g transform="translate(4 34)">
+ <path d="M318 432 C380 452 444 420 452 358 C458 314 440 278 410 268 C394 264 384 276 392 292 C410 306 418 332 410 362 C400 398 362 412 330 404 Z" fill="url(#or)"/>
+ <path d="M410 268 C440 278 458 314 454 344 C442 330 424 320 406 318 C404 306 398 298 392 292 C384 276 394 264 410 268 Z" fill="url(#ws)"/>
+ </g>
+ <!-- Körper -->
+ <path d="M194 290 C174 330 166 382 174 420 C180 448 206 460 236 460 L276 460 C306 460 332 448 338 420 C346 382 338 330 318 290 Z" fill="url(#or)"/>
+ <path d="M222 300 C210 340 208 390 218 430 C226 450 286 450 294 430 C304 390 302 340 290 300 Z" fill="url(#ws)" stroke-width="0"/>
+ <!-- Füße -->
+ <ellipse cx="218" cy="462" rx="32" ry="16" fill="url(#dk)"/>
+ <ellipse cx="294" cy="462" rx="32" ry="16" fill="url(#dk)"/>
+ <!-- Winkender Arm -->
+ <path d="M310 330 C344 318 378 290 396 262 L420 278 C402 312 362 344 320 356 Z" fill="url(#or)"/>
+ <ellipse cx="412" cy="258" rx="19" ry="22" fill="url(#dk)" transform="rotate(-15 412 258)"/>
+ <path d="M402 242 l1 -10 M413 239 l2 -11 M424 243 l4 -9" fill="none" stroke-width="4"/>
+ <path d="M440 228 q12 12 8 28 M454 218 q16 18 10 40" fill="none" stroke="#E07B2E" stroke-width="5"/>
+ <!-- Schreibunterlage -->
+ <g transform="rotate(-8 240 390)">
+  <rect x="184" y="326" width="112" height="128" rx="10" fill="url(#holz)"/>
+  <rect x="194" y="342" width="92" height="104" rx="3" fill="#FFFFFF" stroke-width="3"/>
+  <rect x="218" y="316" width="44" height="20" rx="6" fill="#A9B2C3" stroke-width="4"/>
+  <g fill="none" stroke-width="4.5">
+   <path d="M203 366 l6 6 l11 -13" stroke="#2EA05A"/><path d="M203 392 l6 6 l11 -13" stroke="#2EA05A"/><path d="M203 418 l6 6 l11 -13" stroke="#2EA05A"/>
+   <g stroke="#2547A8" stroke-width="4"><path d="M228 368 h44"/><path d="M228 394 h36"/><path d="M228 420 h40"/></g>
+  </g>
+ </g>
+ <!-- Haltende Pfote -->
+ <ellipse cx="188" cy="384" rx="18" ry="20" fill="url(#dk)"/>
+ <path d="M200 376 h8 M200 388 h9" fill="none" stroke="#9A6A50" stroke-width="3"/>
+
+ <!-- Kopf (leicht geneigt) -->
+ <g transform="rotate(-6 256 200)">
+  <path d="M168 160 C150 120 140 80 150 50 C154 40 164 38 172 44 C200 66 222 92 232 118 Z" fill="url(#or)"/>
+  <path d="M344 160 C362 120 372 80 362 50 C358 40 348 38 340 44 C312 66 290 92 280 118 Z" fill="url(#or)"/>
+  <path d="M180 138 C168 112 164 88 168 68 C188 84 204 100 214 120 Z" fill="#FFE6CF" stroke-width="0"/>
+  <path d="M332 138 C344 112 348 88 344 68 C324 84 308 100 298 120 Z" fill="#FFE6CF" stroke-width="0"/>
+  <path d="M150 50 C154 40 164 38 172 44 C182 52 190 60 196 68 C182 72 166 74 152 72 C149 64 149 56 150 50 Z" fill="#4A2616" stroke-width="0"/>
+  <path d="M362 50 C358 40 348 38 340 44 C330 52 322 60 316 68 C330 72 346 74 360 72 C363 64 363 56 362 50 Z" fill="#4A2616" stroke-width="0"/>
+  <path d="M256 96 C320 96 366 136 376 192 C380 214 386 232 398 244 C384 248 376 250 370 252 C380 262 386 270 390 280 C370 282 356 280 344 276 C320 300 290 312 256 312 C222 312 192 300 168 276 C156 280 142 282 122 280 C126 270 132 262 142 252 C136 250 128 248 114 244 C126 232 132 214 136 192 C146 136 192 96 256 96 Z" fill="url(#or)"/>
+  <path d="M138 214 C164 202 198 206 222 224 C238 236 248 246 256 248 C264 246 274 236 290 224 C314 206 348 202 374 214 C380 230 386 238 398 244 C384 248 376 250 370 252 C380 262 386 270 390 280 C370 282 356 280 344 276 C320 300 290 312 256 312 C222 312 192 300 168 276 C156 280 142 282 122 280 C126 270 132 262 142 252 C136 250 128 248 114 244 C126 238 134 228 138 214 Z" fill="url(#ws)"/>
+  <ellipse cx="220" cy="128" rx="34" ry="14" fill="#FFFFFF" opacity="0.25" stroke-width="0"/>
+  <!-- Augen -->
+  <ellipse cx="208" cy="194" rx="21" ry="26" fill="#2B1A12"/>
+  <ellipse cx="304" cy="194" rx="21" ry="26" fill="#2B1A12"/>
+  <circle cx="215" cy="183" r="8" fill="#fff" stroke-width="0"/><circle cx="311" cy="183" r="8" fill="#fff" stroke-width="0"/>
+  <circle cx="201" cy="205" r="3.5" fill="#fff" stroke-width="0"/><circle cx="297" cy="205" r="3.5" fill="#fff" stroke-width="0"/>
+  <path d="M190 152 q18 -12 36 -2" fill="none" stroke-width="5"/>
+  <path d="M286 150 q18 -10 36 2" fill="none" stroke-width="5"/>
+  <!-- Wangen -->
+  <ellipse cx="170" cy="244" rx="17" ry="10" fill="#FF8F7A" opacity="0.45" stroke-width="0"/>
+  <ellipse cx="342" cy="244" rx="17" ry="10" fill="#FF8F7A" opacity="0.45" stroke-width="0"/>
+  <!-- Nase und Mund -->
+  <path d="M240 240 C240 230 272 230 272 240 C272 250 262 257 256 257 C250 257 240 250 240 240 Z" fill="#2B1A12" stroke-width="4"/>
+  <ellipse cx="250" cy="237" rx="5" ry="2.6" fill="#fff" opacity="0.7" stroke-width="0"/>
+  <path d="M256 257 v8" fill="none" stroke-width="4"/>
+  <path d="M230 266 C238 292 274 292 282 266 C268 272 244 272 230 266 Z" fill="#8A2E22" stroke-width="4"/>
+  <path d="M244 280 C248 274 264 274 268 280 C262 286 250 286 244 280 Z" fill="#FF7C83" stroke-width="0"/>
+ </g>
+</g>
+</svg>

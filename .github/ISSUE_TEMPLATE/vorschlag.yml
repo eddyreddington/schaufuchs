@@ -1,0 +1,20 @@
+name: Vorschlag
+description: Idee für eine neue Funktion oder Verbesserung
+labels: [vorschlag]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Welches Problem bei der Schau soll gelöst werden?
+      description: z. B. „Bei der Einlieferung dauert das Suchen nach Ringnummern zu lange“
+    validations:
+      required: true
+  - type: textarea
+    id: idee
+    attributes:
+      label: Wie stellen Sie sich die Lösung vor?
+  - type: input
+    id: verein
+    attributes:
+      label: Größe der Schau (ungefähr)
+      description: z. B. „Kreisschau, 800 Tiere“
