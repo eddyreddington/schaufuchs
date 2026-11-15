@@ -687,6 +687,7 @@ Tests: `termine.test.ts`
 - Typen: `Phase`, `Meldeart`, `GebuehrArt`, `Alter`, `Eingang`, `MeldungStatus`, `EintragStatus`, `Sondernote`, `PreisZielgruppe`, `Rundung`, `KontingentBasis`, `PreisQuelle`
 
 ### version.ts (2 Z.)
+Tests: `version.test.ts`
 
 - `VERSION` – Version von SchauFUCHS (Oberfläche, Server, Handbuch).
 
