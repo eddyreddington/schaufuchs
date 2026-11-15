@@ -11,7 +11,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { HilfeLink, Knopf, KnopfLink } from "../ui";
-import { baueLandschaft } from "./hallenplan-3d-landschaft";
+import { baueLandschaft, type HallenSeite } from "./hallenplan-3d-landschaft";
 
 const M = 0.01; // cm → m
 
@@ -187,6 +187,19 @@ interface Welt {
 /** Drehung um die Hochachse, damit die Vorderseite (lokal +z) in Blickrichtung zeigt. */
 const DREHUNG: Record<Blick, number> = { "z+": 0, "x+": Math.PI / 2, "z-": Math.PI, "x-": -Math.PI / 2 };
 
+/** Seite mit den meisten Eingängen (Notausgänge zählen nicht): dort liegt der Parkplatz. Ohne Eingang: die Längsseite unten. */
+function vorneSeite(s: HallenSzene): HallenSeite {
+  const zahl: Record<HallenSeite, number> = { x0: 0, x1: 0, z0: 0, z1: 0 };
+  for (const t of s.tueren) {
+    if (t.notausgang) continue;
+    const cx = t.q.x + t.q.b / 2, cz = t.q.z + t.q.t / 2;
+    const abstand: [HallenSeite, number][] = [["x0", cx], ["x1", s.breite - cx], ["z0", cz], ["z1", s.laenge - cz]];
+    zahl[abstand.sort((a, b) => a[1] - b[1])[0]![0]]++;
+  }
+  const beste = (Object.entries(zahl) as [HallenSeite, number][]).sort((a, b) => b[1] - a[1])[0]!;
+  return beste[1] > 0 ? beste[0] : "z1";
+}
+
 function baueWelt(kasten: HTMLDivElement, s: HallenSzene, richterIndex: Map<number, number>, schauId: number, verkleidung: Verkleidung): Welt {
   let entsorgt = false;
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -229,7 +242,7 @@ function baueWelt(kasten: HTMLDivElement, s: HallenSzene, richterIndex: Map<numb
   scene.add(sonne, sonne.target);
 
   // Außen: Himmel, Wiese, Hof, Bäume und Hügel (hallenplan-3d-landschaft.ts); innen der Hallenboden mit Meterraster.
-  baueLandschaft(scene, B, L, merk);
+  baueLandschaft(scene, B, L, merk, vorneSeite(s));
   const boden = new THREE.Mesh(merk(new THREE.PlaneGeometry(B, L)), merk(new THREE.MeshStandardMaterial({ color: "#ecdcbc" })));
   boden.rotation.x = -Math.PI / 2;
   boden.position.set(B / 2, 0, L / 2);
