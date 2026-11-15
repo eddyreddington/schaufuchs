@@ -121,7 +121,7 @@ export function AppRahmen() {
       {schauId ? (
         <>
           <SchauWahl id={schauId} />
-          <MenueGruppen gruppen={SCHAU_GRUPPEN} basis={`/schau/${schauId}`} vorgabeOffen={(g) => !!phase && !!g.phasen?.includes(phase)} klapp={klapp} label="Bereiche der Schau" />
+          <MenueGruppen gruppen={SCHAU_GRUPPEN.map((g) => ({ ...g, seiten: g.seiten.filter((x) => !x.nurAdmin || istAdmin) }))} basis={`/schau/${schauId}`} vorgabeOffen={(g) => !!phase && !!g.phasen?.includes(phase)} klapp={klapp} label="Bereiche der Schau" />
           <div className="mt-auto border-t border-linie pt-3">{allgemeineLinks}</div>
         </>
       ) : (

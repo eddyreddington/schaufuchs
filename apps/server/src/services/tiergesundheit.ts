@@ -1,9 +1,9 @@
-import { istAuslaendisch, noetigeNachweise, pruefeNachweis, type Nachweisart, type Tierart } from "@schau/domain";
+import { heuteBerlin, istAuslaendisch, type Nachweisart, noetigeNachweise, pruefeNachweis, type Tierart } from "@schau/domain";
 import type { meldung, schau } from "../db/schema";
 
 /** Heute in deutscher Zeit als JJJJ-MM-TT. */
 export function heuteDe(): string {
-  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+  return heuteBerlin();
 }
 
 /**

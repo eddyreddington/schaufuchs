@@ -1,4 +1,4 @@
-import { formatKatalognummer, MELDEART_LABEL, NACHWEIS_LABEL, TIERART_LABEL, TIERARTEN, tierzahl, type Tierart } from "@schau/domain";
+import { formatKatalognummer, MELDEART_LABEL, NACHWEIS_LABEL, TIERART_LABEL, TIERARTEN, tierzahl, type Tierart, datumKurz } from "@schau/domain";
 import { asc, eq, inArray } from "drizzle-orm";
 import { db } from "../db/client";
 import { aussteller, gesundheit, meldung, verkauf, type schau } from "../db/schema";
@@ -34,7 +34,7 @@ export async function ladeTierliste(s: typeof schau.$inferSelect) {
       const n = nachweisStand(m, tiere.map((t) => t.tierart), s, a.registriernummer);
       const nachweise = n.noetig.map((art) => {
         const datum = art === "nd" ? m.vetImpfdatum : art === "pmv" ? m.pmvImpfdatum : art === "kl" ? m.klDatum : art === "gz" ? m.gzDatum : m.wgDatum;
-        return `${NACHWEIS_LABEL[art].split(" (")[0]}${datum ? ` ${datum.split("-").reverse().join(".")}` : " fehlt"}`;
+        return `${NACHWEIS_LABEL[art].split(" (")[0]}${datum ? ` ${datumKurz(datum)}` : " fehlt"}`;
       });
       return {
         name: `${a.nachname}, ${a.vorname}`,

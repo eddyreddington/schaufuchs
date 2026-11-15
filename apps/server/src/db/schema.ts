@@ -1,4 +1,4 @@
-import { KATALOG_AUFTEILUNGEN, KATALOG_FUSSZEILEN, KATALOG_LINIEN, KATALOG_SCHRIFTEN, KATALOG_TITELBILDER, KATALOG_TITELHINTERGRUENDE, KATALOG_STILE, TERMIN_EBENEN, UNTERSUCHUNG_ARTEN, type Abweichung, type KatalogTeil, type SortierSchritt } from "@schau/domain";
+import { KATALOG_AUFTEILUNGEN, KATALOG_FUSSZEILEN, KATALOG_LINIEN, KATALOG_SCHRIFTEN, KATALOG_TITELBILDER, KATALOG_TITELHINTERGRUENDE, KATALOG_STILE, TERMIN_EBENEN, UNTERSUCHUNG_ARTEN, ZAHLARTEN, type Abweichung, type KatalogTeil, type SortierSchritt } from "@schau/domain";
 import {
   boolean,
   date,
@@ -50,7 +50,7 @@ export const eintragStatusEnum = pgEnum("eintrag_status", EINTRAG_STATUS);
 export const sondernoteEnum = pgEnum("sondernote", SONDERNOTEN);
 export const preisQuelleEnum = pgEnum("preis_quelle", PREIS_QUELLEN);
 export const rolleEnum = pgEnum("rolle", ["admin", "mitarbeiter"]);
-export const zahlartEnum = pgEnum("zahlart", ["ueberweisung", "bar", "sonstige", "karte"]);
+export const zahlartEnum = pgEnum("zahlart", ZAHLARTEN);
 export const erfasstAufEnum = pgEnum("erfasst_auf", ["tablet", "pc"]);
 export const rundungEnum = pgEnum("rundung", RUNDUNGEN);
 export const kontingentBasisEnum = pgEnum("kontingent_basis", KONTINGENT_BASEN);
@@ -81,6 +81,8 @@ export const organisation = pgTable("organisation", {
   abmeldung: jsonb("abmeldung").$type<Partial<Record<"admin" | "mitarbeiter" | "preisrichter", number>>>(),
   /** Steuerliche Angaben für Zuwendungsbestätigungen (packages/domain/src/spenden.ts); null = nicht eingetragen. */
   steuer: jsonb("steuer").$type<Steuerstatus>(),
+  /** Gläubiger-Identifikationsnummer für SEPA-Lastschriften (Entscheidung 018); leer = keine Lastschrift. */
+  glaeubigerId: text("glaeubiger_id").notNull().default(""),
   /**
    * Gelernte Zuordnungen des Imports: Schreibweise aus der Datei (suchNorm von Rasse und Farbenschlag) → Rasse und
    * Farbenschlag im Verzeichnis, mit Namen statt Nummern (die gelten je Verzeichnisversion).
@@ -1032,3 +1034,4 @@ export * from "./schema-spenden";
 // Import aus Altprogrammen: Importläufe.
 export * from "./schema-import";
 export * from "./schema-hallenentwurf";
+export * from "./schema-lastschrift";

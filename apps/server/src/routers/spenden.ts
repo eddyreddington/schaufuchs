@@ -8,7 +8,7 @@ import { and, asc, desc, eq, ilike, isNull, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/client";
 import { bestaetigungSpende, meldung, organisation, spende, spender, zuwendungsbestaetigung } from "../db/schema";
-import { offenerLauf, pruefeNichtAbgerechnet, sperreKasse } from "../services/kasse";
+import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, offenerLauf, pruefeNichtAbgerechnet, sperreKasse } from "../services/kasse";
 import { archiviereSpendenquittung } from "../services/kassenbuch";
 import { protokolliere } from "../services/protokoll";
 import { ladeSpenden, ladeSteuer, sperreBestaetigungen } from "../services/spenden";
@@ -171,6 +171,8 @@ export const spendenRouter = router({
           await pruefeNichtAbgerechnet(tx, s.id, mm.ausstellerId);
           const lauf = await offenerLauf(tx, s.id);
           if (lauf?.posten.some((p) => p.ausstellerId === mm.ausstellerId)) throw fehler("CONFLICT", "Der Aussteller steht in einer offenen SEPA-Datei – erst die Datei buchen oder verwerfen.");
+          // Die Spende steckt im Betrag, den die offene Lastschriftdatei einzieht.
+          if (await inOffenerLastschrift(tx, s.id, { meldungIds: [z0.spende.meldungId] })) throw fehler("CONFLICT", LASTSCHRIFT_OFFEN);
         }
       }
       const [b] = await tx

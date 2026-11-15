@@ -1,10 +1,10 @@
-import { teilschauenLesen, TEILSCHAUEN_MAX, type Aufsteller, GEBUEHR_ARTEN, KONTINGENT_BASEN, PREIS_ZIELGRUPPEN, normalisiereIban, PHASEN, PHASEN_LABEL, PREIS_QUELLEN, pruefeBic, pruefeIban, RUNDUNGEN, STANDARD_NOTENSKALA, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, halleOhneFestenPlan, fehlendeVereinsangaben, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal } from "@schau/domain";
+import { teilschauenLesen, TEILSCHAUEN_MAX, type Aufsteller, GEBUEHR_ARTEN, KONTINGENT_BASEN, PREIS_ZIELGRUPPEN, normalisiereIban, PHASEN, PHASEN_LABEL, PREIS_QUELLEN, pruefeBic, pruefeIban, RUNDUNGEN, STANDARD_NOTENSKALA, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, halleOhneFestenPlan, fehlendeVereinsangaben, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal, datumKurz } from "@schau/domain";
 import { and, asc, count, desc, eq, inArray, isNull, ne, sql, sum } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/client";
 import { aussteller, auszahlung, bewertung, bild, gebuehr, katalogBeitrag, katalogeintrag, katalogGestaltung, meldung, postausgang, preisart, preisrichter, preisvergabe, schau, sitzung, stammdatenVersion, verkauf, zahlung } from "../db/schema";
 import { ladeEintraege } from "../services/eintraege";
-import { offeneStornoZahlungen, offeneUeberweisungsverkaeufe, offenerLauf, pruefeNichtAbgeschlossen, sperreKasse } from "../services/kasse";
+import { inOffenerLastschrift, offeneLastschrift, offeneStornoZahlungen, offeneUeberweisungsverkaeufe, offenerLauf, pruefeNichtAbgeschlossen, sperreKasse } from "../services/kasse";
 import { ladeKassenbuch } from "../services/kassenbuch";
 import { mailStatus, naechsterVersuch, sendeMail, versende } from "../services/post";
 import { protokolliere } from "../services/protokoll";
@@ -129,15 +129,18 @@ async function pruefeGebuehrenAenderbar(tx: Parameters<Parameters<typeof db.tran
   const [a] = await tx.select({ nr: auszahlung.quittungNr }).from(auszahlung).where(and(eq(auszahlung.schauId, schauId), isNull(auszahlung.storniertAm))).limit(1);
   if (a) throw fehler("BAD_REQUEST", `Es gibt schon Auszahlungen (Quittung ${a.nr}) – Gebühren und Preise lassen sich nicht mehr ändern.`);
   if (await offenerLauf(tx, schauId)) throw fehler("BAD_REQUEST", "Es gibt eine offene SEPA-Datei – erst buchen oder verwerfen.");
+  // Die Lastschriftdatei hält die Beträge fest; neue Gebühren ergäben andere Meldegelder als die, die die Bank einzieht.
+  if (await offeneLastschrift(tx, schauId)) throw fehler("BAD_REQUEST", "Es gibt eine offene Lastschriftdatei – erst buchen oder verwerfen.");
 }
 
 /** Was einem Abschluss der Schau noch entgegensteht (leer: abschließbar). */
 async function abschlussHindernisse(schauId: number): Promise<string[]> {
   const { abrechnungListe } = await import("./kasse");
-  const [zeilen, tage, lauf, stornos, ueberweisungen] = await Promise.all([
+  const [zeilen, tage, lauf, lastschrift, stornos, ueberweisungen] = await Promise.all([
     abrechnungListe(schauId),
     ladeKassenbuch(schauId),
     offenerLauf(db, schauId),
+    offeneLastschrift(db, schauId),
     offeneStornoZahlungen(db, schauId),
     offeneUeberweisungsverkaeufe(db, schauId),
   ]);
@@ -148,7 +151,8 @@ async function abschlussHindernisse(schauId: number): Promise<string[]> {
     stornos.length ? `${stornos.length} stornierte oder abgelehnte Meldung(en) mit Zahlungseingang (${stornos.map((x) => x.name).join(", ")}) – erstatten oder Verfall buchen` : "",
     ueberweisungen.length ? `${ueberweisungen.length} Verkauf/Verkäufe per Überweisung ohne Zahlungseingang (Beleg ${ueberweisungen.map((v) => v.belegNr).join(", ")})` : "",
     lauf ? "SEPA-Datei noch offen (buchen oder verwerfen)" : "",
-    ...tage.filter((t) => (t.bewegungen.length && !t.abschluss) || t.nachtragOffen).map((t) => `Kassentag ${t.datum.split("-").reverse().join(".")} ${t.abschluss ? "mit offenem Nachtrag" : "ohne Tagesabschluss"}`),
+    lastschrift ? "Lastschriftdatei noch offen (buchen oder verwerfen)" : "",
+    ...tage.filter((t) => (t.bewegungen.length && !t.abschluss) || t.nachtragOffen).map((t) => `Kassentag ${datumKurz(t.datum)} ${t.abschluss ? "mit offenem Nachtrag" : "ohne Tagesabschluss"}`),
   ].filter(Boolean);
 }
 
@@ -558,6 +562,8 @@ export const schauRouter = router({
         .select({ id: meldung.id, status: meldung.status, ausstellerId: meldung.ausstellerId })
         .from(meldung)
         .where(and(eq(meldung.schauId, s.id), inArray(meldung.status, ["offen", "bestaetigt"])));
+      // Wie beim einzelnen Storno: was in der offenen Lastschriftdatei steht, zieht die Bank ein – erst verwerfen.
+      if (await inOffenerLastschrift(tx, s.id, { meldungIds: ms.map((x) => x.id) })) throw fehler("BAD_REQUEST", "Es gibt eine offene Lastschriftdatei mit Meldegeldern dieser Schau – erst verwerfen (oder nach dem Einzug buchen), dann absagen.");
       for (const x of ms) {
         await tx.update(meldung).set({ status: "storniert" }).where(eq(meldung.id, x.id));
         // Wie beim einzelnen Storno: vor dem Festschreiben verlieren die Tiere ihre Nummer, danach bleiben sie reserviert.
@@ -609,6 +615,8 @@ export const schauRouter = router({
       if (input.phase === "abgeschlossen") {
         // Eine offene SEPA-Datei hält IBANs fest, die nach dem Abschluss gelöscht würden: nie „trotzdem“.
         if (await offenerLauf(db, alt.id)) throw fehler("BAD_REQUEST", "Es gibt noch eine offene SEPA-Datei. Bitte erst buchen oder verwerfen, dann abschließen.");
+        // Ebenso die Lastschriftdatei: nach dem Abschluss ließe sich der Einzug nicht mehr buchen, die IBANs blieben liegen.
+        if (await offeneLastschrift(db, alt.id)) throw fehler("BAD_REQUEST", "Es gibt noch eine offene Lastschriftdatei. Bitte erst buchen oder verwerfen, dann abschließen.");
       }
       // Nach vorn (außer Vorbereitung → Meldephase, dafür gilt die Prüfung oben): rote Punkte der Prüfliste, unbewertete
       // Tiere und die fehlende Freigabe vor „Schau & Verkauf“, beim Abschluss die offenen Kassenpunkte und die laufende
@@ -629,7 +637,7 @@ export const schauRouter = router({
           if (tiere.length && !alt.ergebnisseFreigegeben) offen.push("Ergebnisse sind noch nicht freigegeben (Preise › Freigabe)");
         }
         if (input.phase === "abgeschlossen") {
-          if (alt.reklamationsfrist && heuteDe() <= alt.reklamationsfrist && !alt.abgesagtAm) offen.push(`Reklamationsfrist läuft noch bis ${alt.reklamationsfrist.split("-").reverse().join(".")}`);
+          if (alt.reklamationsfrist && heuteDe() <= alt.reklamationsfrist && !alt.abgesagtAm) offen.push(`Reklamationsfrist läuft noch bis ${datumKurz(alt.reklamationsfrist)}`);
           offen.push(...(await abschlussHindernisse(alt.id)));
         }
         if (offen.length && !(input.trotzdem && input.grund.length >= 3)) {
@@ -640,6 +648,12 @@ export const schauRouter = router({
         }
       }
       await db.transaction(async (tx) => {
+        if (input.phase === "abgeschlossen") {
+          // Unter der Kassensperre noch einmal: eine gleichzeitig erstellte SEPA- oder Lastschriftdatei bliebe sonst mit
+          // IBANs in der abgeschlossenen Schau liegen (erstellen nimmt dieselbe Sperre und liest die Phase frisch).
+          await sperreKasse(tx, alt.id);
+          if ((await offenerLauf(tx, alt.id)) || (await offeneLastschrift(tx, alt.id))) throw fehler("CONFLICT", "Inzwischen wurde eine SEPA- oder Lastschriftdatei erstellt – bitte erst buchen oder verwerfen, dann abschließen.");
+        }
         await tx
           .update(schau)
           .set({ phase: input.phase, abgeschlossenAm: input.phase === "abgeschlossen" ? new Date() : null })

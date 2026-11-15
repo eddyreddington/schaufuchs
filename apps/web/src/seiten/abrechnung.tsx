@@ -280,6 +280,8 @@ export function Abrechnung() {
                   <td className="whitespace-nowrap text-right">
                     {z.inUeberweisung ? (
                       <Marke ton="info">in SEPA-Datei, {formatEuro(z.inUeberweisung.betragCent)}</Marke>
+                    ) : z.imEinzug ? (
+                      <Marke ton="info">Meldegeld in Lastschrift, {formatEuro(z.imEinzug.betragCent)}</Marke>
                     ) : z.auszahlung ? (
                       <span className="flex flex-col items-end gap-1.5">
                         <Marke ton="ok">ausgezahlt {formatEuro(z.ausgezahltCent)}</Marke>

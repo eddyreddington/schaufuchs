@@ -27,7 +27,7 @@ und Preisrichter sind eingebaut.
 | **Preise** | Kontingente je Preisrichter, Prüfung von Mindestpunkten und Mehrfachvergabe, Stiftungen, Freigabe der Ergebnisse |
 | **Tierverkauf** | Nur bewertete Tiere ab der Phase „Preise“; Käufer-Registriernummer (geprüft), Altersangabe nach § 11c TierSchG, Provision, Kaufbeleg, Storno bleibt gekennzeichnet in der Verkaufsliste |
 | **Kassenbuch** | Barkasse je Tag aus den Buchungen (Verkauf bar, Meldegeld bar, Barauszahlung, Wechselgeld, Einlage, Entnahme) mit Soll-Bestand; Tagesabschluss mit gezähltem Bestand und erklärter Differenz, danach keine Barbuchung mehr am selben Tag; Kassenbericht (PDF) und Kassenbuch (CSV) |
-| **Abrechnung** | Je Aussteller Preisgeld + Verkauf − Provision − offenes Meldegeld, Quittung, Gesamtliste, CSV-Export; Sammelüberweisung als SEPA-Datei (pain.001.001.09, geprüft gegen das ISO-Schema) mit IBAN-Prüfung |
+| **Abrechnung** | Je Aussteller Preisgeld + Verkauf − Provision − offenes Meldegeld, Quittung, Gesamtliste, CSV-Export; Sammelüberweisung als SEPA-Datei (pain.001.001.09, geprüft gegen das ISO-Schema) mit IBAN-Prüfung; Einzug des Meldegelds per SEPA-Lastschrift (pain.008) mit Mandaten, Vorabankündigung und Rücklastschrift |
 | **Druckkatalog** | Heft in A5 (oder A4): Titelseite mit Logo und Titelbild, Inhaltsverzeichnis, Grußworte mit Porträt, Ausstellungsleitung, „Zur besonderen Beachtung“, Preisrichter mit Nummernbereichen, Preise und Stifter, Zeichenerklärung, Ehrentafel, zweispaltiger Tierteil mit PR-Zeilen, Rassen- und Ausstellerverzeichnis, Anzeigenteil, Notizseiten bis zur Vierer-Seitenzahl. Gedruckt wird nach der Bewertung (mit Noten, Preisen, Ehrentafel), vorher als Vorkatalog. Vereinsfarbe (30 Vorschläge oder frei), Logo, Titelbild und Fotos pflegt jeder Verein unter „Druckkatalog“; Schriften Spectral und IBM Plex Sans Condensed (OFL, in `apps/server/fonts`), Spartenseiten mit eigenen Tier-Silhouetten |
 | **Drucke (PDF)** | Bewertungskarten (A5), B-Bögen mit doppelten Ringkarten, Preisrichterlisten, Abrechnungen, Kaufbelege |
 | **Öffentlich** | Infoseite mit Meldeformular, „Meine Meldung“ per persönlichem Link, Ergebnisse und Katalog nach Freigabe; Impressum und Datenschutzhinweise in der Fußzeile jeder Seite |
@@ -174,7 +174,7 @@ Demo-Liste ist ein kleiner Auszug zum Ausprobieren.
 
 ## Noch nicht enthalten
 
-Einzug des Standgelds per SEPA-Lastschrift (braucht SEPA-Mandate der Aussteller; Überweisungen an Aussteller gibt es). **Kasse:** Ob die Verkaufsstelle eine TSE braucht (§ 146a AO), klärt
+**Kasse:** Ob die Verkaufsstelle eine TSE braucht (§ 146a AO), klärt
 jeder Verein mit seinem Steuerberater.
 
 ## Lizenz

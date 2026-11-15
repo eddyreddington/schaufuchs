@@ -3,6 +3,7 @@
  * Die Texte beschreiben, was diese Software tatsächlich verarbeitet. Verantwortlich ist der ausrichtende Verein;
  * er sollte die Muster prüfen (lassen) und kann sie ergänzen oder durch einen eigenen Text ersetzen.
  */
+import { MANDAT_NACHWEIS_MONATE, MANDAT_VERFALL_MONATE } from "./lastschrift";
 
 /** Verkaufsaufzeichnungen (Herkunft, Bestimmung, Registriernummer) für das Veterinäramt. */
 export const AUFBEWAHRUNG_VERKAUF_JAHRE = 3;
@@ -95,7 +96,7 @@ export function datenschutzKurz(v: Vereinsangaben): string[] {
     `Verantwortlich: ${verantwortlicher(v).join(" · ")}.`,
     "Wir verarbeiten Ihre Angaben, um die Schau durchzuführen: Meldung, Meldegeld, Katalog, Bewertung, Preise, Tierverkauf und Abrechnung (Art. 6 Abs. 1 lit. b DSGVO). Registriernummer, Ringnummern und Verkäufe zeichnen wir auf, weil das Tierseuchenrecht es verlangt (lit. c).",
     "Name, Wohnort und Verein stehen mit Ihren Tieren und Bewertungen im gedruckten Katalog. Im Internet erscheinen sie nur, wenn Sie unten einwilligen (lit. a). Die Preisrichter sehen keine Namen.",
-    `Empfänger: das Veterinäramt (Verkaufsliste), die Bank bei Überweisungen. Geburtsdatum und IBAN löschen wir nach der Schau, Verkaufsaufzeichnungen nach ${AUFBEWAHRUNG_VERKAUF_JAHRE} Jahren, Belege nach ${AUFBEWAHRUNG_BELEGE_JAHRE} Jahren.`,
+    `Empfänger: das Veterinäramt (Verkaufsliste), die Bank bei Überweisungen und Lastschriften. Geburtsdatum und IBAN löschen wir nach der Schau, ein Lastschriftmandat ${MANDAT_NACHWEIS_MONATE} Monate nach Widerruf oder Verfall, Verkaufsaufzeichnungen nach ${AUFBEWAHRUNG_VERKAUF_JAHRE} Jahren, Belege nach ${AUFBEWAHRUNG_BELEGE_JAHRE} Jahren.`,
     "Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Widerspruch, auf Widerruf Ihrer Einwilligung und auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde.",
   ];
 }
@@ -133,7 +134,7 @@ export function datenschutzAbschnitte(v: Vereinsangaben): Textabschnitt[] {
     {
       titel: "Zahlungen und Abrechnung",
       absaetze: [
-        "Meldegeld, Auszahlungen von Preisgeld und Verkaufserlös sowie Kaufbelege buchen wir mit Name und Betrag. Bei einer Überweisung geben wir Name und IBAN an unsere Bank weiter. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, für die Aufbewahrung der Belege lit. c in Verbindung mit § 147 AO.",
+        "Meldegeld, Auszahlungen von Preisgeld und Verkaufserlös sowie Kaufbelege buchen wir mit Name und Betrag. Bei einer Überweisung geben wir Name und IBAN an unsere Bank weiter. Haben Sie uns ein SEPA-Lastschriftmandat erteilt, speichern wir Mandatsreferenz, Datum der Unterschrift, IBAN und Kontoinhaber und geben sie mit dem Betrag zum Einzug des Meldegelds an unsere Bank weiter; die Vorabankündigung schicken wir per E-Mail. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, für die Aufbewahrung der Belege lit. c in Verbindung mit § 147 AO.",
       ],
     },
     {
@@ -155,13 +156,13 @@ export function datenschutzAbschnitte(v: Vereinsangaben): Textabschnitt[] {
     {
       titel: "Empfänger",
       absaetze: [
-        "Das Veterinäramt (Verkaufsliste, Tierliste und Gesundheitsjournal, auf Anforderung), unsere Bank (Überweisungen), die Öffentlichkeit (Katalog, im Internet nur mit Einwilligung) und unser E-Mail-Anbieter für die Bestätigungsmails. Mitglieder der Ausstellungsleitung und Helfer sehen die Daten, soweit sie sie für ihre Aufgabe brauchen.",
+        "Das Veterinäramt (Verkaufsliste, Tierliste und Gesundheitsjournal, auf Anforderung), unsere Bank (Überweisungen und Lastschriften), die Öffentlichkeit (Katalog, im Internet nur mit Einwilligung) und unser E-Mail-Anbieter für die Bestätigungsmails. Mitglieder der Ausstellungsleitung und Helfer sehen die Daten, soweit sie sie für ihre Aufgabe brauchen.",
       ],
     },
     {
       titel: "Speicherdauer",
       absaetze: [
-        `Bestätigungsmails löschen wir nach ${POSTAUSGANG_TAGE} Tagen. Geburtsdatum, IBAN sowie E-Mail, Telefon und Zugangs-PIN der Preisrichter löschen wir ${KARENZ_TAGE} Tage nach dem Abschluss der Schau (Zeit für Rückfragen zu Überweisungen), Geburtsdatum und IBAN frühestens ${KARENZ_TAGE} Tage nach dem Ende der Reklamationsfrist.`,
+        `Bestätigungsmails löschen wir nach ${POSTAUSGANG_TAGE} Tagen. Geburtsdatum, IBAN sowie E-Mail, Telefon und Zugangs-PIN der Preisrichter löschen wir ${KARENZ_TAGE} Tage nach dem Abschluss der Schau (Zeit für Rückfragen zu Überweisungen), Geburtsdatum und IBAN frühestens ${KARENZ_TAGE} Tage nach dem Ende der Reklamationsfrist. Ein Lastschriftmandat mit IBAN und Kontoinhaber bewahren wir auf, solange es gilt; es verfällt nach ${MANDAT_VERFALL_MONATE} Monaten ohne Lastschrift. ${MANDAT_NACHWEIS_MONATE} Monate nach Widerruf oder Verfall löschen wir es (so lange können Sie einer Lastschrift widersprechen und wir müssen das Mandat vorlegen). Auf Ihren Löschwunsch löschen wir IBAN und Kontoinhaber sofort.`,
         `Ergebnisse und Katalog stehen bis ${ONLINE_MONATE} Monate nach der Schau im Internet; danach nehmen wir sie aus dem Netz. Der gedruckte Katalog bleibt davon unberührt.`,
         `Verkaufsaufzeichnungen, Tierliste und Gesundheitsjournal bewahren wir ${AUFBEWAHRUNG_VERKAUF_JAHRE} Jahre nach der Schau auf, Buchungsbelege ${AUFBEWAHRUNG_BELEGE_JAHRE} Jahre und das Änderungsprotokoll ${AUFBEWAHRUNG_BUECHER_JAHRE} Jahre nach Ende des Kalenderjahres. Die Anschrift der Preisrichter löschen wir ${INAKTIV_JAHRE} Jahre nach der Schau. Bis zum Fristende sperren wir Daten, deren Löschung Sie verlangen, und löschen sie danach.`,
         `Ihre Stammdaten (Name, Anschrift, Verein) bewahren wir auf, damit Sie bei der nächsten Schau nicht alles neu eingeben müssen. Haben Sie ${INAKTIV_JAHRE} Jahre nicht gemeldet, löschen wir sie, ebenso jederzeit auf Ihren Wunsch. Müssen Buchungsbelege noch aufbewahrt werden, bleibt bis dahin nur Ihr Name gesperrt gespeichert.`,

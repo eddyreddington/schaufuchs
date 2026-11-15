@@ -1,3 +1,4 @@
+import { tagBerlin } from "@schau/domain";
 import { createHash } from "node:crypto";
 import { and, asc, eq } from "drizzle-orm";
 import { db, type Tx } from "../db/client";
@@ -9,7 +10,7 @@ import { mitVermerk } from "../pdf/basis";
 type Abrechnungszeile = Awaited<ReturnType<typeof import("../routers/kasse").abrechnungListe>>[number];
 
 /** Kalendertag in deutscher Zeit (JJJJ-MM-TT) – nach ihm richten sich Kassenbuch und Tagesabschluss. */
-export const tagDe = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(d);
+export const tagDe = (d: Date) => tagBerlin(d);
 
 export interface Bewegung {
   zeit: Date;

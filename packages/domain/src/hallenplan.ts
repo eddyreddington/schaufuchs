@@ -470,6 +470,14 @@ export interface Rechteck {
   h: number;
 }
 
+/**
+ * Überschneiden sich zwei Rechtecke? Berühren zählt nicht, ebenso eine Überlappung bis `spiel` cm (Rundung beim
+ * Rechnen in Zentimetern). Eine Stelle für Plan-Warnungen, Entfernen und Volieren, damit alle dieselbe Lage gleich sehen.
+ */
+export function ueberlappt(a: Rechteck, c: Rechteck, spiel = 0.5): boolean {
+  return a.x < c.x + c.b - spiel && c.x < a.x + a.b - spiel && a.y < c.y + c.h - spiel && c.y < a.y + a.h - spiel;
+}
+
 export interface PlanKaefig extends PlanTier {
   /** Laufende Nummer der Grundplatte in ihrer Reihe (ab 0), auf der der Käfig steht. */
   platte?: number;
@@ -812,7 +820,7 @@ function planeFest(halle: Halle, fest: FesterPlan, tiere: PlanTier[], masse: Kae
   const stellplaetze = neueVolieren.length
     ? planeImReihensystem(halle, Array.from({ length: vPlaetze.length + neueVolieren.length }, (_, i) => ({ id: -1 - i, typ: "voliere" as KaefigTyp, nr: null, rasse: "", preisrichterId: null })), masse, eingesetzteVolieren).volieren
     : [];
-  const deckt = (a: { x: number; y: number; breite: number; tiefe: number }, c: { x: number; y: number; breite: number; tiefe: number }) => a.x < c.x + c.breite - 0.5 && c.x < a.x + a.breite - 0.5 && a.y < c.y + c.tiefe - 0.5 && c.y < a.y + a.tiefe - 0.5;
+  const deckt = (a: { x: number; y: number; breite: number; tiefe: number }, c: { x: number; y: number; breite: number; tiefe: number }) => ueberlappt({ x: a.x, y: a.y, b: a.breite, h: a.tiefe }, { x: c.x, y: c.y, b: c.breite, h: c.tiefe });
   const ohneVoliere: PlanTier[] = [];
   for (const t of neueVolieren) {
     const frei = vPlaetze.find((v) => !v.tier);
@@ -1003,7 +1011,7 @@ export function planeHalle(halle: Halle, tiere: PlanTier[], masse: KaefigMasse |
     const inReihe = sys.flaechen.filter((f) => f.teil && p.reihen.some((r) => f.x >= r.x - 0.5 && f.x + f.breite <= r.x + r.tiefe + 0.5));
     if (inReihe.length) {
       const ohne = planeAusgeglichen({ ...sys, flaechen: sys.flaechen.filter((f) => !inReihe.includes(f)) }, rest, masse, eingesetzt);
-      const auf = (r: Rechteck) => inReihe.some((f) => r.x < f.x + f.breite - 0.5 && f.x < r.x + r.b - 0.5 && r.y < f.y + f.tiefe - 0.5 && f.y < r.y + r.h - 0.5);
+      const auf = (r: Rechteck) => inReihe.some((f) => ueberlappt(r, { x: f.x, y: f.y, b: f.breite, h: f.tiefe }));
       if (!ohne.reihen.some((r) => r.platten.some((pl) => auf({ x: pl.x, y: pl.y, b: pl.tiefe, h: pl.laenge })))) p = ohne;
     }
   }
@@ -1115,7 +1123,6 @@ export function planeHalle(halle: Halle, tiere: PlanTier[], masse: KaefigMasse |
         : `${nichtPlatziert.length} ${nichtPlatziert.length === 1 ? "Tier hat" : "Tiere haben"} keinen Platz.`,
     );
   const innen = (q: Rechteck) => q.x >= -0.5 && q.y >= -0.5 && q.x + q.b <= halle.breite + 0.5 && q.y + q.h <= halle.laenge + 0.5;
-  const ueber = (a: Rechteck, b: Rechteck) => a.x < b.x + b.b - 0.5 && b.x < a.x + a.b - 0.5 && a.y < b.y + b.h - 0.5 && b.y < a.y + a.h - 0.5;
   const teile: { name: string; flaechen: Rechteck[]; bewegt: boolean; moebel?: true; freiBereich?: true }[] = [
     ...reihen
       .filter((r) => r.platten.some((pl) => !pl.versatz && !pl.entfernt))
@@ -1135,14 +1142,14 @@ export function planeHalle(halle: Halle, tiere: PlanTier[], masse: KaefigMasse |
       if (!A.bewegt && !B.bewegt) continue;
       // Tische und Bänke dürfen in einem freien Bereich stehen (Cafeteria …).
       if ((A.moebel && B.freiBereich) || (B.moebel && A.freiBereich)) continue;
-      if (A.flaechen.some((x) => B.flaechen.some((y) => ueber(x, y)))) meldungen.push(`${A.name} überschneidet ${B.name}.`);
+      if (A.flaechen.some((x) => B.flaechen.some((y) => ueberlappt(x, y)))) meldungen.push(`${A.name} überschneidet ${B.name}.`);
     }
   }
   // Tische und Bänke stehen frei, auch vor Käfigen. Im Gang vor einem Ein- oder Ausgang (Fluchtweg) nur ein Hinweis.
   const fluchtwege = halle.flaechen.filter((f) => f.art === "eingang").map((f) => ({ name: `Gang vor „${f.name}“`, rechteck: eingangsGang(halle, f) }));
   for (const o of objekte) {
     if (!istMoebel(o)) continue;
-    const g = fluchtwege.find((x) => ueber(o.rechteck, x.rechteck));
+    const g = fluchtwege.find((x) => ueberlappt(o.rechteck, x.rechteck));
     if (g) meldungen.push(`${o.name} steht im ${g.name}.`);
   }
   // Von Hand gesetzte Volieren: mindestens 1,50 m Abstand (direkt aneinander = Rücken an Rücken oder nebeneinander, erlaubt).
@@ -1526,7 +1533,7 @@ export function frontFehler(halle: Pick<Halle, "breite" | "laenge" | "gang" | "f
   const fehler = (q: Rechteck, blick: Blick, _mitMoebel: boolean): string | null => {
     const s = streifenVor(q, blick, Math.max(0, halle.gang));
     // Was direkt davor steht, zuerst nennen; sonst die Wand.
-    const h = hindernisse.find((x) => x.q !== q && !x.moebel && ueber(s, x.q));
+    const h = hindernisse.find((x) => x.q !== q && !x.moebel && ueberlappt(s, x.q));
     if (h) return `Front zu ${h.name}`;
     return innen(s) ? null : "Front zur Wand";
   };

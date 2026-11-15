@@ -220,7 +220,7 @@ export function spendenquittungPdf(d: Design, q: QuittungDaten) {
     (doc) => {
       const x = doc.page.margins.left;
       const w = doc.page.width - x - doc.page.margins.right;
-      briefkopf(doc, d, { ...q.kopf, art: "Spende", titel, angaben: [["Beleg", `S-${q.nummer}`], ["Datum", q.datum ? q.datum.split("-").reverse().join(".") : "–"]] });
+      briefkopf(doc, d, { ...q.kopf, art: "Spende", titel, angaben: [["Beleg", `S-${q.nummer}`], ["Datum", q.datum ? datumKurz(q.datum) : "–"]] });
       let y = angaben(
         doc,
         [

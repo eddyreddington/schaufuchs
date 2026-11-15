@@ -376,6 +376,46 @@ Unter „Import“ (linke Leiste, nur Administratoren) übernehmen Sie Meldungen
 
 **Zurücknehmen:** Unter „Frühere Importe“ steht jeder Import. „Zurücknehmen“ löscht seine Meldungen und die Aussteller, die er neu angelegt hat – nur bis zur Phase „Katalog & Halle“ und solange nichts weiter damit geschehen ist: niemand hat die Meldungen danach bearbeitet (auch nicht bestätigt), keine Zahlung, keine Katalognummern, keine Bewertung, kein Ehrenpreis, keine Spende, keine Abrechnung. Sonst bleibt alles stehen, und einzelne Meldungen stornieren Sie wie gewohnt. Ein neu angelegter Aussteller, den jemand danach bearbeitet hat oder der woanders gebraucht wird, bleibt erhalten. Import und Rücknahme stehen im Protokoll, die Rücknahme bei jeder Meldung.
 
+### 3.13 SEPA-Lastschrift {#sepa-lastschrift}
+
+Das Meldegeld lässt sich per SEPA-Basislastschrift einziehen – zusätzlich zu bar und Überweisung, die überall möglich
+bleiben. Eingezogen wird nur bei Ausstellern mit unterschriebenem Mandat und nur, was dann noch offen ist.
+
+- **Gläubiger-ID:** Unter „Verein und Datenschutz“, Abschnitt „SEPA-Lastschrift“, die Gläubiger-Identifikationsnummer
+  des Vereins eintragen (bei der Deutschen Bundesbank beantragt). Das Konto, auf das eingezogen wird, ist das
+  Vereinskonto aus den Einstellungen der Schau.
+- **Mandat:** Der Aussteller unterschreibt ein SEPA-Lastschriftmandat (Vordruck der Bank des Vereins). Unter „Aussteller“
+  → Aussteller bearbeiten → „Mandat erfassen“ tragen Sie das Datum der Unterschrift, die IBAN, den Kontoinhaber und
+  „wiederkehrend“ (für jede Schau) oder einmalig ein. Die Mandatsreferenz vergibt SchauFUCHS, wenn Sie keine eigene
+  eintragen (Form „SF-M“ und die Nummer des Mandats). Ein Widerruf des Zahlers wird mit „Widerrufen“ und Datum
+  festgehalten. Ein Mandat verfällt, wenn es 36 Monate nicht genutzt wurde; ein einmaliges Mandat gilt für eine
+  Lastschrift und steht deshalb in höchstens einer offenen Datei. Für gelöschte oder gesperrte Aussteller lässt sich kein
+  Mandat erfassen. Lastschrift geht nur von Konten in EU und EWR (für die Schweiz oder Großbritannien bräuchte sie BIC und
+  Anschrift) – diese Aussteller zahlen bar oder per Überweisung.
+- **Lastschriftdatei:** In der Schau unter „Lastschrift“ (Gruppe „Kasse und Abrechnung“, nur Administratoren) stehen alle
+  bestätigten Meldungen mit offenem Meldegeld und gültigem Mandat. Wer an der Kasse schon abgerechnet ist (Quittung
+  oder offene SEPA-Überweisung), steht nicht darin – sein Meldegeld ist dort verrechnet. Fälligkeitsdatum wählen
+  (vorgeschlagen sind 14 Tage nach heute; frühestens der zweite Bankarbeitstag nach heute, nie ein Wochenende oder
+  Bankfeiertag), „Vorabankündigung per E-Mail“ anlassen und „Lastschriftdatei erstellen“. Die
+  Vorabankündigung (Betrag, Fälligkeit, Mandatsreferenz, Gläubiger-ID) muss den Zahler rechtzeitig erreichen – in der
+  Regel 14 Tage vor der Fälligkeit, wenn mit ihm nichts anderes vereinbart ist. Wer keine E-Mail-Adresse hat, bekommt
+  sie auf anderem Weg (z. B. mit der Meldebestätigung).
+- **Bei der Bank einreichen:** „Datei herunterladen“ und die XML-Datei im Online-Banking hochladen. Die Datei hält die
+  Beträge fest. Solange sie offen ist, geht nichts, was diese Beträge ändert oder die Meldung entfernt: keine weitere
+  Zahlung, kein Storno, keine Tiere hinzufügen oder abmelden, keine anderen Gebühren, keine Stiftung oder Spende mit
+  dem Meldegeld ändern, keine Zahlung stornieren, kein Widerruf des Mandats, keine Absage der Schau, keine Rücknahme des Imports, kein Löschwunsch.
+  Ebenso keine Auszahlung an diese Aussteller, keine SEPA-Überweisungsdatei und kein Abschluss der Schau.
+- **Eingang buchen:** Hat die Bank eingezogen (Kontoauszug), „Eingang buchen“: Jeder Posten wird als Zahlung
+  „Lastschrift“ zum Fälligkeitstag gebucht. Lehnt die Bank die Datei ab, „Verwerfen“ mit Grund.
+- **Rücklastschrift:** Kommt ein Betrag zurück (z. B. Konto erloschen, Widerspruch), unter „Frühere Lastschriften“ beim
+  Posten „Rücklastschrift“ mit dem Grund laut Bank: Das Meldegeld ist wieder offen. Eine Lastschrift wird nur so
+  zurückgebucht, nicht über „Zahlung stornieren“. Gibt es zu einer Spende mit diesem Meldegeld schon eine
+  Zuwendungsbestätigung, erst die Bestätigung stornieren (unter „Spenden“).
+- **Datenschutz:** IBAN und Kontoinhaber der Mandate sind verschlüsselt gespeichert. Nach dem Buchen oder Verwerfen
+  enthält die Datei keine Bankdaten mehr. Beim Löschwunsch eines Ausstellers wird sein Mandat widerrufen und die
+  Bankverbindung gelöscht, in früheren Lastschriftdateien auch sein Name. Mandate werden 14 Monate nach Widerruf bzw.
+  Verfall gelöscht. Die Auskunft nach Art. 15 enthält die Mandate und alle Einzüge.
+
 ## 4. Rassen und Farbenschläge
 
 Das Verzeichnis der Rassen und Farbenschläge bestimmt zweierlei: was Aussteller melden können und in welcher Reihenfolge der Katalog nummeriert wird (Ausstellungsfolge). Jede Schau nutzt **eine Version** des Verzeichnisses. So bleiben alte Kataloge stimmig, auch wenn im nächsten Jahr ein neues Verzeichnis kommt.
@@ -634,7 +674,7 @@ So rechnet die Software das Meldegeld je Meldung: Standgeld je Tier nach Meldear
 
 **Beispiel:** 4 Einzeltiere à 3,50 € + Kostenanteil 2,00 € + Katalog 5,00 € = **21,00 €**. Ist der Aussteller amtierender Preisrichter und der Katalog befreit: 16,00 €.
 
-> **Wichtig:** Sobald die erste Auszahlung gebucht ist, lassen sich die Gebühren nicht mehr ändern („Es gibt schon Auszahlungen (Quittung …) – Gebühren und Preise lassen sich nicht mehr ändern.“). Ebenso, solange eine SEPA-Datei offen ist. Für Preisarten gelten eigene Grenzen (siehe unten).
+> **Wichtig:** Sobald die erste Auszahlung gebucht ist, lassen sich die Gebühren nicht mehr ändern („Es gibt schon Auszahlungen (Quittung …) – Gebühren und Preise lassen sich nicht mehr ändern.“). Ebenso, solange eine SEPA-Datei oder eine Lastschriftdatei offen ist. Für Preisarten gelten eigene Grenzen (siehe unten).
 
 #### Abschnitt „Preise“ (Preisarten)
 
@@ -1476,7 +1516,7 @@ Der Abschluss geht ohne Weiteres nur, wenn
 - alle Aussteller vollständig abgerechnet sind,
 - stornierte oder abgelehnte Meldungen mit Zahlungseingang erstattet oder als Verfall gebucht sind,
 - jeder Verkauf per Überweisung seinen Zahlungseingang hat,
-- keine SEPA-Datei offen ist,
+- keine SEPA-Datei und keine Lastschriftdatei offen ist,
 - jeder Kassentag mit Bargeld einen Tagesabschluss hat und kein Nachtrag offen ist.
 
 Sonst meldet die Software „Noch nicht abschließbar: …“ und fragt „Trotzdem abschließen?“. Abschließen geht dann nur mit Grund im Feld „Grund“ und dem Knopf „Trotzdem abschließen“; der Grund steht im Protokoll. **Eine offene SEPA-Datei** verhindert den Abschluss immer: „Es gibt noch eine offene SEPA-Datei. Bitte erst buchen oder verwerfen, dann abschließen.“

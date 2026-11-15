@@ -882,6 +882,72 @@ bleibt alles stehen, und einzelne Meldungen stornieren Sie wie gewohnt.
 Ein neu angelegter Aussteller, den jemand danach bearbeitet hat oder der
 woanders gebraucht wird, bleibt erhalten. Import und Rücknahme stehen im
 Protokoll, die Rücknahme bei jeder Meldung.</p>
+<h3 id="sepa-lastschrift">3.13 SEPA-Lastschrift</h3>
+<p>Das Meldegeld lässt sich per SEPA-Basislastschrift einziehen –
+zusätzlich zu bar und Überweisung, die überall möglich bleiben.
+Eingezogen wird nur bei Ausstellern mit unterschriebenem Mandat und nur,
+was dann noch offen ist.</p>
+<ul>
+<li><strong>Gläubiger-ID:</strong> Unter „Verein und Datenschutz“,
+Abschnitt „SEPA-Lastschrift“, die Gläubiger-Identifikationsnummer des
+Vereins eintragen (bei der Deutschen Bundesbank beantragt). Das Konto,
+auf das eingezogen wird, ist das Vereinskonto aus den Einstellungen der
+Schau.</li>
+<li><strong>Mandat:</strong> Der Aussteller unterschreibt ein
+SEPA-Lastschriftmandat (Vordruck der Bank des Vereins). Unter
+„Aussteller“ → Aussteller bearbeiten → „Mandat erfassen“ tragen Sie das
+Datum der Unterschrift, die IBAN, den Kontoinhaber und „wiederkehrend“
+(für jede Schau) oder einmalig ein. Die Mandatsreferenz vergibt
+SchauFUCHS, wenn Sie keine eigene eintragen (Form „SF-M“ und die Nummer
+des Mandats). Ein Widerruf des Zahlers wird mit „Widerrufen“ und Datum
+festgehalten. Ein Mandat verfällt, wenn es 36 Monate nicht genutzt
+wurde; ein einmaliges Mandat gilt für eine Lastschrift und steht deshalb
+in höchstens einer offenen Datei. Für gelöschte oder gesperrte
+Aussteller lässt sich kein Mandat erfassen. Lastschrift geht nur von
+Konten in EU und EWR (für die Schweiz oder Großbritannien bräuchte sie
+BIC und Anschrift) – diese Aussteller zahlen bar oder per
+Überweisung.</li>
+<li><strong>Lastschriftdatei:</strong> In der Schau unter „Lastschrift“
+(Gruppe „Kasse und Abrechnung“, nur Administratoren) stehen alle
+bestätigten Meldungen mit offenem Meldegeld und gültigem Mandat. Wer an
+der Kasse schon abgerechnet ist (Quittung oder offene SEPA-Überweisung),
+steht nicht darin – sein Meldegeld ist dort verrechnet. Fälligkeitsdatum
+wählen (vorgeschlagen sind 14 Tage nach heute; frühestens der zweite
+Bankarbeitstag nach heute, nie ein Wochenende oder Bankfeiertag),
+„Vorabankündigung per E-Mail“ anlassen und „Lastschriftdatei erstellen“.
+Die Vorabankündigung (Betrag, Fälligkeit, Mandatsreferenz, Gläubiger-ID)
+muss den Zahler rechtzeitig erreichen – in der Regel 14 Tage vor der
+Fälligkeit, wenn mit ihm nichts anderes vereinbart ist. Wer keine
+E-Mail-Adresse hat, bekommt sie auf anderem Weg (z. B. mit der
+Meldebestätigung).</li>
+<li><strong>Bei der Bank einreichen:</strong> „Datei herunterladen“ und
+die XML-Datei im Online-Banking hochladen. Die Datei hält die Beträge
+fest. Solange sie offen ist, geht nichts, was diese Beträge ändert oder
+die Meldung entfernt: keine weitere Zahlung, kein Storno, keine Tiere
+hinzufügen oder abmelden, keine anderen Gebühren, keine Stiftung oder
+Spende mit dem Meldegeld ändern, keine Zahlung stornieren, kein Widerruf
+des Mandats, keine Absage der Schau, keine Rücknahme des Imports, kein
+Löschwunsch. Ebenso keine Auszahlung an diese Aussteller, keine
+SEPA-Überweisungsdatei und kein Abschluss der Schau.</li>
+<li><strong>Eingang buchen:</strong> Hat die Bank eingezogen
+(Kontoauszug), „Eingang buchen“: Jeder Posten wird als Zahlung
+„Lastschrift“ zum Fälligkeitstag gebucht. Lehnt die Bank die Datei ab,
+„Verwerfen“ mit Grund.</li>
+<li><strong>Rücklastschrift:</strong> Kommt ein Betrag zurück (z. B.
+Konto erloschen, Widerspruch), unter „Frühere Lastschriften“ beim Posten
+„Rücklastschrift“ mit dem Grund laut Bank: Das Meldegeld ist wieder
+offen. Eine Lastschrift wird nur so zurückgebucht, nicht über „Zahlung
+stornieren“. Gibt es zu einer Spende mit diesem Meldegeld schon eine
+Zuwendungsbestätigung, erst die Bestätigung stornieren (unter
+„Spenden“).</li>
+<li><strong>Datenschutz:</strong> IBAN und Kontoinhaber der Mandate sind
+verschlüsselt gespeichert. Nach dem Buchen oder Verwerfen enthält die
+Datei keine Bankdaten mehr. Beim Löschwunsch eines Ausstellers wird sein
+Mandat widerrufen und die Bankverbindung gelöscht, in früheren
+Lastschriftdateien auch sein Name. Mandate werden 14 Monate nach
+Widerruf bzw. Verfall gelöscht. Die Auskunft nach Art. 15 enthält die
+Mandate und alle Einzüge.</li>
+</ul>
 <h2 id="rassen-und-farbenschläge">4. Rassen und Farbenschläge</h2>
 <p>Das Verzeichnis der Rassen und Farbenschläge bestimmt zweierlei: was
 Aussteller melden können und in welcher Reihenfolge der Katalog
@@ -1761,8 +1827,8 @@ amtierender Preisrichter und der Katalog befreit: 16,00 €.</p>
 <p><strong>Wichtig:</strong> Sobald die erste Auszahlung gebucht ist,
 lassen sich die Gebühren nicht mehr ändern („Es gibt schon Auszahlungen
 (Quittung …) – Gebühren und Preise lassen sich nicht mehr ändern.“).
-Ebenso, solange eine SEPA-Datei offen ist. Für Preisarten gelten eigene
-Grenzen (siehe unten).</p>
+Ebenso, solange eine SEPA-Datei oder eine Lastschriftdatei offen ist.
+Für Preisarten gelten eigene Grenzen (siehe unten).</p>
 </blockquote>
 <h4 id="abschnitt-preise-preisarten">Abschnitt „Preise“
 (Preisarten)</h4>
@@ -4339,7 +4405,7 @@ freigegeben sind (siehe 5.1),</li>
 <li>stornierte oder abgelehnte Meldungen mit Zahlungseingang erstattet
 oder als Verfall gebucht sind,</li>
 <li>jeder Verkauf per Überweisung seinen Zahlungseingang hat,</li>
-<li>keine SEPA-Datei offen ist,</li>
+<li>keine SEPA-Datei und keine Lastschriftdatei offen ist,</li>
 <li>jeder Kassentag mit Bargeld einen Tagesabschluss hat und kein
 Nachtrag offen ist.</li>
 </ul>

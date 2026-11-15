@@ -15,6 +15,8 @@ export interface MenueSeite {
   symbol: SymbolName;
   /** Weitere Seiten, bei denen der Punkt hervorgehoben ist (das Protokoll erreicht man über die Einstellungen). */
   auch?: string[];
+  /** Nur für Administratoren sichtbar. */
+  nurAdmin?: boolean;
 }
 export interface MenueGruppe {
   /** Schlüssel für den gemerkten Zustand; null = Gruppe ohne Überschrift, nicht einklappbar. */
@@ -74,6 +76,7 @@ export const SCHAU_GRUPPEN: MenueGruppe[] = [
     seiten: [
       { pfad: "kassenbuch", label: "Kassenbuch", symbol: "kassenbuch" },
       { pfad: "spenden", label: "Spenden", symbol: "spenden" },
+      { pfad: "lastschrift", label: "Lastschrift", symbol: "lastschrift", nurAdmin: true },
       { pfad: "abrechnung", label: "Abrechnung", symbol: "abrechnung" },
     ],
   },

@@ -2,7 +2,7 @@
  * Spenden (Entscheidung 013): Spender zum Aussteller finden oder anlegen, Spenden einer Schau mit Eingangstag und
  * Bestätigungsstand laden, Bestätigungsnummern vergeben. Fachregeln: packages/domain/src/spenden.ts.
  */
-import { formatEuro, gefordertCent, steuerstatusLesen, type SpendeFuerBestaetigung } from "@schau/domain";
+import { formatEuro, gefordertCent, type SpendeFuerBestaetigung, steuerstatusLesen, tagBerlin } from "@schau/domain";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db, type Tx } from "../db/client";
 import { aussteller, auszahlung, bestaetigungSpende, meldung, organisation, spende, spender, zahlung, zuwendungsbestaetigung } from "../db/schema";
@@ -83,7 +83,7 @@ export async function eingangMitMeldegeld(ex: Ex, meldungIds: number[]): Promise
   return ergebnis;
 }
 
-const tagDe = (d: Date) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(d);
+const tagDe = (d: Date) => tagBerlin(d);
 
 /** Spenden mit Spender, Eingangstag und ob eine gültige Zuwendungsbestätigung sie schon umfasst. */
 export async function ladeSpenden(ex: Ex, filter: { schauId: number } | { spenderId: number } | { spendeId: number }) {
@@ -149,4 +149,20 @@ export async function spenderFuerKatalog(schauId: number): Promise<string[]> {
     je.set(name, { cent: (alt?.cent ?? 0) + (z.spende.art === "geld" ? z.spende.betragCent : 0), mitBetrag: (alt?.mitBetrag ?? true) && z.spender.nennungBetrag });
   }
   return [...je.entries()].sort(([a], [b]) => a.localeCompare(b, "de")).map(([name, v]) => (v.mitBetrag && v.cent > 0 ? `${name} (${formatEuro(v.cent)})` : name));
+}
+
+/** Spenden eines Ausstellers (über seine Spender-Kopie) für die Auskunft nach Art. 15 DSGVO. */
+export async function spendenFuerAuskunft(ausstellerId: number) {
+  const kopien = await db.select({ id: spender.id }).from(spender).where(eq(spender.ausstellerId, ausstellerId));
+  const zeilen = (await Promise.all(kopien.map((k) => ladeSpenden(db, { spenderId: k.id })))).flat();
+  return zeilen.map((z) => ({
+    datum: z.datum,
+    art: z.spende.art,
+    weg: z.spende.weg,
+    betragCent: z.spende.betragCent,
+    zweck: z.spende.zweck,
+    zuwendungsbestaetigung: z.bestaetigungNr,
+    imKatalogGenannt: z.spender.nennungName,
+    storniertAm: z.spende.storniertAm,
+  }));
 }

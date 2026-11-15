@@ -46,6 +46,8 @@ describe("Verschlüsselung", () => {
     g.erlaubeKlartext(false);
     try {
       expect(() => g.entschluessele("DE02120300000000202051", "aussteller.iban")).toThrow("unverschlüsselt");
+      // Ebenso eine JSON-Spalte (SEPA- und Lastschriftdatei): Klartext-JSON mit fremder IBAN ginge sonst in die Bankdatei.
+      expect(() => g.geheimJsonLesen({ iban: "DE02120300000000202051" }, "lastschriftLauf.daten")).toThrow("unverschlüsselt");
       await m.sql`update aussteller set iban = 'DE02120300000000202051' where id = ${a.id}`;
       await expect(al().verein.ausstellerDaten({ id: a.id })).rejects.toThrow();
     } finally {

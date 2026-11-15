@@ -4,7 +4,9 @@ import { zufallsToken } from "../auth";
 import { db, type Tx } from "../db/client";
 import { aenderung, aussteller, auszahlung, beleg, bestaetigungSpende, bewertung, gesundheit, katalogeintrag, meldung, organisation, postausgang, prEinteilung, preisart, preisrichter, preisvergabe, prZuteilung, schau, sepaLauf, sitzung, spender, stiftung, verkauf, zahlung, zuwendungsbestaetigung } from "../db/schema";
 import { fehler } from "../trpc";
+import { bereinigeMandate, lastschriftAuskunft, loescheLastschriftDaten } from "./datenschutz-lastschrift";
 import { ladeEintraege } from "./eintraege";
+import { spendenFuerAuskunft } from "./spenden";
 import { protokolliere, type Akteur } from "./protokoll";
 import { testKopienVon } from "./testschau";
 import { kurzerFehler } from "./fehlertext";
@@ -35,6 +37,7 @@ export async function ladeAuskunft(organisationId: number, ausstellerId: number)
     .where(eq(meldung.ausstellerId, a.id))
     .orderBy(meldung.eingegangenAm);
   const ids = meldungen.map((x) => x.m.id);
+  const spenderIds = (await db.select({ id: spender.id }).from(spender).where(eq(spender.ausstellerId, a.id))).map((x) => x.id);
   const tiere = ids.length ? await db.select().from(katalogeintrag).where(inArray(katalogeintrag.meldungId, ids)) : [];
   const tierIds = tiere.map((t) => t.id);
   const [zahlungen, auszahlungen, verkaeufe, post, bewertungen, preise, stiftungen, journal] = await Promise.all([
@@ -81,6 +84,7 @@ export async function ladeAuskunft(organisationId: number, ausstellerId: number)
     ...(tierIds.length ? [and(inArray(aenderung.tabelle, ["katalogeintrag", "bewertung", "preisvergabe"]), inArray(aenderung.datensatzId, tierIds))] : []),
     ...(journal.length ? [and(eq(aenderung.tabelle, "gesundheit"), inArray(aenderung.datensatzId, journal.map((g) => g.id)))] : []),
     ...(stiftungen.length ? [and(eq(aenderung.tabelle, "stiftung"), inArray(aenderung.datensatzId, stiftungen.map((x) => x.id)))] : []),
+    ...(spenderIds.length ? [and(eq(aenderung.tabelle, "spender"), inArray(aenderung.datensatzId, spenderIds))] : []),
   ];
   // Tierbezeichnung (Rasse, Farbenschlag) wie im Katalog.
   const bezeichnung = new Map<number, string>();
@@ -145,6 +149,7 @@ export async function ladeAuskunft(organisationId: number, ausstellerId: number)
     })),
     auszahlungen: auszahlungen.map((x) => ({ quittungNr: x.quittungNr, datum: x.createdAt, betragCent: x.betragCent, art: x.art, storniertAm: x.storniertAm })),
     spenden: await spendenFuerAuskunft(a.id),
+    lastschrift: await lastschriftAuskunft(organisationId, a.id),
     belege,
     emails: post,
     protokoll,
@@ -264,7 +269,7 @@ async function entferneEntbehrliches(tx: Tx, a: typeof aussteller.$inferSelect) 
 }
 
 /** Protokollinhalte und Gesundheitstexte mit Bezug zum Aussteller leeren (Zeitpunkt, Aktion und Bearbeiter bleiben). */
-async function anonymisiereProtokoll(tx: Tx, a: { id: number; organisationId: number; vorname: string; nachname: string }, meldungIds: number[]) {
+async function anonymisiereProtokoll(tx: Tx, a: { id: number; organisationId: number; vorname: string; nachname: string }, meldungIds: number[], spenderIds: number[]) {
   const ausstellerId = a.id;
   const tierIds = meldungIds.length ? (await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(inArray(katalogeintrag.meldungId, meldungIds))).map((x) => x.id) : [];
   const zahlIds = meldungIds.length ? (await tx.select({ id: zahlung.id }).from(zahlung).where(inArray(zahlung.meldungId, meldungIds))).map((x) => x.id) : [];
@@ -284,6 +289,7 @@ async function anonymisiereProtokoll(tx: Tx, a: { id: number; organisationId: nu
   await leeren("auszahlung", auszIds);
   await leeren("verkauf", verkIds);
   await leeren("stiftung", stiftIds);
+  await leeren("spender", spenderIds);
   // Preise und Noten des Tiers: der Grund ist Freitext und kann Namen enthalten.
   await leeren("preisvergabe", tierIds);
   await leeren("bewertung", tierIds);
@@ -311,7 +317,8 @@ async function anonymisiereProtokoll(tx: Tx, a: { id: number; organisationId: nu
  * tägliche Bereinigung. Die Meldungen bleiben als anonyme Zeilen erhalten, damit Katalog und Abrechnung stimmen.
  */
 export async function loescheAussteller(tx: Tx, organisationId: number, ausstellerId: number, grund: string, akteur: Akteur, jetzt = new Date()) {
-  const [a] = await tx.select().from(aussteller).where(and(eq(aussteller.id, ausstellerId), eq(aussteller.organisationId, organisationId)));
+  // Zeile sperren: ein gleichzeitiges „Mandat erfassen“ wartet und sieht danach den Löschwunsch.
+  const [a] = await tx.select().from(aussteller).where(and(eq(aussteller.id, ausstellerId), eq(aussteller.organisationId, organisationId))).for("update");
   if (!a) throw fehler("NOT_FOUND", "Aussteller nicht gefunden.");
   if (a.geloeschtAm) throw fehler("BAD_REQUEST", "Dieser Aussteller ist bereits gelöscht.");
   const laufend = await laufendeMeldungen(tx, a.id);
@@ -321,11 +328,12 @@ export async function loescheAussteller(tx: Tx, organisationId: number, ausstell
       `Der Aussteller hat eine laufende Meldung (${laufend.map((l) => l.schau).join(", ")}). Erst die Meldung stornieren oder die Schau abschließen${a.testSchauId ? " – bei einer Testschau genügt es, sie zu löschen oder die Demodaten neu einzuspielen" : ""}.`,
     );
   }
-  // In einer offenen SEPA-Datei stehen IBAN und Name – erst buchen oder verwerfen.
+  // In einer offenen SEPA-Datei bzw. Lastschriftdatei stehen IBAN und Name – erst buchen oder verwerfen.
   const offen = await tx.select({ daten: sepaLauf.daten }).from(sepaLauf).innerJoin(schau, eq(schau.id, sepaLauf.schauId)).where(and(eq(sepaLauf.status, "offen"), eq(schau.organisationId, organisationId)));
   if (offen.some((l) => (l.daten as { posten: { ausstellerId: number }[] }).posten.some((p) => p.ausstellerId === a.id))) {
     throw fehler("BAD_REQUEST", "Der Aussteller steht in einer offenen SEPA-Datei – erst die Datei buchen oder verwerfen.");
   }
+  await loescheLastschriftDaten(tx, organisationId, a.id, jetzt);
   // Test-Kopien in Übungsschauen tragen den Namen mit: sofort unkenntlich (es sind Übungsdaten, keine Aufbewahrung).
   const kopien = await testKopienVon(tx, a.id);
   if (kopien.length) {
@@ -374,14 +382,17 @@ export async function loescheAussteller(tx: Tx, organisationId: number, ausstell
   if (ids.length) await tx.update(stiftung).set({ stifter: "Gelöscht" }).where(inArray(stiftung.meldungId, ids));
   // Spender-Kopie des Ausstellers: keine Nennung mehr; Name und Anschrift nur, solange ein Doppel einer
   // Zuwendungsbestätigung aufbewahrt werden muss (die Bereinigung entfernt sie danach).
-  await tx.update(spender).set({ nennungName: false, nennungBetrag: false, email: "", notiz: "" }).where(eq(spender.ausstellerId, a.id));
+  // Alle Spender-Kopien: ihr Protokoll trägt E-Mail und Notiz mit, auch bei denen mit Zuwendungsbestätigung (deren
+  // Name und Anschrift stehen für das Doppel in der Spenderzeile, nicht im Protokoll).
+  const spenderKopien = await tx.update(spender).set({ nennungName: false, nennungBetrag: false, email: "", notiz: "" }).where(eq(spender.ausstellerId, a.id)).returning({ id: spender.id });
   await tx
     .update(spender)
     .set({ vorname: "", nachname: "Gelöscht", strasse: "", plz: "", ort: "", ausstellerId: null })
     .where(and(eq(spender.ausstellerId, a.id), sql`not exists (select 1 from zuwendungsbestaetigung z where z.spender_id = "spender"."id")`));
   await tx.update(spender).set({ ausstellerId: null }).where(eq(spender.ausstellerId, a.id));
-  // Im Protokoll bleiben Zeitpunkt, Aktion und Bearbeiter – die Inhalte mit Namen, IBAN oder Beträgen fallen weg.
-  await anonymisiereProtokoll(tx, a, ids);
+  // Im Protokoll bleiben Zeitpunkt, Aktion und Bearbeiter – die Inhalte mit Namen, IBAN oder Beträgen fallen weg (auch
+  // die der Spender-Kopien).
+  await anonymisiereProtokoll(tx, a, ids, spenderKopien.map((x) => x.id));
   // Test-Aussteller: ins Protokoll ihrer Testschau (verschwindet mit ihr), echte ins Vereinsprotokoll.
   await protokolliere(tx, { schauId: a.testSchauId ?? null, tabelle: "aussteller", datensatzId: a.id, aktion: "gelöscht", grund, akteur });
   return { art: "gelöscht" as const, loeschenAb: null };
@@ -399,7 +410,7 @@ const jahreZurueck = (jetzt: Date, jahre: number) => new Date(Date.UTC(jetzt.get
  */
 export async function bereinige(jetzt = new Date(), opts: { organisationId?: number } = {}) {
   const akteur: Akteur = { text: "Bereinigung (Speicherfrist)" };
-  const n = { sitzungen: 0, mails: 0, geburtsdaten: 0, preisrichter: 0, kaeufer: 0, spender: 0, protokoll: 0, belege: 0, journal: 0, nachweise: 0, anschriften: 0, geloescht: 0, gesperrt: 0, fehlgeschlagen: 0 };
+  const n = { sitzungen: 0, mails: 0, geburtsdaten: 0, preisrichter: 0, kaeufer: 0, spender: 0, protokoll: 0, belege: 0, journal: 0, nachweise: 0, anschriften: 0, geloescht: 0, gesperrt: 0, fehlgeschlagen: 0, mandate: 0 };
   const org = opts.organisationId;
   const vereinSchau = (spalte: unknown) => (org ? sql`${spalte} in (select id from schau where organisation_id = ${org})` : sql`true`);
   if (!org) n.sitzungen = (await db.delete(sitzung).where(lt(sitzung.laeuftAb, jetzt)).returning({ id: sitzung.id })).length;
@@ -418,6 +429,9 @@ export async function bereinige(jetzt = new Date(), opts: { organisationId?: num
     and not exists (select 1 from meldung m join schau s on s.id = m.schau_id where m.aussteller_id = "aussteller"."id"
       and (s.phase <> 'abgeschlossen' or s.abgeschlossen_am is null or s.abgeschlossen_am > ${karenz}::timestamptz
         or (s.reklamationsfrist is not null and s.reklamationsfrist > (${karenz}::timestamptz)::date)))`;
+  // SEPA-Mandate: 14 Monate nach dem Widerruf bzw. nach dem Verfall (36 Monate ohne Nutzung) – so lange muss der Verein
+  // das Mandat bei einem Widerspruch des Zahlers vorlegen können.
+  n.mandate = await bereinigeMandate(jetzt, org);
   n.geburtsdaten = (
     await db
       .update(aussteller)
@@ -575,21 +589,4 @@ export function starteBereinigung() {
       .catch((e) => console.error("[datenschutz] Bereinigung fehlgeschlagen:", kurzerFehler(e)));
   void lauf();
   setInterval(lauf, 86_400_000).unref?.();
-}
-
-/** Spenden eines Ausstellers (über seine Spender-Kopie) für die Auskunft nach Art. 15 DSGVO. */
-async function spendenFuerAuskunft(ausstellerId: number) {
-  const { ladeSpenden } = await import("./spenden");
-  const kopien = await db.select({ id: spender.id }).from(spender).where(eq(spender.ausstellerId, ausstellerId));
-  const zeilen = (await Promise.all(kopien.map((k) => ladeSpenden(db, { spenderId: k.id })))).flat();
-  return zeilen.map((z) => ({
-    datum: z.datum,
-    art: z.spende.art,
-    weg: z.spende.weg,
-    betragCent: z.spende.betragCent,
-    zweck: z.spende.zweck,
-    zuwendungsbestaetigung: z.bestaetigungNr,
-    imKatalogGenannt: z.spender.nennungName,
-    storniertAm: z.spende.storniertAm,
-  }));
 }

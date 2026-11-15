@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { TERMIN_EBENE_INFO, TERMIN_EBENEN, TERMINE_KEINE, zeitraumDe, type TerminEbene } from "@schau/domain";
-import { datumZeit, fehlerText } from "../lib";
+import { datumZeit, fehlerText, heuteIso } from "../lib";
 import { trpc, type Ausgabe } from "../trpc";
 import { Auswahl, Dialog, Eingabe, Feld, Haken, HilfeLink, Hinweis, Knopf, Marke, useAenderungenWarnen, useFrage, useMeldung } from "../ui";
 
@@ -275,7 +275,7 @@ function TerminListe({ termine, istAdmin, bearbeiten }: { termine: Termin[]; ist
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
   const loeschen = trpc.termine.loeschen.useMutation({ onSuccess: () => utils.termine.laden.invalidate(), onError: (e) => meldung(fehlerText(e), "fehler") });
-  const heute = new Date().toISOString().slice(0, 10);
+  const heute = heuteIso();
   return (
     <ul className="-my-2.5 flex flex-col divide-y divide-linie">
       {termine.map((t) => (

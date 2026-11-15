@@ -1,10 +1,10 @@
-import { berechneAbrechnung, gefordertCent, erzeugeSepaUeberweisung, imEwr, normalisiereRegistriernummer, provision, pruefeIban, REGISTRIERNUMMER_HINWEIS, verdeckeIban, type Phase } from "@schau/domain";
+import { berechneAbrechnung, gefordertCent, erzeugeSepaUeberweisung, imEwr, normalisiereRegistriernummer, provision, pruefeIban, REGISTRIERNUMMER_HINWEIS, verdeckeIban, type Phase, datumKurz } from "@schau/domain";
 import { and, asc, eq, gt, inArray, isNull, max, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Tx } from "../db/client";
-import { aenderung, aussteller, auszahlung, bewertung, gesundheit, kassenabschluss, kassenbewegung, katalogeintrag, KASSENBEWEGUNG_ARTEN, meldung, sepaLauf, verkauf, verkaufZahlungseingang, type schau } from "../db/schema";
+import { aenderung, aussteller, auszahlung, bewertung, gesundheit, kassenabschluss, kassenbewegung, katalogeintrag, KASSENBEWEGUNG_ARTEN, meldung, schau, sepaLauf, verkauf, verkaufZahlungseingang } from "../db/schema";
 import { ladeEintraege, meldebetrag } from "../services/eintraege";
-import { offeneUeberweisungsverkaeufe, offenerLauf, pruefeNichtAbgerechnet, pruefeNichtAbgeschlossen, schliesseLauf, SEPA_ERSTELLT, SEPA_GEBUCHT, SEPA_VERWORFEN, sperreKasse, type UeberweisungsLauf } from "../services/kasse";
+import { LASTSCHRIFT_OFFEN, offeneLastschrift, offeneUeberweisungsverkaeufe, offenerLauf, pruefeNichtAbgerechnet, pruefeNichtAbgeschlossen, schliesseLauf, SEPA_ERSTELLT, SEPA_GEBUCHT, SEPA_VERWORFEN, sperreKasse, type UeberweisungsLauf } from "../services/kasse";
 import { archiviereKassenbeleg, archiviereKaufbeleg, archiviereQuittung, belegListe, ladeKassenbuch, sollBestand } from "../services/kassenbuch";
 import { protokolliere } from "../services/protokoll";
 import { heuteDe } from "../services/tiergesundheit";
@@ -73,7 +73,7 @@ function letzterAbschluss(tage: { datum: string; abschluss: unknown }[]): string
 }
 
 export async function abrechnungListe(schauId: number, ex: Tx = db, opts: { nurAusstellerId?: number; nurAusstellerIds?: number[] } = {}) {
-  const [eintraege, meldungen, auszahlungen, lauf] = await Promise.all([
+  const [eintraege, meldungen, auszahlungen, lauf, lastschrift] = await Promise.all([
     ladeEintraege(schauId, { nurBestaetigt: true, ex }),
     ex
       .select({
@@ -90,6 +90,7 @@ export async function abrechnungListe(schauId: number, ex: Tx = db, opts: { nurA
       .where(and(eq(meldung.schauId, schauId), eq(meldung.status, "bestaetigt"), opts.nurAusstellerId ? eq(meldung.ausstellerId, opts.nurAusstellerId) : undefined, opts.nurAusstellerIds ? inArray(meldung.ausstellerId, opts.nurAusstellerIds.length ? opts.nurAusstellerIds : [-1]) : undefined)),
     ex.select().from(auszahlung).where(eq(auszahlung.schauId, schauId)).orderBy(asc(auszahlung.id)),
     offenerLauf(ex, schauId),
+    offeneLastschrift(ex, schauId),
   ]);
   const alleVerkaeufe = await ex
     .select({ v: verkauf, schauId: katalogeintrag.schauId, eingang: verkaufZahlungseingang.id })
@@ -122,6 +123,9 @@ export async function abrechnungListe(schauId: number, ex: Tx = db, opts: { nurA
       const aus = gueltig[gueltig.length - 1] ?? null;
       const posten = lauf?.posten.find((p) => p.ausstellerId === m.ausstellerId);
       const inUeberweisung = lauf && posten ? { nachrichtId: lauf.nachrichtId, betragCent: posten.betragCent } : null;
+      // Meldegeld in der offenen Lastschriftdatei: die Bank zieht es ein – an der Kasse nicht noch einmal verrechnen.
+      const einzug = lastschrift?.daten.posten.find((p) => p.meldungId === m.id);
+      const imEinzug = lastschrift && einzug ? { nachrichtId: lastschrift.nachrichtId, betragCent: einzug.betragCent } : null;
       // Was noch zu zahlen ist (positiv) oder zurückzufordern (negativ) – nach allen gültigen Buchungen.
       const nochOffenCent = a.saldoCent - ausgezahltCent - (inUeberweisung?.betragCent ?? 0);
       return {
@@ -145,12 +149,13 @@ export async function abrechnungListe(schauId: number, ex: Tx = db, opts: { nurA
         buchungen,
         ausgezahltCent,
         inUeberweisung,
+        imEinzug,
         nochOffenCent,
         // Nicht 0 heißt: nach einer Buchung oder SEPA-Datei nachträglich geändert – auszugleichen über eine Differenzbuchung.
         differenzCent: gueltig.length || inUeberweisung ? nochOffenCent : 0,
         // Überweisbar: Guthaben (auch Nachzahlung), gültige IBAN und in keiner offenen SEPA-Datei.
         // Konten außerhalb des EWR (z. B. Schweiz) nicht in die Sammelüberweisung – dort fehlen BIC und Anschrift.
-        ueberweisbar: !inUeberweisung && nochOffenCent > 0 && !!m.iban && !pruefeIban(m.iban) && imEwr(m.iban),
+        ueberweisbar: !inUeberweisung && !imEinzug && nochOffenCent > 0 && !!m.iban && !pruefeIban(m.iban) && imEwr(m.iban),
       };
     }),
   );
@@ -406,6 +411,7 @@ export const kasseRouter = router({
       const zeile = (await abrechnungListe(s.id, tx, { nurAusstellerId: input.ausstellerId })).find((z) => z.ausstellerId === input.ausstellerId);
       if (!zeile) throw fehler("NOT_FOUND", "Aussteller nicht gefunden.");
       if (zeile.inUeberweisung) throw fehler("CONFLICT", "Aussteller steht in der offenen SEPA-Datei. Erst die Datei buchen oder verwerfen.");
+      if (zeile.imEinzug) throw fehler("CONFLICT", LASTSCHRIFT_OFFEN);
       if (zeile.auszahlung && zeile.nochOffenCent === 0) throw fehler("CONFLICT", `Bereits abgerechnet (Quittung ${zeile.auszahlung.quittungNr}).`);
       // Überweisung an den Aussteller nur mit hinterlegter IBAN (sonst nennt die Zahlungsanzeige ein Konto, das es nicht gibt).
       if (input.art === "ueberweisung" && zeile.nochOffenCent > 0 && !zeile.iban) {
@@ -471,6 +477,11 @@ export const kasseRouter = router({
       return db.transaction(async (tx) => {
         await sperreKasse(tx, s.id);
         if (await offenerLauf(tx, s.id)) throw fehler("CONFLICT", "Es gibt schon eine offene SEPA-Datei. Erst buchen oder verwerfen.");
+        // Phase unter der Sperre frisch lesen: ein gleichzeitiger Abschluss nimmt dieselbe Sperre (routers/schau.ts phaseSetzen).
+        const [frisch] = await tx.select({ phase: schau.phase }).from(schau).where(eq(schau.id, s.id));
+        if (!frisch || !SEPA_PHASEN.includes(frisch.phase)) throw fehler("BAD_REQUEST", "Die SEPA-Datei gehört in die Phase „Abrechnung“ (nach der Schau).");
+        // Die Salden rechnen offenes Meldegeld ab, das die offene Lastschrift gerade einzieht – erst sie buchen oder verwerfen.
+        if (await offeneLastschrift(tx, s.id)) throw fehler("CONFLICT", "Es gibt eine offene Lastschriftdatei. Erst buchen oder verwerfen, dann die Überweisungen.");
         const zeilen = (await abrechnungListe(s.id, tx)).filter((z) => z.ueberweisbar);
         if (zeilen.length === 0) throw fehler("BAD_REQUEST", "Keine offenen Überweisungen.");
         const jetzt = new Date();
@@ -686,13 +697,13 @@ export const kasseRouter = router({
         await sperreKasse(tx, input.schauId);
         const tage = await ladeKassenbuch(input.schauId, tx);
         const tag = tage.find((t) => t.datum === datum);
-        if (tag?.abschluss && !tag.nachtragOffen) throw fehler("BAD_REQUEST", `Der Kassentag ${datum.split("-").reverse().join(".")} ist schon abgeschlossen (keine Barbuchung seitdem).`);
+        if (tag?.abschluss && !tag.nachtragOffen) throw fehler("BAD_REQUEST", `Der Kassentag ${datumKurz(datum)} ist schon abgeschlossen (keine Barbuchung seitdem).`);
         const nachtrag = tag?.abschluss ? tag.abschluss.nachtrag + 1 : 0;
         // Kassentage nur der Reihe nach: sonst stimmte der Anfangsbestand der Folgetage nicht mehr, und ein früherer
         // offener Tag ließe sich nie mehr abschließen.
         if (tage.some((t) => t.datum > datum && t.abschluss)) throw fehler("BAD_REQUEST", "Ein späterer Kassentag ist schon abgeschlossen.");
         const frueher = tage.find((t) => t.datum < datum && ((t.datum > letzterAbschluss(tage) && !t.abschluss && t.bewegungen.length) || t.nachtragOffen));
-        if (frueher) throw fehler("BAD_REQUEST", `Erst den Kassentag ${frueher.datum.split("-").reverse().join(".")} abschließen.`);
+        if (frueher) throw fehler("BAD_REQUEST", `Erst den Kassentag ${datumKurz(frueher.datum)} abschließen.`);
         if (datum !== heuteDe() && !tage.some((t) => t.datum === datum && t.bewegungen.length)) throw fehler("BAD_REQUEST", "An diesem Tag gab es keine Bargeldbewegung.");
         const sollCent = await sollBestand(input.schauId, tx, datum);
         const differenzCent = input.istCent - sollCent;

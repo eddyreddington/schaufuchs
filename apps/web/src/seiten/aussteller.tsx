@@ -1,3 +1,4 @@
+import { SepaMandate } from "./aussteller-mandate";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { datum, fehlerText } from "../lib";
 import { trpc, type Ausgabe } from "../trpc";
@@ -260,6 +261,7 @@ function BearbeitenDialog({ id, eigene, schliessen }: { id?: number; eigene: str
           schliessen={schliessen}
         />
       )}
+      {id && <SepaMandate ausstellerId={id} />}
     </Dialog>
   );
 }

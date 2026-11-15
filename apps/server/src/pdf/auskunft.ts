@@ -1,9 +1,10 @@
-import { AUFBEWAHRUNG_BELEGE_JAHRE, AUFBEWAHRUNG_VERKAUF_JAHRE, formatEuro, KARENZ_TAGE, MELDEART_LABEL, SONDERNOTE_LABEL, type Vereinsangaben } from "@schau/domain";
+import { AUFBEWAHRUNG_BELEGE_JAHRE, AUFBEWAHRUNG_VERKAUF_JAHRE, formatEuro, KARENZ_TAGE, MELDEART_LABEL, SONDERNOTE_LABEL, type Vereinsangaben, ZAHLART_LABEL } from "@schau/domain";
 import type { Auskunft } from "../services/datenschutz";
 import { angaben, briefkopf, datumDe, design, erzeugePdf, fusszeilen, GRAU, hinweisKasten, MM, SANS_KURSIV, SERIF, tabelle, TINTE, type Doc } from "./basis";
 
 const STATUS: Record<string, string> = { offen: "offen", bestaetigt: "bestätigt", abgelehnt: "abgelehnt", storniert: "storniert" };
-const ZAHLART: Record<string, string> = { ueberweisung: "Überweisung", bar: "bar", sonstige: "sonstige" };
+const ZAHLART: Record<string, string> = ZAHLART_LABEL;
+const LAUF_STATUS: Record<string, string> = { offen: "Datei offen", gebucht: "eingezogen", verworfen: "verworfen" };
 const EINGANG: Record<string, string> = { papier: "Meldebogen", email: "E-Mail", online: "online" };
 const breite = (doc: Doc) => doc.page.width - doc.page.margins.left - doc.page.margins.right;
 
@@ -176,6 +177,38 @@ export function auskunftPdf(a: Auskunft, verein: Vereinsangaben) {
           { titel: "Betrag", breite: 30 * MM, align: "right" },
         ],
         a.auszahlungen.map((z) => [String(z.quittungNr), datumDe(z.datum), `${ZAHLART[z.art] ?? z.art}${z.storniertAm ? " (storniert)" : ""}`, formatEuro(z.betragCent)]),
+        { schrift: 8.5 },
+      );
+
+    abschnitt(doc, "SEPA-Lastschrift");
+    if (!a.lastschrift.mandate.length && !a.lastschrift.einzuege.length) leer(doc, "Keine Lastschriftmandate.");
+    if (a.lastschrift.mandate.length)
+      tabelle(
+        doc,
+        [
+          { titel: "Mandat", breite: 32 * MM },
+          { titel: "Konto", breite: w - 32 * MM - 26 * MM - 50 * MM },
+          { titel: "Unterschrieben", breite: 26 * MM },
+          { titel: "Stand", breite: 50 * MM },
+        ],
+        a.lastschrift.mandate.map((x) => [
+          `${x.referenz}${x.wiederkehrend ? "" : " (einmalig)"}`,
+          x.iban ? `${x.iban}${x.kontoinhaber ? `, ${x.kontoinhaber}` : ""}` : "gelöscht",
+          datumDe(x.unterschriebenAm),
+          [x.widerrufenAm ? `widerrufen ${datumDe(x.widerrufenAm)}` : "gültig", x.letzteNutzungAm ? `zuletzt genutzt ${datumDe(x.letzteNutzungAm)}` : ""].filter(Boolean).join(", "),
+        ]),
+        { schrift: 8.5 },
+      );
+    if (a.lastschrift.einzuege.length)
+      tabelle(
+        doc,
+        [
+          { titel: "Schau", breite: w - 26 * MM - 50 * MM - 30 * MM },
+          { titel: "Fällig", breite: 26 * MM },
+          { titel: "Stand", breite: 50 * MM },
+          { titel: "Betrag", breite: 30 * MM, align: "right" },
+        ],
+        a.lastschrift.einzuege.map((x) => [x.schau, datumDe(x.faelligAm), `${LAUF_STATUS[x.status] ?? x.status}${x.zurueckgebucht ? ", zurückgebucht" : ""} (${x.mandatsreferenz})`, formatEuro(x.betragCent)]),
         { schrift: 8.5 },
       );
 

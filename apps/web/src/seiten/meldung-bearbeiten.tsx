@@ -1,4 +1,4 @@
-import { gefordertCent } from "@schau/domain";
+import { gefordertCent, type Zahlart, ZAHLART_LABEL } from "@schau/domain";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AusstellerFelder, leererAussteller, type AusstellerDaten } from "../komponenten/aussteller";
@@ -110,14 +110,9 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
         hilfeTeil={istAdmin ? undefined : "helfer"}
         hilfeText="Hilfe zu Meldungen"
         aktionen={
-          <>
-            <Link to={`/schau/${schauId}/meldungen`} className={knopfKlasse("leise")}>
-              Zurück zur Liste
-            </Link>
-            <Knopf type="submit" form={formId} variante="primaer" laedt={speichern.isPending}>
-              Meldung speichern
-            </Knopf>
-          </>
+          <Link to={`/schau/${schauId}/meldungen`} className={knopfKlasse("leise")}>
+            Zurück zur Liste
+          </Link>
         }
       />
       {vorhanden && b && (
@@ -247,8 +242,6 @@ function AusstellerSuche({ schauId, onWahl }: { schauId: number; onWahl: (a: Aus
   );
 }
 
-const ZAHLART_LABEL = { bar: "bar", ueberweisung: "Überweisung", sonstige: "sonstige" } as const;
-
 function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number }) {
   const utils = trpc.useUtils();
   const meldung = useMeldung();
@@ -369,7 +362,7 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
                 return (
                   <li key={z.id} className={`flex items-center justify-between gap-2 py-1 ${storniert || z.stornoVon ? "text-grau" : ""}`}>
                     <span className="min-w-0">
-                      {datum(z.datum)} · {ZAHLART_LABEL[z.art as keyof typeof ZAHLART_LABEL] ?? "sonstige"}
+                      {datum(z.datum)} · {ZAHLART_LABEL[z.art as Zahlart] ?? "sonstige"}
                       {z.stornoVon ? ` · Storno: ${z.grund}` : z.grund ? ` · ${z.grund}` : ""}
                     </span>
                     <span className="flex shrink-0 items-center gap-1">

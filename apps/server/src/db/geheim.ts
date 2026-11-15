@@ -85,15 +85,22 @@ export function geheimText(spalte: string, feld: string) {
 }
 
 /**
- * JSON-Spalte, verschlüsselt gespeichert als `{"enc": "…"}`. Altbestand (gewöhnliches JSON) wird unverändert gelesen.
+ * Wert einer verschlüsselten JSON-Spalte lesen. Gewöhnliches JSON (Altbestand) nur in Entwicklung, Tests und bei der
+ * Umstellung beim Start – wie bei geheimText: in Produktion kann Klartext nur von außen geschrieben sein (etwa eine
+ * fremde IBAN in einer SEPA- oder Lastschriftdatei), und die Anwendung lehnt ihn ab.
  */
+export function geheimJsonLesen<T>(v: unknown, feld: string): T {
+  const o = typeof v === "string" ? JSON.parse(v) : v;
+  if (o && typeof o === "object" && typeof (o as { enc?: unknown }).enc === "string") return JSON.parse(entschluessele((o as { enc: string }).enc, feld)) as T;
+  if (o != null && !(klartextErlaubt ?? entwicklung())) throw new Error(`Feld ${feld} steht unverschlüsselt in der Datenbank – nicht über die Anwendung geschrieben. Bitte prüfen (Manipulation?).`);
+  return o as T;
+}
+
+/** JSON-Spalte, verschlüsselt gespeichert als `{"enc": "…"}` (Lesen: geheimJsonLesen). */
 export function geheimJson<T>(spalte: string, feld: string) {
   return customType<{ data: T; driverData: unknown }>({
     dataType: () => "jsonb",
     toDriver: (v) => JSON.stringify({ enc: verschluessele(JSON.stringify(v), feld) }),
-    fromDriver: (v) => {
-      const o = typeof v === "string" ? JSON.parse(v) : v;
-      return (o && typeof o === "object" && typeof (o as { enc?: unknown }).enc === "string" ? JSON.parse(entschluessele((o as { enc: string }).enc, feld)) : o) as T;
-    },
+    fromDriver: (v) => geheimJsonLesen<T>(v, feld),
   })(spalte);
 }

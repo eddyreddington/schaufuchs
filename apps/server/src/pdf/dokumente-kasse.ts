@@ -1,5 +1,5 @@
 /** Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. */
-import { betragInWorten, formatEuro } from "@schau/domain";
+import { betragInWorten, formatEuro, ZAHLART_LABEL } from "@schau/domain";
 import { and, eq } from "drizzle-orm";
 import { config } from "../config";
 import { db } from "../db/client";
@@ -300,7 +300,7 @@ export async function kassenbelegPdf(s: Schau, art: "einzahlung" | "eigenbeleg",
       ["Beleg", `E-${nummer}`],
       ["Datum", datumDe(z.z.createdAt)],
       ["Aussteller", `${z.vorname} ${z.nachname}`],
-      ["Zahlart", z.z.art === "bar" ? "bar" : z.z.art === "ueberweisung" ? "Überweisung" : z.z.art === "karte" ? "Karte" : "sonstige"],
+      ["Zahlart", ZAHLART_LABEL[z.z.art]],
       ...(z.z.grund ? ([["Grund", z.z.grund]] as [string, string][]) : []),
     ];
     text = storno

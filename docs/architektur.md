@@ -46,6 +46,7 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
 | Import aus Altprogrammen | `import.ts` | `routers/import.ts` (`datenimport.*`), `services/import.ts`, `import/xlsx.ts` | `import.tsx` |
 | Teilschauen (fortlaufende Katalognummern) | `teilschau.ts`, `katalog.ts` | `routers/schau.ts` (`teilschauenSetzen`), `services/eintraege.ts`, `pdf/katalog.ts` | `einstellungen-teilschauen.tsx` |
 | Hallenplan-Entwürfe und Archiv | `hallenplan-entfernen.ts` (`halleOhneFestenPlan`) | `routers/hallenentwurf.ts`, `db/schema-hallenentwurf.ts` | `hallenplan-entwuerfe.tsx` |
+| SEPA-Lastschrift | `lastschrift.ts` | `routers/lastschrift.ts`, `db/schema-lastschrift.ts` | `lastschrift.tsx`, `aussteller-mandate.tsx`, `verein-lastschrift.tsx` |
 
 Bedienung und Hintergründe für Anwender: `docs/handbuch/` (in der App unter `/hilfe`).
 

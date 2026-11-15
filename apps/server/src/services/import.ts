@@ -4,14 +4,14 @@
  * und Protokoll) und einen ganzen Importlauf zurücknehmen, solange nichts weiter damit geschehen ist.
  * Vorhandene Aussteller werden nie überschrieben.
  */
-import { ausstellerSchluessel, type ImportAussteller, type ImportFeld, type ImportZeile, istAuslaendisch, istJugendlich, JUGEND_ALTERSGRENZE, PHASEN_LABEL, rassenVorschlaege, suchNorm, zeilenAuswerten } from "@schau/domain";
+import { ausstellerSchluessel, heuteBerlin, type ImportAussteller, type ImportFeld, type ImportZeile, istAuslaendisch, istJugendlich, JUGEND_ALTERSGRENZE, PHASEN_LABEL, rassenVorschlaege, suchNorm, zeilenAuswerten } from "@schau/domain";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { db, type Tx } from "../db/client";
 import { aenderung, auszahlung, aussteller, farbenschlag, importlauf, katalogeintrag, meldung, organisation, postausgang, rasse, schau, spende, spender, stiftung, zahlung } from "../db/schema";
 import { fehler } from "../trpc";
 import { ausstellerVerwaltungEingabe, speichereAussteller } from "./aussteller";
-import { offenerLauf, sperreKasse } from "./kasse";
+import { inOffenerLastschrift, offenerLauf, sperreKasse } from "./kasse";
 import { ausstellerEingabe, bindungen, meldungEingabe, positionEingabe, speichereMeldung } from "./meldung";
 import { type Akteur, protokolliere } from "./protokoll";
 import { ausstellerDerSchau, echteAussteller } from "./testschau";
@@ -195,7 +195,7 @@ export async function importPruefen(q: Lesen, organisationId: number, e: ImportE
     gruppenHinweise.set(g, h);
   }
   // Jugend: maßgeblich ist das gespeicherte Geburtsdatum eines vorhandenen Ausstellers (wie beim Speichern).
-  const stichtag = s?.bewertungAm ?? new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+  const stichtag = s?.bewertungAm ?? heuteBerlin();
   const nichtMehrJugend = (g: Gruppe | undefined) => !!g?.vorhanden?.geburtsdatum && !istJugendlich(g.vorhanden.geburtsdatum, stichtag);
 
   const bericht: (ImportZeile & { farbenschlagId: number | null })[] = zeilen.map((z) => {
@@ -331,6 +331,8 @@ export async function importZuruecknehmen(tx: Tx, organisationId: number, id: nu
     const [sp] = await tx.select({ id: spende.id }).from(spende).where(inArray(spende.meldungId, mIds)).limit(1);
     const [ab] = await tx.select({ id: auszahlung.id }).from(auszahlung).where(and(eq(auszahlung.schauId, sid), inArray(auszahlung.ausstellerId, aIds))).limit(1);
     const sepa = (await offenerLauf(tx, sid))?.posten.some((x) => aIds.includes(x.ausstellerId));
+    // Bestätigte Importe kommen in die Lastschrift; ohne die Meldung ließe sich der Einzug nicht mehr buchen.
+    const einzug = await inOffenerLastschrift(tx, sid, { meldungIds: mIds });
     // Bearbeitet: die Meldung selbst oder eines ihrer Tiere (Ringnummer, Käfig je Tier usw. stehen am Tier im Protokoll).
     const bearbeitet = [...(await spaeter("meldung", mIds)), ...(await spaeter("katalogeintrag", eintraege.map((x) => x.id))).map((x) => ({ id: eintraege.find((e) => e.id === x.id)?.meldungId ?? null }))];
     const gruende = [
@@ -341,6 +343,7 @@ export async function importZuruecknehmen(tx: Tx, organisationId: number, id: nu
       sp ? "Spenden erfasst" : "",
       ab ? "Aussteller abgerechnet" : "",
       sepa ? "Aussteller in der offenen SEPA-Datei" : "",
+      einzug ? "Meldegeld in der offenen Lastschriftdatei" : "",
       ...(await bindungen(tx, eintraege.map((x) => x.id), { loeschen: true, statuswechsel: true })),
     ].filter(Boolean);
     if (gruende.length) throw fehler("BAD_REQUEST", `Der Import lässt sich nicht mehr zurücknehmen: ${gruende.join("; ")}. Einzelne Meldungen bitte von Hand stornieren.`);

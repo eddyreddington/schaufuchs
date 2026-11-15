@@ -1,5 +1,5 @@
 import { verzeichnisVorschlaegeZwischengespeichert } from "../services/vereinsverzeichnis";
-import { teilschauenLesen, adressVorschlaege, mitVerzeichnis, bewertungsText, datenschutzAbschnitte, datenschutzKurz, fehlendeVereinsangaben, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, onlineAbgelaufen } from "@schau/domain";
+import { adressVorschlaege, bewertungsText, datenschutzAbschnitte, datenschutzKurz, fehlendeVereinsangaben, heuteBerlin, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, mitVerzeichnis, onlineAbgelaufen, teilschauenLesen } from "@schau/domain";
 import { heuteDe } from "../services/tiergesundheit";
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -27,7 +27,7 @@ async function ladeOeffentlich(slug: string) {
 
 /** Heute in deutscher Zeit als JJJJ-MM-TT – der Meldeschluss gilt bis Tagesende. */
 function heute(): string {
-  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+  return heuteBerlin();
 }
 
 async function meldungOffen(s: typeof schau.$inferSelect) {

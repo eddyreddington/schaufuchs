@@ -6,7 +6,7 @@
  * Plan als Platzhalter (`PlanPlatte.entfernt`): die Nummern der übrigen Platten – und damit ihr `plattenVersatz` – ändern
  * sich nie, und dort wird keine Nachmeldung angebaut. Reine Rechnung ohne Datenbank.
  */
-import { etageFeld, gleicheEtage, stabilerText, type EntfernterPlatz, type FesterPlan, type Halle, type Hallenplan, type PlanKaefig, type Rechteck } from "./hallenplan";
+import { etageFeld, gleicheEtage, stabilerText, ueberlappt, type EntfernterPlatz, type FesterPlan, type Halle, type Hallenplan, type PlanKaefig, type Rechteck } from "./hallenplan";
 import type { HallenTeil } from "./hallenplan-gruppe";
 import { nummernBereiche } from "./kaefige";
 
@@ -46,8 +46,6 @@ function nummernText(k: { nr: string | null }[]): string {
 }
 const nummern = (k: { nr: string | null }[]) => (nummernText(k) ? ` (Nr. ${nummernText(k)})` : "");
 const belegtMit = (k: { nr: string | null }[]) => ` (belegt${nummernText(k) ? `, Nr. ${nummernText(k)}` : ""})`;
-
-const ueberlappt = (q: Rechteck, a: Rechteck) => q.x < a.x + a.b - 0.5 && a.x < q.x + q.b - 0.5 && q.y < a.y + a.h - 0.5 && a.y < q.y + q.h - 0.5;
 
 /**
  * Alles Leere der Auswahl entfernen. Eine Reihe zählt nur ganz leer; mit einer Platte gehen ihre freien Plätze mit. Der

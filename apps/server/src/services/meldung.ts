@@ -1,4 +1,4 @@
-import { ALTER, EINGANG, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, normalisiereIban, normalisiereRegistriernummer, pruefeGeschlecht, pruefeIban, REGISTRIERNUMMER_HINWEIS, istAuslaendisch, teilschauenLesen, teilschauVon } from "@schau/domain";
+import { ALTER, EINGANG, gefordertCent, heuteBerlin, istAuslaendisch, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, normalisiereIban, normalisiereRegistriernummer, pruefeGeschlecht, pruefeIban, REGISTRIERNUMMER_HINWEIS, teilschauenLesen, teilschauVon } from "@schau/domain";
 import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import { z } from "zod";
 import { zufallsToken } from "../auth";
@@ -6,7 +6,7 @@ import type { Tx } from "../db/client";
 import { aussteller, auszahlung, bewertung, farbenschlag, gesundheit, katalogeintrag, meldung, preisvergabe, schau, sepaLauf, stiftung, rasse, verkauf } from "../db/schema";
 import { fehler, dbId, kalenderdatum } from "../trpc";
 import { meldebetrag } from "./eintraege";
-import { offenerLauf, sperreKasse } from "./kasse";
+import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, offenerLauf, sperreKasse } from "./kasse";
 import { pruefeAusstellerZurSchau, sperreTestschauGeteilt, testSchauIdFuer } from "./testschau";
 import { protokolliere, type Akteur } from "./protokoll";
 import { meldungsspendeAnlegen } from "./spenden";
@@ -146,7 +146,7 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
   const adaten = { ...eingabe, geburtsdatum: input.istJugend ? eingabe.geburtsdatum : null };
   // Jugendtarif nur, wer am Bewertungstag noch jugendlich ist (wie bei der Online-Meldung).
   if (input.istJugend && adaten.geburtsdatum) {
-    const stichtag = s.bewertungAm ?? new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+    const stichtag = s.bewertungAm ?? heuteBerlin();
     if (!istJugendlich(adaten.geburtsdatum, stichtag)) throw fehler("BAD_REQUEST", `Laut Geburtsdatum am Bewertungstag nicht mehr jugendlich (unter ${JUGEND_ALTERSGRENZE} Jahre) – bitte ohne Jugend erfassen.`);
   }
   // Teilschau: nur eine, die es in dieser Schau gibt.
@@ -177,11 +177,16 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
   if (s.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen – Meldungen nur noch lesen. Für Korrekturen erst mit Grund zurück zur Abrechnung.");
   const spaetePhase = s.phase === "abrechnung";
   let abgerechnet = false;
+  let imEinzug = false;
   let vorherBetrag: Awaited<ReturnType<typeof meldebetrag>> | null = null;
   if (vorherige) {
     await sperreKasse(tx, s.id);
     vorherBetrag = await meldebetrag(tx, vorherige.id);
     abgerechnet = (await hatAuszahlung(tx, s.id, vorherige.ausstellerId)) != null || !!(await offenerLauf(tx, s.id))?.posten.some((p) => p.ausstellerId === vorherige.ausstellerId);
+    imEinzug = await inOffenerLastschrift(tx, s.id, { meldungIds: [vorherige.id] });
+    // Nach dem Festschreiben stehen die Nummern im gedruckten Katalog im Block ihrer Teilschau (wie teilschauenSetzen).
+    if (s.katalogGedruckt && input.teilschau !== undefined && input.teilschau !== vorherige.teilschau)
+      throw fehler("BAD_REQUEST", "Der Katalog ist festgeschrieben – die Teilschau einer Meldung bleibt dann, wie sie ist.");
   }
   const nurAL = (abgerechnet || spaetePhase) && !opts.istAdmin;
 
@@ -206,7 +211,7 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
       }
       // Jugend: maßgeblich ist das gespeicherte Geburtsdatum (ein eingegebenes jüngeres zählt nicht).
       if (input.istJugend && a.geburtsdatum) {
-        const stichtag = s.bewertungAm ?? new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+        const stichtag = s.bewertungAm ?? heuteBerlin();
         if (!istJugendlich(a.geburtsdatum, stichtag)) throw fehler("BAD_REQUEST", `Laut Geburtsdatum am Bewertungstag nicht mehr jugendlich (unter ${JUGEND_ALTERSGRENZE} Jahre) – bitte ohne Jugend melden.`);
       }
     } else if (!input.istJugend) {
@@ -416,6 +421,8 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
       input.positionen.some((p) => !p.id) ||
       vorherige.istJugend !== input.istJugend ||
       vorherige.istPreisrichter !== input.aussteller.istPreisrichter;
+    // Die offene Lastschriftdatei zieht den alten Betrag ein: der Betrag bleibt, bis sie gebucht oder verworfen ist.
+    if (imEinzug && gefordertCent(vorherBetrag) !== gefordertCent(betrag)) throw fehler("CONFLICT", LASTSCHRIFT_OFFEN);
     if (geldGeaendert && nurAL) {
       throw fehler("FORBIDDEN", abgerechnet ? "Der Aussteller ist abgerechnet: Tiere, Jugend und Preisrichter-Befreiung ändert nur die Ausstellungsleitung." : "Ab der Abrechnung ändert Tiere, Jugend und Preisrichter-Befreiung nur die Ausstellungsleitung.");
     }

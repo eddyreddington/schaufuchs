@@ -11,7 +11,7 @@
  * Die Aussteller sind erfunden und haben keine E-Mail-Adresse (es geht keine Post hinaus). Erkennungsmerkmal: die
  * Registriernummer beginnt mit „276 16 999“ (Kreis 999 gibt es nicht) – daran findet --entfernen sie wieder.
  */
-import { gefordertCent, halleOhneFestenPlan, standardBesatz } from "@schau/domain";
+import { gefordertCent, halleOhneFestenPlan, heuteBerlin, standardBesatz, tagBerlin } from "@schau/domain";
 import { and, asc, eq, inArray, like, notExists, sql as sqlText } from "drizzle-orm";
 import { db, sql } from "./db/client";
 import { aussteller, benutzer, farbenschlag, gebuehr, katalogBeitrag, katalogGestaltung, meldung, preisrichter, rasse, schau, sparte, spende, spender, verkauf, katalogeintrag, zuwendungsbestaetigung } from "./db/schema";
@@ -68,9 +68,9 @@ function testIban(n: number): string {
   return `DE${String(pruef).padStart(2, "0")}${bban}`;
 }
 
-const heute = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+const heute = () => heuteBerlin();
 /** Datum `n` Tage von heute (negativ: zurück) – die Demodaten altern so nicht. */
-const tag = (n: number) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date(Date.now() + n * 86_400_000));
+const tag = (n: number) => tagBerlin(new Date(Date.now() + n * 86_400_000));
 /** Laufendes Jahr zweistellig, für Ringnummern (Jungtiere dieses Jahres, Alttiere des Vorjahres). */
 let jahrKurz = 26;
 
@@ -447,7 +447,7 @@ export async function zuruecksetzen(slug: string, opts: { leise?: boolean } = {}
             notExists(tx.select({ id: zuwendungsbestaetigung.id }).from(zuwendungsbestaetigung).where(eq(zuwendungsbestaetigung.spenderId, spender.id))),
           ),
         );
-    for (const t of ["gesundheit", "stiftung", "auszahlung", "beleg", "kassenbewegung", "kassenabschluss", "sepa_lauf", "pr_einteilung", "pr_zuteilung"]) {
+    for (const t of ["gesundheit", "stiftung", "auszahlung", "beleg", "kassenbewegung", "kassenabschluss", "sepa_lauf", "lastschrift_lauf", "pr_einteilung", "pr_zuteilung"]) {
       await tx.execute(sqlText`delete from ${sqlText.identifier(t)} where schau_id = ${id}`);
     }
     await tx.execute(sqlText`delete from meldung where schau_id = ${id}`);

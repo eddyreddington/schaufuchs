@@ -64,6 +64,20 @@ describe("Teilschauen", () => {
     await al().schau.teilschauenSetzen({ id: schauId, teilschauen: [{ id: "t1", name: "Landesverbandsschau" }, { id: "t2", name: "Jugendschau" }] });
   });
 
+  test("Nach dem Festschreiben bleibt die Teilschau einer Meldung fest", async () => {
+    const carl = (await m.db.select().from(m.schema.meldung).where(m.eq(m.schema.meldung.schauId, schauId))).find((x) => x.teilschau === "t1")!;
+    const [a] = await m.db.select().from(m.schema.aussteller).where(m.eq(m.schema.aussteller.id, carl.ausstellerId));
+    const d = await al().meldung.get({ id: carl.id });
+    const eingabe = { schauId, meldungId: carl.id, aussteller: { ...leer, vorname: a!.vorname, nachname: a!.nachname, id: a!.id }, eingang: "papier" as const, istJugend: false, bemerkung: "", zustimmung: true, positionen: [{ ...pos(d.eintraege[0]!.farbenschlagId!), id: d.eintraege[0]!.id }] };
+    await m.db.update(m.schema.schau).set({ katalogGedruckt: true }).where(m.eq(m.schema.schau.id, schauId));
+    try {
+      await expect(al().meldung.speichern({ ...eingabe, teilschau: "t2" })).rejects.toThrow("festgeschrieben");
+      await al().meldung.speichern({ ...eingabe, teilschau: "t1", bemerkung: "bleibt" });
+    } finally {
+      await m.db.update(m.schema.schau).set({ katalogGedruckt: false }).where(m.eq(m.schema.schau.id, schauId));
+    }
+  });
+
   test("Online-Meldung in eine Teilschau", async () => {
     const { id } = await al().schau.anlegen({ name: "Teilschau online", ort: "Musterdorf" });
     const s = await al().schau.get({ id });

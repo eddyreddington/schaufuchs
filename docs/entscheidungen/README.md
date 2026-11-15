@@ -21,3 +21,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [015](015-import.md) | Import aus Altprogrammen: zuordnen statt festes Format, nur über die normalen Wege |
 | [016](016-teilschauen.md) | Teilschauen: Abteilungen einer Schau mit fortlaufenden Katalognummern |
 | [017](017-hallenplan-entwuerfe.md) | Hallenplan-Entwürfe und Archiv |
+| [018](018-sepa-lastschrift.md) | SEPA-Lastschrift für das Meldegeld |

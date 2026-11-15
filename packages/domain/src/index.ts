@@ -41,3 +41,6 @@ export * from "./zuwendungsbestaetigung";
 export * from "./meisterschaft";
 export * from "./import";
 export * from "./teilschau";
+export * from "./datum";
+export * from "./zahlart";
+export * from "./lastschrift";

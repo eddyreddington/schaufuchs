@@ -5,6 +5,7 @@
  * werden nur nicht zutreffende Varianten (BMF Nr. 1 und 2). Hier stehen nur die Texte und welche Variante gilt –
  * gezeichnet wird in apps/server/src/pdf/spenden.ts. Entscheidung 013.
  */
+import { datumKurz } from "./datum";
 import { betragInWorten, formatEuro } from "./geld";
 import { type Sachangaben, type Steuerstatus } from "./spenden";
 
@@ -45,8 +46,6 @@ export const HINWEIS = [
 export const ANLAGE_TITEL = "Anlage zur Sammelbestätigung";
 export const ANLAGE_SPALTEN = ["Datum der Zuwendung", "Art der Zuwendung (Geldzuwendung/Mitgliedsbeitrag)", "Verzicht auf die Erstattung von Aufwendungen (ja/nein)", "Betrag"] as const;
 
-/** TT.MM.JJJJ aus JJJJ-MM-TT. */
-export const datumKurz = (iso: string) => iso.split("-").reverse().join(".");
 
 /** Satz zum Freistellungsbescheid bzw. zur Feststellung nach § 60a AO – nur die zutreffende Variante. */
 export function bescheidSatz(st: Steuerstatus): string {

@@ -5,7 +5,7 @@ import { db, type Tx } from "../db/client";
 import { auszahlung, kassenbewegung, meldung, preisart, preisrichter, preisvergabe, prEinteilung, schau, stiftung } from "../db/schema";
 import { ladeEintraege, skalaVon } from "../services/eintraege";
 import { entfernePreis, vergebePreis } from "../services/preise";
-import { pruefeNichtAbgerechnet, pruefeNichtAbgeschlossen, sperreKasse } from "../services/kasse";
+import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, pruefeNichtAbgerechnet, pruefeNichtAbgeschlossen, sperreKasse } from "../services/kasse";
 import { archiviereKassenbeleg } from "../services/kassenbuch";
 import { heuteDe } from "../services/tiergesundheit";
 import { protokolliere } from "../services/protokoll";
@@ -34,12 +34,14 @@ async function pruefeStiftungDeckung(tx: Tx, preisartId: number, weniger: number
  * Eine mit der Meldung zugesagte Stiftung steckt im Saldo des Ausstellers: nach der Quittung oder in der offenen
  * SEPA-Datei ändert sie sich nicht mehr still (Kassensperre wie bei Preisen und Verkäufen).
  */
-async function pruefeStiftungAenderbar(tx: Tx, schauId: number, meldungId: number | null) {
+async function pruefeStiftungAenderbar(tx: Tx, schauId: number, meldungId: number | null, betragAendert: boolean) {
   // Immer sperren: auch „Bar erhalten“ (Stiftung ohne Meldung) läuft unter der Kassensperre.
   await sperreKasse(tx, schauId);
   if (meldungId == null) return;
   const [m] = await tx.select({ ausstellerId: meldung.ausstellerId }).from(meldung).where(eq(meldung.id, meldungId));
   if (m) await pruefeNichtAbgerechnet(tx, schauId, m.ausstellerId);
+  // Der Betrag steckt im Meldegeld, das die offene Lastschriftdatei einzieht.
+  if (betragAendert && (await inOffenerLastschrift(tx, schauId, { meldungIds: [meldungId] }))) throw fehler("CONFLICT", LASTSCHRIFT_OFFEN);
 }
 
 /** Die für Reklamationen wichtigen Felder einer Stiftung (Geld in Cent). */
@@ -129,7 +131,7 @@ export const preiseRouter = router({
           await sperreKasse(tx, input.schauId);
           [alt] = await tx.select().from(stiftung).where(and(eq(stiftung.id, id), eq(stiftung.schauId, input.schauId)));
           if (!alt) throw fehler("NOT_FOUND", "Stiftung nicht gefunden.");
-          await pruefeStiftungAenderbar(tx, input.schauId, alt.meldungId);
+          await pruefeStiftungAenderbar(tx, input.schauId, alt.meldungId, alt.betragCent !== input.betragCent);
           // Aus dieser Stiftung schon vergeben: Preisart und Betrag stehen in den Vergaben (Abrechnung), Anzahl nicht darunter.
           const [{ n: aus }] = (await tx.select({ n: count() }).from(preisvergabe).where(eq(preisvergabe.stiftungId, alt.id))) as [{ n: number }];
           if (aus > 0 && (alt.preisartId !== input.preisartId || alt.betragCent !== input.betragCent)) {
@@ -192,7 +194,7 @@ export const preiseRouter = router({
       await sperreKasse(tx, input.schauId);
       const [vorher] = await tx.select().from(stiftung).where(and(eq(stiftung.id, input.id), eq(stiftung.schauId, input.schauId)));
       if (!vorher) throw fehler("NOT_FOUND", "Stiftung nicht gefunden.");
-      await pruefeStiftungAenderbar(tx, input.schauId, vorher.meldungId);
+      await pruefeStiftungAenderbar(tx, input.schauId, vorher.meldungId, vorher.betragCent !== 0);
       const [{ n: aus }] = (await tx.select({ n: count() }).from(preisvergabe).where(eq(preisvergabe.stiftungId, vorher.id))) as [{ n: number }];
       if (aus > 0) throw fehler("BAD_REQUEST", `Aus dieser Stiftung sind schon ${aus} Preise vergeben. Erst die Preise entfernen.`);
       if (vorher.kassenbewegungId != null) throw fehler("BAD_REQUEST", "Die Stiftung ist schon als Einlage im Kassenbuch gebucht und bleibt deshalb stehen.");

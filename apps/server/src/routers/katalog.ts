@@ -708,11 +708,14 @@ export const katalogRouter = router({
     return db.transaction(async (tx) => {
       // Gleichzeitig darf niemand die Preisrichter einteilen (die Bereiche hängen an diesen Nummern).
       await sperreEinteilung(tx, s.id);
+      // Festgeschrieben oder nicht: unter Zeilensperre frisch lesen. Schreibt ein zweiter Admin gerade fest, wartet der
+      // Aufruf und nummeriert danach nur nach (statt den festgeschriebenen Katalog neu zu nummerieren).
+      const [{ gedruckt }] = (await tx.select({ gedruckt: schau.katalogGedruckt }).from(schau).where(eq(schau.id, s.id)).for("update")) as [{ gedruckt: boolean }];
       // Unter der Sperre frisch laden (eine Meldung kann inzwischen bestätigt worden sein).
       const alle = await ladeEintraege(s.id, { nurBestaetigt: true, ex: tx });
       let geaendert = 0;
       const verletzt: string[] = [];
-      if (!s.katalogGedruckt) {
+      if (!gedruckt) {
         const gebunden = await bindungen(tx, alle.map((e) => e.id));
         if (gebunden.length) throw fehler("BAD_REQUEST", `Neu nummerieren geht nicht mehr – es gibt schon Bewertungen, Preise oder Verkäufe (z. B. ${gebunden[0]}). Bitte die Nummern festschreiben; neue Tiere bekommen dann Unternummern.`);
         const nummern = vergebeKatalognummern(alle.map(folge), opts);
@@ -754,11 +757,11 @@ export const katalogRouter = router({
         schauId: s.id,
         tabelle: "katalogeintrag",
         datensatzId: null,
-        aktion: s.katalogGedruckt ? "Nachmeldungen nummeriert" : "Katalognummern vergeben",
+        aktion: gedruckt ? "Nachmeldungen nummeriert" : "Katalognummern vergeben",
         neu: { anzahl: geaendert, ...(verletzt.length ? { ausserhalbDerFolge: verletzt } : {}) },
         akteur: ctx,
       });
-      return { geaendert, nachmeldungen: s.katalogGedruckt, ausserhalbDerFolge: verletzt, ohnePreisrichter: einteilung?.ohne ?? null, einteilung };
+      return { geaendert, nachmeldungen: gedruckt, ausserhalbDerFolge: verletzt, ohnePreisrichter: einteilung?.ohne ?? null, einteilung };
     });
   }),
 

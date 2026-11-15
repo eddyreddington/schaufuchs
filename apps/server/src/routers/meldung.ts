@@ -5,7 +5,7 @@ import { config } from "../config";
 import { db } from "../db/client";
 import { aussteller, katalogeintrag, meldung, schau, stiftung, zahlung } from "../db/schema";
 import { ladeEintraege, meldebetrag } from "../services/eintraege";
-import { offeneStornoZahlungen, pruefeNichtAbgeschlossen, sperreKasse, offenerLauf } from "../services/kasse";
+import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, offeneStornoZahlungen, offenerLauf, pruefeNichtAbgeschlossen, sperreKasse } from "../services/kasse";
 import { bindungen, hatAuszahlung, meldungEingabe, speichereMeldung } from "../services/meldung";
 import { sendeMail } from "../services/post";
 import { archiviereKassenbeleg } from "../services/kassenbuch";
@@ -232,6 +232,7 @@ export const meldungRouter = router({
           const quittung = await hatAuszahlung(tx, m.schauId, m.ausstellerId);
           if (quittung != null) gebunden.unshift(`Aussteller ist abgerechnet (Quittung ${quittung})`);
           if ((await offenerLauf(tx, m.schauId))?.posten.some((p) => p.ausstellerId === m.ausstellerId)) gebunden.unshift("Aussteller steht in der offenen SEPA-Datei");
+          if (await inOffenerLastschrift(tx, m.schauId, { meldungIds: [m.id] })) gebunden.unshift("Meldegeld steht in der offenen Lastschriftdatei");
           if (gebunden.length) throw fehler("BAD_REQUEST", `Die Meldung kann nicht mehr ${input.status === "storniert" ? "storniert" : input.status === "abgelehnt" ? "abgelehnt" : "zurückgesetzt"} werden: ${gebunden.join("; ")}.`);
         }
         await tx.update(meldung).set({ status: input.status }).where(eq(meldung.id, m.id));
@@ -283,6 +284,8 @@ export const meldungRouter = router({
       const z = await db.transaction(async (tx) => {
         // Gleiche Sperre wie bei Verkauf und Auszahlung: die Abrechnung sieht immer einen vollständigen Stand.
         await sperreKasse(tx, m.schauId);
+        // Steht das Meldegeld in der offenen Lastschriftdatei, zieht die Bank es ein – nicht zusätzlich kassieren.
+        if (await inOffenerLastschrift(tx, m.schauId, { meldungIds: [m.id] })) throw fehler("CONFLICT", LASTSCHRIFT_OFFEN);
         // Doppelt kassieren verhindern (zwei Helfer gleichzeitig, erneuter Klick nach Netzfehler): unter der Sperre neu rechnen.
         const b = await meldebetrag(tx, m.id);
         const offen = gefordertCent(b) - b.bezahltCent;
@@ -382,6 +385,11 @@ export const meldungRouter = router({
       const g = await db.transaction(async (tx) => {
         await sperreKasse(tx, m.schauId);
         if (z.stornoVon) throw fehler("BAD_REQUEST", "Eine Gegenbuchung lässt sich nicht stornieren.");
+        // Eine Lastschrift kommt nur über die Bank zurück: „Rücklastschrift“ auf der Seite Lastschrift (markiert auch den
+        // Posten im Lauf; zwei Wege hießen zweimal zurückbuchen).
+        if (z.art === "lastschrift") throw fehler("BAD_REQUEST", "Eine Lastschrift wird über „Rücklastschrift“ auf der Seite Lastschrift zurückgebucht.");
+        // Ein Storno ändert, was offen ist – die offene Lastschriftdatei zöge sonst den festen Betrag zusätzlich ein.
+        if (await inOffenerLastschrift(tx, m.schauId, { meldungIds: [m.id] })) throw fehler("CONFLICT", LASTSCHRIFT_OFFEN);
         const [schon] = await tx.select({ id: zahlung.id }).from(zahlung).where(eq(zahlung.stornoVon, z.id));
         if (schon) throw fehler("CONFLICT", "Diese Zahlung ist bereits storniert.");
         const [g] = await tx

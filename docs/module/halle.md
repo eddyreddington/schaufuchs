@@ -17,7 +17,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 | Druck, 3D | `hallenplan-druck.ts`, `hallenplan-3d.ts`, `stellvorschlaege.ts`, `kaefige.ts` | `zeichnungDerHalle()`, `richterFarbe()`, `hallenSzene()`, `stellVorschlaege()`, `kaefigTyp()`, `kaefigMass()` |
 | Server | `apps/server/src/routers/katalog.ts` (`katalogRouter`, ab `kaefigbedarf` bis `wandreiheStellen`) | `katalog.hallenplan`, `halleSetzen`, `planFestschreiben`, `planNeuSetzen` (`planNeuSetzenIn`), `stellVorschlaege`, `plattenSetzen`, `kaefigMassSetzen`; `halle.kaefigSetzen` (einzelnes Tier) |
 | PDF | `apps/server/src/pdf/hallenplan.ts` | `hallenplanPdf()`, `aufbaulistePdf()` |
-| Web | `apps/web/src/seiten/hallenplan.tsx` (⚠ 3.400 Z.), `hallenplan-werkzeuge.tsx`, `hallenplan-3d.tsx` (three.js, nur dynamisch geladen), `hallenplan-3d-seite.tsx`, `kaefige.tsx` | Editor = Seite; rechnet über `@schau/domain` selbst mit, speichert über `katalog.halleSetzen` |
+| Web | `apps/web/src/seiten/hallenplan.tsx` (⚠ 3.592 Z., offen: reine Planfunktionen wie `planKoerper`, `plattenDa`, `platzWeg` in die Domain ziehen und die Seite aufteilen), `hallenplan-werkzeuge.tsx`, `hallenplan-3d.tsx` (three.js, nur dynamisch geladen), `hallenplan-3d-seite.tsx`, `kaefige.tsx` | Editor = Seite; rechnet über `@schau/domain` selbst mit, speichert über `katalog.halleSetzen` |
 
 ## Regeln und Invarianten
 

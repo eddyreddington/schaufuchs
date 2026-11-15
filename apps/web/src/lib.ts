@@ -1,3 +1,5 @@
+import { heuteBerlin } from "@schau/domain";
+
 export { formatEuro, parseEuro, formatKatalognummer } from "@schau/domain";
 
 /** Lesbarer Fehlertext aus einer tRPC-Antwort, inklusive Feldfehlern der Eingabeprüfung. */
@@ -27,8 +29,9 @@ export function datumZeit(d: string | Date | null | undefined): string {
   return new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(d));
 }
 
+/** Heute in deutscher Zeit (JJJJ-MM-TT), wie auf dem Server (packages/domain/src/datum.ts). */
 export function heuteIso(): string {
-  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+  return heuteBerlin();
 }
 
 export function centZuText(cent: number | null | undefined): string {

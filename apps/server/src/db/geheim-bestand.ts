@@ -21,6 +21,9 @@ export async function pruefeDatenschluessel(db: typeof Db) {
     ["select kontoinhaber as w from aussteller where kontoinhaber like 'enc1:%' limit 1", "aussteller.kontoinhaber"],
     ["select totp_geheim as w from benutzer where totp_geheim like 'enc1:%' limit 1", "benutzer.totpGeheim"],
     ["select daten->>'enc' as w from sepa_lauf where daten ? 'enc' limit 1", "sepaLauf.daten"],
+    ["select iban as w from sepa_mandat where iban like 'enc1:%' limit 1", "sepaMandat.iban"],
+    ["select kontoinhaber as w from sepa_mandat where kontoinhaber like 'enc1:%' limit 1", "sepaMandat.kontoinhaber"],
+    ["select daten->>'enc' as w from lastschrift_lauf where daten ? 'enc' limit 1", "lastschriftLauf.daten"],
   ];
   for (const [q, feld] of proben) {
     const [z] = (await db.execute(sql.raw(q))) as unknown as { w: string }[];

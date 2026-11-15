@@ -21,6 +21,7 @@ import { trpc, type Ausgabe } from "../trpc";
 import { AutoAbmeldung } from "./verein-abmeldung";
 import { Druckvorlagen } from "./verein-druckvorlagen";
 import { SteuerAngaben } from "./verein-steuer";
+import { GlaeubigerId } from "./verein-lastschrift";
 import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, HilfeLink, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, SEITE, Seitenkopf, Speicherleiste, Suchfeld, Textfeld, useMeldung } from "../ui";
 
 type Angaben = Ausgabe["verein"]["get"]["angaben"];
@@ -40,6 +41,7 @@ export function Verein() {
       />
       {v.error ? <FehlerAnzeige fehler={v.error} nochmal={() => v.refetch()} /> : !v.data ? <Laden /> : <Angabenformular key={JSON.stringify(v.data.angaben)} daten={v.data} />}
       <SteuerAngaben />
+      <GlaeubigerId />
       <AutoAbmeldung />
       <Druckvorlagen />
       <Postausgang />
