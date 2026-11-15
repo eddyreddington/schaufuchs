@@ -174,7 +174,7 @@ Demo-Liste ist ein kleiner Auszug zum Ausprobieren.
 
 ## Noch nicht enthalten
 
-Lastschrift für das Standgeld (braucht SEPA-Mandate), Druck auf Endlospapier. **Kasse:** Ob die Verkaufsstelle eine TSE braucht (§ 146a AO), klärt
+Einzug des Standgelds per SEPA-Lastschrift (braucht SEPA-Mandate der Aussteller; Überweisungen an Aussteller gibt es). **Kasse:** Ob die Verkaufsstelle eine TSE braucht (§ 146a AO), klärt
 jeder Verein mit seinem Steuerberater.
 
 ## Lizenz
