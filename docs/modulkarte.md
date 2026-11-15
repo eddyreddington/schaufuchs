@@ -1062,14 +1062,14 @@ Prozeduren: auth.status, schau.absagen, schau.aktualisieren, schau.alsTestschau,
 
 ### fehler.tsx (42 Z.)
 
-### hallenplan-3d-landschaft.ts (286 Z.)
+### hallenplan-3d-landschaft.ts (287 Z.)
 Umgebung der 3D-Halle (nur zur Anschauung, ohne Maße): Himmel mit Wolken, Wiese, ein heller Hof um die Halle, vor dem Haupteingang ein Parkplatz, g …
 
 ### hallenplan-3d-seite.tsx (54 Z.) – `/schau/:schauId/hallenplan/3d`
 Hallenplan in 3D als eigene Seite (eigener Browser-Tab, ohne Seitenleiste): zeigt den gespeicherten Stand des Plans.
 Prozeduren: auth.status, katalog.hallenplan, schau.get
 
-### hallenplan-3d.tsx (954 Z. ⚠)
+### hallenplan-3d.tsx (959 Z. ⚠)
 Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben oder im Gang in Augenhöhe.
 
 ### hallenplan-aktionen.ts (206 Z.)
