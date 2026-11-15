@@ -1069,7 +1069,17 @@ Prozeduren: auth.status, katalog.hallenplan, schau.get
 ### hallenplan-3d.tsx (944 Z. ⚠)
 Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben oder im Gang in Augenhöhe.
 
-### hallenplan-bild.tsx (762 Z. ⚠)
+### hallenplan-aktionen.ts (206 Z.)
+Werkzeuge des Hallenplan-Editors für die Auswahl und für neue Teile: am Raster ausrichten, drehen, an den Platz zurück, Leeres entfernen, Teile und …
+
+### hallenplan-befehle.ts (286 Z.)
+Befehle des Hallenplan-Editors, die über den Entwurf hinausgehen: Rückgängig/Wiederholen, Tier versetzen, nach Plan nummerieren, Einstellungen der …
+Prozeduren: katalog.nummernNachPlan, katalog.tierVersetzen, katalog.wandreiheStellen
+
+### hallenplan-bild-bedienung.ts (307 Z.)
+Bedienung der Hallenplan-Zeichnung: Teile greifen, ziehen und loslassen (mit Prüfung gegen Wände und andere Teile), Auswahlrahmen, Fläche aufziehen …
+
+### hallenplan-bild.tsx (485 Z.)
 Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
 
 ### hallenplan-eigenschaften.tsx (535 Z.)
@@ -1078,12 +1088,19 @@ Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die
 ### hallenplan-entwuerfe.tsx (162 Z.)
 Prozeduren: hallenentwurf.entscheiden, hallenentwurf.laden, hallenentwurf.liste, hallenentwurf.loeschen, hallenentwurf.speichern, hallenentwurf.umbenennen
 
+### hallenplan-entwurf.ts (145 Z.)
+Entwurf des Hallenplan-Editors und alles, was ihn speichert: jede Änderung wirkt sofort im Entwurf und geht der Reihe nach an den Server (`kette`), …
+Prozeduren: katalog.halleSetzen, katalog.planFestschreiben, katalog.planNeuSetzen
+
 ### hallenplan-geometrie.ts (530 Z.)
 Reine Rechnungen des Hallenplan-Editors (ohne React): Auswahl und Teile, Lage und Versatz von Reihen, Platten und Objekten, Hindernisse (`planKoerp …
 
 ### hallenplan-teile.tsx (229 Z.)
 Kleine Teile des Hallenplans: Muster und Legende, Tiere ohne Platz, Sparten in den Reihen, Angaben zu einem Käfig, Schalter „Automatisch planen“.
 Prozeduren: katalog.kaefigInfo
+
+### hallenplan-uebersicht.tsx (201 Z.)
+Anzeige unter dem Hallenplan: Legende der Zeichnung, „Platz“ (gestellt, ohne Platz, frei) und die Aufbauliste je Reihe.
 
 ### hallenplan-vorschlaege.tsx (193 Z.)
 Stellvorschläge: dieselbe Halle in allen möglichen Aufstellungen, je mit Skizze (`HallenSkizze`).
@@ -1095,9 +1112,9 @@ Bausteine der Werkzeugleiste im Hallenplan-Editor: Symbole, Werkzeugknöpfe mit 
 ### hallenplan-werkzeugleiste.tsx (206 Z.)
 Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen, Zoom, Menü „Plan“).
 
-### hallenplan.tsx (1.197 Z. ⚠) – `/schau/:schauId/hallenplan`
+### hallenplan.tsx (472 Z.) – `/schau/:schauId/hallenplan`
 Seite „Hallenplan“: neue Halle anlegen und der Editor (`Plan`) mit Speichern, Rückgängig, Auswahl und Tastatur.
-Prozeduren: katalog.halleSetzen, katalog.hallenplan, katalog.nummernNachPlan, katalog.planFestschreiben, katalog.planNeuSetzen, katalog.tierVersetzen, katalog.wandreiheStellen
+Prozeduren: katalog.halleSetzen, katalog.hallenplan
 
 ### hilfe.tsx (182 Z.) – `/hilfe`, `/hilfe/:teil`
 Prozeduren: auth.status
