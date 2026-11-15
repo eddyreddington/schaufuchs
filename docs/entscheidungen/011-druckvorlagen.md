@@ -19,4 +19,4 @@ entscheiden, ohne dass jede Schau neu eingerichtet werden muss.
 - Erklärungen zum Drucker (Treiber-Formular, Perforation) stehen im Handbuch, nicht in der Oberfläche (008).
 
 **Folgen:** Briefe (Meldebestätigung, Abrechnung, Quittungen, Spendenquittung, Serienbrief) bekommen eine eigene
-Briefvorlage nach demselben Muster (Art „brief“ in derselben Tabelle).
+Briefvorlage nach demselben Muster (Art „brief“ in derselben Tabelle) – siehe 012.

@@ -25,6 +25,7 @@ import { SchauListe } from "./seiten/schau-liste";
 import { Stammdaten } from "./seiten/stammdaten";
 import { Uebersicht } from "./seiten/uebersicht";
 import { Verein } from "./seiten/verein";
+import { BriefvorlageSeite } from "./seiten/briefvorlage";
 import { DruckvorlageSeite } from "./seiten/druckvorlage";
 import { AusstellerSeite } from "./seiten/aussteller";
 import { Verkauf } from "./seiten/verkauf";
@@ -69,6 +70,7 @@ export const router = createBrowserRouter([
           { path: "benutzer/:benutzerId", element: <BenutzerSeite /> },
           { path: "verein", element: <Verein /> },
           { path: "verein/druckvorlagen/:vorlageId", element: <DruckvorlageSeite /> },
+          { path: "verein/briefvorlage", element: <BriefvorlageSeite /> },
           { path: "aussteller", element: <AusstellerSeite /> },
           {
             path: "schau/:schauId",

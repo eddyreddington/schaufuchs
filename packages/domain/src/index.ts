@@ -35,3 +35,4 @@ export * from "./hallenplan-versetzen";
 export * from "./ruecksprung";
 export * from "./abmeldung";
 export * from "./druckvorlage";
+export * from "./briefvorlage";

@@ -28,17 +28,28 @@ export function Druckvorlagen() {
         <span className="flex flex-wrap items-center gap-3">
           <HilfeLink abschnitt="druckvorlagen">Hilfe zu Druckvorlagen</HilfeLink>
           <Link to="/verein/druckvorlagen/neu" className={knopfKlasse("zweit")}>
-            Neue Vorlage
+            Neue Bewertungskarte
           </Link>
         </span>
       }
     >
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-y border-linie py-2">
+        <div className="min-w-0 flex-1">
+          <Link to="/verein/briefvorlage" className="font-semibold text-tinte no-underline hover:underline">
+            Briefvorlage
+          </Link>
+          <span className="block text-sm text-grau">Briefbogen, Fußzeile und Texte für Meldebestätigung, Abrechnung, Quittungen und Serienbriefe</span>
+        </div>
+        <Link to="/verein/briefvorlage#serienbrief" className={knopfKlasse("leise")}>
+          Serienbrief
+        </Link>
+      </div>
       {q.error ? (
         <FehlerAnzeige fehler={q.error} nochmal={() => q.refetch()} />
       ) : !q.data ? (
         <Laden />
       ) : q.data.length === 0 ? (
-        <Leer titel="Noch keine eigene Vorlage">Ohne Vorlage druckt SchauFUCHS die Bewertungskarten in DIN A6, vier je A4-Bogen.</Leer>
+        <Leer titel="Noch keine eigene Bewertungskarte">Ohne Vorlage druckt SchauFUCHS die Bewertungskarten in DIN A6, vier je A4-Bogen.</Leer>
       ) : (
         <ul className="divide-y divide-linie border-y border-linie">
           {q.data.map((v) => (

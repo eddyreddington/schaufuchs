@@ -48,6 +48,21 @@ Tests: `abmeldung.test.ts`
 - `pruefeBesatz()` – Hinweis, wenn der gemeldete Besatz nicht der Vorgabe entspricht (der Preisrichter vergibt dann o.B.).
 - `tierzahl()` – Anzahl der Tiere hinter einer Geschlechtsangabe: „1,0“ → 1, „1,2“ → 3, „3,3“ → 6. Für Aufzeichnungen über abgegebene Tiere (Stamm und Voliere zähle …
 
+### briefvorlage.ts (117 Z.)
+Briefvorlage des Vereins: wie Briefe aussehen (DIN 5008 für Fensterumschläge, Briefkopf, Fußzeile) und welche Texte in ihnen stehen.
+Tests: `briefvorlage.test.ts`
+
+- `BRIEF_PLATZHALTER` – Platzhalter, die in Brieftexten erlaubt sind, mit Erklärung für die Oberfläche.
+- `BRIEF_VORGABE` – So sahen Briefe bisher aus – Ausgangspunkt jeder Vorlage.
+- `anschriftfeld()` – Lage des Anschriftfelds nach DIN 5008 in mm (Form A / B): oben links, Rücksendezone zuerst, dann die Anschrift.
+- `falzmarkenMm()` – Falz- und Lochmarken (mm von oben) je Form.
+- `fuelle()` – Setzt Platzhalter ein; unbekannte bleiben, wie sie sind (siehe unbekanntePlatzhalter).
+- `unbekanntePlatzhalter()` – Platzhalter im Text, die es nicht gibt (Tippfehler wie {Vornahme}) – zum Anzeigen vor dem Speichern.
+- `briefWerte()` – Werte der Platzhalter für einen Empfänger.
+- `BRIEFKOPF_ZEILEN` – Höchstzahl der Zeilen im Briefkopf (Form B: alle drei, Form A: zwei; der Rest wird beim Drucken mit „…“ gekürzt).
+- `briefVorlageLesen()` – Gespeicherten Wert in eine gültige Vorlage bringen; Fehlendes gilt als Vorgabe.
+- Typen: `BriefPlatzhalter`, `BriefVorlage`
+
 ### datenschutz.ts (204 Z.)
 Datenschutz und Anbieterkennzeichnung: Speicherfristen und Mustertexte für Impressum und Datenschutzhinweise.
 
@@ -319,7 +334,7 @@ Hallenplan: Wie stehen die Käfige in der Halle?
 - `frontFehler()` – Käfigfronten, die nicht zu einem Gang zeigen: Die Front (Gitter) eines Käfigs ist offen, Rück- und Seitenwände sind dicht – vor jeder Front muss ei …
 - Typen: `HallenFlaeche`, `Halle`, `Drehung`, `HallenObjekt`, `Hauptgang`, `PlanKaefig`, `Reihe`, `FreierPlatz`, `PlanPlatte`, `PlanObjekt`, `Hallenplan`
 
-### index.ts (37 Z.)
+### index.ts (38 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -629,7 +644,7 @@ Setzt Teile zu einem Router zusammen.
 - `richter.preisEntfernen` mutation · richter
 - `richter.obmannBestaetigen` mutation · richter
 
-### routers/druckvorlage.ts (111 Z.) → `druckvorlage`
+### routers/druckvorlage.ts (141 Z.) → `druckvorlage`
 Druckvorlagen (vorerst Bewertungskarte): Vorlagen des Vereins anlegen, ändern, löschen; je Schau eine auswählen oder für die Schau abwandeln (eigen …
 
 - `druckvorlage.liste` query · admin – Alle Kartenvorlagen des Vereins: die allgemeinen und die für einzelne Schauen abgewandelten.
@@ -639,6 +654,9 @@ Druckvorlagen (vorerst Bewertungskarte): Vorlagen des Vereins anlegen, ändern, 
 - `druckvorlage.fuerSchau` query · admin – Welche Vorlage eine Schau nutzt (null = Vorgabe) und welche zur Wahl stehen.
 - `druckvorlage.waehlen` mutation · admin – Vorlage für eine Schau wählen (Vereinsvorlage oder die eigene Fassung dieser Schau; null = Vorgabe).
 - `druckvorlage.fuerSchauAnpassen` mutation · admin – Für diese Schau abwandeln: Kopie der gewählten Vorlage (oder der Vorgabe) nur für diese Schau, gleich gewählt.
+- `druckvorlage.brief` query · admin – Briefvorlage des Vereins und die Vorgabe (zum Zurücksetzen einzelner Texte).
+- `druckvorlage.briefSpeichern` mutation · admin
+- `druckvorlage.serienbriefAnzahl` query · admin – Wie viele Empfänger ein Serienbrief mit dieser Auswahl hätte (vor dem Erzeugen anzeigen).
 
 ### routers/kasse.ts (714 Z. ⚠) → `kasse`
 
@@ -841,7 +859,10 @@ Prozeduren: auth.benutzerAbmelden, auth.benutzerAktiv, auth.benutzerAnlegen, aut
 ### bewertung.tsx (326 Z.) – `/schau/:schauId/bewertung`
 Prozeduren: auth.status, bewertung.liste, bewertung.obmannBestaetigen, bewertung.setzen, bewertung.zuruecksetzen
 
-### druckvorlage-vorschau.tsx (105 Z.)
+### briefvorlage.tsx (237 Z.) – `/verein/briefvorlage`
+Prozeduren: druckvorlage.brief, druckvorlage.briefSpeichern, druckvorlage.serienbriefAnzahl, schau.liste
+
+### druckvorlage-vorschau.tsx (147 Z.)
 
 ### druckvorlage.tsx (230 Z.) – `/verein/druckvorlagen/:vorlageId`
 Prozeduren: druckvorlage.liste, druckvorlage.speichern, druckvorlage.vorgabe
@@ -852,7 +873,7 @@ Prozeduren: auth.einladungAnnehmen, auth.einladungPruefen, auth.status
 ### einlieferung.tsx (489 Z.) – `/schau/:schauId/einlieferung`
 Prozeduren: auth.status, halle.gesundheit, halle.gesundheitErfassen, halle.gesundheitFreigeben, halle.kaefigSetzen, halle.ringnummerSetzen, halle.statusSetzen, halle.suche, halle.vetSetzen, meldung.zahlungErfassen, schau.get
 
-### einstellungen-druck.tsx (57 Z.)
+### einstellungen-druck.tsx (60 Z.)
 Prozeduren: druckvorlage.fuerSchau, druckvorlage.fuerSchauAnpassen, druckvorlage.waehlen
 
 ### einstellungen-vetamt.tsx (87 Z.)
@@ -936,7 +957,7 @@ Prozeduren: auth.status, schau.phaseSetzen, schau.uebersicht
 ### verein-abmeldung.tsx (58 Z.)
 Prozeduren: verein.abmeldung, verein.abmeldungSpeichern
 
-### verein-druckvorlagen.tsx (64 Z.)
+### verein-druckvorlagen.tsx (75 Z.)
 Prozeduren: druckvorlage.liste, druckvorlage.loeschen
 
 ### verein.tsx (542 Z.) – `/verein`
@@ -967,6 +988,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `protokoll.ts` (37 Z.) · protokolliere
 - `pruefung.ts` (366 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, kontingente, checkliste
 - `rassebild.ts` (86 Z.) – Rassebilder für den Katalog: prüfen und speichern (Oberfläche und Einspielen aus dem Netz). · RASSEBILD_MAX_BYTES, jpegAnzeige, oeffneBild, pruefeRassebild, speichereRassebild
+- `serienbrief.ts` (34 Z.) – Empfänger eines Serienbriefs: Vereinsmitglieder, alle Aussteller des Vereins oder die Aussteller mit bestätigter Meldung zu einer Schau. · SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger
 - `termine.ts` (253 Z.) – Kommende Schauen: Termine für die Katalogseite, abonnierte Kalender (iCal) abrufen und abgleichen, eigene Schauen als Kalender. · KALENDER_MAX_BYTES, ladeKommende, eigeneSchauenFuerKalender, istInterneAdresse, sichereAufloesung, pruefeKalenderAdresse, holeKalender, aboAbrufen, alleAbosAbrufen, starteTerminabruf
 - `testschau.ts` (164 Z.) – Testschauen (Üben, Vorführen) sind von echten Schauen getrennt: Aussteller, die in einer Testschau angelegt oder gemeldet werden, gehören nur ihr ( … · sperreTestschauGeteilt, ausstellerDerSchau, echteAussteller, testSchauIdFuer, pruefeAusstellerZurSchau, sperreTestschauExklusiv, testschauVorschau, KOPIE_AKTION, testKopienVon, kennzeichneAlsTestschau
 - `textbausteine-grundbestand.ts` (709 Z. ⚠) · TEXTBAUSTEINE_LISTE
@@ -981,9 +1003,13 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 ### PDFs `apps/server/src/pdf`
 
 - `auskunft.ts` (243 Z.) · auskunftPdf
-- `basis.ts` (404 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, seitenzahlen, tabelle, textImFeld, angaben, hinweisKasten, unterschrift, ueberschrift, datumDe
+- `basis.ts` (425 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, teilSeite, seitenzahlen, tabelle, textImFeld, angaben, hinweisKastenHoehe, hinweisKasten, unterschrift, ueberschrift, datumDe
 - `bewertungskarte.ts` (325 Z.) – Bewertungskarten nach der Druckvorlage der Schau (Format, Bausteine oder Vordruck-Felder, Versatz) – dazu die Vorschau für den Designer und der Pro … · ladeKartenVorlage, kartenKopf, bewertungskartenPdf, BEISPIEL_KARTEN, zeichneKartenPdf, probedruckPdf
-- `dokumente.ts` (1.128 Z. ⚠) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf, kaufbelegPdf, verkaufslistePdf, tierlistePdf, kassenberichtPdf, kassenbelegPdf
+- `brief.ts` (136 Z.) – Briefe nach der Briefvorlage des Vereins (DIN 5008, Form A oder B): Briefkopf, Rücksendeangabe, Anschrift, Informationsblock, Falzmarken und Fußzeile. · BRIEF_RAENDER, ladeBriefVorlage, briefDesign, briefKopf, belegKopf, briefFuss, serienbriefPdf
+- `dokumente-amt.ts` (245 Z.) – Listen für das Veterinäramt: abgegebene Tiere (Verkaufsliste) und Aussteller- und Tierliste. · verkaufslistePdf, tierlistePdf
+- `dokumente-gemeinsam.ts` (35 Z.) – Gemeinsame Hilfen der Dokumente einer Schau (dokumente.ts, dokumente-kasse.ts, dokumente-amt.ts): Design aus der Katalog-Gestaltung, Vereinsname, K … · nr, klasse, tier, A4_RAENDER, ladeDesign, verein, kopfzeile, fusstext, breite, unten
+- `dokumente-kasse.ts` (344 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
+- `dokumente.ts` (533 Z.) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf
 - `hallenplan.ts` (403 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog.ts` (1.493 Z. ⚠) · KURZ_JE_ABTEILUNG, kurzauswahl, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis, katalogPdf
@@ -1000,8 +1026,8 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 - `auth.ts` (189 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
 - `config.ts` (30 Z.) · config
-- `datei-druckvorlage.ts` (67 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien
-- `index.ts` (935 Z. ⚠)
+- `datei-druckvorlage.ts` (125 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien, briefDateien
+- `index.ts` (936 Z. ⚠)
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
 - `router.ts` (38 Z.) · appRouter
@@ -1021,7 +1047,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `pdf-anzeige.tsx` (43 Z.) – PDF im Browser anzeigen (pdf.js), gemeinsam für die Live-Vorschauen von Katalog und Druckvorlagen. · pdfjs, PdfSeite
 - `rahmen.tsx` (523 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
 - `rolle.ts` (9 Z.) · useIstAdmin
-- `routes.tsx` (104 Z.) · router
+- `routes.tsx` (106 Z.) · router
 - `symbole.tsx` (41 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui.tsx` (621 Z. ⚠) · knopfKlasse, Knopf, KnopfLink, Feld, useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter, Eingabe, Textfeld, Auswahl, Haken, Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, SpeicherPlatz, Speicherleiste, Kennzahlen, Leer, Laden, FehlerAnzeige, Dialog, FragenAnbieter, useFrage, MeldungenAnbieter, useMeldung
@@ -1077,5 +1103,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `45-hallenplan-tier-versetzen.ts` (163 Z.) – Tiere im Halleneditor versetzen (Rückmeldung 15.11.2026: „ich will auch käfige frei zuordnen können im halleneditor und ggf tiere versetzen“): nur …
 - `46-automatische-abmeldung.ts` (64 Z.) – Automatische Abmeldung nach Untätigkeit (Rückmeldung 15.11.2026): Frist je Rolle unter „Verein und Datenschutz“, nur die angebotenen Minuten, Proto …
 - `47-druckvorlagen.ts` (112 Z.) – Druckvorlagen für Bewertungskarten: Vorlagen des Vereins speichern, je Schau wählen, für eine Schau abwandeln, löschen (Schau druckt dann wieder mi …
+- `48-briefvorlage.ts` (116 Z.) – Briefvorlage des Vereins: speichern (Protokoll), eigene Texte im B-Bogen, Serienbrief an Mitglieder, alle Aussteller oder die einer Schau – ohne ge …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

@@ -80,3 +80,4 @@ import "./tests/44-pruefliste-hallenplan";
 import "./tests/45-hallenplan-tier-versetzen";
 import "./tests/46-automatische-abmeldung";
 import "./tests/47-druckvorlagen";
+import "./tests/48-briefvorlage";

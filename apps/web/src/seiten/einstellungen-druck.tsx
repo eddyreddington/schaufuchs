@@ -50,6 +50,9 @@ export function DruckAbschnitt({ schauId, darfAendern }: { schauId: number; darf
           <Link to={`/verein#druckvorlagen`} className={knopfKlasse("leise")}>
             Vorlagen des Vereins
           </Link>
+          <Link to="/verein/briefvorlage" className={knopfKlasse("leise")}>
+            Briefvorlage
+          </Link>
         </div>
       )}
     </Abschnitt>

@@ -224,9 +224,10 @@ export function briefkopf(
 }
 
 /** Fußzeile auf allen Seiten: links Veranstalter/Kontakt, rechts „Seite x von n“. */
-export function fusszeilen(doc: Doc, linksText: string) {
+export function fusszeilen(doc: Doc, linksText: string, anfaenge?: number[]) {
   const range = doc.bufferedPageRange();
   for (let i = range.start; i < range.start + range.count; i++) {
+    const { nr, von } = teilSeite(i - range.start, range.count, anfaenge);
     doc.switchToPage(i);
     const rand = doc.page.margins.bottom;
     doc.page.margins.bottom = 0;
@@ -236,10 +237,21 @@ export function fusszeilen(doc: Doc, linksText: string) {
     doc.save().lineWidth(0.3).strokeColor(HAARLINIE).moveTo(x, y - 4).lineTo(x + w, y - 4).stroke().restore();
     doc.font(SANS).fontSize(7).fillColor(GRAU);
     doc.text(linksText, x, y, { width: w * 0.75, lineBreak: false, ellipsis: true });
-    doc.text(`Seite ${i + 1} von ${range.count}`, x, y, { width: w, align: "right", lineBreak: false });
+    doc.text(`Seite ${nr} von ${von}`, x, y, { width: w, align: "right", lineBreak: false });
     doc.page.margins.bottom = rand;
     doc.fillColor(TINTE);
   }
+}
+
+/**
+ * Seitenzahl innerhalb eines Teils: Ein PDF mit mehreren Briefen (Serienbrief, Ausstellerunterlagen) zählt je Brief.
+ * `anfaenge` sind die Seitenindizes (ab 0), auf denen ein neuer Brief beginnt; ohne zählt das ganze PDF.
+ */
+export function teilSeite(i: number, anzahl: number, anfaenge?: number[]): { nr: number; von: number } {
+  if (!anfaenge?.length) return { nr: i + 1, von: anzahl };
+  const start = Math.max(0, ...anfaenge.filter((a) => a <= i));
+  const ende = Math.min(anzahl, ...anfaenge.filter((a) => a > i));
+  return { nr: i - start + 1, von: ende - start };
 }
 
 /** Alte Fußzeile („Seite x von n“) – Name für bestehende Aufrufe. */
@@ -364,12 +376,21 @@ export function angaben(doc: Doc, zeilen: [string, string][], x: number, y: numb
 }
 
 /** Getönter Kasten mit Farbkante, z. B. für Hinweise. Gibt das untere y zurück. */
-export function hinweisKasten(doc: Doc, d: Design, titel: string, punkte: string[], x: number, y: number, w: number, groesse = 8.5): number {
+/** Höhe, die hinweisKasten() für diese Punkte braucht – zum Prüfen, ob er noch auf die Seite passt. */
+export function hinweisKastenHoehe(doc: Doc, punkte: string[], w: number, groesse = 8.5): number {
+  return kastenMasse(doc, punkte, w, groesse).h;
+}
+
+function kastenMasse(doc: Doc, punkte: string[], w: number, groesse: number) {
   const innen = 4 * MM;
   const tb = w - 2 * innen - 8;
   doc.font(SANS).fontSize(groesse);
   const hoehen = punkte.map((t) => doc.heightOfString(t, { width: tb, lineGap: 1 }));
-  const h = innen + 12 + hoehen.reduce((n, v) => n + v + 3, 0) - 3 + innen;
+  return { innen, tb, hoehen, h: innen + 12 + hoehen.reduce((n, v) => n + v + 3, 0) - 3 + innen };
+}
+
+export function hinweisKasten(doc: Doc, d: Design, titel: string, punkte: string[], x: number, y: number, w: number, groesse = 8.5): number {
+  const { innen, tb, hoehen, h } = kastenMasse(doc, punkte, w, groesse);
   doc.save().fillOpacity(0.08).rect(x, y, w, h).fill(d.flaeche).restore();
   doc.save().rect(x, y, 2.2, h).fill(d.flaeche).restore();
   kicker(doc, titel, x + innen, y + innen, d.farbe, w - 2 * innen);

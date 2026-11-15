@@ -317,7 +317,7 @@ Unter „Automatische Abmeldung“ legen Sie fest, nach wie vielen Minuten ohne 
 
 ### 3.8 Druckvorlagen
 
-Unter „Druckvorlagen“ legen Sie fest, wie die Bewertungskarten gedruckt werden. Ohne eigene Vorlage druckt SchauFUCHS sie in DIN A6, vier je A4-Bogen. „Neue Vorlage“ öffnet den Designer: links die Einstellungen, rechts ein Bogen mit Beispielkarten, der sich bei jeder Änderung neu aufbaut. Gespeichert wird erst mit „Speichern“; jede Änderung steht im Protokoll.
+Unter „Druckvorlagen“ legen Sie fest, wie die Bewertungskarten gedruckt werden. Ohne eigene Vorlage druckt SchauFUCHS sie in DIN A6, vier je A4-Bogen. „Neue Bewertungskarte“ öffnet den Designer: links die Einstellungen, rechts ein Bogen mit Beispielkarten, der sich bei jeder Änderung neu aufbaut. Gespeichert wird erst mit „Speichern“; jede Änderung steht im Protokoll.
 
 - **Papier:** DIN A6 (vier je A4-Bogen), DIN A5 (zwei je A4-Bogen, quer), DIN A4 (eine je Seite) oder „Endlospapier oder eigenes Maß“ mit Bogenbreite und -länge in Millimetern (12 Zoll = 304,8 mm, 6 Zoll = 152,4 mm) und der Zahl der Karten neben- und untereinander.
 - **Feinabstimmung:** „Versatz nach rechts“ und „Versatz nach unten“ verschieben alles um Millimeter; die „Längenkorrektur“ in Prozent gleicht Endlospapier aus, das über viele Bögen wegläuft.
@@ -328,6 +328,19 @@ Unter „Druckvorlagen“ legen Sie fest, wie die Bewertungskarten gedruckt werd
 **Vorlage für eine Schau:** In den Einstellungen der Schau wählen Sie im Abschnitt „Druck“ die Vorlage für die Bewertungskarten. „Für diese Schau anpassen“ legt eine Kopie nur für diese Schau an und öffnet sie im Designer; die Vorlage des Vereins bleibt dabei unverändert. Wird eine gewählte Vorlage gelöscht, druckt die Schau wieder mit der Vorgabe.
 
 **Endlospapier am Drucker:** Das PDF hat genau die Größe eines Bogens. Unter Windows legen Sie dafür einmal ein eigenes Papierformat an (Druckserver-Eigenschaften, Formular mit Breite × Länge) und wählen es beim Drucken. Im Drucker stellen Sie die Bogenlänge ein und schalten „Perforation überspringen“ aus. Drucken Sie mit „Tatsächliche Größe“ bzw. 100 %, ohne Anpassen an die Seite.
+
+### 3.9 Briefvorlage
+
+Die Briefvorlage bestimmt, wie Briefe des Vereins aussehen: Meldebestätigung (B-Bogen), Abrechnung je Aussteller, Quittungen und Serienbriefe. Sie öffnen sie unter „Druckvorlagen“ → „Briefvorlage“ oder in den Einstellungen einer Schau im Abschnitt „Druck“. Rechts steht ein Beispielbrief, der sich bei jeder Änderung neu aufbaut. Gespeichert wird erst mit „Speichern“; jede Änderung steht im Protokoll. Die Vorlage gilt für alle Schauen des Vereins.
+
+- **Briefbogen:** „Form B“ (großer Briefkopf, üblich) oder „Form A“ (kleiner Briefkopf) nach DIN 5008. Die Anschrift sitzt so, dass sie im Fenster eines DL- oder C6/5-Umschlags zu sehen ist. Der „Briefkopf“ hat bis zu drei Zeilen (bei Form A passen zwei), die erste fett; leer stehen dort Vereinsname und Schau. „Absender über der Anschrift“ ist die kleine Zeile im Fenster. „Logo der Schau“, „Farbig“ (aus: nur Schwarz und Grau) und „Falz- und Lochmarken“ schalten Sie ein und aus.
+- **Fußzeile:** drei Spalten, z. B. Anschrift, Bankverbindung und Vorstand. Sind alle leer, steht unten wie bisher der Vereinsname in einer Zeile.
+- **Meldebestätigung:** Einleitung über der Liste der Tiere, Hinweise zur Einlieferung (je Zeile ein Hinweis, im Kasten „Zur Einlieferung“) und ein Gruß darunter. Wie der B-Bogen damit aussieht, sehen Sie beim Drucken der Ausstellerunterlagen einer Schau.
+- **Serienbrief:** Betreff, Text und Gruß, mit denen jeder neue Serienbrief beginnt.
+- **Platzhalter:** In allen Texten setzt SchauFUCHS für jeden Empfänger ein: `{Anrede}` („Guten Tag Vorname Nachname“), `{Vorname}`, `{Nachname}`, `{Name}`, `{Verein}`, `{Schau}`, `{Ort}`, `{Meldeschluss}`, `{Einlieferung}`, `{Datum}`. Ein vertippter Platzhalter wie `{Vornahme}` bleibt so im Brief stehen; die Seite warnt davor.
+- „Vorgabe einsetzen“ stellt die Texte eines Briefs wieder so her, wie SchauFUCHS sie mitbringt.
+
+**Serienbrief erstellen:** Unten auf der Seite wählen Sie die Empfänger: „Vereinsmitglieder“, „Alle Aussteller“ oder „Aussteller einer Schau“ (alle mit bestätigter Meldung zu dieser Schau). Darunter steht, wie viele es sind und wie vielen eine vollständige Anschrift fehlt. Gesperrte und gelöschte Aussteller und Test-Aussteller bekommen keinen Brief. Betreff und Text können Sie für diesen Brief ändern, ohne die Vorlage zu ändern. „Serienbrief als PDF“ öffnet ein PDF mit einer Seite je Empfänger zum Drucken. Der Serienbrief nutzt immer die gespeicherte Vorlage; speichern Sie Änderungen am Briefbogen also vorher.
 
 ## 4. Rassen und Farbenschläge
 

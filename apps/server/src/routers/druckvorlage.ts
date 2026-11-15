@@ -3,22 +3,24 @@
  * für die Schau abwandeln (eigene Kopie mit schauId). Gelesen wird der Inhalt immer über kartenVorlageLesen(), damit
  * nur gültige Werte gespeichert und gedruckt werden. Jede Änderung steht im Protokoll.
  */
-import { KARTEN_VORGABE, kartenVorlageLesen } from "@schau/domain";
-import { and, asc, eq } from "drizzle-orm";
+import { BRIEF_VORGABE, briefVorlageLesen, KARTEN_VORGABE, kartenVorlageLesen } from "@schau/domain";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/client";
 import { druckvorlage, schau } from "../db/schema";
+import { ladeBriefVorlage } from "../pdf/brief";
 import { protokolliere } from "../services/protokoll";
+import { SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger } from "../services/serienbrief";
 import { adminProcedure, dbId, fehler, ladeSchau, router } from "../trpc";
 
 const name = z.string().trim().min(1, "Name fehlt.").max(80);
 
-/** Vorlage des Vereins laden – eine fremde gilt als nicht vorhanden. */
+/** Bewertungskarten-Vorlage des Vereins laden – eine fremde oder die Briefvorlage gilt als nicht vorhanden. */
 async function ladeVorlage(organisationId: number, id: number) {
   const [v] = await db
     .select()
     .from(druckvorlage)
-    .where(and(eq(druckvorlage.id, id), eq(druckvorlage.organisationId, organisationId)));
+    .where(and(eq(druckvorlage.id, id), eq(druckvorlage.organisationId, organisationId), eq(druckvorlage.art, "bewertungskarte")));
   if (!v) throw fehler("NOT_FOUND", "Vorlage nicht gefunden.");
   return v;
 }
@@ -107,5 +109,33 @@ export const druckvorlageRouter = router({
       return { id: neu!.id };
     });
   }),
-});
 
+  // ── Briefvorlage (eine je Verein) ──────────────────────────────────────
+
+  /** Briefvorlage des Vereins und die Vorgabe (zum Zurücksetzen einzelner Texte). */
+  brief: adminProcedure.query(async ({ ctx }) => ({ vorlage: await ladeBriefVorlage(ctx.benutzer.organisationId), vorgabe: BRIEF_VORGABE })),
+
+  briefSpeichern: adminProcedure.input(z.object({ daten: z.unknown() })).mutation(async ({ ctx, input }) => {
+    const daten = briefVorlageLesen(input.daten);
+    const org = ctx.benutzer.organisationId;
+    await db.transaction(async (tx) => {
+      const [alt] = await tx
+        .select()
+        .from(druckvorlage)
+        .where(and(eq(druckvorlage.organisationId, org), eq(druckvorlage.art, "brief"), isNull(druckvorlage.schauId)))
+        .orderBy(asc(druckvorlage.id))
+        .limit(1);
+      if (alt) await tx.update(druckvorlage).set({ daten }).where(eq(druckvorlage.id, alt.id));
+      const id = alt?.id ?? (await tx.insert(druckvorlage).values({ organisationId: org, art: "brief", name: "Briefvorlage", daten }).returning({ id: druckvorlage.id }))[0]!.id;
+      await protokolliere(tx, { schauId: null, tabelle: "druckvorlage", datensatzId: id, aktion: "Briefvorlage gespeichert", alt: alt?.daten ?? null, neu: daten, akteur: ctx });
+    });
+    return { ok: true };
+  }),
+
+  /** Wie viele Empfänger ein Serienbrief mit dieser Auswahl hätte (vor dem Erzeugen anzeigen). */
+  serienbriefAnzahl: adminProcedure.input(z.object({ auswahl: z.enum(SERIENBRIEF_AUSWAHL), schauId: dbId.optional() })).query(async ({ ctx, input }) => {
+    if (input.auswahl === "schau" && input.schauId != null) await ladeSchau(ctx.benutzer.organisationId, input.schauId);
+    const liste = await serienbriefEmpfaenger(ctx.benutzer.organisationId, input.auswahl, input.schauId);
+    return { anzahl: liste.length, ohneAnschrift: liste.filter((a) => !a.strasse.trim() || !a.ort.trim()).length };
+  }),
+});
