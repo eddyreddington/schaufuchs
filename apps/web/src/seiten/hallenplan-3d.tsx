@@ -11,6 +11,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { HilfeLink, Knopf, KnopfLink } from "../ui";
+import { baueLandschaft } from "./hallenplan-3d-landschaft";
 
 const M = 0.01; // cm → m
 
@@ -197,7 +198,6 @@ function baueWelt(kasten: HTMLDivElement, s: HallenSzene, richterIndex: Map<numb
   renderer.domElement.setAttribute("aria-label", "Halle räumlich");
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#dfe5ec");
   /** Was ins 3D-Modell kommt (ohne Beschriftungen). */
   const modell = new THREE.Group();
   modell.name = "Halle";
@@ -212,9 +212,9 @@ function baueWelt(kasten: HTMLDivElement, s: HallenSzene, richterIndex: Map<numb
   const groesse = Math.max(B, L);
   const mitte = new THREE.Vector3(B / 2, 0, L / 2);
 
-  // Licht: Himmel und Boden, dazu Sonne mit Schatten über der Halle.
-  scene.add(new THREE.HemisphereLight("#ffffff", "#b9b2a5", 1.6));
-  const sonne = new THREE.DirectionalLight("#ffffff", 1.6);
+  // Licht: Himmel (leicht blau) und Wiese, dazu eine warme Sonne mit Schatten über der Halle.
+  scene.add(new THREE.HemisphereLight("#e4efff", "#a7b48c", 1.55));
+  const sonne = new THREE.DirectionalLight("#fff1dc", 1.75);
   sonne.position.set(mitte.x - groesse * 0.4, groesse * 0.9, mitte.z - groesse * 0.3);
   sonne.target.position.copy(mitte);
   sonne.castShadow = true;
@@ -228,11 +228,8 @@ function baueWelt(kasten: HTMLDivElement, s: HallenSzene, richterIndex: Map<numb
   sonne.shadow.bias = -0.0005;
   scene.add(sonne, sonne.target);
 
-  // Boden: Hallenboden mit Meterraster, außen Gelände.
-  const gelaende = new THREE.Mesh(merk(new THREE.PlaneGeometry(groesse * 6, groesse * 6)), merk(new THREE.MeshStandardMaterial({ color: "#c9cfc3" })));
-  gelaende.rotation.x = -Math.PI / 2;
-  gelaende.position.set(mitte.x, -0.02, mitte.z);
-  scene.add(gelaende);
+  // Außen: Himmel, Wiese, Hof, Bäume und Hügel (hallenplan-3d-landschaft.ts); innen der Hallenboden mit Meterraster.
+  baueLandschaft(scene, B, L, merk);
   const boden = new THREE.Mesh(merk(new THREE.PlaneGeometry(B, L)), merk(new THREE.MeshStandardMaterial({ color: "#ecdcbc" })));
   boden.rotation.x = -Math.PI / 2;
   boden.position.set(B / 2, 0, L / 2);
