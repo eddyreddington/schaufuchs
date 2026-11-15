@@ -251,28 +251,6 @@ Tests: `hallenplan-neu.test.ts`
 - `fehlendeImPlan()` – Stellen für die Tiere ohne Platz – dieselbe Suche für „Plan neu setzen“ und den Knopf „Alle fehlenden Käfige einsetzen“ (siehe `fehlendeEinsetzen`) …
 - `vonHandGeplant()` – Steht im Plan etwas von Hand Geplantes, das beim Neu-Setzen wegfiele?
 
-### hallenplan-umriss.ts (229 Z.)
-Freier Grundriss der Halle (Entscheidung 019): ein rechtwinkliges Vieleck in Hallenkoordinaten (cm, x nach rechts entlang der Breite, y nach unten …
-Tests: `hallenplan-umriss.test.ts`
-
-- `WandAussen` (Typ) – Seite, nach der eine Wand außen zeigt (wie man auf den Plan schaut).
-- `UMRISS_MIN` – Mindestmaß des Grundrisses (cm), wie bei der rechteckigen Halle.
-- `rechteckUmriss()`
-- `umrissVon()` – Umriss einer Halle: der gezeichnete oder das Rechteck aus Breite und Länge.
-- `umrissFlaeche()`
-- `umrissMasse()`
-- `umrissNormal()` – Einheitliche Form: links oben bei 0/0, im Uhrzeigersinn, ohne doppelte Ecken und ohne Ecken mitten auf einer geraden Wand, Beginn an der obersten, …
-- `pruefeUmriss()` – Ist der Grundriss gültig?
-- `punktInUmriss()` – Liegt der Punkt in der Halle?
-- `umrissSperren()` – Was im umschließenden Rechteck außerhalb der Halle liegt, als möglichst wenige Rechtecke (Zeilen zusammengefasst, dann gleich breite Stücke unterei …
-- `umrissKanten()` – Wände des Grundrisses mit ihrer Außenseite (für Zeichnung, 3D und Türen).
-- `wandZiehen()` – Wand `i` (von Ecke i zu Ecke i+1) senkrecht verschieben: positiv nach innen, negativ nach außen.
-- `istRechteckUmriss()` – Ist der Grundriss ein einfaches Rechteck (oder keiner)?
-- `AUSSEN_NAME` – Name der Sperrflächen außerhalb des Grundrisses (in Meldungen beim Verschieben).
-- `mitUmrissSperren()` – Halle für die Planung: dazu die Sperrflächen außerhalb des Grundrisses (markiert mit `aussen`, nie gespeichert).
-- `wandTeilen()` – Wand `i` an der Stelle `bei` teilen (x bei waagrechter, y bei senkrechter Wand); ein Teilstück lässt sich dann ziehen.
-- Typen: `Punkt`, `UmrissKante`
-
 ### hallenplan-versetzen.ts (171 Z.)
 Tiere im festen Hallenplan von Hand versetzen (Rückmeldung 15.11.2026: „ich will auch käfige frei zuordnen können im halleneditor und ggf tiere ver …
 Tests: `hallenplan-versetzen.test.ts`
@@ -306,7 +284,7 @@ Tests: `hallenplan-wandfront.test.ts`
 - `wandKandidaten()` – Kandidaten aus einem gerechneten Plan (Lage samt Versatz und Drehung): alle Grundplatten, Käfigblöcke und eingesetzten Volieren.
 - `wandDrehungenAnwenden()` – Drehungen in die Halle übernehmen: Grundplatten über ihre Drehung (um die eigene Mitte), Teile über ihre Front.
 
-### hallenplan.ts (1.570 Z. ⚠)
+### hallenplan.ts (1.557 Z. ⚠)
 Hallenplan: Wie stehen die Käfige in der Halle?
 
 - `EntfernterPlatz` (Typ) – Entfernte leere Grundplatte (Lage der Platte) bzw. entfernter freier Platz im festen Plan.
@@ -385,7 +363,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (47 Z.)
+### index.ts (46 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
