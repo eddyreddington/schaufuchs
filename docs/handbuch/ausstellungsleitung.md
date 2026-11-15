@@ -315,6 +315,20 @@ Unter „Automatische Abmeldung“ legen Sie fest, nach wie vielen Minuten ohne 
 - Nach der Abmeldung steht auf der Anmeldeseite „Sie wurden nach längerer Untätigkeit automatisch abgemeldet.“ Nach dem Anmelden geht es zurück auf die Seite, auf der Sie waren. Nicht gespeicherte Eingaben sind verloren.
 - Am Tablet bleibt ein Preisrichter angemeldet, solange er ohne Netz bewertet. Hat das Tablet noch nicht übertragene Bewertungen, meldet es nicht selbst ab; die Bewertungen bleiben im Gerät und gehen nach der nächsten Anmeldung mit der PIN hinaus.
 
+### 3.8 Druckvorlagen
+
+Unter „Druckvorlagen“ legen Sie fest, wie die Bewertungskarten gedruckt werden. Ohne eigene Vorlage druckt SchauFUCHS sie in DIN A6, vier je A4-Bogen. „Neue Vorlage“ öffnet den Designer: links die Einstellungen, rechts ein Bogen mit Beispielkarten, der sich bei jeder Änderung neu aufbaut. Gespeichert wird erst mit „Speichern“; jede Änderung steht im Protokoll.
+
+- **Papier:** DIN A6 (vier je A4-Bogen), DIN A5 (zwei je A4-Bogen, quer), DIN A4 (eine je Seite) oder „Endlospapier oder eigenes Maß“ mit Bogenbreite und -länge in Millimetern (12 Zoll = 304,8 mm, 6 Zoll = 152,4 mm) und der Zahl der Karten neben- und untereinander.
+- **Feinabstimmung:** „Versatz nach rechts“ und „Versatz nach unten“ verschieben alles um Millimeter; die „Längenkorrektur“ in Prozent gleicht Endlospapier aus, das über viele Bögen wegläuft.
+- **Probedruck:** druckt ein Millimeterraster mit roten Kreuzen an den Kartenecken. Messen Sie mit dem Lineal nach, wie weit die Kreuze von der Stelle auf dem Papier abweichen, und tragen Sie die Abweichung als Versatz ein.
+- **„Ganze Karte drucken“:** SchauFUCHS druckt die ganze Karte. Die Bausteine (Kopf mit Katalognummer, Rasse und Farbenschlag, Klasse, Ringnummer, Vorzüge/Wünsche/Mängel, Ankreuzfeld, Note/Punkte/Preis, Unterschriften, Legende, eigener Text) schalten Sie ein und aus und ordnen sie mit ↑ und ↓. „Größe“ vergrößert oder verkleinert Schrift und Abstände; „Farbig“ aus druckt nur Schwarz, z. B. für Nadeldrucker mit Durchschlag.
+- **„Vordruck bedrucken“:** Für gekaufte Karten (Verbandsvordruck, Endloskarten) druckt SchauFUCHS nur die Daten. Jedes Feld hat seine Lage in Millimetern ab der oberen linken Ecke der Karte, dazu Breite, Höhe und Schriftgröße. Legen Sie eine Karte auf den Probedruck, um die Stellen abzumessen.
+
+**Vorlage für eine Schau:** In den Einstellungen der Schau wählen Sie im Abschnitt „Druck“ die Vorlage für die Bewertungskarten. „Für diese Schau anpassen“ legt eine Kopie nur für diese Schau an und öffnet sie im Designer; die Vorlage des Vereins bleibt dabei unverändert. Wird eine gewählte Vorlage gelöscht, druckt die Schau wieder mit der Vorgabe.
+
+**Endlospapier am Drucker:** Das PDF hat genau die Größe eines Bogens. Unter Windows legen Sie dafür einmal ein eigenes Papierformat an (Druckserver-Eigenschaften, Formular mit Breite × Länge) und wählen es beim Drucken. Im Drucker stellen Sie die Bogenlänge ein und schalten „Perforation überspringen“ aus. Drucken Sie mit „Tatsächliche Größe“ bzw. 100 %, ohne Anpassen an die Seite.
+
 ## 4. Rassen und Farbenschläge
 
 Das Verzeichnis der Rassen und Farbenschläge bestimmt zweierlei: was Aussteller melden können und in welcher Reihenfolge der Katalog nummeriert wird (Ausstellungsfolge). Jede Schau nutzt **eine Version** des Verzeichnisses. So bleiben alte Kataloge stimmig, auch wenn im nächsten Jahr ein neues Verzeichnis kommt.

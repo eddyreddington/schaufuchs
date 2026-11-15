@@ -22,7 +22,8 @@ const bremse = new Bremse(120, 60_000, "Zu viele Vorschauen. Bitte kurz warten."
 
 /** Hängt die Adressen an die Server-App (aufgerufen in index.ts). */
 export function druckvorlageDateien(app: Hono<any>) {
-  app.post("/datei/druckvorlage/:art{vorschau|probedruck}.pdf", async (c) => {
+  app.post("/datei/druckvorlage/:datei{(vorschau|probedruck)\\.pdf}", async (c) => {
+    const art = c.req.param("datei") === "probedruck.pdf" ? "probedruck" : "vorschau";
     if (!(c.req.header("content-type") ?? "").toLowerCase().startsWith("application/json")) return c.text("Nur JSON-Anfragen.", 415);
     if (c.req.header("sec-fetch-site") === "cross-site") return c.text("Fremde Herkunft.", 403);
     if (Number(c.req.header("content-length") ?? 0) > MAX_BYTES) return c.text("Die Anfrage ist zu groß.", 413);
@@ -43,7 +44,7 @@ export function druckvorlageDateien(app: Hono<any>) {
     }
     const vorlage = kartenVorlageLesen(koerper?.daten);
     const inhalt =
-      c.req.param("art") === "probedruck"
+      art === "probedruck"
         ? await probedruckPdf(vorlage)
         : await (async () => {
             const s = typeof koerper?.schauId === "number" ? await eigeneSchau(benutzer.organisationId, koerper.schauId) : null;
@@ -55,7 +56,7 @@ export function druckvorlageDateien(app: Hono<any>) {
             const karten = Array.from({ length: Math.max(jeBogen, 1) }, (_, i) => BEISPIEL_KARTEN[i % BEISPIEL_KARTEN.length]!);
             return zeichneKartenPdf("Vorschau Bewertungskarten", karten, vorlage, d, kopf, "");
           })();
-    return c.body(new Uint8Array(inhalt), 200, { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${c.req.param("art")}.pdf"`, "Cache-Control": "no-store" });
+    return c.body(new Uint8Array(inhalt), 200, { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${art}.pdf"`, "Cache-Control": "no-store" });
   });
 }
 

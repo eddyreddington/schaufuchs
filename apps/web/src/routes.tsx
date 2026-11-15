@@ -25,6 +25,7 @@ import { SchauListe } from "./seiten/schau-liste";
 import { Stammdaten } from "./seiten/stammdaten";
 import { Uebersicht } from "./seiten/uebersicht";
 import { Verein } from "./seiten/verein";
+import { DruckvorlageSeite } from "./seiten/druckvorlage";
 import { AusstellerSeite } from "./seiten/aussteller";
 import { Verkauf } from "./seiten/verkauf";
 import { UngespeichertWaechter } from "./ui";
@@ -67,6 +68,7 @@ export const router = createBrowserRouter([
           { path: "benutzer/neu", element: <BenutzerNeu /> },
           { path: "benutzer/:benutzerId", element: <BenutzerSeite /> },
           { path: "verein", element: <Verein /> },
+          { path: "verein/druckvorlagen/:vorlageId", element: <DruckvorlageSeite /> },
           { path: "aussteller", element: <AusstellerSeite /> },
           {
             path: "schau/:schauId",

@@ -47,14 +47,26 @@ describe("Druckvorlage Bewertungskarte: Bausteine", () => {
     const v = { ...KARTEN_VORGABE, bausteine: [{ id: "note" as const, an: true }, { id: "kopf" as const, an: true }, { id: "legende" as const, an: false }] };
     const l = kartenLayout(v, PAPIER.A5);
     expect(l.map((t) => t.id)).toEqual(["note", "kopf"]);
-    expect(kartenMassstab(PAPIER.A5.breite, 100)).toBeCloseTo(1.41, 2);
-    expect(l[0]!.hoehe).toBeCloseTo(14.5 * kartenMassstab(148, 100));
+    expect(kartenMassstab(PAPIER.A5)).toBeCloseTo(1.41, 2);
+    expect(l[0]!.hoehe).toBeCloseTo(14.5 * kartenMassstab(PAPIER.A5));
+  });
+
+  test("Quer liegende Karte (Endlos 240 × 152 mm): Maßstab nach der Höhe, Bausteine passen ohne Stauchen", () => {
+    const karte = { breite: 240, hoehe: 152.4 };
+    expect(kartenMassstab(karte)).toBeCloseTo(152.4 / 148, 3);
+    const l = kartenLayout(KARTEN_VORGABE, karte);
+    const ende = l.at(-1)!;
+    expect(ende.y + ende.hoehe).toBeCloseTo(152.4 - 6 * kartenMassstab(karte));
+    // Ohne Stauchen: der Kopf hat seine volle Höhe.
+    expect(l[0]!.hoehe).toBeCloseTo(16 * kartenMassstab(karte));
   });
 
   test("Zu viel für die Karte: alles wird gleichmäßig gestaucht, nichts läuft über", () => {
-    const l = kartenLayout({ ...KARTEN_VORGABE, groesse: 150 }, { breite: 105, hoehe: 100 });
+    const karte = { breite: 105, hoehe: 100 };
+    const l = kartenLayout({ ...KARTEN_VORGABE, groesse: 150 }, karte);
     const ende = l.at(-1)!;
-    expect(ende.y + ende.hoehe).toBeLessThanOrEqual(100 - 6 + 1e-9);
+    // Der Rand wächst und schrumpft mit der Karte (6 mm auf A6).
+    expect(ende.y + ende.hoehe).toBeLessThanOrEqual(100 - 6 * kartenMassstab(karte) + 1e-9);
   });
 });
 

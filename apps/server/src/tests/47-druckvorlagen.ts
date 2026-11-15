@@ -69,6 +69,32 @@ describe("Druckvorlagen Bewertungskarte", () => {
     await al().druckvorlage.loeschen({ id });
   });
 
+  test("Vorschau und Probedruck: PDF für die Ausstellungsleitung, sonst nichts", async () => {
+    const server = (await import("../index")).default;
+    const { neueSitzung } = await import("../auth");
+    // Eigener Administrator mit eingerichteter Zwei-Faktor-Anmeldung (ohne sie gilt ein Administrator als Helfer).
+    const [al2] = await m.db
+      .insert(m.schema.benutzer)
+      .values({ organisationId: adminKontext.benutzer!.organisationId, email: "druck-al@test.de", name: "Druck AL", passwortHash: "-", rolle: "admin", totpAktivSeit: new Date() })
+      .returning();
+    const cookie = `schau_sitzung=${await neueSitzung({ benutzerId: al2!.id })}`;
+    const helfer = `schau_sitzung=${await neueSitzung({ benutzerId: adminKontext.benutzer!.id })}`;
+    const post = (datei: string, koerper: unknown, kopf: Record<string, string> = { cookie, "content-type": "application/json" }) =>
+      server.fetch(new Request(`http://test/datei/druckvorlage/${datei}`, { method: "POST", body: JSON.stringify(koerper), headers: kopf }));
+    const endlos = { ...KARTEN_VORGABE, format: { art: "endlos", bogenBreite: 240, bogenLaenge: 304.8, spalten: 2, zeilen: 2 } };
+    for (const datei of ["vorschau.pdf", "probedruck.pdf"]) {
+      const r = await post(datei, { daten: endlos });
+      expect(r.status).toBe(200);
+      const pdf = Buffer.from(await r.arrayBuffer());
+      expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+      expect(seiteMm(pdf)).toEqual([240, 305]);
+    }
+    expect((await post("vorschau.pdf", { daten: endlos }, { "content-type": "application/json" })).status).toBe(403);
+    expect((await post("vorschau.pdf", { daten: endlos }, { cookie: helfer, "content-type": "application/json" })).status).toBe(403);
+    expect((await post("vorschau.pdf", { daten: endlos }, { cookie, "content-type": "text/plain" })).status).toBe(415);
+    expect((await post("anderes.pdf", { daten: endlos })).status).toBe(404);
+  });
+
   test("Gespeichert wird nur Gültiges; fremde und schaufremde Vorlagen sind nicht wählbar", async () => {
     const { id } = await al().druckvorlage.speichern({ name: "Grenzen", daten: { groesse: 999, druck: { versatzX: 100 }, format: { art: "unsinn" } } });
     const v = (await al().druckvorlage.liste()).find((x) => x.id === id)!;

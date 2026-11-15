@@ -169,15 +169,18 @@ export const KARTEN_VORGABE: KartenVorlage = {
   felder: vordruckFelderAusLayout(),
 };
 
-/** Maßstab der Karte gegenüber A6 bei 100 % (A5 ≈ 1,41, A4 = 2). */
-export function kartenMassstab(kartenBreite: number, groesse: number): number {
-  return (kartenBreite / A6_BREITE) * (groesse / 100);
+/**
+ * Maßstab der Karte gegenüber einer A6-Karte (A5 ≈ 1,41, A4 = 2): die engere der beiden Richtungen, damit auch eine
+ * quer liegende Karte (z. B. Endlospapier 240 × 152 mm) nicht überläuft. Ohne `groesse`: nur die Kartengröße (Rand).
+ */
+export function kartenMassstab(karte: { breite: number; hoehe: number }, groesse = 100): number {
+  return Math.min(karte.breite / A6_BREITE, karte.hoehe / PAPIER.A6.hoehe) * (groesse / 100);
 }
 
 /** Lage der eingeschalteten Bausteine auf einer Karte (mm ab Kartenoberkante, innerhalb des Rands). */
 export function kartenLayout(v: Pick<KartenVorlage, "bausteine" | "groesse">, karte: { breite: number; hoehe: number }): { id: KartenBaustein; y: number; hoehe: number }[] {
-  const m = kartenMassstab(karte.breite, v.groesse);
-  const rand = KARTEN_RAND * (karte.breite / A6_BREITE);
+  const m = kartenMassstab(karte, v.groesse);
+  const rand = KARTEN_RAND * kartenMassstab(karte);
   const an = v.bausteine.filter((b) => b.an).map((b) => b.id);
   const fest = an.filter((id): id is Exclude<KartenBaustein, "texte"> => id !== "texte").reduce((n, id) => n + BAUSTEIN_HOEHE[id] * m, 0);
   const verfuegbar = karte.hoehe - 2 * rand;

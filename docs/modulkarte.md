@@ -67,7 +67,7 @@ Datenschutz und Anbieterkennzeichnung: Speicherfristen und Mustertexte für Impr
 - `aufbewahrenBis()` – Bis wann die Daten eines Ausstellers aufbewahrt werden müssen: Verkaufsaufzeichnungen ab Verkauf, Belege (Zahlungen, Auszahlungen, Kaufbelege) bis …
 - Typen: `Vereinsangaben`, `Textabschnitt`
 
-### druckvorlage.ts (260 Z.)
+### druckvorlage.ts (263 Z.)
 Tests: `druckvorlage.test.ts`
 
 - `MM_JE_ZOLL` – Druckvorlage der Bewertungskarte: welches Papier, wie viele Karten je Bogen, was auf der Karte steht und wo.
@@ -87,7 +87,7 @@ Tests: `druckvorlage.test.ts`
 - `VORDRUCK_FELDER`
 - `VORDRUCK_FELD_LABEL`
 - `KARTEN_VORGABE` – Die Karte, wie SchauFUCHS sie bisher gedruckt hat: A6, vier je A4, alle Bausteine außer dem eigenen Text.
-- `kartenMassstab()` – Maßstab der Karte gegenüber A6 bei 100 % (A5 ≈ 1,41, A4 = 2).
+- `kartenMassstab()` – Maßstab der Karte gegenüber einer A6-Karte (A5 ≈ 1,41, A4 = 2): die engere der beiden Richtungen, damit auch eine quer liegende Karte (z. B. Endlos …
 - `kartenLayout()` – Lage der eingeschalteten Bausteine auf einer Karte (mm ab Kartenoberkante, innerhalb des Rands).
 - `vordruckFelderAusLayout()` – Feldlagen für den Vordruck-Modus, abgeleitet aus der eigenen A6-Karte – Ausgangspunkt zum Verschieben.
 - `kartenVorlageLesen()` – Gespeicherten Wert (jsonb, ggf. alt oder unvollständig) in eine gültige Vorlage bringen; Unbekanntes gilt als Vorgabe.
@@ -841,16 +841,24 @@ Prozeduren: auth.benutzerAbmelden, auth.benutzerAktiv, auth.benutzerAnlegen, aut
 ### bewertung.tsx (326 Z.) – `/schau/:schauId/bewertung`
 Prozeduren: auth.status, bewertung.liste, bewertung.obmannBestaetigen, bewertung.setzen, bewertung.zuruecksetzen
 
+### druckvorlage-vorschau.tsx (105 Z.)
+
+### druckvorlage.tsx (230 Z.) – `/verein/druckvorlagen/:vorlageId`
+Prozeduren: druckvorlage.liste, druckvorlage.speichern, druckvorlage.vorgabe
+
 ### einladung.tsx (99 Z.) – `/einladung`
 Prozeduren: auth.einladungAnnehmen, auth.einladungPruefen, auth.status
 
 ### einlieferung.tsx (489 Z.) – `/schau/:schauId/einlieferung`
 Prozeduren: auth.status, halle.gesundheit, halle.gesundheitErfassen, halle.gesundheitFreigeben, halle.kaefigSetzen, halle.ringnummerSetzen, halle.statusSetzen, halle.suche, halle.vetSetzen, meldung.zahlungErfassen, schau.get
 
+### einstellungen-druck.tsx (57 Z.)
+Prozeduren: druckvorlage.fuerSchau, druckvorlage.fuerSchauAnpassen, druckvorlage.waehlen
+
 ### einstellungen-vetamt.tsx (87 Z.)
 Prozeduren: schau.veterinaeraemter
 
-### einstellungen.tsx (894 Z. ⚠) – `/schau/:schauId/einstellungen`
+### einstellungen.tsx (897 Z. ⚠) – `/schau/:schauId/einstellungen`
 Prozeduren: auth.status, schau.absagen, schau.aktualisieren, schau.alsTestschau, schau.demodatenNeu, schau.gebuehrenSetzen, schau.get, schau.loeschen, schau.notenskalaSetzen, schau.preisartLoeschen, schau.preisartSpeichern, schau.protokoll, schau.testschauVorschau, stammdaten.versionen
 
 ### fehler.tsx (42 Z.)
@@ -883,7 +891,7 @@ Prozeduren: auth.status, katalogGestaltung.beitraegeOrdnen, katalogGestaltung.be
 ### katalog-reihenfolge.tsx (96 Z.)
 Prozeduren: schau.katalogSortierungSetzen
 
-### katalog-vorschau.tsx (177 Z.)
+### katalog-vorschau.tsx (141 Z.)
 
 ### katalog.tsx (177 Z.) – `/schau/:schauId/katalog`
 Prozeduren: auth.status, katalog.gedrucktSetzen, katalog.liste, katalog.nummernVergeben, schau.get
@@ -928,7 +936,10 @@ Prozeduren: auth.status, schau.phaseSetzen, schau.uebersicht
 ### verein-abmeldung.tsx (58 Z.)
 Prozeduren: verein.abmeldung, verein.abmeldungSpeichern
 
-### verein.tsx (540 Z.) – `/verein`
+### verein-druckvorlagen.tsx (64 Z.)
+Prozeduren: druckvorlage.liste, druckvorlage.loeschen
+
+### verein.tsx (542 Z.) – `/verein`
 Prozeduren: bewertung.textbausteinGrundbestand, bewertung.textbausteinLoeschen, bewertung.textbausteinSpeichern, bewertung.textbausteine, schau.postErneutSenden, schau.postausgang, stammdaten.gliederung, stammdaten.versionen, verein.auskunftPerson, verein.bereinigen, verein.get, verein.speichern
 
 ### verkauf.tsx (340 Z.) – `/schau/:schauId/verkauf`
@@ -989,7 +1000,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 - `auth.ts` (189 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
 - `config.ts` (30 Z.) · config
-- `datei-druckvorlage.ts` (66 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien
+- `datei-druckvorlage.ts` (67 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien
 - `index.ts` (935 Z. ⚠)
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
@@ -1007,9 +1018,10 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `lib.ts` (39 Z.) · fehlerText, datum, datumZeit, heuteIso, centZuText, ALTER_LABEL
 - `main.tsx` (22 Z.)
 - `modus.ts` (46 Z.) · setzeFarbmodus, useFarbmodus
+- `pdf-anzeige.tsx` (43 Z.) – PDF im Browser anzeigen (pdf.js), gemeinsam für die Live-Vorschauen von Katalog und Druckvorlagen. · pdfjs, PdfSeite
 - `rahmen.tsx` (523 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
 - `rolle.ts` (9 Z.) · useIstAdmin
-- `routes.tsx` (102 Z.) · router
+- `routes.tsx` (104 Z.) · router
 - `symbole.tsx` (41 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui.tsx` (621 Z. ⚠) · knopfKlasse, Knopf, KnopfLink, Feld, useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter, Eingabe, Textfeld, Auswahl, Haken, Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, SpeicherPlatz, Speicherleiste, Kennzahlen, Leer, Laden, FehlerAnzeige, Dialog, FragenAnbieter, useFrage, MeldungenAnbieter, useMeldung
@@ -1064,6 +1076,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `44-pruefliste-hallenplan.ts` (60 Z.) – Prüfliste ab der Phase „Katalog & Halle“: Hinweise zum Hallenplan (Tiere ohne Platz, Käfigfront zur Wand oder zu einer Reihe, Nummern nicht in Plan …
 - `45-hallenplan-tier-versetzen.ts` (163 Z.) – Tiere im Halleneditor versetzen (Rückmeldung 15.11.2026: „ich will auch käfige frei zuordnen können im halleneditor und ggf tiere versetzen“): nur …
 - `46-automatische-abmeldung.ts` (64 Z.) – Automatische Abmeldung nach Untätigkeit (Rückmeldung 15.11.2026): Frist je Rolle unter „Verein und Datenschutz“, nur die angebotenen Minuten, Proto …
-- `47-druckvorlagen.ts` (86 Z.) – Druckvorlagen für Bewertungskarten: Vorlagen des Vereins speichern, je Schau wählen, für eine Schau abwandeln, löschen (Schau druckt dann wieder mi …
+- `47-druckvorlagen.ts` (112 Z.) – Druckvorlagen für Bewertungskarten: Vorlagen des Vereins speichern, je Schau wählen, für eine Schau abwandeln, löschen (Schau druckt dann wieder mi …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

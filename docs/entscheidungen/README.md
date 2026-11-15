@@ -14,3 +14,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [006](006-fester-plan.md) | Fester Plan und „Automatisch planen“ |
 | [007](007-keine-bdrg-daten.md) | Keine BDRG-Daten ohne Nutzungsrecht |
 | [008](008-handbuch-statt-erklaertexte.md) | Keine Erklärtexte in der Oberfläche, Handbuch-Links |
+| [011](011-druckvorlagen.md) | Druckvorlagen: Verein legt fest, Schau wählt |

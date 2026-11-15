@@ -200,8 +200,8 @@ function eigeneKarte(
   f: { farbe: string; flaeche: string | null },
   kopf: KartenKopf,
 ) {
-  const m = kartenMassstab(karte.breite, v.groesse);
-  const rand = KARTEN_RAND * (karte.breite / 105);
+  const m = kartenMassstab(karte, v.groesse);
+  const rand = KARTEN_RAND * kartenMassstab(karte);
   const b = (karte.breite - 2 * rand) * MM;
   const feld = (x: number, y: number, w: number, h: number, titel: string) => {
     doc.save().lineWidth(0.5).strokeColor(HAARLINIE).rect(x, y, w, h).stroke().restore();
