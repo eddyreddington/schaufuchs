@@ -100,6 +100,7 @@ Abschalten: Klicken Sie auf „Abschalten …“, tragen Sie Ihr „Passwort“ 
 
 Die Seitenleiste links enthält (auf dem Handy und am Tablet hochkant öffnet sie der Knopf mit den drei Strichen oben links):
 
+- ganz oben das Logo, darunter klein die Versionsnummer (z. B. „Version 1.3.0“),
 - „Alle Schauen“ – die Liste aller Ausstellungen Ihres Vereins,
 - unter „Einrichtung“: „Rassen und Farbenschläge“ – das Verzeichnis zum Nachschlagen (Einspielen und Ändern nur durch die Ausstellungsleitung) – und „Mein Zugang“ – Passwort und Zwei-Faktor-Anmeldung,
 - „Hilfe“ – die Handbücher zum Nachlesen, in einem eigenen Tab: Reiter „Helfer“ für dieses Handbuch, „Drucken“ druckt das geöffnete Handbuch, „Als PDF“ öffnet die Druckfassung, die Leiste „Handbücher zum Ausdrucken“ lädt jedes Handbuch als PDF herunter; „Schließen“ schließt den Tab wieder,
