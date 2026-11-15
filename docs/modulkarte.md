@@ -1182,9 +1182,10 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `main.tsx` (22 Z.)
 - `modus.ts` (46 Z.) · setzeFarbmodus, useFarbmodus
 - `pdf-anzeige.tsx` (43 Z.) – PDF im Browser anzeigen (pdf.js), gemeinsam für die Live-Vorschauen von Katalog und Druckvorlagen. · pdfjs, PdfSeite
-- `rahmen.tsx` (527 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
+- `rahmen.tsx` (445 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
 - `rolle.ts` (9 Z.) · useIstAdmin
 - `routes.tsx` (114 Z.) · router
+- `seitenmenue.tsx` (187 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · SCHAU_GRUPPEN, allgemeineGruppen, useKlappzustand, MenueGruppen
 - `symbole.tsx` (44 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui.tsx` (621 Z. ⚠) · knopfKlasse, Knopf, KnopfLink, Feld, useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter, Eingabe, Textfeld, Auswahl, Haken, Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, SpeicherPlatz, Speicherleiste, Kennzahlen, Leer, Laden, FehlerAnzeige, Dialog, FragenAnbieter, useFrage, MeldungenAnbieter, useMeldung

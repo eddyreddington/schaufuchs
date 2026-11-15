@@ -34,7 +34,7 @@ SchauFUCHS erreichen Sie im Browser unter:
 
 Ohne Telefon geht im zweiten Schritt auch ein **Notfallcode** (siehe 1.3).
 
-Nach der Anmeldung steht links die Seitenleiste mit „Alle Schauen“, „Rassen und Farbenschläge“, „Aussteller“, „Benutzer“, „Verein und Datenschutz“ und „Hilfe“. Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.2.0“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
+Nach der Anmeldung steht links die Seitenleiste mit „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.2.0“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
 
 > **Tipp:** Melden Sie sich an fremden oder gemeinsam genutzten Rechnern immer mit „Abmelden“ ab.
 
@@ -488,12 +488,16 @@ In einer Schau zeigt die Seitenleiste oben die Schau mit Ort und Phase; ein Klic
 | Vorbereitung | Einstellungen (mit dem Protokoll), Preisrichter |
 | Meldephase | Meldungen |
 | Nach dem Meldeschluss | Käfige, Hallenplan, Katalognummern, Katalog |
-| Schautage | Einlieferung, Bewertung, Preise, Tierverkauf |
-| Abschluss | Abrechnung, Kassenbuch |
+| Schautage | Einlieferung, Bewertung, Preise, Meisterschaften, Tierverkauf |
+| Kasse und Abrechnung | Kassenbuch, Spenden, Abrechnung |
 
 Käfige und Hallenplan stehen hinter den Meldungen: Erst mit den Meldungen steht fest, wie viele Käfige welcher Größe in die Halle müssen. Die Halle selbst (Maße, Eingänge) können Sie schon vorher anlegen. Das Protokoll öffnen Sie in den Einstellungen im Abschnitt „Protokoll“ (siehe 5.17).
 
-Die allgemeinen Seiten („Alle Schauen“, „Rassen und Farbenschläge“ usw.) stehen darunter.
+Kassenbuch, Spenden und Abrechnung stehen in einer eigenen Gruppe: Sie laufen über die ganze Schau, nicht erst am Ende.
+
+Darunter stehen „Alle Schauen“, die Gruppe „Verein“ (Aussteller, Spender, Import, Verein und Datenschutz), die Gruppe „Einrichtung“ (Rassen und Farbenschläge, Benutzer) und „Hilfe“.
+
+**Gruppen einklappen:** Ein Klick auf die Überschrift einer Gruppe klappt sie zu oder auf; SchauFUCHS merkt sich das in diesem Browser. Ohne eigene Wahl ist in einer Schau die Gruppe der aktuellen Phase offen (in der Meldephase „Meldephase“, an den Schautagen „Schautage“), „Verein“ und „Einrichtung“ sind zu. Öffnen Sie eine Seite in einer zugeklappten Gruppe (etwa über die Übersicht), klappt die Gruppe auf.
 
 **Speichern oben rechts:** Gespeichert wird immer oben rechts. Sobald Sie auf einer Seite etwas ändern (Einstellungen, Gebühren, Notenskala, Grundplatten, Aufsteller, Preisrichter-Einteilung, Katalog, Meldung, Verein, steuerliche Angaben, Druck- und Briefvorlagen, Spender, Benutzer), erscheinen oben rechts in der Kopfleiste „Verwerfen“ und der Speichern-Knopf des Formulars. Nur in Fenstern (z. B. „Preisrichter bearbeiten“) und für eine einzelne Tabellenzeile (z. B. Bewertung am PC) steht „Speichern“ direkt dabei. Die Kopfleiste bleibt beim Scrollen stehen; Sie müssen also nicht nach unten. Haben mehrere Formulare einer Seite Ungespeichertes, steht für jedes ein eigener Knopf da (z. B. „Einstellungen speichern“ und „Gebühren speichern“). Wer die Seite mit Ungespeichertem verlässt, wird vorher gefragt.
 
@@ -1466,7 +1470,7 @@ Ist die Reklamationsfrist abgelaufen und die Schau liegt über 8 Wochen zurück,
 
 ### 5.20 Spenden
 
-Unter „Spenden“ (Abschnitt „Abschluss“ der Schau) erfassen Sie Geld- und Sachspenden für die Schau, zum Beispiel 100 € vom Bürgermeister. Mitarbeiter dürfen Spenden erfassen; bestätigen und stornieren darf nur die Ausstellungsleitung.
+Unter „Spenden“ (Gruppe „Kasse und Abrechnung“ der Schau) erfassen Sie Geld- und Sachspenden für die Schau, zum Beispiel 100 € vom Bürgermeister. Mitarbeiter dürfen Spenden erfassen; bestätigen und stornieren darf nur die Ausstellungsleitung.
 
 **Spende erfassen:**
 1. Spender suchen (Name oder Ort) oder „Neuer Spender“ und Name und Anschrift eintragen.
@@ -1488,7 +1492,7 @@ Eine Barspende steht sofort als Einnahme im Kassenbuch (Beleg S-…), und es gib
 
 ### 5.21 Meisterschaften
 
-Meisterschaften (Vereins-, Kreis- oder Landesmeister, Zuchtpreis, Leistungspreis) richten Sie in den Einstellungen der Schau im Abschnitt „Meisterschaften“ ein. Die Ergebnisse stehen unter „Meisterschaften“ (Abschnitt „Schautage“). Sie rechnen sich aus Katalog und Bewertung jedes Mal neu – nach einer Korrektur der Bewertung stimmen sie sofort.
+Meisterschaften (Vereins-, Kreis- oder Landesmeister, Zuchtpreis, Leistungspreis) richten Sie in den Einstellungen der Schau im Abschnitt „Meisterschaften“ ein. Die Ergebnisse stehen unter „Meisterschaften“ (Gruppe „Schautage“). Sie rechnen sich aus Katalog und Bewertung jedes Mal neu – nach einer Korrektur der Bewertung stimmen sie sofort.
 
 **Einrichten:** Eine Vorlage wählen und „Meisterschaft hinzufügen“, dann anpassen und oben rechts „Meisterschaften speichern“. Die Vorlagen folgen den Bestimmungen von AAB und BDRG; gleichen Sie die Werte vor jeder Schau mit den aktuellen Bestimmungen Ihres Verbands ab.
 

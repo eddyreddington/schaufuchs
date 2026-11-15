@@ -4,6 +4,7 @@ import { Link, Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, us
 import { AbmeldeHinweis, useAutoAbmeldung } from "./abmeldung";
 import { fehlerText } from "./lib";
 import { useFarbmodus, type Farbmodus } from "./modus";
+import { allgemeineGruppen, leistenLink, MenueGruppen, SCHAU_GRUPPEN, useKlappzustand } from "./seitenmenue";
 import { Symbol, type SymbolName } from "./symbole";
 import { direkt, trpc } from "./trpc";
 import { Eingabe, FehlerAnzeige, Feld, Hinweis, Knopf, Laden, Marke, SCHMAL, SEITENRAND, SpeicherPlatz, useMeldung, useSeitentitel } from "./ui";
@@ -12,64 +13,11 @@ export function useSchauId(): number {
   return Number(useParams().schauId);
 }
 
-/** Seiten einer Schau, gruppiert nach dem Ablauf. pfad relativ zu /schau/:id. */
-/**
- * Seiten der Schau in der Reihenfolge, in der eine Schau abläuft: vorbereiten, Meldungen annehmen, nach dem Meldeschluss
- * Käfige, Hallenplan und Katalog, dann die Schautage und der Abschluss. `auch`: weitere Seiten, bei denen der Punkt
- * hervorgehoben ist (das Protokoll erreicht man über die Einstellungen).
- */
-const GRUPPEN: { name: string | null; seiten: { pfad: string; label: string; symbol: SymbolName; auch?: string[] }[] }[] = [
-  {
-    name: null,
-    seiten: [{ pfad: "", label: "Übersicht", symbol: "uebersicht" }],
-  },
-  {
-    name: "Vorbereitung",
-    seiten: [
-      { pfad: "einstellungen", label: "Einstellungen", symbol: "einstellungen", auch: ["protokoll"] },
-      { pfad: "preisrichter", label: "Preisrichter", symbol: "preisrichter" },
-    ],
-  },
-  {
-    name: "Meldephase",
-    seiten: [{ pfad: "meldungen", label: "Meldungen", symbol: "meldungen" }],
-  },
-  {
-    // Erst mit den Meldungen weiß man, wie viele Käfige welcher Größe in die Halle müssen. Die Katalognummern folgen der
-    // Ausstellungsfolge oder dem Plan; die Bereiche der Preisrichter (Einteilung nach Rassen) folgen den Nummern.
-    name: "Nach dem Meldeschluss",
-    seiten: [
-      { pfad: "kaefige", label: "Käfige", symbol: "kaefige" },
-      { pfad: "hallenplan", label: "Hallenplan", symbol: "hallenplan" },
-      { pfad: "katalog", label: "Katalognummern", symbol: "katalognummern" },
-      { pfad: "katalog/gestalten", label: "Katalog", symbol: "katalog" },
-    ],
-  },
-  {
-    name: "Schautage",
-    seiten: [
-      { pfad: "einlieferung", label: "Einlieferung", symbol: "einlieferung" },
-      { pfad: "bewertung", label: "Bewertung", symbol: "bewertung" },
-      { pfad: "preise", label: "Preise", symbol: "preise" },
-      { pfad: "meisterschaften", label: "Meisterschaften", symbol: "meisterschaften" },
-      { pfad: "verkauf", label: "Tierverkauf", symbol: "verkauf" },
-    ],
-  },
-  {
-    name: "Abschluss",
-    seiten: [
-      { pfad: "abrechnung", label: "Abrechnung", symbol: "abrechnung" },
-      { pfad: "kassenbuch", label: "Kassenbuch", symbol: "kassenbuch" },
-      { pfad: "spenden", label: "Spenden", symbol: "spenden" },
-    ],
-  },
-];
-
 /** Bezeichnung der aktuellen Seite für die Pfadzeile. */
 function seitenName(pfad: string, imSchau: boolean, istAdmin: boolean): string {
   if (imSchau) {
     const rest = pfad.replace(/^\/schau\/\d+\/?/, "").replace(/\/$/, "");
-    for (const g of GRUPPEN) for (const s of g.seiten) if (s.pfad === rest) return s.label;
+    for (const g of SCHAU_GRUPPEN) for (const s of g.seiten) if (s.pfad === rest) return s.label;
     if (rest === "protokoll") return "Protokoll";
     if (rest.startsWith("meldungen/")) return rest === "meldungen/neu" ? "Neue Meldung" : "Meldung";
     return "";
@@ -83,9 +31,6 @@ function seitenName(pfad: string, imSchau: boolean, istAdmin: boolean): string {
   if (pfad.startsWith("/verein")) return "Verein und Datenschutz";
   return "";
 }
-
-const leistenLink = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-2.5 rounded-md px-2.5 py-1.5 no-underline ${isActive ? "bg-weiss font-semibold text-tinte shadow-[0_0_0_1px_var(--color-linie-stark),0_1px_2px_rgb(0_0_0/0.05)] [&>svg]:text-band" : "text-grau hover:bg-linie/60 hover:text-tinte"}`;
 
 export function AppRahmen() {
   const status = trpc.auth.status.useQuery();
@@ -133,6 +78,8 @@ export function AppRahmen() {
   }, [menueOffen]);
   const schauTreffer = useMatch("/schau/:schauId/*");
   const schauId = schauTreffer ? Number(schauTreffer.params.schauId) : null;
+  const phase = trpc.schau.get.useQuery({ id: schauId ?? 0 }, { enabled: !!schauId }).data?.phase as Phase | undefined;
+  const klapp = useKlappzustand();
   const abmelden = trpc.auth.abmelden.useMutation({
     onSuccess: async () => {
       await utils.invalidate();
@@ -155,28 +102,16 @@ export function AppRahmen() {
   if (status.error) return <div className={`${SEITENRAND} ${SCHMAL}`}><FehlerAnzeige fehler={status.error} nochmal={() => status.refetch()} /></div>;
   if (!status.data?.benutzer) return <Navigate to={anmeldeZiel(ort.pathname, ort.search)} replace />;
   const b = status.data.benutzer;
-  const allgemein: { to: string; label: string; symbol: SymbolName; end?: boolean }[] = [
-    { to: "/", label: "Alle Schauen", symbol: "schauen", end: true },
-    { to: "/stammdaten", label: "Rassen und Farbenschläge", symbol: "stammdaten" },
-    ...(b.rolle === "admin" ? [{ to: "/aussteller", label: "Aussteller", symbol: "aussteller" as const }, { to: "/spender", label: "Spender", symbol: "spenden" as const }, { to: "/import", label: "Import", symbol: "import" as const }] : []),
-    { to: "/benutzer", label: b.rolle === "admin" ? "Benutzer" : "Mein Zugang", symbol: "benutzer" },
-    ...(b.rolle === "admin" ? [{ to: "/verein", label: "Verein und Datenschutz", symbol: "verein" as const }] : []),
-  ];
-  const allgemeineLinks = (
-    <div className="flex flex-col gap-px">
-      {allgemein.map((p) => (
-        <NavLink key={p.to} to={p.to} end={p.end} className={leistenLink}>
-          <Symbol name={p.symbol} />
-          {p.label}
-        </NavLink>
-      ))}
-      {/* Hilfe im neuen Tab: die Arbeit hier (Formulare, Kasse) bleibt offen. */}
-      <a href="/hilfe" target="_blank" rel="noreferrer" className={leistenLink({ isActive: false })}>
-        <Symbol name="hilfe" />
-        Hilfe
-      </a>
-    </div>
+  const istAdmin = b.rolle === "admin";
+  // Hilfe im neuen Tab: die Arbeit hier (Formulare, Kasse) bleibt offen.
+  const hilfe = (
+    <a href="/hilfe" target="_blank" rel="noreferrer" className={leistenLink({ isActive: false })}>
+      <Symbol name="hilfe" />
+      Hilfe
+    </a>
   );
+  // In einer Schau sind Verein und Einrichtung ohne gemerkte Wahl eingeklappt, sonst offen.
+  const allgemeineLinks = <MenueGruppen gruppen={allgemeineGruppen(istAdmin)} vorgabeOffen={() => !schauId} klapp={klapp} label={schauId ? "Allgemein" : "Hauptnavigation"} nachher={hilfe} />;
   const leiste = (
     <div className="flex min-h-full flex-col gap-4 px-2.5 py-3 text-[0.95rem]">
       <Link to="/" className="flex items-center gap-3 px-1.5 py-1 font-display text-[1.15rem] font-bold text-tinte no-underline [font-stretch:112%]">
@@ -186,28 +121,11 @@ export function AppRahmen() {
       {schauId ? (
         <>
           <SchauWahl id={schauId} />
-          <nav aria-label="Bereiche der Schau" className="flex flex-col gap-3">
-            {GRUPPEN.map((g) => (
-              <div key={g.name ?? "start"} className="flex flex-col gap-px">
-                {g.name && <span className="px-2.5 pb-0.5 text-[0.8rem] font-medium text-grau">{g.name}</span>}
-                {g.seiten.map((s) => (
-                  <NavLink
-                    key={s.pfad}
-                    to={`/schau/${schauId}${s.pfad ? `/${s.pfad}` : ""}`}
-                    end
-                    className={({ isActive }) => leistenLink({ isActive: isActive || !!s.auch?.some((a) => ort.pathname.replace(/\/$/, "") === `/schau/${schauId}/${a}`) })}
-                  >
-                    <Symbol name={s.symbol} />
-                    {s.label}
-                  </NavLink>
-                ))}
-              </div>
-            ))}
-          </nav>
-          <nav aria-label="Allgemein" className="mt-auto border-t border-linie pt-3">{allgemeineLinks}</nav>
+          <MenueGruppen gruppen={SCHAU_GRUPPEN} basis={`/schau/${schauId}`} vorgabeOffen={(g) => !!phase && !!g.phasen?.includes(phase)} klapp={klapp} label="Bereiche der Schau" />
+          <div className="mt-auto border-t border-linie pt-3">{allgemeineLinks}</div>
         </>
       ) : (
-        <nav aria-label="Hauptnavigation" className="mb-auto">{allgemeineLinks}</nav>
+        <div className="mb-auto">{allgemeineLinks}</div>
       )}
       <BenutzerMenue name={b.name} verein={status.data.organisationName ?? ""} rolle={b.rolle} abmelden={() => abmelden.mutate()} meldetAb={abmelden.isPending} />
     </div>
