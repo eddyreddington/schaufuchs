@@ -1470,6 +1470,33 @@ Eine Barspende steht sofort als Einnahme im Kassenbuch (Beleg S-…), und es gib
 
 > **Hinweis:** Eine Ehrenpreisstiftung (Preise und Freigabe) ist keine Spende im Sinne dieser Seite und bekommt keine Zuwendungsbestätigung: Wer einen Preis stiftet, kann ihn oft selbst gewinnen. Fragen Sie im Zweifel Ihr Finanzamt.
 
+### 5.21 Meisterschaften
+
+Meisterschaften (Vereins-, Kreis- oder Landesmeister, Zuchtpreis, Leistungspreis) richten Sie in den Einstellungen der Schau im Abschnitt „Meisterschaften“ ein. Die Ergebnisse stehen unter „Meisterschaften“ (Abschnitt „Schautage“). Sie rechnen sich aus Katalog und Bewertung jedes Mal neu – nach einer Korrektur der Bewertung stimmen sie sofort.
+
+**Einrichten:** Eine Vorlage wählen und „Meisterschaft hinzufügen“, dann anpassen und oben rechts „Meisterschaften speichern“. Die Vorlagen folgen den Bestimmungen von AAB und BDRG; gleichen Sie die Werte vor jeder Schau mit den aktuellen Bestimmungen Ihres Verbands ab.
+
+| Vorlage | Wertung |
+|---|---|
+| Zuchtpreis (AAB) | 4 Jungtiere je Aussteller und Farbenschlag, beide Geschlechter (1,3 bis 3,1), eigene Zucht |
+| Leistungspreis (AAB) | 6 Tiere, jung und alt, beide Geschlechter |
+| Bundessieger (BDRG) | 5 Tiere, Großgeflügel 4; jung und alt, beide Geschlechter |
+| Deutsche Jugendmeisterschaft (BDRG) | nur Jugend: 4 Jungtiere ab 378 Punkten, Zwerghühner und Tauben 5 ab 472 |
+| Vereinsmeisterschaft | die 12 besten Tiere je Verein von mindestens 3 Züchtern aus mindestens 2 Sparten |
+
+Einstellbar sind unter anderem:
+- die Zahl der gewerteten Tiere, auch abweichend je Sparte (Name genau wie im Verzeichnis, z. B. „Zwerghühner“);
+- Mindestpunkte, für die Jugend eigene;
+- nur Jungtiere oder jung und alt (mit höchstens n Alttieren), beide Geschlechter Pflicht, nur eigene Zucht;
+- Jugend mit den Senioren, getrennt, ohne oder nur Jugend; alle Aussteller oder nur Vereinsmitglieder;
+- die Mindestbeteiligung (Aussteller bzw. Tiere je Farbenschlag).
+
+**Gewertet** werden bewertete Einzeltiere bestätigter Meldungen; Sondernoten (u, o. B.) zählen mit 0 Punkten. Je Aussteller zählt die beste Auswahl, die alle Bedingungen erfüllt – notfalls also ein schwächeres Tier des anderen Geschlechts. Einen Platz bekommt, wer genug Tiere hat; den Titel bekommt Platz 1, wenn er die Mindestpunkte erreicht und die Mindestbeteiligung erfüllt ist.
+
+**Gleichstand:** Bei gleicher Punktsumme entscheiden die Kriterien in der eingestellten Reihenfolge, z. B. „höhere Einzelnoten der Reihe nach“ (wer das beste Einzeltier hat, dann das zweitbeste …), „höhere Preise“ (Reihenfolge der Preisarten in den Einstellungen) oder „weitere Tiere“. Bleibt es gleich, erhalten beide den Titel oder die Ausstellungsleitung entscheidet – auch das ist einstellbar. Die AAB regeln den Gleichstand selbst; prüfen Sie die Reihenfolge an Ihrer Ausgabe der AAB.
+
+**Aushang und Liste:** „Aushang (PDF)“ druckt alle Ergebnisse (Namen wie im gedruckten Katalog), „Tabelle (CSV)“ lädt alle Kandidaten mit ihren Tieren für die Tabellenkalkulation.
+
 ## 6. Checkliste für den Schautag
 
 **Einige Tage vorher**

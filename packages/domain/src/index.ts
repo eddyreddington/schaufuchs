@@ -38,3 +38,4 @@ export * from "./druckvorlage";
 export * from "./briefvorlage";
 export * from "./spenden";
 export * from "./zuwendungsbestaetigung";
+export * from "./meisterschaft";

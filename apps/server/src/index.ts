@@ -40,6 +40,8 @@ import { eigeneSchauenFuerKalender, starteTerminabruf } from "./services/termine
 import { adressSchluessel, Bremse } from "./services/bremse";
 import { briefDateien, druckvorlageDateien } from "./datei-druckvorlage";
 import { spendenDateien } from "./datei-spenden";
+import { csv } from "./csv";
+import { meisterschaftDateien } from "./datei-meisterschaften";
 import { archiviereKassenbeleg, archiviereKaufbeleg, archiviereQuittung, archiviereSpendenquittung, ladeBeleg, ladeKassenbuch, type Belegart } from "./services/kassenbuch";
 import { ladeEintraege, skalaVon, verdeckeNamen } from "./services/eintraege";
 import { ladeTierliste } from "./services/tierliste";
@@ -382,6 +384,7 @@ app.post("/datei/:schauId/katalog-vorschau.pdf", async (c) => {
 
 druckvorlageDateien(app);
 spendenDateien(app);
+meisterschaftDateien(app);
 briefDateien(app);
 
 app.get("/datei/:schauId/bewertungskarten.pdf", async (c) => {
@@ -596,19 +599,6 @@ app.get("/datei/:schauId/verkaufsliste.pdf", async (c) => {
   return pdf(c, await verkaufslistePdf(s), `verkaufsliste-${s.slug}.pdf`);
 });
 
-/** `{ zahl }`: Betrag für die CSV, bleibt unverändert (auch mit Minus) und wird nicht als Text geschützt. */
-type Zelle = string | number | { zahl: string };
-
-function csv(zeilen: Zelle[][]): string {
-  const zelle = (v: Zelle) => {
-    let t = typeof v === "object" ? v.zahl : String(v);
-    // Text, der mit = + - @ oder Tab/Wagenrücklauf beginnt, wertet Excel als Formel aus (Formel-Injektion).
-    if (typeof v === "string" && /^[=+\-@\t\r]/.test(t)) t = `'${t}`;
-    return /[";\r\n]/.test(t) || t.startsWith("'") ? `"${t.replace(/"/g, '""')}"` : t;
-  };
-  // BOM, damit Excel die Umlaute richtig liest; Semikolon wie in deutschem Excel üblich.
-  return "﻿" + zeilen.map((z) => z.map(zelle).join(";")).join("\r\n");
-}
 const euro = (cent: number) => ({ zahl: (cent / 100).toFixed(2).replace(".", ",") });
 
 app.get("/datei/:schauId/abrechnung.csv", async (c) => {

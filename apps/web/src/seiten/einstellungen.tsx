@@ -7,6 +7,7 @@ import { VetAmtFeld } from "./einstellungen-vetamt";
 import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, Haken, Hinweis, Knopf, knopfKlasse, Laden, Seitenkopf, Speicherleiste, Textfeld, useAenderungenWarnen, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
 import { DruckAbschnitt } from "./einstellungen-druck";
+import { MeisterschaftenAbschnitt } from "./einstellungen-meisterschaften";
 
 type Schau = Ausgabe["schau"]["get"];
 
@@ -21,6 +22,7 @@ const ABSCHNITTE: [string, string][] = [
   ["gebuehren", "Standgeld und Gebühren"],
   ["preise", "Preise"],
   ["notenskala", "Notenskala"],
+  ["meisterschaften", "Meisterschaften"],
   ["kaefige", "Käfige und Halle"],
   ["druck", "Druck"],
   ["protokoll", "Protokoll"],
@@ -53,6 +55,7 @@ export function Einstellungen() {
             <Preisarten schau={schau.data} />
             <Notenskala schau={schau.data} />
           </fieldset>
+          <MeisterschaftenAbschnitt schauId={schau.data.id} darfAendern={istAdmin} />
           <KaefigeUndHalle schauId={schau.data.id} />
           <DruckAbschnitt schauId={schau.data.id} darfAendern={istAdmin} />
           <ProtokollAbschnitt schauId={schau.data.id} />

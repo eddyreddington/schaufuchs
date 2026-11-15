@@ -51,6 +51,7 @@ const GRUPPEN: { name: string | null; seiten: { pfad: string; label: string; sym
       { pfad: "einlieferung", label: "Einlieferung", symbol: "einlieferung" },
       { pfad: "bewertung", label: "Bewertung", symbol: "bewertung" },
       { pfad: "preise", label: "Preise", symbol: "preise" },
+      { pfad: "meisterschaften", label: "Meisterschaften", symbol: "meisterschaften" },
       { pfad: "verkauf", label: "Tierverkauf", symbol: "verkauf" },
     ],
   },

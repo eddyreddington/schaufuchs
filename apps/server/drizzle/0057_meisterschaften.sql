@@ -1,0 +1,1 @@
+ALTER TABLE "schau" ADD COLUMN "meisterschaften" jsonb DEFAULT '[]'::jsonb NOT NULL;

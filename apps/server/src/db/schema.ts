@@ -30,6 +30,7 @@ import {
   type FesterPlan,
   type KaefigMasse,
   type KaefigTyp,
+  type MeisterschaftRegel,
   type NotenStufe,
   type Steuerstatus,
 } from "@schau/domain";
@@ -245,6 +246,8 @@ export const schau = pgTable("schau", {
   /** Pflichterklärungen der Aussteller, je Zeile eine (z. B. „nicht aus Sperrbezirk“, „21 Tage kein Zukauf“). */
   erklaerungen: text("erklaerungen").notNull().default(""),
   notenskala: jsonb("notenskala").$type<NotenStufe[] | null>(),
+  /** Meisterschaftswertungen der Schau (packages/domain/src/meisterschaft.ts), in der Reihenfolge der Ausgabe. */
+  meisterschaften: jsonb("meisterschaften").$type<MeisterschaftRegel[]>().notNull().default([]),
   /** Abweichende Käfiggröße je Rasse (Einzeltiere), z. B. Brahma im Großkäfig. */
   kaefigRegeln: jsonb("kaefig_regeln").$type<KaefigRegel[]>().notNull().default([]),
   /** Katalognummern nach Käfigblöcken in dieser Reihenfolge (wie in der Halle); null = nach Sparten. */

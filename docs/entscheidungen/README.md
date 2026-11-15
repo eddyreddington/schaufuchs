@@ -17,3 +17,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [011](011-druckvorlagen.md) | Druckvorlagen: Verein legt fest, Schau wählt |
 | [012](012-briefvorlage.md) | Briefvorlage: eine je Verein, Texte mit Platzhaltern |
 | [013](013-spenden.md) | Spenden: Spenderverzeichnis, Kassenbuch, Zuwendungsbestätigung nach amtlichem Muster |
+| [014](014-meisterschaften.md) | Meisterschaften: ein Regelmodell, Vorlagen statt fester Regeln |

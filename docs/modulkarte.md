@@ -335,7 +335,7 @@ Hallenplan: Wie stehen die Käfige in der Halle?
 - `frontFehler()` – Käfigfronten, die nicht zu einem Gang zeigen: Die Front (Gitter) eines Käfigs ist offen, Rück- und Seitenwände sind dicht – vor jeder Front muss ei …
 - Typen: `HallenFlaeche`, `Halle`, `Drehung`, `HallenObjekt`, `Hauptgang`, `PlanKaefig`, `Reihe`, `FreierPlatz`, `PlanPlatte`, `PlanObjekt`, `Hallenplan`
 
-### index.ts (40 Z.)
+### index.ts (41 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -409,6 +409,17 @@ Tests: `lizenz.test.ts`
 - `lizenzUrlVon()` – Link zur Lizenz aus einer üblichen Angabe wie „CC BY-SA 4.0“ oder „CC BY 3.0 DE“; leer, wenn nicht ableitbar.
 - `pruefeLizenz()` – Prüft, ob ein Bild mit diesen Angaben in den Katalog darf.
 - Typen: `LizenzAngaben`
+
+### meisterschaft.ts (390 Z.)
+Tests: `meisterschaft.test.ts`
+
+- `GLEICHSTAND_KRITERIEN` – Meisterschaftswertungen einer Schau: Summe der besten n Tiere je Aussteller und Rasse/Farbenschlag (Einzelwertung) oder je Verein (Vereinswertung), …
+- `GLEICHSTAND_LABEL`
+- `MeisterschaftTier` (Typ) – Ein bewertetes Tier für die Wertung (Einzeltiere; Stämme und Volieren zählen nicht).
+- `MEISTERSCHAFT_VORLAGEN` – Voreinstellungen aus den Bestimmungen von AAB und BDRG (Stand November 2026).
+- `meisterschaftLesen()` – Gespeicherte Regel in eine gültige bringen; Fehlendes gilt als Vorgabe.
+- `werteMeisterschaft()` – Wertet eine Meisterschaft aus.
+- Typen: `GleichstandKriterium`, `SparteRegel`, `MeisterschaftRegel`, `MeisterschaftVorlage`, `Kandidat`, `Gruppe`
 
 ### noten.ts (70 Z.)
 
@@ -763,6 +774,13 @@ Druckvorlagen (vorerst Bewertungskarte): Vorlagen des Vereins anlegen, ändern, 
 - `halle.gesundheitErfassen` mutation · angemeldet
 - `halle.gesundheitFreigeben` mutation · admin – Sperre aufheben (z. B. Tierarzt gibt Entwarnung) – nur die Ausstellungsleitung; der Eintrag bleibt im Journal.
 
+### routers/meisterschaft.ts (37 Z.) → `meisterschaft`
+Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Ausstellungsleitung, mit Protokoll), Vorlagen, Ergebnisse.
+
+- `meisterschaft.regeln` query · angemeldet – Regeln der Schau (gelesen und ergänzt) und die Vorlagen.
+- `meisterschaft.speichern` mutation · admin
+- `meisterschaft.ergebnisse` query · angemeldet – Ergebnisse aller Meisterschaften (intern, mit allen Namen).
+
 ### routers/meldung.ts (424 Z.) → `meldung`
 
 - `meldung.liste` query · angemeldet
@@ -909,18 +927,18 @@ Prozeduren: auth.status, kasse.abrechnung, kasse.auszahlen, kasse.auszahlungStor
 ### aussteller.tsx (456 Z.) – `/aussteller`
 Prozeduren: schau.liste, verein.aussteller, verein.ausstellerDaten, verein.ausstellerLoeschen, verein.ausstellerSpeichern, verein.vereinsangaben, verein.vereinsnamenSetzen
 
-### benutzer.tsx (631 Z. ⚠) – `/benutzer`, `/benutzer/neu`, `/benutzer/:benutzerId`
+### benutzer.tsx (630 Z. ⚠) – `/benutzer`, `/benutzer/neu`, `/benutzer/:benutzerId`
 Prozeduren: auth.benutzerAbmelden, auth.benutzerAktiv, auth.benutzerAnlegen, auth.benutzerGet, auth.benutzerListe, auth.benutzerLoeschen, auth.benutzerPasswortSetzen, auth.benutzerRolle, auth.benutzerSpeichern, auth.benutzerWillkommen, auth.passwortAendern, auth.sperreAufheben, auth.status, auth.zweiFaktorAbschalten, auth.zweiFaktorBestaetigen, auth.zweiFaktorEinrichten, auth.zweiFaktorStatus, auth.zweiFaktorZuruecksetzen
 
 ### bewertung.tsx (326 Z.) – `/schau/:schauId/bewertung`
 Prozeduren: auth.status, bewertung.liste, bewertung.obmannBestaetigen, bewertung.setzen, bewertung.zuruecksetzen
 
-### briefvorlage.tsx (237 Z.) – `/verein/briefvorlage`
+### briefvorlage.tsx (236 Z.) – `/verein/briefvorlage`
 Prozeduren: druckvorlage.brief, druckvorlage.briefSpeichern, druckvorlage.serienbriefAnzahl, schau.liste
 
 ### druckvorlage-vorschau.tsx (147 Z.)
 
-### druckvorlage.tsx (230 Z.) – `/verein/druckvorlagen/:vorlageId`
+### druckvorlage.tsx (229 Z.) – `/verein/druckvorlagen/:vorlageId`
 Prozeduren: druckvorlage.liste, druckvorlage.speichern, druckvorlage.vorgabe
 
 ### einladung.tsx (99 Z.) – `/einladung`
@@ -932,10 +950,13 @@ Prozeduren: auth.status, halle.gesundheit, halle.gesundheitErfassen, halle.gesun
 ### einstellungen-druck.tsx (60 Z.)
 Prozeduren: druckvorlage.fuerSchau, druckvorlage.fuerSchauAnpassen, druckvorlage.waehlen
 
+### einstellungen-meisterschaften.tsx (267 Z.)
+Prozeduren: meisterschaft.regeln, meisterschaft.speichern
+
 ### einstellungen-vetamt.tsx (87 Z.)
 Prozeduren: schau.veterinaeraemter
 
-### einstellungen.tsx (897 Z. ⚠) – `/schau/:schauId/einstellungen`
+### einstellungen.tsx (892 Z. ⚠) – `/schau/:schauId/einstellungen`
 Prozeduren: auth.status, schau.absagen, schau.aktualisieren, schau.alsTestschau, schau.demodatenNeu, schau.gebuehrenSetzen, schau.get, schau.loeschen, schau.notenskalaSetzen, schau.preisartLoeschen, schau.preisartSpeichern, schau.protokoll, schau.testschauVorschau, stammdaten.versionen
 
 ### fehler.tsx (42 Z.)
@@ -956,7 +977,7 @@ Prozeduren: katalog.halleSetzen, katalog.hallenplan, katalog.kaefigInfo, katalog
 ### hilfe.tsx (182 Z.) – `/hilfe`, `/hilfe/:teil`
 Prozeduren: auth.status
 
-### kaefige.tsx (483 Z.) – `/schau/:schauId/kaefige`
+### kaefige.tsx (473 Z.) – `/schau/:schauId/kaefige`
 Prozeduren: katalog.aufstellerSetzen, katalog.kaefigMassSetzen, katalog.kaefigRegelSetzen, katalog.kaefigbedarf, katalog.plattenSetzen, katalog.sockelBildEntfernen, katalog.sockelBildSetzen
 
 ### kassenbuch.tsx (334 Z.) – `/schau/:schauId/kassenbuch`
@@ -976,6 +997,9 @@ Prozeduren: auth.status, katalog.gedrucktSetzen, katalog.liste, katalog.nummernV
 ### kommende-schauen.tsx (534 Z.)
 Prozeduren: termine.aboAbrufen, termine.aboLoeschen, termine.aboSpeichern, termine.abweichung, termine.druckenSetzen, termine.laden, termine.loeschen, termine.pruefen, termine.speichern, termine.veroeffentlichenSetzen, termine.wahlSetzen
 
+### meisterschaften.tsx (84 Z.) – `/schau/:schauId/meisterschaften`
+Prozeduren: meisterschaft.ergebnisse
+
 ### meldung-bearbeiten.tsx (446 Z.) – `/schau/:schauId/meldungen/neu`, `/schau/:schauId/meldungen/:meldungId`
 Prozeduren: meldung.adressVorschlaege, meldung.ausstellerSuche, meldung.bestaetigungSenden, meldung.get, meldung.speichern, meldung.statusSetzen, meldung.verfallBuchen, meldung.zahlungErfassen, meldung.zahlungStornieren, schau.get, stammdaten.suche
 
@@ -988,7 +1012,7 @@ Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.m
 ### preise.tsx (462 Z.) – `/schau/:schauId/preise`
 Prozeduren: auth.status, preise.entfernen, preise.freigeben, preise.stiftungBarErhalten, preise.stiftungLoeschen, preise.stiftungSpeichern, preise.uebersicht, preise.vergeben, schau.get
 
-### preisrichter.tsx (515 Z.) – `/schau/:schauId/preisrichter`
+### preisrichter.tsx (506 Z.) – `/schau/:schauId/preisrichter`
 Prozeduren: preisrichter.einteilungSetzen, preisrichter.einteilungVorschlagen, preisrichter.liste, preisrichter.loeschen, preisrichter.pinErzeugen, preisrichter.speichern, preisrichter.sperreAufheben, preisrichter.zuteilung, preisrichter.zuteilungSetzen, preisrichter.zuteilungVorschlagen, schau.get, stammdaten.gliederung
 
 ### protokoll.tsx (147 Z.) – `/schau/:schauId/protokoll`
@@ -1010,7 +1034,7 @@ Prozeduren: spenden.erfassen, spenden.spender, spenden.spenderSpeichern
 ### spenden.tsx (168 Z.) – `/schau/:schauId/spenden`
 Prozeduren: spenden.bestaetigen, spenden.liste, spenden.steuer, spenden.stornieren
 
-### spender.tsx (182 Z.) – `/spender`
+### spender.tsx (181 Z.) – `/spender`
 Prozeduren: spenden.bestaetigungStornieren, spenden.sammelbestaetigen, spenden.spender, spenden.spenderDetails, spenden.spenderSpeichern
 
 ### stammdaten.tsx (291 Z.) – `/stammdaten`
@@ -1019,16 +1043,16 @@ Prozeduren: auth.status, stammdaten.baum, stammdaten.ergaenzen, stammdaten.glied
 ### uebersicht.tsx (302 Z.) – `/schau/:schauId`
 Prozeduren: auth.status, schau.phaseSetzen, schau.uebersicht
 
-### verein-abmeldung.tsx (58 Z.)
+### verein-abmeldung.tsx (53 Z.)
 Prozeduren: verein.abmeldung, verein.abmeldungSpeichern
 
 ### verein-druckvorlagen.tsx (75 Z.)
 Prozeduren: druckvorlage.liste, druckvorlage.loeschen
 
-### verein-steuer.tsx (76 Z.)
+### verein-steuer.tsx (75 Z.)
 Prozeduren: spenden.steuer, spenden.steuerSpeichern
 
-### verein.tsx (545 Z.) – `/verein`
+### verein.tsx (544 Z.) – `/verein`
 Prozeduren: bewertung.textbausteinGrundbestand, bewertung.textbausteinLoeschen, bewertung.textbausteinSpeichern, bewertung.textbausteine, schau.postErneutSenden, schau.postausgang, stammdaten.gliederung, stammdaten.versionen, verein.auskunftPerson, verein.bereinigen, verein.get, verein.speichern
 
 ### verkauf.tsx (340 Z.) – `/schau/:schauId/verkauf`
@@ -1049,6 +1073,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `fehlertext.ts` (5 Z.) · kurzerFehler
 - `kasse.ts` (110 Z.) · sperreKasse, SEPA_ERSTELLT, SEPA_VERWORFEN, SEPA_GEBUCHT, offenerLauf, schliesseLauf, offeneStornoZahlungen, offeneUeberweisungsverkaeufe, pruefeNichtAbgeschlossen, pruefeNichtAbgerechnet
 - `kassenbuch.ts` (237 Z.) · tagDe, ladeKassenbuch, sollBestand, archiviereBeleg, ladeBeleg, zweitschrift, belegListe, archiviereKaufbeleg, archiviereKassenbeleg, archiviereQuittung, archiviereSpendenquittung
+- `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
 - `meldung.ts` (493 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, speichereMeldung, bindungen, hatAuszahlung
 - `post.ts` (143 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, naechsterVersuch, sendeMail, versende, starteMailversand
 - `preise.ts` (174 Z.) · vergebePreis, entfernePreis
@@ -1084,6 +1109,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `hallenplan.ts` (403 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog.ts` (1.502 Z. ⚠) · KURZ_JE_ABTEILUNG, kurzauswahl, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis, katalogPdf
+- `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
 - `spenden.ts` (257 Z.) – Spenden: Zuwendungsbestätigung nach amtlichem Muster (Geld, Sache, Sammelbestätigung mit Anlage) und die einfache Spendenquittung für die Kasse. · zuwendungsbestaetigungPdf, spendenquittungPdf
 
 ### Datenbank `apps/server/src/db`
@@ -1092,7 +1118,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `geheim-bestand.ts` (61 Z.) – Stellt Altbestand im Klartext auf verschlüsselte Spalten um (läuft bei jedem Start nach den Migrationen; findet es nichts mehr, tut es nichts). · pruefeDatenschluessel, verschluesseleBestand
 - `geheim.ts` (99 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, entschluessele, geheimText, geheimJson
 - `schema-spenden.ts` (115 Z.) – Spenden (Entscheidung 013): Spenderverzeichnis des Vereins, Spenden je Schau und Zuwendungsbestätigungen. · spender, spende, zuwendungsbestaetigung, bestaetigungSpende
-- `schema.ts` (1.018 Z. ⚠) · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum, organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag, schau, gebuehr, preisart, aussteller, meldung, zahlung, katalogeintrag, vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein, stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung, aenderung, postausgang, KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, druckvorlage, katalogGestaltung, TERMIN_STATUS, terminabo, schautermin, bild, rassebild, katalogBeitrag, KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, aenderungKette, aenderungGeloescht, aenderungAnonymisiert, sepaLauf
+- `schema.ts` (1.021 Z. ⚠) · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum, organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag, schau, gebuehr, preisart, aussteller, meldung, zahlung, katalogeintrag, vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein, stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung, aenderung, postausgang, KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, druckvorlage, katalogGestaltung, TERMIN_STATUS, terminabo, schautermin, bild, rassebild, katalogBeitrag, KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, aenderungKette, aenderungGeloescht, aenderungAnonymisiert, sepaLauf
 - `schutz.ts` (15 Z.) – Spielt die Schutz-Trigger (schutz.sql) ein: nach Migrationen, nach db:push und in den Tests. · schutzEinspielen
 - `spalten.ts` (12 Z.) – Spaltenarten, die mehrere Schemadateien nutzen (schema.ts, schema-spenden.ts). · ts, created, createdNachSperre, bytea
 
@@ -1100,12 +1126,14 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 - `auth.ts` (189 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
 - `config.ts` (30 Z.) · config
+- `csv.ts` (15 Z.) – CSV für Excel: Semikolon, BOM, Schutz vor Formel-Injektion. · csv
 - `datei-druckvorlage.ts` (125 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien, briefDateien
+- `datei-meisterschaften.ts` (47 Z.) – Datei-Adressen der Meisterschaften (angemeldete Benutzer der eigenen Schau): GET /datei/:schauId/meisterschaften.pdf – Ergebnisse zum Aushängen, Na … · meisterschaftDateien
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
-- `index.ts` (940 Z. ⚠)
+- `index.ts` (930 Z. ⚠)
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
-- `router.ts` (40 Z.) · appRouter
+- `router.ts` (42 Z.) · appRouter
 - `seed.ts` (548 Z.) – Demo-Daten für Entwicklung, Tests und Vorführung. · DEMO, demoEntfernen, seed, bisZurBewertung, komplett
 - `testschau.ts` (517 Z.) – Testdaten für eine vorhandene, leere Schau: füllt sie wie eine echte Lokalschau bis nach der Einlieferung, damit die Ausstellungsleitung den Rest ( … · MERKMAL, DEMO_TIERE_HOECHSTENS, mitDemoSperre, fuellen, zuruecksetzen, entfernen
 - `trpc.ts` (290 Z.) · kurzerPruefText, pruefeMeta, pruefeUmfang, strukturZuGross, sqlZustand, router, publicProcedure, fehler, dbId, kalenderdatum, benutzerProcedure, adminProcedure, richterProcedure, oeffentlichSichtbarProcedure, ladeSchau, pruefeNachFreigabe
@@ -1120,10 +1148,10 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `main.tsx` (22 Z.)
 - `modus.ts` (46 Z.) · setzeFarbmodus, useFarbmodus
 - `pdf-anzeige.tsx` (43 Z.) – PDF im Browser anzeigen (pdf.js), gemeinsam für die Live-Vorschauen von Katalog und Druckvorlagen. · pdfjs, PdfSeite
-- `rahmen.tsx` (525 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
+- `rahmen.tsx` (526 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
 - `rolle.ts` (9 Z.) · useIstAdmin
-- `routes.tsx` (110 Z.) · router
-- `symbole.tsx` (42 Z.) · Symbol
+- `routes.tsx` (112 Z.) · router
+- `symbole.tsx` (43 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui.tsx` (621 Z. ⚠) · knopfKlasse, Knopf, KnopfLink, Feld, useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter, Eingabe, Textfeld, Auswahl, Haken, Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, SpeicherPlatz, Speicherleiste, Kennzahlen, Leer, Laden, FehlerAnzeige, Dialog, FragenAnbieter, useFrage, MeldungenAnbieter, useMeldung
 
@@ -1180,5 +1208,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `47-druckvorlagen.ts` (112 Z.) – Druckvorlagen für Bewertungskarten: Vorlagen des Vereins speichern, je Schau wählen, für eine Schau abwandeln, löschen (Schau druckt dann wieder mi …
 - `48-briefvorlage.ts` (116 Z.) – Briefvorlage des Vereins: speichern (Protokoll), eigene Texte im B-Bogen, Serienbrief an Mitglieder, alle Aussteller oder die einer Schau – ohne ge …
 - `49-spenden.ts` (211 Z.) – Spenden (Entscheidung 013): steuerliche Angaben, Barspende mit Kassenbuch und Quittung, Spende bei der Meldung im offenen Betrag, Zuwendungsbestäti …
+- `50-meisterschaften.ts` (60 Z.) – Meisterschaften (Entscheidung 014): Regeln speichern (Ausstellungsleitung, Protokoll), Wertung aus Katalog und Bewertung, PDF und CSV.
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
