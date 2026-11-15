@@ -13,6 +13,9 @@
 # Für Entwickler (Probelauf mit lokal gebauten Images und Dateien):
 #   SCHAUFUCHS_QUELLE=/pfad/zum/repo SCHAUFUCHS_IMAGE=schaufuchs-lokal SCHAUFUCHS_VERSION=test sh install.sh
 set -eu
+# Alles in geschweiften Klammern: Beim Aufruf über „curl … | sh“ liest die Shell so erst das ganze Skript, bevor sie
+# etwas ausführt – sonst könnte ein Befehl, der von der Eingabe liest, den Rest des Skripts verschlucken.
+{
 
 KONTO="eddyreddington"
 VERSION="${SCHAUFUCHS_VERSION:-1.2.0}"
@@ -91,8 +94,8 @@ ln -sf "$ZIEL/schaufuchs" /usr/local/bin/schaufuchs
 echo
 echo "Lade die Programme (einmalig einige hundert MB) …"
 export SCHAUFUCHS_IMAGE="$IMAGE" SCHAUFUCHS_VERSION="$VERSION"
-case "$IMAGE" in */*) docker pull -q "$IMAGE-backup:$VERSION" > /dev/null ;; esac
-schluesselpaar=$(docker run --rm --entrypoint age-keygen "$IMAGE-backup:$VERSION" 2> /dev/null) || fehler "Sicherungsschlüssel ließ sich nicht erzeugen."
+case "$IMAGE" in */*) docker pull -q "$IMAGE-backup:$VERSION" < /dev/null > /dev/null ;; esac
+schluesselpaar=$(docker run --rm --entrypoint age-keygen "$IMAGE-backup:$VERSION" < /dev/null 2> /dev/null) || fehler "Sicherungsschlüssel ließ sich nicht erzeugen."
 sicherung_privat=$(printf '%s\n' "$schluesselpaar" | grep '^AGE-SECRET-KEY-')
 sicherung_oeffentlich=$(printf '%s\n' "$schluesselpaar" | sed -n 's/^# public key: //p')
 [ -n "$sicherung_privat" ] && [ -n "$sicherung_oeffentlich" ] || fehler "Sicherungsschlüssel unvollständig."
@@ -126,12 +129,12 @@ umask 022
 # ── Starten ───────────────────────────────────────────────────────────────
 echo "Starte SchauFUCHS …"
 cd "$ZIEL"
-case "$IMAGE" in */*) docker compose pull -q ;; esac
-docker compose up -d
+case "$IMAGE" in */*) docker compose pull -q < /dev/null ;; esac
+docker compose up -d < /dev/null
 printf 'Warte auf den Start '
 bereit=""
 for _ in $(seq 1 90); do
-  if docker compose exec -T app bun -e "fetch('http://localhost:8787/api/gesund').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" > /dev/null 2>&1; then
+  if docker compose exec -T app bun -e "fetch('http://localhost:8787/api/gesund').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" < /dev/null > /dev/null 2>&1; then
     bereit=1
     break
   fi
@@ -174,3 +177,4 @@ echo "      rm $blatt       (danach löschen)"
 echo "  Ohne diese Schlüssel lässt sich keine Sicherung zurückspielen."
 echo
 echo "  Weitere Befehle: schaufuchs hilfe"
+}
