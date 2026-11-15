@@ -37,13 +37,70 @@ und Preisrichter sind eingebaut.
 
 ## Installation für Vereine
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/eddyreddington/schaufuchs/main/deploy/install.sh | sudo sh
-```
+### Systemvoraussetzungen
 
-Der Installer fragt nur nach Adresse und E-Mail, erzeugt alle Schlüssel, startet SchauFUCHS mit HTTPS und automatischen,
-verschlüsselten Sicherungen. Danach: `schaufuchs update`, `schaufuchs zuruecknehmen`, `schaufuchs wiederherstellen` …
-Die ausführliche Anleitung mit allen Schritten steht in [docs/installation.md](docs/installation.md).
+| | Voraussetzung |
+|---|---|
+| **Server-Betriebssystem** | Linux. Geprüft mit **Debian 12** und **Ubuntu 24.04 LTS**. Andere Linux-Systeme, auf denen Docker läuft, sollten gehen, sind aber nicht geprüft. |
+| **Prozessor** | 64 Bit, Intel/AMD (`amd64`) oder ARM (`arm64`, z. B. ARM-Cloud-Server). Fertige Images gibt es für beide. |
+| **Größe** | 2 CPU-Kerne, 4 GB Arbeitsspeicher, 40 GB Speicher – ein kleiner gemieteter Cloud-Server (rund 5 € im Monat) reicht. |
+| **Netz** | Eine eigene Adresse (z. B. `schau.mein-verein.de`), die per DNS auf den Server zeigt; Ports 80 und 443 offen. |
+| **Software** | Nur Docker mit `docker compose` – der Installer richtet es bei Bedarf selbst ein. |
+| **Windows, macOS** | Nicht als Server vorgesehen (der Installer läuft nur unter Linux). Als Arbeitsplatz genügt jeder aktuelle Browser – auch auf Windows, macOS, iPad und Android-Tablets. |
+
+Benutzt wird SchauFUCHS nur im Browser; auf den Rechnern und Tablets des Vereins wird nichts installiert. Preisrichter
+bewerten am Tablet auch ohne Netz (die Seite lässt sich als App auf den Startbildschirm legen).
+
+### Installieren und in Betrieb nehmen
+
+1. **Server mieten** (Debian 12 oder Ubuntu 24.04, Standort Deutschland/EU, mit Auftragsverarbeitungsvertrag).
+2. **DNS-Eintrag** anlegen: `A`-Eintrag `schau` → IP-Adresse des Servers.
+3. **Anmelden:** `ssh root@IP-ADRESSE` (Windows: PowerShell, Mac: Terminal).
+4. **Installieren** – ein Befehl:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/eddyreddington/schaufuchs/main/deploy/install.sh | sh
+   ```
+
+   Der Installer fragt nur nach Adresse und E-Mail (für das HTTPS-Zertifikat), installiert bei Bedarf Docker, erzeugt
+   alle Schlüssel, startet SchauFUCHS mit HTTPS (Let's Encrypt) und automatischen, verschlüsselten Sicherungen. Am Ende
+   zeigt er die Adresse und einen Einrichtungscode. Als normaler Benutzer: `| sudo sh`.
+5. **Notfallblatt sichern:** `/root/schaufuchs-notfallblatt.txt` (Schlüssel zum Wiederherstellen) in den
+   Passwortmanager oder ausdrucken, dann auf dem Server löschen.
+6. **Verein einrichten:** Adresse im Browser öffnen, mit dem Einrichtungscode den ersten Ausstellungsleiter anlegen,
+   Zwei-Faktor-Anmeldung einrichten, Impressum und Datenschutzhinweise ausfüllen.
+7. **Optional Mailversand:** `schaufuchs einstellungen` und `SMTP_URL` eintragen (siehe unten).
+
+Die ausführliche Anleitung mit allen Schritten steht in [docs/installation.md](docs/installation.md), der laufende Betrieb
+(Sicherungen, Notfälle, Hallenbetrieb) in [docs/betrieb.md](docs/betrieb.md).
+
+### Im Betrieb
+
+| Was | Befehl auf dem Server |
+|---|---|
+| Läuft alles? | `schaufuchs status` |
+| Neue Version einspielen (sichert vorher) | `schaufuchs update` |
+| Update zurücknehmen | `schaufuchs zuruecknehmen` |
+| Sicherung zurückspielen | `schaufuchs sicherungen`, dann `schaufuchs wiederherstellen DATEI` |
+| Einstellungen ändern | `schaufuchs einstellungen` (öffnet `/opt/schaufuchs/.env`, startet danach neu) |
+| Alle Befehle | `schaufuchs hilfe` |
+
+### Konfiguration
+
+Alles steht in `/opt/schaufuchs/.env`; der Installer legt die Datei an. Ändern mit `schaufuchs einstellungen`.
+
+| Einstellung | Bedeutung |
+|---|---|
+| `SCHAUFUCHS_DOMAIN`, `PUBLIC_URL` | Adresse, unter der SchauFUCHS erreichbar ist (z. B. `schau.mein-verein.de` bzw. `https://schau.mein-verein.de`) |
+| `ACME_EMAIL` | E-Mail für das HTTPS-Zertifikat |
+| `SMTP_URL`, `MAIL_FROM` | Mailversand, z. B. `smtps://benutzer%40verein.de:PASSWORT@mail.anbieter.de:465`; leer: Mails bleiben im Postausgang |
+| `BACKUP_INTERVALL_MINUTEN`, `BACKUP_TAGE` | Wie oft gesichert wird (Vorgabe 120 Minuten) und wie lange Sicherungen bleiben (Vorgabe 30 Tage) |
+| `APP_NAME` | Name in der Oberfläche (Vorgabe „SchauFUCHS“) |
+| `APP_SPEICHER` | Arbeitsspeicher-Grenze der Anwendung (Vorgabe `2g`) |
+| `DATENSCHLUESSEL`, `POSTGRES_PASSWORD`, `BACKUP_EMPFAENGER` | Vom Installer erzeugt – **nie ändern**. Ohne den Datenschlüssel sind IBAN und Zwei-Faktor-Geheimnisse nicht mehr lesbar. |
+
+Alles Fachliche – Verein, Benutzer, Schauen, Gebühren, Preise, Druckvorlagen, Briefe, Spenden – stellt die
+Ausstellungsleitung in der Anwendung selbst ein; das Handbuch dazu ist unter „Hilfe“ eingebaut.
 
 ## Entwicklung
 

@@ -8,7 +8,7 @@ eine neue). Laufende Kosten: rund 5 € im Monat für den Server.
 
 | | Wofür | Beispiel |
 |---|---|---|
-| **Server** | Hier läuft SchauFUCHS, rund um die Uhr erreichbar | gemieteter „Cloud-Server“ / „VPS“ mit Debian 12 oder Ubuntu 24.04, 2 CPU-Kerne, 4 GB Arbeitsspeicher, 40 GB Speicher, Standort Deutschland bzw. EU |
+| **Server** | Hier läuft SchauFUCHS, rund um die Uhr erreichbar | gemieteter „Cloud-Server“ / „VPS“ mit Debian 12 oder Ubuntu 24.04 (Intel/AMD oder ARM, 64 Bit), 2 CPU-Kerne, 4 GB Arbeitsspeicher, 40 GB Speicher, Standort Deutschland bzw. EU. Windows- und macOS-Rechner eignen sich nicht als Server. |
 | **Adresse** | Unter ihr erreichen Helfer, Preisrichter und Aussteller SchauFUCHS | `schau.mein-verein.de` (Subdomain der Vereinsdomain) |
 | **E-Mail-Adresse** | Für das HTTPS-Zertifikat (Let's Encrypt schreibt nur bei Problemen) | `technik@mein-verein.de` |
 | **Optional: Mailpostfach** | Damit SchauFUCHS Bestätigungen an Aussteller verschickt | Zugangsdaten (SMTP) eines Postfachs des Vereins |
@@ -116,6 +116,22 @@ und bei `MAIL_FROM=` den Absender. Speichern (bei nano: Strg+O, Enter, Strg+X) �
 Sicherungen entstehen automatisch alle zwei Stunden (wenn sich etwas geändert hat) und werden 30 Tage aufgehoben. Bitte
 den Ordner `/opt/schaufuchs/backups` zusätzlich ab und zu auf einen anderen Rechner kopieren – die Dateien sind
 verschlüsselt. Mehr dazu und zu Notfällen: [betrieb.md](betrieb.md).
+
+## Einstellungen
+
+Alle Einstellungen stehen in `/opt/schaufuchs/.env`. `schaufuchs einstellungen` öffnet die Datei und startet SchauFUCHS
+nach dem Speichern neu.
+
+| Einstellung | Bedeutung |
+|---|---|
+| `SCHAUFUCHS_DOMAIN`, `PUBLIC_URL` | Adresse von SchauFUCHS. Bei einem Wechsel zuerst den DNS-Eintrag anlegen, dann beide Zeilen ändern. |
+| `ACME_EMAIL` | E-Mail für das HTTPS-Zertifikat |
+| `SMTP_URL`, `MAIL_FROM` | Mailversand (Schritt 7); leer: Mails bleiben im Postausgang (Verein und Datenschutz) |
+| `BACKUP_INTERVALL_MINUTEN`, `BACKUP_TAGE` | Abstand der Sicherungen (Vorgabe 120 Minuten) und Aufbewahrung (Vorgabe 30 Tage) |
+| `APP_NAME` | Name in der Oberfläche |
+| `APP_SPEICHER` | Arbeitsspeicher-Grenze der Anwendung (Vorgabe `2g`) |
+| `ZWEI_FAKTOR_PFLICHT` | Nur im Notfall `0` (siehe [betrieb.md](betrieb.md)) – sonst nicht eintragen |
+| `DATENSCHLUESSEL`, `POSTGRES_PASSWORD`, `BACKUP_EMPFAENGER`, `EINRICHTUNG_CODE` | Vom Installer erzeugt – nicht ändern. Sicherungs- und Datenschlüssel stehen auf dem Notfallblatt (Schritt 5). |
 
 ## Ohne eigenen Server ausprobieren
 
