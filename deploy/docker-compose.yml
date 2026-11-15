@@ -51,6 +51,9 @@ services:
       BACKUP_UNVERSCHLUESSELT: ${BACKUP_UNVERSCHLUESSELT:-0}
       BACKUP_TAGE: ${BACKUP_TAGE:-30}
       BACKUP_INTERVALL_MINUTEN: ${BACKUP_INTERVALL_MINUTEN:-120}
+      # Besitzer der Sicherungsdateien (setzt install.sh auf den Benutzer, der sudo aufgerufen hat); leer: root.
+      BACKUP_UID: ${BACKUP_UID:-}
+      BACKUP_GID: ${BACKUP_GID:-}
       TZ: Europe/Berlin
     volumes:
       - ./backups:/backups

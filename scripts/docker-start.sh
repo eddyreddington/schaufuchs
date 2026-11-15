@@ -5,6 +5,12 @@
 #   sh scripts/wiederherstellen.sh --schluessel DATEI --vorherige-version backups/schau-…-vor-update.dump.age
 set -eu
 cd "$(dirname "$0")/.."
+# Unter Linux braucht Docker root-Rechte: mit sudo aufrufen. Die Gruppe „docker“ wäre gleichbedeutend mit root und ist
+# deshalb nicht der empfohlene Weg.
+if ! docker info > /dev/null 2>&1; then
+  echo "Docker ist nicht erreichbar. Läuft Docker? Unter Linux bitte mit sudo aufrufen: sudo sh scripts/docker-start.sh" >&2
+  exit 1
+fi
 # Ohne diese Schlüssel startet die App nicht bzw. wird nicht gesichert – lieber vor dem Update abbrechen.
 wert() { sed -n "s/^$1=//p" .env 2>/dev/null | tail -n 1; }
 if [ -z "$(wert DATENSCHLUESSEL)" ]; then

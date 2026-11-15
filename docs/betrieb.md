@@ -5,8 +5,10 @@ Befehle, Sicherung, Wiederherstellung, Notfälle – und den Betrieb mit selbst 
 
 ## Mit dem Installer (Befehl `schaufuchs`)
 
-Der Installer legt alles unter `/opt/schaufuchs` ab: `docker-compose.yml` (App, PostgreSQL, Sicherung, Caddy für HTTPS),
-`.env` (Einstellungen und Schlüssel, nur für root lesbar), `backups/` und den Befehl `schaufuchs`:
+Der Installer läuft als eigener Benutzer mit sudo (Einrichtung und Absicherung des Servers: [installation.md](installation.md))
+und legt alles unter `/opt/schaufuchs` ab: `docker-compose.yml` (App, PostgreSQL, Sicherung, Caddy für HTTPS), `.env`
+(Einstellungen und Schlüssel, nur für root lesbar), `backups/` (gehört dem Benutzer, der sudo aufgerufen hat) und den
+Befehl `schaufuchs`:
 
 | Befehl | Wirkung |
 |---|---|
@@ -16,14 +18,17 @@ Der Installer legt alles unter `/opt/schaufuchs` ab: `docker-compose.yml` (App, 
 | `sudo schaufuchs sichern` / `sicherungen` | Sicherung jetzt anlegen / vorhandene anzeigen |
 | `sudo schaufuchs wiederherstellen DATEI` | Sicherung zurückspielen (fragt nach dem Sicherungsschlüssel vom Notfallblatt) |
 | `sudo schaufuchs einstellungen` | `.env` bearbeiten (z. B. Mailversand), danach Neustart |
-| `sudo schaufuchs logs` | Meldungen von Anwendung und HTTPS |
+| `sudo schaufuchs logs` | Meldungen von Anwendung, HTTPS und Sicherung |
+| `sudo schaufuchs pruefen` | Absicherung abfragen: SSH (root, Passwort), ufw, unattended-upgrades, Neustart, fail2ban, letzte Sicherung, Platz – nur Hinweise (ab 1.2.1) |
 
-**Notfallblatt:** Der Installer schreibt Sicherungsschlüssel und Datenschlüssel nach `/root/schaufuchs-notfallblatt.txt`.
+**Notfallblatt:** Der Installer schreibt Sicherungsschlüssel und Datenschlüssel nach `~/schaufuchs-notfallblatt.txt` des
+Benutzers, der sudo aufgerufen hat (als root angemeldet: `/root/schaufuchs-notfallblatt.txt`).
 Ausdrucken oder im Passwortmanager des Vereins ablegen, dann die Datei löschen. Ohne Sicherungsschlüssel lässt sich keine
 Sicherung zurückspielen; ohne Datenschlüssel sind IBAN und Zwei-Faktor-Geheimnisse einer zurückgespielten Datenbank unlesbar.
 
 **Sicherungen außer Haus:** `/opt/schaufuchs/backups` regelmäßig auf einen anderen Rechner oder in einen Cloud-Speicher
-kopieren (die Dateien sind verschlüsselt). Fällt der Server aus: neuen Server mit dem Installer aufsetzen, in der `.env`
+kopieren (die Dateien sind verschlüsselt und gehören über `BACKUP_UID`/`BACKUP_GID` dem eigenen Benutzer, also z. B.
+`rsync -av verwalter@schau.example.org:/opt/schaufuchs/backups/ ~/schaufuchs-sicherungen/` ohne sudo). Fällt der Server aus: neuen Server mit dem Installer aufsetzen, in der `.env`
 `DATENSCHLUESSEL` vom Notfallblatt eintragen, Sicherung nach `backups/` kopieren, `sudo schaufuchs wiederherstellen DATEI`.
 
 **Mailversand:** `sudo schaufuchs einstellungen`, `SMTP_URL` eintragen (Zugangsdaten des Mailpostfachs des Vereins,

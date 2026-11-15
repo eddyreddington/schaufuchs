@@ -9,7 +9,7 @@ Bewertung am Tablet (auch ohne Netz), Preise, Tierverkauf, Kasse und Abrechnung.
 den Sonderbestimmungen der jeweiligen Schau. Die Oberfläche ist deutsch, die Handbücher für Ausstellungsleitung, Helfer
 und Preisrichter sind eingebaut.
 
-- **Für Vereine:** [SchauFUCHS installieren](docs/installation.md) – ein gemieteter Server für rund 5 € im Monat, ein Befehl, fertig.
+- **Für Vereine:** [SchauFUCHS installieren und betreiben](docs/installation.md) – Schritt für Schritt vom leeren Server (rund 5 € im Monat) bis zur abgesicherten, erreichbaren Schau.
 - **Betrieb, Sicherung, Notfälle:** [docs/betrieb.md](docs/betrieb.md)
 - **Für Entwickler:** [Architektur](docs/architektur.md), [Modulkarte](docs/modulkarte.md), [Mitmachen](CONTRIBUTING.md)
 
@@ -44,7 +44,7 @@ und Preisrichter sind eingebaut.
 | **Server-Betriebssystem** | Linux. Geprüft mit **Debian 12** und **Ubuntu 24.04 LTS** – auf einem gemieteten Server oder einem eigenen Rechner im Verein (Mini-PC, alter PC, Raspberry Pi 4/5 mit 64-Bit-System). Andere Linux-Systeme, auf denen Docker läuft, sollten gehen, sind aber nicht geprüft. |
 | **Prozessor** | 64 Bit, Intel/AMD (`amd64`) oder ARM (`arm64`, z. B. ARM-Cloud-Server). Fertige Images gibt es für beide. |
 | **Größe** | 2 CPU-Kerne, 4 GB Arbeitsspeicher, 40 GB Speicher – ein kleiner gemieteter Cloud-Server (rund 5 € im Monat) reicht. |
-| **Netz** | Eine eigene Adresse (z. B. `schau.mein-verein.de`), die per DNS auf den Server zeigt; Ports 80 und 443 offen. |
+| **Netz** | Eine eigene Adresse (z. B. `schau.example.org`), die per DNS (A, bei IPv6 auch AAAA) auf den Server zeigt; Ports 80 und 443 offen. |
 | **Software** | Nur Docker mit `docker compose` – der Installer richtet es bei Bedarf selbst ein. |
 | **Laptop (Mac, Windows)** | Zum Ausprobieren, für Schulungen oder als Einzelplatz unter `https://localhost`: Mac mit Docker Desktop oder OrbStack (ab 1.2.1, geprüft mit OrbStack), Windows über WSL2 mit Ubuntu und Docker Desktop (nicht geprüft). Für eine Schau mit Online-Meldung und Tablets braucht es einen Server mit eigener Adresse. |
 | **Arbeitsplätze** | Jeder aktuelle Browser – auch auf Windows, macOS, iPad und Android-Tablets. |
@@ -54,50 +54,57 @@ bewerten am Tablet auch ohne Netz (die Seite lässt sich als App auf den Startbi
 
 ### Installieren und in Betrieb nehmen
 
-1. **Server bereitstellen:** mieten (Debian 12 oder Ubuntu 24.04, Standort Deutschland/EU, mit
-   Auftragsverarbeitungsvertrag) oder einen eigenen Rechner im Verein mit Debian/Ubuntu nehmen (Ports 80 und 443 im
-   Router freigeben, ggf. DynDNS).
-2. **DNS-Eintrag** anlegen: `A`-Eintrag `schau` → IP-Adresse des Servers (bei DynDNS: `CNAME` auf die DynDNS-Adresse).
-3. **Anmelden:** `ssh root@IP-ADRESSE` (Windows: PowerShell, Mac: Terminal).
-4. **Installieren** – ein Befehl:
+Die [Anleitung](docs/installation.md) führt Schritt für Schritt vom leeren Server bis zur abgesicherten, erreichbaren
+Schau. In Kurzform:
+
+1. **SSH-Schlüssel** auf dem eigenen Computer erzeugen (`ssh-keygen -t ed25519`).
+2. **Server bereitstellen:** mieten (Ubuntu 24.04 oder Debian 12, Standort Deutschland/EU, mit
+   Auftragsverarbeitungsvertrag) oder einen eigenen Rechner im Verein nehmen (Portweiterleitung 80/443, ggf. DynDNS).
+3. **DNS-Eintrag** anlegen: `A` (und bei IPv6 `AAAA`) `schau` → Adresse des Servers. Das HTTPS-Zertifikat holt der
+   mitgelieferte Caddy danach selbst bei Let's Encrypt.
+4. **Eigenen Benutzer mit sudo** anlegen und den Schlüssel hinterlegen – gearbeitet wird nicht als root.
+5. **Absichern:** SSH nur mit Schlüssel und ohne root (`PermitRootLogin no`, `PasswordAuthentication no`), Firewall
+   (ufw) nur für 22, 80 und 443, automatische Sicherheitsupdates (unattended-upgrades).
+6. **Installieren** – als eigener Benutzer, ein Befehl:
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/eddyreddington/schaufuchs/main/deploy/install.sh | sh
+   curl -fsSL https://raw.githubusercontent.com/eddyreddington/schaufuchs/main/deploy/install.sh | sudo sh
    ```
 
    Der Installer fragt nur nach Adresse und E-Mail (für das HTTPS-Zertifikat), installiert bei Bedarf Docker, erzeugt
-   alle Schlüssel, startet SchauFUCHS mit HTTPS (Let's Encrypt) und automatischen, verschlüsselten Sicherungen. Am Ende
-   zeigt er die Adresse und einen Einrichtungscode. Als normaler Benutzer: `| sudo sh`.
-5. **Notfallblatt sichern:** `/root/schaufuchs-notfallblatt.txt` (Schlüssel zum Wiederherstellen) in den
-   Passwortmanager oder ausdrucken, dann auf dem Server löschen.
-6. **Verein einrichten:** Adresse im Browser öffnen, mit dem Einrichtungscode den ersten Ausstellungsleiter anlegen,
+   alle Schlüssel, startet SchauFUCHS mit HTTPS und automatischen, verschlüsselten Sicherungen. Am Ende zeigt er die
+   Adresse und einen Einrichtungscode. `sudo schaufuchs pruefen` fragt danach die Absicherung ab (ab 1.2.1).
+7. **Notfallblatt sichern:** `~/schaufuchs-notfallblatt.txt` (Schlüssel zum Wiederherstellen) in den Passwortmanager
+   oder ausdrucken, dann auf dem Server löschen.
+8. **Verein einrichten:** Adresse im Browser öffnen, mit dem Einrichtungscode den ersten Ausstellungsleiter anlegen,
    Zwei-Faktor-Anmeldung einrichten, Impressum und Datenschutzhinweise ausfüllen.
-7. **Optional Mailversand:** `schaufuchs einstellungen` und `SMTP_URL` eintragen (siehe unten).
+9. **Optional Mailversand:** `sudo schaufuchs einstellungen` und `SMTP_URL` eintragen (siehe unten).
 
 Auf dem Laptop (Mac, Windows) geht es mit der Adresse `localhost` – siehe „Auf dem Laptop“ in der Anleitung.
-Die ausführliche Anleitung mit allen Schritten steht in [docs/installation.md](docs/installation.md), der laufende Betrieb
-(Sicherungen, Notfälle, Hallenbetrieb) in [docs/betrieb.md](docs/betrieb.md).
+Updates, Sicherung außer Haus, Wiederherstellung, Neustart, Meldungen und Notfälle stehen ebenfalls in der
+[Anleitung](docs/installation.md), Einzelheiten zu Sicherung und Hallenbetrieb in [docs/betrieb.md](docs/betrieb.md).
 
 ### Im Betrieb
 
 | Was | Befehl auf dem Server |
 |---|---|
-| Läuft alles? | `schaufuchs status` |
-| Neue Version einspielen (sichert vorher) | `schaufuchs update` |
-| Update zurücknehmen | `schaufuchs zuruecknehmen` |
-| Sicherung zurückspielen | `schaufuchs sicherungen`, dann `schaufuchs wiederherstellen DATEI` |
-| Einstellungen ändern | `schaufuchs einstellungen` (öffnet `/opt/schaufuchs/.env`, startet danach neu) |
-| Alle Befehle | `schaufuchs hilfe` |
+| Läuft alles? | `sudo schaufuchs status` |
+| Neue Version einspielen (sichert vorher) | `sudo schaufuchs update` |
+| Update zurücknehmen | `sudo schaufuchs zuruecknehmen` |
+| Sicherung zurückspielen | `sudo schaufuchs sicherungen`, dann `sudo schaufuchs wiederherstellen DATEI` |
+| Einstellungen ändern | `sudo schaufuchs einstellungen` (öffnet `/opt/schaufuchs/.env`, startet danach neu) |
+| Absicherung prüfen (SSH, Firewall, Updates) | `sudo schaufuchs pruefen` (ab 1.2.1) |
+| Alle Befehle | `sudo schaufuchs hilfe` |
 
 ### Konfiguration
 
-Alles steht in `/opt/schaufuchs/.env`; der Installer legt die Datei an. Ändern mit `schaufuchs einstellungen`.
+Alles steht in `/opt/schaufuchs/.env`; der Installer legt die Datei an. Ändern mit `sudo schaufuchs einstellungen`.
 
 | Einstellung | Bedeutung |
 |---|---|
-| `SCHAUFUCHS_DOMAIN`, `PUBLIC_URL` | Adresse, unter der SchauFUCHS erreichbar ist (z. B. `schau.mein-verein.de` bzw. `https://schau.mein-verein.de`) |
+| `SCHAUFUCHS_DOMAIN`, `PUBLIC_URL` | Adresse, unter der SchauFUCHS erreichbar ist (z. B. `schau.example.org` bzw. `https://schau.example.org`) |
 | `ACME_EMAIL` | E-Mail für das HTTPS-Zertifikat |
-| `SMTP_URL`, `MAIL_FROM` | Mailversand, z. B. `smtps://benutzer%40verein.de:PASSWORT@mail.anbieter.de:465`; leer: Mails bleiben im Postausgang |
+| `SMTP_URL`, `MAIL_FROM` | Mailversand, z. B. `smtps://benutzer%40example.org:PASSWORT@mail.example.net:465`; leer: Mails bleiben im Postausgang |
 | `BACKUP_INTERVALL_MINUTEN`, `BACKUP_TAGE` | Wie oft gesichert wird (Vorgabe 120 Minuten) und wie lange Sicherungen bleiben (Vorgabe 30 Tage) |
 | `APP_NAME` | Name in der Oberfläche (Vorgabe „SchauFUCHS“) |
 | `APP_SPEICHER` | Arbeitsspeicher-Grenze der Anwendung (Vorgabe `2g`) |

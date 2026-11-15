@@ -52,6 +52,77 @@ schluessel_abfragen() {
   printf '%s' "$datei"
 }
 
+# Absicherung des Servers abfragen (Anleitung: docs/installation.md, „Server absichern“). Gibt nur Hinweise, ändert
+# nichts. Steht hier und nicht in einer eigenen Datei, weil ein Update von 1.2.0 nur die bekannten Dateien holt.
+absicherung_pruefen() {
+  hinweise=0
+  gut() { printf '  \033[32m✓\033[0m %s\n' "$*"; }
+  hinweis() { printf '  \033[33m!\033[0m %s\n' "$*"; hinweise=$((hinweise + 1)); }
+  fett "SSH"
+  if command -v sshd > /dev/null 2>&1 || [ -x /usr/sbin/sshd ]; then
+    # Fehlermeldungen mitnehmen: ssh_wert liest nur die Einstellungszeilen, der Hinweis unten nennt sonst den Grund.
+    ssh_werte=$(PATH="$PATH:/usr/sbin" sshd -T 2>&1 || true)
+    ssh_wert() { printf '%s\n' "$ssh_werte" | awk -v n="$1" '$1 == n { print $2; exit }'; }
+    case "$(ssh_wert permitrootlogin)" in
+      no) gut "Anmeldung als root abgeschaltet (PermitRootLogin no)" ;;
+      "") hinweis "SSH-Einstellungen nicht lesbar (sshd -T: $(printf '%s\n' "$ssh_werte" | head -n 1)) – bitte von Hand prüfen" ;;
+      *) hinweis "Anmeldung als root ist erlaubt ($(ssh_wert permitrootlogin)) – PermitRootLogin no setzen" ;;
+    esac
+    case "$(ssh_wert passwordauthentication)" in
+      no) gut "Anmeldung nur mit Schlüssel (PasswordAuthentication no)" ;;
+      "") ;;
+      *) hinweis "Anmeldung mit Passwort ist erlaubt – PasswordAuthentication no setzen (vorher Schlüssel prüfen)" ;;
+    esac
+    [ "$(ssh_wert kbdinteractiveauthentication)" != "yes" ] || hinweis "KbdInteractiveAuthentication yes erlaubt Passwörter auf anderem Weg – auf no setzen"
+  else
+    gut "Kein SSH-Server installiert"
+  fi
+  fett "Firewall"
+  if command -v ufw > /dev/null 2>&1; then
+    ufw_status=$(ufw status 2> /dev/null || true)
+    if printf '%s' "$ufw_status" | grep -q "Status: active"; then
+      gut "ufw ist eingeschaltet"
+      for port in 22 80 443; do
+        muster="^$port(/tcp)?[[:space:]]"
+        [ "$port" != 22 ] || muster="^(22(/tcp)?|OpenSSH)[[:space:]]"
+        printf '%s\n' "$ufw_status" | grep -Eq "$muster.*(ALLOW|LIMIT)" || hinweis "Port $port ist in ufw nicht freigegeben"
+      done
+      andere=$(printf '%s\n' "$ufw_status" | awk '/ALLOW|LIMIT/ { split($1, p, "/"); if (p[1] != "22" && p[1] != "80" && p[1] != "443" && p[1] != "OpenSSH") print $1 }' | sort -u | tr '\n' ' ')
+      [ -z "$andere" ] || hinweis "Weitere offene Ports in ufw: $andere– nötig?"
+    else
+      hinweis "ufw ist installiert, aber nicht eingeschaltet"
+    fi
+  else
+    hinweis "Keine Firewall (ufw) installiert – außer der Anbieter filtert davor (Firewall im Kundenbereich)"
+  fi
+  fett "Updates"
+  if dpkg -s unattended-upgrades > /dev/null 2>&1; then
+    if apt-config dump 2> /dev/null | grep -q '^APT::Periodic::Unattended-Upgrade "1"'; then
+      gut "Sicherheitsupdates werden automatisch eingespielt (unattended-upgrades)"
+    else
+      hinweis "unattended-upgrades ist installiert, aber nicht eingeschaltet (dpkg-reconfigure -plow unattended-upgrades)"
+    fi
+  else
+    hinweis "Keine automatischen Sicherheitsupdates – unattended-upgrades installieren"
+  fi
+  if [ -f /var/run/reboot-required ]; then hinweis "Neustart nötig, damit Updates wirken (nicht am Schautag): sudo reboot"; else gut "Kein Neustart ausstehend"; fi
+  if command -v fail2ban-client > /dev/null 2>&1; then
+    if fail2ban-client status sshd > /dev/null 2>&1; then gut "fail2ban schützt SSH"; else hinweis "fail2ban ist installiert, der Schutz für SSH läuft aber nicht"; fi
+  fi
+  fett "SchauFUCHS"
+  if [ -z "$(find backups -maxdepth 1 -name 'schau-*.dump*' -mmin -1560 2> /dev/null | head -n 1)" ]; then
+    hinweis "Keine Sicherung aus den letzten 26 Stunden – $AUFRUF logs"
+  else
+    gut "Sicherung aus den letzten 26 Stunden vorhanden"
+  fi
+  frei=$(df -Pk "$ZIEL" | awk 'NR==2 { print int($4 / 1048576) }')
+  if [ "$frei" -lt 5 ]; then hinweis "Nur noch $frei GB frei"; else gut "$frei GB frei"; fi
+  blaetter=$(ls /root/schaufuchs-notfallblatt.txt /home/*/schaufuchs-notfallblatt.txt 2> /dev/null | tr '\n' ' ' | sed 's/ $//' || true)
+  [ -z "$blaetter" ] || hinweis "Notfallblatt liegt noch auf dem Server ($blaetter) – ablegen, dann löschen"
+  echo
+  if [ "$hinweise" = 0 ]; then fett "Keine Hinweise."; else fett "$hinweise Hinweis(e). Anleitung: docs/installation.md, Abschnitt „Server absichern“."; fi
+}
+
 neueste_version() {
   curl -fsSL "https://api.github.com/repos/$KONTO/schaufuchs/releases/latest" 2> /dev/null | sed -n 's/.*"tag_name": *"v\{0,1\}\([^"]*\)".*/\1/p' | head -n 1
 }
@@ -62,7 +133,7 @@ case "$befehl" in
   status)
     fett "SchauFUCHS $(wert SCHAUFUCHS_VERSION) – $(wert PUBLIC_URL)"
     docker compose ps --format 'table {{.Service}}\t{{.Status}}'
-    if gesund 1; then echo "Anwendung: läuft"; else echo "Anwendung: antwortet nicht (schaufuchs logs)"; fi
+    if gesund 1; then echo "Anwendung: läuft"; else echo "Anwendung: antwortet nicht ($AUFRUF logs)"; fi
     echo "Letzte Sicherung: $(ls -t backups/*.dump* 2> /dev/null | head -n 1 || echo keine)"
     df -h "$ZIEL" | awk 'NR==2{print "Freier Platz: " $4}'
     ;;
@@ -138,11 +209,16 @@ case "$befehl" in
 
   neustart)
     docker compose up -d --force-recreate
-    gesund 90 && echo "Läuft." || fehler "Startet nicht – schaufuchs logs"
+    gesund 90 && echo "Läuft." || fehler "Startet nicht – $AUFRUF logs"
     ;;
 
   logs)
-    docker compose logs --tail "${1:-200}" app caddy
+    docker compose logs --tail "${1:-200}" app caddy backup
+    ;;
+
+  pruefen)
+    [ "$(uname -s)" = "Linux" ] && [ -f /etc/debian_version ] || fehler "„pruefen“ gibt es nur auf Linux-Servern mit Debian oder Ubuntu."
+    absicherung_pruefen
     ;;
 
   hilfe|*)
@@ -157,7 +233,8 @@ SchauFUCHS verwalten (Linux: immer mit sudo):
   schaufuchs wiederherstellen D  Sicherung D zurückspielen (braucht den Sicherungsschlüssel)
   schaufuchs einstellungen       Einstellungen bearbeiten (z. B. Mailversand), danach Neustart
   schaufuchs neustart            Alles neu starten
-  schaufuchs logs                Meldungen der Anwendung anzeigen
+  schaufuchs logs [N]            Letzte N Meldungen von Anwendung, HTTPS und Sicherung (Vorgabe 200)
+  schaufuchs pruefen             Absicherung des Servers prüfen (SSH, Firewall, Updates) – ändert nichts
 
 Installation: $ZIEL · Sicherungen: $ZIEL/backups (bitte auch außer Haus kopieren)
 HILFE

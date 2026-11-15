@@ -5,6 +5,9 @@
 #   Linux, Windows (WSL2):  curl -fsSL https://raw.githubusercontent.com/eddyreddington/schaufuchs/main/deploy/install.sh | sudo sh
 #   Mac:                    curl -fsSL https://raw.githubusercontent.com/eddyreddington/schaufuchs/main/deploy/install.sh | sh
 #
+# Linux: als eigener Benutzer mit sudo aufrufen, nicht als root angemeldet (Anleitung: docs/installation.md). Dieser
+# Benutzer bekommt das Notfallblatt in seinen Ordner und darf die verschlüsselten Sicherungen lesen und kopieren.
+#
 # Fragt Adresse und E-Mail, installiert bei Bedarf Docker, erzeugt alle Schlüssel, startet SchauFUCHS mit HTTPS und
 # zeigt am Ende den Einrichtungscode und das Notfallblatt (Schlüssel zum Aufheben).
 # Zum Ausprobieren ohne eigene Adresse: Adresse „localhost“ eingeben (HTTPS mit selbst ausgestelltem Zertifikat).
@@ -42,8 +45,14 @@ ja() {
 zufall_hex() { od -An -tx1 -N"$1" /dev/urandom | tr -d ' \n'; }
 
 # ── Voraussetzungen ───────────────────────────────────────────────────────
+# Linux: Docker und /opt brauchen root-Rechte. Aufgerufen wird mit sudo von einem eigenen Benutzer (SUDO_USER); der
+# bekommt Notfallblatt und Sicherungen. Wer direkt als root angemeldet ist, wird gewarnt.
+benutzer=""
 case "$SYSTEM" in
-  Linux) [ "$(id -u)" = "0" ] || fehler "Bitte mit sudo bzw. als root ausführen." ;;
+  Linux)
+    [ "$(id -u)" = "0" ] || fehler "Bitte mit sudo starten: curl -fsSL https://raw.githubusercontent.com/$KONTO/schaufuchs/main/deploy/install.sh | sudo sh"
+    if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then benutzer="$SUDO_USER"; fi
+    ;;
   Darwin) ;;
   *) fehler "Dieses System wird nicht unterstützt. Unter Windows bitte in WSL2 (Ubuntu) ausführen – siehe Anleitung." ;;
 esac
@@ -51,6 +60,13 @@ esac
 
 fett "SchauFUCHS $VERSION – Installation"
 echo
+if [ "$SYSTEM" = "Linux" ] && [ -z "$benutzer" ]; then
+  echo "Achtung: Sie sind direkt als root angemeldet. Sicherer ist ein eigener Benutzer mit sudo, und die Anmeldung"
+  echo "als root per SSH gehört abgeschaltet (Anleitung, Abschnitt „Server absichern“). Notfallblatt und Sicherungen"
+  echo "gehören dann root."
+  ja "Trotzdem als root installieren?" || fehler "Abgebrochen. Erst einen eigenen Benutzer anlegen, dann mit ihm und sudo neu starten."
+  echo
+fi
 
 if [ "$SYSTEM" = "Darwin" ]; then
   # Auf dem Mac installiert der Installer Docker nicht selbst: Docker Desktop oder OrbStack vorher installieren und starten.
@@ -65,7 +81,7 @@ fi
 docker compose version > /dev/null 2>&1 || fehler "„docker compose“ fehlt. Bitte Docker aktualisieren (https://docs.docker.com/engine/install/)."
 
 # ── Fragen ────────────────────────────────────────────────────────────────
-echo "Unter welcher Adresse soll SchauFUCHS erreichbar sein? Beispiel: schau.mein-verein.de"
+echo "Unter welcher Adresse soll SchauFUCHS erreichbar sein? Beispiel: schau.example.org"
 echo "Die Adresse muss schon auf diesen Server zeigen (DNS-Eintrag beim Anbieter der Domain)."
 echo "Nur auf diesem Rechner ausprobieren: localhost"
 domain=$(printf '%s' "${SCHAUFUCHS_ADRESSE:-$(frage "Adresse:")}" | tr 'A-Z' 'a-z' | sed -E 's#^https?://##; s#/.*$##')
@@ -89,6 +105,12 @@ case "$email" in *@*.*) ;; *) fehler "Bitte eine gültige E-Mail-Adresse angeben
 # ── Dateien holen ─────────────────────────────────────────────────────────
 mkdir -p "$ZIEL/backups" "$ZIEL/scripts"
 chmod 700 "$ZIEL/backups"
+# Die Sicherungen sind verschlüsselt; der eigene Benutzer darf sie lesen und außer Haus kopieren (BACKUP_UID unten).
+if [ -n "$benutzer" ]; then
+  benutzer_uid=$(id -u "$benutzer")
+  benutzer_gid=$(id -g "$benutzer")
+  chown "$benutzer_uid:$benutzer_gid" "$ZIEL/backups"
+fi
 hole() {
   case "$QUELLE" in
     http*) curl -fsSL "$QUELLE/$1" -o "$2" || fehler "Konnte $1 nicht laden ($QUELLE)." ;;
@@ -138,6 +160,9 @@ EINRICHTUNG_CODE=$einrichtung
 BACKUP_EMPFAENGER=$sicherung_oeffentlich
 BACKUP_INTERVALL_MINUTEN=120
 BACKUP_TAGE=30
+${benutzer:+# Sicherungsdateien gehören diesem Benutzer ($benutzer), damit er sie ohne sudo kopieren kann.
+BACKUP_UID=$benutzer_uid
+BACKUP_GID=$benutzer_gid}
 # E-Mail-Versand (leer = Mails bleiben im Postausgang). Format: smtp://benutzer:passwort@server:587
 # Sonderzeichen in Benutzer/Passwort kodieren: @ → %40, # → %23, / → %2F, ? → %3F, % → %25, : → %3A
 SMTP_URL=
@@ -164,8 +189,15 @@ echo
 [ -n "$bereit" ] || fehler "SchauFUCHS ist nicht gestartet. Hinweise: $befehl logs"
 
 # ── Notfallblatt ──────────────────────────────────────────────────────────
-# Linux: im Ordner von root; Mac: im Installationsordner (nur für den Benutzer lesbar).
-if [ "$SYSTEM" = "Darwin" ]; then blatt="$ZIEL/notfallblatt.txt"; else blatt=/root/schaufuchs-notfallblatt.txt; fi
+# Linux: im Ordner des Benutzers, der sudo aufgerufen hat (sonst root); Mac: im Installationsordner. Nur für den
+# Besitzer lesbar.
+if [ "$SYSTEM" = "Darwin" ]; then
+  blatt="$ZIEL/notfallblatt.txt"
+elif [ -n "$benutzer" ]; then
+  blatt="$(getent passwd "$benutzer" | cut -d: -f6)/schaufuchs-notfallblatt.txt"
+else
+  blatt=/root/schaufuchs-notfallblatt.txt
+fi
 umask 077
 cat > "$blatt" << BLATT
 SchauFUCHS – Notfallblatt für $domain (erstellt $(date '+%d.%m.%Y'))
@@ -180,8 +212,17 @@ Datenschlüssel (entschlüsselt IBAN und Zwei-Faktor-Geheimnisse in der Datenban
 $datenschluessel
 
 Sicherungen liegen auf dem Server unter $ZIEL/backups – bitte regelmäßig zusätzlich außer Haus kopieren.
+
+Zum Ausfüllen von Hand (Anleitung: docs/installation.md, Schritt „Notfallblatt sichern“):
+  Server-Anbieter, Kundennummer, Zugang zur Konsole: ______________________________________________
+  IP-Adressen des Servers (IPv4, IPv6):              ______________________________________________
+  Domain verwaltet bei:                              ______________________________________________
+  Benutzer auf dem Server:                           ${benutzer:-______________________________________________}
+  SSH-Schlüssel und Benutzerpasswort liegen bei:     ______________________________________________
+  Sicherungen außer Haus liegen bei:                 ______________________________________________
 BLATT
 umask 022
+[ -z "$benutzer" ] || chown "$benutzer_uid:$benutzer_gid" "$blatt"
 
 echo
 fett "SchauFUCHS läuft."
@@ -198,6 +239,10 @@ echo "  Ohne diese Schlüssel lässt sich keine Sicherung zurückspielen."
 echo
 if [ "$domain" = "localhost" ]; then
   echo "  Der Browser warnt einmal vor dem selbst ausgestellten Zertifikat – für localhost unbedenklich."
+fi
+# „pruefen“ gibt es im Befehl schaufuchs ab 1.2.1.
+if [ "$SYSTEM" = "Linux" ] && grep -q '^  pruefen)' "$ZIEL/schaufuchs"; then
+  echo "  Absicherung des Servers prüfen (SSH, Firewall, Updates): $befehl pruefen"
 fi
 echo "  Weitere Befehle: $befehl hilfe"
 }
