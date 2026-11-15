@@ -3,6 +3,7 @@ import { druckvorlageRouter } from "./routers/druckvorlage";
 import { spendenRouter } from "./routers/spenden";
 import { meisterschaftRouter } from "./routers/meisterschaft";
 import { importRouter } from "./routers/import";
+import { hallenentwurfRouter } from "./routers/hallenentwurf";
 import { bewertungRouter, richterRouter } from "./routers/bewertung";
 import { kasseRouter } from "./routers/kasse";
 import { halleRouter, katalogRouter } from "./routers/katalog";
@@ -29,6 +30,7 @@ export const appRouter = router({
   spenden: spendenRouter,
   meisterschaft: meisterschaftRouter,
   datenimport: importRouter,
+  hallenentwurf: hallenentwurfRouter,
   termine: termineRouter,
   halle: halleRouter,
   preisrichter: preisrichterRouter,

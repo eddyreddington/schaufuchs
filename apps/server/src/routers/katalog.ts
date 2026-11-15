@@ -41,7 +41,7 @@ const KAEFIG_PLATZ = z.discriminatedUnion("art", [
   z.object({ art: z.literal("block"), objektId: z.string().min(1).max(100), i: z.number().int().min(0).max(1000) }),
 ]);
 
-const HALLE_EINGABE = z.object({
+export const HALLE_EINGABE = z.object({
   breite: z.number().min(100).max(50000),
   laenge: z.number().min(100).max(50000),
   gang: z.number().min(50).max(1000),
@@ -133,7 +133,7 @@ type Akteur = Parameters<typeof protokolliere>[1]["akteur"];
  * unter Sperre. Verschobenes, entfernte Plätze und eingesetzte Teile der bisherigen Aufstellung fallen weg – auch belegte
  * Blöcke, ihre Tiere stellt der neue Plan; was nicht in die Reihen passt, bekommt Käfigblöcke. Der Plan ist danach nicht fest.
  */
-async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<typeof ladeSchau>>, e: { basis?: string; halle?: z.infer<typeof HALLE_EINGABE>; grund: string }) {
+export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<typeof ladeSchau>>, e: { basis?: string; halle?: z.infer<typeof HALLE_EINGABE>; grund: string }) {
   const { tiere } = await planTiere(s);
   return db.transaction(async (tx) => {
     const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("update");

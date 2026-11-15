@@ -5,6 +5,7 @@ import { fehlerText } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
 import { trpc, type Ausgabe } from "../trpc";
+import { HallenEntwuerfe } from "./hallenplan-entwuerfe";
 import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, KnopfLink, Laden, Leer, Marke, SEITE, Seitenkopf, SpeicherStatus, type SpeicherStand, TabellenRahmen, useFrage, useMeldung } from "../ui";
 import { MenueEintrag, MenueKopf, MenueTrenner, strg, WzGruppe, WzKnopf, WzMenue, WzSymbol } from "./hallenplan-werkzeuge";
 
@@ -868,6 +869,7 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
           <span className="nicht-drucken flex flex-wrap gap-2">
             {!bearbeiten && <Knopf onClick={() => setVoll(true)}>Vollansicht</Knopf>}
             {!bearbeiten && <Knopf onClick={dreiDOeffnen}>3D</Knopf>}
+            <HallenEntwuerfe schauId={schauId} darfAendern={bearbeiten} />
             <KnopfLink href={`/datei/${schauId}/hallenplan.pdf`} target="_blank" rel="noreferrer">
               Plan drucken
             </KnopfLink>

@@ -1031,3 +1031,4 @@ export const sepaLauf = pgTable(
 export * from "./schema-spenden";
 // Import aus Altprogrammen: Importläufe.
 export * from "./schema-import";
+export * from "./schema-hallenentwurf";

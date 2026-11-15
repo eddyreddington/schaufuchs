@@ -18,6 +18,7 @@ import {
   aenderung,
   aussteller,
   importlauf,
+  hallenentwurf,
   benutzer,
   bild,
   farbenschlag,
@@ -180,6 +181,7 @@ export async function demoEntfernen(): Promise<boolean> {
     await tx.delete(spender).where(eq(spender.organisationId, orgId));
     if (nutzerIds.length) await tx.delete(aenderung).where(and(isNull(aenderung.schauId), inArray(aenderung.benutzerId, nutzerIds)));
     await tx.delete(importlauf).where(eq(importlauf.organisationId, orgId));
+    await tx.delete(hallenentwurf).where(eq(hallenentwurf.organisationId, orgId));
     await tx.delete(aussteller).where(eq(aussteller.organisationId, orgId));
     await tx.delete(textbaustein).where(eq(textbaustein.organisationId, orgId));
     await tx.delete(benutzer).where(eq(benutzer.organisationId, orgId));

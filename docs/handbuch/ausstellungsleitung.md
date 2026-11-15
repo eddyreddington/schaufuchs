@@ -970,6 +970,24 @@ Das geht nur mit festgeschriebenem Plan, denn sonst würde die Software die Käf
 
 **Drucken:** „Plan drucken“ öffnet den Hallenplan als PDF auf genau einem Blatt DIN A4 – quer, wenn die Zeichnung breiter als hoch ist (das ist der Normalfall, die lange Seite liegt waagrecht), sonst hochkant. Der Plan füllt das Blatt; eine große Halle wird verkleinert, nie abgeschnitten. Die Reihennamen R1, R2 … stehen außerhalb der Halle am Rand (über der Wand bzw. links davor, neben der Meterleiste) – so verdecken sie im Plan nichts, auf dem Bildschirm wie im Druck. Darüber stehen nur Schau, Hallenmaße und Stand, darunter eine kleine Legende (Preisrichter-Farben, Eingang/Notausgang, freie Fläche, Volierenbereich, Grundplatte, freier Platz). „Aufbauliste“ öffnet die Aufbauliste je Reihe als eigenes PDF im Hochformat. Bevor die Katalognummern vergeben sind, stehen die Tiere in Ausstellungsfolge ohne Nummern; danach stimmt der Plan mit den Käfignummern überein. Abgelehnte und stornierte Meldungen fallen heraus; ein Tier, das bei der Einlieferung als fehlend gemeldet wird, behält seinen Käfig im Plan – die Reihen ordnen sich während der Schau nicht neu. Ein bei der Einlieferung anders gewählter Käfig erscheint im Plan in seiner gewählten Größe.
 
+#### Entwürfe und Archiv {#hallenplan-entwuerfe}
+
+Für eine Schau lassen sich mehrere Hallenpläne entwerfen und vergleichen. „Entwürfe“ (oben auf der Seite) öffnet die
+Übersicht:
+
+- **Aktuellen Plan als Entwurf speichern:** Namen eingeben (z. B. „Variante quer“), „Speichern“. Gespeichert wird die
+  Halle, wie sie gerade ist – Maße, Gänge, Reihen, Grundplatten, Flächen und eingesetzte Teile.
+- **Laden:** ersetzt den aktuellen Plan durch den Entwurf und setzt ihn neu (wie „Plan neu setzen“; ein fester Plan
+  entfällt, die Katalognummern bleiben). Wer den aktuellen Plan behalten will, speichert ihn vorher als Entwurf.
+- **Diesen nehmen:** Der Verein hat entschieden – der Entwurf wird geladen und gilt. Alle übrigen Entwürfe der Schau
+  gehen ins **Archiv**. „Aktuellen Plan nehmen – Entwürfe ins Archiv“ macht dasselbe mit dem Plan, der gerade gilt.
+- **Archiv:** Hier stehen die nicht gewählten Pläne aller früheren Schauen des Vereins, mit Schau und Datum. „Laden“
+  übernimmt einen davon in die aktuelle Schau (ohne Teile, die zu den Tieren der früheren Schau gehörten).
+- Umbenennen und Löschen gehen jederzeit; gelöschte Entwürfe sind endgültig weg. Speichern, Laden und Entscheiden stehen
+  im Protokoll.
+
+Eine neue Schau übernimmt wie bisher die Halle der letzten Schau; das Archiv kommt dazu.
+
 #### Hallenplan in 3D {#hallenplan-3d}
 
 Der Knopf **3D** (im Editor in der Werkzeugleiste unter *Ansicht*, für Helfer oben neben „Vollansicht“) öffnet die Halle räumlich in einem neuen Browser-Tab: Wände mit Ein- und Notausgängen (über einem Ausgang, dessen Name „Not…“ enthält, hängt ein grünes Schild), die Aufsteller mit den Grundplatten, die Käfige in ihrer Breite, Tiefe und Höhe (Maße unter „Käfige“) – wie Ausstellungskäfige gebaut: Seitenwände und Rückwand dicht, damit die Tiere sich nicht sehen, vorn und oben Gitter; die Gitterfront zeigt immer zum Gang, die Rückwand zur Wand bzw. zur Rückwand der Gegenreihe (eingesetzte Käfigblöcke richten sich nach der Reihe, in der sie stehen) – die eingesetzten Käfigblöcke, Käfige in Etagen übereinander, die Volieren (Rückwand und Seiten dicht, vorn und oben Draht, die Front wie im Plan), Tische und Bänke und die Flächen am Boden. Die Käfige tragen die Farbe ihres Preisrichters wie im Plan (Legende unten links), freie Plätze sind grau. In jedem belegten Käfig sitzt eine einfache Figur: Huhn, kleiner bei Zwerghühnern, Taube, Ente, Gans oder Pute; die Farbe richtet sich grob nach dem Farbenschlag. In einer Voliere laufen mehrere Tiere.

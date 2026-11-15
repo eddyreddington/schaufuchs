@@ -86,3 +86,4 @@ import "./tests/50-meisterschaften";
 import "./tests/51-import";
 import "./tests/52-import-befunde";
 import "./tests/53-teilschauen";
+import "./tests/54-hallenentwuerfe";

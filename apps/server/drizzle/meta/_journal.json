@@ -421,6 +421,13 @@
       "when": 1794760436172,
       "tag": "0059_teilschauen",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1794761420453,
+      "tag": "0060_hallenentwuerfe",
+      "breakpoints": true
     }
   ]
 }
