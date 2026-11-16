@@ -32,6 +32,7 @@ export const rahmen = {
     preisrichter: "Preisrichter",
     meldephase: "Meldephase",
     meldungen: "Meldungen",
+    kontoauszug: "Kontoauszug",
     nachMeldeschluss: "Nach dem Meldeschluss",
     kaefige: "Käfige",
     hallenplan: "Hallenplan",

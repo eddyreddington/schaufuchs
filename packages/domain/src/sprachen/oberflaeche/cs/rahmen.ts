@@ -29,6 +29,7 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     preisrichter: "Posuzovatelé",
     meldephase: "Období přihlášek",
     meldungen: "Přihlášky",
+    kontoauszug: "Výpis z účtu",
     nachMeldeschluss: "Po uzávěrce přihlášek",
     kaefige: "Klece",
     hallenplan: "Plán haly",

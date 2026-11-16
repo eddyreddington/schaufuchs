@@ -453,8 +453,15 @@
     {
       "idx": 64,
       "version": "7",
-      "when": 1794865725496,
-      "tag": "0064_benutzer_sprache",
+      "when": 1794865924783,
+      "tag": "0064_kontoauszug",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1794869700988,
+      "tag": "0065_benutzer_sprache",
       "breakpoints": true
     }
   ]

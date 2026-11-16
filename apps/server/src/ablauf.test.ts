@@ -92,4 +92,5 @@ import "./tests/56-grundriss";
 import "./tests/57-sprachen";
 import "./tests/58-a-bogen";
 import "./tests/59-girocode";
-import "./tests/60-oberflaeche-sprache";
+import "./tests/60-kontoauszug";
+import "./tests/61-oberflaeche-sprache";

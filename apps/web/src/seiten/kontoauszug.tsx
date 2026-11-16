@@ -1,0 +1,169 @@
+import { useState } from "react";
+import { datum, fehlerText, formatEuro } from "../lib";
+import { useSchauId } from "../rahmen";
+import { trpc, type Ausgabe } from "../trpc";
+import { Auswahl, Hinweis, Knopf, Leer, Marke, SEITE, Seitenkopf, TabellenRahmen, useMeldung } from "../ui";
+
+type Bericht = Ausgabe["kontoauszug"]["pruefen"];
+const MAX_BYTES = 4 * 1024 * 1024;
+
+/** Datei als Base64 (ohne „data:“-Vorspann). */
+function alsBase64(datei: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
+    r.onerror = () => reject(new Error("Datei konnte nicht gelesen werden."));
+    r.readAsDataURL(datei);
+  });
+}
+
+/**
+ * Kontoauszug-Import (Entscheidung 023), nur Administratoren: Datei aus dem Onlinebanking (camt.053 oder CSV) hochladen,
+ * Zuordnung prüfen, ausgewählte Gutschriften als Überweisung buchen. Erklärungen im Handbuch („Kontoauszug-Import“).
+ */
+export function Kontoauszug() {
+  const schauId = useSchauId();
+  const meldung = useMeldung();
+  const utils = trpc.useUtils();
+  const [datei, setDatei] = useState<{ name: string; base64: string } | null>(null);
+  const [feld, setFeld] = useState(0);
+  const [bericht, setBericht] = useState<Bericht | null>(null);
+  /** Gewählte Meldung je Gutschrift (Schlüssel) und ob sie gebucht werden soll. */
+  const [ziel, setZiel] = useState<Record<string, number | null>>({});
+  const [haken, setHaken] = useState<Record<string, boolean>>({});
+  const pruefen = trpc.kontoauszug.pruefen.useMutation({ onError: (e) => meldung(fehlerText(e), "fehler") });
+  const buchen = trpc.kontoauszug.buchen.useMutation({ onError: (e) => meldung(fehlerText(e), "fehler") });
+
+  const lesen = async (d: { name: string; base64: string }) => {
+    const r = await pruefen.mutateAsync({ schauId, base64: d.base64 }).catch(() => null);
+    if (!r) return;
+    // Datei erst übernehmen, wenn sie gelesen ist – sonst buchte der Knopf eine andere Datei als die angezeigte.
+    setDatei(d);
+    setBericht(r);
+    setZiel(Object.fromEntries(r.posten.map((p) => [p.schluessel, p.meldungId])));
+    // Vorausgewählt nur, was über die Referenz sicher zugeordnet und noch nicht gebucht ist.
+    setHaken(Object.fromEntries(r.posten.map((p) => [p.schluessel, !p.gebucht && p.sicherheit === "referenz" && p.hinweis !== "ueberzahlung"])));
+  };
+  const waehlen = async (f: File | undefined) => {
+    setFeld((n) => n + 1);
+    if (!f) return;
+    if (f.size > MAX_BYTES) return meldung("Die Datei ist zu groß (höchstens 4 MB).", "fehler");
+    setBericht(null);
+    setDatei(null);
+    await lesen({ name: f.name, base64: await alsBase64(f) });
+  };
+  const auswahl = (bericht?.posten ?? []).filter((p) => haken[p.schluessel] && ziel[p.schluessel] != null && !p.gebucht);
+  const summe = auswahl.reduce((s, p) => s + p.betragCent, 0);
+  const jetztBuchen = async () => {
+    if (!datei || !auswahl.length) return;
+    const r = await buchen.mutateAsync({ schauId, base64: datei.base64, posten: auswahl.map((p) => ({ schluessel: p.schluessel, meldungId: ziel[p.schluessel]!, offenCent: name(ziel[p.schluessel]!)?.offenCent ?? 0 })) }).catch(() => null);
+    if (!r) return;
+    const teile = [`${r.gebucht} ${r.gebucht === 1 ? "Zahlung" : "Zahlungen"} gebucht`, r.bestaetigt ? `${r.bestaetigt} ${r.bestaetigt === 1 ? "Meldung" : "Meldungen"} bestätigt` : "", r.uebersprungen.length ? `${r.uebersprungen.length} übersprungen (${[...new Set(r.uebersprungen.map((u) => u.grund))].join(", ")})` : ""];
+    meldung(teile.filter(Boolean).join(" · "), r.uebersprungen.length ? "warnung" : "ok");
+    await utils.meldung.liste.invalidate({ schauId });
+    await lesen(datei);
+  };
+
+  const name = (id: number | null) => bericht?.meldungen.find((m) => m.id === id);
+  return (
+    <div className={SEITE}>
+      <Seitenkopf titel="Kontoauszug" unter="Überweisungen des Meldegelds zuordnen und buchen" hilfe="kontoauszug" />
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-linie bg-weiss px-3 py-2 text-sm hover:border-band focus-within:ring-2 focus-within:ring-band">
+          <span>{datei ? "Andere Datei wählen" : "Kontoauszug wählen (CSV oder camt.053)"}</span>
+          <input key={feld} type="file" accept=".csv,.txt,.xml,text/csv,application/xml,text/xml" className="sr-only" onChange={(e) => void waehlen(e.target.files?.[0])} />
+        </label>
+        {datei && <span className="text-sm text-grau">{datei.name}</span>}
+        {pruefen.isPending && <span className="text-sm text-grau">wird gelesen …</span>}
+      </div>
+      {bericht &&
+        (bericht.posten.length === 0 ? (
+          <Leer titel="Keine Gutschriften in Euro in dieser Datei" />
+        ) : (
+          <TabellenRahmen
+            fuss={
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span>
+                  {bericht.posten.length} Gutschriften · {bericht.posten.filter((p) => p.gebucht).length} schon gebucht
+                </span>
+                <Knopf variante="primaer" laedt={buchen.isPending} disabled={!auswahl.length} onClick={() => void jetztBuchen()}>
+                  {auswahl.length ? `${auswahl.length} ${auswahl.length === 1 ? "Zahlung" : "Zahlungen"} buchen (${formatEuro(summe)})` : "Zahlungen buchen"}
+                </Knopf>
+              </div>
+            }
+          >
+            <table className="tabelle">
+              <thead>
+                <tr>
+                  <th className="w-8" aria-label="Buchen" />
+                  <th>Datum</th>
+                  <th className="text-right">Betrag</th>
+                  <th>Von / Verwendungszweck</th>
+                  <th>Meldung</th>
+                  <th>Stand</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bericht.posten.map((p) => {
+                  const m = name(ziel[p.schluessel] ?? null);
+                  return (
+                    <tr key={p.schluessel} className={p.gebucht ? "text-grau" : undefined}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          aria-label={`Gutschrift vom ${datum(p.datum)} über ${formatEuro(p.betragCent)} buchen`}
+                          className="size-[1.05rem] accent-band"
+                          disabled={p.gebucht || ziel[p.schluessel] == null}
+                          checked={!!haken[p.schluessel] && !p.gebucht && ziel[p.schluessel] != null}
+                          onChange={(e) => setHaken((h) => ({ ...h, [p.schluessel]: e.target.checked }))}
+                        />
+                      </td>
+                      <td className="tabular-nums">{datum(p.datum)}</td>
+                      <td className="text-right tabular-nums">{formatEuro(p.betragCent)}</td>
+                      <td className="max-w-[28rem]">
+                        <div>{p.name || "–"}</div>
+                        <div className="line-clamp-2 break-all text-sm text-grau">{p.zweck}</div>
+                      </td>
+                      <td>
+                        <Auswahl
+                          kompakt
+                          aria-label={`Meldung für die Gutschrift vom ${datum(p.datum)} über ${formatEuro(p.betragCent)}`}
+                          disabled={p.gebucht}
+                          value={ziel[p.schluessel] ?? ""}
+                          onChange={(e) => {
+                            // Nicht von selbst ankreuzen: Pfeiltasten im Auswahlfeld wechseln die Meldung ohne Aufklappen.
+                            const id = e.target.value ? Number(e.target.value) : null;
+                            setZiel((z) => ({ ...z, [p.schluessel]: id }));
+                            setHaken((h) => ({ ...h, [p.schluessel]: false }));
+                          }}
+                        >
+                          <option value="">– nicht zuordnen –</option>
+                          {bericht.meldungen.map((x) => (
+                            <option key={x.id} value={x.id}>
+                              {x.name} · offen {formatEuro(Math.max(0, x.offenCent))}
+                            </option>
+                          ))}
+                        </Auswahl>
+                      </td>
+                      <td>
+                        {p.gebucht ? (
+                          <Marke ton="neutral">gebucht</Marke>
+                        ) : m && ziel[p.schluessel] === p.meldungId && p.sicherheit === "referenz" ? (
+                          <Marke ton={p.hinweis === "passt" ? "ok" : "warnung"}>{p.hinweis === "teilzahlung" ? "Teilzahlung" : p.hinweis === "ueberzahlung" ? "zu viel" : "Referenz"}</Marke>
+                        ) : m && ziel[p.schluessel] === p.meldungId && p.sicherheit === "name" ? (
+                          <Marke ton="warnung">Vorschlag</Marke>
+                        ) : m && p.betragCent > Math.max(0, m.offenCent) ? (
+                          <Marke ton="warnung">zu viel</Marke>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </TabellenRahmen>
+        ))}
+      {bericht && bericht.posten.some((p) => p.sicherheit === "name" && !p.gebucht) && <Hinweis ton="warnung">„Vorschlag“: ohne Referenz, nur nach Name und Betrag – bitte prüfen und dann ankreuzen.</Hinweis>}
+    </div>
+  );
+}

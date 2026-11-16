@@ -26,6 +26,7 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     preisrichter: "Keurmeesters",
     meldephase: "Inschrijfperiode",
     meldungen: "Inschrijvingen",
+    kontoauszug: "Rekeningafschrift",
     nachMeldeschluss: "Na sluiting inschrijving",
     kaefige: "Kooien",
     hallenplan: "Halplan",

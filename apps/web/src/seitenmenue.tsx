@@ -45,7 +45,15 @@ export function schauGruppen(t: OberflaecheTexte): MenueGruppe[] {
         { pfad: "preisrichter", label: m.preisrichter, symbol: "preisrichter" },
       ],
     },
-    { id: "meldephase", name: m.meldephase, phasen: ["meldung"], seiten: [{ pfad: "meldungen", label: m.meldungen, symbol: "meldungen" }] },
+    {
+      id: "meldephase",
+      name: m.meldephase,
+      phasen: ["meldung"],
+      seiten: [
+        { pfad: "meldungen", label: m.meldungen, symbol: "meldungen" },
+        { pfad: "kontoauszug", label: m.kontoauszug, symbol: "kontoauszug", nurAdmin: true },
+      ],
+    },
     {
       // Erst mit den Meldungen weiß man, wie viele Käfige welcher Größe in die Halle müssen. Die Katalognummern folgen der
       // Ausstellungsfolge oder dem Plan; die Bereiche der Preisrichter (Einteilung nach Rassen) folgen den Nummern.

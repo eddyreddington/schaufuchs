@@ -1,5 +1,5 @@
 {
-  "id": "700335ef-8b98-4ba5-b72b-777ab1539c54",
+  "id": "fccc7277-1668-46b1-9ba6-285a609ad027",
   "prevId": "1c06937e-9027-4cf7-a135-a3b8ec13cf35",
   "version": "7",
   "dialect": "postgresql",
@@ -94,12 +94,6 @@
         "einladung_bis": {
           "name": "einladung_bis",
           "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sprache": {
-          "name": "sprache",
-          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -2249,6 +2243,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "bank_buchung": {
+          "name": "bank_buchung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -2257,7 +2257,23 @@
           "default": "clock_timestamp()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "zahlung_bank_buchung": {
+          "name": "zahlung_bank_buchung",
+          "columns": [
+            {
+              "expression": "bank_buchung",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "zahlung_meldung_id_meldung_id_fk": {
           "name": "zahlung_meldung_id_meldung_id_fk",

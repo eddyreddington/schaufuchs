@@ -26,7 +26,7 @@ async function ladeMeldung(organisationId: number, meldungId: number) {
 }
 
 /** Bestätigt die Meldung automatisch, sobald der volle Betrag bezahlt ist. */
-async function pruefeBezahlt(meldungId: number, akteur: Akteur) {
+export async function pruefeBezahlt(meldungId: number, akteur: Akteur) {
   // Unter Zeilensperre und nur aus „offen“: eine gleichzeitige Stornierung bleibt bestehen.
   return db.transaction(async (tx) => {
     const [m] = await tx.select().from(meldung).where(eq(meldung.id, meldungId)).for("update");

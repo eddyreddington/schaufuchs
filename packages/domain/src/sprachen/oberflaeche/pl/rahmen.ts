@@ -33,6 +33,7 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     preisrichter: "Sędziowie",
     meldephase: "Okres zgłoszeń",
     meldungen: "Zgłoszenia",
+    kontoauszug: "Wyciąg bankowy",
     nachMeldeschluss: "Po terminie zgłoszeń",
     kaefige: "Klatki",
     hallenplan: "Plan hali",

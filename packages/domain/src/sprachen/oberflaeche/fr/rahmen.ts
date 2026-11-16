@@ -26,6 +26,7 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     preisrichter: "Juges",
     meldephase: "Période d’inscription",
     meldungen: "Inscriptions",
+    kontoauszug: "Relevé de compte",
     nachMeldeschluss: "Après la clôture des inscriptions",
     kaefige: "Cages",
     hallenplan: "Plan de salle",

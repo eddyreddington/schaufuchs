@@ -4,6 +4,7 @@ import { spendenRouter } from "./routers/spenden";
 import { meisterschaftRouter } from "./routers/meisterschaft";
 import { importRouter } from "./routers/import";
 import { hallenentwurfRouter } from "./routers/hallenentwurf";
+import { kontoauszugRouter } from "./routers/kontoauszug";
 import { lastschriftRouter } from "./routers/lastschrift";
 import { bewertungRouter, richterRouter } from "./routers/bewertung";
 import { kasseRouter } from "./routers/kasse";
@@ -32,6 +33,7 @@ export const appRouter = router({
   meisterschaft: meisterschaftRouter,
   datenimport: importRouter,
   hallenentwurf: hallenentwurfRouter,
+  kontoauszug: kontoauszugRouter,
   lastschrift: lastschriftRouter,
   termine: termineRouter,
   halle: halleRouter,
