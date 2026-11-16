@@ -25,6 +25,8 @@ Danach nur die genannten Dateien öffnen.
 - Keine echten BDRG-Daten ins Repo, solange die Nutzungsrechte nicht geklärt sind – `007`.
 - Hallenplan: Grundplatten nie kürzen (`001`), Möbel keine Sperrfläche (`002`), fester Plan (`006`).
 - Dateien unter 600 Zeilen halten (Ziel 400); `bun run pruefen` warnt.
+- Commit-Betreff kurz (≤ 50 Zeichen, „Bereich: was sich ändert“), ohne Versionsnummer; Version nur in Tag und
+  Versionshinweisen, die Erhöhung kommt in den letzten Commit des Blocks.
 - **Pflege:** Wer öffentliche Funktionen, Prozeduren oder Seiten ändert, führt `bun run modulkarte` aus und committet
   `docs/modulkarte.md` mit; Moduldoku und betroffene Entscheidung mitpflegen, neue Entscheidung als neue ADR-Datei.
   Bei Merge-Konflikt in der Modulkarte neu erzeugen statt zusammenführen.

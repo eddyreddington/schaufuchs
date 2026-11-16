@@ -27,5 +27,8 @@ Danke, dass Sie SchauFUCHS verbessern wollen – ob als Verein mit einer Rückme
    zuerst einen Test schreiben, der den Fehler zeigt.
 5. Handbuch geändert: `sh scripts/handbuch.sh` (braucht pandoc und WeasyPrint) und die erzeugten Dateien mit einchecken.
    Oberfläche geändert: Bildschirmfotos neu mit `bun run handbuch:bilder` (eigene Demo-Datenbanken, Chrome ohne Fenster).
+6. Commit-Nachricht: Betreff höchstens 50 Zeichen, Form „Bereich: was sich ändert“, z. B. „3D-Ansicht: Rundgang durch
+   die Gänge“. Keine Versionsnummer im Betreff, die steht im Tag und in den Versionshinweisen. Einzelheiten in den
+   Text unter dem Betreff.
 
 Mit einem Beitrag stimmen Sie zu, dass er unter der EUPL-1.2 veröffentlicht wird.
