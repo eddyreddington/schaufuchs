@@ -3,7 +3,8 @@
  * Der Server schreibt weiter deutsch – so bleiben Protokoll, Tests und Drucke, wie sie sind. Die Gruppen `server*` in
  * `de/` enthalten jede Meldung wortgleich; Texte mit eingesetzten Werten als Funktion mit Text-Parametern ohne Logik:
  * `(nr: string) => \`Käfig ${nr} ist belegt.\``. `serverText()` erkennt die deutsche Meldung und gibt die Übersetzung mit
- * denselben eingesetzten Werten zurück. Unbekannte Meldungen bleiben deutsch.
+ * denselben eingesetzten Werten zurück (ist ein eingesetzter Wert selbst eine bekannte Meldung, wird er mit übersetzt).
+ * Mehrzahl o. Ä. als eigene Einträge („1 Tier“ / „${n} Tiere“), nicht als Bedingung im Text. Unbekannte Meldungen bleiben deutsch.
  */
 import type { Sprache } from "..";
 import { oberflaeche } from ".";
@@ -42,7 +43,7 @@ function nachPfad(wurzel: unknown, pfad: string[]): unknown {
 }
 
 /** Eine ganze Meldung übersetzen; `null`, wenn sie nicht bekannt ist. */
-function einzeln(text: string, sprache: Sprache): string | null {
+function einzeln(text: string, sprache: Sprache, tiefe = 0): string | null {
   for (const m of alleMuster()) {
     let werte: string[] | null = null;
     if (m.genau !== undefined) {
@@ -53,6 +54,8 @@ function einzeln(text: string, sprache: Sprache): string | null {
       if (!treffer) continue;
       werte = [];
       for (const [name, wert] of Object.entries(treffer.groups ?? {})) werte[Number(name.slice(1).split("_")[0])] = wert;
+      // Eingesetzt kann wieder eine bekannte Meldung sein (z. B. ein Grund aus der Fachlogik): mit übersetzen.
+      if (tiefe < 2) werte = werte.map((w) => (w ? (einzeln(w, sprache, tiefe + 1) ?? w) : w));
     }
     const ziel = nachPfad(oberflaeche(sprache), m.pfad);
     if (typeof ziel === "string") return ziel;
