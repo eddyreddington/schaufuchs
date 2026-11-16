@@ -115,7 +115,7 @@ Die Wahl gilt nur für dieses Gerät und diesen Browser. Gedruckt wird immer hel
 
 SchauFUCHS gibt es auf Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niederländisch, Polnisch und Tschechisch. Jede Sprache steht in der Auswahl unter ihrem eigenen Namen (z. B. „Polski“).
 
-- **Auf der Anmeldeseite** wählen Sie die Sprache unten unter „Hilfe zur Anmeldung und zur Software“. Die Wahl merkt sich dieser Browser.
+- **Auf der Anmeldeseite** wählen Sie die Sprache unten unter „Hilfe zur Anmeldung und zur Software“. Die Wahl merkt sich dieser Browser; nach dem Anmelden wird sie für Ihren Zugang gespeichert.
 - **Angemeldet:** unten in der Seitenleiste auf Ihren Namen klicken, dann unter „Sprache“ wählen. Die Sprache wird mit Ihrem Zugang gespeichert und gilt auf jedem Gerät, an dem Sie sich anmelden.
 - Ohne eigene Wahl bleibt die Oberfläche deutsch – auch wenn der Browser auf eine andere Sprache eingestellt ist.
 - Jeder Helfer stellt seine eigene Sprache ein; die Kollegen am Nachbarrechner sehen weiter ihre.

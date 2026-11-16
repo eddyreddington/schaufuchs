@@ -45,7 +45,7 @@ export const preisrichter: OberflaecheTexte["preisrichter"] = {
     anschriftHinweis: "Jen se souhlasem posuzovatele.",
     telefon: "Telefon",
     email: "E-mail",
-    obmannHinweis: "Potvrzuje známku „vorzüglich“.",
+    obmannHinweis: "Potvrzuje známku „výborná“.",
     sparten: "Posuzuje tyto sekce",
     spartenLeer: "(žádná = všechny)",
   },

@@ -63,7 +63,7 @@ Die Anmeldung ist nur möglich, solange die Schau in den Phasen „Einlieferung�
 
 Falschen Namen gewählt? Tippen Sie auf „Anderer Name“.
 
-**Sprache:** Auf der Anmeldeseite stellen Sie die Sprache des Tablets ein (Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niederländisch, Polnisch, Tschechisch). Das Tablet merkt sich die Wahl. Rassen, Farbenschläge und Textbausteine bleiben deutsch, ebenso die gedruckte Bewertungskarte.
+**Sprache:** Auf der Anmeldeseite stellen Sie die Sprache des Tablets ein (Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niederländisch, Polnisch, Tschechisch). Das Tablet merkt sich die Wahl, unabhängig davon, wer sonst an diesem Gerät angemeldet ist. Rassen, Farbenschläge und Textbausteine bleiben deutsch, ebenso die gedruckte Bewertungskarte.
 
 Ganz unten auf der Anmeldeseite führt der Link „Hilfe für Preisrichter“ zu diesem Handbuch. Es öffnet in einem eigenen Tab; mit „Schließen“ kommen Sie zurück.
 

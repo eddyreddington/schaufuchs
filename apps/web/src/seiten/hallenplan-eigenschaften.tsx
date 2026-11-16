@@ -2,12 +2,12 @@
  * Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle
  * (`HalleEigenschaften`) mit ihren Eingabefeldern.
  */
-import { type Punkt, type Halle, type HallenFlaeche, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, type KaefigTyp, LOCALE, moebelMass, type WandSeite } from "@schau/domain";
+import { type Punkt, type Halle, type HallenFlaeche, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, type KaefigTyp, LOCALE, moebelMass, type OberflaecheTexte, type WandSeite } from "@schau/domain";
 import { type InputHTMLAttributes, type ReactNode, useEffect, useRef, useState } from "react";
 import { useOberflaeche, useSprache } from "../sprache";
 import { Auswahl, Eingabe, Feld, Haken, Knopf, Marke } from "../ui";
 import { WzSymbol } from "./hallenplan-werkzeuge";
-import { type Aendern, type Aktionen, BLOCK_TYPEN, type FehlendeSetzen, HAUPTGANG_LAGE, meter, type Plan, teilInfo, type TeilInfo, type Versetzen, wandText, type Ziel, zuCm } from "./hallenplan-geometrie";
+import { type Aendern, type Aktionen, BLOCK_TYPEN, type FehlendeSetzen, HAUPTGANG_LAGE, meter, type Plan, teilInfo, type TeilInfo, type Versetzen, wandText, type Ziel, zuCm, zweisprachig } from "./hallenplan-geometrie";
 import { AutomatikSchalter, OhnePlatz } from "./hallenplan-teile";
 import { GrundrissKnopf } from "./hallenplan-grundriss";
 import { kaefigNameIn } from "./kaefige";
@@ -123,8 +123,10 @@ export function Eigenschaften({
             <span className="min-w-0 shrink truncate font-semibold">{eins.name}</span>
             <Marke ton={eins.leer ? "ok" : "neutral"}>{eins.status}</Marke>
             {flaeche && eins.flaeche != null && <NameFeld key={`f${eins.flaeche}`} i={eins.flaeche} name={flaeche.name} aendern={aendern} />}
-            <span className="min-w-0 flex-1 truncate text-sm text-grau">{/* bleibt deutsch: Vergleich mit den Schlüsseln aus teilInfo (hallenplan-geometrie.ts) */}
-            {eins.zeilen.find(([k]) => k === "Käfige" || k === "Käfig" || k === "Nummern")?.[1]}</span>
+            <span className="min-w-0 flex-1 truncate text-sm text-grau">
+              {/* Zeilen aus teilInfo (hallenplan-geometrie.ts) – beschriftet in der Sprache der Oberfläche */}
+              {eins.zeilen.find(([k]) => k === t.halleBild.geometrie.kaefigeZeile || k === t.halleBild.geometrie.kaefig || k === t.halleBild.geometrie.nummern)?.[1]}
+            </span>
             {detailsOeffnen && (eins.flaeche != null || (eins.tiere?.length ?? 0) > 0) && (
               <Knopf className="shrink-0 px-3" onClick={detailsOeffnen}>
                 {t.halle.eigenschaftenTitel}
@@ -291,7 +293,7 @@ export function MoebelFelder({ halle, id, aendern, zeilen }: { halle: Halle; id:
   if (!o || !istMoebel(o)) return null;
   const m = moebelMass(o);
   const setze = (patch: Partial<HallenObjekt>) => {
-    aendern((h) => ({ ...h, objekte: (h.objekte ?? []).map((x) => (x.id === id ? { ...x, ...patch } : x)) }), { was: t.halle.eigenschaften.aendern(t.fach.MOEBEL_NAME[o.art]) });
+    aendern((h) => ({ ...h, objekte: (h.objekte ?? []).map((x) => (x.id === id ? { ...x, ...patch } : x)) }), zweisprachig((x) => x.halle.eigenschaften.aendern(x.fach.MOEBEL_NAME[o.art])));
   };
   return (
     <div className="flex flex-col gap-3">
@@ -323,14 +325,14 @@ export function FlaecheFelder({ halle, i, aendern }: { halle: Halle; i: number; 
   const setzeG = (patch: Partial<typeof g>) => {
     const n = { ...g, ...patch };
     const neu = quer ? { x: n.y, y: n.x, breite: n.h, tiefe: n.b } : { x: n.x, y: n.y, breite: n.b, tiefe: n.h };
-    aendern((h) => ({ ...h, flaechen: h.flaechen.map((x, j) => (j === i ? { ...x, ...neu } : x)) }), { was: te.flaecheAendern });
+    aendern((h) => ({ ...h, flaechen: h.flaechen.map((x, j) => (j === i ? { ...x, ...neu } : x)) }), zweisprachig((x) => x.halle.eigenschaften.flaecheAendern));
   };
   return (
     <div className="flex flex-col gap-3">
       <NameFeld i={i} name={f.name} aendern={aendern} breit />
       <Feld label={te.art}>
         {(id) => (
-          <Auswahl id={id} value={f.art} onChange={(e) => aendern((h) => ({ ...h, flaechen: h.flaechen.map((x, j) => (j === i ? { ...x, art: e.target.value as HallenFlaeche["art"] } : x)) }), { was: te.flaecheAendern })}>
+          <Auswahl id={id} value={f.art} onChange={(e) => aendern((h) => ({ ...h, flaechen: h.flaechen.map((x, j) => (j === i ? { ...x, art: e.target.value as HallenFlaeche["art"] } : x)) }), zweisprachig((x) => x.halle.eigenschaften.flaecheAendern))}>
             <option value="eingang">{te.eingangAusgang}</option>
             <option value="sperre">{te.freierBereich}</option>
             <option value="volieren">{te.volierenbereich}</option>
@@ -366,7 +368,7 @@ export function HalleEigenschaften({
   plan: Plan;
   masse: KaefigMasse;
   platziert: number;
-  aendernHalle: (patch: Partial<Halle>, was: string) => Promise<boolean>;
+  aendernHalle: (patch: Partial<Halle>, was: (t: OberflaecheTexte) => string) => Promise<boolean>;
   /** Grundriss bearbeiten (Entscheidung 019); fehlt, wenn die Halle nicht geändert werden darf. */
   grundriss?: (roh: Punkt[], basis: string) => Promise<boolean>;
   automatik?: () => void;
@@ -397,8 +399,8 @@ export function HalleEigenschaften({
           <span className="text-sm tabular-nums">{te.freierGrundriss(meter(halle.breite), meter(halle.laenge))}</span>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            <MeterFeld label={t.halle.breite} cm={halle.breite} min={300} setzen={(v) => aendernHalle({ breite: v }, t.halle.breite)} />
-            <MeterFeld label={t.halle.laenge} cm={halle.laenge} min={300} setzen={(v) => aendernHalle({ laenge: v }, t.halle.laenge)} />
+            <MeterFeld label={t.halle.breite} cm={halle.breite} min={300} setzen={(v) => aendernHalle({ breite: v }, (x) => x.halle.breite)} />
+            <MeterFeld label={t.halle.laenge} cm={halle.laenge} min={300} setzen={(v) => aendernHalle({ laenge: v }, (x) => x.halle.laenge)} />
           </div>
         )}
         {grundriss && <GrundrissKnopf halle={halle} masse={masse} uebernehmen={grundriss} />}
@@ -406,8 +408,8 @@ export function HalleEigenschaften({
       <div className={gruppe}>
         <Gruppenkopf>{te.gaenge}</Gruppenkopf>
         <div className="grid grid-cols-2 gap-2">
-          <MeterFeld label={t.halle.gangMindestens} cm={halle.gang} min={50} max={1000} setzen={(v) => aendernHalle({ gang: v }, te.gangbreite)} />
-          {hg.lage !== "keiner" && <MeterFeld label={te.hauptgang} cm={hg.breite} min={50} max={2000} setzen={(v) => aendernHalle({ hauptgang: { ...hg, breite: v } }, te.hauptgang)} />}
+          <MeterFeld label={t.halle.gangMindestens} cm={halle.gang} min={50} max={1000} setzen={(v) => aendernHalle({ gang: v }, (x) => x.halle.eigenschaften.gangbreite)} />
+          {hg.lage !== "keiner" && <MeterFeld label={te.hauptgang} cm={hg.breite} min={50} max={2000} setzen={(v) => aendernHalle({ hauptgang: { ...hg, breite: v } }, (x) => x.halle.eigenschaften.hauptgang)} />}
         </div>
         <Feld label={te.lageHauptgang}>
           {(id) => (
@@ -416,7 +418,7 @@ export function HalleEigenschaften({
               value={hg.lage}
               onChange={(e) => {
                 const lage = e.target.value as typeof hg.lage;
-                void aendernHalle({ hauptgang: { lage, breite: lage === "keiner" ? 0 : hg.breite || HAUPTGANG_STANDARD.breite } }, te.hauptgang);
+                void aendernHalle({ hauptgang: { lage, breite: lage === "keiner" ? 0 : hg.breite || HAUPTGANG_STANDARD.breite } }, (x) => x.halle.eigenschaften.hauptgang);
               }}
             >
               {(["anfang", "ende", "beide", "mitte", "keiner"] as const).map((l) => (
@@ -438,7 +440,7 @@ export function HalleEigenschaften({
               role="radio"
               aria-checked={richtung === x}
               className={`min-h-8 flex-1 rounded text-sm ${richtung === x ? "bg-weiss font-semibold text-tinte shadow-sm" : "text-grau hover:text-tinte"}`}
-              onClick={() => richtung !== x && void aendernHalle({ richtung: x }, te.reihenrichtung)}
+              onClick={() => richtung !== x && void aendernHalle({ richtung: x }, (y) => y.halle.eigenschaften.reihenrichtung)}
             >
               {x === "quer" ? te.quer : te.laengs}
             </button>
@@ -451,7 +453,7 @@ export function HalleEigenschaften({
               value={!halle.wandreihen ? "keine" : (halle.wandreiheSeite ?? "beide")}
               onChange={(e) => {
                 const w = e.target.value;
-                void aendernHalle(w === "keine" ? { wandreihen: false, wandreiheSeite: undefined } : { wandreihen: true, wandreiheSeite: w === "beide" ? undefined : (w as WandSeite) }, te.wandreihen);
+                void aendernHalle(w === "keine" ? { wandreihen: false, wandreiheSeite: undefined } : { wandreihen: true, wandreiheSeite: w === "beide" ? undefined : (w as WandSeite) }, (x) => x.halle.eigenschaften.wandreihen);
               }}
             >
               <option value="beide">{te.anBeidenWaenden}</option>
@@ -461,7 +463,7 @@ export function HalleEigenschaften({
             </Auswahl>
           )}
         </Feld>
-        <Haken label={te.buendig} checked={halle.wandBuendig ?? true} onChange={(v) => void aendernHalle({ wandBuendig: v }, te.buendigKurz)} />
+        <Haken label={te.buendig} checked={halle.wandBuendig ?? true} onChange={(v) => void aendernHalle({ wandBuendig: v }, (x) => x.halle.eigenschaften.buendigKurz)} />
       </div>
       <details className="border-t border-linie pt-4">
         <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-grau hover:text-tinte">{te.grundplattenJeArt}</summary>
@@ -469,7 +471,7 @@ export function HalleEigenschaften({
           {BLOCK_TYPEN.map((k) => {
             const mass = kaefigMass(k, masse);
             const vorgabe = mass ? kaefigeJePlatte(k, mass.breite, { platte: halle.platte, plattenMass: halle.plattenMass }) : null;
-            return <JePlatteFeld key={k} label={kaefigNameIn(t, k, masse)} wert={halle.jePlatte?.[k]} vorgabe={vorgabe} setzen={(v) => aendernHalle({ jePlatte: { ...(halle.jePlatte ?? {}), [k]: v } }, t.halle.kaefigeJePlatte)} />;
+            return <JePlatteFeld key={k} label={kaefigNameIn(t, k, masse)} wert={halle.jePlatte?.[k]} vorgabe={vorgabe} setzen={(v) => aendernHalle({ jePlatte: { ...(halle.jePlatte ?? {}), [k]: v } }, (x) => x.halle.kaefigeJePlatte)} />;
           })}
         </div>
       </details>
@@ -533,7 +535,7 @@ export function NameFeld({ i, name, aendern, breit }: { i: number; name: string;
     const neu = stand.current.wert.trim().slice(0, 100);
     if (!neu || neu === stand.current.gespeichert) return;
     stand.current.gespeichert = neu;
-    aendern((h) => ({ ...h, flaechen: h.flaechen.map((f, j) => (j === i ? { ...f, name: neu } : f)) }), { was: te.umbenennen });
+    aendern((h) => ({ ...h, flaechen: h.flaechen.map((f, j) => (j === i ? { ...f, name: neu } : f)) }), zweisprachig((x) => x.halle.eigenschaften.umbenennen));
   };
   const sichernRef = useRef(sichern);
   sichernRef.current = sichern;

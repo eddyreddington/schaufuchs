@@ -46,7 +46,7 @@ export const preisrichter: OberflaecheTexte["preisrichter"] = {
     anschriftHinweis: "Tylko za zgodą sędziego.",
     telefon: "Telefon",
     email: "E-mail",
-    obmannHinweis: "Zatwierdza ocenę „vorzüglich”.",
+    obmannHinweis: "Zatwierdza ocenę „doskonała”.",
     sparten: "Ocenia te sekcje",
     spartenLeer: "(brak = wszystkie)",
   },

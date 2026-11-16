@@ -19,7 +19,7 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     grundriss: "In a fixed plan, a different floor plan is only possible with “Rebuild plan”.",
     neuSetzenBestaetigen: "The plan is fixed – first confirm that it will be rebuilt.",
     reiheFehlt: "This row no longer exists – the plan will be reloaded.",
-    plattenOhneHalle: "Please create the hall under “Hall plan” first – the base plates belong to it.",
+    plattenOhneHalle: "Please create the hall under “Hall plan” first – the base boards belong to it.",
   },
   entwurf: {
     fehlt: "Draft not found.",
@@ -45,9 +45,9 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
   },
   entfernen: {
     nurFest: "Empty places can only be removed in a fixed plan.",
-    platteFehlt: (reihe: string) => `This base plate in R${reihe} no longer exists in the fixed plan – the plan will be reloaded.`,
-    platteBelegtNr: (platte: string, reihe: string, nr: string) => `Base plate ${platte} in R${reihe} is occupied (No. ${nr}) – only empty ones can be removed.`,
-    platteBelegt: (platte: string, reihe: string) => `Base plate ${platte} in R${reihe} is occupied – only empty ones can be removed.`,
+    platteFehlt: (reihe: string) => `This base board in R${reihe} no longer exists in the fixed plan – the plan will be reloaded.`,
+    platteBelegtNr: (platte: string, reihe: string, nr: string) => `Base board ${platte} in R${reihe} is occupied (No. ${nr}) – only empty ones can be removed.`,
+    platteBelegt: (platte: string, reihe: string) => `Base board ${platte} in R${reihe} is occupied – only empty ones can be removed.`,
     platzFehlt: (reihe: string) => `This place in R${reihe} no longer exists in the fixed plan – the plan will be reloaded.`,
     platzBelegtNr: (reihe: string, nr: string) => `The place in R${reihe} is occupied (No. ${nr}) – only empty ones can be removed.`,
     platzBelegt: (reihe: string) => `The place in R${reihe} is occupied – only empty ones can be removed.`,

@@ -42,7 +42,7 @@ export const preisrichter: OberflaecheTexte["preisrichter"] = {
     anschriftHinweis: "Only with the judge’s consent.",
     telefon: "Phone",
     email: "Email",
-    obmannHinweis: "Confirms the grade “vorzüglich”.",
+    obmannHinweis: "Confirms the grade “excellent”.",
     sparten: "Judges these sections",
     spartenLeer: "(none = all)",
   },

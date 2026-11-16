@@ -16,7 +16,7 @@ export const preise: T["preise"] = {
   sachpreis: "Fundacja nie ma kwoty pieniężnej (nagroda rzeczowa).",
   bleibtStehen: "Fundacja jest już zaksięgowana jako wpłata do kasy w księdze kasowej i dlatego pozostaje.",
   nichtBewertet: (n: string) => `Zwierzęta jeszcze nieocenione: ${n}.`,
-  obmannOffen: (n: string) => `Oceny („vorzüglich” lub u.M.) jeszcze niezatwierdzone przez sędziego głównego: ${n}.`,
+  obmannOffen: (n: string) => `Oceny („doskonała” lub u.M.) jeszcze niezatwierdzone przez sędziego głównego: ${n}.`,
   ohneNummer: (n: string) => `Zatwierdzone zwierzęta bez numeru katalogowego: ${n} – najpierw nadać numery lub uporządkować zgłoszenie.`,
   kontingentUeber: (liste: string) => `Przekroczona pula: ${liste}. Prosimy najpierw usunąć nagrody.`,
   stiftungUngedeckt: (liste: string) => `Nagrody fundowane bez pokrycia: ${liste}. Prosimy uzupełnić fundację lub usunąć nagrody.`,

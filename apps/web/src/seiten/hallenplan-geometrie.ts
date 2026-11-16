@@ -2,7 +2,7 @@
  * Reine Rechnungen des Hallenplan-Editors (ohne React): Auswahl und Teile, Lage und Versatz von Reihen,
  * Platten und Objekten, Hindernisse (`planKoerper`), Texte zu Teilen. Die Fachregeln selbst stehen in packages/domain.
  */
-import { istRechteckUmriss, KAEFIG_TYP_LABEL, LOCALE, umrissNormal, umrissSperren, auswahlBereinigen, blockPlatz, dreheBlick, dreheRechteck, type Drehung, eingangsGang, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenTeil, istMoebel, type KaefigMasse, kaefigName, type KaefigPlatz, type KaefigTyp, mitteVon, nummernBereiche, objektFront, type PlanAuswahlTeil, type PlanKaefig, type PlanKoerper, pruefeLage, type Rechteck, type Reihe, teilGroesse, teilSchluessel, type VerschiebePruefung, type WandKandidat, type WandSeite } from "@schau/domain";
+import { istRechteckUmriss, KAEFIG_TYP_LABEL, LOCALE, oberflaeche, type OberflaecheTexte, umrissNormal, umrissSperren, auswahlBereinigen, blockPlatz, dreheBlick, dreheRechteck, type Drehung, eingangsGang, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenTeil, istMoebel, type KaefigMasse, kaefigName, type KaefigPlatz, type KaefigTyp, mitteVon, nummernBereiche, objektFront, type PlanAuswahlTeil, type PlanKaefig, type PlanKoerper, pruefeLage, type Rechteck, type Reihe, teilGroesse, teilSchluessel, type VerschiebePruefung, type WandKandidat, type WandSeite } from "@schau/domain";
 import { aktuelleSprache, ot } from "../sprache-jetzt";
 import { type Ausgabe } from "../trpc";
 
@@ -125,19 +125,26 @@ export function platzWeg(halle: Halle, r: Reihe, f: { x: number; y: number; plat
   return (halle.entfernt ?? []).some((e) => e.reihe === r.nr && e.art === "platz" && Math.abs(e.x - f.x) < 0.5 && Math.abs(e.y - f.y) < 0.5 && (e.etage ?? 0) === (f.etage ?? 0));
 }
 /** Änderung der Halle im Editor: `was` für Rückgängig, `grund` fürs Protokoll. */
-export type Aendern = (f: (h: Halle) => Halle, opt?: { was?: string; grund?: string; ohneVerlauf?: boolean; festschreiben?: boolean }) => Halle;
+export type Aendern = (f: (h: Halle) => Halle, opt?: { was?: string; wasDe?: string; grund?: string; ohneVerlauf?: boolean; festschreiben?: boolean }) => Halle;
 export type Schritt =
-  | { art?: undefined; vorher: Halle; nachher: Halle; was: string }
+  | { art?: undefined; vorher: Halle; nachher: Halle; was: string; wasDe?: string }
   /** Tier versetzt (im festen Plan): Rückgängig setzt es zurück, beim Tausch tauschen beide wieder. */
-  | { art: "tier"; tierId: number; von: KaefigPlatz | null; ziel: KaefigPlatz; getauscht: number | null; was: string };
+  | { art: "tier"; tierId: number; von: KaefigPlatz | null; ziel: KaefigPlatz; getauscht: number | null; was: string; wasDe?: string };
+
+/**
+ * Name eines Bearbeitungsschritts zweimal: `was` in der Sprache der Oberfläche (Verlauf, Meldungen), `wasDe` deutsch für
+ * das Protokoll (Rückgängig/Wiederholt; das Protokoll bleibt deutsch, Entscheidung 022).
+ */
+export function zweisprachig(f: (t: OberflaecheTexte) => string): { was: string; wasDe: string } {
+  return { was: f(ot()), wasDe: f(oberflaeche("de")) };
+}
 /** Tier, das gerade versetzt wird (Ziel im Plan anklicken). */
 export type Versetzen = { tierId: number; nr: string | null; rasse: string; typ: KaefigTyp };
 /** Aktionen zur Auswahl – gleich in Werkzeugleiste, Eigenschaften und Tastenkürzeln. */
 export type Aktionen = { ausrichten: () => void; drehen: () => void; zurueckAnPlatz: () => void; entfernen: () => void; aufheben: () => void; dreht: boolean; zurueck: boolean; einzelreihe?: { seiten: WandSeite[]; text: (seite: WandSeite) => string; stellen: (seite: WandSeite) => void }};
 export const anzahl = (n: number, eins: string, viele: string) => `${n} ${n === 1 ? eins : viele}`;
 /** Was „Entfernen“ wegnimmt, als Aufzählung („1 Grundplatte und 2 freie Plätze“); leer: nichts. */
-export function entfernenText(e: { platten: number; plaetze: number; teile: number; flaechen: number }): string {
-  const w = tg();
+export function entfernenText(e: { platten: number; plaetze: number; teile: number; flaechen: number }, w = tg()): string {
   const t = [
     e.platten && zahlWort(e.platten, w.grundplatten),
     e.plaetze && zahlWort(e.plaetze, w.freiePlaetze),

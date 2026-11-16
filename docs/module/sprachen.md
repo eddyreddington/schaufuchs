@@ -31,5 +31,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 
 - Deutsch ist die Grundlage und bleibt wortgleich; Schweiz („ss“) und französische Leerzeichen entstehen automatisch.
 - Der Server schreibt deutsch; übersetzt wird erst in der Oberfläche. Protokoll, Drucke, PDFs, Mails an Benutzer bleiben deutsch.
-- Sprache der Verwaltung: Konto → im Browser gewählt → Deutsch (nie allein nach Browsersprache). Aussteller-Seiten: Link → Wahl → Browser → Deutsch.
+- Sprache der Verwaltung: Konto → im Browser gewählt → Deutsch (nie allein nach Browsersprache); Wahl auf der Anmeldeseite geht nach dem Anmelden ans Konto. Tablet: nur die Wahl am Gerät. Aussteller-Seiten: Link → Wahl → Browser → Deutsch (eigener Speicher).
+- Übersetzungen werden nachgeladen (`ladeOberflaeche()`, in Tests `ladeAlleOberflaechen()`); Deutsch ist immer da.
+- Was ans Protokoll oder als Inhalt an den Server geht, bleibt deutsch: `oberflaeche("de")` bzw. im Hallenplan `zweisprachig()` (`was`/`wasDe`).
 - Rassen, Farbenschläge, Bewertungstexte und alles, was der Verein selbst schreibt, werden nicht übersetzt.

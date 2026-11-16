@@ -1,4 +1,4 @@
-import { ENDLOS_12_ZOLL, ENDLOS_6_ZOLL, KARTEN_FORMAT_LABEL, VORDRUCK_FELDER, type KartenFormat, type KartenVorlage, type VordruckFeld } from "@schau/domain";
+import { ENDLOS_12_ZOLL, ENDLOS_6_ZOLL, KARTEN_FORMAT_LABEL, VORDRUCK_FELDER, type KartenFormat, type KartenVorlage, type VordruckFeld, oberflaeche } from "@schau/domain";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { fehlerText } from "../lib";
@@ -24,7 +24,7 @@ export function DruckvorlageSeite() {
   const id = vorlageId === "neu" ? null : Number(vorlageId);
   const vorhanden = id == null ? null : liste.data.find((v) => v.id === id);
   if (id != null && !vorhanden) return <FehlerAnzeige fehler={new Error(t.nichtGefunden)} />;
-  const start = vorhanden ? { name: vorhanden.name, daten: vorhanden.daten } : { name: t.standardName, daten: vorgabe.data };
+  const start = vorhanden ? { name: vorhanden.name, daten: vorhanden.daten } : { name: oberflaeche("de").vorlagen.druckvorlage.standardName, daten: vorgabe.data }; // bleibt deutsch: wird als Inhalt des Vereins gespeichert
   return <Editor key={id ?? "neu"} id={id} start={start} schauId={schauId} fuerSchau={vorhanden?.schauName ?? null} />;
 }
 

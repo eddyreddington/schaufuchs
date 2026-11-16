@@ -16,7 +16,7 @@ export const preise: T["preise"] = {
   sachpreis: "Věnování nemá peněžní částku (věcná cena).",
   bleibtStehen: "Věnování je už zaúčtováno jako vklad v pokladní knize, a proto zůstává.",
   nichtBewertet: (n: string) => `Dosud neposouzená zvířata: ${n}.`,
-  obmannOffen: (n: string) => `Hodnocení („vorzüglich“ nebo u.M.) dosud nepotvrzená hlavním posuzovatelem: ${n}.`,
+  obmannOffen: (n: string) => `Hodnocení („výborná“ nebo u.M.) dosud nepotvrzená hlavním posuzovatelem: ${n}.`,
   ohneNummer: (n: string) => `Potvrzená zvířata bez katalogového čísla: ${n} – nejprve očíslujte nebo upravte přihlášku.`,
   kontingentUeber: (liste: string) => `Kontingent překročen: ${liste}. Nejprve prosím odeberte ceny.`,
   stiftungUngedeckt: (liste: string) => `Sponzorované ceny nejsou kryty: ${liste}. Doplňte prosím věnování nebo odeberte ceny.`,

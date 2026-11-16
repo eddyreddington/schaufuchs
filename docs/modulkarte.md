@@ -2404,7 +2404,7 @@ Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben 
 ### hallenplan-aktionen.ts (216 Z.)
 Werkzeuge des Hallenplan-Editors für die Auswahl und für neue Teile: am Raster ausrichten, drehen, an den Platz zurück, Leeres entfernen, Teile und …
 
-### hallenplan-befehle.ts (296 Z.)
+### hallenplan-befehle.ts (297 Z.)
 Befehle des Hallenplan-Editors, die über den Entwurf hinausgehen: Rückgängig/Wiederholen, Tier versetzen, nach Plan nummerieren, Einstellungen der …
 Prozeduren: katalog.nummernNachPlan, katalog.tierVersetzen, katalog.wandreiheStellen
 
@@ -2414,7 +2414,7 @@ Bedienung der Hallenplan-Zeichnung: Teile greifen, ziehen und loslassen (mit Pr�
 ### hallenplan-bild.tsx (481 Z.)
 Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
 
-### hallenplan-eigenschaften.tsx (557 Z.)
+### hallenplan-eigenschaften.tsx (559 Z.)
 Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle (`HalleEigenschaften`) mit ihren Eingabefe …
 
 ### hallenplan-entwuerfe.tsx (166 Z.)
@@ -2424,7 +2424,7 @@ Prozeduren: hallenentwurf.entscheiden, hallenentwurf.laden, hallenentwurf.liste,
 Entwurf des Hallenplan-Editors und alles, was ihn speichert: jede Änderung wirkt sofort im Entwurf und geht der Reihe nach an den Server (`kette`), …
 Prozeduren: katalog.halleSetzen, katalog.planFestschreiben, katalog.planNeuSetzen
 
-### hallenplan-geometrie.ts (565 Z.)
+### hallenplan-geometrie.ts (572 Z.)
 Reine Rechnungen des Hallenplan-Editors (ohne React): Auswahl und Teile, Lage und Versatz von Reihen, Platten und Objekten, Hindernisse (`planKoerp …
 
 ### hallenplan-grundriss.tsx (206 Z.)
@@ -2706,7 +2706,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `routes.tsx` (120 Z.) · router
 - `seitenmenue.tsx` (194 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · schauGruppen, allgemeineGruppen, useKlappzustand, MenueGruppen
 - `sprache-jetzt.ts` (20 Z.) – Sprache der Oberfläche für Code außerhalb von Komponenten (Fehlertexte, Datum, Rückfragen): `SpracheRahmen` setzt sie, Komponenten nehmen besser `u … · setzeAktuelleSprache, aktuelleSprache, ot
-- `sprache.tsx` (154 Z.) – Sprache der Oberfläche. · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, useOberflaeche, SprachWahl, fehlerFuerAussteller
+- `sprache.tsx` (197 Z.) – Sprache der Oberfläche. · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, useOberflaeche, SprachWahl, fehlerFuerAussteller
 - `symbole.tsx` (45 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui-basis.ts` (11 Z.) · cx, TON

@@ -2,9 +2,10 @@
  * Sprache der Oberfläche.
  * - Seiten für Aussteller unter `/s/…` (Entscheidung 020): `?sprache=` im Link (aus der Mail) → zuletzt gewählte Sprache
  *   → Sprache des Browsers → Deutsch.
- * - Alles andere – Anmeldung, Verwaltung, Helfer, Preisrichter-Tablet (Entscheidung 022): Sprache des angemeldeten
- *   Benutzers (gespeichert am Konto) → zuletzt in diesem Browser gewählte → Deutsch. Die Browsersprache allein stellt die
- *   Verwaltung nicht um – wer bisher deutsch gearbeitet hat, merkt vom Update nichts.
+ * - Anmeldung, Verwaltung, Helfer (Entscheidung 022): Sprache des angemeldeten Benutzers (gespeichert am Konto) → zuletzt
+ *   in diesem Browser gewählte → Deutsch. Eine Wahl auf der Anmeldeseite geht nach dem Anmelden ans Konto. Die
+ *   Browsersprache allein stellt die Verwaltung nicht um – wer bisher deutsch gearbeitet hat, merkt vom Update nichts.
+ * - Preisrichter-Tablet unter `/richter/…`: nur die Wahl an diesem Gerät, sonst Deutsch.
  */
 import { istSprache, ladeOberflaeche, oberflaeche, oberflaecheGeladen, passendeSprache, SPRACHEN, SPRACHNAME, texte, type OberflaecheTexte, type Sprache, type Texte } from "@schau/domain";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
@@ -12,21 +13,24 @@ import { useLocation } from "react-router-dom";
 import { fehlerText } from "./lib";
 import { setzeAktuelleSprache } from "./sprache-jetzt";
 import { trpc } from "./trpc";
+import { useMeldung } from "./ui";
 
-const SPEICHER = "schaufuchs.sprache";
+/** Gemerkte Wahl im Browser: getrennt für Aussteller-Seiten und Verwaltung/Tablet (eine Wahl auf /s/ stellt die Verwaltung nicht um). */
+const SPEICHER = { aussteller: "schaufuchs.sprache", oberflaeche: "schaufuchs.sprache.oberflaeche" } as const;
+type Speicher = keyof typeof SPEICHER;
 const Kontext = createContext<{ sprache: Sprache; setzen: (s: Sprache) => void }>({ sprache: "de", setzen: () => {} });
 
-function merken(s: Sprache) {
+function merken(wo: Speicher, s: Sprache) {
   try {
-    localStorage.setItem(SPEICHER, s);
+    localStorage.setItem(SPEICHER[wo], s);
   } catch {
     // Privater Modus o. Ä.: die Wahl gilt dann nur für diesen Besuch.
   }
 }
 
-function gemerkteSprache(): Sprache | null {
+function gemerkteSprache(wo: Speicher): Sprache | null {
   try {
-    const gemerkt = localStorage.getItem(SPEICHER);
+    const gemerkt = localStorage.getItem(SPEICHER[wo]);
     if (istSprache(gemerkt)) return gemerkt;
   } catch {
     // wie oben
@@ -36,44 +40,84 @@ function gemerkteSprache(): Sprache | null {
 
 /** Sprache der Aussteller-Seiten beim Laden; ein `?sprache=` aus dem Mail-Link gilt als Wahl. */
 function anfangsSprache(): Sprache {
-  const ausLink = new URLSearchParams(window.location.search).get("sprache");
+  const ausLink = istAusstellerSeite(window.location.pathname) ? new URLSearchParams(window.location.search).get("sprache") : null;
   if (istSprache(ausLink)) {
-    merken(ausLink);
+    merken("aussteller", ausLink);
     return ausLink;
   }
-  return gemerkteSprache() ?? passendeSprache(navigator.languages?.length ? navigator.languages : [navigator.language]);
+  return gemerkteSprache("aussteller") ?? passendeSprache(navigator.languages?.length ? navigator.languages : [navigator.language]);
 }
 
 /** Seiten für Aussteller: Sprache aus Link oder Browser. */
 export const istAusstellerSeite = (pfad: string) => pfad.startsWith("/s/");
+/** Preisrichter-Tablet: Sprache nur aus der Wahl am Gerät – ein dort angemeldetes Konto der Verwaltung zählt nicht. */
+const istTablet = (pfad: string) => pfad.startsWith("/richter/");
 
 /** Einmal im Wurzel-Layout (innerhalb des Routers), damit auch Fehlerseite und Rückfragen die Sprache kennen. */
 export function SpracheRahmen({ children }: { children: ReactNode }) {
-  const aussteller = istAusstellerSeite(useLocation().pathname);
+  const pfad = useLocation().pathname;
+  const aussteller = istAusstellerSeite(pfad);
+  const tablet = istTablet(pfad);
   const [fuerAussteller, setFuerAussteller] = useState(anfangsSprache);
-  const [imBrowser, setImBrowser] = useState(() => gemerkteSprache() ?? "de");
+  const [imBrowser, setImBrowser] = useState(() => gemerkteSprache("oberflaeche") ?? "de");
   // Angemeldet: die Sprache am Konto (dieselbe Abfrage wie im Rahmen der Verwaltung, also ohne zweiten Aufruf).
-  const status = trpc.auth.status.useQuery(undefined, { enabled: !aussteller });
+  const status = trpc.auth.status.useQuery(undefined, { enabled: !aussteller && !tablet });
   const utils = trpc.useUtils();
-  const amKonto = status.data?.benutzer?.sprache;
-  const speichern = trpc.auth.spracheSetzen.useMutation();
+  const meldung = useMeldung();
+  const konto = !aussteller && !tablet ? status.data?.benutzer : null;
+  const amKonto = konto?.sprache;
+  const speichern = trpc.auth.spracheSetzen.useMutation({
+    onError: (e) => {
+      meldung(fehlerText(e), "fehler");
+      void utils.auth.status.invalidate();
+    },
+  });
+  const amKontoSpeichern = (s: Sprache) => {
+    utils.auth.status.setData(undefined, (d) => (d?.benutzer ? { ...d, benutzer: { ...d.benutzer, sprache: s } } : d));
+    speichern.mutate({ sprache: s });
+  };
+  // Vor der Anmeldung gewählt (Anmeldeseite): nach der Anmeldung für das Konto übernehmen.
+  const vorAnmeldung = useRef<Sprache | null>(null);
+  useEffect(() => {
+    const s = vorAnmeldung.current;
+    if (!konto || !s) return;
+    vorAnmeldung.current = null;
+    if (s !== amKonto) amKontoSpeichern(s);
+  }, [konto?.id]); // nur beim Anmelden
   const gewuenscht: Sprache = aussteller ? fuerAussteller : istSprache(amKonto) ? amKonto : imBrowser;
-  // Übersetzungen kommen als eigener Teil nach: bis dahin die zuletzt gezeigte Sprache (beim ersten Laden nichts).
+  // Übersetzungen kommen als eigener Teil nach: bis dahin die zuletzt gezeigte Sprache. Geht das Laden schief (kein
+  // Netz beim ersten Aufruf), vorerst Deutsch und nach einer Weile noch einmal versuchen.
   const [, neuZeichnen] = useState(0);
+  const [versuch, nochmal] = useState(0);
   const zuletzt = useRef<Sprache | null>(null);
   const bereit = oberflaecheGeladen(gewuenscht);
   if (bereit) zuletzt.current = gewuenscht;
   useEffect(() => {
-    if (!bereit) void ladeOberflaeche(gewuenscht).then(() => neuZeichnen((n) => n + 1), () => neuZeichnen((n) => n + 1));
-  }, [gewuenscht, bereit]);
+    if (bereit) return;
+    let aus = false;
+    let uhr: ReturnType<typeof setTimeout> | undefined;
+    ladeOberflaeche(gewuenscht).then(
+      () => !aus && neuZeichnen((n) => n + 1),
+      () => {
+        if (aus) return;
+        zuletzt.current ??= "de";
+        neuZeichnen((n) => n + 1);
+        uhr = setTimeout(() => !aus && nochmal((n) => n + 1), 15_000);
+      },
+    );
+    return () => {
+      aus = true;
+      clearTimeout(uhr);
+    };
+  }, [gewuenscht, bereit, versuch]);
   const sprache: Sprache = zuletzt.current ?? (bereit ? gewuenscht : "de");
   setzeAktuelleSprache(sprache);
   useEffect(() => {
     document.documentElement.lang = sprache;
   }, [sprache]);
   const setzen = (s: Sprache) => {
-    merken(s);
     if (aussteller) {
+      merken("aussteller", s);
       setFuerAussteller(s);
       // Eigene Wahl gilt auch nach dem Neuladen: `?sprache=` aus dem Mail-Link sonst wieder vorrangig.
       const url = new URL(window.location.href);
@@ -83,11 +127,10 @@ export function SpracheRahmen({ children }: { children: ReactNode }) {
       }
       return;
     }
+    merken("oberflaeche", s);
     setImBrowser(s);
-    if (status.data?.benutzer) {
-      utils.auth.status.setData(undefined, (d) => (d?.benutzer ? { ...d, benutzer: { ...d.benutzer, sprache: s } } : d));
-      speichern.mutate({ sprache: s });
-    }
+    if (konto) amKontoSpeichern(s);
+    else if (!tablet) vorAnmeldung.current = s;
   };
   if (!zuletzt.current) return null; // erster Aufruf in einer Übersetzung: einen Augenblick, bis sie geladen ist
   return <Kontext.Provider value={{ sprache, setzen }}>{children}</Kontext.Provider>;

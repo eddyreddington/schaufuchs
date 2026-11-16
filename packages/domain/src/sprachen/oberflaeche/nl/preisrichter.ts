@@ -42,7 +42,7 @@ export const preisrichter: OberflaecheTexte["preisrichter"] = {
     anschriftHinweis: "Alleen met toestemming van de keurmeester.",
     telefon: "Telefoon",
     email: "E-mail",
-    obmannHinweis: "Bevestigt het predicaat „vorzüglich”.",
+    obmannHinweis: "Bevestigt het predicaat „voortreffelijk”.",
     sparten: "Keurt deze afdelingen",
     spartenLeer: "(geen = alle)",
   },

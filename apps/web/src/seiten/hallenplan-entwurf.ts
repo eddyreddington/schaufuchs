@@ -3,7 +3,7 @@
  * nach an den Server (`kette`), dazu der Verlauf für Rückgängig/Wiederholen, das automatische Festschreiben vor dem
  * ersten Verschieben und „Plan neu setzen“. Alle teilen dieselben Zähler und Sperren – deshalb ein Hook.
  */
-import { type Halle, halleSchluessel, plattenStand } from "@schau/domain";
+import { type Halle, halleSchluessel, oberflaeche, plattenStand } from "@schau/domain";
 import { useEffect, useRef, useState } from "react";
 import { fehlerText } from "../lib";
 import { useOberflaeche } from "../sprache";
@@ -60,7 +60,7 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
     const vorher = entwurfRef.current;
     const neu = vonHandBewegt(vorher, vollstaendig(f(entwurfRef.current)));
     if (halleSchluessel(neu) === basis) return neu;
-    const schritt: Schritt | null = opt.ohneVerlauf ? null : { vorher, nachher: neu, was: opt.was ?? t.aenderung };
+    const schritt: Schritt | null = opt.ohneVerlauf ? null : { vorher, nachher: neu, was: opt.was ?? t.aenderung, wasDe: opt.wasDe ?? (opt.was ? undefined : oberflaeche("de").halleBild.entwurf.aenderung) };
     if (schritt) verlaufSetzen({ zurueck: [...verlauf.current.zurueck.slice(-99), schritt], vor: [] });
     entwurfRef.current = neu;
     setEntwurf(neu);

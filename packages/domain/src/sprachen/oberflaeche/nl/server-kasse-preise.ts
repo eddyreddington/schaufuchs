@@ -16,7 +16,7 @@ export const preise: T["preise"] = {
   sachpreis: "De schenking heeft geen geldbedrag (prijs in natura).",
   bleibtStehen: "De schenking is al als storting in het kasboek geboekt en blijft daarom staan.",
   nichtBewertet: (n: string) => `${n} dieren zijn nog niet gekeurd.`,
-  obmannOffen: (n: string) => `${n} keuringen („vorzüglich” of u.M.) zijn nog niet door de hoofdkeurmeester bevestigd.`,
+  obmannOffen: (n: string) => `${n} keuringen („voortreffelijk” of u.M.) zijn nog niet door de hoofdkeurmeester bevestigd.`,
   ohneNummer: (n: string) => `${n} bevestigde dieren hebben geen catalogusnummer – eerst nummeren of de inschrijving opschonen.`,
   kontingentUeber: (liste: string) => `Contingent overschreden: ${liste}. Eerst prijzen verwijderen.`,
   stiftungUngedeckt: (liste: string) => `Geschonken prijzen niet gedekt: ${liste}. Vul de schenking aan of verwijder prijzen.`,

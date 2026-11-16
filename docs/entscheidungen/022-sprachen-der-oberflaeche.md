@@ -19,13 +19,19 @@ Anwender haben die Sprachwahl auf der Anmeldeseite gesucht.
   setzt die Übersetzung mit denselben Werten ein, Satz für Satz bei zusammengesetzten Meldungen. Unbekanntes bleibt
   deutsch. `fehlerText()` übersetzt so jeden Fehler, auch die Kurztexte der Eingabeprüfung.
 - **Sprache:** angemeldet die Sprache am Konto (`benutzer.sprache`, Migration `0064_benutzer_sprache`, `auth.spracheSetzen`),
-  gewählt im Benutzermenü; ohne Anmeldung (Anmeldeseite, Tablet) die zuletzt in diesem Browser gewählte, sonst Deutsch.
-  Die Browsersprache allein stellt die Verwaltung bewusst nicht um – wer bisher deutsch arbeitet, merkt vom Update nichts.
-  Für Aussteller-Seiten bleibt die Regel aus 020 (Link → Wahl → Browser → Deutsch).
+  gewählt im Benutzermenü; ohne Anmeldung die zuletzt in diesem Browser gewählte, sonst Deutsch. Eine Wahl auf der
+  Anmeldeseite geht nach dem Anmelden ans Konto. Das Preisrichter-Tablet folgt nur der Wahl am Gerät (ein dort
+  angemeldetes Konto der Verwaltung zählt nicht). Die Browsersprache allein stellt die Verwaltung bewusst nicht um – wer
+  bisher deutsch arbeitet, merkt vom Update nichts. Für Aussteller-Seiten bleibt die Regel aus 020 (Link → Wahl → Browser
+  → Deutsch); ihre Wahl wird getrennt gemerkt und stellt die Verwaltung nicht um.
+- Deutsch ist immer geladen, jede Übersetzung kommt als eigener Teil nach (`ladeOberflaeche()`); der Service Worker lädt
+  alle vor, das Tablet bleibt offline benutzbar. Schlägt das Laden fehl, zeigt die Oberfläche vorerst Deutsch.
 - Datumsangaben folgen der Sprache; Geldbeträge bleiben im deutschen Format (Eingaben mit Komma).
 - **Bleibt deutsch** (wie 020): Inhalte des Vereins, Rassen- und Farbenschlagverzeichnis, Bewertungstexte und
   Textbausteine, alle PDFs und Drucke, Impressum und Datenschutz (rechtlich maßgeblich), Handbücher, Protokolleinträge,
-  Mails an Benutzer (Einladung, Hinweise). Im Quelltext markiert `// bleibt deutsch` solche Stellen.
+  Mails an Benutzer (Einladung, Hinweise), Namen, die als Inhalt gespeichert werden (z. B. Vorgabename einer Druckvorlage),
+  Gründe im Protokoll (Bearbeitungsschritte im Hallenplan tragen dazu ihren deutschen Namen mit). Im Quelltext markiert
+  `// bleibt deutsch` solche Stellen.
 
 **Prüfung:** `oberflaeche.test.ts` (Domain: Vollständigkeit, keine Kopie des Deutschen, Platzhalter, Schweiz/Französisch,
 `serverText` erkennt jede Meldung eindeutig) und `scripts/sprachen-scan.test.ts` (kein deutscher Rest im Quelltext der

@@ -4,13 +4,13 @@
  * Einzelreihe an der Wand. Jeder Befehl fragt nach, wo es nötig ist, und wartet auf laufende Speicherungen.
  */
 import { aktuelleSprache } from "../sprache-jetzt";
-import { aufDeutsch, grundrissUebernehmen, type Punkt, belegungImPlan, festGeometrie, type Halle, halleSchluessel, type KaefigPlatz, platzImPlan, serverText, vonHandGeplant, wandAusrichtung, wandDrehungenAnwenden, type WandSeite } from "@schau/domain";
+import { aufDeutsch, grundrissUebernehmen, type Punkt, belegungImPlan, festGeometrie, type Halle, halleSchluessel, type KaefigPlatz, oberflaeche, type OberflaecheTexte, platzImPlan, serverText, vonHandGeplant, wandAusrichtung, wandDrehungenAnwenden, type WandSeite } from "@schau/domain";
 import { fehlerText } from "../lib";
 import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { useFrage, useMeldung } from "../ui";
 import { type HallenEntwurf } from "./hallenplan-entwurf";
-import { type Daten, type Plan, type Versetzen, wandKandidatenImEntwurf, type Ziel } from "./hallenplan-geometrie";
+import { type Daten, type Plan, type Versetzen, wandKandidatenImEntwurf, type Ziel, zweisprachig } from "./hallenplan-geometrie";
 
 export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, setVersetzen }: {
   d: Daten;
@@ -49,7 +49,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
         verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: verlauf.current.vor });
         return meldung(tb.rueckgaengigNichtMehr, "warnung");
       }
-      const r = await tierZug(s.tierId, s.ziel, s.von, s.getauscht, `Rückgängig: ${aufDeutsch(s.was, aktuelleSprache())}`); // bleibt deutsch (Protokoll)
+      const r = await tierZug(s.tierId, s.ziel, s.von, s.getauscht, `Rückgängig: ${s.wasDe ?? aufDeutsch(s.was, aktuelleSprache())}`); // bleibt deutsch (Protokoll)
       if (r === "abbruch") return;
       if (!r) return verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: verlauf.current.vor });
       verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: [...verlauf.current.vor, s] });
@@ -60,7 +60,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
       return meldung(tb.rueckgaengigNichtMehr, "warnung");
     }
     setAuswahl([]);
-    if (!(await schrittAnwenden(s.vorher, `Rückgängig: ${aufDeutsch(s.was, aktuelleSprache())}`))) return; // bleibt deutsch (Protokoll)
+    if (!(await schrittAnwenden(s.vorher, `Rückgängig: ${s.wasDe ?? aufDeutsch(s.was, aktuelleSprache())}`))) return; // bleibt deutsch (Protokoll)
     verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: [...verlauf.current.vor, s] });
   };
   const wiederholen = async () => {
@@ -72,7 +72,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
         verlaufSetzen({ zurueck: verlauf.current.zurueck, vor: verlauf.current.vor.filter((x) => x !== s) });
         return meldung(tb.wiederholenNichtMehr, "warnung");
       }
-      const r = await tierZug(s.tierId, s.von, s.ziel, s.getauscht, `Wiederholt: ${s.was}`); // bleibt deutsch (Protokoll)
+      const r = await tierZug(s.tierId, s.von, s.ziel, s.getauscht, `Wiederholt: ${s.wasDe ?? aufDeutsch(s.was, aktuelleSprache())}`); // bleibt deutsch (Protokoll)
       if (r === "abbruch") return;
       if (!r) return verlaufSetzen({ zurueck: verlauf.current.zurueck, vor: verlauf.current.vor.filter((x) => x !== s) });
       verlaufSetzen({ zurueck: [...verlauf.current.zurueck, s], vor: verlauf.current.vor.filter((x) => x !== s) });
@@ -83,7 +83,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
       return meldung(tb.wiederholenNichtMehr, "warnung");
     }
     setAuswahl([]);
-    if (!(await schrittAnwenden(s.nachher, `Wiederholt: ${s.was}`))) return; // bleibt deutsch (Protokoll)
+    if (!(await schrittAnwenden(s.nachher, `Wiederholt: ${s.wasDe ?? aufDeutsch(s.was, aktuelleSprache())}`))) return; // bleibt deutsch (Protokoll)
     verlaufSetzen({ zurueck: [...verlauf.current.zurueck, s], vor: verlauf.current.vor.filter((x) => x !== s) });
   };
   const versetzenMut = trpc.katalog.tierVersetzen.useMutation();
@@ -133,8 +133,8 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     }
     const r = await tierZug(v.tierId, von, ziel, da?.tierId ?? null);
     if (!r || r === "abbruch") return;
-    const was = r.getauscht != null ? tb.getauscht(v.nr ?? "–", nrVon(r.getauscht)) : tb.versetzt(v.nr ?? "–");
-    verlaufSetzen({ zurueck: [...verlauf.current.zurueck.slice(-99), { art: "tier", tierId: v.tierId, von, ziel, getauscht: r.getauscht, was }], vor: [] });
+    const { was, wasDe } = zweisprachig((x) => (r.getauscht != null ? x.halleWerkzeuge.befehle.getauscht(v.nr ?? "–", nrVon(r.getauscht)) : x.halleWerkzeuge.befehle.versetzt(v.nr ?? "–")));
+    verlaufSetzen({ zurueck: [...verlauf.current.zurueck.slice(-99), { art: "tier", tierId: v.tierId, von, ziel, getauscht: r.getauscht, was, wasDe }], vor: [] });
     meldung(`${was}.`);
   };
   const nachPlan = trpc.katalog.nummernNachPlan.useMutation({
@@ -188,7 +188,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     )
       return;
     aendern((h) => wandDrehungenAnwenden(h, wandAusrichtung(h, wandKandidatenImEntwurf(h, plan, null))), {
-      was: tb.wandWas,
+      ...zweisprachig((x) => x.halleWerkzeuge.befehle.wandWas),
       grund: `An den Wänden ausgerichtet: ${d.length} ${d.length === 1 ? "Teil" : "Teile"} gedreht`, // bleibt deutsch (Protokoll)
       festschreiben: d.some((x) => x.teil.art === "platte"),
     });
@@ -205,7 +205,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
    * Andere Einstellungen der Halle (auch Rückgängig/Wiederholen davon): Plan neu setzen. Steht etwas von Hand Geplantes
    * oder ist der Plan fest, vorher Rückfrage. `f` wirkt auf den Stand nach der Rückfrage (inzwischen Gespeichertes bleibt).
    */
-  const halleNeuSetzen = async (f: (h: Halle) => Halle, grund: string): Promise<boolean> => {
+  const halleNeuSetzen = async (f: (h: Halle) => Halle, grund: string, was?: string): Promise<boolean> => {
     if (neuUnterwegs.current) {
       meldung(tb.neuGerade, "warnung");
       return false;
@@ -221,7 +221,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
       // Ebenso ein anderer Grundriss (Entscheidung 019): die festen Plätze lägen sonst womöglich außerhalb der Wände.
       const grundrissNeu = JSON.stringify(f(entwurfRef.current).umriss ?? null) !== JSON.stringify(entwurfRef.current.umriss ?? null);
       if (!richtungNeu && !grundrissNeu) {
-        aendern(f, { was: grund, grund });
+        aendern(f, { was: was ?? grund, wasDe: grund, grund });
         return true;
       }
       if (!(await bestaetige({ titel: tb.automatikTitel, text: grundrissNeu ? tb.grundrissNurNeu : tb.richtungNurNeu, knopf: tb.einschaltenKnopf, gefahr: true })))
@@ -256,7 +256,8 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
       neuSetzenMit(null, "Automatisch planen eingeschaltet"); // bleibt deutsch (Protokoll)
   };
   /** Einstellung der Halle ändern (Maße, Gänge, Reihen, Grundplatten): der Plan wird neu gesetzt (siehe `halleNeuSetzen`). */
-  const aendernHalle = (patch: Partial<Halle>, was: string): Promise<boolean> => halleNeuSetzen((h) => ({ ...h, ...patch }), `Halle: ${was}`); // bleibt deutsch (Protokoll)
+  const aendernHalle = (patch: Partial<Halle>, was: (t: OberflaecheTexte) => string): Promise<boolean> =>
+    halleNeuSetzen((h) => ({ ...h, ...patch }), `Halle: ${was(oberflaeche("de"))}`, was(t)); // Grund bleibt deutsch (Protokoll)
   /** Eine Doppelreihe an die Wand gezogen: dort eine Einzelreihe stellen, die übrigen Reihen ordnen sich neu. */
   const wandreihe = trpc.katalog.wandreiheStellen.useMutation({
     onSuccess: async (e) => {

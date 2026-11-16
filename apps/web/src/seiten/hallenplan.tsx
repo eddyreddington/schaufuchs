@@ -17,7 +17,7 @@ import { PlanBild } from "./hallenplan-bild";
 import { Eigenschaften, HalleEigenschaften, MitEinheit } from "./hallenplan-eigenschaften";
 import { HallenEntwuerfe } from "./hallenplan-entwuerfe";
 import { useHallenEntwurf } from "./hallenplan-entwurf";
-import { type Daten, meter, type Versetzen, type Ziel, zuCm } from "./hallenplan-geometrie";
+import { type Daten, meter, type Versetzen, type Ziel, zuCm, zweisprachig } from "./hallenplan-geometrie";
 import { AutomatikSchalter, KaefigInfo, SpartenReihen } from "./hallenplan-teile";
 import { Aufbauliste, PlanLegende, PlatzUebersicht } from "./hallenplan-uebersicht";
 import { HallenSkizze, StellVorschlaege } from "./hallenplan-vorschlaege";
@@ -343,8 +343,8 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
                 nummerieren: plan.fest && !d.abgeschlossen ? { text: d.katalogGedruckt ? th.kaefigplaetzeNachPlan : th.nachPlanNummerieren, tun: nachPlanFragen } : null,
                 reihenZurueck: versetzt,
                 plattenZurueck: plattenVersetzt,
-                alleReihenZurueck: () => aendern((h) => ({ ...h, reihenVersatz: [] }), { was: th.alleReihenZurueck }),
-                allePlattenZurueck: () => aendern((h) => ({ ...h, plattenVersatz: [] }), { was: th.allePlattenZurueck }),
+                alleReihenZurueck: () => aendern((h) => ({ ...h, reihenVersatz: [] }), zweisprachig((x) => x.halle.hallenplan.alleReihenZurueck)),
+                allePlattenZurueck: () => aendern((h) => ({ ...h, plattenVersatz: [] }), zweisprachig((x) => x.halle.hallenplan.allePlattenZurueck)),
                 neuSetzen: neuSetzenFragen,
                 anWaenden: kannPlanen && !d.abgeschlossen ? () => void anWaendenAusrichten() : null,
               }}

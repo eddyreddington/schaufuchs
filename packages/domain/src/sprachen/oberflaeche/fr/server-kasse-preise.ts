@@ -16,7 +16,7 @@ export const preise: T["preise"] = {
   sachpreis: "La dotation n’a pas de montant en argent (prix en nature).",
   bleibtStehen: "La dotation est déjà comptabilisée comme apport dans le livre de caisse et reste donc en place.",
   nichtBewertet: (n: string) => `${n} animaux ne sont pas encore jugés.`,
-  obmannOffen: (n: string) => `${n} jugements (« vorzüglich » ou u.M.) ne sont pas encore confirmés par le juge en chef.`,
+  obmannOffen: (n: string) => `${n} jugements (« excellent » ou u.M.) ne sont pas encore confirmés par le juge en chef.`,
   ohneNummer: (n: string) => `${n} animaux confirmés n’ont pas de numéro de catalogue – numéroter d’abord ou corriger l’inscription.`,
   kontingentUeber: (liste: string) => `Contingent dépassé : ${liste}. Veuillez d’abord retirer des prix.`,
   stiftungUngedeckt: (liste: string) => `Prix dotés non couverts : ${liste}. Veuillez compléter la dotation ou retirer des prix.`,

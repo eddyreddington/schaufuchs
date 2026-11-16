@@ -8,7 +8,7 @@ import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { useFrage, useMeldung } from "../ui";
 import { type HallenEntwurf } from "./hallenplan-entwurf";
-import { type Aktionen, type Daten, drehPruefung, EINGANG_TIEFE, entfernenText, gedreht, type Plan, planKoerper, RASTER, raster, vollstaendig, wandText, type Ziel, zuTeilen } from "./hallenplan-geometrie";
+import { type Aktionen, type Daten, drehPruefung, EINGANG_TIEFE, entfernenText, gedreht, type Plan, planKoerper, RASTER, raster, vollstaendig, wandText, type Ziel, zuTeilen, zweisprachig } from "./hallenplan-geometrie";
 
 export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, zeichnen, setZeichnen, anWandFragen }: {
   d: Daten;
@@ -43,7 +43,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
         e = rasterAusrichten(h, planKoerper(h, plan), ziele, RASTER);
         return e.ok ? e.halle : h;
       },
-      { was: ta.rasterWas, festschreiben: !ziele || ziele.some((t) => t.art === "reihe" || t.art === "platte") },
+      { ...zweisprachig((x) => x.halleWerkzeuge.aktionen.rasterWas), festschreiben: !ziele || ziele.some((t) => t.art === "reihe" || t.art === "platte") },
     );
     const ergebnis = e as ReturnType<typeof rasterAusrichten>;
     if (!ergebnis.ok) return meldung(serverText(ergebnis.meldung, sprache), "warnung");
@@ -54,7 +54,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     const t = teile[0]!;
     const pr = drehPruefung(entwurf, plan, t);
     if (!pr.ok) return meldung(serverText(pr.meldung, sprache), "warnung");
-    aendern((h) => gedreht(h, t), { was: ta.drehenWas, festschreiben: t.art === "reihe" || t.art === "platte" });
+    aendern((h) => gedreht(h, t), { ...zweisprachig((x) => x.halleWerkzeuge.aktionen.drehenWas), festschreiben: t.art === "reihe" || t.art === "platte" });
   };
   /** Gewählte Reihen und Platten an ihren gerechneten Platz (Versatz und Drehung weg). */
   const zurueckTeile = teile.filter((t) => (t.art === "reihe" ? entwurf.reihenVersatz!.some((x) => x.nr === t.nr) : t.art === "platte" && entwurf.plattenVersatz!.some((x) => x.reihe === t.reihe && x.platte === t.i)));
@@ -70,7 +70,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
           plattenVersatz: v.plattenVersatz!.filter((x) => !z.some((t) => t.art === "platte" && t.reihe === x.reihe && t.i === x.platte)),
         };
       },
-      { was: tg.anPlatzZurueck },
+      zweisprachig((x) => x.halleWerkzeuge.gemeinsam.anPlatzZurueck),
     );
   };
   const entfernenFragen = async () => {
@@ -110,7 +110,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
       p = utils.katalog.hallenplan.getData({ schauId })?.plan ?? plan;
       if (!p.fest) return;
     }
-    aendern((h) => leereEntfernen(h, p, gewaehlt).halle, { was: t.allgemein.entfernen, grund: `Leeres entfernt: ${was}` }); // bleibt deutsch (Protokoll)
+    aendern((h) => leereEntfernen(h, p, gewaehlt).halle, { ...zweisprachig((x) => x.allgemein.entfernen), grund: `Leeres entfernt: ${entfernenText(e, oberflaeche("de").halleBild.geometrie)}` }); // bleibt deutsch (Protokoll)
     setAuswahl([]);
   };
   /** „1 Tier bleibt ohne Platz.“ bzw. Mehrzahl. */
@@ -165,7 +165,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     for (const e of einsaetze) zaehlen.set(e.typ, (zaehlen.get(e.typ) ?? 0) + 1);
     const liste = (x: OberflaecheTexte) => [...zaehlen].map(([typ, n]) => (typ === "voliere" ? x.halleWerkzeuge.gemeinsam.volieren(n) : x.halleWerkzeuge.aktionen.bloeckeArt(n, x.fach.KAEFIG_TYP_MEHRZAHL[typ]))).join(", ");
     const was = liste(t);
-    aendern((h) => ({ ...h, objekte: [...(h.objekte ?? []), ...neu] }), { was: ta.fehlendeWas, grund: `Fehlende Käfige eingesetzt: ${liste(oberflaeche("de"))}` }); // bleibt deutsch (Protokoll)
+    aendern((h) => ({ ...h, objekte: [...(h.objekte ?? []), ...neu] }), { ...zweisprachig((x) => x.halleWerkzeuge.aktionen.fehlendeWas), grund: `Fehlende Käfige eingesetzt: ${liste(oberflaeche("de"))}` }); // bleibt deutsch (Protokoll)
     setAuswahl(neu.map((o) => ({ art: "objekt" as const, id: o.id })));
     if (!nur) meldung(`${ta.eingesetzt(was)}${ohne ? ` ${ohnePlatz(ohne)}` : ""}`, ohne ? "warnung" : undefined);
   };
@@ -198,7 +198,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     const anzahl = entwurf.flaechen.filter((x) => x.art === art).length;
     // Vorgabename der Fläche: Inhalt des Plans (steht so in Drucken), wie vom Verein geschrieben.
     const name = art === "eingang" ? `Eingang${anzahl ? ` ${anzahl + 1}` : ""}` : art === "volieren" ? "Volieren" : "Freier Bereich"; // bleibt deutsch
-    const neu = aendern((h) => ({ ...h, flaechen: [...h.flaechen, { name, art, ...f }] }), { was: ta.flaecheWas });
+    const neu = aendern((h) => ({ ...h, flaechen: [...h.flaechen, { name, art, ...f }] }), zweisprachig((x) => x.halleWerkzeuge.aktionen.flaecheWas));
     setAuswahl([{ art: "flaeche", i: neu.flaechen.length - 1 }]);
   };
   /** Eine gewählte, ungedrehte Doppelreihe lässt sich als Einzelreihe an eine Wand stellen (wo noch keine steht). */

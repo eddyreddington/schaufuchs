@@ -6,7 +6,7 @@
 import { anKantenEinrasten, serverText, type Halle, type HallenFlaeche, type HallenTeil, pruefeVerschiebung, type Rechteck, type Reihe, type VerschiebePruefung, verschiebeTeile, wandAusrichtung, wandDrehungenAnwenden, type WandSeite, wandSeiteVon } from "@schau/domain";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOberflaeche, useSprache } from "../sprache";
-import { type Aendern, drehPruefung, freierPlatz, gedreht, gleich, groesseAendern, innen, type Plan, planKoerper, plattenDa, type Rahmen, RASTER, raster, reihenLage, vollstaendig, wandKandidatenImEntwurf, type Ziel, type Zug, zahlWort, zuTeilen } from "./hallenplan-geometrie";
+import { type Aendern, drehPruefung, freierPlatz, gedreht, gleich, groesseAendern, innen, type Plan, planKoerper, plattenDa, type Rahmen, RASTER, raster, reihenLage, vollstaendig, wandKandidatenImEntwurf, type Ziel, type Zug, zahlWort, zuTeilen, zweisprachig } from "./hallenplan-geometrie";
 
 export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, aendern, mehrfach, melden, pfeilRef, zeichnen, gezeichnet, anWand, quer, svgRef }: {
   halle: Halle;
@@ -237,7 +237,7 @@ export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, ae
         gedreht = d.length;
         return wandDrehungenAnwenden(v, d);
       },
-      { was: tb.verschieben, festschreiben: ziele.some((t) => t.art === "reihe" || t.art === "platte") },
+      { ...zweisprachig((x) => x.halleBild.bedienung.verschieben), festschreiben: ziele.some((t) => t.art === "reihe" || t.art === "platte") },
     );
     if (gedreht) melden?.(gedreht === 1 ? tb.anWandGedrehtEins : tb.anWandGedreht(zahlWort(gedreht, tb.teile)));
   };
@@ -273,7 +273,7 @@ export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, ae
     if (!t) return;
     const pr = drehPruefung(halle, plan, t);
     if (!pr.ok) return meldeFach(pr.meldung);
-    aendern((h) => gedreht(h, t), { was: tb.drehen, festschreiben: t.art === "reihe" || t.art === "platte" });
+    aendern((h) => gedreht(h, t), { ...zweisprachig((x) => x.halleBild.bedienung.drehen), festschreiben: t.art === "reihe" || t.art === "platte" });
   };
   /**
    * Pfeiltasten am Teil mit dem Fokus: gehört es zur Auswahl (auch als Platte einer gewählten Reihe), rückt die ganze

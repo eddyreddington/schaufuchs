@@ -16,7 +16,7 @@ export const preise: T["preise"] = {
   sachpreis: "The sponsorship has no amount of money (prize in kind).",
   bleibtStehen: "The sponsorship has already been booked as a deposit in the cash book and therefore remains.",
   nichtBewertet: (n: string) => `${n} animals have not been judged yet.`,
-  obmannOffen: (n: string) => `${n} gradings (“vorzüglich” or u.M.) have not yet been confirmed by the chief judge.`,
+  obmannOffen: (n: string) => `${n} gradings (“excellent” or u.M.) have not yet been confirmed by the chief judge.`,
   ohneNummer: (n: string) => `${n} confirmed animals have no catalogue number – number them first or clean up the entry.`,
   kontingentUeber: (liste: string) => `Quota exceeded: ${liste}. Please remove prizes first.`,
   stiftungUngedeckt: (liste: string) => `Sponsored prizes not covered: ${liste}. Please add a sponsorship or remove prizes.`,
