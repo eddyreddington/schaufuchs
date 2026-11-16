@@ -6,6 +6,9 @@ Aussteller-Texte in `packages/domain/src/sprachen/{en,fr,nl,pl,cs}.ts` haben sie
 Deutsch (Schweiz) entsteht automatisch („ss“ statt „ß“), Französisch bekommt die geschützten Leerzeichen automatisch –
 in den Dateien also normales Leerzeichen vor „: ; ? !“.
 
+Bleiben in allen Sprachen deutsch: Notenkürzel (v, hv, sg, g, b, u, o.B., u.M., n.a.), Geschlecht als 1,0 / 0,1,
+Textbausteine samt ihren Gruppen (Gesamteindruck, Form …), Rassen und Farbenschläge, Kopfzeilen von Import-Dateien.
+
 Anrede: Englisch neutral; Französisch „vous“; Niederländisch „u“; Polnisch unpersönlich oder „Państwo“; Tschechisch
 „vy“ (Mehrzahl, höflich). Knöpfe im Infinitiv bzw. Imperativ wie in der jeweiligen Sprache üblich (en „Save“, fr
 „Enregistrer“, nl „Opslaan“, pl „Zapisz“, cs „Uložit“).
@@ -63,3 +66,16 @@ Anrede: Englisch neutral; Französisch „vous“; Niederländisch „u“; Poln
 | Tablet | tablet | tablette | tablet | tablet | tablet |
 | Zwei-Faktor-Anmeldung | two-factor sign-in | connexion à deux facteurs | tweestapsaanmelding | logowanie dwuskładnikowe | dvoufázové přihlášení |
 | Anmelden / Abmelden | sign in / sign out | se connecter / se déconnecter | aanmelden / afmelden | zaloguj / wyloguj | přihlásit / odhlásit |
+| Freigabe (der Ergebnisse) | release | validation | vrijgave | zatwierdzenie | schválení |
+| Stiftung, Stifter | sponsorship, sponsor | dotation, mécène | sponsoring, sponsor | nagroda fundowana, fundator | sponzorovaná cena, sponzor |
+| Nachweis (Impfung, Untersuchung) | certificate | attestation | bewijs | zaświadczenie | doklad |
+| Beleg / Quittung | voucher / receipt | justificatif / quittance | bon / kwitantie | dowód / pokwitowanie | doklad / stvrzenka |
+| buchen | book | comptabiliser | boeken | zaksięgować | zaúčtovat |
+| stornieren | reverse | extourner | storneren | stornować | stornovat |
+| Verfall (Geld bleibt beim Verein) | forfeiture | retenue | vervallen | przepadek | propadnutí |
+| A-Bogen / B-Bogen | form A / form B | formulaire A / B | A-formulier / B-formulier | formularz A / B | formulář A / B |
+| festgeschrieben (Katalog) | fixed | figé | vastgelegd | ustalone na stałe | pevně stanoveno |
+| Grundplatte | base board | plateau | grondplaat | płyta | deska |
+| Aufsteller (Käfiggestell) | stands | tréteaux | schragen | stojaki | stojany |
+| Gang | aisle | allée | gangpad | przejście | ulička |
+| Plan neu setzen | rebuild plan | recalculer le plan | plan opnieuw opbouwen | ustawić plan od nowa | znovu rozmístit plán |
