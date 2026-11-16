@@ -168,7 +168,13 @@ export function OeffentlicheSchau() {
           </div>
         </Abschnitt>
       ) : d.meldung.offen ? (
+        <>
+        {/* Wer lieber auf Papier meldet: leerer A-Bogen (deutsch, wie alle Drucke). */}
+        <p className="-mb-2 text-sm">
+          <a href={`/s/${slug}/a-bogen.pdf`} target="_blank" rel="noreferrer">{t.aBogen}</a>
+        </p>
         <Meldeformular slug={slug} bestimmungen={d.bestimmungen} erklaerungen={d.erklaerungen} datenschutz={d.datenschutzKurz} kaefigRegeln={d.kaefigRegeln} kaefigMasse={d.kaefigMasse} teilschauen={d.teilschauen} vorschlaege={{ vereine: d.vereine, kreisverbaende: d.kreisverbaende }} fertig={(token, betrag) => { setGemeldet({ token, betrag }); window.scrollTo(0, 0); }} />
+        </>
       ) : (
         <Hinweis ton="warnung">{d.meldung.grund}</Hinweis>
       )}

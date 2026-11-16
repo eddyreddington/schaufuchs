@@ -44,6 +44,7 @@ export const pl: Texte = {
     zahlungAn: "Płatność na rzecz:",
     ergebnisseAnsehen: "Zobacz wyniki",
     katalogPdf: "Katalog z wynikami (PDF)",
+    aBogen: "Formularz zgłoszeniowy do wydruku (PDF, po niemiecku)",
     nummernFest: "Numery katalogowe są ustalone. Wyniki i katalog pojawią się tutaj po ich opublikowaniu.",
     fragen: "Pytania do kierownictwa wystawy:",
     abgesagt: (grund: string) => `Wystawa została odwołana${grund ? `: ${grund}` : "."}`,

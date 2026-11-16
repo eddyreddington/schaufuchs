@@ -36,6 +36,7 @@ export const en: Texte = {
     zahlungAn: "Pay to:",
     ergebnisseAnsehen: "View results",
     katalogPdf: "Catalogue with results (PDF)",
+    aBogen: "Entry form to print (PDF, in German)",
     nummernFest: "The catalogue numbers are fixed. Results and catalogue will appear here once they are released.",
     fragen: "Questions to the show management:",
     abgesagt: (grund: string) => `The show has been cancelled${grund ? `: ${grund}` : "."}`,

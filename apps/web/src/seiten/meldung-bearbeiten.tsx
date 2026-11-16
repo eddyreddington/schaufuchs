@@ -395,6 +395,7 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
 
       <Abschnitt titel="Für den Aussteller">
         <div className="flex flex-col items-start gap-3 text-sm">
+          <a href={`/datei/${schauId}/a-bogen.pdf?meldung=${m.id}`} target="_blank" rel="noreferrer">A-Bogen zum Unterschreiben (PDF)</a>
           <a href={`/datei/${schauId}/aussteller.pdf?meldung=${m.id}`} target="_blank" rel="noreferrer">B-Bogen und Ringkarten (PDF)</a>
           <a href={daten.link} target="_blank" rel="noreferrer">Seite „Meine Meldung“</a>
           <Knopf onClick={() => senden.mutate({ id: m.id })} laedt={senden.isPending} disabled={!daten.aussteller.email}>

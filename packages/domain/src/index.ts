@@ -48,3 +48,4 @@ export * from "./hallenplan-umriss-pruefen";
 export * from "./zahlart";
 export * from "./lastschrift";
 export * from "./sprachen";
+export * from "./meldebogen";

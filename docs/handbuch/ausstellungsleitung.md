@@ -1,6 +1,6 @@
 # Handbuch für die Ausstellungsleitung
 
-SchauFUCHS 1.5.0 · Stand 16. November 2026
+SchauFUCHS 1.6.0 · Stand 16. November 2026
 
 Dieses Handbuch richtet sich an die Ausstellungsleitung, also an alle, die in SchauFUCHS die Rolle **Administrator** haben. Es führt Sie von der Anmeldung über die Einrichtung des Vereins bis durch eine komplette Schau – vom Anlegen bis zum Abschluss. Wörter in „Anführungszeichen“ stehen genau so auf dem Bildschirm. Was sich mit Version 1.2.1 geändert hat, steht in den Versionshinweisen.
 
@@ -34,7 +34,7 @@ SchauFUCHS erreichen Sie im Browser unter:
 
 Ohne Telefon geht im zweiten Schritt auch ein **Notfallcode** (siehe 1.3).
 
-Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.5.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.5.0“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
+Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.6.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.6.0“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
 
 > **Tipp:** Melden Sie sich an fremden oder gemeinsam genutzten Rechnern immer mit „Abmelden“ ab.
 
@@ -778,6 +778,15 @@ Die Seiten für Aussteller gibt es auf Deutsch, Deutsch (Schweiz), Englisch, Fra
 - Rassen und Farbenschläge stehen im Verzeichnis deutsch. Ausländische Aussteller tippen sie deutsch ein (z. B. „wyan weiß“); das Formular sagt das im Suchfeld.
 - Ihre eigene Oberfläche bleibt immer deutsch.
 
+#### A-Bogen: Meldebogen zum Ausfüllen
+
+Wer lieber auf Papier meldet, braucht den A-Bogen: Anschrift, Registriernummer, Tiere in der Reihenfolge des Meldebogens, Stiftung und Spende, Ihre Erklärungen zur Herkunft, die Kurzfassung des Datenschutzes und die Unterschrift, mit der der Aussteller AAB und Sonderbestimmungen anerkennt. Gebühren, Meldeschluss, Ihre Anschrift als Meldestelle, Termine und Sonderbestimmungen stehen schon darauf.
+
+- **Leer:** „Meldungen“ → „A-Bogen (leer)“ – zum Verteilen im Verein oder Beilegen ins Rundschreiben. Auf der öffentlichen Schauseite steht über dem Formular „Meldebogen zum Ausdrucken (PDF)“, solange die Online-Meldung offen ist.
+- **Vorausgefüllt:** an einer Meldung unter „Für den Aussteller“ → „A-Bogen zum Unterschreiben (PDF)“ – z. B. wenn eine Meldung per Telefon oder E-Mail kam und die Unterschrift fehlt. Anschrift und Tiere stehen darauf; Bankdaten nie, und die Kreuze für Erklärungen, Datenschutz und Internet setzt der Aussteller selbst.
+
+Kommt der unterschriebene Bogen zurück, übernehmen Sie an der Meldung, was angekreuzt ist: „Meldebogen ist unterschrieben“, „Pflichterklärungen zur Herkunft abgegeben“, „Veröffentlichung im Internet erlaubt“ (nur mit Kreuz) und bei Jugend den Namen des Erziehungsberechtigten. Den B-Bogen (Meldebestätigung mit Katalognummern) bekommt der Aussteller später zurück. Für eine Testschau trägt der Bogen auf jeder Seite den Vermerk „Testschau – keine echte Ausstellung“.
+
 #### Papiermeldungen erfassen
 
 ![Die Meldungsliste.](bilder/meldungen.jpg)
@@ -827,7 +836,7 @@ Bis eines davon geschehen ist, ist das in der Prüfliste ein Hinweis, in der Pha
 
 > **Wichtig:** Funktionstrennung – Helfer buchen nur **Bargeld**, und höchstens den offenen Betrag („Offen sind … – mehr bucht nur die Ausstellungsleitung (Überzahlung).“). Überweisungen und „sonstige“ Eingänge bucht die Ausstellungsleitung nach dem Kontoauszug. **Erstattungen** (negativer Betrag, mit Grund) und das **Stornieren einer Zahlung** (Knopf „Zahlung stornieren“ mit dem Kreuz-Symbol hinter der Zahlung, als Gegenbuchung mit Grund) ebenfalls nur die Ausstellungsleitung.
 
-Im Abschnitt „Für den Aussteller“ finden Sie „B-Bogen und Ringkarten (PDF)“, den Link zur Seite „Meine Meldung“ und „Eingangsbestätigung mailen“ (höchstens fünfmal am Tag je Meldung; ohne E-Mail-Adresse des Ausstellers ist der Knopf grau).
+Im Abschnitt „Für den Aussteller“ finden Sie „A-Bogen zum Unterschreiben (PDF)“, „B-Bogen und Ringkarten (PDF)“, den Link zur Seite „Meine Meldung“ und „Eingangsbestätigung mailen“ (höchstens fünfmal am Tag je Meldung; ohne E-Mail-Adresse des Ausstellers ist der Knopf grau).
 
 > **Tipp:** Die Liste „Meldungen“ zeigt je Aussteller Betrag und bezahlten Betrag; mit dem Status-Filter finden Sie schnell alle „offen“-Meldungen.
 

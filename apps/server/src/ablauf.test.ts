@@ -90,3 +90,4 @@ import "./tests/54-hallenentwuerfe";
 import "./tests/55-lastschrift";
 import "./tests/56-grundriss";
 import "./tests/57-sprachen";
+import "./tests/58-a-bogen";

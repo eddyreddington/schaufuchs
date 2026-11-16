@@ -36,6 +36,7 @@ export const fr: Texte = {
     zahlungAn: "Paiement à :",
     ergebnisseAnsehen: "Voir les résultats",
     katalogPdf: "Catalogue avec résultats (PDF)",
+    aBogen: "Bulletin d’inscription à imprimer (PDF, en allemand)",
     nummernFest: "Les numéros du catalogue sont fixés. Les résultats et le catalogue paraîtront ici après leur publication.",
     fragen: "Questions à la direction de l’exposition :",
     abgesagt: (grund: string) => `L’exposition est annulée${grund ? ` : ${grund}` : "."}`,

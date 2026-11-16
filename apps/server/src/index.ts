@@ -38,6 +38,7 @@ import { kurzerFehler } from "./services/fehlertext";
 import { starteMailversand } from "./services/post";
 import { eigeneSchauenFuerKalender, starteTerminabruf } from "./services/termine";
 import { adressSchluessel, Bremse } from "./services/bremse";
+import { aBogenPdf } from "./pdf/a-bogen";
 import { briefDateien, druckvorlageDateien } from "./datei-druckvorlage";
 import { spendenDateien } from "./datei-spenden";
 import { csv } from "./csv";
@@ -412,6 +413,18 @@ app.get("/datei/:schauId/aussteller.pdf", async (c) => {
     ? [zahlAus(einzel)!]
     : (await db.select({ id: meldung.id }).from(meldung).where(eq(meldung.schauId, s.id))).map((m) => m.id);
   return pdf(c, await ausstellerUnterlagenPdf(s, ids), `b-bogen-${s.slug}.pdf`);
+});
+
+// A-Bogen (Meldebogen zum Ausfüllen und Unterschreiben): leer, oder mit ?meldung= vorausgefüllt aus einer Meldung.
+app.get("/datei/:schauId/a-bogen.pdf", async (c) => {
+  const s = await schauFuer(c);
+  if (!s) return c.text("Nicht angemeldet oder keine Berechtigung.", 403);
+  const einzel = c.req.query("meldung");
+  const id = einzel ? zahlAus(einzel) : undefined;
+  if (einzel && id == null) return c.text("Meldung nicht gefunden.", 404);
+  const datei = await aBogenPdf(s, id ?? undefined);
+  if (!datei) return c.text("Meldung nicht gefunden.", 404);
+  return pdf(c, datei, id ? `a-bogen-${s.slug}-${id}.pdf` : `a-bogen-${s.slug}.pdf`);
 });
 
 app.get("/datei/:schauId/abrechnung.pdf", async (c) => {
@@ -843,6 +856,19 @@ app.get("/o/:id{[0-9]+}/schauen.ics", async (c) => {
   if (!o || !o.an) return c.text("Kalender nicht gefunden.", 404);
   const ics = schreibeIcal({ name: `Schauen ${o.name}`, prodid: "-//SchauFUCHS//Schautermine//DE" }, await eigeneSchauenFuerKalender(id!), new Date());
   return c.body(ics, 200, { "Content-Type": "text/calendar; charset=utf-8", "Content-Disposition": `inline; filename="schauen.ics"`, "Cache-Control": "public, max-age=3600" });
+});
+
+// Leerer A-Bogen für alle, die auf Papier melden – nur Angaben, die auf der Schauseite ohnehin öffentlich stehen.
+const aBogenBremse = new Bremse(30, 60_000, "Zu viele Abrufe. Bitte gleich noch einmal versuchen.");
+app.get("/s/:slug/a-bogen.pdf", async (c) => {
+  try {
+    aBogenBremse.versuch([`ip:${clientIp(c)}`]);
+  } catch {
+    return c.text("Zu viele Abrufe. Bitte gleich noch einmal versuchen.", 429);
+  }
+  const [s] = await db.select().from(schau).where(eq(schau.slug, c.req.param("slug").slice(0, 100)));
+  if (!s || s.abgesagtAm) return c.text("Schau nicht gefunden.", 404);
+  return pdf(c, (await aBogenPdf(s))!, `a-bogen-${s.slug}.pdf`);
 });
 
 app.get("/s/:slug/katalog.pdf", async (c) => {

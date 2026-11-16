@@ -36,6 +36,7 @@ export const nl: Texte = {
     zahlungAn: "Betalen aan:",
     ergebnisseAnsehen: "Uitslagen bekijken",
     katalogPdf: "Catalogus met uitslagen (pdf)",
+    aBogen: "Inschrijfformulier om af te drukken (pdf, in het Duits)",
     nummernFest: "De catalogusnummers liggen vast. Uitslagen en catalogus verschijnen hier na de vrijgave.",
     fragen: "Vragen aan de showleiding:",
     abgesagt: (grund: string) => `De show is afgelast${grund ? `: ${grund}` : "."}`,

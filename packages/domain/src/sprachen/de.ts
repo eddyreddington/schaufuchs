@@ -40,6 +40,7 @@ export const de = {
     zahlungAn: "Zahlung an:",
     ergebnisseAnsehen: "Ergebnisse ansehen",
     katalogPdf: "Katalog mit Ergebnissen (PDF)",
+    aBogen: "Meldebogen zum Ausdrucken (PDF)",
     nummernFest: "Die Katalognummern stehen fest. Ergebnisse und Katalog erscheinen hier nach der Freigabe.",
     fragen: "Fragen an die Ausstellungsleitung:",
     abgesagt: (grund: string) => `Die Schau ist abgesagt${grund ? `: ${grund}` : "."}`,

@@ -412,7 +412,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (50 Z.)
+### index.ts (51 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -516,6 +516,17 @@ Tests: `meisterschaft.test.ts`
 - `werteMeisterschaft()` – Wertet eine Meisterschaft aus.
 - Typen: `GleichstandKriterium`, `SparteRegel`, `MeisterschaftRegel`, `MeisterschaftVorlage`, `Kandidat`, `Gruppe`
 
+### meldebogen.ts (68 Z.)
+A-Bogen (Meldebogen): das Formular, das der Aussteller ausfüllt und unterschreibt – Anschrift, Registriernummer, Tiere in der Reihenfolge des Melde …
+Tests: `meldebogen.test.ts`
+
+- `MELDEART_KUERZEL` – Kürzel der Meldeart in der schmalen Spalte „Art“ (Erklärung steht unter der Tabelle).
+- `ALTER_KUERZEL`
+- `A_BOGEN_LEERZEILEN` – Leerer A-Bogen: so viele Schreibzeilen, dass Tabelle und Unterschrift auf zwei Seiten passen.
+- `A_BOGEN_NACHTRAG` – Vorausgefüllter A-Bogen: nach den gemeldeten Tieren noch Platz für Nachträge.
+- `aBogenZeilen()` – Zeilen der Tiertabelle: gemeldete Tiere in der gemeldeten Reihenfolge (fortlaufend nummeriert), dann leere Schreibzeilen – leerer Bogen `A_BOGEN_LE …
+- Typen: `ABogenTier`, `ABogenZeile`
+
 ### noten.ts (70 Z.)
 
 - `STANDARD_NOTENSKALA` – Notenskala des europäischen Bewertungssystems, wie sie der BDRG anwendet (v 97, hv 96, sg 95–93, g 92–91, b 90).
@@ -604,30 +615,30 @@ Tests: `spenden.test.ts`
 - `sammelbestaetigung()` – Sammelbestätigung eines Kalenderjahres: alle Geldzuwendungen des Spenders aus diesem Jahr, die bestätigt werden dürfen (Sachzuwendungen nie – sie b …
 - Typen: `SpendeArt`, `SpendeWeg`, `SachHerkunft`, `Sachangaben`, `SpendeFuerBestaetigung`, `SpenderAnschrift`
 
-### cs.ts (274 Z.)
+### cs.ts (275 Z.)
 
 - `cs`
 
-### de.ts (279 Z.)
+### de.ts (280 Z.)
 
 - `de` – Texte der Seiten für Aussteller (öffentliche Schauseite, Online-Meldung, Meine Meldung, Ergebnisse) und der Mails an Aussteller – Deutsch ist die G …
 
-### en.ts (268 Z.)
+### en.ts (269 Z.)
 
 - `en`
 
-### fr.ts (268 Z.)
+### fr.ts (269 Z.)
 
 - `fr`
 
 ### index.ts (102 Z.)
 Sammelt alle Exporte (`export * from …`).
 
-### nl.ts (268 Z.)
+### nl.ts (269 Z.)
 
 - `nl`
 
-### pl.ts (276 Z.)
+### pl.ts (277 Z.)
 
 - `pl`
 
@@ -1243,13 +1254,13 @@ Prozeduren: lastschrift.buchen, lastschrift.datei, lastschrift.erstellen, lastsc
 ### meisterschaften.tsx (84 Z.) – `/schau/:schauId/meisterschaften`
 Prozeduren: meisterschaft.ergebnisse
 
-### meldung-bearbeiten.tsx (454 Z.) – `/schau/:schauId/meldungen/neu`, `/schau/:schauId/meldungen/:meldungId`
+### meldung-bearbeiten.tsx (455 Z.) – `/schau/:schauId/meldungen/neu`, `/schau/:schauId/meldungen/:meldungId`
 Prozeduren: meldung.adressVorschlaege, meldung.ausstellerSuche, meldung.bestaetigungSenden, meldung.get, meldung.speichern, meldung.statusSetzen, meldung.verfallBuchen, meldung.zahlungErfassen, meldung.zahlungStornieren, schau.get, stammdaten.suche
 
-### meldungen.tsx (127 Z.) – `/schau/:schauId/meldungen`
+### meldungen.tsx (130 Z.) – `/schau/:schauId/meldungen`
 Prozeduren: meldung.liste, schau.get
 
-### oeffentlich.tsx (553 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
+### oeffentlich.tsx (559 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
 Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.meineMeldung, oeffentlich.melden, oeffentlich.onlineVeroeffentlichung, oeffentlich.rechtstexte, oeffentlich.schau
 
 ### preise.tsx (462 Z.) – `/schau/:schauId/preise`
@@ -1346,6 +1357,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 ### PDFs `apps/server/src/pdf`
 
+- `a-bogen.ts` (266 Z.) – A-Bogen (Meldebogen) zum Ausdrucken: der Aussteller füllt ihn aus, unterschreibt und schickt ihn an die Meldestelle; mit der Unterschrift erkennt e … · aBogenPdf
 - `auskunft.ts` (296 Z.) · auskunftPdf
 - `basis.ts` (425 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, teilSeite, seitenzahlen, tabelle, textImFeld, angaben, hinweisKastenHoehe, hinweisKasten, unterschrift, ueberschrift, datumDe
 - `bewertungskarte.ts` (325 Z.) – Bewertungskarten nach der Druckvorlage der Schau (Format, Bausteine oder Vordruck-Felder, Versatz) – dazu die Vorschau für den Designer und der Pro … · ladeKartenVorlage, kartenKopf, bewertungskartenPdf, BEISPIEL_KARTEN, zeichneKartenPdf, probedruckPdf
@@ -1381,7 +1393,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datei-druckvorlage.ts` (125 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien, briefDateien
 - `datei-meisterschaften.ts` (47 Z.) – Datei-Adressen der Meisterschaften (angemeldete Benutzer der eigenen Schau): GET /datei/:schauId/meisterschaften.pdf – Ergebnisse zum Aushängen, Na … · meisterschaftDateien
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
-- `index.ts` (930 Z. ⚠)
+- `index.ts` (956 Z. ⚠)
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
 - `router.ts` (48 Z.) · appRouter
@@ -1469,5 +1481,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `55-lastschrift.ts` (219 Z.) – SEPA-Lastschrift (Entscheidung 018): Gläubiger-ID, Mandate, Lastschriftdatei nur für offenes Meldegeld mit gültigem Mandat, Vorabankündigung, Sperr …
 - `56-grundriss.ts` (62 Z.) – Freier Grundriss der Halle (Entscheidung 019): speichern, prüfen (gültig, passt zu Breite/Länge, nichts außerhalb), ein Rechteck als Grundriss gilt …
 - `57-sprachen.ts` (91 Z.) – Sprachen der Seiten und Mails für Aussteller (Entscheidung 020): Schauseite, Fehlermeldungen der Online-Meldung, Sprache an der Meldung, Bestätigun …
+- `58-a-bogen.ts` (66 Z.) – A-Bogen (Meldebogen zum Ausfüllen und Unterschreiben): leer öffentlich über die Schauseite, leer und vorausgefüllt für die Ausstellungsleitung.
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

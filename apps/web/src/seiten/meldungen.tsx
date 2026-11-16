@@ -32,6 +32,9 @@ export function Meldungen() {
         hilfe="phase-meldephase"
         aktionen={
           <>
+            <KnopfLink href={`/datei/${schauId}/a-bogen.pdf`} target="_blank" rel="noreferrer">
+              A-Bogen (leer)
+            </KnopfLink>
             <KnopfLink href={`/datei/${schauId}/aussteller.pdf`} target="_blank" rel="noreferrer">
               B-Bögen und Ringkarten (alle)
             </KnopfLink>

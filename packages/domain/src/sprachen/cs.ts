@@ -42,6 +42,7 @@ export const cs: Texte = {
     zahlungAn: "Platba na:",
     ergebnisseAnsehen: "Zobrazit výsledky",
     katalogPdf: "Katalog s výsledky (PDF)",
+    aBogen: "Přihláška k vytištění (PDF, v němčině)",
     nummernFest: "Katalogová čísla jsou pevně stanovena. Výsledky a katalog se zde objeví po jejich zveřejnění.",
     fragen: "Dotazy na vedení výstavy:",
     abgesagt: (grund: string) => `Výstava je zrušena${grund ? `: ${grund}` : "."}`,
