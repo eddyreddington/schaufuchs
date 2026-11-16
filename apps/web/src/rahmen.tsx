@@ -5,6 +5,7 @@ import { AbmeldeHinweis, useAutoAbmeldung } from "./abmeldung";
 import { fehlerText } from "./lib";
 import { useFarbmodus, type Farbmodus } from "./modus";
 import { allgemeineGruppen, leistenLink, MenueGruppen, SCHAU_GRUPPEN, useKlappzustand } from "./seitenmenue";
+import { SprachWahl } from "./sprache";
 import { Symbol, type SymbolName } from "./symbole";
 import { direkt, trpc } from "./trpc";
 import { Eingabe, FehlerAnzeige, Feld, Hinweis, Knopf, Laden, Marke, SCHMAL, SEITENRAND, SpeicherPlatz, useMeldung, useSeitentitel } from "./ui";
@@ -306,6 +307,7 @@ function BenutzerMenue({ name, verein, rolle, abmelden, meldetAb }: { name: stri
               ))}
             </div>
           </div>
+          <SprachWahl hell mitLabel className="mt-3 border-t border-linie pt-3" />
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-linie pt-3">
             <NavLink to="/benutzer" onClick={() => setOffen(false)} className="rounded px-1 py-1">
               Mein Zugang
@@ -442,6 +444,7 @@ export function Anmelden() {
           <a href="/hilfe" target="_blank" rel="noreferrer" className="text-center text-sm text-band">
             Hilfe zur Anmeldung und zur Software
           </a>
+          <SprachWahl hell className="mx-auto w-44" />
         </div>
       </form>
     </AnmeldeFlaeche>

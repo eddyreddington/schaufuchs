@@ -33,6 +33,9 @@
   "off",
   "kontoinhaber"
  ],
+ "apps/web/src/komponenten/girocode.tsx": [
+  "GiroCode"
+ ],
  "apps/web/src/komponenten/positionen.tsx": [
   "einzeltier",
   "jung",
@@ -1122,16 +1125,22 @@
   "reklamationsfrist",
   "Reklamationsfrist",
   "Meldegeld und Konto",
+  "girocode",
+  "Hilfe zum GiroCode",
   "Meldegeld zahlen",
   "vorab per Überweisung",
+  "vorab per Überweisung mit GiroCode",
   "bei der Einlieferung der Tiere",
-  "bankverbindung",
   "Bankverbindung für das Meldegeld",
+  "Mit GiroCode: das Vereinskonto unten",
+  "bankverbindung",
   "Wird bei Zahlung bei der Einlieferung nicht angezeigt",
   "Provision Tierverkauf (%)",
   "Vereinskonto für Auszahlungen (SEPA)",
+  "und GiroCode",
   "vereinKontoinhaber",
   "Kontoinhaber",
+  "Genau wie bei der Bank",
   "vereinIban",
   "IBAN",
   "vereinBic",

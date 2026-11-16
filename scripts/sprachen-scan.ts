@@ -1,7 +1,7 @@
 /**
  * Prüfungen der Übersetzung der Oberfläche (Entscheidung 022), auch als Befehl:
  *   bun scripts/sprachen-scan.ts rest [Datei …]   deutsche Texte, die noch im Quelltext von apps/web stehen
- *   bun scripts/sprachen-scan.ts vorher          alle Textstücke von apps/web nach scripts/sprachen-vorher.json (einmalig)
+ *   bun scripts/sprachen-scan.ts vorher STAND    alle Textstücke von apps/web im Git-Stand STAND nach scripts/sprachen-vorher.json
  *   bun scripts/sprachen-scan.ts verloren        alte Textstücke, die weder im Quelltext noch in den deutschen Texten stehen
  *   bun scripts/sprachen-scan.ts server [Datei …] Meldungen des Servers ohne Übersetzung
  * Bewusst deutscher Text im Quelltext: Kommentar `// bleibt deutsch` in derselben oder der Zeile davor.
@@ -97,9 +97,14 @@ export function reste(nur?: string[]): Stueck[] {
   return liste.flatMap((d) => stuecke(d, undefined, false));
 }
 
-/** Alle Textstücke von apps/web/src (für die Liste „vorher“). */
-export function alleStuecke(): Stueck[] {
-  return dateien(WEB).flatMap((d) => stuecke(d));
+/** Alle Textstücke von apps/web/src, heute oder in einem Git-Stand (für die Liste „vorher“). */
+export function alleStuecke(stand?: string): Stueck[] {
+  if (!stand) return dateien(WEB).flatMap((d) => stuecke(d));
+  const git = (...a: string[]) => Bun.spawnSync(["git", ...a], { cwd: WURZEL }).stdout.toString();
+  return git("ls-tree", "-r", "--name-only", stand, "apps/web/src")
+    .split("\n")
+    .filter((f) => /\.tsx?$/.test(f))
+    .flatMap((f) => stuecke(join(WURZEL, f), git("show", `${stand}:${f}`)));
 }
 
 /** Alte Textstücke, die weder im heutigen Quelltext noch in einem deutschen Text der Oberfläche stehen. */
@@ -159,7 +164,8 @@ if (import.meta.main) {
   else if (befehl === "verloren") zeige(await verloren());
   else if (befehl === "vorher") {
     const nachDatei: Record<string, string[]> = {};
-    for (const s of alleStuecke()) (nachDatei[s.datei] ??= []).includes(s.text) || nachDatei[s.datei]!.push(s.text);
+    if (!rest[0]) throw new Error("Git-Stand angeben, z. B. main");
+    for (const s of alleStuecke(rest[0])) (nachDatei[s.datei] ??= []).includes(s.text) || nachDatei[s.datei]!.push(s.text);
     writeFileSync(VORHER_DATEI, `${JSON.stringify(nachDatei, null, 1)}\n`);
     console.log(`${Object.values(nachDatei).flat().length} Textstücke aus ${Object.keys(nachDatei).length} Dateien`);
   } else console.log("bun scripts/sprachen-scan.ts rest|vorher|verloren|server [Datei …]");
