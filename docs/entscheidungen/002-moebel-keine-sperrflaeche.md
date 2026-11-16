@@ -11,4 +11,4 @@ der Halle. Im Gang vor einem Ein- oder Ausgang nur ein Hinweis (Fluchtweg). Beim
 
 **Folgen:** Wer eine Regel „Möbel als Hindernis“ einbaut, dreht diese Entscheidung um – Test „Möbel ohne Einfluss“ (Zufallshallen) schlägt an.
 
-**Wo:** `hallenplan.ts` (`istMoebel`, `moebelStuecke`), `hallenplan-gruppe.ts` (`pruefeLage`), `hallenplan-neu.ts`, Server-Test `42-hallenplan-moebel-etagen`.
+**Wo:** `hallenplan-moebel.ts` (`istMoebel`, `moebelStuecke`), `hallenplan-gruppe.ts` (`pruefeLage`), `hallenplan-neu.ts`, Server-Test `42-hallenplan-moebel-etagen`.

@@ -1,5 +1,13 @@
 # SchauFUCHS 1.6 – Versionshinweise
 
+## 1.6.2 (16.11.2026)
+
+- Für Anwender keine Änderung. Intern sind die 13 Code-Dateien über 600 Zeilen (Hallenplan-Rechnung, Katalog-PDF,
+  Router für Katalog, Schau und Kasse, Server-Einstieg, Datenbankschema, Textbausteine, Preisrichter-Tablet,
+  Benutzer, Einstellungen, Katalog-Gestaltung, Oberflächen-Bausteine) in kleinere, verständliche Teildateien
+  aufgeteilt – reine Verschiebung, ohne geänderten Ablauf. Doku und Modulkarte zeigen die neuen Stellen.
+- `sudo schaufuchs update` sichert vorher und holt 1.6.2. Daten und Tabellen ändern sich nicht.
+
 ## 1.6.1 (16.11.2026)
 
 - Mustertext der Datenschutzhinweise, Abschnitt „Meldung zur Schau“: Die E-Mail-Adresse ist nur bei der

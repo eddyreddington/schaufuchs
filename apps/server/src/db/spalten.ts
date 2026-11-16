@@ -1,4 +1,4 @@
-/** Spaltenarten, die mehrere Schemadateien nutzen (schema.ts, schema-spenden.ts). */
+/** Spaltenarten, die mehrere Schemadateien nutzen (die Teildateien schema-*.ts). */
 import { sql } from "drizzle-orm";
 import { customType, timestamp } from "drizzle-orm/pg-core";
 

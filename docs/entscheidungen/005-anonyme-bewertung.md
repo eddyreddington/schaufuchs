@@ -9,4 +9,4 @@ Art, Geschlecht, Alter und die Bewertung – keine Namen, keine Anschrift, keine
 
 **Folgen:** Neue Felder für das Tablet nie aus `aussteller` befüllen; Tests in `01-schau-ablauf`, `05-datenschutz-fachrecht`, `07-runde4` prüfen das.
 
-**Wo:** `apps/server/src/routers/bewertung.ts` (`richterRouter`), `apps/web/src/seiten/richter.tsx`.
+**Wo:** `apps/server/src/routers/bewertung.ts` (`richterRouter`), `apps/web/src/seiten/richter-tablet.tsx`, `richter-karte.tsx`.

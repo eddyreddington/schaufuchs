@@ -228,6 +228,14 @@ Tests: `hallenplan-fehlend.test.ts`
 - `fehlendeEinsetzen()` – Stellen für die fehlenden Käfige: Käfigblöcke (bzw. Volieren) nur in die nutzbaren Abschnitte der Reihen – dort, wo die Planung selbst Platten stel …
 - Typen: `FehlendeKaefige`
 
+### hallenplan-fest.ts (248 Z.)
+Hallenplan – fester Plan: was beim Festschreiben gilt (`festGeometrie`), Festschreiben des gerechneten Plans, Belegung eines Käfigblocks und die Re …
+
+- `blockBelegung()` – Belegung eines Käfigblocks je Platz (Tier-Id, null = frei), ohne freie Plätze am Ende.
+- `festGeometrie()` – Was beim Festschreiben gilt: Hallenmaße, Reihen und Käfigmaße (nicht Flächen oder eingesetzte Teile).
+- `festschreiben()` – Den gerechneten Plan festschreiben (aus `planeHalle` ohne festen Plan).
+- `planeFest()` – Fester Plan: die Plätze bleiben, wo sie sind.
+
 ### hallenplan-folge.ts (209 Z.)
 Reihenfolge der Käfige, wie sie im Plan stehen – Grundlage für „Nach Plan nummerieren“ nach dem Umstellen.
 Tests: `hallenplan-folge.test.ts`
@@ -256,6 +264,33 @@ Tests: `hallenplan-gruppe.test.ts`
 - `pruefeLage()` – Darf ein Teil künftig an `rechteck` stehen (z. B. nach dem Drehen)?
 - Typen: `VerschiebePruefung`, `AusrichtenErgebnis`
 
+### hallenplan-intern.ts (66 Z.)
+Hallenplan – interne Hilfen für die Rechnung (nicht über `hallenplan.ts` veröffentlicht): Ersatzmaß der Voliere, Platzhalter-Rechteck, Stücke einge …
+
+- `VOLIERE_ERSATZ` – Voliere ohne eingetragenes Maß: 2 × 1 m.
+- `LEER` – Platzhalter im Reihensystem; die Lage in der Halle setzt `planeHalle`.
+- `teilStuecke()` – Stücke eingesetzter Teile (siehe `HallenFlaeche.teil`), die ganz im Streifen einer Reihe stehen – je Reihe, entlang der Reihe sortiert.
+- `teilStueckeFest()` – Im festen Plan: Stücke je Reihe, auf die keine angebaute Platte darf – jedes eingesetzte Teil, das in den Streifen der Reihe ragt (Volieren samt Ga …
+- `hinterStuecken()` – Erste Stelle ab `y`, an der `laenge` frei von den Stücken ist (sortiert, siehe `teilStuecke`).
+- `abziehen()`
+- `m()`
+- Typen: `Abschnitt`
+
+### hallenplan-moebel.ts (44 Z.)
+Hallenplan – Tisch, Bank und Garnitur: Arten, Namen, Standardmaße und Höhen, Maße mit Vorgaben und die Körper einer Garnitur (Bank, Tisch, Bank).
+
+- `MoebelArt` (Typ) – Tisch, Bank und Garnitur (Biertisch mit zwei Bänken): eingesetzte Teile ohne Käfigplatz.
+- `MOEBEL_ARTEN`
+- `MOEBEL_NAME`
+- `TISCH_STANDARD` – Biertisch 220 × 50 cm, Bierbank 220 × 25 cm; in der Garnitur je eine Bank an jeder langen Seite, 15 cm vom Tisch.
+- `BANK_STANDARD`
+- `GARNITUR_ABSTAND`
+- `TISCH_HOEHE` – Höhen (cm) für die 3D-Ansicht.
+- `BANK_HOEHE`
+- `istMoebel()`
+- `moebelMass()` – Maße eines Möbelstücks mit Vorgaben: Länge, Tiefe (Tisch bzw. Bank) und bei der Garnitur die Tiefe der Bänke.
+- `moebelStuecke()` – Tisch, Bank oder Garnitur in der Lage `q` (Hallenkoordinaten): die Körper darin – eine Garnitur als Bank, Tisch, Bank quer zur Länge.
+
 ### hallenplan-neu.ts (93 Z.)
 Plan neu setzen: Die Software stellt alle Käfige neu – nach den Einstellungen der Halle (Maße, Gänge, Richtung, Wandreihen, Grundplatten) und ihren …
 Tests: `hallenplan-neu.test.ts`
@@ -265,6 +300,42 @@ Tests: `hallenplan-neu.test.ts`
 - `neuSetzen()` – Halle für einen neu gesetzten Plan: ohne die bisherige Aufstellung, mit Käfigblöcken (bzw. Volieren) für die Tiere, die nicht in die Reihen passen.
 - `fehlendeImPlan()` – Stellen für die Tiere ohne Platz – dieselbe Suche für „Plan neu setzen“ und den Knopf „Alle fehlenden Käfige einsetzen“ (siehe `fehlendeEinsetzen`) …
 - `vonHandGeplant()` – Steht im Plan etwas von Hand Geplantes, das beim Neu-Setzen wegfiele?
+
+### hallenplan-rechtecke.ts (148 Z.)
+Hallenplan – Rechnen mit Rechtecken und Blickrichtungen: Drehen, Front einer Reihe oder eines Blocks, Streifen und Gang vor den Käfigen, Etagenfeld …
+
+- `dreheRechteck()` – Rechteck um den Punkt c in 90°-Schritten drehen (Hallenkoordinaten x/y).
+- `dreheBlick()` – Richtung in 90°-Schritten drehen (wie `dreheRechteck`: 90° führt x in y über).
+- `frontDerReihe()` – Front der Käfige einer Reihe in der Halle (Reihensystem: „rechts“ = zu größerem x; bei Reihen quer ist das Hallen-y).
+- `streifenVor()` – Streifen der Breite `tief` vor der Seite `blick` eines Rechtecks.
+- `gangVorKaefigen()` – Der Gang vor den Käfigen jeder Grundplatte (Gangbreite der Halle, in Richtung der Front) – dort steht kein Tisch und keine Bank.
+- `etagenStreifen()` – Feld eines Käfigs im Plan, wenn Käfige übereinander stehen: die Grundfläche quer zur Front in so viele Streifen geteilt, wie es Etagen gibt – die u …
+- `blickTausch()` – Richtung im gedrehten Koordinatensystem (x und y vertauscht: Reihensystem bei Reihen quer, Zeichnung der Halle quer).
+- `kaefigKanten()` – Kanten eines Käfigs, einer Grundplatte oder eines Blocks mit Front `front`: die dichte Rückwand gegenüber der Front, die beiden dichten Seitenwände …
+- `blockFront()` – Front eines eingesetzten Käfigblocks ohne eigene Angabe: zur langen Seite (ungedreht zu größerem y, gedreht zu größerem x).
+- `objektFront()` – Front eines Käfigblocks: seine Angabe `front`, wenn sie zu einer langen Seite zeigt (ungedreht z±, gedreht x±), sonst wie `blockFront`.
+- `mitteVon()` – Mitte des umschließenden Rechtecks.
+- `ueberlappt()` – Überschneiden sich zwei Rechtecke?
+- `eingangsGang()` – Gang vor einem Eingang oder Notausgang (samt dem Ausgang selbst): in Fluchtrichtung, so breit wie der Ausgang und einen Gang tief – seitlich danebe …
+- `blockPlatz()` – Lage eines Platzes in einem eingesetzten Käfigblock: die Plätze liegen entlang der langen Seite, je Spalte die Etagen übereinander (gezählt unten z …
+
+### hallenplan-reihen.ts (340 Z.)
+Hallenplan – Stellen im Reihensystem: Reihen und ihre Abschnitte, Grundplatten und Käfige streng in Katalogfolge, Volieren im Volierenbereich, Plat …
+
+- `planeAusgeglichen()` – Automatische Aufstellung mit ruhigem Bild (Rückmeldung 14.11.2026): Die Tiere stehen streng in Katalogfolge Reihe für Reihe, lückenlos – auch über …
+- `planeImReihensystem()` – Stellen im Reihensystem.
+
+### hallenplan-typen.ts (331 Z.)
+Hallenplan – Datentypen: Halle mit Flächen und eingesetzten Teilen, Rechteck und Blickrichtung, gerechneter Plan (Reihen, Platten, Käfige, freie Pl …
+
+- `EntfernterPlatz` (Typ) – Entfernte leere Grundplatte (Lage der Platte) bzw. entfernter freier Platz im festen Plan.
+- `Blick` (Typ) – Richtung, in die eine Käfigfront zeigt (Hallenkoordinaten: x+ zu größerem x, z+ zu größerem y).
+- `Strecke` (Typ) – Strecke von (x1, y1) nach (x2, y2) in Hallenkoordinaten.
+- `Grundplatte` (Typ) – Grundplatte eines Käfigblocks: Länge entlang der Reihe, Tiefe quer dazu.
+- `PlanTier` (Typ) – Ein Tier in Katalogfolge, wie es in einen Käfig kommt.
+- `Rechteck` (Typ) – Rechteck in Hallenkoordinaten (x entlang der Breite, y entlang der Länge) – zum Zeichnen.
+- `FesterPlan` (Typ) – Festgeschriebener Plan: die Lage jedes Käfigs im Reihensystem (ohne Versatz und Drehung, die bleiben einstellbar).
+- Typen: `HallenFlaeche`, `Halle`, `Drehung`, `HallenObjekt`, `Hauptgang`, `PlanKaefig`, `Reihe`, `FreierPlatz`, `PlanPlatte`, `PlanObjekt`, `Hallenplan`
 
 ### hallenplan-umriss-pruefen.ts (67 Z.)
 Prüfung einer Halle mit freiem Grundriss vor dem Speichern (Entscheidung 019): Grundriss gültig, Breite und Länge passen dazu, keine Fläche und kei …
@@ -312,6 +383,27 @@ Tests: `hallenplan-versetzen.test.ts`
 - `tierVersetzen()` – Tier `tierId` auf Platz `ziel` versetzen (`plan`: der Plan aus `fest`, wie er gerade gerechnet ist).
 - Typen: `VersetzenErgebnis`
 
+### hallenplan-vorgaben.ts (140 Z.)
+Hallenplan – Vorgaben und Maße: Halle mit allen Vorgaben (`halleNormal`), Schlüssel für den Stand einer Halle, Größe eingesetzter Teile, Standards …
+
+- `halleNormal()` – Halle mit allen Vorgaben ausgefüllt – ältere gespeicherte Hallen haben noch nicht jedes Feld.
+- `stabilerText()` – Text mit sortierten Schlüsseln (leere Felder fallen weg) – gleiche Halle ergibt immer denselben Text.
+- `halleSchluessel()` – Kurzer Schlüssel für den Stand einer Halle – zum Erkennen gleichzeitiger Änderungen.
+- `VOLIEREN_GANG` – Freier Gang zwischen Volierenreihen (cm).
+- `teilGroesse()` – Größe eines eingesetzten Teils, ungedreht (lange Seite in x): eine Voliere nach dem Volierenmaß, ein Käfigblock so groß wie die Grundplatte seiner …
+- `HAUPTGANG_STANDARD`
+- `GRUNDPLATTE_STANDARD`
+- `HALLE_STANDARD`
+- `PLATTE_LAENGE` – Länge, auf die eine Grundplatte ausgelegt ist (cm): rund 2 m.
+- `kaefigeJePlatte()` – Wie viele Käfige einer Art auf einer Grundplatte stehen: eigene Angabe, sonst so viele, wie auf ihr eigenes Plattenmaß passen, sonst so viele, wie …
+- `platteFuer()` – Grundplatte einer Käfigart (Länge entlang der Reihe, Tiefe quer dazu) und wie viele Käfige darauf stehen.
+- `ETAGEN_MAX` – Höchstens so viele Etagen übereinander.
+- `etagenVon()` – Etagen einer Käfigart: eigene Angabe (1 bis 4), sonst eine.
+- `plaetzeJePlatte()` – Plätze auf einer Grundplatte: Käfige nebeneinander × Etagen.
+- `etagenNormal()` – Nur Angaben über einer Etage; leer = nicht da.
+- `etageFeld()` – Etage nur, wenn nicht unten (so bleiben Pläne ohne Etagen wie bisher).
+- `gleicheEtage()` – Gleiche Etage (fehlt = unten).
+
 ### hallenplan-wand.ts (66 Z.)
 Einzelreihe an einer Wand: Zieht die Ausstellungsleitung eine Reihe an eine der beiden Wände, an denen die Reihen entlanglaufen, stellt die Softwar …
 Tests: `hallenplan-wand.test.ts`
@@ -333,65 +425,11 @@ Tests: `hallenplan-wandfront.test.ts`
 - `wandKandidaten()` – Kandidaten aus einem gerechneten Plan (Lage samt Versatz und Drehung): alle Grundplatten, Käfigblöcke und eingesetzten Volieren.
 - `wandDrehungenAnwenden()` – Drehungen in die Halle übernehmen: Grundplatten über ihre Drehung (um die eigene Mitte), Teile über ihre Front.
 
-### hallenplan.ts (1.580 Z. ⚠)
+### hallenplan.ts (328 Z.)
 Hallenplan: Wie stehen die Käfige in der Halle?
 
-- `EntfernterPlatz` (Typ) – Entfernte leere Grundplatte (Lage der Platte) bzw. entfernter freier Platz im festen Plan.
-- `dreheRechteck()` – Rechteck um den Punkt c in 90°-Schritten drehen (Hallenkoordinaten x/y).
-- `Blick` (Typ) – Richtung, in die eine Käfigfront zeigt (Hallenkoordinaten: x+ zu größerem x, z+ zu größerem y).
-- `dreheBlick()` – Richtung in 90°-Schritten drehen (wie `dreheRechteck`: 90° führt x in y über).
-- `frontDerReihe()` – Front der Käfige einer Reihe in der Halle (Reihensystem: „rechts“ = zu größerem x; bei Reihen quer ist das Hallen-y).
-- `streifenVor()` – Streifen der Breite `tief` vor der Seite `blick` eines Rechtecks.
-- `gangVorKaefigen()` – Der Gang vor den Käfigen jeder Grundplatte (Gangbreite der Halle, in Richtung der Front) – dort steht kein Tisch und keine Bank.
-- `etagenStreifen()` – Feld eines Käfigs im Plan, wenn Käfige übereinander stehen: die Grundfläche quer zur Front in so viele Streifen geteilt, wie es Etagen gibt – die u …
-- `blickTausch()` – Richtung im gedrehten Koordinatensystem (x und y vertauscht: Reihensystem bei Reihen quer, Zeichnung der Halle quer).
-- `Strecke` (Typ) – Strecke von (x1, y1) nach (x2, y2) in Hallenkoordinaten.
-- `kaefigKanten()` – Kanten eines Käfigs, einer Grundplatte oder eines Blocks mit Front `front`: die dichte Rückwand gegenüber der Front, die beiden dichten Seitenwände …
-- `blockFront()` – Front eines eingesetzten Käfigblocks ohne eigene Angabe: zur langen Seite (ungedreht zu größerem y, gedreht zu größerem x).
-- `objektFront()` – Front eines Käfigblocks: seine Angabe `front`, wenn sie zu einer langen Seite zeigt (ungedreht z±, gedreht x±), sonst wie `blockFront`.
-- `mitteVon()` – Mitte des umschließenden Rechtecks.
-- `MoebelArt` (Typ) – Tisch, Bank und Garnitur (Biertisch mit zwei Bänken): eingesetzte Teile ohne Käfigplatz.
-- `MOEBEL_ARTEN`
-- `MOEBEL_NAME`
-- `TISCH_STANDARD` – Biertisch 220 × 50 cm, Bierbank 220 × 25 cm; in der Garnitur je eine Bank an jeder langen Seite, 15 cm vom Tisch.
-- `BANK_STANDARD`
-- `GARNITUR_ABSTAND`
-- `TISCH_HOEHE` – Höhen (cm) für die 3D-Ansicht.
-- `BANK_HOEHE`
-- `istMoebel()`
-- `moebelMass()` – Maße eines Möbelstücks mit Vorgaben: Länge, Tiefe (Tisch bzw. Bank) und bei der Garnitur die Tiefe der Bänke.
-- `moebelStuecke()` – Tisch, Bank oder Garnitur in der Lage `q` (Hallenkoordinaten): die Körper darin – eine Garnitur als Bank, Tisch, Bank quer zur Länge.
-- `halleNormal()` – Halle mit allen Vorgaben ausgefüllt – ältere gespeicherte Hallen haben noch nicht jedes Feld.
-- `stabilerText()` – Text mit sortierten Schlüsseln (leere Felder fallen weg) – gleiche Halle ergibt immer denselben Text.
-- `halleSchluessel()` – Kurzer Schlüssel für den Stand einer Halle – zum Erkennen gleichzeitiger Änderungen.
-- `VOLIEREN_GANG` – Freier Gang zwischen Volierenreihen (cm).
-- `eingangsGang()` – Gang vor einem Eingang oder Notausgang (samt dem Ausgang selbst): in Fluchtrichtung, so breit wie der Ausgang und einen Gang tief – seitlich danebe …
-- `teilGroesse()` – Größe eines eingesetzten Teils, ungedreht (lange Seite in x): eine Voliere nach dem Volierenmaß, ein Käfigblock so groß wie die Grundplatte seiner …
-- `HAUPTGANG_STANDARD`
-- `Grundplatte` (Typ) – Grundplatte eines Käfigblocks: Länge entlang der Reihe, Tiefe quer dazu.
-- `GRUNDPLATTE_STANDARD`
-- `HALLE_STANDARD`
-- `PLATTE_LAENGE` – Länge, auf die eine Grundplatte ausgelegt ist (cm): rund 2 m.
-- `kaefigeJePlatte()` – Wie viele Käfige einer Art auf einer Grundplatte stehen: eigene Angabe, sonst so viele, wie auf ihr eigenes Plattenmaß passen, sonst so viele, wie …
-- `platteFuer()` – Grundplatte einer Käfigart (Länge entlang der Reihe, Tiefe quer dazu) und wie viele Käfige darauf stehen.
-- `ETAGEN_MAX` – Höchstens so viele Etagen übereinander.
-- `etagenVon()` – Etagen einer Käfigart: eigene Angabe (1 bis 4), sonst eine.
-- `plaetzeJePlatte()` – Plätze auf einer Grundplatte: Käfige nebeneinander × Etagen.
-- `etagenNormal()` – Nur Angaben über einer Etage; leer = nicht da.
-- `blockBelegung()` – Belegung eines Käfigblocks je Platz (Tier-Id, null = frei), ohne freie Plätze am Ende.
-- `blockPlatz()` – Lage eines Platzes in einem eingesetzten Käfigblock: die Plätze liegen entlang der langen Seite, je Spalte die Etagen übereinander (gezählt unten z …
-- `PlanTier` (Typ) – Ein Tier in Katalogfolge, wie es in einen Käfig kommt.
-- `Rechteck` (Typ) – Rechteck in Hallenkoordinaten (x entlang der Breite, y entlang der Länge) – zum Zeichnen.
-- `ueberlappt()` – Überschneiden sich zwei Rechtecke?
-- `FesterPlan` (Typ) – Festgeschriebener Plan: die Lage jedes Käfigs im Reihensystem (ohne Versatz und Drehung, die bleiben einstellbar).
-- `festGeometrie()` – Was beim Festschreiben gilt: Hallenmaße, Reihen und Käfigmaße (nicht Flächen oder eingesetzte Teile).
-- `etageFeld()` – Etage nur, wenn nicht unten (so bleiben Pläne ohne Etagen wie bisher).
-- `gleicheEtage()` – Gleiche Etage (fehlt = unten).
-- `festschreiben()` – Den gerechneten Plan festschreiben (aus `planeHalle` ohne festen Plan).
 - `planeHalle()` – Plan der Halle.
-- `planeImReihensystem()` – Stellen im Reihensystem.
 - `frontFehler()` – Käfigfronten, die nicht zu einem Gang zeigen: Die Front (Gitter) eines Käfigs ist offen, Rück- und Seitenwände sind dicht – vor jeder Front muss ei …
-- Typen: `HallenFlaeche`, `Halle`, `Drehung`, `HallenObjekt`, `Hauptgang`, `PlanKaefig`, `Reihe`, `FreierPlatz`, `PlanPlatte`, `PlanObjekt`, `Hallenplan`
 
 ### import.ts (328 Z.)
 Import aus Altprogrammen (Entscheidung 015): Es gibt kein Standardformat – Programme wie Vereins- und Katalogprogramme exportieren Tabellen mit eig …
@@ -877,7 +915,36 @@ Import aus Altprogrammen (Entscheidung 015), nur Administratoren: Datei lesen (C
 - `datenimport.laeufe` query · admin
 - `datenimport.zuruecknehmen` mutation · admin
 
-### routers/kasse.ts (726 Z. ⚠) → `kasse`
+### routers/kasse/auszahlung.ts (120 Z.) → `kasse`
+Abrechnung je Aussteller, Auszahlung (bar oder Überweisung, auch Nachzahlung und Rückforderung) und ihr Storno.
+
+- `kasse.abrechnung` query · angemeldet
+- `kasse.auszahlen` mutation · angemeldet – Bucht die Auszahlung.
+- `kasse.auszahlungStornieren` mutation · admin – Storniert eine Buchung, bei der kein Geld geflossen ist (Fehlbuchung, Überweisung von der Bank zurückgebucht).
+
+### routers/kasse/gemeinsam.ts (187 Z.)
+Gemeinsame Hilfen der Kasse: Beleg- und Quittungsnummern, SEPA-XML aus einem Lauf, die Abrechnungsliste aller Aussteller, die erlaubten Phasen für …
+
+Keine Prozeduren (Hilfen für die Router).
+
+### routers/kasse/kassenbuch.ts (116 Z.) → `kasse`
+Kassenbuch der Barkasse: Tage mit Bewegungen, Einlage und Entnahme, Tagesabschluss, archivierte Belege.
+
+- `kasse.kassenbuch` query · angemeldet – Kassenbuch nach Tagen: Anfangsbestand, Bargeldbewegungen, Soll, Tagesabschluss.
+- `kasse.kassenbewegung` mutation · angemeldet – Wechselgeld zu Beginn, Einlage oder Entnahme (z. B. Bargeld zur Bank).
+- `kasse.tagesabschluss` mutation · angemeldet – Tagesabschluss mit gezähltem Bestand für einen Kassentag (Standard: heute; nach Mitternacht der Vortag).
+- `kasse.belege` query · angemeldet – Archivierte Belege mit Prüfsumme (SHA-256).
+
+### routers/kasse/sepa.ts (155 Z.) → `kasse`
+SEPA-Sammelüberweisung an die Aussteller: offene Datei anzeigen, erstellen, verwerfen und als ausgezahlt buchen.
+
+- `kasse.ueberweisungsdatei` query · angemeldet – Die offene SEPA-Datei (erstellt, noch nicht gebucht) oder null.
+- `kasse.ueberweisungsdateiErstellen` mutation · admin – Legt die SEPA-Datei mit allen jetzt überweisbaren Ausstellern fest.
+- `kasse.ueberweisungsdateiVerwerfen` mutation · admin – Verwirft die offene SEPA-Datei, z. B. wenn die Bank sie abgelehnt hat.
+- `kasse.ueberweisungenBuchen` mutation · admin – Bucht die Aussteller aus der offenen SEPA-Datei mit den Beträgen der Datei als ausgezahlt (Art: Überweisung).
+
+### routers/kasse/verkauf.ts (200 Z.) → `kasse`
+Tierverkauf an der Kasse: Tier suchen, verkaufen, stornieren, Angebot, Verkaufsliste und Zahlungseingang bei Überweisung.
 
 - `kasse.tierSuchen` query · angemeldet
 - `kasse.verkaufen` mutation · angemeldet
@@ -886,17 +953,65 @@ Import aus Altprogrammen (Entscheidung 015), nur Administratoren: Datei lesen (C
 - `kasse.verkaeufe` query · angemeldet
 - `kasse.zahlungseingangVerkauf` mutation · admin – Zahlungseingang zu einem Verkauf per Überweisung (laut Kontoauszug) – nur Ausstellungsleitung.
 - `kasse.offeneUeberweisungen` query · angemeldet – Verkäufe per Überweisung, deren Zahlungseingang noch fehlt (Liste für die Kasse).
-- `kasse.abrechnung` query · angemeldet
-- `kasse.auszahlen` mutation · angemeldet – Bucht die Auszahlung.
-- `kasse.ueberweisungsdatei` query · angemeldet – Die offene SEPA-Datei (erstellt, noch nicht gebucht) oder null.
-- `kasse.ueberweisungsdateiErstellen` mutation · admin – Legt die SEPA-Datei mit allen jetzt überweisbaren Ausstellern fest.
-- `kasse.ueberweisungsdateiVerwerfen` mutation · admin – Verwirft die offene SEPA-Datei, z. B. wenn die Bank sie abgelehnt hat.
-- `kasse.ueberweisungenBuchen` mutation · admin – Bucht die Aussteller aus der offenen SEPA-Datei mit den Beträgen der Datei als ausgezahlt (Art: Überweisung).
-- `kasse.auszahlungStornieren` mutation · admin – Storniert eine Buchung, bei der kein Geld geflossen ist (Fehlbuchung, Überweisung von der Bank zurückgebucht).
-- `kasse.kassenbuch` query · angemeldet – Kassenbuch nach Tagen: Anfangsbestand, Bargeldbewegungen, Soll, Tagesabschluss.
-- `kasse.kassenbewegung` mutation · angemeldet – Wechselgeld zu Beginn, Einlage oder Entnahme (z. B. Bargeld zur Bank).
-- `kasse.tagesabschluss` mutation · angemeldet – Tagesabschluss mit gezähltem Bestand für einen Kassentag (Standard: heute; nach Mitternacht der Vortag).
-- `kasse.belege` query · angemeldet – Archivierte Belege mit Prüfsumme (SHA-256).
+
+### routers/kasse.ts (16 Z.)
+Kasse: Tierverkauf, Abrechnung und Auszahlung, SEPA-Sammelüberweisung und Kassenbuch.
+
+Setzt Teile zu einem Router zusammen.
+
+### routers/katalog/einlieferung.ts (284 Z.) → `halle`
+Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferung, Ausgabe), Impfnachweise.
+
+- `halle.ringnummerSetzen` mutation · angemeldet – Ringnummer bei der Einlieferung nach der Ringkarte eintragen (Kennzeichnung für Kaufbeleg und Veterinärliste).
+- `halle.kaefigSetzen` mutation · angemeldet – Andere Käfiggröße für ein einzelnes Tier, z. B. das Zwerghuhn in den letzten freien Großkäfig.
+- `halle.suche` query · angemeldet – Einlieferung: Aussteller mit ihren Tieren, gesucht nach Name oder Katalognummer.
+- `halle.statusSetzen` mutation · angemeldet
+- `halle.vetSetzen` mutation · angemeldet – Nachweise bei der Einlieferung: ND-Impfung (Hühner, Puten), PMV-Impfung (Tauben), Untersuchung Wassergeflügel.
+
+### routers/katalog/gemeinsam.ts (210 Z.)
+Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan.
+
+Keine Prozeduren (Hilfen für die Router).
+
+### routers/katalog/gesundheit.ts (74 Z.) → `halle`
+Gesundheitsjournal in der Halle: Liste, Eintrag erfassen, Sperre aufheben.
+
+- `halle.gesundheit` query · angemeldet – Gesundheitsjournal (Art. 25 DelVO (EU) 2019/2035): Krankheit, Verdacht, Todesfall, Maßnahme.
+- `halle.gesundheitErfassen` mutation · angemeldet
+- `halle.gesundheitFreigeben` mutation · admin – Sperre aufheben (z. B. Tierarzt gibt Entwarnung) – nur die Ausstellungsleitung; der Eintrag bleibt im Journal.
+
+### routers/katalog/hallenplan.ts (340 Z.) → `katalog`
+Hallenplan: Plan und Stellvorschläge, festschreiben, neu setzen, Tier versetzen, Käfiginfo, Halle speichern, Wandreihe.
+
+- `katalog.hallenplan` query · angemeldet – Hallenplan: alle gemeldeten Tiere (offen und bestätigt) mit Käfig in Katalogfolge (Käfignummern) auf die Reihen der Halle verteilt; dazu die Preisr …
+- `katalog.stellVorschlaege` query · angemeldet – Stellvorschläge: die Halle in anderen Aufstellungen (Richtung, Wandreihen, bündig, Hauptgang) durchgerechnet, mit Eingängen, Flächen und eingesetzt …
+- `katalog.stellVorschlaegeEntwurf` mutation · admin – Stellvorschläge für eine noch nicht gespeicherte Halle (geführter Ablauf „Halle einrichten“): nur Ausstellungsleitung, als POST (ein Entwurf mit vi …
+- `katalog.planFestschreiben` mutation · admin – Plan festschreiben: Die Lage jedes Käfigs wird gespeichert, die Automatik rechnet danach nicht mehr neu.
+- `katalog.planNeuSetzen` mutation · admin – Plan neu setzen: die Software stellt alle Käfige neu (siehe `planNeuSetzenIn`).
+- `katalog.planLoesen` mutation · admin – Früherer Name von „Plan neu setzen“ (ohne neue Einstellungen) – für ältere geöffnete Seiten.
+- `katalog.tierVersetzen` mutation · admin – Tier im festen Plan von Hand versetzen (Rückmeldung 15.11.2026): in einen freien Käfig gleicher Größe oder Tausch mit einem Tier gleicher Größe (si …
+- `katalog.kaefigInfo` query · angemeldet – Angaben zu einem Käfig im Hallenplan (beim Klick): Tier, Züchter, Preisrichter, Status, Bewertung und Preise.
+- `katalog.halleSetzen` mutation · admin – Halle für den Hallenplan festlegen (Maße in cm).
+- `katalog.wandreiheStellen` mutation · admin – Einzelreihe an einer Wand (die Ausstellungsleitung hat eine Reihe an die Wand gezogen): dort steht dann eine Einzelreihe, die übrigen Reihen ordnen …
+
+### routers/katalog/kaefige.ts (219 Z.) → `katalog`
+Käfige und Grundplatten: Käfigbedarf, Aufsteller und Sockelbild, Grundplatten, Käfigregeln und -maße.
+
+- `katalog.kaefigbedarf` query · angemeldet – Käfigbedarf: je Käfiggröße die gemeldeten und bestätigten Tiere (ohne fehlende) und die Käfignummern (= Katalognummern) der bestätigten.
+- `katalog.aufstellerSetzen` mutation · admin – Höhe der Aufsteller (cm), auf denen die Grundplatten stehen; null = wieder Vorgabe.
+- `katalog.sockelBildSetzen` mutation · admin – Bild für die Sockelverkleidung (z. B. die Plane eines Sponsors): wie die Katalogbilder geprüft (PNG oder JPEG, Größe, Pixel), ersetzt ein vorheriges.
+- `katalog.sockelBildEntfernen` mutation · admin – Bild der Sockelverkleidung entfernen (die Verkleidung bleibt in ihrer Farbe).
+- `katalog.plattenSetzen` mutation · admin – Grundplatte (Länge × Tiefe in cm) und Käfige je Platte für einzelne Käfigarten (fehlend = automatisch aus Platte und Käfigbreite).
+- `katalog.kaefigRegelSetzen` mutation · admin – Abweichende Käfiggröße für eine Rasse festlegen (typ null = wieder automatisch).
+- `katalog.kaefigMassSetzen` mutation · admin – Maße der eigenen Käfige je Käfigart (cm); null = wieder Richtwert.
+
+### routers/katalog/nummern.ts (226 Z.) → `katalog`
+Katalognummern: Liste, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern.
+
+- `katalog.liste` query · angemeldet
+- `katalog.nummernVergeben` mutation · admin – Vor dem Festschreiben: alle Nummern lückenlos neu.
+- `katalog.nummernNachPlan` mutation · admin – Nach dem Umstellen im Hallenplan: Nummern in der Reihenfolge, in der die Käfige jetzt im (festgeschriebenen) Plan stehen (siehe `planFolge`).
+- `katalog.gedrucktSetzen` mutation · admin
 
 ### routers/katalog-gestaltung.ts (334 Z.) → `katalogGestaltung`
 
@@ -909,37 +1024,10 @@ Import aus Altprogrammen (Entscheidung 015), nur Administratoren: Datei lesen (C
 - `katalogGestaltung.beitragLoeschen` mutation · admin
 - `katalogGestaltung.beitraegeOrdnen` mutation · admin – Neue Reihenfolge einer Art (Grußworte, Anzeigen, Seiten) als Liste der IDs.
 
-### routers/katalog.ts (1.295 Z. ⚠) → `katalog`, `halle`
+### routers/katalog.ts (16 Z.)
+Katalog und Halle.
 
-- `katalog.kaefigbedarf` query · angemeldet – Käfigbedarf: je Käfiggröße die gemeldeten und bestätigten Tiere (ohne fehlende) und die Käfignummern (= Katalognummern) der bestätigten.
-- `katalog.aufstellerSetzen` mutation · admin – Höhe der Aufsteller (cm), auf denen die Grundplatten stehen; null = wieder Vorgabe.
-- `katalog.sockelBildSetzen` mutation · admin – Bild für die Sockelverkleidung (z. B. die Plane eines Sponsors): wie die Katalogbilder geprüft (PNG oder JPEG, Größe, Pixel), ersetzt ein vorheriges.
-- `katalog.sockelBildEntfernen` mutation · admin – Bild der Sockelverkleidung entfernen (die Verkleidung bleibt in ihrer Farbe).
-- `katalog.plattenSetzen` mutation · admin – Grundplatte (Länge × Tiefe in cm) und Käfige je Platte für einzelne Käfigarten (fehlend = automatisch aus Platte und Käfigbreite).
-- `katalog.kaefigRegelSetzen` mutation · admin – Abweichende Käfiggröße für eine Rasse festlegen (typ null = wieder automatisch).
-- `katalog.kaefigMassSetzen` mutation · admin – Maße der eigenen Käfige je Käfigart (cm); null = wieder Richtwert.
-- `katalog.hallenplan` query · angemeldet – Hallenplan: alle gemeldeten Tiere (offen und bestätigt) mit Käfig in Katalogfolge (Käfignummern) auf die Reihen der Halle verteilt; dazu die Preisr …
-- `katalog.stellVorschlaege` query · angemeldet – Stellvorschläge: die Halle in anderen Aufstellungen (Richtung, Wandreihen, bündig, Hauptgang) durchgerechnet, mit Eingängen, Flächen und eingesetzt …
-- `katalog.stellVorschlaegeEntwurf` mutation · admin – Stellvorschläge für eine noch nicht gespeicherte Halle (geführter Ablauf „Halle einrichten“): nur Ausstellungsleitung, als POST (ein Entwurf mit vi …
-- `katalog.planFestschreiben` mutation · admin – Plan festschreiben: Die Lage jedes Käfigs wird gespeichert, die Automatik rechnet danach nicht mehr neu.
-- `katalog.planNeuSetzen` mutation · admin – Plan neu setzen: die Software stellt alle Käfige neu (siehe `planNeuSetzenIn`).
-- `katalog.planLoesen` mutation · admin – Früherer Name von „Plan neu setzen“ (ohne neue Einstellungen) – für ältere geöffnete Seiten.
-- `katalog.tierVersetzen` mutation · admin – Tier im festen Plan von Hand versetzen (Rückmeldung 15.11.2026): in einen freien Käfig gleicher Größe oder Tausch mit einem Tier gleicher Größe (si …
-- `katalog.kaefigInfo` query · angemeldet – Angaben zu einem Käfig im Hallenplan (beim Klick): Tier, Züchter, Preisrichter, Status, Bewertung und Preise.
-- `katalog.halleSetzen` mutation · admin – Halle für den Hallenplan festlegen (Maße in cm).
-- `katalog.wandreiheStellen` mutation · admin – Einzelreihe an einer Wand (die Ausstellungsleitung hat eine Reihe an die Wand gezogen): dort steht dann eine Einzelreihe, die übrigen Reihen ordnen …
-- `katalog.liste` query · angemeldet
-- `katalog.nummernVergeben` mutation · admin – Vor dem Festschreiben: alle Nummern lückenlos neu.
-- `katalog.nummernNachPlan` mutation · admin – Nach dem Umstellen im Hallenplan: Nummern in der Reihenfolge, in der die Käfige jetzt im (festgeschriebenen) Plan stehen (siehe `planFolge`).
-- `katalog.gedrucktSetzen` mutation · admin
-- `halle.ringnummerSetzen` mutation · angemeldet – Ringnummer bei der Einlieferung nach der Ringkarte eintragen (Kennzeichnung für Kaufbeleg und Veterinärliste).
-- `halle.kaefigSetzen` mutation · angemeldet – Andere Käfiggröße für ein einzelnes Tier, z. B. das Zwerghuhn in den letzten freien Großkäfig.
-- `halle.suche` query · angemeldet – Einlieferung: Aussteller mit ihren Tieren, gesucht nach Name oder Katalognummer.
-- `halle.statusSetzen` mutation · angemeldet
-- `halle.vetSetzen` mutation · angemeldet – Nachweise bei der Einlieferung: ND-Impfung (Hühner, Puten), PMV-Impfung (Tauben), Untersuchung Wassergeflügel.
-- `halle.gesundheit` query · angemeldet – Gesundheitsjournal (Art. 25 DelVO (EU) 2019/2035): Krankheit, Verdacht, Todesfall, Maßnahme.
-- `halle.gesundheitErfassen` mutation · angemeldet
-- `halle.gesundheitFreigeben` mutation · admin – Sperre aufheben (z. B. Tierarzt gibt Entwarnung) – nur die Ausstellungsleitung; der Eintrag bleibt im Journal.
+Setzt Teile zu einem Router zusammen.
 
 ### routers/lastschrift.ts (317 Z.) → `lastschrift`
 SEPA-Lastschrift für das Standgeld (Entscheidung 018), nur Administratoren: Gläubiger-ID des Vereins, Mandate der Aussteller, je Schau eine Lastsch …
@@ -1020,30 +1108,56 @@ Rassebilder: ansehen (alle Benutzer) und pflegen (Ausstellungsleitung).
 - `rassebild.angabenSetzen` mutation · admin – Urheber, Lizenz, Quelle und „geprüft“ ändern.
 - `rassebild.loeschen` mutation · admin
 
-### routers/schau.ts (909 Z. ⚠) → `schau`
+### routers/schau/anlegen.ts (282 Z.) → `schau`
+Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
 
-- `schau.veterinaeraemter` query · angemeldet – Verzeichnis der zuständigen Veterinärämter (öffentliche Behördenangaben mit Quelle, siehe daten/veterinaeraemter.json) für die Vorschläge im Feld „ …
-- `schau.liste` query · angemeldet
-- `schau.get` query · angemeldet
 - `schau.anlegen` mutation · admin – Neue Schau anlegen – leer mit Startwerten oder aus einer früheren Schau des Vereins als Vorlage.
 - `schau.demodatenNeu` mutation · admin – Testschau: Demodaten neu einspielen – Meldungen, Test-Aussteller, Geld, Katalog und Bewertungen weg, frische Demodaten bis zur Einlieferung.
 - `schau.loeschen` mutation · admin – Löscht eine leere Schau (z. B. zum Ausprobieren angelegt): nur in der Vorbereitung, ohne Meldungen, Geld, Belege oder Stiftungen, mit eingetipptem …
 - `schau.alsTestschau` mutation · admin – Eine bestehende Schau als Testschau kennzeichnen (z. B. eine zum Üben angelegte mit Demo-Meldungen): ihre Aussteller werden Test-Aussteller und ver …
 - `schau.testschauVorschau` query · admin – Vor dem Kennzeichnen: wer würde Test-Aussteller, wer ist echt (und verhindert es)?
+
+### routers/schau/einstellungen.ts (224 Z.) → `schau`
+Einstellungen einer Schau: Felder speichern, Reihenfolge der Katalognummern, Teilschauen und Notenskala.
+
 - `schau.aktualisieren` mutation · admin
 - `schau.katalogSortierungSetzen` mutation · admin – Reihenfolge der Katalognummern (Kriterien in Rangfolge, ausgeschaltet, umgekehrt; siehe SORTIER_KRITERIEN).
 - `schau.teilschauenSetzen` mutation · admin – Teilschauen (Entscheidung 016) in Katalogfolge.
-- `schau.absagen` mutation · admin – Schau absagen (z. B. Ausstellungsverbot wegen Tierseuche, § 7 Abs. 5 GeflPestSchV): nur bis vor der Einlieferung.
-- `schau.phaseSetzen` mutation · admin
+- `schau.notenskalaSetzen` mutation · admin
+
+### routers/schau/gebuehren.ts (134 Z.) → `schau`
+Gebühren und Preisarten einer Schau setzen, ändern und löschen (gesperrt, sobald Geld oder Preise daran hängen).
+
 - `schau.gebuehrenSetzen` mutation · admin
 - `schau.preisartSpeichern` mutation · admin – Preisart anlegen oder ändern.
 - `schau.preisartLoeschen` mutation · admin
-- `schau.notenskalaSetzen` mutation · admin
-- `schau.uebersicht` query · angemeldet
+
+### routers/schau/phase.ts (185 Z.) → `schau`
+Phase der Schau: absagen und Phase wechseln (mit den Prüfungen vor Meldephase, Schau und Abschluss).
+
+- `schau.absagen` mutation · admin – Schau absagen (z. B. Ausstellungsverbot wegen Tierseuche, § 7 Abs. 5 GeflPestSchV): nur bis vor der Einlieferung.
+- `schau.phaseSetzen` mutation · admin
+
+### routers/schau/protokoll-post.ts (59 Z.) → `schau`
+Protokoll der Schau (Suche, Prüfung der Hash-Kette) und Postausgang des Vereins.
+
 - `schau.protokoll` query · angemeldet
 - `schau.protokollPruefen` query · angemeldet – Prüft die Hash-Kette des Protokolls: wurde etwas nachträglich verändert?
 - `schau.postausgang` query · admin – Postausgang des Vereins: nicht versandte Mails zuerst, damit ein gestörter Mailserver auffällt.
 - `schau.postErneutSenden` mutation · admin – Nicht versandte Mail erneut senden (z. B. nach Korrektur der Mailserver-Einstellungen).
+
+### routers/schau/uebersicht.ts (81 Z.) → `schau`
+Schauen lesen: Verzeichnis der Veterinärämter, Liste der Schauen, eine Schau mit Gebühren und Preisarten, Übersicht.
+
+- `schau.veterinaeraemter` query · angemeldet – Verzeichnis der zuständigen Veterinärämter (öffentliche Behördenangaben mit Quelle, siehe daten/veterinaeraemter.json) für die Vorschläge im Feld „ …
+- `schau.liste` query · angemeldet
+- `schau.get` query · angemeldet
+- `schau.uebersicht` query · angemeldet
+
+### routers/schau.ts (15 Z.)
+Schauen: anlegen, lesen, Einstellungen, Phase, Gebühren und Preisarten, Protokoll und Postausgang.
+
+Setzt Teile zu einem Router zusammen.
 
 ### routers/spenden.ts (204 Z.) → `spenden`
 Spenden (Entscheidung 013): steuerliche Angaben des Vereins, Spenderverzeichnis, Spenden je Schau erfassen und stornieren, Zuwendungsbestätigungen …
@@ -1113,8 +1227,19 @@ Prozeduren: lastschrift.mandatAnlegen, lastschrift.mandatWiderrufen, lastschrift
 ### aussteller.tsx (458 Z.) – `/aussteller`
 Prozeduren: schau.liste, verein.aussteller, verein.ausstellerDaten, verein.ausstellerLoeschen, verein.ausstellerSpeichern, verein.vereinsangaben, verein.vereinsnamenSetzen
 
-### benutzer.tsx (630 Z. ⚠) – `/benutzer`, `/benutzer/neu`, `/benutzer/:benutzerId`
-Prozeduren: auth.benutzerAbmelden, auth.benutzerAktiv, auth.benutzerAnlegen, auth.benutzerGet, auth.benutzerListe, auth.benutzerLoeschen, auth.benutzerPasswortSetzen, auth.benutzerRolle, auth.benutzerSpeichern, auth.benutzerWillkommen, auth.passwortAendern, auth.sperreAufheben, auth.status, auth.zweiFaktorAbschalten, auth.zweiFaktorBestaetigen, auth.zweiFaktorEinrichten, auth.zweiFaktorStatus, auth.zweiFaktorZuruecksetzen
+### benutzer-bearbeiten.tsx (229 Z.)
+Seite eines Benutzers (für Administratoren): Angaben, Zugang, Passwort neu setzen, Zwei-Faktor zurücksetzen.
+Prozeduren: auth.benutzerAbmelden, auth.benutzerAktiv, auth.benutzerLoeschen, auth.benutzerPasswortSetzen, auth.benutzerRolle, auth.benutzerSpeichern, auth.benutzerWillkommen, auth.sperreAufheben, auth.zweiFaktorZuruecksetzen
+
+### benutzer-eigener-zugang.tsx (139 Z.)
+Eigener Zugang: Passwort ändern und Zwei-Faktor-Anmeldung einrichten oder abschalten.
+Prozeduren: auth.passwortAendern, auth.zweiFaktorAbschalten, auth.zweiFaktorBestaetigen, auth.zweiFaktorEinrichten, auth.zweiFaktorStatus
+
+### benutzer-teile.tsx (54 Z.)
+Benutzer: gemeinsame Teile der Seiten (Rollennamen, Statusmarken, Rücklink, Neuladen nach Änderungen).
+
+### benutzer.tsx (228 Z.) – `/benutzer`, `/benutzer/neu`, `/benutzer/:benutzerId`
+Prozeduren: auth.benutzerAnlegen, auth.benutzerGet, auth.benutzerListe, auth.status
 
 ### bewertung.tsx (326 Z.) – `/schau/:schauId/bewertung`
 Prozeduren: auth.status, bewertung.liste, bewertung.obmannBestaetigen, bewertung.setzen, bewertung.zuruecksetzen
@@ -1139,14 +1264,26 @@ Prozeduren: druckvorlage.fuerSchau, druckvorlage.fuerSchauAnpassen, druckvorlage
 ### einstellungen-meisterschaften.tsx (267 Z.)
 Prozeduren: meisterschaft.regeln, meisterschaft.speichern
 
+### einstellungen-notenskala.tsx (71 Z.)
+Prozeduren: schau.notenskalaSetzen
+
+### einstellungen-preise.tsx (247 Z.)
+Prozeduren: schau.gebuehrenSetzen, schau.preisartLoeschen, schau.preisartSpeichern
+
+### einstellungen-stammangaben.tsx (286 Z.)
+Prozeduren: schau.aktualisieren, stammdaten.versionen
+
 ### einstellungen-teilschauen.tsx (69 Z.)
 Prozeduren: schau.teilschauenSetzen
+
+### einstellungen-verwalten.tsx (211 Z.)
+Prozeduren: schau.absagen, schau.alsTestschau, schau.demodatenNeu, schau.loeschen, schau.testschauVorschau
 
 ### einstellungen-vetamt.tsx (87 Z.)
 Prozeduren: schau.veterinaeraemter
 
-### einstellungen.tsx (895 Z. ⚠) – `/schau/:schauId/einstellungen`
-Prozeduren: auth.status, schau.absagen, schau.aktualisieren, schau.alsTestschau, schau.demodatenNeu, schau.gebuehrenSetzen, schau.get, schau.loeschen, schau.notenskalaSetzen, schau.preisartLoeschen, schau.preisartSpeichern, schau.protokoll, schau.testschauVorschau, stammdaten.versionen
+### einstellungen.tsx (125 Z.) – `/schau/:schauId/einstellungen`
+Prozeduren: auth.status, schau.get, schau.protokoll
 
 ### fehler.tsx (45 Z.)
 
@@ -1234,8 +1371,23 @@ Prozeduren: katalog.aufstellerSetzen, katalog.kaefigMassSetzen, katalog.kaefigRe
 ### kassenbuch.tsx (334 Z.) – `/schau/:schauId/kassenbuch`
 Prozeduren: kasse.belege, kasse.kassenbewegung, kasse.kassenbuch, kasse.tagesabschluss
 
-### katalog-gestalten.tsx (1.029 Z. ⚠) – `/schau/:schauId/katalog/gestalten`
-Prozeduren: auth.status, katalogGestaltung.beitraegeOrdnen, katalogGestaltung.beitragLoeschen, katalogGestaltung.beitragSpeichern, katalogGestaltung.bildAngabenSetzen, katalogGestaltung.bildHochladen, katalogGestaltung.bildLoeschen, katalogGestaltung.laden, katalogGestaltung.speichern, schau.get, termine.laden
+### katalog-gestalten-aufbau.tsx (269 Z.)
+
+### katalog-gestalten-bausteine.tsx (55 Z.)
+
+### katalog-gestalten-bilder.tsx (158 Z.)
+Prozeduren: katalogGestaltung.bildAngabenSetzen, katalogGestaltung.bildHochladen, katalogGestaltung.laden
+
+### katalog-gestalten-form.ts (33 Z.)
+
+### katalog-gestalten-teile.tsx (262 Z.)
+Prozeduren: katalogGestaltung.beitraegeOrdnen, katalogGestaltung.beitragLoeschen, katalogGestaltung.beitragSpeichern
+
+### katalog-gestalten-titelseite.tsx (93 Z.)
+Prozeduren: katalogGestaltung.bildLoeschen
+
+### katalog-gestalten.tsx (203 Z.) – `/schau/:schauId/katalog/gestalten`
+Prozeduren: auth.status, katalogGestaltung.laden, katalogGestaltung.speichern, schau.get, termine.laden
 
 ### katalog-reihenfolge.tsx (96 Z.)
 Prozeduren: schau.katalogSortierungSetzen
@@ -1275,9 +1427,25 @@ Prozeduren: schau.protokoll, schau.protokollPruefen
 ### rassebilder.tsx (268 Z.)
 Prozeduren: rassebild.angabenSetzen, rassebild.hochladen, rassebild.liste, rassebild.loeschen
 
-### richter.tsx (1.140 Z. ⚠) – `/richter/:slug`
+### richter-anmeldung.tsx (171 Z.)
+Preisrichter-Tablet: Anmeldung mit Name und PIN, Hinweis auf noch nicht übertragene Bewertungen im Gerät.
+Prozeduren: richter.anmeldeInfo, richter.anmelden
+
+### richter-geraet.ts (95 Z.)
+Preisrichter-Tablet: Datentypen und was im Gerät liegt (Schlüssel in IndexedDB/localStorage, gemerkter Preisrichter, Aufräumen).
+
+### richter-karte.tsx (263 Z.)
+Preisrichter-Tablet: Bewertungskarte eines Tieres (Note, Texte mit Bausteinen, Preise).
+
+### richter-obmann.tsx (40 Z.)
+Preisrichter-Tablet: Ansicht für den Obmann zum Bestätigen von Noten.
+
+### richter-tablet.tsx (568 Z.)
+Preisrichter-Tablet nach der Anmeldung: Tierliste, Ausgang und Abgleich mit dem Server, abgelehnte Bewertungen.
+
+### richter.tsx (55 Z.) – `/richter/:slug`
 Bewertung am Tablet für Preisrichter.
-Prozeduren: auth.status, richter.anmeldeInfo, richter.anmelden
+Prozeduren: auth.status
 
 ### schau-liste.tsx (206 Z.) – `/`
 Prozeduren: auth.status, schau.anlegen, schau.liste
@@ -1345,7 +1513,11 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `spenden.ts` (168 Z.) – Spenden (Entscheidung 013): Spender zum Aussteller finden oder anlegen, Spenden einer Schau mit Eingangstag und Bestätigungsstand laden, Bestätigun … · ladeSteuer, spenderFuerAussteller, meldungsspendeAnlegen, eingangMitMeldegeld, ladeSpenden, sperreBestaetigungen, naechsteBestaetigungsnummer, spenderFuerKatalog, spendenFuerAuskunft
 - `termine.ts` (253 Z.) – Kommende Schauen: Termine für die Katalogseite, abonnierte Kalender (iCal) abrufen und abgleichen, eigene Schauen als Kalender. · KALENDER_MAX_BYTES, ladeKommende, eigeneSchauenFuerKalender, istInterneAdresse, sichereAufloesung, pruefeKalenderAdresse, holeKalender, aboAbrufen, alleAbosAbrufen, starteTerminabruf
 - `testschau.ts` (164 Z.) – Testschauen (Üben, Vorführen) sind von echten Schauen getrennt: Aussteller, die in einer Testschau angelegt oder gemeldet werden, gehören nur ihr ( … · sperreTestschauGeteilt, ausstellerDerSchau, echteAussteller, testSchauIdFuer, pruefeAusstellerZurSchau, sperreTestschauExklusiv, testschauVorschau, KOPIE_AKTION, testKopienVon, kennzeichneAlsTestschau
-- `textbausteine-grundbestand.ts` (709 Z. ⚠) · TEXTBAUSTEINE_LISTE
+- `textbausteine-gefieder.ts` (199 Z.) · BAUSTEINE_GEFIEDER
+- `textbausteine-gestalt.ts` (124 Z.) · BAUSTEINE_GESTALT
+- `textbausteine-grundbestand.ts` (14 Z.) · TEXTBAUSTEINE_LISTE
+- `textbausteine-kopf.ts` (212 Z.) · BAUSTEINE_KOPF
+- `textbausteine-rumpf.ts` (185 Z.) · BAUSTEINE_RUMPF
 - `textbausteine.ts` (50 Z.) · TEXTBAUSTEINE_GRUNDBESTAND, legeTextbausteineAn, TEXTBAUSTEINE_MAX, sperreBausteine, ergaenzeGrundbestand
 - `tiergesundheit.ts` (28 Z.) · heuteDe, nachweisStand
 - `tierliste.ts` (106 Z.) · ladeTierliste
@@ -1368,7 +1540,14 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `dokumente.ts` (544 Z.) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf
 - `hallenplan.ts` (417 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
-- `katalog.ts` (1.511 Z. ⚠) · KURZ_JE_ABTEILUNG, kurzauswahl, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis, katalogPdf
+- `katalog-anhang.ts` (147 Z.) – Katalog-PDF, Anhang: kommende Schauen, Anzeigen der Förderer und Notizseiten bis zur vollen Heftlage. · kommendeSchauenSeite, anzeigenSeiten, notizSeiten
+- `katalog-hilfen.ts` (65 Z.) – Katalog-PDF, gemeinsame Hilfen ohne PDF: Kurzvorschau-Auswahl, Anzahltexte („3 Stämme“) und der Bildnachweis (Adressen kürzen, Urheber bereinigen, … · KURZ_JE_ABTEILUNG, kurzauswahl, anzahlText, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis
+- `katalog-kontext.ts` (241 Z.) – Katalog-PDF, Grundlage für alle Teile: lädt die Daten der Schau, legt das PDF an und stellt die gemeinsamen Satzhilfen bereit (Seiten, Inhaltsverze … · katalogKontext
+- `katalog-tierteil.ts` (450 Z.) – Katalog-PDF, Tierteil: zwei oder drei Spalten bzw. Tabelle, Spartenköpfe mit Stich, Rassenköpfe mit Rassebild, Preisrichter-, Klassen- und Tierzeil … · nrVergleich, nrBereich, tierteilSetzen
+- `katalog-titel.ts` (178 Z.) – Katalog-PDF, Titelseite: Hintergrund, Titel, Logo, Titelbild bzw. Stich und Termine je Stil. · titelseite
+- `katalog-verzeichnisse.ts` (177 Z.) – Katalog-PDF, Verzeichnisse: Rassenverzeichnis, Bildnachweis, Ausstellerverzeichnis und das am Ende nachgetragene Inhaltsverzeichnis mit Impressum. · rassenverzeichnis, bildnachweisSeite, ausstellerverzeichnis, inhaltsverzeichnis
+- `katalog-vorspann.ts` (310 Z.) – Katalog-PDF, Inhaltsteile vor dem Tierteil: Grußworte, Ausstellungsleitung und Termine, Preisrichter, Kennzahlen, Preise und Stifter, Bestimmungen, … · vorspann, ehrentafel
+- `katalog.ts` (89 Z.) – Katalog-PDF, Einstieg: lädt die Grundlage (katalog-kontext.ts) und setzt die Teile der Reihe nach – Titelseite (katalog-titel.ts), Vorspann und Ehr … · katalogPdf
 - `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
 - `spenden.ts` (257 Z.) – Spenden: Zuwendungsbestätigung nach amtlichem Muster (Geld, Sache, Sammelbestätigung mit Anlage) und die einfache Spendenquittung für die Kasse. · zuwendungsbestaetigungPdf, spendenquittungPdf
 
@@ -1377,23 +1556,39 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `client.ts` (11 Z.) · sql, db
 - `geheim-bestand.ts` (64 Z.) – Stellt Altbestand im Klartext auf verschlüsselte Spalten um (läuft bei jedem Start nach den Migrationen; findet es nichts mehr, tut es nichts). · pruefeDatenschluessel, verschluesseleBestand
 - `geheim.ts` (106 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, entschluessele, geheimText, geheimJsonLesen, geheimJson
+- `schema-aufzaehlungen.ts` (18 Z.) – Aufzählungstypen der Datenbank (pgEnum) – Phasen, Meldearten, Status, Zahlarten u. a. Über schema.ts exportiert. · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum
+- `schema-bewertung.ts` (106 Z.) – Preisrichter und Bewertung: Vereinsverzeichnis, Preisrichter, Einteilung, Bewertung, Textbausteine. · vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein
 - `schema-hallenentwurf.ts` (30 Z.) – Entwürfe des Hallenplans (Entscheidung 017): Je Schau mehrere Varianten speichern und laden; ist entschieden, gehen die übrigen ins Archiv des Vere … · hallenentwurf
 - `schema-import.ts` (26 Z.) – Import aus Altprogrammen (Entscheidung 015): je Importlauf, was er angelegt hat – damit „Zurücknehmen“ genau das wieder entfernt, solange nichts we … · importlauf
+- `schema-kasse.ts` (79 Z.) – Kassenbuch und Belegarchiv: Kassenbewegungen, Tagesabschlüsse, Belege; SEPA-Überweisungsläufe. · KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, sepaLauf
+- `schema-katalog.ts` (142 Z.) – Katalog-Gestaltung: Druckvorlagen, Gestaltung, Bilder, Rassebilder, Beiträge (Grußworte, Anzeigen). · KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, druckvorlage, katalogGestaltung, bild, rassebild, katalogBeitrag
 - `schema-lastschrift.ts` (74 Z.) – SEPA-Lastschrift (Entscheidung 018): Mandate der Aussteller und Lastschriftläufe je Schau. · sepaMandat, lastschriftLauf
+- `schema-mandant.ts` (131 Z.) – Mandant (Verein) mit Benutzern und Sitzungen; Stammdaten des Verzeichnisses (Sparten, Rassen, Farbenschläge je Version). · organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag
+- `schema-meldung.ts` (165 Z.) – Aussteller und Meldungen: Aussteller, Meldung, Zahlung des Meldegelds, Katalogeinträge (Tiere). · aussteller, meldung, zahlung, katalogeintrag
+- `schema-protokoll.ts` (73 Z.) – Protokoll und Post: Änderungsprotokoll mit Hash-Kette und ihren Vermerken, Postausgang. · aenderung, postausgang, aenderungKette, aenderungGeloescht, aenderungAnonymisiert
+- `schema-schau.ts` (138 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
 - `schema-spenden.ts` (115 Z.) – Spenden (Entscheidung 013): Spenderverzeichnis des Vereins, Spenden je Schau und Zuwendungsbestätigungen. · spender, spende, zuwendungsbestaetigung, bestaetigungSpende
-- `schema.ts` (1.039 Z. ⚠) · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum, organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag, schau, gebuehr, preisart, aussteller, meldung, zahlung, katalogeintrag, vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein, stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung, aenderung, postausgang, KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, druckvorlage, katalogGestaltung, TERMIN_STATUS, terminabo, schautermin, bild, rassebild, katalogBeitrag, KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, aenderungKette, aenderungGeloescht, aenderungAnonymisiert, sepaLauf
+- `schema-termine.ts` (68 Z.) – Kommende Schauen: abonnierte Kalender und Termine anderer Schauen für den Katalog. · TERMIN_STATUS, terminabo, schautermin
+- `schema-verkauf.ts` (138 Z.) – Preise, Verkauf, Geld: Stiftungen, Preisvergabe, Verkauf mit Zahlungseingang, Tiergesundheit, Auszahlungen. · stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung
+- `schema.ts` (21 Z.) – Datenbankschema (Drizzle) – Einstieg für drizzle.config.ts und alle Importe im Server.
 - `schutz.ts` (15 Z.) – Spielt die Schutz-Trigger (schutz.sql) ein: nach Migrationen, nach db:push und in den Tests. · schutzEinspielen
-- `spalten.ts` (12 Z.) – Spaltenarten, die mehrere Schemadateien nutzen (schema.ts, schema-spenden.ts). · ts, created, createdNachSperre, bytea
+- `spalten.ts` (12 Z.) – Spaltenarten, die mehrere Schemadateien nutzen (die Teildateien schema-*.ts). · ts, created, createdNachSperre, bytea
 
 ### Server sonst `apps/server/src`
 
 - `auth.ts` (189 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
+- `besucher-adresse.ts` (31 Z.) – Adresse des Besuchers für die Bremsen (tRPC-Kontext und öffentliche Dateien), auch hinter einem eigenen Proxy (TRUST_PROXY). · clientIp
 - `config.ts` (30 Z.) · config
 - `csv.ts` (15 Z.) – CSV für Excel: Semikolon, BOM, Schutz vor Formel-Injektion. · csv
 - `datei-druckvorlage.ts` (125 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien, briefDateien
+- `datei-exporte.ts` (317 Z.) – Datei-Adressen der Listen und Exporte (angemeldete Benutzer der eigenen Schau): Kassenbuch (CSV), Protokoll mit Hash-Kette (CSV, JSON), Verkaufslis … · exportDateien
+- `datei-hilfen.ts` (49 Z.) – Gemeinsame Bausteine der Datei-Adressen (/datei/...): Zahlen und Daten aus der Adresse prüfen, Schau des angemeldeten Benutzers laden, Datei-Antwor … · zahlAus, datumAus, schauMitBenutzer, schauFuer, datei, pdf, archivPdf
+- `datei-katalog.ts` (131 Z.) – Datei-Adressen für Bilder und Katalog (angemeldete Benutzer der eigenen Schau): GET /datei/:schauId/bild/:bildId – Vorschau hochgeladener Katalogbi … · katalogNacheinander, katalogDateien
 - `datei-meisterschaften.ts` (47 Z.) – Datei-Adressen der Meisterschaften (angemeldete Benutzer der eigenen Schau): GET /datei/:schauId/meisterschaften.pdf – Ergebnisse zum Aushängen, Na … · meisterschaftDateien
+- `datei-oeffentlich.ts` (141 Z.) – Öffentliche Dateien ohne Anmeldung, jeweils mit Bremse je Adresse: GET /o/:id/schauen.ics – eigene Schauen des Vereins als Kalender (iCal) GET /s/: … · katalogVerzeichnis, oeffentlicheDateien
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
-- `index.ts` (956 Z. ⚠)
+- `datei-unterlagen.ts` (120 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, B-Bogen und A-Bogen, Abrechnung und Q … · unterlagenDateien
+- `index.ts` (260 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
 - `router.ts` (48 Z.) · appRouter
@@ -1418,7 +1613,15 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `sprache.tsx` (110 Z.) – Sprache der Seiten für Aussteller (Entscheidung 020): alles unter `/s/…` – öffentliche Schauseite, Online-Meldung, Meine Meldung, Ergebnisse, Impre … · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, SprachWahl, fehlerFuerAussteller
 - `symbole.tsx` (45 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
-- `ui.tsx` (652 Z. ⚠) · knopfKlasse, Knopf, KnopfLink, Feld, useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter, Eingabe, Textfeld, Auswahl, Haken, Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, SpeicherPlatz, Speicherleiste, SpeicherStatus, Kennzahlen, Leer, Laden, FehlerAnzeige, Dialog, FragenAnbieter, useFrage, MeldungenAnbieter, useMeldung
+- `ui-basis.ts` (11 Z.) · cx, TON
+- `ui-dialog.tsx` (124 Z.) – Dialog und Rückfragen als eigener Dialog (useFrage statt prompt/confirm). · Dialog, FragenAnbieter, useFrage
+- `ui-felder.tsx` (71 Z.) – Formularfelder: Feld mit Beschriftung, Eingabe, Textfeld, Auswahl, Haken. · feldKlasse, Feld, Eingabe, Textfeld, Auswahl, Haken
+- `ui-knoepfe.tsx` (45 Z.) – Knöpfe: Knopf, Link im Aussehen eines Knopfs und ihre Klassen. · knopfKlasse, Knopf, KnopfLink
+- `ui-meldungen.tsx` (42 Z.) – Rückmeldungen als Toast unten rechts (useMeldung). · MeldungenAnbieter, useMeldung
+- `ui-seite.tsx` (232 Z.) – Bausteine einer Seite: Hinweise, Marken, Seitenkopf, Abschnitte, Tabellenrahmen, Suche, Kennzahlen, Lade- und Leerzustand. · Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, Kennzahlen, Leer, Laden, FehlerAnzeige
+- `ui-speichern.tsx` (76 Z.) – Speichern in der Kopfleiste: Speicherleiste bei ungespeicherten Änderungen, Speicherstatus bei sofortigem Speichern. · SpeicherPlatz, Speicherleiste, SpeicherStatus
+- `ui-ungespeichert.tsx` (65 Z.) – Warnung vor dem Verlassen mit ungespeicherten Eingaben (Formulare anmelden, ein Wächter im Wurzel-Layout). · useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter
+- `ui.tsx` (33 Z.) – Einstieg für alle UI-Bausteine – Seiten importieren von hier.
 
 ## Server-Tests `apps/server/src/tests`
 

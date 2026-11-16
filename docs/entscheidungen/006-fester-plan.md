@@ -11,4 +11,4 @@ selbst, neue Tiere kommen auf freie Plätze oder stehen unter „Platz“, geän
 Das erste Verschieben, Drehen oder Ausrichten im Editor schreibt den Plan vorher fest. Zurück nur über „Plan neu setzen“
 (`neuSetzen()`, mit Rückfrage – Verschobenes und eingesetzte Teile fallen weg, Möbel bleiben). Die Reihenrichtung lässt sich nur bei „an“ ändern.
 
-**Wo:** `hallenplan.ts` (`planeHalle`, `festschreiben`, `festGeometrie`), `hallenplan-neu.ts`, Router `katalog.planFestschreiben` / `katalog.planNeuSetzen`, Test `24-plan-fest`, `40-hallenplan-neu-setzen`.
+**Wo:** `hallenplan.ts` (`planeHalle`), `hallenplan-fest.ts` (`festschreiben`, `festGeometrie`), `hallenplan-neu.ts`, Router `katalog.planFestschreiben` / `katalog.planNeuSetzen`, Test `24-plan-fest`, `40-hallenplan-neu-setzen`.

@@ -11,4 +11,4 @@ nächsten Art auf, wenn Länge und Tiefe der Platte reichen (`restPlaetze: "naec
 
 **Folgen:** Reihen haben am Ende Lücken statt krummer Plattenmaße; gemischte Platten tragen `gemischt`.
 
-**Wo:** `packages/domain/src/hallenplan.ts` (`platteFuer`, Aufstellen der Reihen), Tests `hallenplan*.test.ts`, Handbuch „Hallenplan“ Punkt 2 und 5.
+**Wo:** `packages/domain/src/hallenplan-vorgaben.ts` (`platteFuer`), `hallenplan-reihen.ts` (Aufstellen der Reihen), Tests `hallenplan*.test.ts`, Handbuch „Hallenplan“ Punkt 2 und 5.

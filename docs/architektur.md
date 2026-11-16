@@ -8,8 +8,8 @@ Moduldoku in [`docs/module/`](module/) und die [Entscheidungen](entscheidungen/)
 | Schicht | Inhalt | Regel |
 |---|---|---|
 | `packages/domain` (`@schau/domain`) | Reine Fachlogik: Gebühren, Katalognummern, Noten, Preise, Abrechnung, Hallenplan, SEPA, Fristen | Keine Datenbank, kein Netz, keine Oberfläche. Jede Fachregel einmal, hier, mit Test daneben (`*.test.ts`). |
-| `apps/server` | Bun + Hono + tRPC + Drizzle (PostgreSQL 16) | Router in `src/routers` prüfen Eingabe (zod) und Rechte, Logik mit Datenbank in `src/services`, PDFs in `src/pdf`, Datei-Endpunkte (PDF, CSV, Bilder) in `src/index.ts`. |
-| `apps/web` | React + Vite + Tailwind + tRPC-Client, PWA | Seiten in `src/seiten`, Routen in `src/routes.tsx`, Bausteine in `src/ui.tsx` und `src/komponenten`. Rechnet nichts Fachliches selbst, sondern ruft `@schau/domain` auf. Das Preisrichter-Tablet (`seiten/richter.tsx`) arbeitet offline (IndexedDB). |
+| `apps/server` | Bun + Hono + tRPC + Drizzle (PostgreSQL 16) | Router in `src/routers` prüfen Eingabe (zod) und Rechte, Logik mit Datenbank in `src/services`, PDFs in `src/pdf`, Datei-Endpunkte (PDF, CSV, Bilder) in `src/datei-*.ts`, registriert in `src/index.ts`. |
+| `apps/web` | React + Vite + Tailwind + tRPC-Client, PWA | Seiten in `src/seiten`, Routen in `src/routes.tsx`, Bausteine in `src/ui-*.tsx` (Einstieg `src/ui.tsx`) und `src/komponenten`. Rechnet nichts Fachliches selbst, sondern ruft `@schau/domain` auf. Das Preisrichter-Tablet (`seiten/richter.tsx` mit `richter-*.tsx`) arbeitet offline (IndexedDB). |
 
 Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → domain.
 
@@ -19,7 +19,8 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
   `halle`). Das Web ruft `trpc.<bereich>.<prozedur>.useQuery/useMutation` auf, Typen kommen ohne Code-Erzeugung direkt
   aus dem Server. Rollen über die Prozedur-Art in `src/trpc.ts`: `publicProcedure`, `benutzerProcedure` (angemeldet),
   `adminProcedure` (Ausstellungsleitung mit Zwei-Faktor), `richterProcedure` (Tablet). Mandant: `ladeSchau(organisationId, schauId)`.
-- **Datenbank:** Schema in `apps/server/src/db/schema.ts` (Drizzle). Änderung am Schema: `schema.ts` ändern,
+- **Datenbank:** Schema-Einstieg `apps/server/src/db/schema.ts` (Drizzle), Tabellen nach Fachgebiet in `db/schema-*.ts`.
+  Änderung am Schema: passende `schema-*.ts` ändern (neue Datei in `schema.ts` weiterreichen),
   `cd apps/server && bun run db:generate` erzeugt die Migration in `apps/server/drizzle/NNNN_*.sql` (mit ins Repo).
   Betrieb spielt sie mit `bun run db:migrate` ein, Entwicklung und Tests mit `db:push`. Danach immer `db/schutz.sql`
   (Trigger für Protokoll und Kasse, wiederholbar).
@@ -30,21 +31,21 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
 
 | Fachgebiet | Domain | Server | Web |
 |---|---|---|---|
-| Schau, Phasen, Prüfliste | `types.ts` | `routers/schau.ts`, `services/pruefung.ts` | `einstellungen.tsx`, `uebersicht.tsx` |
+| Schau, Phasen, Prüfliste | `types.ts` | `routers/schau.ts` mit `routers/schau/*` (Phase: `phase.ts`), `services/pruefung.ts` | `einstellungen.tsx`, `einstellungen-*.tsx`, `uebersicht.tsx` |
 | Stammdaten (Rassen, Vereine, Veterinärämter) | `stammdaten.ts`, `veterinaeramt.ts` | `routers/stammdaten.ts`, `services/vereinsverzeichnis.ts` | `stammdaten.tsx`, `rassebilder.tsx` |
 | Meldung, Aussteller, Gebühren | `gebuehren.ts`, `adressen.ts`, `besatz.ts` | `routers/meldung.ts`, `routers/oeffentlich.ts`, `services/meldung.ts` | `meldungen.tsx`, `meldung-bearbeiten.tsx`, `oeffentlich.tsx` |
 | Preisrichter, Einteilung | `einteilung.ts` | `routers/preisrichter.ts`, `services/einteilung.ts` | `preisrichter.tsx` |
-| **Halle** (Käfige, Hallenplan, 3D) | `kaefige.ts`, `hallenplan*.ts` | `routers/katalog.ts` (Teil), `pdf/hallenplan.ts` | `kaefige.tsx`, `hallenplan*.tsx` – [Moduldoku](module/halle.md) |
-| **Katalog** (Nummern, Sortierung, Druck) | `katalog.ts` | `routers/katalog.ts`, `routers/katalog-gestaltung.ts`, `pdf/katalog.ts` | `katalog*.tsx` – [Moduldoku](module/katalog.md) |
-| Schautage (Einlieferung, Bewertung, Preise) | `noten.ts`, `preise.ts`, `tiergesundheit.ts`, `textbausteine.ts` | `routers/katalog.ts` (`halle.*`), `routers/bewertung.ts`, `routers/preise.ts` | `einlieferung.tsx`, `bewertung.tsx`, `richter.tsx`, `preise.tsx` |
-| Verkauf, Kasse, Abrechnung, SEPA | `geld.ts`, `abrechnung.ts`, `sepa.ts` | `routers/kasse.ts`, `services/kasse*.ts` | `verkauf.tsx`, `abrechnung.tsx`, `kassenbuch.tsx` |
+| **Halle** (Käfige, Hallenplan, 3D) | `kaefige.ts`, `hallenplan*.ts` | `routers/katalog/kaefige.ts`, `hallenplan.ts`, `gemeinsam.ts`, `pdf/hallenplan.ts` | `kaefige.tsx`, `hallenplan*.tsx` – [Moduldoku](module/halle.md) |
+| **Katalog** (Nummern, Sortierung, Druck) | `katalog.ts` | `routers/katalog/nummern.ts`, `routers/katalog-gestaltung.ts`, `pdf/katalog.ts` mit `pdf/katalog-*.ts` | `katalog*.tsx` – [Moduldoku](module/katalog.md) |
+| Schautage (Einlieferung, Bewertung, Preise) | `noten.ts`, `preise.ts`, `tiergesundheit.ts`, `textbausteine.ts` | `routers/katalog/einlieferung.ts`, `gesundheit.ts` (`halle.*`), `routers/bewertung.ts`, `routers/preise.ts`, Grundbestand der Textbausteine `services/textbausteine-gestalt/-kopf/-rumpf/-gefieder.ts` | `einlieferung.tsx`, `bewertung.tsx`, `richter.tsx`, `richter-*.tsx`, `preise.tsx` |
+| Verkauf, Kasse, Abrechnung, SEPA | `geld.ts`, `abrechnung.ts`, `sepa.ts` | `routers/kasse/{verkauf,auszahlung,sepa,kassenbuch,gemeinsam}.ts`, `services/kasse*.ts` | `verkauf.tsx`, `abrechnung.tsx`, `kassenbuch.tsx` |
 | Datenschutz, Protokoll | `datenschutz.ts` | `services/datenschutz.ts`, `services/protokoll*.ts`, `db/schutz.sql` | `verein.tsx`, `protokoll.tsx` |
-| Anmeldung, Benutzer | – | `routers/auth/*`, `auth.ts` | `benutzer.tsx`, `rahmen.tsx` |
+| Anmeldung, Benutzer | – | `routers/auth/*`, `auth.ts` | `benutzer.tsx`, `benutzer-*.tsx`, `rahmen.tsx` |
 | Kommende Schauen (Termine) | `termine.ts`, `kommende-schauen.ts` | `routers/termine.ts` | `kommende-schauen.tsx` |
 | Spenden, Zuwendungsbestätigung | `spenden.ts`, `zuwendungsbestaetigung.ts` | `routers/spenden.ts`, `services/spenden*.ts`, `pdf/spenden.ts` | `spenden.tsx`, `spender.tsx`, `verein-steuer.tsx` |
 | Meisterschaften | `meisterschaft.ts` | `routers/meisterschaft.ts`, `services/meisterschaften.ts` | `meisterschaften.tsx`, `einstellungen-meisterschaften.tsx` |
 | Import aus Altprogrammen | `import.ts` | `routers/import.ts` (`datenimport.*`), `services/import.ts`, `import/xlsx.ts` | `import.tsx` |
-| Teilschauen (fortlaufende Katalognummern) | `teilschau.ts`, `katalog.ts` | `routers/schau.ts` (`teilschauenSetzen`), `services/eintraege.ts`, `pdf/katalog.ts` | `einstellungen-teilschauen.tsx` |
+| Teilschauen (fortlaufende Katalognummern) | `teilschau.ts`, `katalog.ts` | `routers/schau/einstellungen.ts` (`teilschauenSetzen`), `services/eintraege.ts`, `pdf/katalog-tierteil.ts` | `einstellungen-teilschauen.tsx` |
 | Hallenplan-Entwürfe und Archiv | `hallenplan-entfernen.ts` (`halleOhneFestenPlan`) | `routers/hallenentwurf.ts`, `db/schema-hallenentwurf.ts` | `hallenplan-entwuerfe.tsx` |
 | SEPA-Lastschrift | `lastschrift.ts` | `routers/lastschrift.ts`, `db/schema-lastschrift.ts` | `lastschrift.tsx`, `aussteller-mandate.tsx`, `verein-lastschrift.tsx` |
 | Sprachen für Aussteller ([020](entscheidungen/020-sprachen-fuer-aussteller.md)) | `sprachen/` | `routers/oeffentlich.ts`, `routers/meldung.ts` (`eingangsText`) | `sprache.tsx`, `oeffentlich.tsx` |

@@ -11,11 +11,11 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 | Nummern, Folge | `packages/domain/src/katalog.ts` | `vergebeKatalognummern()` (alle neu, lückenlos ab Start), `nachmeldungsNummern()` / `nachmeldungsNummer()`, `vergleicheFolge()`, `formatKatalognummer()`, `gruppenAbteilung()` |
 | Sortierung | `katalog.ts` | `SORTIER_KRITERIEN`, `SORTIER_FEST` (Sparte, Rasse, Farbenschlag immer vorn), `SORTIERUNG_STANDARD`, `sortierungNormal()`, `istStandardSortierung()` |
 | Gliederung, Schriften | `schriften.ts`, `kaefige.ts` | `KATALOG_GLIEDERUNG`, `KATALOG_TEILE`, `seitenbereiche()`, `KATALOG_SCHRIFTEN`; `nummernBereiche()`, Käfigblöcke (`kaefigFolge`) |
-| Server, Nummern | `apps/server/src/routers/katalog.ts` | `katalog.liste`, `katalog.nummernVergeben` (vor dem Festschreiben alle neu, danach nur Nachmeldungen), `katalog.nummernNachPlan` (Folge aus dem Hallenplan), `katalog.gedrucktSetzen` (festschreiben) |
-| Server, Sortierung | `apps/server/src/routers/schau.ts` | `schau.katalogSortierungSetzen` (nur Ausstellungsleitung, gesperrt nach Festschreiben, Protokoll) |
+| Server, Nummern | `apps/server/src/routers/katalog/nummern.ts` | `katalog.liste`, `katalog.nummernVergeben` (vor dem Festschreiben alle neu, danach nur Nachmeldungen), `katalog.nummernNachPlan` (Folge aus dem Hallenplan), `katalog.gedrucktSetzen` (festschreiben) |
+| Server, Sortierung | `apps/server/src/routers/schau/einstellungen.ts` | `schau.katalogSortierungSetzen` (nur Ausstellungsleitung, gesperrt nach Festschreiben, Protokoll) |
 | Server, Gestaltung | `apps/server/src/routers/katalog-gestaltung.ts` | `katalogGestaltung.laden/speichern`, Bilder, Beiträge (`beitragSpeichern`, `beitraegeOrdnen`) |
-| PDF | `apps/server/src/pdf/katalog.ts` (⚠ 1.500 Z.) | `katalogPdf()`; ausgeliefert in `src/index.ts` über `/datei/:schauId/katalog.pdf` und öffentlich `/s/:slug/katalog.pdf`, nacheinander in einer Warteschlange (`katalogNacheinander`) |
-| Web | `apps/web/src/seiten/katalog.tsx`, `katalog-reihenfolge.tsx`, `katalog-gestalten.tsx` (⚠ 1.000 Z.), `katalog-vorschau.tsx` (PDF-Vorschau) | Routen `/schau/:id/katalog`, `/schau/:id/katalog/gestalten` |
+| PDF | `apps/server/src/pdf/katalog.ts` (Einstieg) mit `katalog-kontext.ts`, `-hilfen.ts`, `-titel.ts`, `-vorspann.ts`, `-tierteil.ts`, `-verzeichnisse.ts`, `-anhang.ts` | `katalogPdf()`; ausgeliefert über `/datei/:schauId/katalog.pdf` (`src/datei-katalog.ts`) und öffentlich `/s/:slug/katalog.pdf` (`src/datei-oeffentlich.ts`), nacheinander in einer Warteschlange (`katalogNacheinander` in `datei-katalog.ts`) |
+| Web | `apps/web/src/seiten/katalog.tsx`, `katalog-reihenfolge.tsx`, `katalog-gestalten.tsx` mit `katalog-gestalten-*.tsx`, `katalog-vorschau.tsx` (PDF-Vorschau) | Routen `/schau/:id/katalog`, `/schau/:id/katalog/gestalten` |
 
 ## Regeln und Invarianten
 

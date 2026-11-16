@@ -25,5 +25,5 @@ sind sorgfältig, aber nicht von Muttersprachlern geprüft – Verbesserungen bi
 **Wo:** `packages/domain/src/sprachen/` (Texte, `texte()`, `passendeSprache()`, `euroIn()`, `datumIn()`, Test),
 `apps/web/src/sprache.tsx` (Rahmen, Auswahl, Fehlertext), Seiten `oeffentlich.tsx`, `komponenten/aussteller.tsx`,
 `komponenten/positionen.tsx`, `fehler.tsx`; Server `routers/oeffentlich.ts` (`sprache` an schau, melden,
-onlineVeroeffentlichung), `routers/meldung.ts` (`eingangsText`, `meldungsLink`), Absage `routers/schau.ts`,
+onlineVeroeffentlichung), `routers/meldung.ts` (`eingangsText`, `meldungsLink`), Absage `routers/schau/phase.ts`,
 Vorabankündigung `routers/lastschrift.ts`, Migration `0062_sprache`. Test: Domain `sprachen.test.ts`, Server `57-sprachen`.

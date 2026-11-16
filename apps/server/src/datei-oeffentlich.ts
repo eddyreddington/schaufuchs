@@ -63,6 +63,7 @@ async function datenschutzGeaendert(schauId: number, seit: number) {
  * Schauen“. Nur Name, Ort, Tage und Link zur Schauseite; abschaltbar unter „Katalog“ → „Kommende Schauen“.
  */
 const kalenderBremse = new Bremse(60, 60_000, "Zu viele Abrufe.");
+const aBogenBremse = new Bremse(30, 60_000, "Zu viele Abrufe. Bitte gleich noch einmal versuchen.");
 
 export function oeffentlicheDateien(app: Hono<any>) {
   app.get("/o/:id{[0-9]+}/schauen.ics", async (c) => {
@@ -79,7 +80,6 @@ export function oeffentlicheDateien(app: Hono<any>) {
   });
 
   // Leerer A-Bogen für alle, die auf Papier melden – nur Angaben, die auf der Schauseite ohnehin öffentlich stehen.
-  const aBogenBremse = new Bremse(30, 60_000, "Zu viele Abrufe. Bitte gleich noch einmal versuchen.");
   app.get("/s/:slug/a-bogen.pdf", async (c) => {
     try {
       aBogenBremse.versuch([`ip:${clientIp(c)}`]);

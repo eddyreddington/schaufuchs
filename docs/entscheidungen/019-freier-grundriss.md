@@ -31,6 +31,7 @@ speichern den Umriss mit.
 
 **Wo:** `packages/domain/src/hallenplan-umriss.ts` (Prüfen, Zerlegen, Kanten, Wand ziehen/teilen, Wandring, Türöffnung,
 Eingang an der Wand), `hallenplan-umriss-pruefen.ts` (Prüfung beim Speichern, `grundrissUebernehmen`), `hallenplan.ts`
-(Sperren in `planeHalle`, Schlüssel und feste Geometrie), `hallenplan-3d.ts` (Wände je Kante, Seite der Wand), Server
-`routers/katalog.ts` (`mitGeprueftemUmriss`), Editor `hallenplan-grundriss.tsx`, Zeichnung `hallenplan-bild.tsx`, PDF
+(Sperren in `planeHalle`), `hallenplan-vorgaben.ts` (Schlüssel, `halleNormal`), `hallenplan-fest.ts` (feste Geometrie),
+`hallenplan-3d.ts` (Wände je Kante, Seite der Wand), Server
+`routers/katalog/gemeinsam.ts` (`mitGeprueftemUmriss`), Editor `hallenplan-grundriss.tsx`, Zeichnung `hallenplan-bild.tsx`, PDF
 `apps/server/src/pdf/hallenplan.ts`. Tests: Domain `hallenplan-umriss*.test.ts`, `hallenplan-3d-umriss.test.ts`, Server `56-grundriss`.
