@@ -1,6 +1,7 @@
 import type { OberflaecheTexte } from "..";
 import { abrechnung, liczba } from "./kasse-abrechnung";
 import { kassenbuch } from "./kasse-kassenbuch";
+import { kontoauszug } from "./kasse-kontoauszug";
 
 const pozycje = (n: number) => liczba(n, "pozycja", "pozycje", "pozycji");
 
@@ -71,6 +72,7 @@ export const kasse: OberflaecheTexte["kasse"] = {
   },
   abrechnung,
   kassenbuch,
+  kontoauszug,
   lastschrift: {
     status: { offen: "otwarty", gebucht: "zaksięgowany", verworfen: "odrzucony" },
     titel: "Polecenie zapłaty",

@@ -18,7 +18,7 @@ Anwender haben die Sprachwahl auf der Anmeldeseite gesucht.
   Meldung wortgleich (mit Platzhaltern als Funktion); `serverText()` erkennt die deutsche Meldung in der Oberfläche und
   setzt die Übersetzung mit denselben Werten ein, Satz für Satz bei zusammengesetzten Meldungen. Unbekanntes bleibt
   deutsch. `fehlerText()` übersetzt so jeden Fehler, auch die Kurztexte der Eingabeprüfung.
-- **Sprache:** angemeldet die Sprache am Konto (`benutzer.sprache`, Migration `0064_benutzer_sprache`, `auth.spracheSetzen`),
+- **Sprache:** angemeldet die Sprache am Konto (`benutzer.sprache`, Migration `0065_benutzer_sprache`, `auth.spracheSetzen`),
   gewählt im Benutzermenü; ohne Anmeldung die zuletzt in diesem Browser gewählte, sonst Deutsch. Eine Wahl auf der
   Anmeldeseite geht nach dem Anmelden ans Konto. Das Preisrichter-Tablet folgt nur der Wahl am Gerät (ein dort
   angemeldetes Konto der Verwaltung zählt nicht). Die Browsersprache allein stellt die Verwaltung bewusst nicht um – wer

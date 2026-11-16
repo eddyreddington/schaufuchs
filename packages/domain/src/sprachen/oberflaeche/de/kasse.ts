@@ -1,6 +1,7 @@
-/** Texte der Oberfläche: kasse – Tierverkauf, Abrechnung, Kassenbuch, Lastschrift (Entscheidung 022). */
+/** Texte der Oberfläche: kasse – Tierverkauf, Abrechnung, Kassenbuch, Kontoauszug, Lastschrift (Entscheidung 022). */
 import { abrechnung } from "./kasse-abrechnung";
 import { kassenbuch } from "./kasse-kassenbuch";
+import { kontoauszug } from "./kasse-kontoauszug";
 
 export const kasse = {
   /** In mehreren Seiten der Kasse. */
@@ -70,6 +71,7 @@ export const kasse = {
   },
   abrechnung,
   kassenbuch,
+  kontoauszug,
   lastschrift: {
     status: { offen: "offen", gebucht: "gebucht", verworfen: "verworfen" },
     titel: "Lastschrift",

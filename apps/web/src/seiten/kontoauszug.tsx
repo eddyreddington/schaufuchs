@@ -1,6 +1,9 @@
+import { serverText } from "@schau/domain";
 import { useState } from "react";
 import { datum, fehlerText, formatEuro } from "../lib";
 import { useSchauId } from "../rahmen";
+import { useOberflaeche, useSprache } from "../sprache";
+import { ot } from "../sprache-jetzt";
 import { trpc, type Ausgabe } from "../trpc";
 import { Auswahl, Hinweis, Knopf, Leer, Marke, SEITE, Seitenkopf, TabellenRahmen, useMeldung } from "../ui";
 
@@ -12,7 +15,7 @@ function alsBase64(datei: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
-    r.onerror = () => reject(new Error("Datei konnte nicht gelesen werden."));
+    r.onerror = () => reject(new Error(ot().kasse.kontoauszug.nichtGelesen));
     r.readAsDataURL(datei);
   });
 }
@@ -23,6 +26,9 @@ function alsBase64(datei: Blob): Promise<string> {
  */
 export function Kontoauszug() {
   const schauId = useSchauId();
+  const t = useOberflaeche();
+  const tk = t.kasse.kontoauszug;
+  const sprache = useSprache();
   const meldung = useMeldung();
   const utils = trpc.useUtils();
   const [datei, setDatei] = useState<{ name: string; base64: string } | null>(null);
@@ -47,7 +53,7 @@ export function Kontoauszug() {
   const waehlen = async (f: File | undefined) => {
     setFeld((n) => n + 1);
     if (!f) return;
-    if (f.size > MAX_BYTES) return meldung("Die Datei ist zu groß (höchstens 4 MB).", "fehler");
+    if (f.size > MAX_BYTES) return meldung(tk.zuGross, "fehler");
     setBericht(null);
     setDatei(null);
     await lesen({ name: f.name, base64: await alsBase64(f) });
@@ -58,7 +64,11 @@ export function Kontoauszug() {
     if (!datei || !auswahl.length) return;
     const r = await buchen.mutateAsync({ schauId, base64: datei.base64, posten: auswahl.map((p) => ({ schluessel: p.schluessel, meldungId: ziel[p.schluessel]!, offenCent: name(ziel[p.schluessel]!)?.offenCent ?? 0 })) }).catch(() => null);
     if (!r) return;
-    const teile = [`${r.gebucht} ${r.gebucht === 1 ? "Zahlung" : "Zahlungen"} gebucht`, r.bestaetigt ? `${r.bestaetigt} ${r.bestaetigt === 1 ? "Meldung" : "Meldungen"} bestätigt` : "", r.uebersprungen.length ? `${r.uebersprungen.length} übersprungen (${[...new Set(r.uebersprungen.map((u) => u.grund))].join(", ")})` : ""];
+    const teile = [
+      tk.zahlungenGebucht(r.gebucht),
+      r.bestaetigt ? tk.meldungenBestaetigt(r.bestaetigt) : "",
+      r.uebersprungen.length ? tk.uebersprungen(r.uebersprungen.length, [...new Set(r.uebersprungen.map((u) => serverText(u.grund, sprache)))].join(", ")) : "",
+    ];
     meldung(teile.filter(Boolean).join(" · "), r.uebersprungen.length ? "warnung" : "ok");
     await utils.meldung.liste.invalidate({ schauId });
     await lesen(datei);
@@ -67,27 +77,25 @@ export function Kontoauszug() {
   const name = (id: number | null) => bericht?.meldungen.find((m) => m.id === id);
   return (
     <div className={SEITE}>
-      <Seitenkopf titel="Kontoauszug" unter="Überweisungen des Meldegelds zuordnen und buchen" hilfe="kontoauszug" />
+      <Seitenkopf titel={tk.titel} unter={tk.unter} hilfe="kontoauszug" />
       <div className="flex flex-wrap items-center gap-3">
         <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-linie bg-weiss px-3 py-2 text-sm hover:border-band focus-within:ring-2 focus-within:ring-band">
-          <span>{datei ? "Andere Datei wählen" : "Kontoauszug wählen (CSV oder camt.053)"}</span>
+          <span>{datei ? tk.andereDatei : tk.dateiWaehlen}</span>
           <input key={feld} type="file" accept=".csv,.txt,.xml,text/csv,application/xml,text/xml" className="sr-only" onChange={(e) => void waehlen(e.target.files?.[0])} />
         </label>
         {datei && <span className="text-sm text-grau">{datei.name}</span>}
-        {pruefen.isPending && <span className="text-sm text-grau">wird gelesen …</span>}
+        {pruefen.isPending && <span className="text-sm text-grau">{tk.wirdGelesen}</span>}
       </div>
       {bericht &&
         (bericht.posten.length === 0 ? (
-          <Leer titel="Keine Gutschriften in Euro in dieser Datei" />
+          <Leer titel={tk.keineGutschriften} />
         ) : (
           <TabellenRahmen
             fuss={
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span>
-                  {bericht.posten.length} Gutschriften · {bericht.posten.filter((p) => p.gebucht).length} schon gebucht
-                </span>
+                <span>{tk.gutschriften(bericht.posten.length, bericht.posten.filter((p) => p.gebucht).length)}</span>
                 <Knopf variante="primaer" laedt={buchen.isPending} disabled={!auswahl.length} onClick={() => void jetztBuchen()}>
-                  {auswahl.length ? `${auswahl.length} ${auswahl.length === 1 ? "Zahlung" : "Zahlungen"} buchen (${formatEuro(summe)})` : "Zahlungen buchen"}
+                  {auswahl.length ? tk.zahlungenBuchen(auswahl.length, formatEuro(summe)) : tk.keineAuswahl}
                 </Knopf>
               </div>
             }
@@ -95,12 +103,12 @@ export function Kontoauszug() {
             <table className="tabelle">
               <thead>
                 <tr>
-                  <th className="w-8" aria-label="Buchen" />
-                  <th>Datum</th>
-                  <th className="text-right">Betrag</th>
-                  <th>Von / Verwendungszweck</th>
-                  <th>Meldung</th>
-                  <th>Stand</th>
+                  <th className="w-8" aria-label={t.kasse.buchen} />
+                  <th>{tk.datum}</th>
+                  <th className="text-right">{tk.betrag}</th>
+                  <th>{tk.vonZweck}</th>
+                  <th>{tk.meldung}</th>
+                  <th>{tk.stand}</th>
                 </tr>
               </thead>
               <tbody>
@@ -111,7 +119,7 @@ export function Kontoauszug() {
                       <td>
                         <input
                           type="checkbox"
-                          aria-label={`Gutschrift vom ${datum(p.datum)} über ${formatEuro(p.betragCent)} buchen`}
+                          aria-label={tk.hakenLabel(datum(p.datum), formatEuro(p.betragCent))}
                           className="size-[1.05rem] accent-band"
                           disabled={p.gebucht || ziel[p.schluessel] == null}
                           checked={!!haken[p.schluessel] && !p.gebucht && ziel[p.schluessel] != null}
@@ -127,7 +135,7 @@ export function Kontoauszug() {
                       <td>
                         <Auswahl
                           kompakt
-                          aria-label={`Meldung für die Gutschrift vom ${datum(p.datum)} über ${formatEuro(p.betragCent)}`}
+                          aria-label={tk.meldungLabel(datum(p.datum), formatEuro(p.betragCent))}
                           disabled={p.gebucht}
                           value={ziel[p.schluessel] ?? ""}
                           onChange={(e) => {
@@ -137,23 +145,23 @@ export function Kontoauszug() {
                             setHaken((h) => ({ ...h, [p.schluessel]: false }));
                           }}
                         >
-                          <option value="">– nicht zuordnen –</option>
+                          <option value="">{tk.nichtZuordnen}</option>
                           {bericht.meldungen.map((x) => (
                             <option key={x.id} value={x.id}>
-                              {x.name} · offen {formatEuro(Math.max(0, x.offenCent))}
+                              {tk.offen(x.name, formatEuro(Math.max(0, x.offenCent)))}
                             </option>
                           ))}
                         </Auswahl>
                       </td>
                       <td>
                         {p.gebucht ? (
-                          <Marke ton="neutral">gebucht</Marke>
+                          <Marke ton="neutral">{tk.gebucht}</Marke>
                         ) : m && ziel[p.schluessel] === p.meldungId && p.sicherheit === "referenz" ? (
-                          <Marke ton={p.hinweis === "passt" ? "ok" : "warnung"}>{p.hinweis === "teilzahlung" ? "Teilzahlung" : p.hinweis === "ueberzahlung" ? "zu viel" : "Referenz"}</Marke>
+                          <Marke ton={p.hinweis === "passt" ? "ok" : "warnung"}>{p.hinweis === "teilzahlung" ? tk.teilzahlung : p.hinweis === "ueberzahlung" ? tk.zuViel : tk.referenz}</Marke>
                         ) : m && ziel[p.schluessel] === p.meldungId && p.sicherheit === "name" ? (
-                          <Marke ton="warnung">Vorschlag</Marke>
+                          <Marke ton="warnung">{tk.vorschlag}</Marke>
                         ) : m && p.betragCent > Math.max(0, m.offenCent) ? (
-                          <Marke ton="warnung">zu viel</Marke>
+                          <Marke ton="warnung">{tk.zuViel}</Marke>
                         ) : null}
                       </td>
                     </tr>
@@ -163,7 +171,7 @@ export function Kontoauszug() {
             </table>
           </TabellenRahmen>
         ))}
-      {bericht && bericht.posten.some((p) => p.sicherheit === "name" && !p.gebucht) && <Hinweis ton="warnung">„Vorschlag“: ohne Referenz, nur nach Name und Betrag – bitte prüfen und dann ankreuzen.</Hinweis>}
+      {bericht && bericht.posten.some((p) => p.sicherheit === "name" && !p.gebucht) && <Hinweis ton="warnung">{tk.vorschlagHinweis}</Hinweis>}
     </div>
   );
 }

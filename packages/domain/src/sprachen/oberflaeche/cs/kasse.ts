@@ -1,6 +1,7 @@
 import type { OberflaecheTexte } from "..";
 import { abrechnung, pocet } from "./kasse-abrechnung";
 import { kassenbuch } from "./kasse-kassenbuch";
+import { kontoauszug } from "./kasse-kontoauszug";
 
 const polozky = (n: number) => pocet(n, "položka", "položky", "položek");
 
@@ -71,6 +72,7 @@ export const kasse: OberflaecheTexte["kasse"] = {
   },
   abrechnung,
   kassenbuch,
+  kontoauszug,
   lastschrift: {
     status: { offen: "otevřeno", gebucht: "zaúčtováno", verworfen: "zamítnuto" },
     titel: "Inkaso",

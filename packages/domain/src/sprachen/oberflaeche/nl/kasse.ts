@@ -1,6 +1,7 @@
 import type { OberflaecheTexte } from "..";
 import { abrechnung } from "./kasse-abrechnung";
 import { kassenbuch } from "./kasse-kassenbuch";
+import { kontoauszug } from "./kasse-kontoauszug";
 
 const posten = (n: number) => `${n} ${n === 1 ? "post" : "posten"}`;
 
@@ -71,6 +72,7 @@ export const kasse: OberflaecheTexte["kasse"] = {
   },
   abrechnung,
   kassenbuch,
+  kontoauszug,
   lastschrift: {
     status: { offen: "open", gebucht: "geboekt", verworfen: "verworpen" },
     titel: "Incasso",

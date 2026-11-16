@@ -1,6 +1,7 @@
 import type { OberflaecheTexte } from "..";
 import { abrechnung } from "./kasse-abrechnung";
 import { kassenbuch } from "./kasse-kassenbuch";
+import { kontoauszug } from "./kasse-kontoauszug";
 
 export const kasse: OberflaecheTexte["kasse"] = {
   buchen: "Book",
@@ -69,6 +70,7 @@ export const kasse: OberflaecheTexte["kasse"] = {
   },
   abrechnung,
   kassenbuch,
+  kontoauszug,
   lastschrift: {
     status: { offen: "open", gebucht: "booked", verworfen: "discarded" },
     titel: "Direct debit",

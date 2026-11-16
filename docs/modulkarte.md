@@ -739,7 +739,11 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch`
 
-### kasse.ts (117 Z.)
+### kasse-kontoauszug.ts (36 Z.)
+
+- `kontoauszug`
+
+### kasse.ts (119 Z.)
 
 - `kasse`
 
@@ -801,6 +805,10 @@ Sammelt alle Exporte (`export * from …`).
 - `sepa`
 - `verkauf`
 
+### server-kasse-kontoauszug.ts (10 Z.)
+
+- `kontoauszug`
+
 ### server-kasse-lastschrift.ts (81 Z.)
 
 - `lastschrift`
@@ -813,7 +821,7 @@ Sammelt alle Exporte (`export * from …`).
 - `preisrichter`
 - `meisterschaft`
 
-### server-kasse.ts (6 Z.)
+### server-kasse.ts (7 Z.)
 
 - `serverKasse`
 
@@ -916,8 +924,12 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch` – Texte der Oberfläche: kasse.kassenbuch – Barkasse, Tagesabschluss, Belegarchiv (Entscheidung 022).
 
-### kasse.ts (115 Z.)
-Texte der Oberfläche: kasse – Tierverkauf, Abrechnung, Kassenbuch, Lastschrift (Entscheidung 022).
+### kasse-kontoauszug.ts (32 Z.)
+
+- `kontoauszug` – Texte der Oberfläche: kasse.kontoauszug – Kontoauszug-Import fürs Meldegeld (Entscheidungen 022, 023).
+
+### kasse.ts (117 Z.)
+Texte der Oberfläche: kasse – Tierverkauf, Abrechnung, Kassenbuch, Kontoauszug, Lastschrift (Entscheidung 022).
 
 - `kasse`
 
@@ -985,6 +997,10 @@ Meldungen des Servers zur Kasse (routers/kasse/*, services/kasse.ts) mit SEPA-Ü
 - `sepa` – SEPA-Sammelüberweisung (routers/kasse/sepa.ts) und Prüfungen beim Erzeugen der Datei (domain sepa.ts).
 - `verkauf` – Tierverkauf, Storno, Zahlungseingang (routers/kasse/verkauf.ts).
 
+### server-kasse-kontoauszug.ts (13 Z.)
+
+- `kontoauszug` – Meldungen des Servers zum Kontoauszug-Import (routers/kontoauszug.ts, Entscheidung 023) – Teil von serverKasse (Entscheidung 022).
+
 ### server-kasse-lastschrift.ts (88 Z.)
 Meldungen des Servers zu SEPA-Lastschrift (routers/lastschrift.ts, domain lastschrift.ts) und Spenden (routers/spenden.ts, services/zuwendungsbesta …
 
@@ -999,8 +1015,8 @@ Meldungen des Servers zu Preisen und Stiftungen (routers/preise.ts, services/pre
 - `preisrichter` – Einteilung der Preisrichter (routers/preisrichter.ts).
 - `meisterschaft` – Gründe und Hinweise der Meisterschaftswertung (domain meisterschaft.ts).
 
-### server-kasse.ts (11 Z.)
-Texte der Oberfläche: serverKasse (Entscheidung 022) – Meldungen des Servers zu Kasse, SEPA, Lastschrift, Spenden, Preisen, Bewertung, Einteilung d …
+### server-kasse.ts (12 Z.)
+Texte der Oberfläche: serverKasse (Entscheidung 022) – Meldungen des Servers zu Kasse, SEPA, Lastschrift, Kontoauszug, Spenden, Preisen, Bewertung, …
 
 - `serverKasse`
 
@@ -1104,7 +1120,11 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch`
 
-### kasse.ts (115 Z.)
+### kasse-kontoauszug.ts (33 Z.)
+
+- `kontoauszug`
+
+### kasse.ts (117 Z.)
 
 - `kasse`
 
@@ -1166,6 +1186,10 @@ Sammelt alle Exporte (`export * from …`).
 - `sepa`
 - `verkauf`
 
+### server-kasse-kontoauszug.ts (10 Z.)
+
+- `kontoauszug`
+
 ### server-kasse-lastschrift.ts (81 Z.)
 
 - `lastschrift`
@@ -1178,7 +1202,7 @@ Sammelt alle Exporte (`export * from …`).
 - `preisrichter`
 - `meisterschaft`
 
-### server-kasse.ts (6 Z.)
+### server-kasse.ts (7 Z.)
 
 - `serverKasse`
 
@@ -1277,7 +1301,11 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch`
 
-### kasse.ts (118 Z.)
+### kasse-kontoauszug.ts (33 Z.)
+
+- `kontoauszug`
+
+### kasse.ts (120 Z.)
 
 - `kasse`
 
@@ -1339,6 +1367,10 @@ Sammelt alle Exporte (`export * from …`).
 - `sepa`
 - `verkauf`
 
+### server-kasse-kontoauszug.ts (10 Z.)
+
+- `kontoauszug`
+
 ### server-kasse-lastschrift.ts (81 Z.)
 
 - `lastschrift`
@@ -1351,7 +1383,7 @@ Sammelt alle Exporte (`export * from …`).
 - `preisrichter`
 - `meisterschaft`
 
-### server-kasse.ts (6 Z.)
+### server-kasse.ts (7 Z.)
 
 - `serverKasse`
 
@@ -1454,7 +1486,11 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch`
 
-### kasse.ts (117 Z.)
+### kasse-kontoauszug.ts (33 Z.)
+
+- `kontoauszug`
+
+### kasse.ts (119 Z.)
 
 - `kasse`
 
@@ -1516,6 +1552,10 @@ Sammelt alle Exporte (`export * from …`).
 - `sepa`
 - `verkauf`
 
+### server-kasse-kontoauszug.ts (10 Z.)
+
+- `kontoauszug`
+
 ### server-kasse-lastschrift.ts (81 Z.)
 
 - `lastschrift`
@@ -1528,7 +1568,7 @@ Sammelt alle Exporte (`export * from …`).
 - `preisrichter`
 - `meisterschaft`
 
-### server-kasse.ts (6 Z.)
+### server-kasse.ts (7 Z.)
 
 - `serverKasse`
 
@@ -1628,7 +1668,11 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch`
 
-### kasse.ts (118 Z.)
+### kasse-kontoauszug.ts (36 Z.)
+
+- `kontoauszug`
+
+### kasse.ts (120 Z.)
 
 - `kasse`
 
@@ -1690,6 +1734,10 @@ Sammelt alle Exporte (`export * from …`).
 - `sepa`
 - `verkauf`
 
+### server-kasse-kontoauszug.ts (10 Z.)
+
+- `kontoauszug`
+
 ### server-kasse-lastschrift.ts (81 Z.)
 
 - `lastschrift`
@@ -1702,7 +1750,7 @@ Sammelt alle Exporte (`export * from …`).
 - `preisrichter`
 - `meisterschaft`
 
-### server-kasse.ts (6 Z.)
+### server-kasse.ts (7 Z.)
 
 - `serverKasse`
 
@@ -2510,7 +2558,7 @@ Prozeduren: auth.status, katalog.gedrucktSetzen, katalog.liste, katalog.nummernV
 ### kommende-schauen.tsx (563 Z.)
 Prozeduren: termine.aboAbrufen, termine.aboLoeschen, termine.aboSpeichern, termine.abweichung, termine.druckenSetzen, termine.laden, termine.loeschen, termine.pruefen, termine.speichern, termine.veroeffentlichenSetzen, termine.wahlSetzen
 
-### kontoauszug.tsx (169 Z.) – `/schau/:schauId/kontoauszug`
+### kontoauszug.tsx (177 Z.) – `/schau/:schauId/kontoauszug`
 Prozeduren: kontoauszug.buchen, kontoauszug.pruefen
 
 ### lastschrift.tsx (218 Z.) – `/schau/:schauId/lastschrift`
