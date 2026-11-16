@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Prüfkette wie in der CI (.gitea/workflows/pruefen.yml): Typecheck, Modulkarte aktuell, Dateigrößen (Warnung),
-# Domain- und Server-Tests. Lokal ohne TEST_DATABASE_URL startet sie die Entwicklungsdatenbank wie `bun run test`.
+# Domain-Tests, Sprachen der Oberfläche, Server-Tests. Lokal ohne TEST_DATABASE_URL startet sie die Entwicklungsdatenbank wie `bun run test`.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 GRENZE=600
@@ -41,6 +41,9 @@ fi
 
 schritt "Domain-Tests"
 (cd packages/domain && bun test)
+
+schritt "Sprachen (Reste, Deutsch unverändert, Servermeldungen)"
+bun test scripts/sprachen-scan.test.ts
 
 schritt "Server-Tests"
 # 30 s je Test: Demodaten und Katalog-PDFs brauchen auf dem CI-Runner (begrenzte CPU) mehr als die 5 s Vorgabe.
