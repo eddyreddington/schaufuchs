@@ -23,3 +23,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [017](017-hallenplan-entwuerfe.md) | Hallenplan-Entwürfe und Archiv |
 | [018](018-sepa-lastschrift.md) | SEPA-Lastschrift für das Meldegeld |
 | [019](019-freier-grundriss.md) | Freier, rechtwinkliger Grundriss der Halle |
+| [020](020-sprachen-fuer-aussteller.md) | Sprachen der Seiten und Mails für Aussteller |

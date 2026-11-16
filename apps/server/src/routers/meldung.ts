@@ -1,4 +1,4 @@
-import { formatEuro, gefordertCent, MELDUNG_STATUS, mitVerzeichnis, verdeckeIban } from "@schau/domain";
+import { euroIn, formatEuro, gefordertCent, istSprache, MELDUNG_STATUS, mitVerzeichnis, texte, verdeckeIban, type Sprache } from "@schau/domain";
 import { and, asc, desc, eq, ilike, inArray, isNull, or, sql, sum } from "drizzle-orm";
 import { z } from "zod";
 import { config } from "../config";
@@ -47,35 +47,40 @@ export function anrede(vorname: string, nachname: string) {
 }
 
 /** Was der Aussteller zahlt und wann – je nach Zahlungsweise der Schau (vorab per Überweisung oder bei der Einlieferung). */
-export function zahlungsZeilen(s: Pick<Schau, "bankverbindung" | "zahlungBeiEinlieferung">, betragCent: number, stiftungCent = 0, spendeCent = 0): string[] {
+export function zahlungsZeilen(s: Pick<Schau, "bankverbindung" | "zahlungBeiEinlieferung">, betragCent: number, stiftungCent = 0, spendeCent = 0, sprache: Sprache = "de"): string[] {
+  const t = texte(sprache);
+  const euro = (cent: number) => euroIn(cent, sprache);
   const summe = betragCent + stiftungCent + spendeCent;
-  if (summe <= 0) return ["Für diese Meldung fällt kein Meldegeld an. Die Ausstellungsleitung bestätigt sie."];
-  const zusatz = [stiftungCent > 0 && `Ehrenpreisstiftung ${formatEuro(stiftungCent)}`, spendeCent > 0 && `Spende ${formatEuro(spendeCent)}`].filter(Boolean);
-  const betrag = zusatz.length ? `Meldegeld ${formatEuro(betragCent)} + ${zusatz.join(" + ")} = ${formatEuro(summe)}` : formatEuro(summe);
-  if (s.zahlungBeiEinlieferung) return [`Zu zahlen bei der Einlieferung der Tiere: ${betrag}`];
-  return [`Zu zahlen: ${betrag}`, s.bankverbindung ? `Bankverbindung: ${s.bankverbindung}` : "", "Die Meldung wird erst nach Zahlungseingang bearbeitet."];
+  if (summe <= 0) return [t.mail.keinMeldegeld];
+  const zusatz = [stiftungCent > 0 && `${t.betrag.stiftung} ${euro(stiftungCent)}`, spendeCent > 0 && `${t.betrag.spende} ${euro(spendeCent)}`].filter(Boolean);
+  const betrag = zusatz.length ? `${t.betrag.meldegeld} ${euro(betragCent)} + ${zusatz.join(" + ")} = ${euro(summe)}` : euro(summe);
+  if (s.zahlungBeiEinlieferung) return [t.mail.zuZahlenEinlieferung(betrag)];
+  return [t.mail.zuZahlen(betrag), s.bankverbindung ? t.mail.bankverbindung(s.bankverbindung) : "", t.mail.erstNachZahlung];
 }
 
-export function eingangsText(s: Schau, name: string, betragCent: number, link: string, online?: boolean, stiftungCent = 0, spendeCent = 0) {
+/** Link zu „Meine Meldung“ – in einer anderen Sprache als Deutsch öffnet die Seite gleich in dieser. */
+export function meldungsLink(s: Pick<Schau, "slug">, token: string, sprache: Sprache = "de") {
+  return `${config.publicUrl}/s/${s.slug}/meldung/${token}${sprache === "de" ? "" : `?sprache=${sprache}`}`;
+}
+
+/** Bestätigungsmail einer Meldung in der Sprache der Meldung (Entscheidung 020). */
+export function eingangsText(s: Schau, name: string, betragCent: number, link: string, online?: boolean, stiftungCent = 0, spendeCent = 0, sprache: Sprache = "de") {
+  const t = texte(sprache);
   return [
-    name ? `Guten Tag ${name},` : "Guten Tag,",
+    t.mail.gutenTag(name),
     "",
-    `Ihre Meldung zur Schau „${s.name}“ ist eingegangen.`,
-    ...zahlungsZeilen(s, betragCent, stiftungCent, spendeCent),
+    t.mail.eingegangen(s.name),
+    ...zahlungsZeilen(s, betragCent, stiftungCent, spendeCent, sprache),
     "",
-    `Hier können Sie Ihre Meldung prüfen und später Ihre Ergebnisse sehen:`,
+    t.mail.pruefenLink,
     link,
     "",
-    "Bitte prüfen Sie Rasse, Farbenschlag, Geschlecht und Alter jedes Tieres.",
+    t.mail.pruefenTiere,
     "",
-    online === undefined
-      ? ""
-      : online
-        ? "Sie haben eingewilligt, dass Name, Wohnort und Verein in den Online-Ergebnissen erscheinen. Widerrufen können Sie das jederzeit über den Link oben."
-        : "Im Internet erscheinen Sie ohne Namen. Über den Link oben können Sie die Veröffentlichung jederzeit erlauben.",
-    `Datenschutzhinweise: ${config.publicUrl}/s/${s.slug}/datenschutz`,
+    online === undefined ? "" : online ? t.mail.online : t.mail.offline,
+    t.mail.datenschutz(`${config.publicUrl}/s/${s.slug}/datenschutz`),
     "",
-    s.kontaktEmail ? `Fragen an: ${s.kontaktEmail}` : "",
+    s.kontaktEmail ? t.mail.fragen(s.kontaktEmail) : "",
   ]
     .filter((z, i, arr) => z !== "" || arr[i - 1] !== "")
     .join("\n");
@@ -410,11 +415,12 @@ export const meldungRouter = router({
     const [a] = await db.select().from(aussteller).where(eq(aussteller.id, m.ausstellerId));
     if (!a?.email) throw fehler("BAD_REQUEST", "Der Aussteller hat keine E-Mail-Adresse.");
     const b = await meldebetrag(db, m.id);
+    const sprache = istSprache(m.sprache) ? m.sprache : "de";
     await sendeMail(
       s.organisationId,
       a.email,
-      `Meldung ${s.name}`,
-      eingangsText(s, anrede(a.vorname, a.nachname), b.summeCent, `${config.publicUrl}/s/${s.slug}/meldung/${m.zugangsToken}`, !!m.onlineZustimmungAm, b.stiftungCent, b.spendeCent),
+      texte(sprache).mail.betreffMeldung(s.name),
+      eingangsText(s, anrede(a.vorname, a.nachname), b.summeCent, meldungsLink(s, m.zugangsToken, sprache), !!m.onlineZustimmungAm, b.stiftungCent, b.spendeCent, sprache),
       a.id,
     );
     return { ok: true };

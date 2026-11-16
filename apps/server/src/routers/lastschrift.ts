@@ -4,7 +4,7 @@
  * Mandat. Gebucht wird genau der Inhalt der Datei (als Zahlung „Lastschrift“), Rücklastschriften einzeln. Bar und
  * Überweisung bleiben daneben möglich; wer schon bezahlt hat, steht nicht in der Datei.
  */
-import { bankarbeitstag, erzeugeSepaLastschrift, formatEuro, fruehesteFaelligkeit, gefordertCent, heuteBerlin, imEwr, mandatGueltig, normalisiereGlaeubigerId, normalisiereIban, pruefeGlaeubigerId, pruefeIban, pruefeMandatsreferenz, verdeckeIban, vorgeschlageneFaelligkeit, datumKurz } from "@schau/domain";
+import { bankarbeitstag, datumIn, erzeugeSepaLastschrift, euroIn, istSprache, texte, fruehesteFaelligkeit, gefordertCent, heuteBerlin, imEwr, mandatGueltig, normalisiereGlaeubigerId, normalisiereIban, pruefeGlaeubigerId, pruefeIban, pruefeMandatsreferenz, verdeckeIban, vorgeschlageneFaelligkeit, datumKurz } from "@schau/domain";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Tx } from "../db/client";
@@ -24,7 +24,7 @@ const datum = kalenderdatum();
  */
 async function posten(tx: Tx, organisationId: number, schauId: number, faelligAm: string, opts: { sperren?: boolean } = {}) {
   const meldungen = await tx
-    .select({ id: meldung.id, ausstellerId: meldung.ausstellerId, istJugend: meldung.istJugend, istPreisrichter: meldung.istPreisrichter, vorname: aussteller.vorname, nachname: aussteller.nachname, email: aussteller.email })
+    .select({ id: meldung.id, ausstellerId: meldung.ausstellerId, istJugend: meldung.istJugend, istPreisrichter: meldung.istPreisrichter, sprache: meldung.sprache, vorname: aussteller.vorname, nachname: aussteller.nachname, email: aussteller.email })
     .from(meldung)
     .innerJoin(aussteller, eq(aussteller.id, meldung.ausstellerId))
     .where(and(eq(meldung.schauId, schauId), eq(meldung.status, "bestaetigt")));
@@ -39,7 +39,7 @@ async function posten(tx: Tx, organisationId: number, schauId: number, faelligAm
   ]);
   // Einmalige Mandate in offenen Dateien anderer Schauen des Vereins (gebucht gelten sie über letzteNutzungAm als genutzt).
   const einmalVergeben = new Set((await offeneLastschriftenDesVereins(tx, organisationId)).filter((l) => l.schauId !== schauId).flatMap((l) => l.daten.posten.filter((p) => !p.wiederkehrend).map((p) => p.mandatId)));
-  const liste: (LastschriftLaufPosten & { email: string })[] = [];
+  const liste: (LastschriftLaufPosten & { email: string; sprache: string })[] = [];
   const ohne: { name: string; grund: string; offenCent: number }[] = [];
   for (const m of meldungen) {
     const b = betraege.get(m.id)!;
@@ -55,7 +55,7 @@ async function posten(tx: Tx, organisationId: number, schauId: number, faelligAm
       continue;
     }
     if (!gueltig.wiederkehrend) einmalVergeben.add(gueltig.id);
-    liste.push({ meldungId: m.id, ausstellerId: m.ausstellerId, mandatId: gueltig.id, name, kontoinhaber: gueltig.kontoinhaber || name, iban: gueltig.iban, betragCent: offen, mandatsreferenz: gueltig.referenz, unterschriebenAm: gueltig.unterschriebenAm, wiederkehrend: gueltig.wiederkehrend, email: m.email });
+    liste.push({ meldungId: m.id, ausstellerId: m.ausstellerId, mandatId: gueltig.id, name, kontoinhaber: gueltig.kontoinhaber || name, iban: gueltig.iban, betragCent: offen, mandatsreferenz: gueltig.referenz, unterschriebenAm: gueltig.unterschriebenAm, wiederkehrend: gueltig.wiederkehrend, email: m.email, sprache: m.sprache });
   }
   return { liste, ohne };
 }
@@ -205,7 +205,7 @@ export const lastschriftRouter = router({
       const { liste } = await posten(tx, ctx.benutzer.organisationId, s.id, input.faelligAm, { sperren: true });
       if (!liste.length) throw fehler("BAD_REQUEST", "Kein offenes Meldegeld bei Ausstellern mit gültigem Mandat.");
       const nachrichtId = `SF-L${s.id}-${Date.now().toString(36).toUpperCase()}`;
-      const daten: LastschriftLaufDaten = { posten: liste.map(({ email: _e, ...p }) => p), glaeubiger: g, summeCent: liste.reduce((n, p) => n + p.betragCent, 0), erstelltAm: new Date().toISOString() };
+      const daten: LastschriftLaufDaten = { posten: liste.map(({ email: _e, sprache: _s, ...p }) => p), glaeubiger: g, summeCent: liste.reduce((n, p) => n + p.betragCent, 0), erstelltAm: new Date().toISOString() };
       try {
         xmlAus(s, { nachrichtId, faelligAm: input.faelligAm, daten }); // prüft Gläubiger-ID, IBANs und Beträge vorher
       } catch (e) {
@@ -220,19 +220,22 @@ export const lastschriftRouter = router({
     if (input.vorabankuendigung) {
       for (const p of ergebnis.liste) {
         if (!p.email) continue;
+        // In der Sprache der Meldung (Entscheidung 020).
+        const sprache = istSprache(p.sprache) ? p.sprache : "de";
+        const t = texte(sprache).mail;
         const text = [
-          `Guten Tag ${p.name.split(", ").reverse().join(" ")},`,
+          t.gutenTag(p.name.split(", ").reverse().join(" ")),
           "",
-          `für Ihre Meldung zur Schau „${s.name}“ ziehen wir ${formatEuro(p.betragCent)} am ${datumKurz(input.faelligAm)} per SEPA-Lastschrift von Ihrem Konto ${verdeckeIban(p.iban)} ein.`,
+          t.lastschrift(s.name, euroIn(p.betragCent, sprache), sprache === "de" ? datumKurz(input.faelligAm) : datumIn(input.faelligAm, sprache), verdeckeIban(p.iban)),
           "",
-          `Mandatsreferenz: ${p.mandatsreferenz}`,
-          `Gläubiger-ID: ${ergebnis.g.glaeubigerId}`,
+          t.mandatsreferenz(p.mandatsreferenz),
+          t.glaeubigerId(ergebnis.g.glaeubigerId),
           "",
-          "Bitte sorgen Sie für ausreichende Deckung. Bei Fragen wenden Sie sich an die Ausstellungsleitung.",
+          t.deckung,
           "",
           ergebnis.g.name,
         ].join("\n");
-        await sendeMail(ctx.benutzer.organisationId, p.email, `Vorabankündigung SEPA-Lastschrift – ${s.name}`, text, p.ausstellerId);
+        await sendeMail(ctx.benutzer.organisationId, p.email, t.betreffLastschrift(s.name), text, p.ausstellerId);
         angekuendigt++;
       }
     }

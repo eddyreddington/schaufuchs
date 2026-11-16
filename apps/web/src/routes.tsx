@@ -34,14 +34,18 @@ import { BriefvorlageSeite } from "./seiten/briefvorlage";
 import { DruckvorlageSeite } from "./seiten/druckvorlage";
 import { AusstellerSeite } from "./seiten/aussteller";
 import { Verkauf } from "./seiten/verkauf";
+import { SpracheRahmen } from "./sprache";
 import { UngespeichertWaechter } from "./ui";
 
 /** Wurzel aller Seiten: ein Wächter für ungespeicherte Eingaben (React Router erlaubt nur eine Navigationssperre). */
 function Wurzel() {
   return (
     <>
-      <UngespeichertWaechter />
-      <Outlet />
+      {/* Sprache nur unter /s/… (Seiten für Aussteller, Entscheidung 020), sonst deutsch. */}
+      <SpracheRahmen>
+        <UngespeichertWaechter />
+        <Outlet />
+      </SpracheRahmen>
     </>
   );
 }

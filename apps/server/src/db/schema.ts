@@ -373,6 +373,8 @@ export const meldung = pgTable(
     bemerkung: text("bemerkung").notNull().default(""),
     /** Geheimer Link-Schlüssel, mit dem der Aussteller seine Meldung ansieht. */
     zugangsToken: text("zugangs_token").notNull().unique(),
+    /** Sprache der Mails an den Aussteller zu dieser Meldung (Entscheidung 020); online die Sprache des Formulars. */
+    sprache: text("sprache").notNull().default("de"),
     /** ND-Impfung (Hühner, Puten). */
     vetImpfdatum: date("vet_impfdatum"),
     vetImpfstoff: text("vet_impfstoff").notNull().default(""),

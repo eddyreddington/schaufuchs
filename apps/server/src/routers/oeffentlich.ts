@@ -1,9 +1,8 @@
 import { verzeichnisVorschlaegeZwischengespeichert } from "../services/vereinsverzeichnis";
-import { adressVorschlaege, bewertungsText, datenschutzAbschnitte, datenschutzKurz, fehlendeVereinsangaben, heuteBerlin, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, mitVerzeichnis, onlineAbgelaufen, teilschauenLesen } from "@schau/domain";
+import { adressVorschlaege, bewertungsText, datenschutzAbschnitte, datenschutzKurz, datumIn, fehlendeVereinsangaben, heuteBerlin, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, mitVerzeichnis, onlineAbgelaufen, SPRACHEN, teilschauenLesen, texte, type Sprache } from "@schau/domain";
 import { heuteDe } from "../services/tiergesundheit";
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
-import { config } from "../config";
 import { db } from "../db/client";
 import { aussteller, gebuehr, meldung, schau } from "../db/schema";
 import { ladeVereinsangaben } from "../services/datenschutz";
@@ -14,7 +13,7 @@ import { sendeMail } from "../services/post";
 import { protokolliere } from "../services/protokoll";
 import { belegteKaefige, ONLINE_RESERVIERUNG_STUNDEN } from "../services/pruefung";
 import { fehler, publicProcedure, router } from "../trpc";
-import { anrede, eingangsText } from "./meldung";
+import { anrede, eingangsText, meldungsLink } from "./meldung";
 import { sucheFarbenschlag } from "./stammdaten";
 import { oeffentlicherStand } from "../services/zwischenspeicher";
 import { ausstellerDerSchau } from "../services/testschau";
@@ -30,11 +29,15 @@ function heute(): string {
   return heuteBerlin();
 }
 
-async function meldungOffen(s: typeof schau.$inferSelect) {
-  if (s.abgesagtAm) return { offen: false, grund: `Die Schau ist abgesagt${s.absageGrund ? `: ${s.absageGrund}` : "."}` };
-  if (s.phase !== "meldung") return { offen: false, grund: "Die Online-Meldung ist zurzeit nicht geöffnet." };
-  if (s.meldeschluss && heute() > s.meldeschluss) return { offen: false, grund: "Der Meldeschluss ist vorbei." };
-  if (s.kapazitaet && (await belegteKaefige(s.id)) >= s.kapazitaet) return { offen: false, grund: "Die Hallenkapazität ist erreicht." };
+/** Sprache der Seiten für Aussteller (Entscheidung 020); fehlt sie, Deutsch. */
+const spracheFeld = z.enum(SPRACHEN).default("de");
+
+async function meldungOffen(s: typeof schau.$inferSelect, sprache: Sprache = "de") {
+  const t = texte(sprache).schau;
+  if (s.abgesagtAm) return { offen: false, grund: t.abgesagt(s.absageGrund) };
+  if (s.phase !== "meldung") return { offen: false, grund: t.meldungZu };
+  if (s.meldeschluss && heute() > s.meldeschluss) return { offen: false, grund: t.meldeschlussVorbei };
+  if (s.kapazitaet && (await belegteKaefige(s.id)) >= s.kapazitaet) return { offen: false, grund: t.hallenVoll };
   return { offen: true, grund: "" };
 }
 
@@ -79,11 +82,13 @@ const meldeEingabe = z.object({
   /** Freiwillige Spende für die Ausstellung; „nennen“: Name im Katalog als Spender (Einwilligung). */
   spende: z.object({ betragCent: z.number().int().min(0).max(1_000_000), nennen: z.boolean() }).nullable().default(null),
   bemerkung: z.string().max(1000),
+  /** Sprache des Formulars: Fehlermeldungen und Bestätigungsmail, gespeichert an der Meldung. */
+  sprache: spracheFeld,
 });
 type MeldeInput = z.infer<typeof meldeEingabe>;
 
 export const oeffentlichRouter = router({
-  schau: publicProcedure.input(z.object({ slug: z.string().max(100) })).query(async ({ ctx, input }) => {
+  schau: publicProcedure.input(z.object({ slug: z.string().max(100), sprache: spracheFeld })).query(async ({ ctx, input }) => {
     // Die Seite lädt einmal; massenhaftes Abrufen (Last) wird gebremst wie die Suche.
     if (!istLokaleAdresse(ctx.ip)) {
       const netz = netz48Schluessel(ctx.ip);
@@ -94,7 +99,7 @@ export const oeffentlichRouter = router({
     const s = await ladeOeffentlich(input.slug);
     const [gebuehren, offen, verein, vereinsZeilen] = await Promise.all([
       db.select().from(gebuehr).where(eq(gebuehr.schauId, s.id)),
-      meldungOffen(s),
+      meldungOffen(s, input.sprache),
       ladeVereinsangaben(s.organisationId),
       // Nur Verein und Kreisverband bisheriger Aussteller – keine Namen, keine Adressen. Nur aus bestätigten Meldungen
       // (keine anonym eingeschleusten oder abgelehnten Texte) und höchstens 100 Zeichen lang.
@@ -119,7 +124,7 @@ export const oeffentlichRouter = router({
     const vorschlag = mitVerzeichnis(vereinsZeilen, await verzeichnisVorschlaegeZwischengespeichert());
     return {
       verein: verein.name,
-      datenschutzKurz: datenschutzKurz(verein),
+      datenschutzKurz: datenschutzKurz(verein, input.sprache),
       name: s.name,
       /** Testschau: Hinweis auf der Seite (keine echte Ausstellung). */
       test: s.test,
@@ -238,6 +243,7 @@ export const oeffentlichRouter = router({
         erlaubt: z.boolean(),
         /** Jugendliche: Name des Erziehungsberechtigten, der einverstanden ist (nur beim Erlauben nötig). */
         erziehungsberechtigter: z.string().trim().max(200).default(""),
+        sprache: spracheFeld,
       }),
     )
     .mutation(async ({ input }) => {
@@ -250,7 +256,7 @@ export const oeffentlichRouter = router({
       if (input.erlaubt) {
         // Wie im Meldeformular: Minderjährige erlauben die Veröffentlichung nur mit einem Erziehungsberechtigten.
         if (m.istJugend && input.erziehungsberechtigter.length < 3) {
-          throw fehler("BAD_REQUEST", "Bei einer Jugendmeldung bitte den Namen eines Erziehungsberechtigten angeben, der einverstanden ist.");
+          throw fehler("BAD_REQUEST", texte(input.sprache).meine.fehlerEltern);
         }
         einwilligungBremse.versuch([`meldung:${m.id}`]);
       }
@@ -335,30 +341,25 @@ async function berechneErgebnisse(s: typeof schau.$inferSelect) {
 
 async function meldeOnline(input: MeldeInput, email: string, ip: string) {
   const s = await ladeOeffentlich(input.slug);
-  const offen = await meldungOffen(s);
+  const t = texte(input.sprache);
+  const offen = await meldungOffen(s, input.sprache);
   if (!offen.offen) throw fehler("BAD_REQUEST", offen.grund);
   if (input.istJugend) {
     // Jugendtarif und Jugendblock nur mit passendem Geburtsdatum – Stichtag ist der Bewertungstag.
     const geb = input.aussteller.geburtsdatum;
-    if (!geb) throw fehler("BAD_REQUEST", "Für die Jugendmeldung bitte das Geburtsdatum angeben.");
+    if (!geb) throw fehler("BAD_REQUEST", t.fehler.jugendGeburtsdatum);
     const stichtag = s.bewertungAm ?? heute();
-    if (!istJugendlich(geb, stichtag)) {
-      const [j, mo, t] = stichtag.split("-");
-      throw fehler(
-        "BAD_REQUEST",
-        `Laut Geburtsdatum sind Sie am ${t}.${mo}.${j} nicht mehr jugendlich (unter ${JUGEND_ALTERSGRENZE} Jahre). Bitte ohne Jugend melden.`,
-      );
-    }
+    if (!istJugendlich(geb, stichtag)) throw fehler("BAD_REQUEST", t.fehler.nichtMehrJugend(datumIn(stichtag, input.sprache), JUGEND_ALTERSGRENZE));
     // Minderjährige brauchen für die Meldung (Meldegeld) und eine Einwilligung die Zustimmung der Eltern.
-    if (input.erziehungsberechtigter.length < 3) throw fehler("BAD_REQUEST", "Bei einer Jugendmeldung bitte den Namen eines Erziehungsberechtigten angeben, der einverstanden ist.");
+    if (input.erziehungsberechtigter.length < 3) throw fehler("BAD_REQUEST", t.meine.fehlerEltern);
   }
-  if (s.erklaerungen.trim() && !input.erklaerungen) throw fehler("BAD_REQUEST", "Bitte die Erklärungen zur Herkunft der Tiere bestätigen.");
+  if (s.erklaerungen.trim() && !input.erklaerungen) throw fehler("BAD_REQUEST", t.fehler.erklaerungen);
   // Eine einzelne Online-Meldung belegt höchstens ein Viertel der Halle (mindestens 30 Tiere) – größere über die AL.
   if (s.kapazitaet && input.positionen.length > Math.max(30, Math.floor(s.kapazitaet / 4))) {
-    throw fehler("BAD_REQUEST", "So viele Tiere bitte direkt bei der Ausstellungsleitung melden.");
+    throw fehler("BAD_REQUEST", t.fehler.zuVieleTiere);
   }
   if (s.kapazitaet && (await belegteKaefige(s.id)) + input.positionen.length > s.kapazitaet) {
-    throw fehler("BAD_REQUEST", "So viele Tiere passen nicht mehr in die Halle. Bitte weniger melden oder die Ausstellungsleitung fragen.");
+    throw fehler("BAD_REQUEST", t.fehler.halleVoll);
   }
   // Scheitert die Meldung, zählen ihre Tiere nicht.
   const zurueckTiere = s.kapazitaet && !istLokaleAdresse(ip) ? tiereJeAnschluss.menge(`${s.id}:${anschlussSchluessel(ip)}`, input.positionen.length, Math.max(30, Math.ceil(s.kapazitaet / 2))) : () => {};
@@ -382,7 +383,7 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
           sql`lower(trim(${aussteller.nachname})) = lower(trim(${input.aussteller.nachname}))`,
         ),
       );
-    if (schon.length) throw fehler("CONFLICT", "Diese Person hat für diese Schau schon gemeldet. Änderungen bitte über die Ausstellungsleitung.");
+    if (schon.length) throw fehler("CONFLICT", t.fehler.schonGemeldet);
     // Bekannter Aussteller (gleiche E-Mail, Registriernummer und Name im Verein): die Meldung hängt am vorhandenen
     // Stammsatz, statt in jeder Schau einen neuen anzulegen. Dessen Daten werden online nicht überschrieben.
     const [bekannt] = await tx
@@ -420,20 +421,19 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
         spende: input.spende,
       },
       { text: "Aussteller (online)" },
-      { bestehendenNichtAendern: !!bekannt },
+      { bestehendenNichtAendern: !!bekannt, sprache: input.sprache },
     );
   }).catch((e) => {
     zurueckTiere();
     throw e;
   });
   const [m] = await db.select().from(meldung).where(eq(meldung.id, r.meldungId));
-  const link = `${config.publicUrl}/s/${s.slug}/meldung/${m!.zugangsToken}`;
   await sendeMail(
     s.organisationId,
     email,
-    `Meldung ${s.name}`,
+    t.mail.betreffMeldung(s.name),
     // Anrede nur aus Buchstaben: sie ist frei eingegeben und ginge sonst mit Links als Werbung mit Vereinsabsender hinaus.
-    eingangsText(s, anrede(input.aussteller.vorname, input.aussteller.nachname), r.betrag.summeCent, link, input.onlineVeroeffentlichung, r.betrag.stiftungCent, r.betrag.spendeCent),
+    eingangsText(s, anrede(input.aussteller.vorname, input.aussteller.nachname), r.betrag.summeCent, meldungsLink(s, m!.zugangsToken, input.sprache), input.onlineVeroeffentlichung, r.betrag.stiftungCent, r.betrag.spendeCent, input.sprache),
     r.ausstellerId,
   );
   return { token: m!.zugangsToken, betrag: r.betrag };

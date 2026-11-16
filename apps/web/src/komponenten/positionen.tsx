@@ -1,6 +1,7 @@
-import { kaefigName, kaefigTyp, MELDEART_LABEL, MELDEARTEN, pruefeBesatz, standardBesatz, type Alter, type KaefigMasse, type KaefigRegel, type Meldeart } from "@schau/domain";
+import { kaefigMass, kaefigName, kaefigTyp, MELDEARTEN, ohneEszett, pruefeBesatz, standardBesatz, texte, type Alter, type KaefigMasse, type KaefigRegel, type Meldeart, type Sprache, type Texte } from "@schau/domain";
 import { useEffect, useId, useRef, useState } from "react";
 import { centZuText, parseEuro } from "../lib";
+import { useSprache, useTexte } from "../sprache";
 import { Symbol } from "../symbole";
 import { Auswahl, Eingabe, Knopf } from "../ui";
 
@@ -77,23 +78,23 @@ export function alsEingabe(p: Position) {
   };
 }
 
-/** Prüft die Positionen vor dem Senden. Gibt Fehlertexte je Zeile zurück. */
-export function pruefePositionen(positionen: Position[]): string[] {
+/** Prüft die Positionen vor dem Senden. Gibt Fehlertexte je Zeile zurück (Online-Meldung in der Sprache des Ausstellers). */
+export function pruefePositionen(positionen: Position[], t: Texte = texte("de")): string[] {
   const fehler: string[] = [];
   positionen.forEach((p, i) => {
-    const z = `Zeile ${i + 1}`;
-    if (p.imVerzeichnis && !p.farbenschlag) fehler.push(`${z}: Rasse und Farbenschlag auswählen.`);
-    if (!p.imVerzeichnis && !p.freitext.trim()) fehler.push(`${z}: Bezeichnung eintragen.`);
-    if (!p.imVerzeichnis && !p.einordnung) fehler.push(`${z}: Rasse wählen, bei der das Tier im Katalog steht.`);
-    if (!/^\d{1,2},\d{1,2}$/.test(p.geschlecht.trim())) fehler.push(`${z}: Geschlecht als 1,0 / 0,1 / 1,2.`);
-    if (p.verkaufspreis.trim() && parseEuro(p.verkaufspreis) == null) fehler.push(`${z}: Verkaufspreis ungültig.`);
+    const z = t.tiere.zeile(i + 1);
+    if (p.imVerzeichnis && !p.farbenschlag) fehler.push(`${z}: ${t.tiere.fehlerFarbenschlag}`);
+    if (!p.imVerzeichnis && !p.freitext.trim()) fehler.push(`${z}: ${t.tiere.fehlerBezeichnung}`);
+    if (!p.imVerzeichnis && !p.einordnung) fehler.push(`${z}: ${t.tiere.fehlerEinordnung}`);
+    if (!/^\d{1,2},\d{1,2}$/.test(p.geschlecht.trim())) fehler.push(`${z}: ${t.tiere.fehlerGeschlecht}`);
+    if (p.verkaufspreis.trim() && parseEuro(p.verkaufspreis) == null) fehler.push(`${z}: ${t.tiere.fehlerVerkaufspreis}`);
   });
   // Dieselbe Ringnummer in zwei Zeilen ist fast immer ein Übertragungsfehler.
   const ringe = new Map<string, number>();
   positionen.forEach((p, i) => {
     for (const r of p.ringnummern.split(/[,;\n]/).map((x) => x.replace(/\s+/g, "").toUpperCase()).filter(Boolean)) {
       const vorher = ringe.get(r);
-      if (vorher !== undefined && vorher !== i) fehler.push(`Zeile ${i + 1}: Ringnummer ${r} steht schon in Zeile ${vorher + 1}.`);
+      if (vorher !== undefined && vorher !== i) fehler.push(`${t.tiere.zeile(i + 1)}: ${t.tiere.fehlerRingDoppelt(r, vorher + 1)}`);
       else ringe.set(r, i);
     }
   });
@@ -164,6 +165,7 @@ export function FarbenschlagWahl({
   nurRasse?: boolean;
   platzhalter?: string;
 }) {
+  const tt = useTexte().tiere;
   const anzeige = (t: Treffer) => (nurRasse ? t.rasse : `${t.rasse}, ${t.farbenschlag}`);
   const [text, setText] = useState(wert ? anzeige(wert) : "");
   const [q, setQ] = useState("");
@@ -198,7 +200,7 @@ export function FarbenschlagWahl({
         aria-autocomplete="list"
         aria-activedescendant={offen && q.trim().length >= 2 && aktiv < anzahl ? `${listeId}-opt-${aktiv}` : undefined}
         value={text}
-        placeholder={platzhalter ?? "Rasse und Farbe tippen, z. B. „wyan weiß“"}
+        placeholder={platzhalter ?? tt.suchePlatzhalter}
         className={wert ? "" : "border-stroh-dunkel/50"}
         onChange={(e) => {
           setText(e.target.value);
@@ -231,7 +233,7 @@ export function FarbenschlagWahl({
       />
       {offen && q.trim().length >= 2 && (
         <ul id={listeId} role="listbox" className="absolute z-20 mt-1 max-h-72 w-full max-w-[calc(100vw-2rem)] overflow-auto sm:min-w-80 sm:max-w-none rounded-md border border-linie bg-weiss shadow-lg">
-          {treffer.length === 0 && <li className="px-3 py-2 text-grau">{ergebnis.isFetching ? "Suche …" : "Nichts im Verzeichnis gefunden."}</li>}
+          {treffer.length === 0 && <li className="px-3 py-2 text-grau">{ergebnis.isFetching ? tt.suche : tt.nichtsGefunden}</li>}
           {treffer.map((t, i) => (
             <li
               key={nurRasse ? t.rasseId : t.id}
@@ -261,8 +263,8 @@ export function FarbenschlagWahl({
               }}
               className={`cursor-pointer border-t border-linie px-3 py-2 text-band ${aktiv === treffer.length ? "bg-band-hell" : ""}`}
             >
-              „{frei}“ als freie Angabe übernehmen
-              <span className="block text-sm text-grau">nicht im Verzeichnis</span>
+              {tt.freiUebernehmen(frei)}
+              <span className="block text-sm text-grau">{tt.nichtImVerzeichnisKlein}</span>
             </li>
           )}
         </ul>
@@ -278,11 +280,25 @@ function tierText(p: Position): string {
 
 /** Tabelle zum Erfassen der Tiere einer Meldung – Reihenfolge wie auf dem Meldebogen. */
 /** Käfiggröße einer Meldezeile (ohne gewählte Rasse bei Einzeltieren noch keine – sonst stünde eine falsche da). */
-function kaefigText(p: Position, regeln: KaefigRegel[], masse: KaefigMasse): string | null {
+function kaefigText(p: Position, regeln: KaefigRegel[], masse: KaefigMasse, t: Texte, sprache: Sprache): string | null {
   const wahl = p.imVerzeichnis ? p.farbenschlag : p.einordnung;
   if (p.art === "einzeltier" && !wahl) return null;
   const typ = kaefigTyp({ art: p.art, sparte: wahl?.sparte, rasse: wahl?.rasse }, regeln);
-  return typ ? `Käfig: ${kaefigName(typ, masse)}` : "ohne Käfig";
+  if (!typ) return t.tiere.ohneKaefig;
+  if (sprache === "de" || sprache === "de-CH") return t.tiere.kaefig(sprache === "de" ? kaefigName(typ, masse) : ohneEszett(kaefigName(typ, masse)));
+  // Andere Sprachen: nur das Maß, bei Stamm und Voliere mit übersetztem Namen davor.
+  const m = kaefigMass(typ, masse);
+  const zahl = (n: number) => String(n).replace(".", sprache === "en" ? "." : ",");
+  const mass = m ? `${zahl(m.breite)} × ${zahl(m.tiefe)} × ${zahl(m.hoehe)} cm` : "";
+  const name = typ === "stamm" || typ === "voliere" ? t.meldeart[typ] : "";
+  return t.tiere.kaefig([name, mass].filter(Boolean).join(" "));
+}
+
+/** Hinweis zum vorgeschriebenen Besatz von Stamm und Voliere, in der Sprache der Seite. */
+function besatzHinweis(p: Position, t: Texte): string | null {
+  const text = `${p.imVerzeichnis ? `${p.farbenschlag?.sparte ?? ""} ${p.farbenschlag?.rasse ?? ""}` : p.freitext}`;
+  if (!pruefeBesatz(p.art, p.geschlecht, text)) return null;
+  return t.tiere.besatz(standardBesatz(p.art, text) ?? "");
 }
 
 export function PositionenEditor({
@@ -306,6 +322,9 @@ export function PositionenEditor({
    */
   festgeschrieben?: boolean;
 }) {
+  const t = useTexte();
+  const sprache = useSprache();
+  const tt = t.tiere;
   const aendern = (i: number, teil: Partial<Position>) => setPositionen(positionen.map((p, j) => (j === i ? { ...p, ...teil } : p)));
   const naechstesGeschlecht = (p: Position): Partial<Position> => {
     // Reihenfolge des Meldebogens: 1,0 jung → 1,0 alt → 0,1 jung → 0,1 alt
@@ -322,21 +341,21 @@ export function PositionenEditor({
           <thead>
             <tr>
               <th className="w-10">#</th>
-              <th>Rasse, Farbenschlag</th>
-              <th className="w-40">Art</th>
-              <th className="w-28">Geschlecht</th>
-              <th className="w-24">Alter</th>
+              <th>{tt.rasseFarbenschlag}</th>
+              <th className="w-40">{tt.art}</th>
+              <th className="w-28">{tt.geschlecht}</th>
+              <th className="w-24">{tt.alter}</th>
               <th className="w-36">
-                <abbr title="Ringnummer, z. B. D 26 AZ 123">Ring-Nr.</abbr>
+                <abbr title={tt.ringnummerTitel}>{tt.ringNr}</abbr>
               </th>
               <th className="w-28 text-right">
-                <abbr title="Verkaufspreis in Euro">Verkauf (€)</abbr>
+                <abbr title={tt.verkaufTitel}>{tt.verkauf}</abbr>
               </th>
               <th className="w-14 text-center">
-                <abbr title="Eigene Zucht">E. Z.</abbr>
+                <abbr title={tt.eigeneZucht}>{tt.eigeneZuchtKurz}</abbr>
               </th>
               <th className="w-44">
-                <span className="sr-only">Aktionen</span>
+                <span className="sr-only">{tt.aktionen}</span>
               </th>
             </tr>
           </thead>
@@ -345,12 +364,12 @@ export function PositionenEditor({
               const fest = festgeschrieben && !!p.katalog;
               return (
               <tr key={p.schluessel}>
-                <td data-label="Nr." className="pt-4 text-grau">{p.katalog ? <span className="nummer text-tinte">{p.katalog}</span> : i + 1}</td>
-                <td data-label="Rasse, Farbenschlag">
+                <td data-label={tt.nr} className="pt-4 text-grau">{p.katalog ? <span className="nummer text-tinte">{p.katalog}</span> : i + 1}</td>
+                <td data-label={tt.rasseFarbenschlag}>
                   <fieldset disabled={fest} className="contents">
                   {p.imVerzeichnis ? (
                     <FarbenschlagWahl
-                      label={`Zeile ${i + 1}: Rasse und Farbenschlag`}
+                      label={`${tt.zeile(i + 1)}: ${tt.rasseFarbenschlag}`}
                       wert={p.farbenschlag}
                       onWahl={(t) => aendern(i, { farbenschlag: t })}
                       suche={suche}
@@ -358,10 +377,10 @@ export function PositionenEditor({
                     />
                   ) : (
                     <div className="flex flex-col gap-1">
-                      <Eingabe aria-label={`Zeile ${i + 1}: Bezeichnung`} value={p.freitext} placeholder="Rasse, Farbenschlag (frei)" onChange={(e) => aendern(i, { freitext: e.target.value })} />
+                      <Eingabe aria-label={`${tt.zeile(i + 1)}: ${tt.bezeichnung}`} value={p.freitext} placeholder={tt.bezeichnungFrei} onChange={(e) => aendern(i, { freitext: e.target.value })} />
                       <FarbenschlagWahl
-                        label={`Zeile ${i + 1}: Im Katalog einordnen bei Rasse`}
-                        platzhalter="Im Katalog einordnen bei Rasse …"
+                        label={`${tt.zeile(i + 1)}: ${tt.einordnen}`}
+                        platzhalter={tt.einordnenPlatzhalter}
                         nurRasse
                         wert={p.einordnung}
                         onWahl={(t) => aendern(i, { einordnung: t })}
@@ -372,21 +391,21 @@ export function PositionenEditor({
                           <input type="checkbox" className="accent-band" checked={p.istAoc} onChange={(e) => aendern(i, { istAoc: e.target.checked })} /> AOC
                         </label>
                         <label className="flex items-center gap-1">
-                          <input type="checkbox" className="accent-band" checked={p.istNeuzuechtung} onChange={(e) => aendern(i, { istNeuzuechtung: e.target.checked })} /> Neuzüchtung
+                          <input type="checkbox" className="accent-band" checked={p.istNeuzuechtung} onChange={(e) => aendern(i, { istNeuzuechtung: e.target.checked })} /> {tt.neuzuechtung}
                         </label>
                       </div>
                     </div>
                   )}
                   <button type="button" className="mt-1 text-sm text-grau hover:text-band hover:underline" onClick={() => aendern(i, { imVerzeichnis: !p.imVerzeichnis })}>
-                    {p.imVerzeichnis ? "Nicht im Verzeichnis?" : "Aus dem Verzeichnis wählen"}
+                    {p.imVerzeichnis ? tt.nichtImVerzeichnis : tt.ausVerzeichnis}
                   </button>
                   </fieldset>
-                  {fest && <p className="mt-1 text-xs text-grau">Katalog festgeschrieben</p>}
+                  {fest && <p className="mt-1 text-xs text-grau">{tt.festgeschrieben}</p>}
                 </td>
-                <td data-label="Art">
+                <td data-label={tt.art}>
                   <fieldset disabled={fest} className="contents">
                   <Auswahl
-                    aria-label={`Zeile ${i + 1}: Art`}
+                    aria-label={`${tt.zeile(i + 1)}: ${tt.art}`}
                     kompakt
                     value={p.art}
                     onChange={(e) => {
@@ -397,50 +416,48 @@ export function PositionenEditor({
                   >
                     {MELDEARTEN.map((a) => (
                       <option key={a} value={a}>
-                        {MELDEART_LABEL[a]}
+                        {t.meldeart[a]}
                       </option>
                     ))}
                   </Auswahl>
                   </fieldset>
-                  {kaefigText(p, kaefigRegeln, kaefigMasse) && <p className="mt-1 whitespace-nowrap text-xs text-grau">{kaefigText(p, kaefigRegeln, kaefigMasse)}</p>}
+                  {kaefigText(p, kaefigRegeln, kaefigMasse, t, sprache) && <p className="mt-1 whitespace-nowrap text-xs text-grau">{kaefigText(p, kaefigRegeln, kaefigMasse, t, sprache)}</p>}
                 </td>
-                <td data-label="Geschlecht">
+                <td data-label={tt.geschlecht}>
                   <fieldset disabled={fest} className="contents">
                   {p.art === "einzeltier" ? (
-                    <Auswahl aria-label={`Zeile ${i + 1}: Geschlecht`} kompakt value={p.geschlecht} onChange={(e) => aendern(i, { geschlecht: e.target.value })}>
+                    <Auswahl aria-label={`${tt.zeile(i + 1)}: ${tt.geschlecht}`} kompakt value={p.geschlecht} onChange={(e) => aendern(i, { geschlecht: e.target.value })}>
                       <option value="1,0">1,0</option>
                       <option value="0,1">0,1</option>
                     </Auswahl>
                   ) : (
                     <>
-                      <Eingabe aria-label={`Zeile ${i + 1}: Geschlecht`} value={p.geschlecht} onChange={(e) => aendern(i, { geschlecht: e.target.value })} />
-                      {pruefeBesatz(p.art, p.geschlecht, tierText(p)) && (
-                        <p className="mt-1 text-sm font-semibold text-stroh-dunkel">{pruefeBesatz(p.art, p.geschlecht, tierText(p))}</p>
-                      )}
+                      <Eingabe aria-label={`${tt.zeile(i + 1)}: ${tt.geschlecht}`} value={p.geschlecht} onChange={(e) => aendern(i, { geschlecht: e.target.value })} />
+                      {besatzHinweis(p, t) && <p className="mt-1 text-sm font-semibold text-stroh-dunkel">{besatzHinweis(p, t)}</p>}
                     </>
                   )}
                   </fieldset>
                 </td>
-                <td data-label="Alter">
-                  <Auswahl aria-label={`Zeile ${i + 1}: Alter`} kompakt disabled={fest} value={p.alter} onChange={(e) => aendern(i, { alter: e.target.value as Alter })}>
-                    <option value="jung">jung</option>
-                    <option value="alt">alt</option>
+                <td data-label={tt.alter}>
+                  <Auswahl aria-label={`${tt.zeile(i + 1)}: ${tt.alter}`} kompakt disabled={fest} value={p.alter} onChange={(e) => aendern(i, { alter: e.target.value as Alter })}>
+                    <option value="jung">{t.alter.jung}</option>
+                    <option value="alt">{t.alter.alt}</option>
                   </Auswahl>
                 </td>
-                <td data-label="Ring-Nr.">
-                  <Eingabe aria-label={`Zeile ${i + 1}: Ringnummer`} maxLength={200} value={p.ringnummern} onChange={(e) => aendern(i, { ringnummern: e.target.value })} placeholder="freiwillig" />
+                <td data-label={tt.ringNr}>
+                  <Eingabe aria-label={`${tt.zeile(i + 1)}: ${tt.ringnummer}`} maxLength={200} value={p.ringnummern} onChange={(e) => aendern(i, { ringnummern: e.target.value })} placeholder={tt.freiwillig} />
                 </td>
-                <td data-label="Verkaufspreis (€)">
-                  <Eingabe aria-label={`Zeile ${i + 1}: Verkaufspreis`} inputMode="decimal" value={p.verkaufspreis} onChange={(e) => aendern(i, { verkaufspreis: e.target.value })} placeholder="–" className="text-right" />
+                <td data-label={`${tt.verkaufspreis} (€)`}>
+                  <Eingabe aria-label={`${tt.zeile(i + 1)}: ${tt.verkaufspreis}`} inputMode="decimal" value={p.verkaufspreis} onChange={(e) => aendern(i, { verkaufspreis: e.target.value })} placeholder="–" className="text-right" />
                 </td>
-                <td data-label="Eigene Zucht" className="pt-4 text-center">
-                  <input type="checkbox" aria-label={`Zeile ${i + 1}: eigene Zucht`} className="size-5 accent-band" checked={p.eigeneZucht} onChange={(e) => aendern(i, { eigeneZucht: e.target.checked })} />
+                <td data-label={tt.eigeneZucht} className="pt-4 text-center">
+                  <input type="checkbox" aria-label={`${tt.zeile(i + 1)}: ${tt.eigeneZucht}`} className="size-5 accent-band" checked={p.eigeneZucht} onChange={(e) => aendern(i, { eigeneZucht: e.target.checked })} />
                 </td>
                 <td className="whitespace-nowrap text-right">
-                  <Knopf variante="leise" className="text-sm" title="Gleiche Rasse und Farbe, nächstes Geschlecht/Alter" onClick={() => setPositionen([...positionen.slice(0, i + 1), neuePosition({ ...p, ...naechstesGeschlecht(p), verkaufspreis: "", ringnummern: "" }), ...positionen.slice(i + 1)])}>
-                    Nächstes Tier
+                  <Knopf variante="leise" className="text-sm" title={tt.naechstesTierTitel} onClick={() => setPositionen([...positionen.slice(0, i + 1), neuePosition({ ...p, ...naechstesGeschlecht(p), verkaufspreis: "", ringnummern: "" }), ...positionen.slice(i + 1)])}>
+                    {tt.naechstesTier}
                   </Knopf>
-                  <Knopf variante="leise" disabled={p.gesperrt || p.inHalle || fest} title={p.gesperrt ? "Bereits bewertet" : p.inHalle ? "Tier ist in der Halle" : fest ? "Katalog festgeschrieben" : "Zeile entfernen"} onClick={() => setPositionen(positionen.filter((_, j) => j !== i))} aria-label={`Zeile ${i + 1} entfernen`}>
+                  <Knopf variante="leise" disabled={p.gesperrt || p.inHalle || fest} title={p.gesperrt ? tt.bewertet : p.inHalle ? tt.inHalle : fest ? tt.festgeschrieben : tt.entfernen} onClick={() => setPositionen(positionen.filter((_, j) => j !== i))} aria-label={tt.zeileEntfernen(i + 1)}>
                     <Symbol name="schliessen" className="size-4" />
                   </Knopf>
                 </td>
@@ -452,9 +469,9 @@ export function PositionenEditor({
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Knopf onClick={() => setPositionen([...positionen, neuePosition()])}>Tier hinzufügen</Knopf>
+        <Knopf onClick={() => setPositionen([...positionen, neuePosition()])}>{tt.hinzufuegen}</Knopf>
         <span className="text-sm text-grau">
-          {positionen.length} {positionen.length === 1 ? "Zeile" : "Zeilen"}
+          {tt.zeilen(positionen.length)}
         </span>
       </div>
     </div>

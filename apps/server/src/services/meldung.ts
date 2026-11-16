@@ -1,4 +1,4 @@
-import { ALTER, EINGANG, gefordertCent, heuteBerlin, istAuslaendisch, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, normalisiereIban, normalisiereRegistriernummer, pruefeGeschlecht, pruefeIban, REGISTRIERNUMMER_HINWEIS, teilschauenLesen, teilschauVon } from "@schau/domain";
+import { ALTER, EINGANG, gefordertCent, heuteBerlin, istAuslaendisch, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, normalisiereIban, normalisiereRegistriernummer, pruefeGeschlecht, pruefeIban, REGISTRIERNUMMER_HINWEIS, teilschauenLesen, teilschauVon, texte, type Sprache } from "@schau/domain";
 import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import { z } from "zod";
 import { zufallsToken } from "../auth";
@@ -118,7 +118,7 @@ export type MeldungEingabe = z.infer<typeof meldungEingabe>;
  * `ibanVerdeckt`: Das Formular kam mit gekürzter IBAN (Helfer ohne Bankdaten-Recht) – ein leeres IBAN-Feld heißt dann
  * „unverändert“, nicht „löschen“.
  */
-export async function speichereMeldung(tx: Tx, organisationId: number, input: MeldungEingabe, akteur: Akteur, opts: { istAdmin?: boolean; ibanVerdeckt?: boolean; /** Online-Meldung eines bekannten Ausstellers: Stammdaten bleiben, wie sie sind. */ bestehendenNichtAendern?: boolean } = {}) {
+export async function speichereMeldung(tx: Tx, organisationId: number, input: MeldungEingabe, akteur: Akteur, opts: { istAdmin?: boolean; ibanVerdeckt?: boolean; /** Online-Meldung eines bekannten Ausstellers: Stammdaten bleiben, wie sie sind. */ bestehendenNichtAendern?: boolean; /** Online-Meldung: Sprache des Formulars – für Fehlermeldungen und, bei einer neuen Meldung, gespeichert (Entscheidung 020). */ sprache?: Sprache } = {}) {
   await sperreTestschauGeteilt(tx, input.schauId);
   const [s] = await tx.select().from(schau).where(eq(schau.id, input.schauId));
   if (!s || s.organisationId !== organisationId) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
@@ -151,10 +151,10 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
   }
   // Teilschau: nur eine, die es in dieser Schau gibt.
   const teilschauen = teilschauenLesen(s.teilschauen);
-  if (input.teilschau != null && !teilschauen.some((t) => t.id === input.teilschau)) throw fehler("BAD_REQUEST", "Diese Teilschau gibt es in der Schau nicht.");
+  if (input.teilschau != null && !teilschauen.some((t) => t.id === input.teilschau)) throw fehler("BAD_REQUEST", texte(opts.sprache ?? "de").fehler.teilschau);
   // Herkunft aus einem anderen Mitgliedstaat nur, wenn die Schau das zulässt (Gesundheitszertifikat, TRACES, Einlasskontrolle).
   if (!s.auslandZugelassen && istAuslaendisch(input.aussteller.registriernummer)) {
-    throw fehler("BAD_REQUEST", "Diese Schau nimmt keine Tiere aus dem Ausland an (Registriernummer mit ausländischem Ländercode). Bitte bei der Ausstellungsleitung nachfragen.");
+    throw fehler("BAD_REQUEST", texte(opts.sprache ?? "de").fehler.keinAusland);
   }
   const vorherige = input.meldungId ? (await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)))[0] : undefined;
   if (input.meldungId && (!vorherige || vorherige.schauId !== s.id)) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
@@ -330,6 +330,7 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
         erziehungsberechtigter: input.istJugend ? input.erziehungsberechtigter : "",
         erklaerungenAm: input.erklaerungen ? new Date() : null,
         zugangsToken: zufallsToken(18),
+        sprache: opts.sprache ?? "de",
       })
       .returning();
     meldungId = m!.id;

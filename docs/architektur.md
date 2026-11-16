@@ -47,6 +47,7 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
 | Teilschauen (fortlaufende Katalognummern) | `teilschau.ts`, `katalog.ts` | `routers/schau.ts` (`teilschauenSetzen`), `services/eintraege.ts`, `pdf/katalog.ts` | `einstellungen-teilschauen.tsx` |
 | Hallenplan-Entwürfe und Archiv | `hallenplan-entfernen.ts` (`halleOhneFestenPlan`) | `routers/hallenentwurf.ts`, `db/schema-hallenentwurf.ts` | `hallenplan-entwuerfe.tsx` |
 | SEPA-Lastschrift | `lastschrift.ts` | `routers/lastschrift.ts`, `db/schema-lastschrift.ts` | `lastschrift.tsx`, `aussteller-mandate.tsx`, `verein-lastschrift.tsx` |
+| Sprachen für Aussteller ([020](entscheidungen/020-sprachen-fuer-aussteller.md)) | `sprachen/` | `routers/oeffentlich.ts`, `routers/meldung.ts` (`eingangsText`) | `sprache.tsx`, `oeffentlich.tsx` |
 
 Bedienung und Hintergründe für Anwender: `docs/handbuch/` (in der App unter `/hilfe`).
 

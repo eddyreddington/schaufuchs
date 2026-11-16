@@ -1,0 +1,1 @@
+ALTER TABLE "meldung" ADD COLUMN "sprache" text DEFAULT 'de' NOT NULL;

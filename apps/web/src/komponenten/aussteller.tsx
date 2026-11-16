@@ -1,5 +1,6 @@
 import { kreisverbandZumVerein, ortZurPlz, type AdressVorschlaege } from "@schau/domain";
 import { useId, useRef } from "react";
+import { useTexte } from "../sprache";
 import { Eingabe, Feld } from "../ui";
 
 export interface AusstellerDaten {
@@ -49,6 +50,8 @@ export function AusstellerFelder({
   vorschlaege?: Partial<AdressVorschlaege>;
 }) {
   const listId = useId();
+  // Online-Meldung in der Sprache des Ausstellers; in der Oberfläche des Vereins deutsch.
+  const t = useTexte().person;
   const v = vorschlaege ?? {};
   const plz = a.plz.trim();
   const ortKey = a.ort.trim().toLocaleLowerCase("de");
@@ -103,23 +106,23 @@ export function AusstellerFelder({
     // Spalten nach dem Platz im Formular (Container), nicht nach dem Bildschirm: daneben steht oft eine Seitenleiste.
     <div className="@container">
     <div className="grid gap-4 @md:grid-cols-2 @2xl:grid-cols-4">
-      {feld("vorname", "Vorname", { auto: "given-name", muss: true })}
-      {feld("nachname", "Nachname", { auto: "family-name", muss: true })}
-      {feld("strasse", "Straße und Hausnummer", { auto: "street-address", klasse: "@md:col-span-2", muss: pflicht })}
-      {feld("plz", "PLZ", { auto: "postal-code", muss: pflicht })}
-      {feld("ort", "Ort", { auto: "address-level2", muss: pflicht })}
-      {feld("telefon", "Telefon", { typ: "tel", auto: "tel" })}
-      {feld("email", "E-Mail", { typ: "email", auto: "email", muss: pflicht })}
-      {feld("verein", "Ortsverein", { muss: pflicht })}
-      {feld("kreisverband", "Kreisverband")}
-      {feld("registriernummer", "Registriernummer", { hinweis: "12 Ziffern, z. B. 276 06 535 012 0001", muss: pflicht, klasse: "@md:col-span-2" })}
-      {feld("geburtsdatum", "Geburtsdatum (nur Jugend)", { typ: "date" })}
-      {feld("iban", "IBAN für Preisgeld und Verkauf", {
-        hinweis: a.ibanVerdeckt && !a.iban ? `Hinterlegt: ${a.ibanVerdeckt}, leer = unverändert` : "Freiwillig, sonst Barauszahlung",
+      {feld("vorname", t.vorname, { auto: "given-name", muss: true })}
+      {feld("nachname", t.nachname, { auto: "family-name", muss: true })}
+      {feld("strasse", t.strasse, { auto: "street-address", klasse: "@md:col-span-2", muss: pflicht })}
+      {feld("plz", t.plz, { auto: "postal-code", muss: pflicht })}
+      {feld("ort", t.ort, { auto: "address-level2", muss: pflicht })}
+      {feld("telefon", t.telefon, { typ: "tel", auto: "tel" })}
+      {feld("email", t.email, { typ: "email", auto: "email", muss: pflicht })}
+      {feld("verein", t.verein, { muss: pflicht })}
+      {feld("kreisverband", t.kreisverband)}
+      {feld("registriernummer", t.registriernummer, { hinweis: t.registriernummerHinweis, muss: pflicht, klasse: "@md:col-span-2" })}
+      {feld("geburtsdatum", t.geburtsdatum, { typ: "date" })}
+      {feld("iban", t.iban, {
+        hinweis: a.ibanVerdeckt && !a.iban ? t.ibanHinterlegt(a.ibanVerdeckt) : t.ibanFreiwillig,
         klasse: "@md:col-span-2",
         auto: "off",
       })}
-      {feld("kontoinhaber", "Kontoinhaber, falls abweichend", { auto: "off" })}
+      {feld("kontoinhaber", t.kontoinhaber, { auto: "off" })}
       {Object.entries(listen).map(([k, werte]) =>
         werte.length ? (
           <datalist key={k} id={`${listId}-${k}`}>

@@ -1,6 +1,6 @@
 # Handbuch für die Ausstellungsleitung
 
-SchauFUCHS 1.4.0 · Stand 15. November 2026
+SchauFUCHS 1.5.0 · Stand 16. November 2026
 
 Dieses Handbuch richtet sich an die Ausstellungsleitung, also an alle, die in SchauFUCHS die Rolle **Administrator** haben. Es führt Sie von der Anmeldung über die Einrichtung des Vereins bis durch eine komplette Schau – vom Anlegen bis zum Abschluss. Wörter in „Anführungszeichen“ stehen genau so auf dem Bildschirm. Was sich mit Version 1.2.1 geändert hat, steht in den Versionshinweisen.
 
@@ -34,7 +34,7 @@ SchauFUCHS erreichen Sie im Browser unter:
 
 Ohne Telefon geht im zweiten Schritt auch ein **Notfallcode** (siehe 1.3).
 
-Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.4.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.4.0“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
+Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.5.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.5.0“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
 
 > **Tipp:** Melden Sie sich an fremden oder gemeinsam genutzten Rechnern immer mit „Abmelden“ ab.
 
@@ -768,6 +768,15 @@ Online-Meldungen erscheinen von selbst unter „Meldungen“. Der Aussteller bek
 > **Tipp:** Eine unbezahlte Online-Meldung belegt Käfige nur 14 Tage lang. Danach zählt sie für die Hallenkapazität nicht mehr, bis sie bezahlt ist. Unbekannte oder unsinnige Meldungen lehnen Sie besser gleich ab.
 
 Ändern kann der Aussteller eine Online-Meldung nicht selbst. Änderungen erfassen Sie bzw. die Meldestelle.
+
+#### Online-Meldung in anderen Sprachen
+
+Die Seiten für Aussteller gibt es auf Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niederländisch, Polnisch und Tschechisch: Schauseite, Meldeformular, „Meine Meldung“, Ergebnisse, Impressum und Datenschutz. Die Seite öffnet in der Sprache des Browsers; oben rechts kann der Aussteller umstellen. Für einen Link in einer bestimmten Sprache hängen Sie `?sprache=en` an (ebenso `de-CH`, `fr`, `nl`, `pl`, `cs`).
+
+- Die Sprache des Formulars wird mit der Meldung gespeichert. Eingangsbestätigung, „Eingangsbestätigung mailen“, Absage der Schau und SEPA-Vorabankündigung gehen in dieser Sprache hinaus; Papiermeldungen bleiben deutsch.
+- Was Sie selbst schreiben, bleibt, wie Sie es schreiben: Schauname, Termine als Text, Sonderbestimmungen, Erklärungen zur Herkunft, Bankverbindung, Grund einer Absage. Impressum und Datenschutzhinweise gibt es nur auf Deutsch; die Seiten sagen das in der Sprache des Ausstellers. Die Kurzfassung des Datenschutzes im Formular ist übersetzt.
+- Rassen und Farbenschläge stehen im Verzeichnis deutsch. Ausländische Aussteller tippen sie deutsch ein (z. B. „wyan weiß“); das Formular sagt das im Suchfeld.
+- Ihre eigene Oberfläche bleibt immer deutsch.
 
 #### Papiermeldungen erfassen
 

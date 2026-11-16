@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { useBlocker } from "react-router-dom";
 import { fehlerText } from "./lib";
+import { useTexte } from "./sprache";
 import { Symbol } from "./symbole";
 import {
   createContext,
@@ -48,9 +49,10 @@ export function Knopf({
   children,
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variante?: Variante; gross?: boolean; laedt?: boolean }) {
+  const warten = useTexte().rahmen.bitteWarten;
   return (
     <button type="button" {...rest} disabled={rest.disabled || laedt} className={knopfKlasse(variante, gross, className)}>
-      {laedt ? "Bitte warten …" : children}
+      {laedt ? warten : children}
     </button>
   );
 }
@@ -133,17 +135,19 @@ export function UngespeichertWaechter() {
   }, []);
   const blocker = useBlocker(({ currentLocation, nextLocation }) => currentLocation.pathname !== nextLocation.pathname && etwasUngespeichert());
   const { bestaetige } = useFrage();
+  // Auf den Seiten für Aussteller in deren Sprache (der Dialog selbst liegt außerhalb des Routers).
+  const t = useTexte().rahmen;
   // Die Rückfrage ist asynchron: nicht ein zweites Mal fragen, solange die erste offen ist.
   const fragt = useRef(false);
   useEffect(() => {
     if (blocker.state !== "blocked" || fragt.current) return;
     fragt.current = true;
-    void bestaetige({ titel: "Seite verlassen?", text: "Ihre Eingaben sind noch nicht gespeichert. Seite trotzdem verlassen?", knopf: "Verlassen", gefahr: true }).then((ja) => {
+    void bestaetige({ titel: t.verlassenTitel, text: t.verlassenText, knopf: t.verlassen, abbrechen: t.abbrechen, gefahr: true }).then((ja) => {
       fragt.current = false;
       if (ja) blocker.proceed?.();
       else blocker.reset?.();
     });
-  }, [blocker, bestaetige]);
+  }, [blocker, bestaetige, t]);
   return null;
 }
 
@@ -470,7 +474,7 @@ export function Leer({ titel, children }: { titel: string; children?: ReactNode 
 }
 
 export function Laden() {
-  return <p className="py-8 text-grau">Wird geladen …</p>;
+  return <p className="py-8 text-grau">{useTexte().rahmen.laden}</p>;
 }
 
 /** Ladefehler einer Seite, wahlweise mit „Erneut versuchen“. */
@@ -537,6 +541,8 @@ interface Rueckfrage {
   mindestens?: number;
   vorgabe?: string;
   knopf?: string;
+  /** Beschriftung von „Abbrechen“ (Seiten für Aussteller in deren Sprache). */
+  abbrechen?: string;
   gefahr?: boolean;
   /** Einzeiliges Feld (z. B. eine Belegnummer) statt mehrzeilig. */
   einzeilig?: boolean;
@@ -590,7 +596,7 @@ export function FragenAnbieter({ children }: { children: ReactNode }) {
             )}
             <div className="flex flex-wrap justify-end gap-2">
               <Knopf type="button" onClick={() => ende(null)}>
-                Abbrechen
+                {frage.abbrechen ?? "Abbrechen"}
               </Knopf>
               <Knopf type="submit" variante={frage.gefahr ? "gefahr" : "primaer"} disabled={zuKurz} data-autofocus={frage.feld ? undefined : true}>
                 {frage.knopf ?? "OK"}

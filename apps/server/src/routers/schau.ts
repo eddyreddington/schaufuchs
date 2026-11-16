@@ -1,4 +1,4 @@
-import { teilschauenLesen, TEILSCHAUEN_MAX, type Aufsteller, GEBUEHR_ARTEN, KONTINGENT_BASEN, PREIS_ZIELGRUPPEN, normalisiereIban, PHASEN, PHASEN_LABEL, PREIS_QUELLEN, pruefeBic, pruefeIban, RUNDUNGEN, STANDARD_NOTENSKALA, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, halleOhneFestenPlan, fehlendeVereinsangaben, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal, datumKurz } from "@schau/domain";
+import { teilschauenLesen, TEILSCHAUEN_MAX, type Aufsteller, GEBUEHR_ARTEN, KONTINGENT_BASEN, PREIS_ZIELGRUPPEN, normalisiereIban, PHASEN, PHASEN_LABEL, PREIS_QUELLEN, pruefeBic, pruefeIban, RUNDUNGEN, STANDARD_NOTENSKALA, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, halleOhneFestenPlan, fehlendeVereinsangaben, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal, datumKurz, istSprache, texte } from "@schau/domain";
 import { and, asc, count, desc, eq, inArray, isNull, ne, sql, sum } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/client";
@@ -559,7 +559,7 @@ export const schauRouter = router({
     const betroffen = await db.transaction(async (tx) => {
       await sperreKasse(tx, s.id);
       const ms = await tx
-        .select({ id: meldung.id, status: meldung.status, ausstellerId: meldung.ausstellerId })
+        .select({ id: meldung.id, status: meldung.status, ausstellerId: meldung.ausstellerId, sprache: meldung.sprache })
         .from(meldung)
         .where(and(eq(meldung.schauId, s.id), inArray(meldung.status, ["offen", "bestaetigt"])));
       // Wie beim einzelnen Storno: was in der offenen Lastschriftdatei steht, zieht die Bank ein – erst verwerfen.
@@ -579,11 +579,14 @@ export const schauRouter = router({
       ? await db.select({ id: aussteller.id, email: aussteller.email, vorname: aussteller.vorname, nachname: aussteller.nachname }).from(aussteller).where(inArray(aussteller.id, [...new Set(betroffen.map((x) => x.ausstellerId))]))
       : [];
     for (const a of empfaenger.filter((x) => x.email)) {
+      // In der Sprache der Meldung (Entscheidung 020); der Grund steht, wie die Ausstellungsleitung ihn geschrieben hat.
+      const sprache = betroffen.find((x) => x.ausstellerId === a.id)?.sprache;
+      const t = texte(istSprache(sprache) ? sprache : "de").mail;
       await sendeMail(
         s.organisationId,
         a.email,
-        `Abgesagt: ${s.name}`,
-        `Guten Tag ${`${a.vorname} ${a.nachname}`.trim()},\n\nleider müssen wir die Schau „${s.name}“ absagen.\nGrund: ${input.grund}\n\nIhre Meldung ist damit storniert. Bereits gezahltes Meldegeld erstatten wir; die Ausstellungsleitung meldet sich dazu.\n\nMit freundlichen Grüßen\n${s.veranstalter || s.name}`,
+        t.betreffAbsage(s.name),
+        `${t.gutenTag(`${a.vorname} ${a.nachname}`.trim())}\n\n${t.absage(s.name, input.grund)}\n\n${t.gruesse}\n${s.veranstalter || s.name}`,
         a.id,
       );
     }

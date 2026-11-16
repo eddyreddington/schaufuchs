@@ -4,6 +4,7 @@
  * er sollte die Muster prüfen (lassen) und kann sie ergänzen oder durch einen eigenen Text ersetzen.
  */
 import { MANDAT_NACHWEIS_MONATE, MANDAT_VERFALL_MONATE } from "./lastschrift";
+import { texte, type Sprache } from "./sprachen";
 
 /** Verkaufsaufzeichnungen (Herkunft, Bestimmung, Registriernummer) für das Veterinäramt. */
 export const AUFBEWAHRUNG_VERKAUF_JAHRE = 3;
@@ -82,23 +83,18 @@ export function impressumAbschnitte(v: Vereinsangaben): Textabschnitt[] {
   return abschnitte;
 }
 
-function verantwortlicher(v: Vereinsangaben): string[] {
+function verantwortlicher(v: Vereinsangaben, sprache: Sprache = "de"): string[] {
+  const t = texte(sprache);
   return [
     [v.name, ...zeilen(v.anschrift)].filter(Boolean).join(", "),
-    v.vertretung.trim() ? `Vertreten durch: ${zeilen(v.vertretung).join(", ")}` : "",
-    [v.email.trim() ? `E-Mail: ${v.email.trim()}` : "", v.telefon.trim() ? `Telefon: ${v.telefon.trim()}` : ""].filter(Boolean).join(" · "),
+    v.vertretung.trim() ? `${t.vertreten} ${zeilen(v.vertretung).join(", ")}` : "",
+    [v.email.trim() ? `${t.emailKurz} ${v.email.trim()}` : "", v.telefon.trim() ? `${t.telefonKurz} ${v.telefon.trim()}` : ""].filter(Boolean).join(" · "),
   ].filter(Boolean);
 }
 
-/** Kurzfassung für das Meldeformular (erste Ebene der Information nach Art. 13 DSGVO). */
-export function datenschutzKurz(v: Vereinsangaben): string[] {
-  return [
-    `Verantwortlich: ${verantwortlicher(v).join(" · ")}.`,
-    "Wir verarbeiten Ihre Angaben, um die Schau durchzuführen: Meldung, Meldegeld, Katalog, Bewertung, Preise, Tierverkauf und Abrechnung (Art. 6 Abs. 1 lit. b DSGVO). Registriernummer, Ringnummern und Verkäufe zeichnen wir auf, weil das Tierseuchenrecht es verlangt (lit. c).",
-    "Name, Wohnort und Verein stehen mit Ihren Tieren und Bewertungen im gedruckten Katalog. Im Internet erscheinen sie nur, wenn Sie unten einwilligen (lit. a). Die Preisrichter sehen keine Namen.",
-    `Empfänger: das Veterinäramt (Verkaufsliste), die Bank bei Überweisungen und Lastschriften. Geburtsdatum und IBAN löschen wir nach der Schau, ein Lastschriftmandat ${MANDAT_NACHWEIS_MONATE} Monate nach Widerruf oder Verfall, Verkaufsaufzeichnungen nach ${AUFBEWAHRUNG_VERKAUF_JAHRE} Jahren, Belege nach ${AUFBEWAHRUNG_BELEGE_JAHRE} Jahren.`,
-    "Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Widerspruch, auf Widerruf Ihrer Einwilligung und auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde.",
-  ];
+/** Kurzfassung für das Meldeformular (erste Ebene der Information nach Art. 13 DSGVO), in der Sprache des Ausstellers. */
+export function datenschutzKurz(v: Vereinsangaben, sprache: Sprache = "de"): string[] {
+  return texte(sprache).datenschutzKurz(verantwortlicher(v, sprache).join(" · "), MANDAT_NACHWEIS_MONATE, AUFBEWAHRUNG_VERKAUF_JAHRE, AUFBEWAHRUNG_BELEGE_JAHRE);
 }
 
 /** Vollständige Datenschutzhinweise. Ein eigener Text des Vereins ersetzt das Muster. */

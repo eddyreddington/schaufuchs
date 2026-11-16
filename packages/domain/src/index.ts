@@ -47,3 +47,4 @@ export * from "./hallenplan-3d-rundgang";
 export * from "./hallenplan-umriss-pruefen";
 export * from "./zahlart";
 export * from "./lastschrift";
+export * from "./sprachen";
