@@ -65,6 +65,11 @@ export const cs: Texte = {
     mailUnterwegs: "Potvrzení vám bylo odesláno e-mailem.",
     meineMeldung: "Moje přihláška a výsledky",
   },
+  ueberweisung: {
+    verwendungszweck: "Zpráva pro příjemce:",
+    scannen: "Naskenujte v bankovní aplikaci – příjemce, částka a zpráva pro příjemce se vyplní.",
+    zweckBehalten: "Zprávu pro příjemce prosím neměňte.",
+  },
   formular: {
     pflichtfeld: "* Povinné pole",
     ihreAngaben: "Vaše údaje",
@@ -246,6 +251,8 @@ export const cs: Texte = {
     zuZahlenEinlieferung: (betrag: string) => `K zaplacení při příjmu zvířat: ${betrag}`,
     zuZahlen: (betrag: string) => `K zaplacení: ${betrag}`,
     bankverbindung: (bank: string) => `Bankovní spojení: ${bank}`,
+    verwendungszweck: (zweck: string) => `Zpráva pro příjemce: ${zweck}`,
+    giroCode: "QR kód pro bankovní aplikaci najdete na odkazu níže.",
     erstNachZahlung: "Přihláška bude zpracována až po přijetí platby.",
     pruefenLink: "Zde můžete svou přihlášku zkontrolovat a později zobrazit výsledky:",
     pruefenTiere: "Zkontrolujte prosím plemeno, barevný ráz, pohlaví a věk každého zvířete.",

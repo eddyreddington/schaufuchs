@@ -67,6 +67,11 @@ export const pl: Texte = {
     mailUnterwegs: "Potwierdzenie zostało wysłane e-mailem.",
     meineMeldung: "Moje zgłoszenie i wyniki",
   },
+  ueberweisung: {
+    verwendungszweck: "Tytuł przelewu:",
+    scannen: "Prosimy zeskanować kod w aplikacji bankowej – odbiorca, kwota i tytuł przelewu zostaną wypełnione.",
+    zweckBehalten: "Prosimy nie zmieniać tytułu przelewu.",
+  },
   formular: {
     pflichtfeld: "* Pole obowiązkowe",
     ihreAngaben: "Państwa dane",
@@ -248,6 +253,8 @@ export const pl: Texte = {
     zuZahlenEinlieferung: (betrag: string) => `Do zapłaty przy dostarczeniu zwierząt: ${betrag}`,
     zuZahlen: (betrag: string) => `Do zapłaty: ${betrag}`,
     bankverbindung: (bank: string) => `Dane bankowe: ${bank}`,
+    verwendungszweck: (zweck: string) => `Tytuł przelewu: ${zweck}`,
+    giroCode: "Kod QR dla aplikacji bankowej znajdą Państwo pod linkiem poniżej.",
     erstNachZahlung: "Zgłoszenie zostanie rozpatrzone dopiero po wpłynięciu płatności.",
     pruefenLink: "Tutaj mogą Państwo sprawdzić zgłoszenie, a później zobaczyć wyniki:",
     pruefenTiere: "Prosimy sprawdzić rasę, odmianę barwną, płeć i wiek każdego zwierzęcia.",

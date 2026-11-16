@@ -15,6 +15,7 @@ import { protokolliere, type Akteur } from "../services/protokoll";
 import { heuteDe } from "../services/tiergesundheit";
 import { adminProcedure, benutzerProcedure, fehler, ladeSchau, router, type Schau, dbId, kalenderdatum } from "../trpc";
 import { Bremse } from "../services/bremse";
+import { bankAngabe, ueberweisung, type SchauKonto, type Ueberweisung } from "../services/ueberweisung";
 import { ausstellerDerSchau, echteAussteller } from "../services/testschau";
 
 async function ladeMeldung(organisationId: number, meldungId: number) {
@@ -46,8 +47,11 @@ export function anrede(vorname: string, nachname: string) {
   return `${vorname} ${nachname}`.replace(/[^\p{L}\p{M}\s'’-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 80);
 }
 
-/** Was der Aussteller zahlt und wann – je nach Zahlungsweise der Schau (vorab per Überweisung oder bei der Einlieferung). */
-export function zahlungsZeilen(s: Pick<Schau, "bankverbindung" | "zahlungBeiEinlieferung">, betragCent: number, stiftungCent = 0, spendeCent = 0, sprache: Sprache = "de"): string[] {
+/**
+ * Was der Aussteller zahlt und wann – je nach Zahlungsweise der Schau (vorab per Überweisung oder bei der Einlieferung);
+ * mit GiroCode auch der Verwendungszweck mit Referenz (Entscheidung 021).
+ */
+export function zahlungsZeilen(s: SchauKonto, betragCent: number, stiftungCent = 0, spendeCent = 0, sprache: Sprache = "de", ue: Ueberweisung | null = null): string[] {
   const t = texte(sprache);
   const euro = (cent: number) => euroIn(cent, sprache);
   const summe = betragCent + stiftungCent + spendeCent;
@@ -55,7 +59,14 @@ export function zahlungsZeilen(s: Pick<Schau, "bankverbindung" | "zahlungBeiEinl
   const zusatz = [stiftungCent > 0 && `${t.betrag.stiftung} ${euro(stiftungCent)}`, spendeCent > 0 && `${t.betrag.spende} ${euro(spendeCent)}`].filter(Boolean);
   const betrag = zusatz.length ? `${t.betrag.meldegeld} ${euro(betragCent)} + ${zusatz.join(" + ")} = ${euro(summe)}` : euro(summe);
   if (s.zahlungBeiEinlieferung) return [t.mail.zuZahlenEinlieferung(betrag)];
-  return [t.mail.zuZahlen(betrag), s.bankverbindung ? t.mail.bankverbindung(s.bankverbindung) : "", t.mail.erstNachZahlung];
+  const bank = bankAngabe(s);
+  return [
+    t.mail.zuZahlen(betrag),
+    bank ? t.mail.bankverbindung(bank) : "",
+    ue ? t.mail.verwendungszweck(ue.zweck) : "",
+    ue?.giroCode ? t.mail.giroCode : "",
+    t.mail.erstNachZahlung,
+  ].filter(Boolean);
 }
 
 /** Link zu „Meine Meldung“ – in einer anderen Sprache als Deutsch öffnet die Seite gleich in dieser. */
@@ -64,13 +75,13 @@ export function meldungsLink(s: Pick<Schau, "slug">, token: string, sprache: Spr
 }
 
 /** Bestätigungsmail einer Meldung in der Sprache der Meldung (Entscheidung 020). */
-export function eingangsText(s: Schau, name: string, betragCent: number, link: string, online?: boolean, stiftungCent = 0, spendeCent = 0, sprache: Sprache = "de") {
+export function eingangsText(s: Schau, name: string, betragCent: number, link: string, online?: boolean, stiftungCent = 0, spendeCent = 0, sprache: Sprache = "de", ue: Ueberweisung | null = null) {
   const t = texte(sprache);
   return [
     t.mail.gutenTag(name),
     "",
     t.mail.eingegangen(s.name),
-    ...zahlungsZeilen(s, betragCent, stiftungCent, spendeCent, sprache),
+    ...zahlungsZeilen(s, betragCent, stiftungCent, spendeCent, sprache, ue),
     "",
     t.mail.pruefenLink,
     link,
@@ -420,7 +431,7 @@ export const meldungRouter = router({
       s.organisationId,
       a.email,
       texte(sprache).mail.betreffMeldung(s.name),
-      eingangsText(s, anrede(a.vorname, a.nachname), b.summeCent, meldungsLink(s, m.zugangsToken, sprache), !!m.onlineZustimmungAm, b.stiftungCent, b.spendeCent, sprache),
+      eingangsText(s, anrede(a.vorname, a.nachname), b.summeCent, meldungsLink(s, m.zugangsToken, sprache), !!m.onlineZustimmungAm, b.stiftungCent, b.spendeCent, sprache, await ueberweisung(s, m, a, b)),
       a.id,
     );
     return { ok: true };

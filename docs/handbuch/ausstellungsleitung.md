@@ -416,6 +416,32 @@ bleiben. Eingezogen wird nur bei Ausstellern mit unterschriebenem Mandat und nur
   Bankverbindung gelöscht, in früheren Lastschriftdateien auch sein Name. Mandate werden 14 Monate nach Widerruf bzw.
   Verfall gelöscht. Die Auskunft nach Art. 15 enthält die Mandate und alle Einzüge.
 
+### 3.14 Überweisung mit GiroCode {#girocode}
+
+Mit dem GiroCode überweisen Aussteller das Meldegeld per Banking-App: QR-Code scannen, prüfen, freigeben. Empfänger,
+IBAN, Betrag und Verwendungszweck sind dann schon ausgefüllt. Für den Verein kostet das nichts außer den üblichen
+Buchungsposten der Bank.
+
+- **Einschalten:** In den Einstellungen der Schau unter „Meldegeld und Konto“ → „Meldegeld zahlen“ den Eintrag
+  „vorab per Überweisung mit GiroCode“ wählen und das Vereinskonto eintragen (Kontoinhaber und IBAN; bei einem
+  Konto außerhalb des EWR auch die BIC). Den **Kontoinhaber genau so schreiben, wie die Bank ihn führt** (vollständiger
+  Vereinsname mit „e. V.“): Seit Oktober 2025 vergleicht die Bank des Ausstellers den Namen mit dem Konto und zeigt
+  sonst „ähnlich“ oder „kein Treffer“ an.
+- **Was Aussteller sehen:** Statt des freien Textes „Bankverbindung für das Meldegeld“ steht das Vereinskonto da. Jede
+  Meldung bekommt einen eigenen Verwendungszweck, der mit einer Referenz beginnt (z. B. „RF540001234 Meldegeld
+  Mueller, Hans“). Der GiroCode steht nach dem Absenden auf der Dankseite, auf „Meine Meldung“, im vorausgefüllten
+  A-Bogen und im B-Bogen, die Eingangsbestätigung nennt den Verwendungszweck und verweist auf „Meine Meldung“. Der
+  Code gilt immer über den noch offenen Betrag; ist alles bezahlt, verschwindet er. Der leere A-Bogen hat keinen Code.
+- **Wann es keinen Code gibt:** ab der Phase „Einlieferung“ (dann wird an der Kasse bezahlt oder verrechnet), bei
+  stornierten und abgelehnten Meldungen und für Aussteller mit gültigem Lastschriftmandat oder in der offenen
+  Lastschriftdatei (siehe 3.13) – sie würden sonst doppelt zahlen. Der Kontoinhaber darf höchstens 70 Zeichen haben.
+- **Ausland:** Banking-Apps in Deutschland, Österreich, Belgien, den Niederlanden und Finnland lesen den Code. Ob Apps
+  in Polen, Tschechien oder der Schweiz ihn lesen, ist nicht sicher; dort überweisen Aussteller mit dem Verwendungszweck
+  von Hand.
+- **Zahlungseingang:** Der Code meldet nichts zurück. Den Eingang buchen Sie wie bisher nach dem Kontoauszug an der
+  Meldung (siehe 5.4, „Zahlungen erfassen und bestätigen“). Die Referenz im Verwendungszweck zeigt, zu welcher Meldung
+  das Geld gehört.
+
 ## 4. Rassen und Farbenschläge
 
 Das Verzeichnis der Rassen und Farbenschläge bestimmt zweierlei: was Aussteller melden können und in welcher Reihenfolge der Katalog nummeriert wird (Ausstellungsfolge). Jede Schau nutzt **eine Version** des Verzeichnisses. So bleiben alte Kataloge stimmig, auch wenn im nächsten Jahr ein neues Verzeichnis kommt.
@@ -628,9 +654,9 @@ Die Seite „Einstellungen“ hat vier Abschnitte, die Sie einzeln speichern. We
 | „Erste Katalognummer“ | z. B. 1 oder 101 |
 | „Höchstens Tiere je Preisrichter“, „Höchstens Tiere je Obmann“ | Vorgabe 80 bzw. 60 Tiere. Ein Stamm zählt 2, Voliere und Bruteier je 3. Hat ein Preisrichter mehr, steht ein gelber Hinweis in der Prüfliste; gesperrt wird nichts. In diesem Verhältnis verteilen auch die Vorschläge der Einteilung (Obmann weniger). |
 | „Kontakt für Aussteller (E-Mail)“ | steht in der Eingangsbestätigung |
-| „Meldegeld zahlen“ | „vorab per Überweisung“ oder „bei der Einlieferung der Tiere“. Danach richten sich die Texte für Aussteller: Meldeformular, Eingangsbestätigung und „Meine Meldung“ (bei Einlieferung: „Zu zahlen bei der Einlieferung der Tiere“, keine Bankverbindung, Status „eingegangen – Zahlung bei der Einlieferung“). |
-| „Bankverbindung für das Meldegeld“ | erscheint bei Zahlung vorab im Meldeformular und in der Eingangsbestätigung |
-| „Kontoinhaber“, „IBAN“, „BIC“ | Vereinskonto für Überweisungen an Aussteller (SEPA-Datei). Ohne IBAN keine SEPA-Datei. |
+| „Meldegeld zahlen“ | „vorab per Überweisung“, „vorab per Überweisung mit GiroCode“ (siehe 3.14) oder „bei der Einlieferung der Tiere“. Danach richten sich die Texte für Aussteller: Meldeformular, Eingangsbestätigung und „Meine Meldung“ (bei Einlieferung: „Zu zahlen bei der Einlieferung der Tiere“, keine Bankverbindung, Status „eingegangen – Zahlung bei der Einlieferung“). |
+| „Bankverbindung für das Meldegeld“ | erscheint bei Zahlung vorab im Meldeformular und in der Eingangsbestätigung; mit GiroCode gilt stattdessen das Vereinskonto |
+| „Kontoinhaber“, „IBAN“, „BIC“ | Vereinskonto für Überweisungen an Aussteller (SEPA-Datei) und für den GiroCode. Ohne IBAN keine SEPA-Datei. |
 | „Preise aus dem Standgeld verteilen“ | „je Preisrichter (aus seinen Tieren)“ oder „gemeinsam für die ganze Schau“ – üblich ist je Preisrichter |
 | „Jugend als eigener Block im Katalog“ | nach dem Festschreiben gesperrt |
 | „Volieren und Stämme vor den Einzeltieren“ | nach dem Festschreiben gesperrt |

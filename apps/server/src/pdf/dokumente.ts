@@ -29,6 +29,8 @@ import {
 } from "./basis";
 import { bewertungskartenPdf as kartenNachVorlagePdf } from "./bewertungskarte";
 import { belegKopf, BRIEF_RAENDER, briefDesign, briefFuss, briefKopf, ladeBriefVorlage } from "./brief";
+import { bankAngabe, ueberweisung, type Ueberweisung } from "../services/ueberweisung";
+import { giroCodeBlock, GIROCODE_GROESSE } from "./girocode";
 import { A4_RAENDER, breite, fusstext, klasse, kopfzeile, ladeDesign, nr, type Schau, tier, unten, verein } from "./dokumente-gemeinsam";
 // Belege der Kasse und Listen für das Veterinäramt stehen in eigenen Dateien; hier weitergereicht, damit alle
 // Aufrufer weiter „./pdf/dokumente“ nutzen.
@@ -117,6 +119,7 @@ export async function ausstellerUnterlagenPdf(s: Schau, meldungIds: number[]) {
   const d = briefDesign(dVerein, vorlage);
   const auswahl = meldungen.filter((x) => meldungIds.includes(x.m.id) && x.m.status === "bestaetigt");
   const betraege = await Promise.all(auswahl.map((x) => meldebetrag(db, x.m.id)));
+  const ueberweisungen = await Promise.all(auswahl.map((x, i) => ueberweisung(s, x.m, x.a, betraege[i]!)));
   const heute = datumDe(new Date());
 
   return erzeugePdf(
@@ -127,7 +130,7 @@ export async function ausstellerUnterlagenPdf(s: Schau, meldungIds: number[]) {
         if (i > 0) doc.addPage();
         anfaenge.push(doc.bufferedPageRange().count - 1);
         const tiere = alle.filter((e) => e.meldungId === m.id && e.katalogNr != null);
-        bBogen(doc, m, a, tiere, betraege[i]!);
+        bBogen(doc, m, a, tiere, betraege[i]!, ueberweisungen[i] ?? null);
         ringkarten(doc, a, tiere);
       });
       if (auswahl.length === 0) doc.font(SANS).fontSize(10).text("Keine bestätigten Meldungen ausgewählt.");
@@ -136,7 +139,7 @@ export async function ausstellerUnterlagenPdf(s: Schau, meldungIds: number[]) {
     { margins: BRIEF_RAENDER },
   );
 
-  function bBogen(doc: Doc, m: typeof meldung.$inferSelect, a: typeof aussteller.$inferSelect, tiere: Eintrag[], b: { summeCent: number; bezahltCent: number; stiftungCent: number; spendeCent: number }) {
+  function bBogen(doc: Doc, m: typeof meldung.$inferSelect, a: typeof aussteller.$inferSelect, tiere: Eintrag[], b: { summeCent: number; bezahltCent: number; stiftungCent: number; spendeCent: number }, ue: Ueberweisung | null) {
     const x = doc.page.margins.left;
     const w = breite(doc);
     const werte = briefWerte(a, { verein: verein(s), schau: s.name, ort: s.ort, einlieferung: s.einlieferung, datum: heute });
@@ -214,6 +217,12 @@ export async function ausstellerUnterlagenPdf(s: Schau, meldungIds: number[]) {
         y = doc.page.margins.top;
       }
     };
+    // Noch offenes Meldegeld: Überweisung mit Referenz und GiroCode (Entscheidung 021).
+    if (ue) {
+      neueSeiteWenn(GIROCODE_GROESSE + 16);
+      kicker(doc, "Überweisung", x, y, d.farbe, w);
+      y = giroCodeBlock(doc, ue, bankAngabe(s), x, y + 12, w) + 5 * MM;
+    }
     if (hinweise.length) {
       neueSeiteWenn(hinweisKastenHoehe(doc, hinweise, w));
       y = hinweisKasten(doc, d, "Zur Einlieferung", hinweise, x, y, w) + 5 * MM;

@@ -2,6 +2,7 @@ import { datumIn, euroIn, gefordertCent, gruppenAbteilung, normalisiereRegistrie
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AusstellerFelder, leererAussteller } from "../komponenten/aussteller";
+import { Ueberweisung, type UeberweisungDaten } from "../komponenten/girocode";
 import { alsEingabe, neuePosition, PositionenEditor, pruefePositionen, type Position } from "../komponenten/positionen";
 import { formatKatalognummer, parseEuro } from "../lib";
 import { fehlerFuerAussteller, SprachWahl, useSprache, useTexte } from "../sprache";
@@ -93,7 +94,7 @@ export function OeffentlicheSchau() {
   const t = tx.schau;
   // Mit der Sprache: Grund „Meldung geschlossen“ und Datenschutz-Kurztext kommen übersetzt vom Server.
   const s = trpc.oeffentlich.schau.useQuery({ slug, sprache }, { placeholderData: (alt) => alt });
-  const [gemeldet, setGemeldet] = useState<{ token: string; betrag: Betrag } | null>(null);
+  const [gemeldet, setGemeldet] = useState<{ token: string; betrag: Betrag; ueberweisung: UeberweisungDaten | null } | null>(null);
   if (s.isLoading) return <Laden />;
   if (s.error?.data?.code === "TOO_MANY_REQUESTS")
     return <OeffentlicherRahmen titel={t.warten} ohneFuss><Hinweis ton="warnung">{t.vieleAnfragen}</Hinweis></OeffentlicherRahmen>;
@@ -161,7 +162,11 @@ export function OeffentlicheSchau() {
               {d.zahlungBeiEinlieferung ? "." : `. ${tx.dank.erstNachZahlung}`}
             </p>
           )}
-          {bankZeigen && gefordertCent(gemeldet.betrag) > 0 && <p className="mt-2">{tx.dank.bankverbindung} {d.bankverbindung}</p>}
+          {gemeldet.ueberweisung ? (
+            <Ueberweisung bank={d.bankverbindung} ue={gemeldet.ueberweisung} />
+          ) : (
+            bankZeigen && gefordertCent(gemeldet.betrag) > 0 && <p className="mt-2">{tx.dank.bankverbindung} {d.bankverbindung}</p>
+          )}
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
             <p>{tx.dank.mailUnterwegs}</p>
             <Link to={`meldung/${gemeldet.token}`} className={knopfKlasse("zweit")}>{tx.dank.meineMeldung}</Link>
@@ -173,7 +178,7 @@ export function OeffentlicheSchau() {
         <p className="-mb-2 text-sm">
           <a href={`/s/${slug}/a-bogen.pdf`} target="_blank" rel="noreferrer">{t.aBogen}</a>
         </p>
-        <Meldeformular slug={slug} bestimmungen={d.bestimmungen} erklaerungen={d.erklaerungen} datenschutz={d.datenschutzKurz} kaefigRegeln={d.kaefigRegeln} kaefigMasse={d.kaefigMasse} teilschauen={d.teilschauen} vorschlaege={{ vereine: d.vereine, kreisverbaende: d.kreisverbaende }} fertig={(token, betrag) => { setGemeldet({ token, betrag }); window.scrollTo(0, 0); }} />
+        <Meldeformular slug={slug} bestimmungen={d.bestimmungen} erklaerungen={d.erklaerungen} datenschutz={d.datenschutzKurz} kaefigRegeln={d.kaefigRegeln} kaefigMasse={d.kaefigMasse} teilschauen={d.teilschauen} vorschlaege={{ vereine: d.vereine, kreisverbaende: d.kreisverbaende }} fertig={(r) => { setGemeldet(r); window.scrollTo(0, 0); }} />
         </>
       ) : (
         <Hinweis ton="warnung">{d.meldung.grund}</Hinweis>
@@ -202,7 +207,7 @@ function Meldeformular({
   kaefigMasse: KaefigMasse;
   teilschauen: { id: string; name: string }[];
   vorschlaege: Pick<AdressVorschlaege, "vereine" | "kreisverbaende">;
-  fertig: (token: string, betrag: Betrag) => void;
+  fertig: (r: { token: string; betrag: Betrag; ueberweisung: UeberweisungDaten | null }) => void;
 }) {
   const sprache = useSprache();
   const tx = useTexte();
@@ -225,7 +230,7 @@ function Meldeformular({
   // Lange Formulare: vor dem Verlassen mit Eingaben warnen (nach dem Absenden ist das Formular weg).
   useUngespeichertWarnung(() => !!(a.vorname || a.nachname || a.email || positionen.some((p) => p.farbenschlag != null || p.freitext)));
   const suche = (q: string) => trpc.oeffentlich.farbenschlagSuche.useQuery({ slug, q }, { enabled: q.trim().length >= 2 });
-  const melden = trpc.oeffentlich.melden.useMutation({ onSuccess: (r) => fertig(r.token, r.betrag) });
+  const melden = trpc.oeffentlich.melden.useMutation({ onSuccess: (r) => fertig(r) });
   // Fehlerliste und Serverfehler sind fertiger Text: nach einem Sprachwechsel weg, beim nächsten Absenden neu.
   const [fehlerSprache, setFehlerSprache] = useState(sprache);
   if (fehlerSprache !== sprache) {
@@ -399,8 +404,9 @@ export function MeineMeldung() {
             {d.betrag.stiftungCent > 0 && `, ${tx.betrag.stiftung} ${euro(d.betrag.stiftungCent)}`}
             {d.betrag.spendeCent > 0 && `, ${tx.betrag.spende} ${euro(d.betrag.spendeCent)}`}, {tx.betrag.bezahlt} {euro(d.betrag.bezahltCent)}
           </span>
-          {offen > 0 && d.schau.bankverbindung && !d.schau.zahlungBeiEinlieferung && <span className="text-grau">{t.ueberweisenAn} {d.schau.bankverbindung}</span>}
+          {offen > 0 && !d.ueberweisung && (d.status === "offen" || d.status === "bestaetigt") && d.schau.bankverbindung && !d.schau.zahlungBeiEinlieferung && <span className="text-grau">{t.ueberweisenAn} {d.schau.bankverbindung}</span>}
         </div>
+        {d.ueberweisung && <Ueberweisung bank={d.schau.bankverbindung} ue={d.ueberweisung} />}
       </Abschnitt>
       <OnlineVeroeffentlichung slug={slug} token={token} online={d.online} jugend={d.jugend} />
       {!d.meldebogen && <Hinweis ton="warnung">{t.keinMeldebogen}</Hinweis>}

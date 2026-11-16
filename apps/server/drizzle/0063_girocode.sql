@@ -1,0 +1,1 @@
+ALTER TABLE "schau" ADD COLUMN "girocode" boolean DEFAULT false NOT NULL;

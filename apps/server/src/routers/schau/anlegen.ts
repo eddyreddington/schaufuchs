@@ -95,6 +95,7 @@ export const schauAnlegen = {
               vereinKontoinhaber: vorlage.vereinKontoinhaber,
               vereinIban: vorlage.vereinIban,
               vereinBic: vorlage.vereinBic,
+              girocode: vorlage.girocode,
               kontaktEmail: vorlage.kontaktEmail,
               vetRegistriernummer: vorlage.vetRegistriernummer,
               vetAmt: vorlage.vetAmt,

@@ -11,8 +11,10 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { aussteller, gebuehr, meldung } from "../db/schema";
 import { ladeVereinsangaben } from "../services/datenschutz";
-import { ladeEintraege } from "../services/eintraege";
+import { ladeEintraege, meldebetrag } from "../services/eintraege";
+import { bankAngabe, ueberweisung } from "../services/ueberweisung";
 import { briefkopf, datumDe, type Doc, erzeugePdf, fusszeilen, GRAU, HAARLINIE, kicker, MM, mitVermerk, SANS, SANS_FETT, SERIF, tabelle, textImFeld, TINTE, unterschrift } from "./basis";
+import { giroCodeBlock } from "./girocode";
 import { A4_RAENDER, breite, fusstext, kopfzeile, ladeDesign, type Schau, unten, verein } from "./dokumente-gemeinsam";
 
 /** Kästchen zum Ankreuzen, bei `an` mit Kreuz (vorausgefüllte Angaben aus der Meldung). */
@@ -57,7 +59,7 @@ export async function aBogenPdf(s: Schau, meldungId?: number) {
           .from(meldung)
           .innerJoin(aussteller, eq(aussteller.id, meldung.ausstellerId))
           .where(and(eq(meldung.id, meldungId), eq(meldung.schauId, s.id)))
-          .then(async ([x]) => (x ? { ...x, tiere: await ladeEintraege(s.id, { nurMeldungId: x.m.id }) } : null)),
+          .then(async ([x]) => (x ? { ...x, tiere: await ladeEintraege(s.id, { nurMeldungId: x.m.id }), betrag: await meldebetrag(db, x.m.id) } : null)),
   ]);
   if (meldungId != null && !vorlage) return null;
   const a = vorlage?.a;
@@ -79,6 +81,9 @@ export async function aBogenPdf(s: Schau, meldungId?: number) {
   const teilschauen = teilschauenLesen(s.teilschauen);
   const erklaerungen = s.erklaerungen.split("\n").map((z) => z.trim()).filter(Boolean);
   const mitBetrag = gebuehren.filter((g) => g.betragCent > 0);
+  // Vorausgefüllt mit offenem Meldegeld: Verwendungszweck mit Referenz und GiroCode (Entscheidung 021).
+  const ue = vorlage ? await ueberweisung(s, vorlage.m, vorlage.a, vorlage.betrag) : null;
+  const bank = bankAngabe(s);
 
   // Testschau: Vermerk auf jeder Seite wie auf Schauseite und Katalog.
   return mitVermerk(s.test ? "Testschau – keine echte Ausstellung" : null, () => erzeugePdf(
@@ -113,9 +118,13 @@ export async function aBogenPdf(s: Schau, meldungId?: number) {
         doc.text(formatEuro(g.betragCent), x + halb + 6 * MM, yG, { width: halb, align: "right", lineBreak: false });
         yG += 11;
       }
-      const zahlung = s.zahlungBeiEinlieferung ? "Zahlung bei der Einlieferung der Tiere." : s.bankverbindung ? `Mit der Meldung überweisen an: ${s.bankverbindung}` : "";
-      if (zahlung) doc.font(SANS).fontSize(7.5).fillColor(GRAU).text(zahlung, x + halb + 6 * MM, yG + 2, { width: halb });
-      y = Math.max(yAn, doc.y) + 6 * MM;
+      const zahlung = s.zahlungBeiEinlieferung ? "Zahlung bei der Einlieferung der Tiere." : bank ? `Mit der Meldung überweisen an: ${bank}` : "";
+      const yZahlung = ue
+        ? giroCodeBlock(doc, ue, bank, x + halb + 6 * MM, yG + 3, halb)
+        : zahlung
+          ? (doc.font(SANS).fontSize(7.5).fillColor(GRAU).text(zahlung, x + halb + 6 * MM, yG + 2, { width: halb }), doc.y)
+          : yG;
+      y = Math.max(yAn, yZahlung) + 6 * MM;
 
       // Aussteller.
       kicker(doc, "Aussteller", x, y, d.farbe, w);

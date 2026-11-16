@@ -142,6 +142,17 @@ Tests: `einteilung.test.ts`
 - `anteil()` – Prozentsatz in Basispunkten (1500 = 15 %), kaufmännisch gerundet auf Cent.
 - `betragInWorten()` – Betrag in Worten für Quittungen: 23550 → „zweihundertfünfunddreißig Euro und fünfzig Cent“.
 
+### girocode.ts (83 Z.)
+Überweisung des Meldegelds mit Referenz und GiroCode (Entscheidung 021): Jede Meldung bekommt eine Referenz nach ISO 11649 („RF“ + Prüfziffern), di …
+Tests: `girocode.test.ts`
+
+- `rfReferenz()` – Referenz einer Meldung, ohne Leerzeichen, z. B. „RF910001234“.
+- `istRfReferenz()` – Ist das eine gültige Referenz nach ISO 11649 (Aufbau und Prüfziffern)?
+- `verwendungszweckMeldegeld()` – Verwendungszweck einer Meldegeld-Überweisung: Referenz zuerst (die findet der Import), dann der Name lesbar für den Kassierer.
+- `GIROCODE_MAX_BYTE` – Höchstlänge des Inhalts laut EPC069-12.
+- `giroCodeText()` – Inhalt des GiroCodes (EPC069-12 Version 002, UTF-8) oder null, wenn die Angaben dafür nicht reichen (IBAN ungültig, kein Empfänger, Betrag außerhal …
+- Typen: `GiroCodeAngaben`
+
 ### hallenplan-3d-rundgang.ts (65 Z.)
 Automatischer Rundgang durch die Halle (3D): die Gänge zwischen den Reihen in Schlangenlinie, in Augenhöhe.
 Tests: `hallenplan-3d-rundgang.test.ts`
@@ -450,7 +461,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (51 Z.)
+### index.ts (52 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -653,30 +664,30 @@ Tests: `spenden.test.ts`
 - `sammelbestaetigung()` – Sammelbestätigung eines Kalenderjahres: alle Geldzuwendungen des Spenders aus diesem Jahr, die bestätigt werden dürfen (Sachzuwendungen nie – sie b …
 - Typen: `SpendeArt`, `SpendeWeg`, `SachHerkunft`, `Sachangaben`, `SpendeFuerBestaetigung`, `SpenderAnschrift`
 
-### cs.ts (275 Z.)
+### cs.ts (282 Z.)
 
 - `cs`
 
-### de.ts (280 Z.)
+### de.ts (288 Z.)
 
 - `de` – Texte der Seiten für Aussteller (öffentliche Schauseite, Online-Meldung, Meine Meldung, Ergebnisse) und der Mails an Aussteller – Deutsch ist die G …
 
-### en.ts (269 Z.)
+### en.ts (276 Z.)
 
 - `en`
 
-### fr.ts (269 Z.)
+### fr.ts (276 Z.)
 
 - `fr`
 
 ### index.ts (102 Z.)
 Sammelt alle Exporte (`export * from …`).
 
-### nl.ts (269 Z.)
+### nl.ts (276 Z.)
 
 - `nl`
 
-### pl.ts (277 Z.)
+### pl.ts (284 Z.)
 
 - `pl`
 
@@ -1051,7 +1062,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `meisterschaft.speichern` mutation · admin
 - `meisterschaft.ergebnisse` query · angemeldet – Ergebnisse aller Meisterschaften (intern, mit allen Namen).
 
-### routers/meldung.ts (439 Z.) → `meldung`
+### routers/meldung.ts (450 Z.) → `meldung`
 
 - `meldung.liste` query · angemeldet
 - `meldung.get` query · angemeldet
@@ -1067,7 +1078,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `meldung.bestaetigungSenden` mutation · angemeldet
 - `meldung.zuletzt` query · angemeldet
 
-### routers/oeffentlich.ts (440 Z.) → `oeffentlich`
+### routers/oeffentlich.ts (445 Z.) → `oeffentlich`
 
 - `oeffentlich.schau` query · öffentlich
 - `oeffentlich.rechtstexte` query · öffentlich – Impressum (§ 5 DDG) und Datenschutzhinweise (Art. 13 DSGVO) des ausrichtenden Vereins.
@@ -1108,7 +1119,7 @@ Rassebilder: ansehen (alle Benutzer) und pflegen (Ausstellungsleitung).
 - `rassebild.angabenSetzen` mutation · admin – Urheber, Lizenz, Quelle und „geprüft“ ändern.
 - `rassebild.loeschen` mutation · admin
 
-### routers/schau/anlegen.ts (282 Z.) → `schau`
+### routers/schau/anlegen.ts (283 Z.) → `schau`
 Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
 
 - `schau.anlegen` mutation · admin – Neue Schau anlegen – leer mit Startwerten oder aus einer früheren Schau des Vereins als Vorlage.
@@ -1117,7 +1128,7 @@ Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau l�
 - `schau.alsTestschau` mutation · admin – Eine bestehende Schau als Testschau kennzeichnen (z. B. eine zum Üben angelegte mit Demo-Meldungen): ihre Aussteller werden Test-Aussteller und ver …
 - `schau.testschauVorschau` query · admin – Vor dem Kennzeichnen: wer würde Test-Aussteller, wer ist echt (und verhindert es)?
 
-### routers/schau/einstellungen.ts (224 Z.) → `schau`
+### routers/schau/einstellungen.ts (235 Z.) → `schau`
 Einstellungen einer Schau: Felder speichern, Reihenfolge der Katalognummern, Teilschauen und Notenskala.
 
 - `schau.aktualisieren` mutation · admin
@@ -1270,7 +1281,7 @@ Prozeduren: schau.notenskalaSetzen
 ### einstellungen-preise.tsx (247 Z.)
 Prozeduren: schau.gebuehrenSetzen, schau.preisartLoeschen, schau.preisartSpeichern
 
-### einstellungen-stammangaben.tsx (286 Z.)
+### einstellungen-stammangaben.tsx (301 Z.)
 Prozeduren: schau.aktualisieren, stammdaten.versionen
 
 ### einstellungen-teilschauen.tsx (69 Z.)
@@ -1412,7 +1423,7 @@ Prozeduren: meldung.adressVorschlaege, meldung.ausstellerSuche, meldung.bestaeti
 ### meldungen.tsx (130 Z.) – `/schau/:schauId/meldungen`
 Prozeduren: meldung.liste, schau.get
 
-### oeffentlich.tsx (559 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
+### oeffentlich.tsx (565 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
 Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.meineMeldung, oeffentlich.melden, oeffentlich.onlineVeroeffentlichung, oeffentlich.rechtstexte, oeffentlich.schau
 
 ### preise.tsx (462 Z.) – `/schau/:schauId/preise`
@@ -1521,6 +1532,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `textbausteine.ts` (50 Z.) · TEXTBAUSTEINE_GRUNDBESTAND, legeTextbausteineAn, TEXTBAUSTEINE_MAX, sperreBausteine, ergaenzeGrundbestand
 - `tiergesundheit.ts` (28 Z.) · heuteDe, nachweisStand
 - `tierliste.ts` (106 Z.) · ladeTierliste
+- `ueberweisung.ts` (54 Z.) – Überweisung des Meldegelds (Entscheidung 021): welche Bankverbindung Aussteller sehen, und je Meldung Verwendungszweck mit Referenz und GiroCode. · girocodeAktiv, bankAngabe, ueberweisung
 - `vereinsverzeichnis.ts` (90 Z.) · verzeichnisVorschlaegeZwischengespeichert, verzeichnisVergessen, vereineEinspielen
 - `verkaufsliste.ts` (55 Z.) · ladeVerkaufsliste
 - `zuwendungsbestaetigung.ts` (95 Z.) – Zuwendungsbestätigungen ausstellen und stornieren (Entscheidung 013). · bestaetigeSpende, sammelbestaetige, storniereBestaetigung
@@ -1529,7 +1541,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 ### PDFs `apps/server/src/pdf`
 
-- `a-bogen.ts` (266 Z.) – A-Bogen (Meldebogen) zum Ausdrucken: der Aussteller füllt ihn aus, unterschreibt und schickt ihn an die Meldestelle; mit der Unterschrift erkennt e … · aBogenPdf
+- `a-bogen.ts` (275 Z.) – A-Bogen (Meldebogen) zum Ausdrucken: der Aussteller füllt ihn aus, unterschreibt und schickt ihn an die Meldestelle; mit der Unterschrift erkennt e … · aBogenPdf
 - `auskunft.ts` (296 Z.) · auskunftPdf
 - `basis.ts` (425 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, teilSeite, seitenzahlen, tabelle, textImFeld, angaben, hinweisKastenHoehe, hinweisKasten, unterschrift, ueberschrift, datumDe
 - `bewertungskarte.ts` (325 Z.) – Bewertungskarten nach der Druckvorlage der Schau (Format, Bausteine oder Vordruck-Felder, Versatz) – dazu die Vorschau für den Designer und der Pro … · ladeKartenVorlage, kartenKopf, bewertungskartenPdf, BEISPIEL_KARTEN, zeichneKartenPdf, probedruckPdf
@@ -1537,7 +1549,8 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `dokumente-amt.ts` (245 Z.) – Listen für das Veterinäramt: abgegebene Tiere (Verkaufsliste) und Aussteller- und Tierliste. · verkaufslistePdf, tierlistePdf
 - `dokumente-gemeinsam.ts` (35 Z.) – Gemeinsame Hilfen der Dokumente einer Schau (dokumente.ts, dokumente-kasse.ts, dokumente-amt.ts): Design aus der Katalog-Gestaltung, Vereinsname, K … · nr, klasse, tier, A4_RAENDER, ladeDesign, verein, kopfzeile, fusstext, breite, unten
 - `dokumente-kasse.ts` (344 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
-- `dokumente.ts` (544 Z.) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf
+- `dokumente.ts` (553 Z.) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf
+- `girocode.ts` (38 Z.) – GiroCode im PDF (Entscheidung 021): QR-Code als Vektorgrafik (scharf in jedem Druck), daneben Bankverbindung und Verwendungszweck. · GIROCODE_GROESSE, qrZeichnen, giroCodeBlock
 - `hallenplan.ts` (417 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog-anhang.ts` (147 Z.) – Katalog-PDF, Anhang: kommende Schauen, Anzeigen der Förderer und Notizseiten bis zur vollen Heftlage. · kommendeSchauenSeite, anzeigenSeiten, notizSeiten
@@ -1566,7 +1579,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `schema-mandant.ts` (131 Z.) – Mandant (Verein) mit Benutzern und Sitzungen; Stammdaten des Verzeichnisses (Sparten, Rassen, Farbenschläge je Version). · organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag
 - `schema-meldung.ts` (165 Z.) – Aussteller und Meldungen: Aussteller, Meldung, Zahlung des Meldegelds, Katalogeinträge (Tiere). · aussteller, meldung, zahlung, katalogeintrag
 - `schema-protokoll.ts` (73 Z.) – Protokoll und Post: Änderungsprotokoll mit Hash-Kette und ihren Vermerken, Postausgang. · aenderung, postausgang, aenderungKette, aenderungGeloescht, aenderungAnonymisiert
-- `schema-schau.ts` (138 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
+- `schema-schau.ts` (143 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
 - `schema-spenden.ts` (115 Z.) – Spenden (Entscheidung 013): Spenderverzeichnis des Vereins, Spenden je Schau und Zuwendungsbestätigungen. · spender, spende, zuwendungsbestaetigung, bestaetigungSpende
 - `schema-termine.ts` (68 Z.) – Kommende Schauen: abonnierte Kalender und Termine anderer Schauen für den Katalog. · TERMIN_STATUS, terminabo, schautermin
 - `schema-verkauf.ts` (138 Z.) – Preise, Verkauf, Geld: Stiftungen, Preisvergabe, Verkauf mit Zahlungseingang, Tiergesundheit, Auszahlungen. · stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung
@@ -1600,6 +1613,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 ### Web-Bausteine `apps/web/src`
 
 - `aussteller.tsx` (138 Z.) · leererAussteller, AusstellerFelder
+- `girocode.tsx` (42 Z.) – Überweisung des Meldegelds für Aussteller (Entscheidung 021): Bankverbindung, Verwendungszweck mit Referenz und der GiroCode zum Scannen mit der Ba … · Ueberweisung
 - `positionen.tsx` (479 Z.) · neuePosition, alsEingabe, pruefePositionen, ausEintrag, FarbenschlagWahl, PositionenEditor
 - `abmeldung.tsx` (78 Z.) · eingabeVorMs, useAutoAbmeldung, AbmeldeHinweis
 - `lib.ts` (42 Z.) · fehlerText, datum, datumZeit, heuteIso, centZuText, ALTER_LABEL
@@ -1640,7 +1654,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `11-runde6-bausteine.ts` (239 Z.) – Audit Runde 6, Textbausteine, Zwei-Faktor-Pflicht.
 - `12-runde7-rollen-kasse.ts` (265 Z.) – Audit Runde 7, Rollen (Meldungen, Noten, Preise, Meldegeld), Nachtrag nach dem Tagesabschluss.
 - `13-luecken.ts` (210 Z.) – Prozeduren, die bisher in keinem Test aufgerufen wurden (Code-Review nach Runde 7): je Prozedur Wirkung, Rechte und Grenzen.
-- `14-konzept-audit.ts` (125 Z.) – Restpunkte aus Audit Runde 7 und Konzept-Abgleich: Meldephase nur mit Gebühren und Meldeschluss, Hinweise vor der Freigabe, Zahlungsweise (vorab od …
+- `14-konzept-audit.ts` (126 Z.) – Restpunkte aus Audit Runde 7 und Konzept-Abgleich: Meldephase nur mit Gebühren und Meldeschluss, Hinweise vor der Freigabe, Zahlungsweise (vorab od …
 - `15-info-runde7.ts` (35 Z.) – Info-Hinweise aus Audit Runde 7 (Mengenbremse je /48).
 - `16-schau-loeschen.ts` (60 Z.) – Leere Schau löschen (z. B. eine angelegte Test-Schau).
 - `17-kaefige.ts` (234 Z.) – Käfigbedarf je Käfiggröße und abweichende Größe je Rasse.
@@ -1685,5 +1699,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `56-grundriss.ts` (62 Z.) – Freier Grundriss der Halle (Entscheidung 019): speichern, prüfen (gültig, passt zu Breite/Länge, nichts außerhalb), ein Rechteck als Grundriss gilt …
 - `57-sprachen.ts` (91 Z.) – Sprachen der Seiten und Mails für Aussteller (Entscheidung 020): Schauseite, Fehlermeldungen der Online-Meldung, Sprache an der Meldung, Bestätigun …
 - `58-a-bogen.ts` (66 Z.) – A-Bogen (Meldebogen zum Ausfüllen und Unterschreiben): leer öffentlich über die Schauseite, leer und vorausgefüllt für die Ausstellungsleitung.
+- `59-girocode.ts` (146 Z.) – Überweisung mit Referenz und GiroCode (Entscheidung 021): nur mit vollständigem Vereinskonto, Referenz je Meldung im Verwendungszweck, Code über de …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

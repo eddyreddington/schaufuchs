@@ -45,8 +45,9 @@ describe("Audit-Restpunkte und Konzept-Abgleich", () => {
 
   test("Zahlungsweise: vorab per Überweisung oder bei der Einlieferung, 0,00 € ohne Zahlungsaufforderung", async () => {
     const { zahlungsZeilen } = await import("../routers/meldung");
-    const vorab = { bankverbindung: "IBAN DE00 Testbank", zahlungBeiEinlieferung: false };
-    const einlieferung = { bankverbindung: "IBAN DE00 Testbank", zahlungBeiEinlieferung: true };
+    const konto = { girocode: false, vereinKontoinhaber: "", vereinIban: "", vereinBic: "" };
+    const vorab = { ...konto, bankverbindung: "IBAN DE00 Testbank", zahlungBeiEinlieferung: false };
+    const einlieferung = { ...konto, bankverbindung: "IBAN DE00 Testbank", zahlungBeiEinlieferung: true };
     expect(zahlungsZeilen(vorab, 800).join(" ")).toContain("Die Meldung wird erst nach Zahlungseingang bearbeitet.");
     expect(zahlungsZeilen(vorab, 800).join(" ")).toContain("IBAN DE00 Testbank");
     const bei = zahlungsZeilen(einlieferung, 800, 500).join(" ");

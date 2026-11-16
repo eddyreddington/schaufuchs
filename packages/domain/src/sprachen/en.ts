@@ -59,6 +59,11 @@ export const en: Texte = {
     mailUnterwegs: "A confirmation is on its way by e-mail.",
     meineMeldung: "My entry and results",
   },
+  ueberweisung: {
+    verwendungszweck: "Payment reference:",
+    scannen: "Scan with your banking app: payee, amount and reference are then filled in.",
+    zweckBehalten: "Please keep the payment reference unchanged.",
+  },
   formular: {
     pflichtfeld: "* Required field",
     ihreAngaben: "Your details",
@@ -240,6 +245,8 @@ export const en: Texte = {
     zuZahlenEinlieferung: (betrag: string) => `To be paid when the animals are brought in: ${betrag}`,
     zuZahlen: (betrag: string) => `Amount due: ${betrag}`,
     bankverbindung: (bank: string) => `Bank details: ${bank}`,
+    verwendungszweck: (zweck: string) => `Payment reference: ${zweck}`,
+    giroCode: "A QR code for your banking app is available via the link below.",
     erstNachZahlung: "Your entry will only be processed once payment has been received.",
     pruefenLink: "Here you can check your entry and later see your results:",
     pruefenTiere: "Please check the breed, colour variety, sex and age of each animal.",

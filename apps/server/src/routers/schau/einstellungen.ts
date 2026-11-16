@@ -1,5 +1,5 @@
 /** Einstellungen einer Schau: Felder speichern, Reihenfolge der Katalognummern, Teilschauen und Notenskala. */
-import { teilschauenLesen, TEILSCHAUEN_MAX, KONTINGENT_BASEN, normalisiereIban, pruefeBic, pruefeIban, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal } from "@schau/domain";
+import { teilschauenLesen, TEILSCHAUEN_MAX, KONTINGENT_BASEN, imEwr, normalisiereIban, pruefeBic, pruefeIban, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal } from "@schau/domain";
 import { and, count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
@@ -38,6 +38,9 @@ const schauFelder = z.object({
   kontingentJe: z.enum(KONTINGENT_BASEN),
   /** Meldegeld bei der Einlieferung statt vorab per Überweisung (Texte für Aussteller). */
   zahlungBeiEinlieferung: z.boolean().default(false),
+  /** Überweisung mit Referenz und GiroCode auf das Vereinskonto (Entscheidung 021). */
+  // Fehlt das Feld (älterer Browser-Tab, Skript), bleibt der Stand – sonst schaltete jedes Speichern den Code ab.
+  girocode: z.boolean().optional(),
   bestimmungen: z.string().max(20_000),
   bankverbindung: z.string().max(500),
   kontaktEmail: z.string().max(500),
@@ -82,6 +85,14 @@ export const einstellungen = {
     .input(z.object({ id: dbId, daten: schauFelder }))
     .mutation(async ({ ctx, input }) => {
       const alt = await ladeSchau(ctx.benutzer.organisationId, input.id);
+      // Der GiroCode trägt Kontoinhaber und IBAN des Vereinskontos – ohne sie gäbe es keinen gültigen Code.
+      const dt = input.daten;
+      if ((dt.girocode ?? alt.girocode) && !dt.zahlungBeiEinlieferung) {
+        if (!dt.vereinIban || !dt.vereinKontoinhaber) throw fehler("BAD_REQUEST", "Für den GiroCode bitte Kontoinhaber und IBAN des Vereinskontos eintragen.");
+        // Im Code stehen höchstens 70 Zeichen; ein gekürzter Name ergäbe bei der Empfängerüberprüfung „ähnlich“.
+        if ([...dt.vereinKontoinhaber].length > 70) throw fehler("BAD_REQUEST", "Für den GiroCode darf der Kontoinhaber höchstens 70 Zeichen haben.");
+        if (!imEwr(dt.vereinIban) && !dt.vereinBic) throw fehler("BAD_REQUEST", "Das Vereinskonto liegt außerhalb des EWR – für den GiroCode bitte auch die BIC eintragen.");
+      }
       if (input.daten.slug !== alt.slug) {
         // Ab der Meldung stecken Links in versandten Mails („Meine Meldung“, Widerruf) und in den Tablets der Preisrichter.
         if (alt.phase !== "vorbereitung") throw fehler("BAD_REQUEST", "Die Kurzadresse lässt sich nur in der Vorbereitung ändern – danach würden versandte Links und angemeldete Tablets ungültig.");

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { fehlerText } from "../lib";
 import { VetAmtFeld } from "./einstellungen-vetamt";
 import { trpc, type Ausgabe } from "../trpc";
-import { Auswahl, Eingabe, Feld, FormAbschnitt, Formular, Haken, Hinweis, Knopf, Speicherleiste, Textfeld, useAenderungenWarnen, useMeldung } from "../ui";
+import { Auswahl, Eingabe, Feld, FormAbschnitt, Formular, Haken, HilfeLink, Hinweis, Knopf, Speicherleiste, Textfeld, useAenderungenWarnen, useMeldung } from "../ui";
 
 /*
  * Einstellungen der Schau, großes Formular „Stammangaben“: Schau, Termine, Meldegeld und Konto, Katalog und Preise,
@@ -39,6 +39,7 @@ export function Stammangaben({ schau: s }: { schau: Schau }) {
     bestimmungen: s.bestimmungen,
     bankverbindung: s.bankverbindung,
     zahlungBeiEinlieferung: s.zahlungBeiEinlieferung,
+    girocode: s.girocode,
     kontaktEmail: s.kontaktEmail,
     vereinKontoinhaber: s.vereinKontoinhaber,
     vereinIban: s.vereinIban,
@@ -121,22 +122,36 @@ export function Stammangaben({ schau: s }: { schau: Schau }) {
           </Feld>
           {text("reklamationsfrist", "Reklamationsfrist", undefined, "date")}
         </FormAbschnitt>
-        <FormAbschnitt id="zahlung" titel="Meldegeld und Konto">
+        <FormAbschnitt id="zahlung" titel="Meldegeld und Konto" aktionen={<HilfeLink abschnitt="girocode">Hilfe zum GiroCode</HilfeLink>}>
           <Feld label="Meldegeld zahlen">
             {(fid) => (
-              <Auswahl id={fid} value={d.zahlungBeiEinlieferung ? "einlieferung" : "vorab"} onChange={(e) => set("zahlungBeiEinlieferung", e.target.value === "einlieferung")}>
+              <Auswahl
+                id={fid}
+                value={d.zahlungBeiEinlieferung ? "einlieferung" : d.girocode ? "girocode" : "vorab"}
+                onChange={(e) => {
+                  set("zahlungBeiEinlieferung", e.target.value === "einlieferung");
+                  set("girocode", e.target.value === "girocode");
+                }}
+              >
                 <option value="vorab">vorab per Überweisung</option>
+                <option value="girocode">vorab per Überweisung mit GiroCode</option>
                 <option value="einlieferung">bei der Einlieferung der Tiere</option>
               </Auswahl>
             )}
           </Feld>
-          {text("bankverbindung", "Bankverbindung für das Meldegeld", d.zahlungBeiEinlieferung ? "Wird bei Zahlung bei der Einlieferung nicht angezeigt" : undefined)}
+          {d.girocode && !d.zahlungBeiEinlieferung ? (
+            <Feld label="Bankverbindung für das Meldegeld" hinweis="Mit GiroCode: das Vereinskonto unten">
+              {(fid) => <Eingabe id={fid} disabled value={[d.vereinKontoinhaber, d.vereinIban].filter(Boolean).join(", ")} />}
+            </Feld>
+          ) : (
+            text("bankverbindung", "Bankverbindung für das Meldegeld", d.zahlungBeiEinlieferung ? "Wird bei Zahlung bei der Einlieferung nicht angezeigt" : undefined)
+          )}
           <Feld label="Provision Tierverkauf (%)">
             {(fid) => <Eingabe id={fid} type="number" min={0} max={50} step={0.5} value={d.provisionBp / 100} onChange={(e) => set("provisionBp", Math.round(Number(e.target.value) * 100))} />}
           </Feld>
           <div className="grid gap-4 rounded-lg border border-linie bg-papier p-4 md:col-span-2 md:grid-cols-3">
-            <p className="text-sm font-semibold md:col-span-3">Vereinskonto für Auszahlungen (SEPA)</p>
-            {text("vereinKontoinhaber", "Kontoinhaber")}
+            <p className="text-sm font-semibold md:col-span-3">Vereinskonto für Auszahlungen (SEPA){d.girocode && !d.zahlungBeiEinlieferung ? " und GiroCode" : ""}</p>
+            {text("vereinKontoinhaber", "Kontoinhaber", d.girocode && !d.zahlungBeiEinlieferung ? "Genau wie bei der Bank" : undefined)}
             {text("vereinIban", "IBAN")}
             {text("vereinBic", "BIC", "Freiwillig")}
           </div>

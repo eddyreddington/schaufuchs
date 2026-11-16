@@ -59,6 +59,11 @@ export const fr: Texte = {
     mailUnterwegs: "Une confirmation vous a été envoyée par e-mail.",
     meineMeldung: "Mon inscription et mes résultats",
   },
+  ueberweisung: {
+    verwendungszweck: "Référence du paiement :",
+    scannen: "Scannez avec votre application bancaire : bénéficiaire, montant et référence sont alors préremplis.",
+    zweckBehalten: "Merci de ne pas modifier la référence du paiement.",
+  },
   formular: {
     pflichtfeld: "* Champ obligatoire",
     ihreAngaben: "Vos coordonnées",
@@ -240,6 +245,8 @@ export const fr: Texte = {
     zuZahlenEinlieferung: (betrag: string) => `À payer à l’enlogement des animaux : ${betrag}`,
     zuZahlen: (betrag: string) => `Montant à payer : ${betrag}`,
     bankverbindung: (bank: string) => `Coordonnées bancaires : ${bank}`,
+    verwendungszweck: (zweck: string) => `Référence du paiement : ${zweck}`,
+    giroCode: "Un code QR pour votre application bancaire est disponible via le lien ci-dessous.",
     erstNachZahlung: "L’inscription ne sera traitée qu’après réception du paiement.",
     pruefenLink: "Ici, vous pouvez vérifier votre inscription et consulter plus tard vos résultats :",
     pruefenTiere: "Veuillez vérifier la race, la variété, le sexe et l’âge de chaque animal.",

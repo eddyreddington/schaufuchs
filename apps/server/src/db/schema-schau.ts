@@ -50,6 +50,11 @@ export const schau = pgTable("schau", {
   vereinKontoinhaber: text("verein_kontoinhaber").notNull().default(""),
   vereinIban: text("verein_iban").notNull().default(""),
   vereinBic: text("verein_bic").notNull().default(""),
+  /**
+   * Meldegeld per Überweisung auf das Vereinskonto mit Referenz je Meldung und GiroCode (Entscheidung 021). Angezeigt
+   * werden dann Kontoinhaber und IBAN des Vereinskontos statt des freien Textes `bankverbindung`.
+   */
+  girocode: boolean("girocode").notNull().default(false),
   kontaktEmail: text("kontakt_email").notNull().default(""),
   // Tierseuchenrecht: Registrierung der Veranstaltung und Anzeige beim Veterinäramt (4 Wochen vorher).
   vetRegistriernummer: text("vet_registriernummer").notNull().default(""),

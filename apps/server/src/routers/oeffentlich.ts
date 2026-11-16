@@ -17,6 +17,7 @@ import { anrede, eingangsText, meldungsLink } from "./meldung";
 import { sucheFarbenschlag } from "./stammdaten";
 import { oeffentlicherStand } from "../services/zwischenspeicher";
 import { ausstellerDerSchau } from "../services/testschau";
+import { bankAngabe, ueberweisung } from "../services/ueberweisung";
 
 async function ladeOeffentlich(slug: string) {
   const [s] = await db.select().from(schau).where(eq(schau.slug, slug));
@@ -137,7 +138,7 @@ export const oeffentlichRouter = router({
       aussetzen: s.aussetzen,
       bestimmungen: s.bestimmungen,
       erklaerungen: s.erklaerungen.split("\n").map((z) => z.trim()).filter(Boolean),
-      bankverbindung: s.bankverbindung,
+      bankverbindung: bankAngabe(s),
       zahlungBeiEinlieferung: s.zahlungBeiEinlieferung,
       /** Für die Anzeige der Käfiggröße je Meldezeile. */
       kaefigRegeln: s.kaefigRegeln ?? [],
@@ -208,13 +209,15 @@ export const oeffentlichRouter = router({
     const [eintraege, betrag] = await Promise.all([ladeEintraege(s.id, { nurMeldungId: m.id }), meldebetrag(db, m.id)]);
     const skala = skalaVon(s);
     return {
-      schau: { name: s.name, test: s.test, bankverbindung: s.bankverbindung, zahlungBeiEinlieferung: s.zahlungBeiEinlieferung, freigegeben: s.ergebnisseFreigegeben },
+      schau: { name: s.name, test: s.test, bankverbindung: bankAngabe(s), zahlungBeiEinlieferung: s.zahlungBeiEinlieferung, freigegeben: s.ergebnisseFreigegeben },
       status: m.status,
       name: `${a!.vorname} ${a!.nachname}`,
       online: !!m.onlineZustimmungAm,
       jugend: m.istJugend,
       meldebogen: !!m.zustimmungAm,
       betrag,
+      // Verwendungszweck und GiroCode nur für eine gültige Meldung mit offenem Betrag (Entscheidung 021).
+      ueberweisung: await ueberweisung(s, m, a!, betrag),
       tiere: eintraege
         .sort((x, y) => (x.katalogNr ?? 1e9) - (y.katalogNr ?? 1e9) || x.position - y.position)
         .map((e) => ({
@@ -428,13 +431,15 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
     throw e;
   });
   const [m] = await db.select().from(meldung).where(eq(meldung.id, r.meldungId));
+  const [a] = await db.select({ vorname: aussteller.vorname, nachname: aussteller.nachname }).from(aussteller).where(eq(aussteller.id, r.ausstellerId));
+  const ue = await ueberweisung(s, m!, a!, r.betrag);
   await sendeMail(
     s.organisationId,
     email,
     t.mail.betreffMeldung(s.name),
     // Anrede nur aus Buchstaben: sie ist frei eingegeben und ginge sonst mit Links als Werbung mit Vereinsabsender hinaus.
-    eingangsText(s, anrede(input.aussteller.vorname, input.aussteller.nachname), r.betrag.summeCent, meldungsLink(s, m!.zugangsToken, input.sprache), input.onlineVeroeffentlichung, r.betrag.stiftungCent, r.betrag.spendeCent, input.sprache),
+    eingangsText(s, anrede(input.aussteller.vorname, input.aussteller.nachname), r.betrag.summeCent, meldungsLink(s, m!.zugangsToken, input.sprache), input.onlineVeroeffentlichung, r.betrag.stiftungCent, r.betrag.spendeCent, input.sprache, ue),
     r.ausstellerId,
   );
-  return { token: m!.zugangsToken, betrag: r.betrag };
+  return { token: m!.zugangsToken, betrag: r.betrag, ueberweisung: ue };
 }

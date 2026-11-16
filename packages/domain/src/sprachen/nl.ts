@@ -59,6 +59,11 @@ export const nl: Texte = {
     mailUnterwegs: "Er is een bevestiging per e-mail onderweg.",
     meineMeldung: "Mijn inschrijving en uitslagen",
   },
+  ueberweisung: {
+    verwendungszweck: "Omschrijving:",
+    scannen: "Scan met uw bank-app: begunstigde, bedrag en omschrijving zijn dan ingevuld.",
+    zweckBehalten: "Neem de omschrijving ongewijzigd over.",
+  },
   formular: {
     pflichtfeld: "* Verplicht veld",
     ihreAngaben: "Uw gegevens",
@@ -240,6 +245,8 @@ export const nl: Texte = {
     zuZahlenEinlieferung: (betrag: string) => `Te betalen bij het inkooien van de dieren: ${betrag}`,
     zuZahlen: (betrag: string) => `Te betalen: ${betrag}`,
     bankverbindung: (bank: string) => `Bankgegevens: ${bank}`,
+    verwendungszweck: (zweck: string) => `Omschrijving: ${zweck}`,
+    giroCode: "Via de link hieronder vindt u een QR-code voor uw bank-app.",
     erstNachZahlung: "De inschrijving wordt pas na ontvangst van de betaling verwerkt.",
     pruefenLink: "Hier kunt u uw inschrijving controleren en later uw uitslagen bekijken:",
     pruefenTiere: "Controleer ras, kleurslag, geslacht en leeftijd van elk dier.",

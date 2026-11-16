@@ -68,6 +68,12 @@ export const de = {
     mailUnterwegs: "Eine Bestätigung ist per E-Mail unterwegs.",
     meineMeldung: "Meine Meldung und Ergebnisse",
   },
+  /** Überweisung mit Referenz und GiroCode (Entscheidung 021). */
+  ueberweisung: {
+    verwendungszweck: "Verwendungszweck:",
+    scannen: "Mit der Banking-App scannen: Empfänger, Betrag und Verwendungszweck sind dann ausgefüllt.",
+    zweckBehalten: "Bitte den Verwendungszweck unverändert übernehmen.",
+  },
   formular: {
     pflichtfeld: "* Pflichtfeld",
     ihreAngaben: "Ihre Angaben",
@@ -249,6 +255,8 @@ export const de = {
     zuZahlenEinlieferung: (betrag: string) => `Zu zahlen bei der Einlieferung der Tiere: ${betrag}`,
     zuZahlen: (betrag: string) => `Zu zahlen: ${betrag}`,
     bankverbindung: (bank: string) => `Bankverbindung: ${bank}`,
+    verwendungszweck: (zweck: string) => `Verwendungszweck: ${zweck}`,
+    giroCode: "Einen GiroCode für Ihre Banking-App finden Sie unter dem Link unten.",
     erstNachZahlung: "Die Meldung wird erst nach Zahlungseingang bearbeitet.",
     pruefenLink: "Hier können Sie Ihre Meldung prüfen und später Ihre Ergebnisse sehen:",
     pruefenTiere: "Bitte prüfen Sie Rasse, Farbenschlag, Geschlecht und Alter jedes Tieres.",
