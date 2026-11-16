@@ -1,6 +1,6 @@
 <h1 id="handbuch-für-die-ausstellungsleitung">Handbuch für die
 Ausstellungsleitung</h1>
-<p>SchauFUCHS 1.6.2 · Stand 16. November 2026</p>
+<p>SchauFUCHS 1.7.0 · Stand 16. November 2026</p>
 <p>Dieses Handbuch richtet sich an die Ausstellungsleitung, also an
 alle, die in SchauFUCHS die Rolle <strong>Administrator</strong> haben.
 Es führt Sie von der Anmeldung über die Einrichtung des Vereins bis
@@ -38,13 +38,13 @@ Authenticator-App ein und klicken Sie erneut auf „Anmelden“.</li>
 <p>Ohne Telefon geht im zweiten Schritt auch ein
 <strong>Notfallcode</strong> (siehe 1.3).</p>
 <p>Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit
-dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.6.2“),
+dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.7.0“),
 dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“,
 „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen
 und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick
 auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf
 mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit
-der Versionsnummer („SchauFUCHS 1.6.2“), die Darstellung (siehe 1.5),
+der Versionsnummer („SchauFUCHS 1.7.0“), die Darstellung (siehe 1.5),
 „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale
 Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 /
 Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die
@@ -950,6 +950,44 @@ Lastschriftdateien auch sein Name. Mandate werden 14 Monate nach
 Widerruf bzw. Verfall gelöscht. Die Auskunft nach Art. 15 enthält die
 Mandate und alle Einzüge.</li>
 </ul>
+<h3 id="girocode">3.14 Überweisung mit GiroCode</h3>
+<p>Mit dem GiroCode überweisen Aussteller das Meldegeld per Banking-App:
+QR-Code scannen, prüfen, freigeben. Empfänger, IBAN, Betrag und
+Verwendungszweck sind dann schon ausgefüllt. Für den Verein kostet das
+nichts außer den üblichen Buchungsposten der Bank.</p>
+<ul>
+<li><strong>Einschalten:</strong> In den Einstellungen der Schau unter
+„Meldegeld und Konto“ → „Meldegeld zahlen“ den Eintrag „vorab per
+Überweisung mit GiroCode“ wählen und das Vereinskonto eintragen
+(Kontoinhaber und IBAN; bei einem Konto außerhalb des EWR auch die BIC).
+Den <strong>Kontoinhaber genau so schreiben, wie die Bank ihn
+führt</strong> (vollständiger Vereinsname mit „e. V.“): Seit Oktober
+2025 vergleicht die Bank des Ausstellers den Namen mit dem Konto und
+zeigt sonst „ähnlich“ oder „kein Treffer“ an.</li>
+<li><strong>Was Aussteller sehen:</strong> Statt des freien Textes
+„Bankverbindung für das Meldegeld“ steht das Vereinskonto da. Jede
+Meldung bekommt einen eigenen Verwendungszweck, der mit einer Referenz
+beginnt (z. B. „RF540001234 Meldegeld Mueller, Hans“). Der GiroCode
+steht nach dem Absenden auf der Dankseite, auf „Meine Meldung“, im
+vorausgefüllten A-Bogen und im B-Bogen, die Eingangsbestätigung nennt
+den Verwendungszweck und verweist auf „Meine Meldung“. Der Code gilt
+immer über den noch offenen Betrag; ist alles bezahlt, verschwindet er.
+Der leere A-Bogen hat keinen Code.</li>
+<li><strong>Wann es keinen Code gibt:</strong> ab der Phase
+„Einlieferung“ (dann wird an der Kasse bezahlt oder verrechnet), bei
+stornierten und abgelehnten Meldungen und für Aussteller mit gültigem
+Lastschriftmandat oder in der offenen Lastschriftdatei (siehe 3.13) –
+sie würden sonst doppelt zahlen. Der Kontoinhaber darf höchstens 70
+Zeichen haben.</li>
+<li><strong>Ausland:</strong> Banking-Apps in Deutschland, Österreich,
+Belgien, den Niederlanden und Finnland lesen den Code. Ob Apps in Polen,
+Tschechien oder der Schweiz ihn lesen, ist nicht sicher; dort überweisen
+Aussteller mit dem Verwendungszweck von Hand.</li>
+<li><strong>Zahlungseingang:</strong> Der Code meldet nichts zurück. Den
+Eingang buchen Sie wie bisher nach dem Kontoauszug an der Meldung (siehe
+5.4, „Zahlungen erfassen und bestätigen“). Die Referenz im
+Verwendungszweck zeigt, zu welcher Meldung das Geld gehört.</li>
+</ul>
 <h2 id="rassen-und-farbenschläge">4. Rassen und Farbenschläge</h2>
 <p>Das Verzeichnis der Rassen und Farbenschläge bestimmt zweierlei: was
 Aussteller melden können und in welcher Reihenfolge der Katalog
@@ -1656,21 +1694,22 @@ der Einteilung (Obmann weniger).</td>
 </tr>
 <tr>
 <td>„Meldegeld zahlen“</td>
-<td>„vorab per Überweisung“ oder „bei der Einlieferung der Tiere“.
-Danach richten sich die Texte für Aussteller: Meldeformular,
-Eingangsbestätigung und „Meine Meldung“ (bei Einlieferung: „Zu zahlen
-bei der Einlieferung der Tiere“, keine Bankverbindung, Status
-„eingegangen – Zahlung bei der Einlieferung“).</td>
+<td>„vorab per Überweisung“, „vorab per Überweisung mit GiroCode“ (siehe
+3.14) oder „bei der Einlieferung der Tiere“. Danach richten sich die
+Texte für Aussteller: Meldeformular, Eingangsbestätigung und „Meine
+Meldung“ (bei Einlieferung: „Zu zahlen bei der Einlieferung der Tiere“,
+keine Bankverbindung, Status „eingegangen – Zahlung bei der
+Einlieferung“).</td>
 </tr>
 <tr>
 <td>„Bankverbindung für das Meldegeld“</td>
 <td>erscheint bei Zahlung vorab im Meldeformular und in der
-Eingangsbestätigung</td>
+Eingangsbestätigung; mit GiroCode gilt stattdessen das Vereinskonto</td>
 </tr>
 <tr>
 <td>„Kontoinhaber“, „IBAN“, „BIC“</td>
-<td>Vereinskonto für Überweisungen an Aussteller (SEPA-Datei). Ohne IBAN
-keine SEPA-Datei.</td>
+<td>Vereinskonto für Überweisungen an Aussteller (SEPA-Datei) und für
+den GiroCode. Ohne IBAN keine SEPA-Datei.</td>
 </tr>
 <tr>
 <td>„Preise aus dem Standgeld verteilen“</td>

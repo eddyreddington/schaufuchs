@@ -31,8 +31,24 @@ export default defineConfig({
         ],
       },
       workbox: {
-        navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/trpc/, /^\/datei/, /^\/api/, /\.pdf$/],
+        // Seitenaufrufe zuerst übers Netz: Nach einem Update kommt so gleich die neue Oberfläche und nicht erst beim
+        // zweiten Aufruf. Ohne Netz (oder nach 4 s) die zuletzt geladene Seite, sonst die vorgeladene index.html –
+        // so bleibt das Tablet in der Halle offline benutzbar. Kein navigateFallback und kein directoryIndex: beide
+        // beantworteten Seitenaufrufe sofort aus dem Speicher, also mit der alten Version.
+        navigateFallback: null,
+        directoryIndex: "kein-verzeichnisindex",
+        runtimeCaching: [
+          {
+            urlPattern: ({ request, url }) => request.mode === "navigate" && !/^\/(trpc|datei|api)(\/|$)/.test(url.pathname) && !url.pathname.endsWith(".pdf"),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "seiten",
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 30 },
+              plugins: [{ handlerDidError: async () => (await caches.match("/index.html", { ignoreSearch: true })) ?? Response.error() }],
+            },
+          },
+        ],
         // Mit der Hilfe (public/hilfe: HTML, Bilder des Tablets), damit sie in der Halle auch ohne Netz geht. Die übrigen
         // Hilfebilder und die PDFs lädt der Browser bei Bedarf (zu groß für jedes Tablet).
         globPatterns: ["**/*.{js,css,html,svg,woff2}", "hilfe/bilder/tablet-*.jpg", "icon-192.png", "apple-touch-icon.png"],

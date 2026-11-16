@@ -9,7 +9,7 @@ Moduldoku in [`docs/module/`](module/) und die [Entscheidungen](entscheidungen/)
 |---|---|---|
 | `packages/domain` (`@schau/domain`) | Reine Fachlogik: Gebühren, Katalognummern, Noten, Preise, Abrechnung, Hallenplan, SEPA, Fristen | Keine Datenbank, kein Netz, keine Oberfläche. Jede Fachregel einmal, hier, mit Test daneben (`*.test.ts`). |
 | `apps/server` | Bun + Hono + tRPC + Drizzle (PostgreSQL 16) | Router in `src/routers` prüfen Eingabe (zod) und Rechte, Logik mit Datenbank in `src/services`, PDFs in `src/pdf`, Datei-Endpunkte (PDF, CSV, Bilder) in `src/datei-*.ts`, registriert in `src/index.ts`. |
-| `apps/web` | React + Vite + Tailwind + tRPC-Client, PWA | Seiten in `src/seiten`, Routen in `src/routes.tsx`, Bausteine in `src/ui-*.tsx` (Einstieg `src/ui.tsx`) und `src/komponenten`. Rechnet nichts Fachliches selbst, sondern ruft `@schau/domain` auf. Das Preisrichter-Tablet (`seiten/richter.tsx` mit `richter-*.tsx`) arbeitet offline (IndexedDB). |
+| `apps/web` | React + Vite + Tailwind + tRPC-Client, PWA | Seiten in `src/seiten`, Routen in `src/routes.tsx`, Bausteine in `src/ui-*.tsx` (Einstieg `src/ui.tsx`) und `src/komponenten`. Rechnet nichts Fachliches selbst, sondern ruft `@schau/domain` auf. Das Preisrichter-Tablet (`seiten/richter.tsx` mit `richter-*.tsx`) arbeitet offline (IndexedDB). Service Worker (`vite.config.ts`): Seitenaufrufe zuerst übers Netz, damit nach einem Update gleich die neue Oberfläche kommt; ohne Netz die zuletzt geladene Seite bzw. die vorgeladene `index.html`. |
 
 Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → domain.
 
