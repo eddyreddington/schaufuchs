@@ -3,6 +3,7 @@
  * und aufklappbare Menüs. Ohne Fachlogik. Alles mit Klassen und SVG-Attributen (die CSP erlaubt keine Inline-Styles).
  */
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { ot } from "../sprache-jetzt";
 
 const PFADE = {
   auswahl: <path d="M5 3l14 8-6 1.6L10 19z" />,
@@ -132,9 +133,9 @@ export function WzSymbol({ name, klein }: { name: SymbolName; klein?: boolean })
   );
 }
 
-/** Tastenkürzel hübsch: „Strg“ bzw. „⌘“ je nach Rechner. */
+/** Tastenkürzel hübsch: „Strg“ (in der Sprache der Oberfläche) bzw. „⌘“ je nach Rechner. Zur Laufzeit aufrufen. */
 const MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
-export const strg = MAC ? "⌘" : "Strg";
+export const strg = () => (MAC ? "⌘" : ot().halleWerkzeuge.leiste.strg);
 
 /** Tooltip (Name und Kürzel) – bei Maus und Tastatur; an Touch-Geräten ohne Hover nur beim Fokus mit der Tastatur. */
 function Tooltip({ id, titel, kuerzel, rechts }: { id: string; titel: string; kuerzel?: string; rechts?: boolean }) {

@@ -1,7 +1,8 @@
-import { kaefigNameLang, sortierungText, UNTERSUCHUNG_ARTEN, UNTERSUCHUNG_LABEL, type KaefigMasse, type KaefigTyp, type Untersuchung } from "@schau/domain";
+import { kaefigNameLang, sortierungText, UNTERSUCHUNG_ARTEN, type KaefigMasse, type KaefigTyp, type Untersuchung } from "@schau/domain";
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { VetAmtFeld } from "./einstellungen-vetamt";
 import { trpc, type Ausgabe } from "../trpc";
 import { Auswahl, Eingabe, Feld, FormAbschnitt, Formular, Haken, HilfeLink, Hinweis, Knopf, Speicherleiste, Textfeld, useAenderungenWarnen, useMeldung } from "../ui";
@@ -14,6 +15,9 @@ import { Auswahl, Eingabe, Feld, FormAbschnitt, Formular, Haken, HilfeLink, Hinw
 type Schau = Ausgabe["schau"]["get"];
 
 export function Stammangaben({ schau: s }: { schau: Schau }) {
+  const t = useOberflaeche();
+  const ts = t.schau.einstellungen.stammangaben;
+  const ta = t.schau.einstellungen.seite.abschnitte;
   const versionen = trpc.stammdaten.versionen.useQuery();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
@@ -69,7 +73,7 @@ export function Stammangaben({ schau: s }: { schau: Schau }) {
   const tageFeld = (k: "ndTageMin" | "ndTageMax" | "pmvTageMin" | "pmvTageMax", label: string) => (
     <Feld label={label}>
       {(fid) => (
-        <Eingabe id={fid} inputMode="numeric" value={d[k] ?? ""} placeholder="keine Frist" onChange={(e) => set(k, e.target.value.trim() === "" ? null : Math.max(0, Math.min(730, Number(e.target.value.replace(/\D/g, "")) || 0)))} />
+        <Eingabe id={fid} inputMode="numeric" value={d[k] ?? ""} placeholder={ts.keineFrist} onChange={(e) => set(k, e.target.value.trim() === "" ? null : Math.max(0, Math.min(730, Number(e.target.value.replace(/\D/g, "")) || 0)))} />
       )}
     </Feld>
   );
@@ -79,7 +83,7 @@ export function Stammangaben({ schau: s }: { schau: Schau }) {
       gespeichert();
       setStand(JSON.stringify(v.daten));
       utils.schau.invalidate();
-      meldung("Einstellungen gespeichert.");
+      meldung(ts.gespeichert);
     },
   });
   const set = <K extends keyof typeof d>(k: K, v: (typeof d)[K]) => setD((x) => ({ ...x, [k]: v }));
@@ -96,34 +100,34 @@ export function Stammangaben({ schau: s }: { schau: Schau }) {
   return (
     <form onSubmit={senden} className="flex flex-col gap-4">
       <Formular>
-        <FormAbschnitt id="schau" titel="Schau">
-          {text("name", "Name der Schau")}
-          {text("veranstalter", "Veranstalter")}
-          {text("ort", "Ort / Halle")}
+        <FormAbschnitt id="schau" titel={ta.schau}>
+          {text("name", ts.name)}
+          {text("veranstalter", ts.veranstalter)}
+          {text("ort", ts.ort)}
           {s.phase === "vorbereitung" ? (
-            text("slug", "Kurzadresse", `…/s/${d.slug}`)
+            text("slug", ts.kurzadresse, `…/s/${d.slug}`)
           ) : (
-            <Feld label="Kurzadresse" hinweis="Ab der Meldephase fest">
+            <Feld label={ts.kurzadresse} hinweis={ts.kurzadresseFest}>
               {(fid) => <Eingabe id={fid} value={d.slug} disabled readOnly />}
             </Feld>
           )}
-          {text("kontaktEmail", "Kontakt für Aussteller (E-Mail)")}
-          <Feld label="Hallenkapazität (Käfige)">
-            {(fid) => <Eingabe id={fid} type="number" min={1} placeholder="keine Grenze" value={d.kapazitaet ?? ""} onChange={(e) => set("kapazitaet", e.target.value ? Number(e.target.value) : null)} />}
+          {text("kontaktEmail", ts.kontakt)}
+          <Feld label={ts.kapazitaet}>
+            {(fid) => <Eingabe id={fid} type="number" min={1} placeholder={ts.keineGrenze} value={d.kapazitaet ?? ""} onChange={(e) => set("kapazitaet", e.target.value ? Number(e.target.value) : null)} />}
           </Feld>
         </FormAbschnitt>
-        <FormAbschnitt id="termine" titel="Termine">
-          {text("meldeschluss", "Meldeschluss", undefined, "date")}
-          {text("bewertungAm", "Bewertung am", undefined, "date")}
-          <Feld label="Einlieferung">{(fid) => <Eingabe id={fid} placeholder="z. B. Donnerstag 15–20 Uhr" value={d.einlieferung} onChange={(e) => set("einlieferung", e.target.value)} />}</Feld>
-          {text("aussetzen", "Tierausgabe")}
-          <Feld label="Öffnungszeiten" hinweis="Je Tag eine Zeile">
-            {(fid) => <Textfeld id={fid} rows={3} placeholder="Sa. 12.12. 9–18 Uhr" value={d.oeffnungszeiten} onChange={(e) => set("oeffnungszeiten", e.target.value)} />}
+        <FormAbschnitt id="termine" titel={ta.termine}>
+          {text("meldeschluss", ts.meldeschluss, undefined, "date")}
+          {text("bewertungAm", ts.bewertungAm, undefined, "date")}
+          <Feld label={ts.einlieferung}>{(fid) => <Eingabe id={fid} placeholder={ts.einlieferungBeispiel} value={d.einlieferung} onChange={(e) => set("einlieferung", e.target.value)} />}</Feld>
+          {text("aussetzen", ts.tierausgabe)}
+          <Feld label={ts.oeffnungszeiten} hinweis={ts.jeTagZeile}>
+            {(fid) => <Textfeld id={fid} rows={3} placeholder={ts.oeffnungszeitenBeispiel} value={d.oeffnungszeiten} onChange={(e) => set("oeffnungszeiten", e.target.value)} />}
           </Feld>
-          {text("reklamationsfrist", "Reklamationsfrist", undefined, "date")}
+          {text("reklamationsfrist", ts.reklamationsfrist, undefined, "date")}
         </FormAbschnitt>
-        <FormAbschnitt id="zahlung" titel="Meldegeld und Konto" aktionen={<HilfeLink abschnitt="girocode">Hilfe zum GiroCode</HilfeLink>}>
-          <Feld label="Meldegeld zahlen">
+        <FormAbschnitt id="zahlung" titel={ta.zahlung} aktionen={<HilfeLink abschnitt="girocode">{ts.hilfeGirocode}</HilfeLink>}>
+          <Feld label={ts.meldegeldZahlen}>
             {(fid) => (
               <Auswahl
                 id={fid}
@@ -133,34 +137,34 @@ export function Stammangaben({ schau: s }: { schau: Schau }) {
                   set("girocode", e.target.value === "girocode");
                 }}
               >
-                <option value="vorab">vorab per Überweisung</option>
-                <option value="girocode">vorab per Überweisung mit GiroCode</option>
-                <option value="einlieferung">bei der Einlieferung der Tiere</option>
+                <option value="vorab">{ts.vorab}</option>
+                <option value="girocode">{ts.vorabGirocode}</option>
+                <option value="einlieferung">{ts.beiEinlieferung}</option>
               </Auswahl>
             )}
           </Feld>
           {d.girocode && !d.zahlungBeiEinlieferung ? (
-            <Feld label="Bankverbindung für das Meldegeld" hinweis="Mit GiroCode: das Vereinskonto unten">
+            <Feld label={ts.bankverbindung} hinweis={ts.mitGirocode}>
               {(fid) => <Eingabe id={fid} disabled value={[d.vereinKontoinhaber, d.vereinIban].filter(Boolean).join(", ")} />}
             </Feld>
           ) : (
-            text("bankverbindung", "Bankverbindung für das Meldegeld", d.zahlungBeiEinlieferung ? "Wird bei Zahlung bei der Einlieferung nicht angezeigt" : undefined)
+            text("bankverbindung", ts.bankverbindung, d.zahlungBeiEinlieferung ? ts.nichtAngezeigt : undefined)
           )}
-          <Feld label="Provision Tierverkauf (%)">
+          <Feld label={ts.provision}>
             {(fid) => <Eingabe id={fid} type="number" min={0} max={50} step={0.5} value={d.provisionBp / 100} onChange={(e) => set("provisionBp", Math.round(Number(e.target.value) * 100))} />}
           </Feld>
           <div className="grid gap-4 rounded-lg border border-linie bg-papier p-4 md:col-span-2 md:grid-cols-3">
-            <p className="text-sm font-semibold md:col-span-3">Vereinskonto für Auszahlungen (SEPA){d.girocode && !d.zahlungBeiEinlieferung ? " und GiroCode" : ""}</p>
-            {text("vereinKontoinhaber", "Kontoinhaber", d.girocode && !d.zahlungBeiEinlieferung ? "Genau wie bei der Bank" : undefined)}
+            <p className="text-sm font-semibold md:col-span-3">{ts.vereinskonto}{d.girocode && !d.zahlungBeiEinlieferung ? ts.undGirocode : ""}</p>
+            {text("vereinKontoinhaber", ts.kontoinhaber, d.girocode && !d.zahlungBeiEinlieferung ? ts.wieBank : undefined)}
             {text("vereinIban", "IBAN")}
-            {text("vereinBic", "BIC", "Freiwillig")}
+            {text("vereinBic", "BIC", ts.freiwillig)}
           </div>
         </FormAbschnitt>
-        <FormAbschnitt id="katalog" titel="Katalog und Preise">
-          <Feld label="Rassen und Farbenschläge" hinweis={s.katalogGedruckt ? "Festgeschrieben" : undefined}>
+        <FormAbschnitt id="katalog" titel={ta.katalog}>
+          <Feld label={ts.rassen} hinweis={s.katalogGedruckt ? ts.festgeschrieben : undefined}>
             {(fid) => (
               <Auswahl id={fid} value={d.stammdatenVersionId ?? ""} disabled={s.katalogGedruckt} onChange={(e) => set("stammdatenVersionId", e.target.value ? Number(e.target.value) : null)}>
-                <option value="">– bitte wählen –</option>
+                <option value="">{ts.bitteWaehlen}</option>
                 {versionen.data?.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.name} ({v.jahr})
@@ -169,84 +173,84 @@ export function Stammangaben({ schau: s }: { schau: Schau }) {
               </Auswahl>
             )}
           </Feld>
-          <Feld label="Erste Katalognummer">{(fid) => <Eingabe id={fid} type="number" min={1} value={d.katalogStart} onChange={(e) => set("katalogStart", Number(e.target.value))} />}</Feld>
+          <Feld label={ts.ersteNummer}>{(fid) => <Eingabe id={fid} type="number" min={1} value={d.katalogStart} onChange={(e) => set("katalogStart", Number(e.target.value))} />}</Feld>
           <div className="flex flex-col gap-2 md:col-span-2">
-            <Haken label="Jugend als eigener Block im Katalog" checked={d.jugendSeparat} onChange={(v) => set("jugendSeparat", v)} disabled={s.katalogGedruckt} />
-            <Haken label="Volieren und Stämme vor den Einzeltieren" checked={d.staemmeVorn} onChange={(v) => set("staemmeVorn", v)} disabled={s.katalogGedruckt} hinweis={s.katalogGedruckt ? "Festgeschrieben" : undefined} />
+            <Haken label={ts.jugendBlock} checked={d.jugendSeparat} onChange={(v) => set("jugendSeparat", v)} disabled={s.katalogGedruckt} />
+            <Haken label={ts.staemmeVorn} checked={d.staemmeVorn} onChange={(v) => set("staemmeVorn", v)} disabled={s.katalogGedruckt} hinweis={s.katalogGedruckt ? ts.festgeschrieben : undefined} />
           </div>
           <KaefigFolge wert={d.kaefigFolge} setzen={(f) => set("kaefigFolge", f)} gesperrt={s.katalogGedruckt} masse={s.kaefigMasse} />
           <p className="text-sm md:col-span-2">
-            <span className="text-grau">Reihenfolge der Nummern: </span>
+            <span className="text-grau">{ts.reihenfolge}</span>
             <Link to={`/schau/${s.id}/katalog#reihenfolge`}>{sortierungText(s.katalogSortierung)}</Link>
           </p>
-          <Feld label="Preise aus dem Standgeld verteilen">
+          <Feld label={ts.preiseVerteilen}>
             {(fid) => (
               <Auswahl id={fid} value={d.kontingentJe} onChange={(e) => set("kontingentJe", e.target.value as typeof d.kontingentJe)}>
-                <option value="preisrichter">je Preisrichter (aus seinen Tieren)</option>
-                <option value="schau">gemeinsam für die ganze Schau</option>
+                <option value="preisrichter">{ts.jePreisrichter}</option>
+                <option value="schau">{ts.gemeinsam}</option>
               </Auswahl>
             )}
           </Feld>
-          <Feld label="Höchstens Tiere je Preisrichter" hinweis="PV-Hinweise: 80">
+          <Feld label={ts.hoechstPreisrichter} hinweis={ts.pvHinweisPreisrichter}>
             {(fid) => <Eingabe id={fid} type="number" min={1} max={1000} value={d.prHoechstzahl} onChange={(e) => set("prHoechstzahl", Math.max(1, Number(e.target.value) || 1))} />}
           </Feld>
-          <Feld label="Höchstens Tiere je Obmann" hinweis="PV-Hinweise: 60">
+          <Feld label={ts.hoechstObmann} hinweis={ts.pvHinweisObmann}>
             {(fid) => <Eingabe id={fid} type="number" min={1} max={1000} value={d.obmannHoechstzahl} onChange={(e) => set("obmannHoechstzahl", Math.max(1, Number(e.target.value) || 1))} />}
           </Feld>
         </FormAbschnitt>
-        <FormAbschnitt id="bestimmungen" titel="Bestimmungen" spalten={1}>
-          <Feld label="Sonderbestimmungen" hinweis="Erscheinen im Meldeformular">
+        <FormAbschnitt id="bestimmungen" titel={ta.bestimmungen} spalten={1}>
+          <Feld label={ts.sonderbestimmungen} hinweis={ts.imMeldeformular}>
             {(fid) => <Textfeld id={fid} rows={6} value={d.bestimmungen} onChange={(e) => set("bestimmungen", e.target.value)} />}
           </Feld>
-          <Feld label="Pflichterklärungen der Aussteller" hinweis="Je Zeile eine Erklärung; leer, wenn nicht gefordert">
+          <Feld label={ts.pflichterklaerungen} hinweis={ts.jeZeileErklaerung}>
             {(fid) => <Textfeld id={fid} rows={3} value={d.erklaerungen} onChange={(e) => set("erklaerungen", e.target.value)} />}
           </Feld>
         </FormAbschnitt>
-        <FormAbschnitt id="veterinaeramt" titel="Veterinäramt">
+        <FormAbschnitt id="veterinaeramt" titel={ta.veterinaeramt}>
           <VetAmtFeld wert={d.vetAmt} setzen={(v) => set("vetAmt", v)} schauOrt={d.ort} />
-          {text("vetAktenzeichen", "Aktenzeichen")}
-          {text("vetRegistriernummer", "Registriernummer der Veranstaltung")}
-          {text("vetAnzeigeAm", "Angezeigt am", "Spätestens 4 Wochen vor der Schau", "date")}
-          <Feld label="Klinische Untersuchung (§ 7 GeflPestSchV)" className="md:col-span-2">
+          {text("vetAktenzeichen", ts.aktenzeichen)}
+          {text("vetRegistriernummer", ts.registriernummer)}
+          {text("vetAnzeigeAm", ts.angezeigtAm, ts.spaetestens, "date")}
+          <Feld label={ts.untersuchung} className="md:col-span-2">
             {(fid) => (
               <Auswahl id={fid} value={d.untersuchung ?? ""} onChange={(e) => set("untersuchung", (e.target.value || null) as Untersuchung | null)}>
-                <option value="">– noch nicht festgelegt –</option>
+                <option value="">{ts.nichtFestgelegt}</option>
                 {UNTERSUCHUNG_ARTEN.map((u) => (
                   <option key={u} value={u}>
-                    {UNTERSUCHUNG_LABEL[u]}
+                    {t.fach.UNTERSUCHUNG_LABEL[u]}
                   </option>
                 ))}
               </Auswahl>
             )}
           </Feld>
           {d.untersuchung === "bescheinigung" && (
-            <Feld label="Bescheinigung höchstens (Tage vor der Schau)" hinweis="Meist 5 bis 6">
+            <Feld label={ts.bescheinigungTage} hinweis={ts.meist}>
               {(fid) => <Eingabe id={fid} inputMode="numeric" value={d.untersuchungTage} onChange={(e) => set("untersuchungTage", Math.max(1, Math.min(30, Number(e.target.value.replace(/\D/g, "")) || 1)))} />}
             </Feld>
           )}
           {d.untersuchung === "einlass" && (
             <>
-              {text("einlassUntersuchungAm", "Einlassuntersuchung am", undefined, "date")}
-              {text("einlassTierarzt", "Tierarzt der Einlassuntersuchung")}
+              {text("einlassUntersuchungAm", ts.einlassAm, undefined, "date")}
+              {text("einlassTierarzt", ts.einlassTierarzt)}
             </>
           )}
-          <p className="text-sm font-semibold md:col-span-2">Impffristen (Tage vor dem Bewertungstag, leer = keine)</p>
+          <p className="text-sm font-semibold md:col-span-2">{ts.impffristen}</p>
           <div className="grid grid-cols-2 gap-3">
-            {tageFeld("ndTageMin", "ND frühestens")}
-            {tageFeld("ndTageMax", "ND höchstens")}
+            {tageFeld("ndTageMin", ts.ndFruehestens)}
+            {tageFeld("ndTageMax", ts.ndHoechstens)}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            {tageFeld("pmvTageMin", "PMV frühestens")}
-            {tageFeld("pmvTageMax", "PMV höchstens")}
+            {tageFeld("pmvTageMin", ts.pmvFruehestens)}
+            {tageFeld("pmvTageMax", ts.pmvHoechstens)}
           </div>
           <div className="flex flex-col gap-2 md:col-span-2">
-            <Haken label="Behörde verlangt Untersuchung von Enten und Gänsen" checked={d.wassergefluegelUntersuchung} onChange={(v) => set("wassergefluegelUntersuchung", v)} />
-            <Haken label="Aussteller aus anderen Mitgliedstaaten zugelassen" checked={d.auslandZugelassen} onChange={(v) => set("auslandZugelassen", v)} />
+            <Haken label={ts.wassergefluegel} checked={d.wassergefluegelUntersuchung} onChange={(v) => set("wassergefluegelUntersuchung", v)} />
+            <Haken label={ts.ausland} checked={d.auslandZugelassen} onChange={(v) => set("auslandZugelassen", v)} />
           </div>
         </FormAbschnitt>
       </Formular>
       {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
-      <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setD(startwerte())} onSpeichern={() => speichern.mutate({ id: s.id, daten: d })} laedt={speichern.isPending} knopf="Einstellungen speichern" />
+      <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setD(startwerte())} onSpeichern={() => speichern.mutate({ id: s.id, daten: d })} laedt={speichern.isPending} knopf={ts.speichern} />
     </form>
   );
 }
@@ -259,6 +263,7 @@ const KAEFIG_FOLGE_VORSCHLAG: KaefigTyp[] = ["voliere", "stamm", "grosskaefig", 
  * der Halle stehen; innerhalb eines Blocks gilt die Ausstellungsfolge. Aus = nach Sparten.
  */
 function KaefigFolge({ wert, setzen, gesperrt, masse }: { wert: KaefigTyp[] | null; setzen: (f: KaefigTyp[] | null) => void; gesperrt: boolean; masse: KaefigMasse }) {
+  const ts = useOberflaeche().schau.einstellungen.stammangaben;
   const schieben = (i: number, d: -1 | 1) => {
     if (!wert) return;
     const f = [...wert];
@@ -270,14 +275,14 @@ function KaefigFolge({ wert, setzen, gesperrt, masse }: { wert: KaefigTyp[] | nu
   return (
     <div className="flex flex-col gap-2 rounded-md bg-papier p-4 md:col-span-2">
       <Haken
-        label="Katalognummern nach Käfigblöcken (so wie die Käfige in der Halle stehen)"
+        label={ts.kaefigFolge}
         checked={!!wert}
         onChange={(v) => setzen(v ? KAEFIG_FOLGE_VORSCHLAG : null)}
         disabled={gesperrt}
         hinweis={
           gesperrt
-            ? "Festgeschrieben"
-            : "Wirkt beim nächsten Nummern-Vergeben"
+            ? ts.festgeschrieben
+            : ts.wirktBeimVergeben
         }
       />
       {wert && (
@@ -286,10 +291,10 @@ function KaefigFolge({ wert, setzen, gesperrt, masse }: { wert: KaefigTyp[] | nu
             <li key={t} className="flex items-center gap-2">
               <span className="w-6 text-right text-grau">{i + 1}.</span>
               <span className="min-w-0 flex-1 font-bold sm:min-w-40 sm:flex-none">{kaefigNameLang(t, masse)}</span>
-              <Knopf variante="leise" className="min-h-8 px-2" disabled={gesperrt || i === 0} onClick={() => schieben(i, -1)} aria-label={`${kaefigNameLang(t, masse)} nach vorn`}>
+              <Knopf variante="leise" className="min-h-8 px-2" disabled={gesperrt || i === 0} onClick={() => schieben(i, -1)} aria-label={ts.nachVorn(kaefigNameLang(t, masse))}>
                 ↑
               </Knopf>
-              <Knopf variante="leise" className="min-h-8 px-2" disabled={gesperrt || i === wert.length - 1} onClick={() => schieben(i, 1)} aria-label={`${kaefigNameLang(t, masse)} nach hinten`}>
+              <Knopf variante="leise" className="min-h-8 px-2" disabled={gesperrt || i === wert.length - 1} onClick={() => schieben(i, 1)} aria-label={ts.nachHinten(kaefigNameLang(t, masse))}>
                 ↓
               </Knopf>
             </li>

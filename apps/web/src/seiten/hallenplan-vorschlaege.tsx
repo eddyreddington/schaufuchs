@@ -1,13 +1,25 @@
 /**
  * Stellvorschläge: dieselbe Halle in allen möglichen Aufstellungen, je mit Skizze (`HallenSkizze`).
  */
-import { type Halle, type HallenFlaeche, halleSchluessel } from "@schau/domain";
+import { type Halle, type HallenFlaeche, halleSchluessel, HAUPTGANG_STANDARD, type OberflaecheTexte, serverText } from "@schau/domain";
 import { useEffect, useId, useState } from "react";
 import { fehlerText } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { Abschnitt, FehlerAnzeige, Haken, Hinweis, Knopf, Laden, Leer, Marke, useFrage, useMeldung } from "../ui";
 import { PlanBild } from "./hallenplan-bild";
-import { anzahl, BAU, type Daten, meter, zeichenSystem } from "./hallenplan-geometrie";
+import { BAU, type Daten, meter, zeichenSystem } from "./hallenplan-geometrie";
+
+/** Beschreibung einer Aufstellung wie `stellTitel()` der Domain (Deutsch wortgleich), in der Sprache der Oberfläche. */
+function stellTitelT(h: Halle, b: OberflaecheTexte["halleWerkzeuge"]["vorschlaege"]["beschreibung"]): string {
+  const hg = h.hauptgang ?? HAUPTGANG_STANDARD;
+  return [
+    (h.richtung ?? "quer") === "quer" ? b.quer : b.laengs,
+    h.wandreihen ? b.mitWandreihen : b.ohneWandreihen,
+    (b.lage as Record<string, string>)[hg.lage] ?? hg.lage,
+    (h.wandBuendig ?? true) ? b.buendig : b.mitGang,
+  ].join(", ");
+}
 
 /**
  * Stellvorschläge: dieselbe Halle in anderen Aufstellungen (Reihen quer oder längs, Wandreihen, bündig an Wänden, Lage des
@@ -53,6 +65,10 @@ export function StellVorschlaege({
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
+  const t = useOberflaeche();
+  const tv = t.halleWerkzeuge.vorschlaege;
+  const tg = t.halleWerkzeuge.gemeinsam;
+  const sprache = useSprache();
   // Übernehmen heißt neu setzen (Einstellungen und neue Aufstellung in einem Schritt); Abschluss (neu laden, Meldung,
   // schließen) danach – siehe Knopf „Übernehmen“.
   const uebernehmen = trpc.katalog.planNeuSetzen.useMutation({
@@ -69,15 +85,13 @@ export function StellVorschlaege({
     <div key={v.titel + String(aktuell)} className={`flex flex-col gap-2 rounded-lg border border-linie p-3 ${aktuell ? "bg-papier" : "bg-weiss"}`}>
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
         <div className="min-w-0">
-          <p className="font-semibold leading-snug">{aktuell ? (entwurf ? "Mit Ihren Einstellungen" : "So wie jetzt") : v.titel}</p>
-          {aktuell && <p className="text-sm text-grau">{v.titel}</p>}
+          <p className="font-semibold leading-snug">{aktuell ? (entwurf ? tv.mitIhren : tv.soWieJetzt) : stellTitelT(v.halle, tv.beschreibung)}</p>
+          {aktuell && <p className="text-sm text-grau">{stellTitelT(v.halle, tv.beschreibung)}</p>}
         </div>
-        {v.nichtPlatziert === 0 ? <Marke ton="ok">Alle haben Platz</Marke> : <Marke ton="fehler">{v.nichtPlatziert} ohne Platz</Marke>}
+        {v.nichtPlatziert === 0 ? <Marke ton="ok">{tg.alleHabenPlatz}</Marke> : <Marke ton="fehler">{tg.ohnePlatz(v.nichtPlatziert)}</Marke>}
       </div>
-      <p className="text-sm tabular-nums text-grau">
-        {v.freiePlatten} Grundplatten frei · {v.reihen} Reihen mit Käfigen
-      </p>
-      {v.hinweise.length > 0 && <p className="text-sm text-kamm">{v.hinweise.join(" ")}</p>}
+      <p className="text-sm tabular-nums text-grau">{tv.kennzahlen(v.freiePlatten, v.reihen)}</p>
+      {v.hinweise.length > 0 && <p className="text-sm text-kamm">{v.hinweise.map((h) => serverText(h, sprache)).join(" ")}</p>}
       <div>
         <PlanBild klein halle={v.halle} plan={v.plan} richterIndex={richterIndex} bearbeiten={false} auswahl={[]} waehlen={() => {}} aendern={(f) => f(v.halle)} />
       </div>
@@ -91,23 +105,23 @@ export function StellVorschlaege({
             if (
               !(await bestaetige(
                 fest
-                  ? { titel: "Plan neu setzen und übernehmen?", text: "Alle Käfige werden in dieser Aufstellung neu aufgestellt.", knopf: "Neu setzen und übernehmen", gefahr: true }
-                  : { titel: "Diese Aufstellung übernehmen?", text: "Verschobenes und eingesetzte Teile fallen weg.", knopf: "Übernehmen" },
+                  ? { titel: tv.festTitel, text: tv.festText, knopf: tv.festKnopf, gefahr: true }
+                  : { titel: tv.uebernehmenTitel, text: tv.uebernehmenText, knopf: tv.uebernehmen },
               ))
             )
               return;
             try {
-              await uebernehmen.mutateAsync({ schauId, basis: entwurf ? (basis ?? q.data!.basis) : q.data!.basis, halle: v.halle, grund: "Stellvorschlag übernommen" });
+              await uebernehmen.mutateAsync({ schauId, basis: entwurf ? (basis ?? q.data!.basis) : q.data!.basis, halle: v.halle, grund: "Stellvorschlag übernommen" }); // bleibt deutsch (Protokoll)
             } catch {
               return;
             } finally {
               await Promise.all([utils.katalog.hallenplan.invalidate(), utils.katalog.stellVorschlaege.invalidate()]);
             }
-            meldung("Aufstellung übernommen.");
+            meldung(tv.uebernommen);
             schliessen();
           }}
         >
-          Übernehmen
+          {tv.uebernehmen}
         </Knopf>
       )}
     </div>
@@ -116,10 +130,10 @@ export function StellVorschlaege({
     <>
       {konflikt && entwurf && (
         <Hinweis ton="fehler" className="mb-3">
-          Halle inzwischen anderswo gespeichert – bitte neu öffnen.
+          {tv.konflikt}
         </Hinweis>
       )}
-      {veraltet && <Hinweis className="mb-3">Halle geändert – Vorschläge werden neu gerechnet …</Hinweis>}
+      {veraltet && <Hinweis className="mb-3">{tv.veraltet}</Hinweis>}
       {q.error ? (
         <FehlerAnzeige fehler={q.error} nochmal={() => q.refetch()} />
       ) : !q.data ? (
@@ -128,15 +142,15 @@ export function StellVorschlaege({
         <>
           {q.data.vorschlaege.length === 0 && (
             <div className="mb-3">
-              <Leer titel="Keine andere Aufstellung möglich" />
+              <Leer titel={tv.keineAndere} />
             </div>
           )}
           {q.data.vorschlaege.length > 0 && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-sm">
               <p className="tabular-nums text-grau">
-                <span className="font-semibold text-tinte">{anzahl(q.data.vorschlaege.length, "Aufstellung", "Aufstellungen")}</span> · {q.data.vorschlaege.filter((v) => v.nichtPlatziert === 0).length} mit Platz für alle
+                <span className="font-semibold text-tinte">{tv.aufstellungen(q.data.vorschlaege.length)}</span> · {tv.mitPlatz(q.data.vorschlaege.filter((v) => v.nichtPlatziert === 0).length)}
               </p>
-              <Haken label="Nur mit Platz für alle" checked={nurAlle} onChange={setNurAlle} />
+              <Haken label={tv.nurMitPlatz} checked={nurAlle} onChange={setNurAlle} />
             </div>
           )}
           <div className={`grid gap-4 ${schmal ? "sm:grid-cols-2" : "md:grid-cols-2 xl:grid-cols-3"}`}>
@@ -149,7 +163,7 @@ export function StellVorschlaege({
   );
   if (eingebettet) return inhalt;
   return (
-    <Abschnitt titel="Stellvorschläge" className="nicht-drucken" aktionen={<Knopf variante="leise" onClick={schliessen}>Schließen</Knopf>}>
+    <Abschnitt titel={tv.titel} className="nicht-drucken" aktionen={<Knopf variante="leise" onClick={schliessen}>{t.allgemein.schliessen}</Knopf>}>
       {inhalt}
     </Abschnitt>
   );
@@ -158,13 +172,14 @@ export function StellVorschlaege({
 /** Skizze der Halle für „Halle einrichten“: Umriss mit Metern, Eingänge dunkel, Freiflächen schraffiert, Volierenbereich grün. */
 export function HallenSkizze({ breite, laenge, flaechen }: { breite: number; laenge: number; flaechen: HallenFlaeche[] }) {
   const muster = useId().replace(/:/g, "");
+  const tv = useOberflaeche().halleWerkzeuge.vorschlaege;
   if (!(breite > 0 && laenge > 0)) return <div />;
   const zs = zeichenSystem(breite, laenge);
   const rand = Math.max(zs.W, zs.H) * 0.06;
   const schrift = Math.max(zs.W, zs.H) * 0.03;
   return (
     <figure className="immer-hell rounded-md border border-linie bg-weiss p-2">
-      <svg viewBox={`${-rand} ${-rand} ${zs.W + 2 * rand} ${zs.H + 2 * rand}`} className="h-auto w-full" role="img" aria-label="Skizze der Halle">
+      <svg viewBox={`${-rand} ${-rand} ${zs.W + 2 * rand} ${zs.H + 2 * rand}`} className="h-auto w-full" role="img" aria-label={tv.skizze}>
         <defs>
           <pattern id={`${muster}-frei`} width={schrift} height={schrift} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <line x1="0" y1="0" x2="0" y2={schrift} stroke={BAU.platte.stroke} strokeWidth={schrift * 0.15} />

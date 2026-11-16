@@ -1,13 +1,16 @@
 /**
  * Anzeige unter dem Hallenplan: Legende der Zeichnung, „Platz“ (gestellt, ohne Platz, frei) und die Aufbauliste je Reihe.
  */
-import { type Halle, istMoebel, type KaefigMasse, kaefigName, type KaefigTyp, nummernBereiche, type PlanKaefig, richterFarbe } from "@schau/domain";
+import { type Halle, istMoebel, type KaefigMasse, type KaefigTyp, nummernBereiche, type PlanKaefig, richterFarbe } from "@schau/domain";
+import { useOberflaeche } from "../sprache";
 import { Abschnitt, Marke, TabellenRahmen } from "../ui";
-import { alsNummer, anzahl, BAU, type Daten, lage, meter, type Plan, plattenJeArt, richterNamen, zusammenfassen } from "./hallenplan-geometrie";
-import { LegendenFeld, OhnePlatz } from "./hallenplan-teile";
+import { alsNummer, BAU, type Daten, lage, meter, type Plan, plattenJeArt, richterNamen, zusammenfassen } from "./hallenplan-geometrie";
+import { kaefigNameT, LegendenFeld, OhnePlatz } from "./hallenplan-teile";
 
 /** Legende: Preisrichterfarben in Katalogfolge, Grundplatte, Flächen, Eingang, Volieren, Käfigblock, Möbel, Rückwand. */
 export function PlanLegende({ plan, richterReihe, richterIndex }: { plan: Plan; richterReihe: { id: number; name: string }[]; richterIndex: Map<number, number> }) {
+  const t = useOberflaeche().halleWerkzeuge;
+  const tu = t.uebersicht;
   return (
     <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-grau">
       {richterReihe
@@ -23,15 +26,15 @@ export function PlanLegende({ plan, richterReihe, richterIndex }: { plan: Plan; 
         })}
       <span className="flex items-center gap-2">
         <LegendenFeld {...BAU.ohne} />
-        ohne Preisrichter
+        {tu.ohnePreisrichter}
       </span>
       <span className="flex items-center gap-2">
         <LegendenFeld {...BAU.platte} />
-        Grundplatte
+        {tu.grundplatte}
       </span>
       <span className="flex items-center gap-2">
         <LegendenFeld {...BAU.frei} />
-        freier Bereich
+        {tu.freierBereich}
       </span>
       <span className="flex items-center gap-2">
         {/* Öffnung in der Wand wie in der Zeichnung. */}
@@ -40,15 +43,15 @@ export function PlanLegende({ plan, richterReihe, richterIndex }: { plan: Plan; 
           <rect x="16" y="1" width="6" height="3.5" fill={BAU.wand} />
           <rect x="6" y="4.5" width="10" height="10.5" fill={BAU.eingang.fill} stroke={BAU.eingang.stroke} strokeWidth="1" />
         </svg>
-        Eingang / Ausgang
+        {t.gemeinsam.eingangAusgang}
       </span>
       <span className="flex items-center gap-2">
         <LegendenFeld {...BAU.volierenbereich} dash />
-        Volierenbereich
+        {t.gemeinsam.volierenbereich}
       </span>
       <span className="flex items-center gap-2">
         <LegendenFeld {...BAU.voliere} breite={2.2} />
-        eingesetzte Voliere
+        {tu.eingesetzteVoliere}
       </span>
       <span className="flex items-center gap-2">
         <svg width="22" height="16" aria-hidden="true">
@@ -56,12 +59,12 @@ export function PlanLegende({ plan, richterReihe, richterIndex }: { plan: Plan; 
           <rect x="4" y="4" width="6" height="8" fill="#ffffff" stroke="#7c8696" strokeWidth="0.75" strokeDasharray="2 1" />
           <rect x="12" y="4" width="6" height="8" fill="#ffffff" stroke="#7c8696" strokeWidth="0.75" strokeDasharray="2 1" />
         </svg>
-        leerer Käfigblock
+        {tu.leererBlock}
       </span>
       {plan.objekte.some(istMoebel) && (
         <span className="flex items-center gap-2">
           <LegendenFeld fill={BAU.tisch.fill} stroke={BAU.tisch.stroke} />
-          Tisch / Bank
+          {tu.tischBank}
         </span>
       )}
       <span className="flex items-center gap-2">
@@ -73,9 +76,9 @@ export function PlanLegende({ plan, richterReihe, richterIndex }: { plan: Plan; 
           <line x1="20" y1="2" x2="20" y2="14" stroke={BAU.kaefigwand.seite} strokeWidth="1.2" />
           <line x1="2" y1="2" x2="20" y2="2" stroke={BAU.kaefigwand.rueck} strokeWidth="3" />
         </svg>
-        Rückwand
+        {tu.rueckwand}
       </span>
-      <span className="flex items-center">Raster 0,5 m · Maße in Metern</span>
+      <span className="flex items-center">{tu.raster}</span>
     </div>
   );
 }
@@ -83,19 +86,20 @@ export function PlanLegende({ plan, richterReihe, richterIndex }: { plan: Plan; 
 /** Abschnitt „Platz“: gestellt, ohne Platz bzw. noch zu stellen, frei in den Reihen. */
 export function PlatzUebersicht({ plan, halle, masse, platziert }: { plan: Plan; halle: Halle; masse: KaefigMasse; platziert: number }) {
   const gesamt = platziert + plan.nichtPlatziert.length;
+  const t = useOberflaeche();
+  const tu = t.halleWerkzeuge.uebersicht;
+  const tg = t.halleWerkzeuge.gemeinsam;
   return (
     <Abschnitt
-      titel="Platz"
-      aktionen={plan.nichtPlatziert.length === 0 ? <Marke ton="ok">Alle haben Platz</Marke> : <Marke ton="fehler">{plan.nichtPlatziert.length} ohne Platz</Marke>}
+      titel={tu.platz}
+      aktionen={plan.nichtPlatziert.length === 0 ? <Marke ton="ok">{tg.alleHabenPlatz}</Marke> : <Marke ton="fehler">{tg.ohnePlatz(plan.nichtPlatziert.length)}</Marke>}
     >
       <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[10rem_minmax(0,1fr)]">
-        <dt className="text-grau">Gestellt</dt>
-        <dd className="tabular-nums">
-          {platziert} von {anzahl(gesamt, "Käfig", "Käfigen")}
-        </dd>
+        <dt className="text-grau">{tu.gestellt}</dt>
+        <dd className="tabular-nums">{tu.gestelltVon(platziert, gesamt)}</dd>
         {plan.nichtPlatziert.length > 0 && (
           <>
-            <dt className="text-grau">{plan.fest ? "Noch zu stellen" : "Ohne Platz"}</dt>
+            <dt className="text-grau">{plan.fest ? tu.nochZuStellen : tu.ohnePlatz}</dt>
             <dd>
               <OhnePlatz plan={plan} halle={halle} masse={masse} />
             </dd>
@@ -103,10 +107,10 @@ export function PlatzUebersicht({ plan, halle, masse, platziert }: { plan: Plan;
         )}
         {plan.reserve.length > 0 && (
           <>
-            <dt className="text-grau">{plan.fest ? "Frei im festen Plan" : "Frei in den Reihen"}</dt>
+            <dt className="text-grau">{plan.fest ? tu.freiFest : tu.freiReihen}</dt>
             <dd>
-              {!plan.fest && `${anzahl(plan.reservePlatten, "Grundplatte", "Grundplatten")} und freie Plätze: `}
-              {plan.reserve.map((r) => `${r.anzahl} × ${kaefigName(r.typ as KaefigTyp, masse)}`).join(" oder ")}
+              {!plan.fest && tu.plattenUndFrei(plan.reservePlatten)}
+              {plan.reserve.map((r) => `${r.anzahl} × ${kaefigNameT(t, r.typ as KaefigTyp, masse)}`).join(tu.oder)}
             </dd>
           </>
         )}
@@ -121,23 +125,27 @@ export function Aufbauliste({ plan, masse, richter }: { plan: Plan; masse: Kaefi
   const inTeilen = plan.objekte.filter((o) => o.tier).map((o) => ({ ...o.tier!, typ: "voliere" as KaefigTyp }));
   const plattenZusammen = plan.reihen.reduce((n, r) => n + r.platten.filter((pl) => !pl.entfernt).length, 0);
   const laengeZusammen = plan.reihen.reduce((n, r) => n + r.platten.filter((pl) => !pl.entfernt).reduce((m, pl) => m + pl.laenge, 0), 0);
+  const t = useOberflaeche();
+  const tu = t.halleWerkzeuge.uebersicht;
+  const tg = t.halleWerkzeuge.gemeinsam;
+  const tp = t.allgemein.preisrichter;
   return (
     <TabellenRahmen
       className="print:overflow-visible print:*:overflow-visible"
-      kopf={<h2 className="text-[1.02rem] font-semibold">Aufbauliste je Reihe</h2>}
-      fuss={<span>Grundplatten nach Käfigart: {plattenJeArt(plan.reihen, masse)}</span>}
+      kopf={<h2 className="text-[1.02rem] font-semibold">{tu.aufbauliste}</h2>}
+      fuss={<span>{tu.plattenJeArt(plattenJeArt(plan.reihen, masse))}</span>}
     >
       <table className="tabelle">
         <thead>
           <tr>
-            <th scope="col">Reihe</th>
-            <th scope="col">Lage</th>
-            <th scope="col">Käfignummern</th>
-            <th scope="col">Käfige</th>
-            <th scope="col" className="text-right">Grund&shy;platten</th>
-            <th scope="col" className="text-right">Länge</th>
-            <th scope="col">Rassen</th>
-            <th scope="col">Preisrichter</th>
+            <th scope="col">{tu.reihe}</th>
+            <th scope="col">{tu.lage}</th>
+            <th scope="col">{tu.kaefignummern}</th>
+            <th scope="col">{tu.kaefige}</th>
+            <th scope="col" className="text-right">{tu.grundplatten}</th>
+            <th scope="col" className="text-right">{tu.laenge}</th>
+            <th scope="col">{tu.rassen}</th>
+            <th scope="col">{tp}</th>
           </tr>
         </thead>
         <tbody>
@@ -150,7 +158,7 @@ export function Aufbauliste({ plan, masse, richter }: { plan: Plan; masse: Kaefi
                 <td className="tabular-nums">{nummernBereiche(r.kaefige.map((k) => alsNummer(k.nr))) || "–"}</td>
                 <td className="text-sm">
                   {zusammenfassen(r.kaefige.map((k) => k.typ as KaefigTyp), masse)}
-                  {r.freiePlaetze?.length ? `${r.kaefige.length ? ", " : ""}frei: ${zusammenfassen(r.freiePlaetze.map((f) => f.typ as KaefigTyp), masse)}` : ""}
+                  {r.freiePlaetze?.length ? `${r.kaefige.length ? ", " : ""}${tu.frei(zusammenfassen(r.freiePlaetze.map((f) => f.typ as KaefigTyp), masse))}` : ""}
                 </td>
                 <td className="text-right tabular-nums">{r.platten.filter((pl) => !pl.entfernt).length}</td>
                 <td className="whitespace-nowrap text-right tabular-nums">{meter(r.platten.filter((pl) => !pl.entfernt).reduce((n, pl) => n + pl.laenge, 0))} m</td>
@@ -161,9 +169,9 @@ export function Aufbauliste({ plan, masse, richter }: { plan: Plan; masse: Kaefi
           {inTeilen.length > 0 && (
             <tr>
               <td className="font-semibold text-tinte">V*</td>
-              <td className="text-sm">eingesetzte Volieren</td>
+              <td className="text-sm">{tu.eingesetzteVolieren}</td>
               <td className="tabular-nums">{nummernBereiche(inTeilen.map((k) => alsNummer(k.nr))) || "–"}</td>
-              <td className="text-sm">{inTeilen.length} × Voliere</td>
+              <td className="text-sm">{tu.voliereMal(inTeilen.length)}</td>
               <td />
               <td />
               <td className="text-sm">{[...new Set(inTeilen.map((k) => k.rasse))].join(", ")}</td>
@@ -173,7 +181,7 @@ export function Aufbauliste({ plan, masse, richter }: { plan: Plan; masse: Kaefi
           {plan.volieren.length > 0 && (
             <tr>
               <td className="font-semibold text-tinte">V</td>
-              <td className="text-sm">Volierenbereich</td>
+              <td className="text-sm">{tg.volierenbereich}</td>
               <td className="tabular-nums">{nummernBereiche(plan.volieren.map((k) => alsNummer(k.nr))) || "–"}</td>
               <td className="text-sm">{zusammenfassen(plan.volieren.map((k) => k.typ as KaefigTyp), masse)}</td>
               <td />
@@ -185,7 +193,7 @@ export function Aufbauliste({ plan, masse, richter }: { plan: Plan; masse: Kaefi
         </tbody>
         <tfoot>
           <tr>
-            <td>Zusammen</td>
+            <td>{tu.zusammen}</td>
             <td />
             <td />
             <td className="text-sm">{zusammenfassen([...plan.reihen.flatMap((r) => r.kaefige), ...plan.volieren].map((k) => k.typ as KaefigTyp), masse)}</td>

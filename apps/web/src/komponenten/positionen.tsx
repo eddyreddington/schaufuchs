@@ -388,6 +388,7 @@ export function PositionenEditor({
                       />
                       <div className="flex gap-4 text-sm">
                         <label className="flex items-center gap-1">
+                          {/* bleibt deutsch: Abkürzung AOC in allen Sprachen */}
                           <input type="checkbox" className="accent-band" checked={p.istAoc} onChange={(e) => aendern(i, { istAoc: e.target.checked })} /> AOC
                         </label>
                         <label className="flex items-center gap-1">

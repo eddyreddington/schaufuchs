@@ -1,0 +1,48 @@
+import type { OberflaecheTexte } from "..";
+
+export const stamm: OberflaecheTexte["serverKatalog"]["stamm"] = {
+  bild: {
+    groesser2: "Obraz jest większy niż 2 MB. Prosimy go zmniejszyć (np. do 2000 pikseli szerokości).",
+    groesser2Kurz: "Obraz jest większy niż 2 MB. Prosimy go zmniejszyć.",
+    groesser5: "Obraz jest większy niż 5 MB.",
+    logo: "Logo jest większe niż 600 KB. Prosimy je zmniejszyć (np. do 600 pikseli szerokości) – pojawia się na każdym dowodzie.",
+    format: "Tylko obrazy w formacie JPEG lub PNG.",
+    nurJpeg: "Tylko obrazy w formacie JPEG. Prosimy zapisać zdjęcie jako JPEG.",
+    lesen: "Nie można odczytać obrazu. Prosimy zapisać go ponownie jako JPEG lub PNG.",
+    lesenJpeg: "Nie można odczytać obrazu. Prosimy zapisać go ponownie jako JPEG.",
+    beschaedigt: "Nie można odczytać obrazu (uszkodzony lub niekompletny). Prosimy zapisać go ponownie.",
+    unvollstaendig: "Obraz jest niekompletny. Prosimy zapisać lub pobrać go ponownie.",
+    pixel: (breite: string, hoehe: string) => `Obraz o wymiarach ${breite} × ${hoehe} pikseli jest za duży. Prosimy go zmniejszyć.`,
+    pixel1200: (breite: string, hoehe: string) => `Obraz o wymiarach ${breite} × ${hoehe} pikseli jest za duży. Prosimy go zmniejszyć (np. do 1200 pikseli szerokości).`,
+    png: (breite: string, hoehe: string) => `Obraz PNG z przezroczystym tłem o wymiarach ${breite} × ${hoehe} pikseli jest za duży do druku katalogu. Prosimy zapisać go jako JPEG lub zmniejszyć do maksymalnie 1,5 miliona pikseli (np. 1500 × 1000).`,
+    fremd: "Ten obraz nie należy do wystawy.",
+    fehlt: "Nie znaleziono obrazu.",
+    beitragFehlt: "Nie znaleziono artykułu.",
+    beitragUnbekannt: "Nieznany artykuł.",
+  },
+  lizenz: {
+    fehlt: "Brak licencji – np. „własne zdjęcie”, „domena publiczna”, „CC0” lub „CC BY-SA 4.0”.",
+    nc: "Licencja „użycie niekomercyjne” (NC): katalog jest sprzedawany – tego obrazu nie można w nim zamieścić.",
+    nd: "Licencja „bez utworów zależnych” (ND): w katalogu obraz jest przycinany i zmniejszany – tego obrazu nie można w nim zamieścić.",
+    urheber: "Brak autora – licencja CC BY wymaga podania autorstwa.",
+    link: "Brak linku do licencji – prosimy podać adres licencji (np. https://creativecommons.org/licenses/by-sa/4.0/).",
+  },
+  stammdaten: {
+    versionUnbekannt: "Ta wersja danych podstawowych nie istnieje.",
+    keineZeilen: "Plik nie zawiera prawidłowych wierszy.",
+    versionFehlt: "Nie znaleziono wersji.",
+    nichtErgaenzen: "Ta wersja jest udostępniona wszystkim klubom i nie można jej uzupełniać. Prosimy wczytać własną listę.",
+    nichtLoeschen: "Ta wersja jest udostępniona wszystkim klubom i nie można jej usunąć.",
+    schonDa: (rasse: string) => `Wszystkie podane odmiany barwne istnieją już przy „${rasse}”.`,
+    verwendet: "Ta wersja jest używana przez wystawę.",
+    verweisen: "Zgłoszone zwierzęta odwołują się do tej wersji – nie można jej usunąć.",
+    anfuehrung: (zeile: string) => `Wiersz ${zeile}: niezamknięty cudzysłów.`,
+    dreiSpalten: (zeile: string) => `Wiersz ${zeile}: oczekiwano trzech kolumn (Sparte;Rasse;Farbenschlag).`,
+    mehrSpalten: (zeile: string) => `Wiersz ${zeile}: więcej niż trzy kolumny – separator w polu? Pole należy ująć w cudzysłów.`,
+    doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Wiersz ${zeile}: duplikat (${rasse}, ${farbenschlag}).`,
+  },
+  druckvorlage: {
+    fehlt: "Nie znaleziono szablonu.",
+    andereSchau: "Ten szablon należy do innej wystawy.",
+  },
+};

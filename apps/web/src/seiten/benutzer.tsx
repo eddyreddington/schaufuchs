@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { datum, datumZeit, fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, Haken, Hinweis, Knopf, KnopfLink, Laden, Marke, SCHMAL, Seitenkopf, TabellenRahmen, useMeldung, useSeitentitel } from "../ui";
 import { Angaben, PasswortNeu, Zugang, ZweiFaktorFremd } from "./benutzer-bearbeiten";
 import { PasswortAendern, ZweiFaktor } from "./benutzer-eigener-zugang";
-import { Initialen, ROLLE, Seite, StatusMarken, Zurueck } from "./benutzer-teile";
+import { Initialen, Seite, StatusMarken, Zurueck } from "./benutzer-teile";
 
 /** /benutzer – Administratoren sehen alle Benutzer, alle anderen ihren eigenen Zugang. */
 export function Benutzer() {
@@ -17,6 +18,9 @@ export function Benutzer() {
 }
 
 function BenutzerListe() {
+  const o = useOberflaeche();
+  const b0 = o.verein.benutzer;
+  const t = b0.liste;
   const liste = trpc.auth.benutzerListe.useQuery();
   const navigate = useNavigate();
   const aktive = liste.data?.filter((b) => b.aktiv).length ?? 0;
@@ -25,14 +29,14 @@ function BenutzerListe() {
   return (
     <Seite>
       <Seitenkopf
-        titel="Benutzer"
-        unter={liste.data ? `${liste.data.length} Benutzer, ${aktive} aktiv` : undefined}
+        titel={t.titel}
+        unter={liste.data ? t.unter(liste.data.length, aktive) : undefined}
         hilfe="benutzer-verwalten"
-        aktionen={<KnopfLink variante="primaer" href="/benutzer/neu" onClick={(e) => { e.preventDefault(); navigate("/benutzer/neu"); }}>Neuer Benutzer</KnopfLink>}
+        aktionen={<KnopfLink variante="primaer" href="/benutzer/neu" onClick={(e) => { e.preventDefault(); navigate("/benutzer/neu"); }}>{t.neu}</KnopfLink>}
       />
       {liste.data && ohne2fa > 0 && (
         <Hinweis ton="warnung">
-          {ohne2fa} von {aktive} aktiven Benutzern ohne Zwei-Faktor-Anmeldung.
+          {t.ohne2fa(ohne2fa, aktive)}
         </Hinweis>
       )}
       {liste.error ? (
@@ -43,20 +47,18 @@ function BenutzerListe() {
         <TabellenRahmen
           fuss={
             <>
-              <span>{liste.data.length} Benutzer</span>
-              <span>
-                {admins} {admins === 1 ? "Administrator" : "Administratoren"}, {liste.data.length - admins} Mitarbeiter
-              </span>
+              <span>{t.anzahl(liste.data.length)}</span>
+              <span>{t.rollen(admins, liste.data.length - admins)}</span>
             </>
           }
         >
           <table className="tabelle">
             <thead>
               <tr>
-                <th>Benutzer</th>
-                <th className="hidden md:table-cell">Rolle</th>
-                <th className="hidden lg:table-cell">Status</th>
-                <th className="hidden xl:table-cell">Zuletzt angemeldet</th>
+                <th>{t.spalteBenutzer}</th>
+                <th className="hidden md:table-cell">{b0.rolleSpalte}</th>
+                <th className="hidden lg:table-cell">{o.allgemein.status}</th>
+                <th className="hidden xl:table-cell">{b0.zuletzt}</th>
               </tr>
             </thead>
             <tbody>
@@ -72,20 +74,20 @@ function BenutzerListe() {
                     </Link>
                     <span className="mt-1.5 flex flex-wrap gap-1.5 pl-11 lg:hidden">
                       <span className="md:hidden">
-                        <Marke ton={b.rolle === "admin" ? "info" : "neutral"}>{ROLLE[b.rolle]}</Marke>
+                        <Marke ton={b.rolle === "admin" ? "info" : "neutral"}>{b0.rolle[b.rolle]}</Marke>
                       </span>
                       <StatusMarken b={b} />
                     </span>
                   </td>
                   <td className="hidden align-middle md:table-cell">
-                    <Marke ton={b.rolle === "admin" ? "info" : "neutral"}>{ROLLE[b.rolle]}</Marke>
+                    <Marke ton={b.rolle === "admin" ? "info" : "neutral"}>{b0.rolle[b.rolle]}</Marke>
                   </td>
                   <td className="hidden align-middle lg:table-cell">
                     <StatusMarken b={b} />
                   </td>
                   <td className="hidden align-middle text-sm text-grau xl:table-cell">
-                    <span className="tabular-nums">{b.zuletzt ? datumZeit(b.zuletzt) : "noch nie"}</span>
-                    {b.geraete > 0 && ` · ${b.geraete} Gerät${b.geraete === 1 ? "" : "e"}`}
+                    <span className="tabular-nums">{b.zuletzt ? datumZeit(b.zuletzt) : b0.nochNie}</span>
+                    {b.geraete > 0 && t.geraete(b.geraete)}
                   </td>
                 </tr>
               ))}
@@ -99,13 +101,14 @@ function BenutzerListe() {
 
 /** /benutzer/neu */
 export function BenutzerNeu() {
+  const t = useOberflaeche().verein.benutzer.liste;
   const status = trpc.auth.status.useQuery();
   if (status.data && status.data.benutzer?.rolle !== "admin") return <Navigate to="/benutzer" replace />;
   return (
     <Seite>
       <div className="flex flex-col gap-2">
         <Zurueck />
-        <Seitenkopf titel="Neuer Benutzer" hilfe="neuen-benutzer-anlegen" />
+        <Seitenkopf titel={t.neu} hilfe="neuen-benutzer-anlegen" />
       </div>
       <div className={SCHMAL}><NeuerBenutzer /></div>
     </Seite>
@@ -114,12 +117,13 @@ export function BenutzerNeu() {
 
 /** /benutzer/:id – eigene Seite je Benutzer. */
 export function BenutzerSeite() {
+  const t = useOberflaeche().verein.benutzer;
   const id = Number(useParams().benutzerId);
   const status = trpc.auth.status.useQuery();
   const ich = status.data?.benutzer;
   const istAdmin = ich?.rolle === "admin";
   const b = trpc.auth.benutzerGet.useQuery({ id }, { enabled: istAdmin && id > 0 });
-  useSeitentitel(b.data?.name ?? "Benutzer");
+  useSeitentitel(b.data?.name ?? t.liste.titel);
   if (!status.data) return <Laden />;
   if (!istAdmin) return <Navigate to="/benutzer" replace />;
   if (b.error) return <Seite><Zurueck /><FehlerAnzeige fehler={b.error} nochmal={() => b.refetch()} /></Seite>;
@@ -133,13 +137,13 @@ export function BenutzerSeite() {
           titel={b.data.name}
           marke={
             <>
-              {selbst && <Marke>Sie</Marke>}
+              {selbst && <Marke>{t.seite.sie}</Marke>}
               <StatusMarken b={b.data} />
             </>
           }
-          unter={`${b.data.email} · ${ROLLE[b.data.rolle]} · angelegt am ${datum(b.data.angelegt)}`}
+          unter={t.seite.unter(b.data.email, t.rolle[b.data.rolle], datum(b.data.angelegt))}
           hilfe="die-seite-eines-benutzers"
-          hilfeText="Hilfe zur Benutzerseite"
+          hilfeText={t.seite.hilfe}
         />
       </div>
       <div className="grid items-start gap-6 xl:grid-cols-2">
@@ -153,16 +157,18 @@ export function BenutzerSeite() {
 }
 
 function EigenerZugang({ name, email, pflicht }: { name: string; email: string; pflicht?: boolean }) {
-  useSeitentitel("Mein Zugang");
+  const t = useOberflaeche().verein.benutzer.eigener;
+  useSeitentitel(t.titel);
   return (
     <Seite>
       <Seitenkopf
-        titel="Mein Zugang"
+        titel={t.titel}
         unter={`${name} · ${email}`}
+        // bleibt deutsch: Anker im Handbuch
         hilfe={pflicht ? "zwei-faktor-anmeldung-pflicht-für-administratoren" : "mein-zugang"}
         hilfeTeil={pflicht ? undefined : "helfer"}
       />
-      {pflicht && <Hinweis ton="warnung">Für Administratoren ist die Zwei-Faktor-Anmeldung Pflicht – erst danach stehen alle Verwaltungsfunktionen zur Verfügung.</Hinweis>}
+      {pflicht && <Hinweis ton="warnung">{t.pflicht}</Hinweis>}
       <div className="grid items-start gap-6 xl:grid-cols-2">
         <PasswortAendern />
         <ZweiFaktor />
@@ -172,6 +178,9 @@ function EigenerZugang({ name, email, pflicht }: { name: string; email: string; 
 }
 
 function NeuerBenutzer() {
+  const o = useOberflaeche();
+  const b0 = o.verein.benutzer;
+  const t = b0.neu;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [passwort, setPasswort] = useState("");
@@ -185,8 +194,8 @@ function NeuerBenutzer() {
       await utils.auth.benutzerListe.invalidate();
       meldung(
         r.einladung
-          ? `${name} angelegt. Die Einladung mit dem Link zum Festlegen des Passworts ist unterwegs.`
-          : `${name} angelegt. Eine Willkommensmail ohne Passwort ist unterwegs – das Passwort bitte persönlich weitergeben.`,
+          ? t.angelegtEinladung(name)
+          : t.angelegtWillkommen(name),
       );
       navigate(`/benutzer/${r.id}`);
     },
@@ -198,29 +207,29 @@ function NeuerBenutzer() {
   return (
     <form onSubmit={senden}>
       <Formular>
-        <FormAbschnitt titel="Person" spalten={1}>
-          <Feld label="Name">{(id) => <Eingabe id={id} value={name} onChange={(e) => setName(e.target.value)} required autoFocus />}</Feld>
-          <Feld label="E-Mail-Adresse" hinweis="Zum Anmelden">{(id) => <Eingabe id={id} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />}</Feld>
+        <FormAbschnitt titel={t.person} spalten={1}>
+          <Feld label={o.allgemein.name}>{(id) => <Eingabe id={id} value={name} onChange={(e) => setName(e.target.value)} required autoFocus />}</Feld>
+          <Feld label={b0.email} hinweis={t.emailHinweis}>{(id) => <Eingabe id={id} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />}</Feld>
         </FormAbschnitt>
-        <FormAbschnitt titel="Zugang" spalten={1}>
-          <Feld label="Rolle">
+        <FormAbschnitt titel={b0.zugang} spalten={1}>
+          <Feld label={b0.rolleSpalte}>
             {(id) => (
               <Auswahl id={id} value={rolle} onChange={(e) => setRolle(e.target.value as typeof rolle)}>
-                <option value="mitarbeiter">{ROLLE.mitarbeiter} – Meldestelle, Kasse, Halle</option>
-                <option value="admin">{ROLLE.admin} – alles, auch Einstellungen und Benutzer</option>
+                <option value="mitarbeiter">{t.rolleMitarbeiter(b0.rolle.mitarbeiter)}</option>
+                <option value="admin">{t.rolleAdmin(b0.rolle.admin)}</option>
               </Auswahl>
             )}
           </Feld>
-          <Haken label="Passwort selbst vergeben statt Einladungslink" checked={selbstVergeben} onChange={setSelbstVergeben} hinweis="Nur ohne E-Mail-Empfang" />
+          <Haken label={t.selbstVergeben} checked={selbstVergeben} onChange={setSelbstVergeben} hinweis={t.selbstVergebenHinweis} />
           {selbstVergeben && (
-            <Feld label="Erstes Passwort" hinweis="Mindestens 10 Zeichen">
+            <Feld label={t.erstesPasswort} hinweis={b0.mindestens10}>
               {(id) => <Eingabe id={id} type="text" value={passwort} onChange={(e) => setPasswort(e.target.value)} required minLength={10} autoComplete="off" />}
             </Feld>
           )}
         </FormAbschnitt>
         <div className="flex flex-wrap items-center justify-end gap-3 bg-papier/60 px-5 py-3">
           {anlegen.error && <p role="alert" className="mr-auto text-sm font-semibold text-kamm">{fehlerText(anlegen.error)}</p>}
-          <Knopf type="submit" variante="primaer" laedt={anlegen.isPending}>{selbstVergeben ? "Benutzer anlegen" : "Benutzer anlegen und einladen"}</Knopf>
+          <Knopf type="submit" variante="primaer" laedt={anlegen.isPending}>{selbstVergeben ? t.anlegen : t.anlegenEinladen}</Knopf>
         </div>
       </Formular>
     </form>

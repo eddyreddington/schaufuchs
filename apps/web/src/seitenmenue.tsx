@@ -3,7 +3,7 @@
  * lassen sich einklappen; der Zustand wird je Browser gemerkt. Offen sind ohne gemerkte Wahl die Gruppe der aktuellen
  * Phase und die Gruppe der aktuellen Seite – kommt man auf eine Seite in einer eingeklappten Gruppe, klappt sie auf.
  */
-import type { Phase } from "@schau/domain";
+import type { OberflaecheTexte, Phase } from "@schau/domain";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Symbol, type SymbolName } from "./symbole";
@@ -30,82 +30,86 @@ export interface MenueGruppe {
 /**
  * Seiten der Schau in der Reihenfolge, in der eine Schau abläuft: vorbereiten, Meldungen annehmen, nach dem Meldeschluss
  * Käfige, Hallenplan und Katalog, dann die Schautage. Kasse, Spenden und Abrechnung laufen über die ganze Schau und
- * stehen deshalb in einer eigenen Gruppe, nicht unter einem „Abschluss“.
+ * stehen deshalb in einer eigenen Gruppe, nicht unter einem „Abschluss“. Beschriftungen in der Sprache der Oberfläche.
  */
-export const SCHAU_GRUPPEN: MenueGruppe[] = [
-  { id: null, name: "", seiten: [{ pfad: "", label: "Übersicht", symbol: "uebersicht" }] },
-  {
-    id: "vorbereitung",
-    name: "Vorbereitung",
-    phasen: ["vorbereitung"],
-    seiten: [
-      { pfad: "einstellungen", label: "Einstellungen", symbol: "einstellungen", auch: ["protokoll"] },
-      { pfad: "preisrichter", label: "Preisrichter", symbol: "preisrichter" },
-    ],
-  },
-  { id: "meldephase", name: "Meldephase", phasen: ["meldung"], seiten: [{ pfad: "meldungen", label: "Meldungen", symbol: "meldungen" }] },
-  {
-    // Erst mit den Meldungen weiß man, wie viele Käfige welcher Größe in die Halle müssen. Die Katalognummern folgen der
-    // Ausstellungsfolge oder dem Plan; die Bereiche der Preisrichter (Einteilung nach Rassen) folgen den Nummern.
-    id: "meldeschluss",
-    name: "Nach dem Meldeschluss",
-    phasen: ["katalog"],
-    seiten: [
-      { pfad: "kaefige", label: "Käfige", symbol: "kaefige" },
-      { pfad: "hallenplan", label: "Hallenplan", symbol: "hallenplan" },
-      { pfad: "katalog", label: "Katalognummern", symbol: "katalognummern" },
-      { pfad: "katalog/gestalten", label: "Katalog", symbol: "katalog" },
-    ],
-  },
-  {
-    id: "schautage",
-    name: "Schautage",
-    phasen: ["einlieferung", "bewertung", "preise", "schau"],
-    seiten: [
-      { pfad: "einlieferung", label: "Einlieferung", symbol: "einlieferung" },
-      { pfad: "bewertung", label: "Bewertung", symbol: "bewertung" },
-      { pfad: "preise", label: "Preise", symbol: "preise" },
-      { pfad: "meisterschaften", label: "Meisterschaften", symbol: "meisterschaften" },
-      { pfad: "verkauf", label: "Tierverkauf", symbol: "verkauf" },
-    ],
-  },
-  {
-    id: "kasse",
-    name: "Kasse und Abrechnung",
-    phasen: ["schau", "abrechnung", "abgeschlossen"],
-    seiten: [
-      { pfad: "kassenbuch", label: "Kassenbuch", symbol: "kassenbuch" },
-      { pfad: "spenden", label: "Spenden", symbol: "spenden" },
-      { pfad: "lastschrift", label: "Lastschrift", symbol: "lastschrift", nurAdmin: true },
-      { pfad: "abrechnung", label: "Abrechnung", symbol: "abrechnung" },
-    ],
-  },
-];
+export function schauGruppen(t: OberflaecheTexte): MenueGruppe[] {
+  const m = t.rahmen.menue;
+  return [
+    { id: null, name: "", seiten: [{ pfad: "", label: m.uebersicht, symbol: "uebersicht" }] },
+    {
+      id: "vorbereitung",
+      name: m.vorbereitung,
+      phasen: ["vorbereitung"],
+      seiten: [
+        { pfad: "einstellungen", label: m.einstellungen, symbol: "einstellungen", auch: ["protokoll"] },
+        { pfad: "preisrichter", label: m.preisrichter, symbol: "preisrichter" },
+      ],
+    },
+    { id: "meldephase", name: m.meldephase, phasen: ["meldung"], seiten: [{ pfad: "meldungen", label: m.meldungen, symbol: "meldungen" }] },
+    {
+      // Erst mit den Meldungen weiß man, wie viele Käfige welcher Größe in die Halle müssen. Die Katalognummern folgen der
+      // Ausstellungsfolge oder dem Plan; die Bereiche der Preisrichter (Einteilung nach Rassen) folgen den Nummern.
+      id: "meldeschluss",
+      name: m.nachMeldeschluss,
+      phasen: ["katalog"],
+      seiten: [
+        { pfad: "kaefige", label: m.kaefige, symbol: "kaefige" },
+        { pfad: "hallenplan", label: m.hallenplan, symbol: "hallenplan" },
+        { pfad: "katalog", label: m.katalognummern, symbol: "katalognummern" },
+        { pfad: "katalog/gestalten", label: m.katalog, symbol: "katalog" },
+      ],
+    },
+    {
+      id: "schautage",
+      name: m.schautage,
+      phasen: ["einlieferung", "bewertung", "preise", "schau"],
+      seiten: [
+        { pfad: "einlieferung", label: m.einlieferung, symbol: "einlieferung" },
+        { pfad: "bewertung", label: m.bewertung, symbol: "bewertung" },
+        { pfad: "preise", label: m.preise, symbol: "preise" },
+        { pfad: "meisterschaften", label: m.meisterschaften, symbol: "meisterschaften" },
+        { pfad: "verkauf", label: m.tierverkauf, symbol: "verkauf" },
+      ],
+    },
+    {
+      id: "kasse",
+      name: m.kasseAbrechnung,
+      phasen: ["schau", "abrechnung", "abgeschlossen"],
+      seiten: [
+        { pfad: "kassenbuch", label: m.kassenbuch, symbol: "kassenbuch" },
+        { pfad: "spenden", label: m.spenden, symbol: "spenden" },
+        { pfad: "lastschrift", label: m.lastschrift, symbol: "lastschrift", nurAdmin: true },
+        { pfad: "abrechnung", label: m.abrechnung, symbol: "abrechnung" },
+      ],
+    },
+  ];
+}
 
 /** Seiten außerhalb einer Schau. Verein nur für Administratoren. */
-export function allgemeineGruppen(istAdmin: boolean): MenueGruppe[] {
+export function allgemeineGruppen(istAdmin: boolean, t: OberflaecheTexte): MenueGruppe[] {
+  const m = t.rahmen.menue;
   return [
-    { id: null, name: "", seiten: [{ pfad: "/", label: "Alle Schauen", symbol: "schauen" }] },
+    { id: null, name: "", seiten: [{ pfad: "/", label: m.alleSchauen, symbol: "schauen" }] },
     ...(istAdmin
       ? [
           {
             id: "verein",
-            name: "Verein",
+            name: m.verein,
             seiten: [
-              { pfad: "/aussteller", label: "Aussteller", symbol: "aussteller" as const },
-              { pfad: "/spender", label: "Spender", symbol: "spenden" as const },
-              { pfad: "/import", label: "Import", symbol: "import" as const },
-              { pfad: "/verein", label: "Verein und Datenschutz", symbol: "verein" as const },
+              { pfad: "/aussteller", label: m.aussteller, symbol: "aussteller" as const },
+              { pfad: "/spender", label: m.spender, symbol: "spenden" as const },
+              { pfad: "/import", label: m.import, symbol: "import" as const },
+              { pfad: "/verein", label: m.vereinDatenschutz, symbol: "verein" as const },
             ],
           },
         ]
       : []),
     {
       id: "einrichtung",
-      name: "Einrichtung",
+      name: m.einrichtung,
       seiten: [
-        { pfad: "/stammdaten", label: "Rassen und Farbenschläge", symbol: "stammdaten" },
-        { pfad: "/benutzer", label: istAdmin ? "Benutzer" : "Mein Zugang", symbol: "benutzer" },
+        { pfad: "/stammdaten", label: m.stammdaten, symbol: "stammdaten" },
+        { pfad: "/benutzer", label: istAdmin ? m.benutzer : m.meinZugang, symbol: "benutzer" },
       ],
     },
   ];

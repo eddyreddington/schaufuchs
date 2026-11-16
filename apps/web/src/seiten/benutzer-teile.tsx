@@ -1,11 +1,11 @@
 /** Benutzer: gemeinsame Teile der Seiten (Rollennamen, Statusmarken, Rücklink, Neuladen nach Änderungen). */
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useOberflaeche } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { Marke, SEITE } from "../ui";
 
 type Eintrag = Ausgabe["auth"]["benutzerListe"][number];
-export const ROLLE = { admin: "Administrator", mitarbeiter: "Mitarbeiter" } as const;
 
 export function Seite({ children }: { children: ReactNode }) {
   return <div className={SEITE}>{children}</div>;
@@ -21,25 +21,28 @@ export function einladungAbgelaufen(b: Pick<Eintrag, "einladungOffen" | "einladu
 }
 
 export function StatusMarken({ b }: { b: Pick<Eintrag, "aktiv" | "wartet" | "zweiFaktor" | "einladungOffen" | "einladungBis"> }) {
+  const o = useOberflaeche().verein.benutzer;
+  const t = o.teile;
   return (
     <span className="flex flex-wrap gap-1.5">
       {!b.aktiv ? (
-        <Marke ton="fehler">gesperrt</Marke>
+        <Marke ton="fehler">{t.gesperrt}</Marke>
       ) : b.einladungOffen ? (
-        <Marke ton="warnung">{einladungAbgelaufen(b) ? "Einladung abgelaufen" : "eingeladen"}</Marke>
+        <Marke ton="warnung">{einladungAbgelaufen(b) ? t.einladungAbgelaufen : t.eingeladen}</Marke>
       ) : (
-        <Marke ton="ok">aktiv</Marke>
+        <Marke ton="ok">{o.aktiv}</Marke>
       )}
-      {b.zweiFaktor ? <Marke ton="ok">2FA</Marke> : <Marke ton="neutral">ohne 2FA</Marke>}
-      {b.wartet && <Marke ton="warnung">Wartezeit</Marke>}
+      {b.zweiFaktor ? <Marke ton="ok">{t.zweiFa}</Marke> : <Marke ton="neutral">{t.ohne2fa}</Marke>}
+      {b.wartet && <Marke ton="warnung">{t.wartezeit}</Marke>}
     </span>
   );
 }
 
 export function Zurueck() {
+  const t = useOberflaeche().verein.benutzer.teile;
   return (
     <Link to="/benutzer" className="self-start text-sm text-grau no-underline hover:text-tinte hover:underline">
-      ‹ Alle Benutzer
+      {t.alleBenutzer}
     </Link>
   );
 }

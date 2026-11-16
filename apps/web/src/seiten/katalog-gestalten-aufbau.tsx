@@ -1,18 +1,16 @@
 import {
   KATALOG_AUFTEILUNGEN,
-  KATALOG_AUFTEILUNG_INFO,
   KATALOG_FARBFAMILIEN,
   KATALOG_FUSSZEILEN,
-  KATALOG_FUSSZEILE_INFO,
   KATALOG_LINIEN,
-  KATALOG_LINIEN_INFO,
   KATALOG_PALETTEN,
   KATALOG_SCHRIFTEN,
-  KATALOG_SCHRIFT_INFO,
   KATALOG_STILE,
-  KATALOG_STIL_INFO,
   kontrastZuWeiss,
+  LOCALE,
+  type OberflaecheTexte,
 } from "@schau/domain";
+import { useOberflaeche, useSprache } from "../sprache";
 import { Auswahl, Eingabe, Feld, Haken, Marke } from "../ui";
 import { Gruppe, Kacheln } from "./katalog-gestalten-bausteine";
 import type { Form } from "./katalog-gestalten-form";
@@ -86,63 +84,65 @@ function AufteilungBild({ aufteilung, farbe }: { aufteilung: Form["aufteilung"];
 }
 
 export function Aufbau({ d, set }: { d: Form; set: <K extends keyof Form>(k: K, v: Form[K]) => void }) {
+  const t = useOberflaeche();
+  const ta = t.katalog.aufbau;
   return (
     <>
-      <Gruppe titel="Aussehen">
-        <Kacheln label="Gestaltung" werte={KATALOG_STILE} wert={d.stil} name={(w) => KATALOG_STIL_INFO[w].name} bild={(w) => <StilBild stil={w} farbe={d.farbe} akzent={d.akzent || d.farbe} />} onWahl={(w) => set("stil", w)} />
+      <Gruppe titel={ta.aussehen}>
+        <Kacheln label={ta.gestaltung} werte={KATALOG_STILE} wert={d.stil} name={(w) => t.fach.KATALOG_STIL_INFO[w].name} bild={(w) => <StilBild stil={w} farbe={d.farbe} akzent={d.akzent || d.farbe} />} onWahl={(w) => set("stil", w)} />
         <div className="flex flex-col gap-1.5">
           <Kacheln
-            label="Aufteilung des Tierteils"
+            label={ta.aufteilung}
             werte={KATALOG_AUFTEILUNGEN}
             wert={d.aufteilung}
-            name={(w) => KATALOG_AUFTEILUNG_INFO[w].name}
+            name={(w) => t.fach.KATALOG_AUFTEILUNG_INFO[w].name}
             bild={(w) => <AufteilungBild aufteilung={w} farbe={d.farbe} />}
             onWahl={(w) => set("aufteilung", w)}
           />
-          {d.aufteilung === "dreispaltig" && d.format === "A5" && <p className="text-sm text-stroh-dunkel">Bei A5 zweispaltig.</p>}
+          {d.aufteilung === "dreispaltig" && d.format === "A5" && <p className="text-sm text-stroh-dunkel">{ta.a5Zweispaltig}</p>}
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Feld label="Format">
+          <Feld label={ta.format}>
             {(fid) => (
               <Auswahl id={fid} value={d.format} onChange={(e) => set("format", e.target.value as Form["format"])}>
                 <option value="A4">A4</option>
-                <option value="A5">A5 (Heft)</option>
+                <option value="A5">{ta.a5Heft}</option>
               </Auswahl>
             )}
           </Feld>
-          <Feld label="Schrift">
+          <Feld label={ta.schrift}>
             {(fid) => (
               <Auswahl id={fid} value={d.schrift} onChange={(e) => set("schrift", e.target.value as Form["schrift"])}>
                 {KATALOG_SCHRIFTEN.map((sch) => (
                   <option key={sch} value={sch}>
-                    {KATALOG_SCHRIFT_INFO[sch].name}
+                    {t.fach.KATALOG_SCHRIFT_INFO[sch].name}
                   </option>
                 ))}
               </Auswahl>
             )}
           </Feld>
-          <Feld label="Linien">
+          <Feld label={ta.linien}>
             {(fid) => (
               <Auswahl id={fid} value={d.linien} onChange={(e) => set("linien", e.target.value as Form["linien"])}>
                 {KATALOG_LINIEN.map((l) => (
                   <option key={l} value={l}>
-                    {KATALOG_LINIEN_INFO[l].name}
+                    {t.fach.KATALOG_LINIEN_INFO[l].name}
                   </option>
                 ))}
               </Auswahl>
             )}
           </Feld>
         </div>
-        <Kacheln label="Fußzeile" werte={KATALOG_FUSSZEILEN} wert={d.fusszeile} name={(w) => KATALOG_FUSSZEILE_INFO[w]} bild={(w) => <FussBild fusszeile={w} farbe={d.farbe} akzent={d.akzent || d.farbe} />} onWahl={(w) => set("fusszeile", w)} />
+        <Kacheln label={ta.fusszeile} werte={KATALOG_FUSSZEILEN} wert={d.fusszeile} name={(w) => t.fach.KATALOG_FUSSZEILE_INFO[w]} bild={(w) => <FussBild fusszeile={w} farbe={d.farbe} akzent={d.akzent || d.farbe} />} onWahl={(w) => set("fusszeile", w)} />
       </Gruppe>
-      <Gruppe titel="Farben">
+      <Gruppe titel={ta.farben}>
         <Paletten d={d} set={set} />
-        <Farbwahl titel="Vereinsfarbe" farbe={d.farbe} setFarbe={(f) => set("farbe", f)} />
+        <Farbwahl titel={ta.vereinsfarbe} farbe={d.farbe} setFarbe={(f) => set("farbe", f)} />
         <Akzentwahl d={d} set={set} />
       </Gruppe>
-      <Gruppe titel="Impressum">
-        <Feld label="Druck (Impressum)" hinweis="Druckerei mit Anschrift oder „Eigendruck“">
-          {(fid) => <Eingabe id={fid} value={d.druck} placeholder="z. B. Druckerei Muster, Hauptstraße 1, 12345 Musterdorf" onChange={(e) => set("druck", e.target.value)} />}
+      <Gruppe titel={ta.impressum}>
+        <Feld label={ta.druck} hinweis={ta.druckHinweis}>
+          {(fid) => <Eingabe id={fid} value={d.druck} placeholder={ta.druckBeispiel} onChange={(e) => set("druck", e.target.value)} />}
         </Feld>
       </Gruppe>
     </>
@@ -176,20 +176,27 @@ function FussBild({ fusszeile, farbe, akzent }: { fusszeile: Form["fusszeile"]; 
 
 /** Kontrast zu weißem Papier als kurze Marke. */
 function KontrastMarke({ farbe }: { farbe: string }) {
+  const ta = useOberflaeche().katalog.aufbau;
   const k = kontrastZuWeiss(farbe);
-  const zahl = `${k.toLocaleString("de-DE", { maximumFractionDigits: 1 })} : 1`;
-  if (k >= 4.5) return <Marke ton="ok">Kontrast {zahl}</Marke>;
-  return <Marke ton="warnung">Kontrast {zahl}: Schrift wird dunkler gedruckt</Marke>;
+  const zahl = `${k.toLocaleString(LOCALE[useSprache()], { maximumFractionDigits: 1 })} : 1`;
+  if (k >= 4.5) return <Marke ton="ok">{ta.kontrast(zahl)}</Marke>;
+  return <Marke ton="warnung">{ta.kontrastSchwach(zahl)}</Marke>;
 }
 
+// Deutsche Namen der Domain; angezeigt in der Sprache der Oberfläche über `t.katalog.farben` (sonst der deutsche Name).
 const ALLE_FARBEN = [...KATALOG_FARBFAMILIEN.flatMap((f) => f.farben), ...KATALOG_PALETTEN.map((p): [string, string] => [p.akzent, p.name.split(" und ")[1]!])];
-const farbName = (f: string) => ALLE_FARBEN.find(([w]) => w === f.toLowerCase())?.[1] ?? "eigene Farbe";
+const uebersetzt = (liste: Record<string, string>, name: string) => liste[name] ?? name;
+const farbName = (t: OberflaecheTexte, f: string) => {
+  const name = ALLE_FARBEN.find(([w]) => w === f.toLowerCase())?.[1];
+  return name ? uebersetzt(t.katalog.farben.namen, name) : t.katalog.aufbau.eigeneFarbe;
+};
 
 /** Abgestimmte Paare: ein Klick setzt Vereins- und Akzentfarbe. */
 function Paletten({ d, set }: { d: Form; set: <K extends keyof Form>(k: K, v: Form[K]) => void }) {
+  const t = useOberflaeche();
   return (
     <fieldset className="min-w-0">
-      <legend className="mb-1.5 text-sm font-semibold">Abgestimmte Farbpaare</legend>
+      <legend className="mb-1.5 text-sm font-semibold">{t.katalog.aufbau.farbpaare}</legend>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-2">
         {KATALOG_PALETTEN.map((p) => {
           const gewaehlt = d.farbe.toLowerCase() === p.haupt && d.akzent.toLowerCase() === p.akzent;
@@ -208,7 +215,7 @@ function Paletten({ d, set }: { d: Form; set: <K extends keyof Form>(k: K, v: Fo
                 <rect x={0} y={0} width={28} height={20} fill={p.haupt} />
                 <rect x={0} y={14} width={28} height={6} fill={p.akzent} />
               </svg>
-              {p.name}
+              {uebersetzt(t.katalog.farben.paletten, p.name)}
             </button>
           );
         })}
@@ -218,21 +225,23 @@ function Paletten({ d, set }: { d: Form; set: <K extends keyof Form>(k: K, v: Fo
 }
 
 function Farbwahl({ titel, farbe, setFarbe }: { titel: string; farbe: string; setFarbe: (f: string) => void }) {
+  const t = useOberflaeche();
+  const ta = t.katalog.aufbau;
   return (
     <fieldset className="flex min-w-0 flex-col gap-3">
       <legend className="mb-1.5 text-sm font-semibold">{titel}</legend>
-      <div className="grid gap-x-6 gap-y-2 lg:grid-cols-2" role="group" aria-label={`${titel}: Vorschläge`}>
+      <div className="grid gap-x-6 gap-y-2 lg:grid-cols-2" role="group" aria-label={ta.vorschlaege(titel)}>
         {KATALOG_FARBFAMILIEN.map((f) => (
           <div key={f.name} className="flex flex-wrap items-center gap-1.5">
-            <span className="w-24 shrink-0 text-sm text-grau">{f.name}</span>
+            <span className="w-24 shrink-0 text-sm text-grau">{uebersetzt(t.katalog.farben.familien, f.name)}</span>
             {f.farben.map(([wert, name]) => {
               const gewaehlt = farbe.toLowerCase() === wert;
               return (
                 <button
                   key={wert}
                   type="button"
-                  title={name}
-                  aria-label={name}
+                  title={uebersetzt(t.katalog.farben.namen, name)}
+                  aria-label={uebersetzt(t.katalog.farben.namen, name)}
                   aria-pressed={gewaehlt}
                   onClick={() => setFarbe(wert)}
                   className={`size-6 shrink-0 rounded-full ${gewaehlt ? "ring-2 ring-band ring-offset-2 ring-offset-weiss" : "ring-1 ring-linie-stark hover:ring-grau"}`}
@@ -247,9 +256,9 @@ function Farbwahl({ titel, farbe, setFarbe }: { titel: string; farbe: string; se
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <input type="color" aria-label={`${titel}: eigene Farbe`} value={farbe} onChange={(e) => setFarbe(e.target.value)} className="h-9 w-14 cursor-pointer rounded-md border border-feldrand bg-weiss" />
+        <input type="color" aria-label={ta.eigeneFarbeLabel(titel)} value={farbe} onChange={(e) => setFarbe(e.target.value)} className="h-9 w-14 cursor-pointer rounded-md border border-feldrand bg-weiss" />
         <span className="text-sm text-grau">
-          {farbName(farbe)} · <span className="font-mono">{farbe}</span>
+          {farbName(t, farbe)} · <span className="font-mono">{farbe}</span>
         </span>
         <KontrastMarke farbe={farbe} />
       </div>
@@ -259,11 +268,12 @@ function Farbwahl({ titel, farbe, setFarbe }: { titel: string; farbe: string; se
 
 /** Akzentfarbe: leer = wie die Vereinsfarbe (bisheriges Aussehen). */
 function Akzentwahl({ d, set }: { d: Form; set: <K extends keyof Form>(k: K, v: Form[K]) => void }) {
+  const ta = useOberflaeche().katalog.aufbau;
   const eigene = d.akzent !== "";
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      <Haken label="Eigene Akzentfarbe für Linien und kleine Überschriften" checked={eigene} onChange={(v) => set("akzent", v ? d.farbe : "")} />
-      {eigene && <Farbwahl titel="Akzentfarbe" farbe={d.akzent} setFarbe={(f) => set("akzent", f)} />}
+      <Haken label={ta.eigeneAkzentfarbe} checked={eigene} onChange={(v) => set("akzent", v ? d.farbe : "")} />
+      {eigene && <Farbwahl titel={ta.akzentfarbe} farbe={d.akzent} setFarbe={(f) => set("akzent", f)} />}
     </div>
   );
 }

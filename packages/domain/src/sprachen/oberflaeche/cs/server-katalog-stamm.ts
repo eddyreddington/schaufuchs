@@ -1,0 +1,48 @@
+import type { OberflaecheTexte } from "..";
+
+export const stamm: OberflaecheTexte["serverKatalog"]["stamm"] = {
+  bild: {
+    groesser2: "Obrázek je větší než 2 MB. Zmenšete ho prosím (např. na šířku 2000 pixelů).",
+    groesser2Kurz: "Obrázek je větší než 2 MB. Zmenšete ho prosím.",
+    groesser5: "Obrázek je větší než 5 MB.",
+    logo: "Logo je větší než 600 KB. Zmenšete ho prosím (např. na šířku 600 pixelů) – je na každém dokladu.",
+    format: "Jen obrázky ve formátu JPEG nebo PNG.",
+    nurJpeg: "Jen obrázky ve formátu JPEG. Uložte prosím fotografii jako JPEG.",
+    lesen: "Obrázek nelze přečíst. Uložte ho prosím znovu jako JPEG nebo PNG.",
+    lesenJpeg: "Obrázek nelze přečíst. Uložte ho prosím znovu jako JPEG.",
+    beschaedigt: "Obrázek nelze přečíst (poškozený nebo neúplný). Uložte ho prosím znovu.",
+    unvollstaendig: "Obrázek je neúplný. Uložte nebo stáhněte ho prosím znovu.",
+    pixel: (breite: string, hoehe: string) => `Obrázek s rozměry ${breite} × ${hoehe} pixelů je příliš velký. Zmenšete ho prosím.`,
+    pixel1200: (breite: string, hoehe: string) => `Obrázek s rozměry ${breite} × ${hoehe} pixelů je příliš velký. Zmenšete ho prosím (např. na šířku 1200 pixelů).`,
+    png: (breite: string, hoehe: string) => `Obrázek PNG s průhledným pozadím a rozměry ${breite} × ${hoehe} pixelů je pro tisk katalogu příliš velký. Uložte ho prosím jako JPEG nebo ho zmenšete nejvýše na 1,5 milionu pixelů (např. 1500 × 1000).`,
+    fremd: "Tento obrázek nepatří k výstavě.",
+    fehlt: "Obrázek nenalezen.",
+    beitragFehlt: "Příspěvek nenalezen.",
+    beitragUnbekannt: "Neznámý příspěvek.",
+  },
+  lizenz: {
+    fehlt: "Chybí licence – např. „vlastní obrázek“, „volné dílo“, „CC0“ nebo „CC BY-SA 4.0“.",
+    nc: "Licence „nekomerční“ (NC): katalog se prodává – tento obrázek do něj nesmí.",
+    nd: "Licence „nezasahujte do díla“ (ND): v katalogu se obrázek ořezává a zmenšuje – tento obrázek do něj nesmí.",
+    urheber: "Chybí autor – licence CC BY vyžaduje uvedení autora.",
+    link: "Chybí odkaz na licenci – zadejte prosím adresu licence (např. https://creativecommons.org/licenses/by-sa/4.0/).",
+  },
+  stammdaten: {
+    versionUnbekannt: "Tato verze základních dat neexistuje.",
+    keineZeilen: "Soubor neobsahuje žádné platné řádky.",
+    versionFehlt: "Verze nenalezena.",
+    nichtErgaenzen: "Tato verze je poskytnuta všem spolkům a nelze ji doplňovat. Nahrajte prosím vlastní seznam.",
+    nichtLoeschen: "Tato verze je poskytnuta všem spolkům a nelze ji smazat.",
+    schonDa: (rasse: string) => `Všechny zadané barevné rázy už u „${rasse}“ existují.`,
+    verwendet: "Tuto verzi používá některá výstava.",
+    verweisen: "Přihlášená zvířata odkazují na tuto verzi – nelze ji smazat.",
+    anfuehrung: (zeile: string) => `Řádek ${zeile}: neuzavřené uvozovky.`,
+    dreiSpalten: (zeile: string) => `Řádek ${zeile}: očekávány tři sloupce (Sparte;Rasse;Farbenschlag).`,
+    mehrSpalten: (zeile: string) => `Řádek ${zeile}: více než tři sloupce – oddělovač v poli? Dejte pole do uvozovek.`,
+    doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Řádek ${zeile}: duplicitní (${rasse}, ${farbenschlag}).`,
+  },
+  druckvorlage: {
+    fehlt: "Šablona nenalezena.",
+    andereSchau: "Tato šablona patří k jiné výstavě.",
+  },
+};

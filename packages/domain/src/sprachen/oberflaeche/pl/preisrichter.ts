@@ -1,3 +1,97 @@
 import type { OberflaecheTexte } from "..";
+import { preisrichterImport } from "./preisrichter-import";
+import { preisrichterTermine } from "./preisrichter-termine";
 
-export const preisrichter: OberflaecheTexte["preisrichter"] = {};
+/** Polska liczba mnoga: 1 / 2–4 (bez 12–14) / pozostałe. */
+const m = (n: number, jeden: string, kilka: string, wiele: string) =>
+  n === 1 ? jeden : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? kilka : wiele;
+const sedziow = (n: number) => `${n} ${m(n, "sędzia", "sędziów", "sędziów")}`;
+const zwierzat = (n: number) => `${n} ${m(n, "zwierzę", "zwierzęta", "zwierząt")}`;
+
+export const preisrichter: OberflaecheTexte["preisrichter"] = {
+  seite: {
+    sperreAufgehoben: "Blokada zdjęta.",
+    unter: (anzahl, tiere, bewertet) => `${sedziow(anzahl)}, przydzielone zwierzęta: ${tiere}, ocenione: ${bewertet}`,
+    hinzufuegen: "Dodaj sędziego",
+    bearbeitenTitel: "Edytuj sędziego",
+    leer: "Brak sędziów",
+    anzahl: (n) => sedziow(n),
+    ohneZuteilung: (n) => `, bez sędziego: ${zwierzat(n)}`,
+    tablet: "Tablet:",
+    bereich: "Zakres",
+    bewertet: "ocenione",
+    tabletSpalte: "Tablet",
+    obmann: "Sędzia główny",
+    bewertetSparten: (sparten) => `ocenia: ${sparten}`,
+    alleSparten: "wszystkie sekcje",
+    pinGesetzt: "PIN ustawiony",
+    keinePin: "brak PIN-u",
+    wartezeit: "Nieudane próby – czas oczekiwania",
+    sperreAufheben: "Zdejmij blokadę",
+    neuePinFrage: (name) => `Nowy PIN dla: ${name}?`,
+    neuePinText: (name) => `Wszystkie tablety (${name}) zostaną wylogowane; oczekujące oceny pozostają w urządzeniu.`,
+    neuePinErzeugen: "Utwórz nowy PIN",
+    neuePin: "Nowy PIN",
+    pinErzeugen: "Utwórz PIN",
+    liste: "Lista",
+    karten: "Karty",
+    loeschenFrage: (name) => `Usunąć: ${name}?`,
+    loeschenLabel: (name) => `Usuń: ${name}`,
+    pinFuer: (name) => `PIN dla: ${name}`,
+    pinNotieren: "Widoczny tylko teraz – prosimy go zanotować.",
+  },
+  form: {
+    anschrift: "Adres",
+    anschriftImKatalog: "Podaj adres w drukowanym katalogu",
+    anschriftHinweis: "Tylko za zgodą sędziego.",
+    telefon: "Telefon",
+    email: "E-mail",
+    obmannHinweis: "Zatwierdza ocenę „vorzüglich”.",
+    sparten: "Ocenia te sekcje",
+    spartenLeer: "(brak = wszystkie)",
+  },
+  einteilung: {
+    gespeichert: "Podział zapisany.",
+    trotzdemFrage: "Zapisać mimo to?",
+    uebergang: "Limit nagród i nagrody tych zwierząt przechodzą na nowego sędziego.",
+    verteilen: "Rozdziel równomiernie",
+    keinRichterFuer: (liste) => `Brak sędziego dla: ${liste}.`,
+    nummern: {
+      titel: "Podział według numerów",
+      speichernFrage: "Zapisać podział?",
+      speichernText: "Podział według ras przestanie wtedy obowiązywać; zakresy nie będą już same dostosowywać się do nowych numerów.",
+      folgtRassen: "wynika z podziału według ras",
+      keineNummern: "Nie nadano jeszcze numerów katalogowych.",
+      imKatalog: (n) => `${zwierzat(n)} w katalogu`,
+      davonOhne: (n) => `, w tym bez sędziego: ${n}`,
+      vonNr: "od nr",
+      bisNr: "do nr",
+      von: "od",
+      bis: "do",
+      zeileEntfernen: "Usuń wiersz",
+      bereichHinzufuegen: "Dodaj zakres",
+      geaendert: "Zmieniono podział według numerów",
+      speichernKnopf: "Zapisz podział według numerów",
+    },
+    rassen: {
+      titel: "Podział według ras",
+      tiereOhne: (n) => `bez sędziego: ${zwierzat(n)}`,
+      nachmeldungen: (liste) => `Zgłoszenia uzupełniające przy poprzednim numerze: ${liste}`,
+      gespeichertBereiche: "Podział zapisany, zakresy numerów przeliczone na nowo.",
+      gespeichertOhneBereiche: "Podział zapisany. Zakresy numerów powstaną przy nadawaniu numerów katalogowych.",
+      keineTiere: "Nie zgłoszono jeszcze zwierząt.",
+      ohnePreisrichter: "bez sędziego",
+      ohneSparte: "bez sekcji",
+      keiner: "– brak –",
+      richterFuer: (was) => `Sędzia dla: ${was}`,
+      zuklappen: "zwiń",
+      farbenschlaege: "Odmiany barwne",
+      ohneFarbenschlag: "(bez odmiany barwnej)",
+      wieRasse: "jak rasa",
+      geaendert: "Zmieniono podział według ras",
+      speichernKnopf: "Zapisz podział według ras",
+    },
+  },
+  termine: preisrichterTermine,
+  import: preisrichterImport,
+};

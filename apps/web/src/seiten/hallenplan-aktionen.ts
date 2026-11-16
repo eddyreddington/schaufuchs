@@ -3,11 +3,12 @@
  * zurück, Leeres entfernen, Teile und fehlende Käfige einsetzen, Fläche aufziehen; dazu die Aktionen für Leiste,
  * Eigenschaften und Tastenkürzel (`aktionen`).
  */
-import { eingangAnWand, istRechteckUmriss, ueberlappt, umrissNormal, umrissSperren, umrissVon, type Belegt, fehlendeImPlan, freieStelle, type HallenFlaeche, type HallenObjekt, KAEFIG_TYP_MEHRZAHL, type KaefigTyp, leereEntfernen, MOEBEL_NAME, type MoebelArt, rasterAusrichten, type Rechteck, teilGroesse, type WandSeite } from "@schau/domain";
+import { eingangAnWand, istRechteckUmriss, ueberlappt, umrissNormal, umrissSperren, umrissVon, type Belegt, fehlendeImPlan, freieStelle, type HallenFlaeche, type HallenObjekt, type KaefigTyp, leereEntfernen, type MoebelArt, oberflaeche, type OberflaecheTexte, rasterAusrichten, type Rechteck, serverText, teilGroesse, type WandSeite } from "@schau/domain";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { useFrage, useMeldung } from "../ui";
 import { type HallenEntwurf } from "./hallenplan-entwurf";
-import { type Aktionen, anzahl, type Daten, drehPruefung, EINGANG_TIEFE, entfernenText, gedreht, type Plan, planKoerper, RASTER, raster, vollstaendig, wandText, type Ziel, zuTeilen } from "./hallenplan-geometrie";
+import { type Aktionen, type Daten, drehPruefung, EINGANG_TIEFE, entfernenText, gedreht, type Plan, planKoerper, RASTER, raster, vollstaendig, wandText, type Ziel, zuTeilen } from "./hallenplan-geometrie";
 
 export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, zeichnen, setZeichnen, anWandFragen }: {
   d: Daten;
@@ -23,14 +24,18 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
+  const t = useOberflaeche();
+  const ta = t.halleWerkzeuge.aktionen;
+  const tg = t.halleWerkzeuge.gemeinsam;
+  const sprache = useSprache();
   const { entwurf, entwurfRef, aendern, kette, festUnterwegs, festMachen } = e;
   /** Gewählte Teile zum Verschieben, Drehen und Ausrichten: ein freier Platz steht für seine Grundplatte. */
   const teile = zuTeilen(auswahl, plan);
   const ausrichten = () => {
     const ziele = teile.length ? teile : null;
     const vorab = rasterAusrichten(entwurfRef.current, planKoerper(entwurfRef.current, plan), ziele, RASTER);
-    if (!vorab.ok) return meldung(vorab.meldung, "warnung");
-    if (!vorab.bewegt) return meldung(ziele ? "Die gewählten Teile stehen schon am Raster." : "Alles steht schon am Raster.");
+    if (!vorab.ok) return meldung(serverText(vorab.meldung, sprache), "warnung");
+    if (!vorab.bewegt) return meldung(ziele ? ta.rasterSchonAuswahl : ta.rasterSchonAlles);
     // Auf dem neuesten Entwurf rechnen (es kann noch ein Speichern unterwegs sein); gemeldet wird, was wirklich geschah.
     let e: ReturnType<typeof rasterAusrichten> = vorab;
     aendern(
@@ -38,18 +43,18 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
         e = rasterAusrichten(h, planKoerper(h, plan), ziele, RASTER);
         return e.ok ? e.halle : h;
       },
-      { was: "Am Raster ausrichten", festschreiben: !ziele || ziele.some((t) => t.art === "reihe" || t.art === "platte") },
+      { was: ta.rasterWas, festschreiben: !ziele || ziele.some((t) => t.art === "reihe" || t.art === "platte") },
     );
     const ergebnis = e as ReturnType<typeof rasterAusrichten>;
-    if (!ergebnis.ok) return meldung(ergebnis.meldung, "warnung");
-    meldung(`${ergebnis.bewegt} ${ergebnis.bewegt === 1 ? "Teil" : "Teile"} am Raster ausgerichtet.`);
+    if (!ergebnis.ok) return meldung(serverText(ergebnis.meldung, sprache), "warnung");
+    meldung(ta.rasterAusgerichtet(ergebnis.bewegt));
   };
   const drehen = () => {
-    if (teile.length !== 1) return meldung(teile.length ? "Drehen geht für ein Teil auf einmal." : "Erst ein Teil wählen.", "warnung");
+    if (teile.length !== 1) return meldung(teile.length ? ta.drehenEinzeln : ta.erstTeil, "warnung");
     const t = teile[0]!;
     const pr = drehPruefung(entwurf, plan, t);
-    if (!pr.ok) return meldung(pr.meldung, "warnung");
-    aendern((h) => gedreht(h, t), { was: "Drehen", festschreiben: t.art === "reihe" || t.art === "platte" });
+    if (!pr.ok) return meldung(serverText(pr.meldung, sprache), "warnung");
+    aendern((h) => gedreht(h, t), { was: ta.drehenWas, festschreiben: t.art === "reihe" || t.art === "platte" });
   };
   /** Gewählte Reihen und Platten an ihren gerechneten Platz (Versatz und Drehung weg). */
   const zurueckTeile = teile.filter((t) => (t.art === "reihe" ? entwurf.reihenVersatz!.some((x) => x.nr === t.nr) : t.art === "platte" && entwurf.plattenVersatz!.some((x) => x.reihe === t.reihe && x.platte === t.i)));
@@ -65,28 +70,29 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
           plattenVersatz: v.plattenVersatz!.filter((x) => !z.some((t) => t.art === "platte" && t.reihe === x.reihe && t.i === x.platte)),
         };
       },
-      { was: "An ihren Platz zurück" },
+      { was: tg.anPlatzZurueck },
     );
   };
   const entfernenFragen = async () => {
-    if (!auswahl.length) return meldung("Erst etwas wählen.", "warnung");
+    if (!auswahl.length) return meldung(ta.erstEtwas, "warnung");
     const gewaehlt = auswahl;
     // Platten und Plätze entfernt man im festen Plan. Im gerechneten Plan erst prüfen und fragen (mit dem Plan, wie er
     // zu sehen ist), erst danach festschreiben – nichts wird festgeschrieben, wenn nichts zu entfernen ist.
     const mussFest = !plan.fest && gewaehlt.some((z) => z.art === "reihe" || z.art === "platte" || z.art === "platz");
     const e = leereEntfernen(entwurfRef.current, mussFest ? { ...plan, fest: { am: "", veraltet: false } } : plan, gewaehlt);
     const was = entfernenText(e);
+    const bleibt = e.bleibt.map((b) => serverText(b, sprache)).join(", ");
     if (!was)
       return meldung(
-        e.bleibt.length ? `Bleibt stehen: ${e.bleibt.join(", ")} – nur Leeres lässt sich entfernen.` : e.nurFest ? "Leere Plätze lassen sich nur im festen Plan entfernen." : "Hier ist nichts zu entfernen.",
+        e.bleibt.length ? ta.bleibtStehen(bleibt) : e.nurFest ? ta.nurImFesten : ta.nichtsZuEntfernen,
         "warnung",
       );
     const eins = e.platten + e.plaetze + e.teile + e.flaechen === 1;
     if (
       !(await bestaetige({
-        titel: "Leeres entfernen?",
-        text: `${was} ${eins ? "verschwindet" : "verschwinden"} aus dem Plan${e.bleibt.length ? `, stehen bleibt: ${e.bleibt.join(", ")}` : ""}.`,
-        knopf: "Entfernen",
+        titel: ta.leeresTitel,
+        text: (eins ? ta.leeresEins : ta.leeresViele)(was, bleibt),
+        knopf: t.allgemein.entfernen,
         gefahr: true,
       }))
     )
@@ -94,7 +100,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     let p = plan;
     if (mussFest) {
       await kette.current;
-      if (festUnterwegs.current) return meldung("Der Plan wird gerade festgeschrieben – bitte gleich noch einmal.", "warnung");
+      if (festUnterwegs.current) return meldung(tg.festGerade, "warnung");
       festUnterwegs.current = true;
       try {
         await festMachen();
@@ -104,9 +110,11 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
       p = utils.katalog.hallenplan.getData({ schauId })?.plan ?? plan;
       if (!p.fest) return;
     }
-    aendern((h) => leereEntfernen(h, p, gewaehlt).halle, { was: "Entfernen", grund: `Leeres entfernt: ${was}` });
+    aendern((h) => leereEntfernen(h, p, gewaehlt).halle, { was: t.allgemein.entfernen, grund: `Leeres entfernt: ${was}` }); // bleibt deutsch (Protokoll)
     setAuswahl([]);
   };
+  /** „1 Tier bleibt ohne Platz.“ bzw. Mehrzahl. */
+  const ohnePlatz = (n: number) => (n === 1 ? ta.tiereOhnePlatzEins : ta.tiereOhnePlatz(n));
   const neueId = () => `t${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
   const einsetzen = (art: HallenObjekt["art"], typ?: KaefigTyp) => {
     // Neues Teil möglichst in die Mitte der Halle, auf einen freien Platz (nicht auf ein eben eingesetztes) – von dort an
@@ -121,7 +129,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     });
     const belegt = moebel ? [...planKoerper(entwurf, plan).filter((k) => !k.freiBereich).map((k) => k.rechteck), ...teile] : belegtJetzt().map((b) => b.q);
     const ort = freieStelle(entwurf, belegt, { b: groesse.lang, h: groesse.kurz }, start);
-    const was = moebel ? `${MOEBEL_NAME[art as MoebelArt]} einsetzen` : art === "voliere" ? "Voliere einsetzen" : "Käfigblock einsetzen";
+    const was = moebel ? ta.moebelEinsetzen(t.fach.MOEBEL_NAME[art as MoebelArt]) : art === "voliere" ? tg.voliereEinsetzen : tg.blockEinsetzen;
     aendern((h) => ({ ...h, objekte: [...(h.objekte ?? []), { id, art, ...(art === "kaefigblock" ? { typ: typ ?? "huehner" } : {}), ...ort, drehung: 0 }] }), { was });
     setAuswahl([{ art: "objekt", id }]);
   };
@@ -145,9 +153,9 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     // Dieselbe Suche wie „Plan neu setzen“ (dazu Volieren und eben eingesetzte, noch nicht gespeicherte Teile).
     const { einsaetze, ohne } = fehlendeImPlan(entwurf, plan, d.masse, { volieren: true, belegtDazu: belegtJetzt(), ...(nur ? { nur: { typ: nur, hoechstens: 1 } } : {}) });
     if (!einsaetze.length) {
-      if (!nur) return meldung(`In den Reihen ist kein Platz mehr frei – ${anzahl(ohne, "Tier bleibt", "Tiere bleiben")} ohne Platz.`, "warnung");
+      if (!nur) return meldung(ta.keinPlatzMehr(ohnePlatz(ohne)), "warnung");
       einsetzen(nur === "voliere" ? "voliere" : "kaefigblock", nur === "voliere" ? undefined : nur);
-      return meldung("In den Reihen ist kein Platz frei – das Teil steht in der Mitte.", "warnung");
+      return meldung(ta.keinPlatzMitte, "warnung");
     }
     const basis = neueId();
     // Käfigblöcke gehören zum automatischen Plan (Neu-Setzen setzt sie ohne Rückfrage neu); Volieren nicht (die setzt das
@@ -155,10 +163,11 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     const neu = einsaetze.map((e, i) => ({ id: `${basis}${i}`, art: e.art, ...(e.art === "kaefigblock" ? { typ: e.typ, front: e.front, auto: true } : {}), x: e.x, y: e.y, drehung: e.drehung }));
     const zaehlen = new Map<KaefigTyp, number>();
     for (const e of einsaetze) zaehlen.set(e.typ, (zaehlen.get(e.typ) ?? 0) + 1);
-    const was = [...zaehlen].map(([t, n]) => (t === "voliere" ? anzahl(n, "Voliere", "Volieren") : `${anzahl(n, "Block", "Blöcke")} ${KAEFIG_TYP_MEHRZAHL[t]}`)).join(", ");
-    aendern((h) => ({ ...h, objekte: [...(h.objekte ?? []), ...neu] }), { was: "Fehlende Käfige einsetzen", grund: `Fehlende Käfige eingesetzt: ${was}` });
+    const liste = (x: OberflaecheTexte) => [...zaehlen].map(([typ, n]) => (typ === "voliere" ? x.halleWerkzeuge.gemeinsam.volieren(n) : x.halleWerkzeuge.aktionen.bloeckeArt(n, x.fach.KAEFIG_TYP_MEHRZAHL[typ]))).join(", ");
+    const was = liste(t);
+    aendern((h) => ({ ...h, objekte: [...(h.objekte ?? []), ...neu] }), { was: ta.fehlendeWas, grund: `Fehlende Käfige eingesetzt: ${liste(oberflaeche("de"))}` }); // bleibt deutsch (Protokoll)
     setAuswahl(neu.map((o) => ({ art: "objekt" as const, id: o.id })));
-    if (!nur) meldung(`Eingesetzt: ${was}.${ohne ? ` ${anzahl(ohne, "Tier bleibt", "Tiere bleiben")} ohne Platz.` : ""}`, ohne ? "warnung" : undefined);
+    if (!nur) meldung(`${ta.eingesetzt(was)}${ohne ? ` ${ohnePlatz(ohne)}` : ""}`, ohne ? "warnung" : undefined);
   };
   /**
    * Fläche aufgezogen (Werkzeug aus „Einsetzen“; Rechteck in Hallenkoordinaten, ein Klick ohne Ziehen: Vorgabegröße). Ein
@@ -185,10 +194,11 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     }
     // Freier Grundriss: nicht teils außerhalb der Halle (der Server lehnte sonst erst danach ab).
     if (art !== "eingang" && !istRechteckUmriss(entwurf.umriss) && umrissSperren(umrissNormal(entwurf.umriss!)).some((a) => ueberlappt({ x: f.x, y: f.y, b: f.breite, h: f.tiefe }, a)))
-      return meldung("Die Fläche läge teils außerhalb der Halle – bitte innerhalb aufziehen.", "warnung");
+      return meldung(ta.flaecheAussen, "warnung");
     const anzahl = entwurf.flaechen.filter((x) => x.art === art).length;
-    const name = art === "eingang" ? `Eingang${anzahl ? ` ${anzahl + 1}` : ""}` : art === "volieren" ? "Volieren" : "Freier Bereich";
-    const neu = aendern((h) => ({ ...h, flaechen: [...h.flaechen, { name, art, ...f }] }), { was: "Fläche aufziehen" });
+    // Vorgabename der Fläche: Inhalt des Plans (steht so in Drucken), wie vom Verein geschrieben.
+    const name = art === "eingang" ? `Eingang${anzahl ? ` ${anzahl + 1}` : ""}` : art === "volieren" ? "Volieren" : "Freier Bereich"; // bleibt deutsch
+    const neu = aendern((h) => ({ ...h, flaechen: [...h.flaechen, { name, art, ...f }] }), { was: ta.flaecheWas });
     setAuswahl([{ art: "flaeche", i: neu.flaechen.length - 1 }]);
   };
   /** Eine gewählte, ungedrehte Doppelreihe lässt sich als Einzelreihe an eine Wand stellen (wo noch keine steht). */
@@ -199,7 +209,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     if (r?.art !== "doppel" || r.drehung || (entwurf.reihenVersatz ?? []).some((v) => v.nr === t.nr && v.drehung)) return undefined;
     const hat = (seite: WandSeite) => entwurf.wandreihen && entwurf.wandreiheSeite !== (seite === "anfang" ? "ende" : "anfang");
     const seiten = (["anfang", "ende"] as const).filter((x) => !hat(x));
-    return seiten.length ? { seiten, text: (seite) => `Einzelreihe ${wandText(entwurf, seite)}`, stellen: (seite) => void anWandFragen(t.nr, seite) } : undefined;
+    return seiten.length ? { seiten, text: (seite) => ta.einzelreihe(wandText(entwurf, seite)), stellen: (seite) => void anWandFragen(t.nr, seite) } : undefined;
   };
   const aktionen: Aktionen = { ausrichten, drehen, zurueckAnPlatz, entfernen: () => void entfernenFragen(), dreht: teile.length === 1, zurueck: zurueckTeile.length > 0, aufheben: () => setAuswahl([]), einzelreihe: einzelreiheFuer() };
   return { aktionen, einsetzen, fehlendeSetzen, flaecheAufgezogen };

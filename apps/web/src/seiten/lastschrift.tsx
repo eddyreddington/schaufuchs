@@ -1,12 +1,11 @@
-import { formatEuro } from "@schau/domain";
+import { formatEuro, serverText } from "@schau/domain";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { datum, fehlerText } from "../lib";
 import { useSchauId } from "../rahmen";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { Abschnitt, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, Laden, Leer, Marke, SEITE, Seitenkopf, TabellenRahmen, useFrage, useMeldung } from "../ui";
-
-const STATUS = { offen: "offen", gebucht: "gebucht", verworfen: "verworfen" } as const;
 
 /**
  * SEPA-Lastschrift der Schau (Entscheidung 018): offenes Meldegeld von Ausstellern mit gültigem Mandat einziehen –
@@ -14,6 +13,9 @@ const STATUS = { offen: "offen", gebucht: "gebucht", verworfen: "verworfen" } as
  */
 export function Lastschrift() {
   const schauId = useSchauId();
+  const t = useOberflaeche();
+  const tl = t.kasse.lastschrift;
+  const sprache = useSprache();
   const [faellig, setFaellig] = useState<string | undefined>(undefined);
   const [vorab, setVorab] = useState(true);
   const q = trpc.lastschrift.uebersicht.useQuery({ schauId, faelligAm: faellig }, { placeholderData: (alt) => alt });
@@ -49,7 +51,7 @@ export function Lastschrift() {
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Lastschrift"
+        titel={tl.titel}
         hilfe="sepa-lastschrift"
         aktionen={
           !d.offen &&
@@ -62,49 +64,51 @@ export function Lastschrift() {
                 const r = await erstellen.mutateAsync({ schauId, faelligAm: d.faelligAm, vorabankuendigung: vorab }).catch(() => null);
                 if (!r) return;
                 await neu();
-                meldung(`Lastschriftdatei mit ${r.anzahl} Posten erstellt${r.angekuendigt ? `, ${r.angekuendigt} Vorabankündigungen verschickt` : ""}.`);
+                meldung(r.angekuendigt ? tl.erstelltAngekuendigt(r.anzahl, r.angekuendigt) : tl.erstellt(r.anzahl));
               }}
             >
-              Lastschriftdatei erstellen
+              {tl.erstellen}
             </Knopf>
           )
         }
       />
       {d.sperre && (
         <Hinweis ton="warnung">
-          {d.sperre} {d.sperre.includes("Gläubiger") ? <Link to="/verein#lastschrift">Zur Gläubiger-ID</Link> : <Link to={`/schau/${schauId}/einstellungen`}>Zu den Einstellungen</Link>}
+          {serverText(d.sperre, sprache)}{" "}
+          {/* bleibt deutsch: Vergleich mit der deutschen Meldung des Servers (nicht angezeigt) */}
+          {d.sperre.includes("Gläubiger") ? <Link to="/verein#lastschrift">{tl.zurGlaeubigerId}</Link> : <Link to={`/schau/${schauId}/einstellungen`}>{tl.zuDenEinstellungen}</Link>}
         </Hinweis>
       )}
 
       {d.offen ? (
-        <Abschnitt titel="Offene Lastschriftdatei">
+        <Abschnitt titel={tl.offeneDatei}>
           <div className="flex flex-wrap items-center gap-3">
             <span className="min-w-0 flex-1">
               {d.offen.nachrichtId}
               {(() => {
                 const l = d.laeufe.find((x) => x.nachrichtId === d.offen!.nachrichtId);
-                return l ? ` · fällig ${datum(l.faelligAm)} · ${l.anzahl} Posten · ${formatEuro(l.summeCent)}` : "";
+                return l ? tl.laufInfo(datum(l.faelligAm), l.anzahl, formatEuro(l.summeCent)) : "";
               })()}
             </span>
-            <Knopf onClick={() => void herunterladen()}>Datei herunterladen</Knopf>
+            <Knopf onClick={() => void herunterladen()}>{tl.herunterladen}</Knopf>
             <Knopf
               variante="primaer"
               laedt={buchen.isPending}
               onClick={async () => {
-                if (!(await bestaetige({ titel: "Lastschriften buchen?", text: "Erst buchen, wenn die Bank eingezogen hat (Kontoauszug). Jeder Posten wird als Zahlung „Lastschrift“ zum Fälligkeitstag gebucht.", knopf: "Buchen" }))) return;
+                if (!(await bestaetige({ titel: tl.buchenTitel, text: tl.buchenText, knopf: t.kasse.buchen }))) return;
                 if (await buchen.mutateAsync({ schauId, nachrichtId: d.offen!.nachrichtId }).catch(() => null)) await neu();
               }}
             >
-              Eingang buchen
+              {tl.eingangBuchen}
             </Knopf>
             <Knopf
               variante="gefahr"
               onClick={async () => {
-                const grund = await eingabe({ titel: "Lastschriftdatei verwerfen", feld: "Grund", mindestens: 3 });
+                const grund = await eingabe({ titel: tl.verwerfenTitel, feld: t.kasse.grund, mindestens: 3 });
                 if (grund && (await verwerfen.mutateAsync({ schauId, nachrichtId: d.offen!.nachrichtId, grund }).catch(() => null))) await neu();
               }}
             >
-              Verwerfen
+              {tl.verwerfen}
             </Knopf>
           </div>
         </Abschnitt>
@@ -112,27 +116,27 @@ export function Lastschrift() {
         <TabellenRahmen
           kopf={
             <div className="flex w-full flex-wrap items-end justify-between gap-3">
-              <h2 className="text-[1.07rem] font-semibold">Jetzt einziehbar</h2>
+              <h2 className="text-[1.07rem] font-semibold">{tl.einziehbar}</h2>
               <div className="flex flex-wrap items-end gap-4">
-                <Feld label="Fällig am">{(id) => <Eingabe id={id} type="date" value={d.faelligAm} min={d.frueheste} onChange={(e) => setFaellig(e.target.value || undefined)} />}</Feld>
-                <Haken label="Vorabankündigung per E-Mail" checked={vorab} onChange={setVorab} />
+                <Feld label={tl.faelligAm}>{(id) => <Eingabe id={id} type="date" value={d.faelligAm} min={d.frueheste} onChange={(e) => setFaellig(e.target.value || undefined)} />}</Feld>
+                <Haken label={tl.vorabankuendigung} checked={vorab} onChange={setVorab} />
               </div>
             </div>
           }
-          fuss={d.vorschau.length ? `${d.vorschau.length} Posten · ${formatEuro(summe)}` : undefined}
+          fuss={d.vorschau.length ? tl.posten(d.vorschau.length, formatEuro(summe)) : undefined}
         >
           {d.vorschau.length === 0 ? (
             <div className="p-4">
-              <Leer titel="Kein offenes Meldegeld bei Ausstellern mit gültigem Mandat" />
+              <Leer titel={tl.nichtsOffen} />
             </div>
           ) : (
             <table className="tabelle">
               <thead>
                 <tr>
-                  <th>Aussteller</th>
-                  <th>Mandat</th>
-                  <th>Konto</th>
-                  <th className="text-right">Betrag</th>
+                  <th>{t.allgemein.aussteller}</th>
+                  <th>{tl.mandat}</th>
+                  <th>{tl.konto}</th>
+                  <th className="text-right">{t.allgemein.betrag}</th>
                 </tr>
               </thead>
               <tbody>
@@ -152,19 +156,19 @@ export function Lastschrift() {
 
       {d.ohneGueltigesMandat.length > 0 && (
         <Hinweis ton="warnung">
-          Mandat ungültig, Meldegeld offen: {d.ohneGueltigesMandat.map((x) => `${x.name} (${x.grund.replace(/\.$/, "")}, ${formatEuro(x.offenCent)})`).join("; ")}.
+          {tl.mandatUngueltig(d.ohneGueltigesMandat.map((x) => `${x.name} (${serverText(x.grund, sprache).replace(/\.$/, "")}, ${formatEuro(x.offenCent)})`).join("; "))}
         </Hinweis>
       )}
 
       {d.laeufe.filter((l) => l.status !== "offen").length > 0 && (
-        <TabellenRahmen kopf={<h2 className="text-[1.07rem] font-semibold">Frühere Lastschriften</h2>}>
+        <TabellenRahmen kopf={<h2 className="text-[1.07rem] font-semibold">{tl.frueher}</h2>}>
           <table className="tabelle">
             <thead>
               <tr>
-                <th>Datei</th>
-                <th>Fällig</th>
-                <th>Status</th>
-                <th>Posten</th>
+                <th>{tl.datei}</th>
+                <th>{tl.faellig}</th>
+                <th>{t.allgemein.status}</th>
+                <th>{tl.postenSpalte}</th>
               </tr>
             </thead>
             <tbody>
@@ -175,7 +179,7 @@ export function Lastschrift() {
                     <td>{l.nachrichtId}</td>
                     <td>{datum(l.faelligAm)}</td>
                     <td>
-                      <Marke ton={l.status === "gebucht" ? "ok" : "neutral"}>{STATUS[l.status]}</Marke>
+                      <Marke ton={l.status === "gebucht" ? "ok" : "neutral"}>{tl.status[l.status]}</Marke>
                     </td>
                     <td>
                       <ul className="flex flex-col gap-1">
@@ -185,17 +189,17 @@ export function Lastschrift() {
                               {p.name} · {formatEuro(p.betragCent)}
                             </span>
                             {p.zurueck ? (
-                              <Marke ton="warnung">zurückgebucht</Marke>
+                              <Marke ton="warnung">{tl.zurueckgebucht}</Marke>
                             ) : (
                               l.status === "gebucht" && (
                                 <Knopf
                                   variante="leise"
                                   onClick={async () => {
-                                    const grund = await eingabe({ titel: `Rücklastschrift ${p.name}`, feld: "Grund laut Bank", mindestens: 3 });
+                                    const grund = await eingabe({ titel: tl.ruecklastschriftTitel(p.name), feld: tl.grundLautBank, mindestens: 3 });
                                     if (grund && (await rueck.mutateAsync({ schauId, laufId: l.id, meldungId: p.meldungId, grund }).catch(() => null))) await neu();
                                   }}
                                 >
-                                  Rücklastschrift
+                                  {tl.ruecklastschrift}
                                 </Knopf>
                               )
                             )}

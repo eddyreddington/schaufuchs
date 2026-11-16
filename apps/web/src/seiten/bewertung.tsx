@@ -1,8 +1,9 @@
-import { bewertungsText, erlaubtePunkte, PHASEN_LABEL, SONDERNOTE_LABEL, SONDERNOTEN, type Sondernote } from "@schau/domain";
+import { bewertungsText, erlaubtePunkte, serverText, SONDERNOTEN, type Sondernote } from "@schau/domain";
 import { useEffect, useState } from "react";
 import { fehlerText, formatKatalognummer } from "../lib";
 import { Link } from "react-router-dom";
 import { useSchauId } from "../rahmen";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Hinweis, Knopf, KnopfLink, Laden, Marke, SEITE, Seitenkopf, Segmente, TabellenRahmen, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
 
@@ -20,6 +21,9 @@ export function Bewertung() {
   const [nurOffenWahl, setNurOffen] = useState<boolean | null>(null);
   const daten = trpc.bewertung.liste.useQuery({ schauId, preisrichterId: pr });
   const status = trpc.auth.status.useQuery();
+  const t = useOberflaeche();
+  const tb = t.schautage.bewertung;
+  const g = t.schautage.gemeinsam;
   if (daten.error) return <FehlerAnzeige fehler={daten.error} nochmal={() => daten.refetch()} />;
   if (!daten.data) return <Laden />;
   const d = daten.data;
@@ -35,25 +39,25 @@ export function Bewertung() {
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Bewertung"
-        unter={`${d.eintraege.length} Tiere, ${bewertet} bewertet, ${offen} offen`}
+        titel={tb.titel}
+        unter={tb.unter(d.eintraege.length, bewertet, offen)}
         marke={
           <>
-            {d.freigegeben ? <Marke ton="ok">freigegeben</Marke> : !d.tabletOffen && <Marke ton="warnung">Tablet geschlossen</Marke>}
-            {!istAdmin && <Marke>nur lesen</Marke>}
+            {d.freigegeben ? <Marke ton="ok">{g.freigegeben}</Marke> : !d.tabletOffen && <Marke ton="warnung">{tb.tabletGeschlossen}</Marke>}
+            {!istAdmin && <Marke>{g.nurLesen}</Marke>}
           </>
         }
         hilfe="bewertung-am-pc-papierkarten"
-        aktionen={<KnopfLink href={`/datei/${schauId}/bewertungskarten.pdf`} target="_blank" rel="noreferrer">Bewertungskarten drucken</KnopfLink>}
+        aktionen={<KnopfLink href={`/datei/${schauId}/bewertungskarten.pdf`} target="_blank" rel="noreferrer">{tb.kartenDrucken}</KnopfLink>}
       />
       {d.freigegeben ? (
         <Hinweis ton="warnung">
-          Ergebnisse freigegeben: Änderungen nur mit Grund. <Link to={`/schau/${schauId}/preise`}>Zur Freigabe</Link>
+          {tb.freigegebenHinweis} <Link to={`/schau/${schauId}/preise`}>{tb.zurFreigabe}</Link>
         </Hinweis>
       ) : (
         !d.tabletOffen && (
           <Hinweis>
-            Am Tablet geschlossen in der Phase „{PHASEN_LABEL[d.phase]}“. <Link to={`/schau/${schauId}`}>Phase ändern</Link>
+            {tb.geschlossenHinweis(t.fach.PHASEN_LABEL[d.phase])} <Link to={`/schau/${schauId}`}>{tb.phaseAendern}</Link>
           </Hinweis>
         )
       )}
@@ -66,8 +70,8 @@ export function Bewertung() {
       <TabellenRahmen
         kopf={
           <>
-            <Auswahl aria-label="Preisrichter" value={pr ?? ""} onChange={(e) => setPr(e.target.value ? Number(e.target.value) : null)} className="max-w-64">
-              <option value="">Alle Preisrichter</option>
+            <Auswahl aria-label={t.allgemein.preisrichter} value={pr ?? ""} onChange={(e) => setPr(e.target.value ? Number(e.target.value) : null)} className="max-w-64">
+              <option value="">{g.allePreisrichter}</option>
               {d.richter.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}
@@ -75,12 +79,12 @@ export function Bewertung() {
               ))}
             </Auswahl>
             <Segmente
-              label="Auswahl"
+              label={tb.auswahl}
               wert={nurOffen ? "offen" : "alle"}
               onChange={(w) => setNurOffen(w === "offen")}
               optionen={[
-                { wert: "offen", label: "Nur unbewertete", anzahl: offen },
-                { wert: "alle", label: "Alle", anzahl: d.eintraege.length },
+                { wert: "offen", label: tb.nurUnbewertete, anzahl: offen },
+                { wert: "alle", label: t.allgemein.alle, anzahl: d.eintraege.length },
               ]}
             />
           </>
@@ -88,23 +92,23 @@ export function Bewertung() {
         fuss={
           liste.length > 0 ? (
             <>
-              <span>{liste.length} {liste.length === 1 ? "Tier" : "Tiere"}</span>
-              <span>{offen} unbewertet</span>
+              <span>{g.tiere(liste.length)}</span>
+              <span>{tb.unbewertet(offen)}</span>
             </>
           ) : undefined
         }
       >
         <fieldset disabled={!istAdmin} className="min-w-0">
           {liste.length === 0 ? (
-            <p className="px-4 py-10 text-center text-grau">{nurOffen ? "Alle bewertet." : "Keine Tiere."}</p>
+            <p className="px-4 py-10 text-center text-grau">{nurOffen ? tb.alleBewertet : tb.keineTiere}</p>
           ) : (
             <table className="tabelle">
               <thead>
                 <tr>
-                  <th className="text-right">Nr.</th>
-                  <th>Tier</th>
-                  <th className="w-56">Punkte</th>
-                  <th>Vorzüge / Wünsche / Mängel</th>
+                  <th className="text-right">{g.nr}</th>
+                  <th>{t.allgemein.tier}</th>
+                  <th className="w-56">{tb.punkte}</th>
+                  <th>{tb.vorzuegeWuenscheMaengel}</th>
                   <th />
                 </tr>
               </thead>
@@ -143,6 +147,9 @@ function Zeile({ e, skala, schauId, freigegeben, naechste }: { e: Eintrag; skala
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { eingabe, bestaetige } = useFrage();
+  const t = useOberflaeche();
+  const tb = t.schautage.bewertung;
+  const sprache = useSprache();
   const setzen = trpc.bewertung.setzen.useMutation({
     onSuccess: (r, v) => {
       // Gespeichert (auch nach „trotzdem“ oder unverändert): dieser Stand gilt als geladen, mit der Version vom Server.
@@ -153,7 +160,7 @@ function Zeile({ e, skala, schauId, freigegeben, naechste }: { e: Eintrag; skala
     onError: (err, v) => {
       // Inzwischen anderswo (z. B. am Tablet) geändert: nur nach Rückfrage überschreiben.
       if (err.data?.code === "CONFLICT" && !v.erzwingen) {
-        void bestaetige({ titel: "Trotzdem speichern?", text: `${err.message}\n\nTrotzdem die hier eingegebene Note speichern?`, knopf: "Note speichern" }).then((ja) => {
+        void bestaetige({ titel: tb.trotzdemSpeichernTitel, text: tb.trotzdemSpeichernText(serverText(err.message, sprache)), knopf: tb.noteSpeichern }).then((ja) => {
           if (ja) setzen.mutate({ ...v, erzwingen: true });
           else {
             // Verworfen: Eingaben zurück auf den geladenen Stand, dann übernimmt die Zeile die Note von anderswo.
@@ -170,7 +177,7 @@ function Zeile({ e, skala, schauId, freigegeben, naechste }: { e: Eintrag; skala
   const zuruecksetzen = trpc.bewertung.zuruecksetzen.useMutation({
     onSuccess: () => {
       utils.bewertung.liste.invalidate();
-      meldung(`Bewertung von Nr. ${formatKatalognummer(e)} zurückgesetzt.`);
+      meldung(tb.zurueckgesetzt(formatKatalognummer(e)));
     },
     onError: (err) => meldung(fehlerText(err), "fehler"),
   });
@@ -178,16 +185,16 @@ function Zeile({ e, skala, schauId, freigegeben, naechste }: { e: Eintrag; skala
   const begruendung = async (): Promise<string | null> => {
     if (!freigegeben && e.verkaufBelegNr == null) return "";
     return eingabe({
-      titel: e.verkaufBelegNr != null ? `Nr. ${formatKatalognummer(e)} ist verkauft` : "Bewertung nach der Freigabe ändern",
-      text: e.verkaufBelegNr != null ? `Beleg ${e.verkaufBelegNr}. Jede Änderung braucht einen Grund.` : "Nach der Freigabe wird ohne Grund nichts geändert.",
-      feld: e.verkaufBelegNr != null ? "Grund der Änderung (bitte ohne Personennamen)" : "Grund der Änderung (z. B. Reklamation vom …, bitte ohne Personennamen)",
+      titel: e.verkaufBelegNr != null ? tb.verkauftTitel(formatKatalognummer(e)) : tb.nachFreigabeTitel,
+      text: e.verkaufBelegNr != null ? tb.verkauftText(e.verkaufBelegNr) : tb.nachFreigabeText,
+      feld: e.verkaufBelegNr != null ? tb.grundVerkauft : tb.grundFreigabe,
       mindestens: 3,
     });
   };
   const zuruecknehmen = async () => {
     if (
       !freigegeben &&
-      !(await bestaetige({ titel: `Bewertung von Nr. ${formatKatalognummer(e)} zurücksetzen?`, text: "Note und Texte werden gelöscht.", knopf: "Zurücksetzen", gefahr: true }))
+      !(await bestaetige({ titel: tb.zuruecksetzenFrage(formatKatalognummer(e)), text: tb.zuruecksetzenText, knopf: tb.zuruecksetzen, gefahr: true }))
     )
       return;
     const grund = await begruendung();
@@ -208,14 +215,14 @@ function Zeile({ e, skala, schauId, freigegeben, naechste }: { e: Eintrag; skala
         <span className="font-semibold text-tinte">{e.bezeichnung}</span>
         <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-grau">
           {e.geschlecht} {e.alter}
-          {e.status === "fehlt" && <Marke ton="fehler">fehlt</Marke>}
+          {e.status === "fehlt" && <Marke ton="fehler">{t.schautage.gemeinsam.fehlt}</Marke>}
         </span>
       </td>
       <td>
         <div className="flex items-center gap-2">
           <Auswahl
             id={`punkte-${e.id}`}
-            aria-label={`Punkte für ${formatKatalognummer(e)}`}
+            aria-label={tb.punkteFuer(formatKatalognummer(e))}
             value={punkte}
             onChange={(x) => setPunkte(x.target.value)}
             onKeyDown={(x) => x.key === "Enter" && speichern()}
@@ -228,7 +235,7 @@ function Zeile({ e, skala, schauId, freigegeben, naechste }: { e: Eintrag; skala
             ))}
             {SONDERNOTEN.map((s) => (
               <option key={s} value={s}>
-                {SONDERNOTE_LABEL[s].kuerzel} ({SONDERNOTE_LABEL[s].name})
+                {t.fach.SONDERNOTE_LABEL[s].kuerzel} ({t.fach.SONDERNOTE_LABEL[s].name})
               </option>
             ))}
           </Auswahl>
@@ -238,13 +245,13 @@ function Zeile({ e, skala, schauId, freigegeben, naechste }: { e: Eintrag; skala
       <td>
         {offen ? (
           <div className="flex flex-col gap-1">
-            <Eingabe aria-label="Vorzüge" placeholder="Vorzüge" maxLength={500} value={texte.vorzuege} onChange={(x) => setTexte({ ...texte, vorzuege: x.target.value })} />
-            <Eingabe aria-label="Wünsche" placeholder="Wünsche" maxLength={500} value={texte.wuensche} onChange={(x) => setTexte({ ...texte, wuensche: x.target.value })} />
-            <Eingabe aria-label="Mängel" placeholder="Mängel" maxLength={500} value={texte.maengel} onChange={(x) => setTexte({ ...texte, maengel: x.target.value })} />
+            <Eingabe aria-label={tb.vorzuege} placeholder={tb.vorzuege} maxLength={500} value={texte.vorzuege} onChange={(x) => setTexte({ ...texte, vorzuege: x.target.value })} />
+            <Eingabe aria-label={tb.wuensche} placeholder={tb.wuensche} maxLength={500} value={texte.wuensche} onChange={(x) => setTexte({ ...texte, wuensche: x.target.value })} />
+            <Eingabe aria-label={tb.maengel} placeholder={tb.maengel} maxLength={500} value={texte.maengel} onChange={(x) => setTexte({ ...texte, maengel: x.target.value })} />
           </div>
         ) : (
           <button type="button" className="text-left text-sm text-grau hover:text-tinte" onClick={() => setOffen(true)}>
-            {[texte.vorzuege, texte.wuensche, texte.maengel].filter(Boolean).join(" / ") || "Texte eintragen …"}
+            {[texte.vorzuege, texte.wuensche, texte.maengel].filter(Boolean).join(" / ") || tb.texteEintragen}
           </button>
         )}
       </td>
@@ -252,11 +259,11 @@ function Zeile({ e, skala, schauId, freigegeben, naechste }: { e: Eintrag; skala
         <div className="flex flex-wrap justify-end gap-1">
           {e.bewertet && (
             <Knopf variante="leise" className={ZEILE} onClick={zuruecknehmen} laedt={zuruecksetzen.isPending}>
-              Zurücksetzen
+              {tb.zuruecksetzen}
             </Knopf>
           )}
           <Knopf className={ZEILE} onClick={speichern} laedt={setzen.isPending} disabled={!punkte}>
-            Speichern
+            {t.allgemein.speichern}
           </Knopf>
         </div>
       </td>
@@ -282,6 +289,8 @@ function ObmannListe({
   const [obmann, setObmann] = useState(obleute[0]?.id);
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const t = useOberflaeche();
+  const tb = t.schautage.bewertung;
   const best = trpc.bewertung.obmannBestaetigen.useMutation({
     onSuccess: () => utils.bewertung.liste.invalidate(),
     // Note inzwischen geändert: neu laden, damit der Obmann den aktuellen Stand sieht.
@@ -292,14 +301,14 @@ function ObmannListe({
   });
   return (
     <Abschnitt
-      titel={`Wartet auf den Obmann (${eintraege.length})`}
+      titel={tb.wartetAufObmann(eintraege.length)}
       aktionen={
         obleute.length > 0 && (
-          <Auswahl aria-label="Obmann" value={obmann} onChange={(e) => setObmann(Number(e.target.value))} className="max-w-xs">
+          <Auswahl aria-label={tb.obmann} value={obmann} onChange={(e) => setObmann(Number(e.target.value))} className="max-w-xs">
             {auswahl.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.name}
-                {obleute.length === 1 && !obleute.some((x) => x.id === o.id) ? " (nur für eigene Bewertungen des Obmanns)" : ""}
+                {obleute.length === 1 && !obleute.some((x) => x.id === o.id) ? ` ${tb.nurEigene}` : ""}
               </option>
             ))}
           </Auswahl>
@@ -307,14 +316,14 @@ function ObmannListe({
       }
     >
       {obleute.length === 0 ? (
-        <Hinweis ton="warnung">Kein Preisrichter als Obmann markiert (unter „Preisrichter“).</Hinweis>
+        <Hinweis ton="warnung">{tb.keinObmann}</Hinweis>
       ) : (
         <>
           <ul className="flex flex-wrap gap-2">
             {eintraege.map((e) => (
               <li key={e.id}>
                 <Knopf className={ZEILE} onClick={() => obmann && best.mutate({ schauId, katalogeintragId: e.id, obmannId: obmann, version: e.bewertungVersion ?? undefined })}>
-                  <span className="nummer">{formatKatalognummer(e)}</span> ({bewertungsText({ punkte: e.punkte, sondernote: e.sondernote }, skala)}) bestätigen
+                  {tb.bestaetigen(formatKatalognummer(e), bewertungsText({ punkte: e.punkte, sondernote: e.sondernote }, skala))}
                 </Knopf>
               </li>
             ))}

@@ -1,9 +1,11 @@
 /** Preisrichter-Tablet nach der Anmeldung: Tierliste, Ausgang und Abgleich mit dem Server, abgelehnte Bewertungen. */
-import { bewertungsText, PHASEN, PHASEN_LABEL } from "@schau/domain";
+import { bewertungsText, PHASEN, serverText } from "@schau/domain";
 import { del, get, set, update } from "idb-keyval";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AbmeldeHinweis, useAutoAbmeldung } from "../abmeldung";
 import { fehlerText, formatKatalognummer } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
+import { ot } from "../sprache-jetzt";
 import { direkt } from "../trpc";
 import { Knopf, knopfKlasse, Laden, Leer, useFrage, useMeldung } from "../ui";
 import { HttpsHinweis } from "./richter-anmeldung";
@@ -15,7 +17,7 @@ import {
   gleicherEintrag,
   MAX_TEXT,
   merkeZuletzt,
-  TEXT_ZU_LANG,
+  textZuLang,
   type Abgelehnt,
   type Ausgang,
   type Daten,
@@ -39,6 +41,9 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
   const [serverFehler, setServerFehler] = useState<string | null>(null);
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
+  const o = useOberflaeche();
+  const tt = o.tablet.liste;
+  const sprache = useSprache();
   const schluessel = datenSchluessel(slug, richter.id);
   const ausgangSchluessel = ausgangSchluesselVon(slug);
   const abgelehntSchluessel = abgelehntSchluesselVon(slug);
@@ -140,7 +145,7 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
     try {
       // Zu lange Texte (ältere Einträge) gar nicht erst senden: der Server lehnt sie ohnehin ab.
       const zuLang = offen.filter((a) => [a.vorzuege, a.wuensche, a.maengel].some((t) => t.length > MAX_TEXT));
-      const ergebnisse: [Ausgang, Ergebnis][] = zuLang.map((a) => [a, { katalogeintragId: a.katalogeintragId, status: "fehler", meldung: TEXT_ZU_LANG }]);
+      const ergebnisse: [Ausgang, Ergebnis][] = zuLang.map((a) => [a, { katalogeintragId: a.katalogeintragId, status: "fehler", meldung: textZuLang() }]);
       const rest = offen.filter((a) => !zuLang.includes(a));
       if (rest.length) ergebnisse.push(...(await senden(rest)));
 
@@ -148,7 +153,7 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
       // Abgelehnt oder inzwischen anderswo geändert: nicht still verwerfen, sondern sichtbar zur Entscheidung.
       // Vorübergehend gestört: im Ausgang lassen, später erneut senden.
       const spaeter = ergebnisse.filter(([, x]) => x.status === "spaeter").map(([a]) => a);
-      if (spaeter.length) setServerFehler("Der Server ist vorübergehend gestört.");
+      if (spaeter.length) setServerFehler(ot().tablet.liste.serverGestoert);
       const neuAbgelehnt: Abgelehnt[] = ergebnisse.flatMap(([a, x]) => {
         if (x.status === "gespeichert" || x.status === "spaeter") return [];
         const t = datenRef.current?.tiere.find((y) => y.id === a.katalogeintragId);
@@ -272,18 +277,11 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
 
   // Ungespeicherte Eingaben auf der Karte: beim Wechsel des Tiers oder Schließen nachfragen statt still verwerfen.
   const ungespeichert = useRef(false);
+  const eingabeVerwerfen = async () =>
+    !ungespeichert.current || (await bestaetige({ titel: tt.verwerfenTitel, text: tt.verwerfenText, knopf: tt.verwerfenKnopf, gefahr: true }));
   const waehle = async (id: number) => {
     if (id === auswahl) return;
-    if (
-      ungespeichert.current &&
-      !(await bestaetige({
-        titel: "Eingabe verwerfen?",
-        text: "Die Bewertung auf der Karte ist noch nicht gespeichert.",
-        knopf: "Verwerfen und wechseln",
-        gefahr: true,
-      }))
-    )
-      return;
+    if (!(await eingabeVerwerfen())) return;
     ungespeichert.current = false;
     setAuswahl(id);
   };
@@ -317,7 +315,7 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
       if (abgelehnt.some((x) => meins(x) && x.katalogeintragId === a.katalogeintragId))
         await aendereAbgelehnt((alt) => alt.filter((x) => !(meins(x) && x.katalogeintragId === a.katalogeintragId)));
     } catch (e) {
-      return meldung(`Speichern im Gerät fehlgeschlagen: ${fehlerText(e)}`, "fehler");
+      return meldung(tt.speichernFehlgeschlagen(fehlerText(e)), "fehler");
     }
     const naechstes = tiere.slice(idx + 1).find((x) => x.punkte == null && x.sondernote == null && !x.fehlt) ?? tiere[idx + 1];
     ungespeichert.current = false;
@@ -328,10 +326,10 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
   /** Nimmt die Note zurück: Wartendes fliegt aus dem Ausgang, Übertragenes wird am Server gelöscht. */
   const zuruecknehmen = async (id: number) => {
     // Sonst könnte ein gerade gesendeter Eintrag die Rücknahme gleich wieder überschreiben.
-    if (laeuft.current) return meldung("Es wird gerade übertragen. Bitte gleich noch einmal versuchen.", "fehler");
+    if (laeuft.current) return meldung(tt.uebertraegtGerade, "fehler");
     const aufServer = daten?.tiere.find((t) => t.id === id);
     const amServer = aufServer != null && (aufServer.punkte != null || aufServer.sondernote != null);
-    if (amServer && !online) return meldung("Zurücknehmen geht nur mit Verbindung.", "fehler");
+    if (amServer && !online) return meldung(tt.zuruecknehmenOffline, "fehler");
     // Während der Rücknahme keinen Abgleich starten: er könnte einen wartenden Eintrag desselben Tiers neu anlegen.
     laeuft.current = true;
     try {
@@ -339,7 +337,7 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
       // Mit dem bekannten Stand: hat die Ausstellungsleitung inzwischen korrigiert, kommt ein Konflikt statt stillem Löschen.
       if (amServer) await direkt.richter.zuruecksetzen.mutate({ katalogeintragId: id, basisVersion: aufServer!.version });
       if (amServer) await laden();
-      meldung("Note zurückgenommen.");
+      meldung(tt.zurueckgenommen);
     } catch (e) {
       // Inzwischen anderswo geändert: den neuen Stand zeigen, damit der Preisrichter ihn sieht.
       if (fehlerCode(e) === "CONFLICT") await laden();
@@ -355,7 +353,7 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
     const { meldung: _grund, konflikt, ...rest } = a;
     // Wartet für dasselbe Tier schon ein Eintrag, ist er neuer (abgelehnte Einträge verlassen den Ausgang).
     if (ausgang.some((x) => meins(x) && x.katalogeintragId === a.katalogeintragId)) {
-      meldung(`Für Nr. ${a.nr ?? "?"} wartet schon eine neuere Bewertung – die abgelehnte wird verworfen.`, "fehler");
+      meldung(tt.neuereWartet(a.nr ?? "?"), "fehler");
       await aendereAbgelehnt((alt) => alt.filter((x) => !gleicherEintrag(x, a)));
       return;
     }
@@ -369,9 +367,9 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
   const verwerfen = async (a: Abgelehnt) => {
     if (
       !(await bestaetige({
-        titel: `Bewertung von Nr. ${a.nr ?? "?"} löschen?`,
-        text: "Die Bewertung wird endgültig gelöscht – vorher der Ausstellungsleitung zum Nachtragen geben.",
-        knopf: "Endgültig löschen",
+        titel: tt.loeschenTitel(a.nr ?? "?"),
+        text: tt.loeschenText,
+        knopf: o.tablet.endgueltigLoeschen,
         gefahr: true,
       }))
     )
@@ -381,21 +379,17 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
 
   const abmelden = async () => {
     if (eigeneWartend.length) {
-      return meldung(`Noch ${eigeneWartend.length} Bewertung${eigeneWartend.length === 1 ? "" : "en"} nicht übertragen. Bitte erst mit Verbindung übertragen, dann abmelden.`, "fehler");
+      return meldung(tt.nochWartend(eigeneWartend.length), "fehler");
     }
     if (
       eigeneAbgelehnt.length &&
-      !(await bestaetige({
-        titel: "Trotzdem abmelden?",
-        text: "Nicht übernommene Bewertungen bleiben im Gerät und erscheinen bei der nächsten Anmeldung wieder.",
-        knopf: "Abmelden",
-      }))
+      !(await bestaetige({ titel: tt.trotzdemAbmelden, text: tt.abmeldenText, knopf: tt.abmelden }))
     )
       return;
     try {
       await direkt.richter.abmelden.mutate();
     } catch {
-      return meldung("Abmelden geht nur mit Verbindung.", "fehler");
+      return meldung(tt.abmeldenOffline, "fehler");
     }
     merkeZuletzt(slug, null);
     await del(schluessel).catch(() => {});
@@ -403,85 +397,75 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
   };
 
   if (!daten) return <Laden />;
-  document.title = `Bewertung – ${daten.schau.name}`;
+  document.title = tt.seitentitel(daten.schau.name);
   const tier = tiere.find((t) => t.id === auswahl);
   const fertig = tiere.filter((t) => t.punkte != null || t.sondernote != null).length;
-  const fremdeNamen = [...new Set(fremdeWartend.map((a) => a.preisrichterName ?? "einem anderen Preisrichter"))];
+  const fremdeNamen = [...new Set(fremdeWartend.map((a) => a.preisrichterName ?? tt.andererRichter))];
   const n = eigeneWartend.length;
 
   return (
     <div className="flex h-dvh flex-col bg-papier">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-linie bg-weiss px-4 py-2.5 text-tinte">
         <span className="font-display text-lg font-semibold [font-stretch:112%]">{daten.schau.name}</span>
-        <span className="text-grau">{richter.name}: {fertig} von {tiere.length} bewertet</span>
+        <span className="text-grau">{tt.fortschritt(richter.name, fertig, tiere.length)}</span>
         <span className="ml-auto flex items-center gap-2 text-sm" role="status">
           <span className={`size-2.5 rounded-full ${!online ? "bg-kamm" : n ? "bg-stroh-dunkel" : "bg-stall"}`} />
-          {!online ? `Ohne Verbindung${n ? `, ${n} warten` : ""}` : sendet ? "Überträgt …" : n ? `${n} warten` : eigeneAbgelehnt.length ? "" : "Alles übertragen"}
-          {eigeneAbgelehnt.length > 0 && ` · ${eigeneAbgelehnt.length} nicht übernommen`}
+          {!online ? tt.ohneVerbindung(n) : sendet ? tt.uebertraegt : n ? tt.warten(n) : eigeneAbgelehnt.length ? "" : tt.allesUebertragen}
+          {eigeneAbgelehnt.length > 0 && ` · ${tt.nichtUebernommenZahl(eigeneAbgelehnt.length)}`}
         </span>
         {(daten.obmannListe.length > 0 || ansicht === "obmann") && (
           <button
             type="button"
             onClick={async () => {
-              if (
-                ungespeichert.current &&
-                !(await bestaetige({
-                  titel: "Eingabe verwerfen?",
-                  text: "Die Bewertung auf der Karte ist noch nicht gespeichert.",
-                  knopf: "Verwerfen und wechseln",
-                  gefahr: true,
-                }))
-              )
-                return;
+              if (!(await eingabeVerwerfen())) return;
               ungespeichert.current = false;
               setAnsicht(ansicht === "obmann" ? "bewerten" : "obmann");
             }}
             className={knopfKlasse("primaer", false, "min-h-11 text-sm")}
           >
-            {ansicht === "obmann" ? "Zurück zum Bewerten" : `Obmann: ${daten.obmannListe.length} bestätigen`}
+            {ansicht === "obmann" ? tt.zurueckZumBewerten : tt.obmann(daten.obmannListe.length)}
           </button>
         )}
-        <a href="/hilfe/preisrichter" target="_blank" rel="noreferrer" className={knopfKlasse("zweit", false, "min-h-11 text-sm")}>Hilfe</a>
-        <button type="button" onClick={abmelden} className={knopfKlasse("zweit", false, "min-h-11 text-sm")}>Abmelden</button>
+        <a href="/hilfe/preisrichter" target="_blank" rel="noreferrer" className={knopfKlasse("zweit", false, "min-h-11 text-sm")}>{o.allgemein.hilfe}</a>
+        <button type="button" onClick={abmelden} className={knopfKlasse("zweit", false, "min-h-11 text-sm")}>{tt.abmelden}</button>
       </header>
       <HttpsHinweis />
       <AbmeldeHinweis rest={restAbmeldung} />
       {serverFehler && (
         <div className="bg-kamm-hell px-4 py-2 text-kamm" role="alert">
-          Übertragung gescheitert: {serverFehler} Bewertungen bleiben im Gerät, es wird weiter versucht.
+          {tt.gescheitert(serverFehler)}
         </div>
       )}
       {abgelaufen && (
         <div className="flex flex-wrap items-center gap-x-2 bg-kamm-hell px-4 py-1 text-kamm" role="alert">
-          Die Anmeldung ist abgelaufen. Wartende Bewertungen bleiben im Gerät.
-          <button type="button" className="inline-flex min-h-11 items-center px-2 font-semibold underline" onClick={() => location.reload()}>Neu anmelden</button>
+          {tt.abgelaufen}
+          <button type="button" className="inline-flex min-h-11 items-center px-2 font-semibold underline" onClick={() => location.reload()}>{tt.neuAnmelden}</button>
         </div>
       )}
       {!daten.schau.offen && (
         <div className="flex flex-wrap items-center justify-center gap-x-2 bg-stroh px-4 py-1 text-center font-semibold text-tinte">
           {daten.schau.freigegeben
-            ? "Die Ergebnisse sind freigegeben. Änderungen nur noch über die Ausstellungsleitung."
+            ? tt.freigegeben
             : PHASEN.indexOf(daten.schau.phase) > PHASEN.indexOf("preise")
-              ? `Die Bewertung ist abgeschlossen (Phase „${PHASEN_LABEL[daten.schau.phase]}“). Änderungen nur noch über die Ausstellungsleitung.`
-              : `Die Bewertung ist noch nicht geöffnet (Phase „${PHASEN_LABEL[daten.schau.phase]}“).`}
-          <button type="button" className="inline-flex min-h-11 items-center px-2 underline" onClick={() => laden()}>Neu laden</button>
+              ? tt.abgeschlossen(o.fach.PHASEN_LABEL[daten.schau.phase])
+              : tt.nochNichtOffen(o.fach.PHASEN_LABEL[daten.schau.phase])}
+          <button type="button" className="inline-flex min-h-11 items-center px-2 underline" onClick={() => laden()}>{tt.neuLaden}</button>
         </div>
       )}
       {dauerhaft === false && (
         <div className="bg-stroh px-4 py-2 text-sm text-tinte">
-          Der Browser sichert die Bewertungen auf diesem Gerät nicht dauerhaft. Seite zum Startbildschirm hinzufügen, nicht im privaten Modus arbeiten.
+          {tt.nichtDauerhaft}
         </div>
       )}
       {fremdeWartend.length > 0 && (
         <div className="bg-stroh px-4 py-2 text-tinte">
-          Noch {fremdeWartend.length} Bewertung{fremdeWartend.length === 1 ? "" : "en"} von {fremdeNamen.join(", ")} nicht übertragen. Zum Übertragen als {fremdeNamen.join(" bzw. ")} anmelden.
+          {tt.fremdeWartend(fremdeWartend.length, fremdeNamen.join(", "), fremdeNamen.join(tt.namenOder))}
         </div>
       )}
       {eigeneAbgelehnt.length > 0 && (
         <details open className="max-h-[40vh] shrink-0 overflow-y-auto bg-kamm-hell px-4 py-2 text-kamm">
           <summary className="min-h-11 cursor-pointer py-2 font-semibold">
-            {eigeneAbgelehnt.length} Bewertung{eigeneAbgelehnt.length === 1 ? "" : "en"} nicht übernommen.
-            {eigeneAbgelehnt.some((a) => a.konflikt) ? " Anderswo geändert: prüfen, dann trotzdem senden oder verwerfen." : " Bitte der Ausstellungsleitung zum Nachtragen geben."}
+            {tt.abgelehnt(eigeneAbgelehnt.length)} {eigeneAbgelehnt.some((a) => a.konflikt) ? tt.konflikt : o.tablet.nachtragen}
           </summary>
           <ul className="flex flex-col gap-2 pb-2">
             {eigeneAbgelehnt.map((a) => (
@@ -489,27 +473,25 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
                 <span className="nummer text-2xl">{a.nr ?? "?"}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold">{bewertungsText(a, daten.skala)}</span>
-                  {a.vorzuege && <span className="block text-sm">Vorzüge: {a.vorzuege}</span>}
-                  {a.wuensche && <span className="block text-sm">Wünsche: {a.wuensche}</span>}
-                  {a.maengel && <span className="block text-sm">Mängel: {a.maengel}</span>}
-                  <span className="block text-sm font-semibold text-kamm">{a.meldung}</span>
+                  {a.vorzuege && <span className="block text-sm">{o.tablet.vorzuege(a.vorzuege)}</span>}
+                  {a.wuensche && <span className="block text-sm">{o.tablet.wuensche(a.wuensche)}</span>}
+                  {a.maengel && <span className="block text-sm">{o.tablet.maengel(a.maengel)}</span>}
+                  <span className="block text-sm font-semibold text-kamm">{serverText(a.meldung, sprache)}</span>
                   {a.konflikt &&
                     (() => {
                       const jetzt = daten.tiere.find((x) => x.id === a.katalogeintragId);
                       if (!jetzt) return null;
                       return (
                         <span className="mt-1 block rounded bg-papier px-2 py-1 text-sm">
-                          Jetzt gespeichert: <b>{jetzt.punkte != null || jetzt.sondernote != null ? bewertungsText(jetzt, daten.skala) : "keine Note"}</b>
-                          {jetzt.vorzuege && ` · Vorzüge: ${jetzt.vorzuege}`}
-                          {jetzt.wuensche && ` · Wünsche: ${jetzt.wuensche}`}
-                          {jetzt.maengel && ` · Mängel: ${jetzt.maengel}`}
-                          <span className="block text-grau">„Trotzdem senden“ ersetzt diesen Stand.</span>
+                          {tt.jetztGespeichert} <b>{jetzt.punkte != null || jetzt.sondernote != null ? bewertungsText(jetzt, daten.skala) : o.tablet.keineNote}</b>
+                          {tt.jetztTexte(jetzt.vorzuege, jetzt.wuensche, jetzt.maengel)}
+                          <span className="block text-grau">{tt.ersetzt}</span>
                         </span>
                       );
                     })()}
                 </span>
-                <Knopf className="min-h-11" onClick={() => erneutSenden(a)}>{a.konflikt ? "Trotzdem senden" : "Erneut senden"}</Knopf>
-                <Knopf className="min-h-11" onClick={() => verwerfen(a)}>Verwerfen</Knopf>
+                <Knopf className="min-h-11" onClick={() => erneutSenden(a)}>{a.konflikt ? tt.trotzdemSenden : tt.erneutSenden}</Knopf>
+                <Knopf className="min-h-11" onClick={() => verwerfen(a)}>{tt.verwerfen}</Knopf>
               </li>
             ))}
           </ul>
@@ -519,7 +501,7 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
         <ObmannAnsicht liste={daten.obmannListe} skala={daten.skala} online={online} fertig={() => laden()} />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
-          <nav aria-label="Meine Tiere" className="max-h-36 w-full shrink-0 overflow-y-auto border-b border-linie bg-weiss sm:max-h-none sm:w-60 sm:border-r sm:border-b-0">
+          <nav aria-label={tt.meineTiere} className="max-h-36 w-full shrink-0 overflow-y-auto border-b border-linie bg-weiss sm:max-h-none sm:w-60 sm:border-r sm:border-b-0">
             <ul>
               {tiere.map((t) => {
                 const bewertet = t.punkte != null || t.sondernote != null;
@@ -534,10 +516,10 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
                       <span className="nummer w-14 shrink-0 text-right text-2xl">{formatKatalognummer(t)}</span>
                       <span className="min-w-0 flex-1 text-sm leading-tight">
                         <span className="block truncate">{t.bezeichnung}</span>
-                        <span className="text-grau">{t.geschlecht} {t.alter}</span>
+                        <span className="text-grau">{t.geschlecht} {o.tablet.alter[t.alter]}</span>
                       </span>
                       <span className="w-12 shrink-0 text-right text-sm font-semibold">
-                        {t.fehlt ? <span className="text-grau">fehlt</span> : bewertet ? <span className={t.wartet ? "text-stroh-dunkel" : "text-stall"}>{bewertungsText(t, daten.skala).split(" ")[0]}</span> : ""}
+                        {t.fehlt ? <span className="text-grau">{tt.fehlt}</span> : bewertet ? <span className={t.wartet ? "text-stroh-dunkel" : "text-stall"}>{bewertungsText(t, daten.skala).split(" ")[0]}</span> : ""}
                       </span>
                     </button>
                   </li>
@@ -558,7 +540,7 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
                 beiAenderung={(x) => (ungespeichert.current = x)}
               />
             ) : (
-              <Leer titel="Ihnen sind noch keine Tiere zugeteilt." />
+              <Leer titel={tt.keineTiere} />
             )}
           </main>
         </div>

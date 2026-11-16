@@ -1,0 +1,68 @@
+/**
+ * Meldungen des Servers zu Katalog und Einlieferung (Entscheidung 022): routers/katalog/einlieferung.ts, nummern.ts,
+ * gesundheit.ts, die Nachweise (pruefeNachweis in der Domain) und die Gründe aus `bindungen` (services/meldung.ts).
+ */
+export const katalog = {
+  einlieferung: {
+    tierFehlt: "Tier nicht gefunden.",
+    ringnummerFest: "Nach Freigabe, Verkauf oder Abschluss ändert nur die Ausstellungsleitung die Ringnummer (mit Grund).",
+    ringnummerGrund: "Bitte einen Grund für die Änderung der Ringnummer angeben.",
+    bruteier: "Bruteier brauchen keinen Käfig.",
+    statusNachFreigabe: "Nach der Freigabe der Ergebnisse ändert nur die Ausstellungsleitung den Status (Ausgabe ausgenommen).",
+    statusGrund: "Die Ergebnisse sind freigegeben. Statusänderung nur mit Grund.",
+    gehtNicht: (gruende: string) => `Geht nicht: ${gruende}.`,
+    einzelnAusgeben: "Verkaufte Tiere bitte einzeln gegen Kaufbeleg ausgeben.",
+    verkauft: (nr: string) => `Nr. ${nr} ist verkauft – Ausgabe nur gegen Kaufbeleg.`,
+    falscherBeleg: (beleg: string, nr: string) => `Der Kaufbeleg ${beleg} gehört nicht zu Nr. ${nr}.`,
+    ueberweisung: (nr: string) => `Nr. ${nr} ist per Überweisung verkauft – der Zahlungseingang ist noch nicht gebucht (Kasse › Verkauf). Ausgabe vorher nur durch die Ausstellungsleitung mit Grund.`,
+    gesperrt: (nummern: string) => `Gesperrt (Gesundheitsjournal): Nr. ${nummern}. Ausgabe nur mit Grund, z. B. Anordnung des Tierarztes.`,
+    nachweisOffen: (wer: string) => `Nachweis nicht geprüft: ${wer}. Erst den Nachweis prüfen oder mit Grund ohne Nachweis einliefern.`,
+    inzwischen: (gruende: string) => `Inzwischen geändert – geht nicht: ${gruende}.`,
+    inzwischenVerkauft: "Ein Tier wurde inzwischen verkauft – bitte neu laden und gegen Kaufbeleg ausgeben.",
+    meldungFehlt: "Meldung nicht gefunden.",
+    nachweisUnvollstaendig: (fehler: string) => `Nachweis nicht vollständig: ${fehler}`,
+  },
+  /** Gründe, warum ein Tier gebunden ist (`bindungen`): „Nr. 12 ist bewertet“, „Tier hat einen Preis“. */
+  bindung: {
+    nr: (nr: string, grund: string) => `Nr. ${nr} ${grund}`,
+    tier: (grund: string) => `Tier ${grund}`,
+    verkauft: (beleg: string) => `verkauft (Beleg ${beleg}), erst den Verkauf stornieren`,
+    storniert: (belege: string) => `steht mit storniertem Beleg ${belege} in der Verkaufsliste`,
+    preis: "hat einen Preis",
+    bewertet: "ist bewertet",
+    eingeliefert: "ist eingeliefert",
+    ausgegeben: "ist ausgegeben",
+    journal: "steht im Gesundheitsjournal",
+  },
+  /** Nachweise bei der Einlieferung (pruefeNachweis, NACHWEIS_LABEL in der Domain). */
+  nachweis: {
+    nd: "ND-Impfung (Hühner, Puten)",
+    pmv: "PMV-Impfung (Tauben)",
+    wg: "Untersuchung Wassergeflügel (Enten, Gänse)",
+    kl: "Klinische Untersuchung (tierärztliche Bescheinigung)",
+    gz: "Gesundheitszertifikat / TRACES (Herkunft im Ausland)",
+    datumFehlt: (art: string) => `${art}: Datum fehlt.`,
+    zukunft: (art: string) => `${art}: Datum liegt in der Zukunft.`,
+    zuFrueh: (art: string, tage: string, min: string) => `${art}: nur ${tage} Tage vor der Schau – mindestens ${min} Tage verlangt.`,
+    zuAlt: (art: string, tage: string, max: string) => `${art}: ${tage} Tage vor der Schau – höchstens ${max} Tage erlaubt.`,
+    aelterAls: (art: string, tage: string) => `${art}: älter als ${tage} Tage vor der Schau.`,
+    zertifikat: (art: string) => `${art}: Nummer des Zertifikats bzw. der TRACES-Meldung fehlt.`,
+    sentinel: (art: string) => `${art}: Sentinel-Bestätigung ist älter als 12 Monate vor der Schau.`,
+    untersuchung: (art: string, tage: string) => `${art}: Untersuchung ist älter als ${tage} Tage vor der Schau.`,
+  },
+  nummern: {
+    stammdaten: "Bitte zuerst Stammdaten wählen.",
+    keineMeldungen: "Es gibt keine bestätigten Meldungen.",
+    gebunden: (beispiel: string) => `Neu nummerieren geht nicht mehr – es gibt schon Bewertungen, Preise oder Verkäufe (z. B. ${beispiel}). Bitte die Nummern festschreiben; neue Tiere bekommen dann Unternummern.`,
+    gebundenPlan: (beispiel: string) => `Neu nummerieren geht nicht mehr – es gibt schon Bewertungen, Preise oder Verkäufe (z. B. ${beispiel}). Bitte die Nummern festschreiben; dann folgen nur die Käfigplätze dem Plan.`,
+    halleAnlegen: "Erst unter „Hallenplan“ die Halle anlegen.",
+    planFestschreiben: "Erst den Plan festschreiben (im Halleneditor eine Reihe oder Platte verschieben) – sonst stellt die Software die Käfige nach den neuen Nummern wieder um.",
+    planVeraltet: "Der feste Plan passt nicht mehr zu Halle oder Käfigmaßen – erst „Plan neu setzen“ und den Plan wieder festschreiben.",
+    aufheben: (anzahl: string, beispiel: string) => `Die Festschreibung lässt sich nicht mehr aufheben – es gibt schon Bewertungen, Preise oder Verkäufe (${anzahl} Tiere, z. B. ${beispiel}). Neue Tiere bekommen Unternummern.`,
+  },
+  gesundheit: {
+    katalognummer: (nr: string) => `Katalognummer ${nr} nicht gefunden.`,
+    eintragFehlt: "Eintrag nicht gefunden.",
+    verendet: "Ein verendetes Tier bleibt gesperrt.",
+  },
+};

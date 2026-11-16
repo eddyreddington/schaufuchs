@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { KATALOG_GLIEDERUNG, type KatalogGliederungsTeil, type KatalogSeitenbereich, type KatalogTeil } from "@schau/domain";
 import { fehlerText } from "../lib";
 import { useSchauId } from "../rahmen";
+import { useOberflaeche } from "../sprache";
 import { KommendeSchauen } from "./kommende-schauen";
 import { KatalogVorschau } from "./katalog-vorschau";
 import { trpc } from "../trpc";
@@ -18,12 +19,7 @@ import { Titelseite } from "./katalog-gestalten-titelseite";
  */
 
 type Reiter = "aufbau" | "titel" | "teile" | "kommende";
-const REITER: { id: Reiter; name: string }[] = [
-  { id: "aufbau", name: "Aufbau" },
-  { id: "titel", name: "Titelseite" },
-  { id: "teile", name: "Teile und Reihenfolge" },
-  { id: "kommende", name: "Kommende Schauen" },
-];
+const REITER: Reiter[] = ["aufbau", "titel", "teile", "kommende"];
 
 export function KatalogGestalten() {
   const schauId = useSchauId();
@@ -39,6 +35,8 @@ export function KatalogGestalten() {
 }
 
 function Editor({ schauId, daten, istAdmin, mitErgebnis, neuLaden }: { schauId: number; daten: Daten; istAdmin: boolean; mitErgebnis: boolean; neuLaden: string }) {
+  const t = useOberflaeche();
+  const tg = t.katalog.gestalten;
   const g = daten.gestaltung;
   const [d, setD] = useState(() => formAus(g));
   // Neu geladen: Formular übernehmen. Mit ungespeicherten Eingaben nur den Schalter „Kommende Schauen“ (lässt sich auch
@@ -72,7 +70,7 @@ function Editor({ schauId, daten, istAdmin, mitErgebnis, neuLaden }: { schauId: 
     onSuccess: () => {
       utils.katalogGestaltung.laden.invalidate();
       utils.termine.laden.invalidate();
-      meldung("Gestaltung gespeichert.");
+      meldung(tg.gespeichert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -95,33 +93,33 @@ function Editor({ schauId, daten, istAdmin, mitErgebnis, neuLaden }: { schauId: 
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Katalog"
-        marke={mitErgebnis ? <Marke ton="ok">mit Ergebnissen</Marke> : <Marke ton="warnung">Vorkatalog bis zur Freigabe</Marke>}
+        titel={tg.titel}
+        marke={mitErgebnis ? <Marke ton="ok">{tg.mitErgebnissen}</Marke> : <Marke ton="warnung">{tg.vorkatalogBisFreigabe}</Marke>}
         hilfe="katalog-gestalten"
-        hilfeText="Hilfe zum Katalog"
+        hilfeText={tg.hilfe}
         aktionen={
           <KnopfLink href={`/datei/${schauId}/katalog.pdf`} target="_blank" rel="noreferrer" variante="primaer">
-            {mitErgebnis ? "Katalog mit Ergebnissen (PDF)" : "Vorkatalog (PDF)"}
+            {mitErgebnis ? tg.katalogPdf : tg.vorkatalogPdf}
           </KnopfLink>
         }
       />
-      {!istAdmin && <Hinweis>Nur Administratoren können den Katalog gestalten.</Hinweis>}
+      {!istAdmin && <Hinweis>{tg.nurAdmin}</Hinweis>}
 
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
         <section className="min-w-0 overflow-hidden rounded-xl border border-linie bg-weiss shadow-[0_1px_2px_rgb(16_20_28/0.04)]">
-          <div className="flex flex-wrap gap-x-1 border-b border-linie px-3" role="tablist" aria-label="Bereiche">
+          <div className="flex flex-wrap gap-x-1 border-b border-linie px-3" role="tablist" aria-label={tg.bereiche}>
             {REITER.map((r) => (
               <button
-                key={r.id}
+                key={r}
                 type="button"
                 role="tab"
-                id={`reiter-${r.id}`}
-                aria-selected={reiter === r.id}
-                aria-controls={`tafel-${r.id}`}
-                onClick={() => setReiter(r.id)}
-                className={`-mb-px whitespace-nowrap border-b-2 px-2.5 py-3 text-sm font-semibold transition-colors ${reiter === r.id ? "border-band text-tinte" : "border-transparent text-grau hover:text-tinte"}`}
+                id={`reiter-${r}`}
+                aria-selected={reiter === r}
+                aria-controls={`tafel-${r}`}
+                onClick={() => setReiter(r)}
+                className={`-mb-px whitespace-nowrap border-b-2 px-2.5 py-3 text-sm font-semibold transition-colors ${reiter === r ? "border-band text-tinte" : "border-transparent text-grau hover:text-tinte"}`}
               >
-                {r.name}
+                {tg.reiter[r]}
               </button>
             ))}
           </div>
@@ -169,21 +167,21 @@ function Editor({ schauId, daten, istAdmin, mitErgebnis, neuLaden }: { schauId: 
             kopf={
               <label className="flex items-center gap-2 text-sm text-grau">
                 <input type="checkbox" checked={ganz} onChange={(e) => setGanz(e.target.checked)} className="size-4 accent-band" />
-                ganzer Tierteil
+                {tg.ganzerTierteil}
               </label>
             }
             unter={
               teilDerSeite && (
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <span className="font-semibold">{teilDerSeite.name}</span>
-                  <span className="text-sm text-grau tabular-nums">Seite {seite}</span>
+                  <span className="font-semibold">{t.katalog.gliederung[teilDerSeite.schluessel]}</span>
+                  <span className="text-sm text-grau tabular-nums">{tg.seite(seite)}</span>
                   <span className="ml-auto flex items-center gap-3">
                     {"teil" in teilDerSeite && (
-                      <Schalter label={`${teilDerSeite.name} im Katalog`} an={!d.ausgeblendet.includes(teilDerSeite.teil)} onChange={(v) => teilAn(teilDerSeite.teil, v)}>
-                        <span className="text-grau">im Katalog</span>
+                      <Schalter label={tg.imKatalogLabel(t.katalog.gliederung[teilDerSeite.schluessel])} an={!d.ausgeblendet.includes(teilDerSeite.teil)} onChange={(v) => teilAn(teilDerSeite.teil, v)}>
+                        <span className="text-grau">{tg.imKatalog}</span>
                       </Schalter>
                     )}
-                    <Knopf variante="leise" onClick={() => zeigeTeil(teilDerSeite.schluessel)}>Bearbeiten</Knopf>
+                    <Knopf variante="leise" onClick={() => zeigeTeil(teilDerSeite.schluessel)}>{t.allgemein.bearbeiten}</Knopf>
                   </span>
                 </div>
               )
@@ -194,7 +192,7 @@ function Editor({ schauId, daten, istAdmin, mitErgebnis, neuLaden }: { schauId: 
 
       <Speicherleiste
         sichtbar={ungespeichert && istAdmin}
-        onVerwerfen={async () => (await bestaetige({ titel: "Änderungen verwerfen?", text: "Die Gestaltung bleibt wie zuletzt gespeichert.", knopf: "Verwerfen", gefahr: true })) && setD(formAus(g))}
+        onVerwerfen={async () => (await bestaetige({ titel: tg.verwerfenTitel, text: tg.verwerfenText, knopf: tg.verwerfenKnopf, gefahr: true })) && setD(formAus(g))}
         onSpeichern={() => senden()}
         laedt={speichern.isPending}
       />

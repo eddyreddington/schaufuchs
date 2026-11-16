@@ -1,5 +1,9 @@
-/** Dialog und Rückfragen als eigener Dialog (useFrage statt prompt/confirm). */
+/**
+ * Dialog und Rückfragen als eigener Dialog (useFrage statt prompt/confirm). Die Rückfragen liegen außerhalb des Routers
+ * (ohne Sprachkontext): Texte deshalb über ot() in der aktuellen Sprache.
+ */
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { ot } from "./sprache-jetzt";
 import { cx } from "./ui-basis";
 import { Eingabe, Feld, Textfeld } from "./ui-felder";
 import { Knopf } from "./ui-knoepfe";
@@ -30,7 +34,7 @@ export function Dialog({ offen, onSchliessen, titel, children, breit }: { offen:
     >
       <div className="flex items-center justify-between border-b border-linie px-5 py-3">
         <h2 className="text-lg font-semibold">{titel}</h2>
-        <button type="button" onClick={onSchliessen} className="rounded px-2 text-2xl leading-none text-grau hover:text-tinte" aria-label="Schließen">
+        <button type="button" onClick={onSchliessen} className="rounded px-2 text-2xl leading-none text-grau hover:text-tinte" aria-label={ot().allgemein.schliessen}>
           ×
         </button>
       </div>
@@ -95,7 +99,7 @@ export function FragenAnbieter({ children }: { children: ReactNode }) {
           >
             {frage.text && <div className="whitespace-pre-line">{frage.text}</div>}
             {frage.feld && (
-              <Feld label={frage.feld} hinweis={frage.mindestens && frage.mindestens > 1 ? `mindestens ${frage.mindestens} Zeichen` : undefined}>
+              <Feld label={frage.feld} hinweis={frage.mindestens && frage.mindestens > 1 ? ot().rahmen.dialog.mindestensZeichen(frage.mindestens) : undefined}>
                 {(fid) =>
                   frage.einzeilig ? (
                     <Eingabe id={fid} data-autofocus value={wert} onChange={(e) => setWert(e.target.value)} />
@@ -107,10 +111,10 @@ export function FragenAnbieter({ children }: { children: ReactNode }) {
             )}
             <div className="flex flex-wrap justify-end gap-2">
               <Knopf type="button" onClick={() => ende(null)}>
-                {frage.abbrechen ?? "Abbrechen"}
+                {frage.abbrechen ?? ot().allgemein.abbrechen}
               </Knopf>
               <Knopf type="submit" variante={frage.gefahr ? "gefahr" : "primaer"} disabled={zuKurz} data-autofocus={frage.feld ? undefined : true}>
-                {frage.knopf ?? "OK"}
+                {frage.knopf ?? ot().allgemein.ok}
               </Knopf>
             </div>
           </form>

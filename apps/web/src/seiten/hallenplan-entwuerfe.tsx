@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { datum, fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Dialog, Eingabe, FehlerAnzeige, Knopf, Laden, Leer, useFrage, useMeldung } from "../ui";
 
@@ -11,10 +12,11 @@ const meter = (cm: number) => `${(cm / 100).toLocaleString("de-DE", { maximumFra
  */
 export function HallenEntwuerfe({ schauId, darfAendern }: { schauId: number; darfAendern: boolean }) {
   const [offen, setOffen] = useState(false);
+  const t = useOberflaeche().halleBild.entwuerfe;
   return (
     <>
-      <Knopf onClick={() => setOffen(true)}>Entwürfe</Knopf>
-      <Dialog offen={offen} onSchliessen={() => setOffen(false)} titel="Entwürfe des Hallenplans" breit>
+      <Knopf onClick={() => setOffen(true)}>{t.knopf}</Knopf>
+      <Dialog offen={offen} onSchliessen={() => setOffen(false)} titel={t.titel} breit>
         {offen && <Inhalt schauId={schauId} darfAendern={darfAendern} />}
       </Dialog>
     </>
@@ -23,6 +25,8 @@ export function HallenEntwuerfe({ schauId, darfAendern }: { schauId: number; dar
 
 function Inhalt({ schauId, darfAendern }: { schauId: number; darfAendern: boolean }) {
   const q = trpc.hallenentwurf.liste.useQuery({ schauId });
+  const texte = useOberflaeche();
+  const t = texte.halleBild.entwuerfe;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige, eingabe } = useFrage();
@@ -45,29 +49,29 @@ function Inhalt({ schauId, darfAendern }: { schauId: number; darfAendern: boolea
     await speichern.mutateAsync({ schauId, name: name.trim() });
     setName("");
     await neu();
-    meldung("Aktueller Plan als Entwurf gespeichert.");
+    meldung(t.gespeichert);
   };
   const ladenFragen = async (id: number, n: string) => {
-    if (!(await bestaetige({ titel: `„${n}“ laden?`, text: "Der aktuelle Plan wird ersetzt und neu gesetzt. Wer ihn behalten will, speichert ihn vorher als Entwurf.", knopf: "Laden" }))) return;
+    if (!(await bestaetige({ titel: t.ladenFrage(n), text: t.ladenText, knopf: t.laden }))) return;
     await laden.mutateAsync({ schauId, id });
     await neu();
-    meldung(`„${n}“ geladen.`);
+    meldung(t.geladen(n));
   };
   const entscheidenFragen = async (id?: number, n?: string) => {
-    const text = `${n ? `„${n}“ wird geladen und gilt.` : "Der aktuelle Plan gilt."} Alle übrigen Entwürfe dieser Schau gehen ins Archiv und lassen sich in späteren Schauen laden.`;
-    if (!(await bestaetige({ titel: "Für diesen Plan entscheiden?", text, knopf: "Entscheiden" }))) return;
+    const text = `${n ? t.wirdGeladen(n) : t.aktuellerGilt} ${t.insArchiv}`;
+    if (!(await bestaetige({ titel: t.entscheidenFrage, text, knopf: t.entscheiden }))) return;
     const r = await entscheiden.mutateAsync({ schauId, ...(id ? { id } : {}) });
     await neu();
-    meldung(`Entschieden – ${r.archiviert} Entwürfe im Archiv.`);
+    meldung(t.entschieden(r.archiviert));
   };
   const umbenennenFragen = async (id: number, alt: string) => {
-    const n = await eingabe({ titel: "Entwurf umbenennen", feld: "Name", vorgabe: alt, mindestens: 1 });
+    const n = await eingabe({ titel: t.umbenennenTitel, feld: texte.allgemein.name, vorgabe: alt, mindestens: 1 });
     if (!n || n === alt) return;
     await umbenennen.mutateAsync({ id, name: n });
     await neu();
   };
   const loeschenFragen = async (id: number, n: string) => {
-    if (!(await bestaetige({ titel: `„${n}“ löschen?`, text: "Der Entwurf wird endgültig gelöscht.", knopf: "Löschen", gefahr: true }))) return;
+    if (!(await bestaetige({ titel: t.loeschenFrage(n), text: t.loeschenText, knopf: texte.allgemein.loeschen, gefahr: true }))) return;
     await loeschen.mutateAsync({ id });
     await neu();
   };
@@ -78,19 +82,19 @@ function Inhalt({ schauId, darfAendern }: { schauId: number; darfAendern: boolea
       {darfAendern && (
         <form onSubmit={(e) => void sichern(e).catch(() => {})} className="flex flex-wrap items-end gap-2">
           <label className="flex min-w-60 flex-1 flex-col gap-1 text-sm font-semibold">
-            Aktuellen Plan als Entwurf speichern
-            <Eingabe value={name} maxLength={100} placeholder="Name, z. B. „Variante quer“" onChange={(e) => setName(e.target.value)} />
+            {t.speichernAls}
+            <Eingabe value={name} maxLength={100} placeholder={t.namePlatzhalter} onChange={(e) => setName(e.target.value)} />
           </label>
           <Knopf type="submit" variante="primaer" laedt={speichern.isPending} disabled={!name.trim()}>
-            Speichern
+            {texte.allgemein.speichern}
           </Knopf>
         </form>
       )}
 
       <section className="flex flex-col gap-2">
-        <h3 className="font-semibold">Entwürfe dieser Schau</h3>
+        <h3 className="font-semibold">{t.dieserSchau}</h3>
         {entwuerfe.length === 0 ? (
-          <Leer titel="Noch keine Entwürfe" />
+          <Leer titel={t.keine} />
         ) : (
           <ul className="divide-y divide-linie rounded-lg border border-linie">
             {entwuerfe.map((e) => (
@@ -104,16 +108,16 @@ function Inhalt({ schauId, darfAendern }: { schauId: number; darfAendern: boolea
                 {darfAendern && (
                   <span className="flex flex-wrap gap-1.5">
                     <Knopf disabled={beschaeftigt} onClick={() => void ladenFragen(e.id, e.name).catch(() => {})}>
-                      Laden
+                      {t.laden}
                     </Knopf>
                     <Knopf variante="primaer" disabled={beschaeftigt} onClick={() => void entscheidenFragen(e.id, e.name).catch(() => {})}>
-                      Diesen nehmen
+                      {t.diesenNehmen}
                     </Knopf>
                     <Knopf variante="leise" onClick={() => void umbenennenFragen(e.id, e.name).catch(() => {})}>
-                      Umbenennen
+                      {t.umbenennen}
                     </Knopf>
                     <Knopf variante="gefahr" onClick={() => void loeschenFragen(e.id, e.name).catch(() => {})}>
-                      Löschen
+                      {texte.allgemein.loeschen}
                     </Knopf>
                   </span>
                 )}
@@ -123,15 +127,15 @@ function Inhalt({ schauId, darfAendern }: { schauId: number; darfAendern: boolea
         )}
         {darfAendern && entwuerfe.length > 0 && (
           <Knopf className="self-start" disabled={beschaeftigt} onClick={() => void entscheidenFragen().catch(() => {})}>
-            Aktuellen Plan nehmen – Entwürfe ins Archiv
+            {t.aktuellenNehmen}
           </Knopf>
         )}
       </section>
 
       <section className="flex flex-col gap-2">
-        <h3 className="font-semibold">Archiv (frühere Schauen)</h3>
+        <h3 className="font-semibold">{t.archiv}</h3>
         {archiv.length === 0 ? (
-          <Leer titel="Archiv ist leer" />
+          <Leer titel={t.archivLeer} />
         ) : (
           <ul className="max-h-80 divide-y divide-linie overflow-y-auto rounded-lg border border-linie">
             {archiv.map((e) => (
@@ -139,16 +143,16 @@ function Inhalt({ schauId, darfAendern }: { schauId: number; darfAendern: boolea
                 <span className="min-w-0 flex-1">
                   <span className="font-semibold">{e.name}</span>
                   <span className="block text-sm text-grau">
-                    {e.herkunft || "ohne Schau"} · {meter(e.masse.breite)} × {meter(e.masse.laenge)} · archiviert {datum(e.archiviertAm)}
+                    {t.archivZeile(e.herkunft || t.ohneSchau, `${meter(e.masse.breite)} × ${meter(e.masse.laenge)}`, datum(e.archiviertAm))}
                   </span>
                 </span>
                 {darfAendern && (
                   <span className="flex flex-wrap gap-1.5">
                     <Knopf disabled={beschaeftigt} onClick={() => void ladenFragen(e.id, e.name).catch(() => {})}>
-                      Laden
+                      {t.laden}
                     </Knopf>
                     <Knopf variante="gefahr" onClick={() => void loeschenFragen(e.id, e.name).catch(() => {})}>
-                      Löschen
+                      {texte.allgemein.loeschen}
                     </Knopf>
                   </span>
                 )}

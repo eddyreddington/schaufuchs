@@ -1,7 +1,9 @@
 /**
  * Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen, Zoom, Menü „Plan“).
  */
-import { type HallenFlaeche, type HallenObjekt, type KaefigMasse, kaefigName, type KaefigTyp } from "@schau/domain";
+import { type HallenFlaeche, type HallenObjekt, type KaefigMasse, type KaefigTyp } from "@schau/domain";
+import { useOberflaeche } from "../sprache";
+import { kaefigNameT } from "./hallenplan-teile";
 import { MenueEintrag, MenueKopf, MenueTrenner, strg, WzGruppe, WzKnopf, WzMenue } from "./hallenplan-werkzeuge";
 import { type Aktionen, BLOCK_TYPEN } from "./hallenplan-geometrie";
 
@@ -64,26 +66,29 @@ export function Werkzeugleiste({
   vorschlaegeOffen: boolean;
   dreiD: () => void;
 }) {
+  const t = useOberflaeche();
+  const tl = t.halleWerkzeuge.leiste;
+  const tg = t.halleWerkzeuge.gemeinsam;
   return (
-    <div role="toolbar" aria-label="Werkzeuge des Hallenplans" className={`nicht-drucken z-30 flex flex-wrap items-center gap-y-1 border-b border-linie bg-weiss px-1 py-1 ${voll ? "" : "sticky top-12 rounded-t-xl"}`}>
-      <WzGruppe label="Auswahl">
-        <WzKnopf symbol="auswahl" titel="Auswählen und verschieben" kuerzel="V" an={!mehrfach} onClick={() => setMehrfach(false)} />
-        <WzKnopf symbol="mehrfach" titel="Mehrfachauswahl" kuerzel="M" an={mehrfach} onClick={() => setMehrfach(!mehrfach)} />
+    <div role="toolbar" aria-label={tl.werkzeuge} className={`nicht-drucken z-30 flex flex-wrap items-center gap-y-1 border-b border-linie bg-weiss px-1 py-1 ${voll ? "" : "sticky top-12 rounded-t-xl"}`}>
+      <WzGruppe label={tl.auswahl}>
+        <WzKnopf symbol="auswahl" titel={tl.auswaehlen} kuerzel="V" an={!mehrfach} onClick={() => setMehrfach(false)} />
+        <WzKnopf symbol="mehrfach" titel={tl.mehrfach} kuerzel="M" an={mehrfach} onClick={() => setMehrfach(!mehrfach)} />
       </WzGruppe>
-      <WzGruppe label="Verlauf">
-        <WzKnopf symbol="rueckgaengig" titel={kannZurueck ? `Rückgängig: ${zurueckWas}` : "Rückgängig"} kuerzel={`${strg} Z`} disabled={!kannZurueck} onClick={rueckgaengig} />
-        <WzKnopf symbol="wiederholen" titel={kannVor ? `Wiederholen: ${vorWas}` : "Wiederholen"} kuerzel={`${strg} ⇧ Z`} disabled={!kannVor} onClick={wiederholen} />
+      <WzGruppe label={tl.verlauf}>
+        <WzKnopf symbol="rueckgaengig" titel={kannZurueck ? tl.rueckgaengigWas(zurueckWas ?? "") : tl.rueckgaengig} kuerzel={`${strg()} Z`} disabled={!kannZurueck} onClick={rueckgaengig} />
+        <WzKnopf symbol="wiederholen" titel={kannVor ? tl.wiederholenWas(vorWas ?? "") : tl.wiederholen} kuerzel={`${strg()} ⇧ Z`} disabled={!kannVor} onClick={wiederholen} />
       </WzGruppe>
-      <WzGruppe label="Einsetzen">
-        <WzMenue symbol="einsetzen" titel="Einsetzen" text="Einsetzen">
+      <WzGruppe label={tl.einsetzen}>
+        <WzMenue symbol="einsetzen" titel={tl.einsetzen} text={tl.einsetzen}>
           {(zu) => (
             <>
-              <MenueKopf>Flächen</MenueKopf>
+              <MenueKopf>{tl.flaechen}</MenueKopf>
               {(
                 [
-                  ["eingang", "eingang", "Eingang / Ausgang", "an der Wand"],
-                  ["sperre", "flaeche", "Freier Bereich (Bühne, Kasse …)", undefined],
-                  ["volieren", "voliere", "Volierenbereich", undefined],
+                  ["eingang", "eingang", tg.eingangAusgang, tl.anDerWand],
+                  ["sperre", "flaeche", tl.freierBereich, undefined],
+                  ["volieren", "voliere", tg.volierenbereich, undefined],
                 ] as const
               ).map(([art, symbol, text, zusatz]) => (
                 <MenueEintrag
@@ -99,17 +104,17 @@ export function Werkzeugleiste({
                 </MenueEintrag>
               ))}
               <MenueTrenner />
-              <MenueKopf>Käfige</MenueKopf>
-              {BLOCK_TYPEN.map((t) => (
+              <MenueKopf>{tl.kaefige}</MenueKopf>
+              {BLOCK_TYPEN.map((typ) => (
                 <MenueEintrag
-                  key={t}
+                  key={typ}
                   symbol="block"
                   onClick={() => {
                     zu();
-                    einsetzen("kaefigblock", t);
+                    einsetzen("kaefigblock", typ);
                   }}
                 >
-                  Käfigblock {kaefigName(t, masse)}
+                  {tl.kaefigblock(kaefigNameT(t, typ, masse))}
                 </MenueEintrag>
               ))}
               <MenueEintrag
@@ -119,15 +124,15 @@ export function Werkzeugleiste({
                   einsetzen("voliere");
                 }}
               >
-                Voliere
+                {tl.voliere}
               </MenueEintrag>
               <MenueTrenner />
-              <MenueKopf>Tische und Bänke</MenueKopf>
+              <MenueKopf>{tl.tischeBaenke}</MenueKopf>
               {(
                 [
-                  ["garnitur", "Garnitur (Tisch mit zwei Bänken)"],
-                  ["tisch", "Tisch"],
-                  ["bank", "Bank"],
+                  ["garnitur", tl.garnitur],
+                  ["tisch", tl.tisch],
+                  ["bank", tl.bank],
                 ] as const
               ).map(([art, text]) => (
                 <MenueEintrag
@@ -145,27 +150,27 @@ export function Werkzeugleiste({
           )}
         </WzMenue>
       </WzGruppe>
-      <WzGruppe label="Bearbeiten">
-        <WzKnopf symbol="raster" titel={hatAuswahl ? "Auswahl am Raster ausrichten" : "Alles am Raster ausrichten"} kuerzel="A" onClick={a.ausrichten} />
-        <WzKnopf symbol="drehen" titel="Drehen um 90°" kuerzel="R" disabled={!a.dreht} onClick={a.drehen} />
-        <WzKnopf symbol="zurueck" titel="An ihren Platz zurück" disabled={!a.zurueck} onClick={a.zurueckAnPlatz} />
-        <WzKnopf symbol="entfernen" titel="Entfernen (nur Leeres)" kuerzel="Entf" gefahr disabled={!hatAuswahl} onClick={a.entfernen} />
+      <WzGruppe label={tl.bearbeiten}>
+        <WzKnopf symbol="raster" titel={hatAuswahl ? tl.auswahlRaster : tl.allesRaster} kuerzel="A" onClick={a.ausrichten} />
+        <WzKnopf symbol="drehen" titel={tl.drehen} kuerzel="R" disabled={!a.dreht} onClick={a.drehen} />
+        <WzKnopf symbol="zurueck" titel={tg.anPlatzZurueck} disabled={!a.zurueck} onClick={a.zurueckAnPlatz} />
+        <WzKnopf symbol="entfernen" titel={tl.entfernen} kuerzel={tl.entf} gefahr disabled={!hatAuswahl} onClick={a.entfernen} />
       </WzGruppe>
-      <WzGruppe label="Ansicht">
-        <WzKnopf symbol="verkleinern" titel="Verkleinern" kuerzel="−" disabled={zoom <= 1} onClick={() => zoomen(-1)} />
+      <WzGruppe label={tl.ansicht}>
+        <WzKnopf symbol="verkleinern" titel={tl.verkleinern} kuerzel="−" disabled={zoom <= 1} onClick={() => zoomen(-1)} />
         <span className="w-11 text-center text-sm tabular-nums text-grau" aria-live="polite">
           {Math.round(zoom * 100)} %
         </span>
-        <WzKnopf symbol="vergroessern" titel="Vergrößern" kuerzel="+" disabled={zoom >= 4} onClick={() => zoomen(1)} />
-        <WzKnopf symbol="einpassen" titel="Ganze Halle" kuerzel="0" disabled={zoom === 1} onClick={() => setZoom(1)} />
-        <WzKnopf symbol={voll ? "vollansichtAus" : "vollansicht"} titel={voll ? "Vollansicht schließen" : "Vollansicht"} kuerzel="F" an={voll} onClick={() => setVoll(!voll)} />
-        <WzKnopf symbol="dreiD" titel="Halle in 3D" text="3D" onClick={dreiD} />
+        <WzKnopf symbol="vergroessern" titel={tl.vergroessern} kuerzel="+" disabled={zoom >= 4} onClick={() => zoomen(1)} />
+        <WzKnopf symbol="einpassen" titel={tl.ganzeHalle} kuerzel="0" disabled={zoom === 1} onClick={() => setZoom(1)} />
+        <WzKnopf symbol={voll ? "vollansichtAus" : "vollansicht"} titel={voll ? tl.vollansichtZu : tl.vollansicht} kuerzel="F" an={voll} onClick={() => setVoll(!voll)} />
+        <WzKnopf symbol="dreiD" titel={tl.halle3d} text="3D" onClick={dreiD} />
       </WzGruppe>
-      <WzGruppe label="Aufstellung">
-        <WzKnopf symbol="vorschlaege" titel="Stellvorschläge" text="Stellvorschläge" textBreit an={vorschlaegeOffen} onClick={vorschlaege} />
+      <WzGruppe label={tl.aufstellung}>
+        <WzKnopf symbol="vorschlaege" titel={tl.stellvorschlaege} text={tl.stellvorschlaege} textBreit an={vorschlaegeOffen} onClick={vorschlaege} />
       </WzGruppe>
-      <WzGruppe label="Plan">
-        <WzMenue symbol="menue" titel="Plan" text="Plan" rechts>
+      <WzGruppe label={tl.plan}>
+        <WzMenue symbol="menue" titel={tl.plan} text={tl.plan} rechts>
           {(zu) => {
             const tun = (f: () => void) => () => {
               zu();
@@ -182,19 +187,19 @@ export function Werkzeugleiste({
                   </>
                 )}
                 <MenueEintrag symbol="zurueck" zusatz={plan.reihenZurueck || undefined} disabled={!plan.reihenZurueck} onClick={tun(plan.alleReihenZurueck)}>
-                  Alle Reihen an ihren Platz
+                  {tl.alleReihen}
                 </MenueEintrag>
                 <MenueEintrag symbol="zurueck" zusatz={plan.plattenZurueck || undefined} disabled={!plan.plattenZurueck} onClick={tun(plan.allePlattenZurueck)}>
-                  Alle Platten an ihren Platz
+                  {tl.allePlatten}
                 </MenueEintrag>
                 {plan.anWaenden && (
                   <MenueEintrag symbol="drehen" onClick={tun(plan.anWaenden)}>
-                    Käfige an den Wänden ausrichten …
+                    {tl.wandAusrichten}
                   </MenueEintrag>
                 )}
                 <MenueTrenner />
                 <MenueEintrag symbol="neu" onClick={tun(plan.neuSetzen)}>
-                  Plan neu setzen …
+                  {tl.neuSetzen}
                 </MenueEintrag>
               </>
             );

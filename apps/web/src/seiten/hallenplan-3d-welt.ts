@@ -5,6 +5,7 @@
 import { punktInUmriss, type Verkleidung, type SzeneSchuerze, richterFarbe, wandDeckkraft, wandInnenseiten, type Quader, type Blick, type Figur, type HallenSzene, type SzeneKaefig, type SzeneTier } from "@schau/domain";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { ot } from "../sprache-jetzt";
 import { figurTeile, gitterTextur, hell, innenseitenGeometrie, ladeBild, offenerKasten, schildSprite, schuerzenGeometrie, stoffKachel, type Teil, TURNHALLE_KACHEL, turnhallenWand, wackel } from "./hallenplan-3d-bausteine";
 import { baueLandschaft, type HallenSeite } from "./hallenplan-3d-landschaft";
 import { type Bewegung, bewegungFuer } from "./hallenplan-3d-steuerung";
@@ -57,12 +58,12 @@ export function baueWelt(
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   kasten.appendChild(renderer.domElement);
-  renderer.domElement.setAttribute("aria-label", "Halle räumlich");
+  renderer.domElement.setAttribute("aria-label", ot().halleBild.dreiD.raeumlich);
 
   const scene = new THREE.Scene();
   /** Was ins 3D-Modell kommt (ohne Beschriftungen). */
   const modell = new THREE.Group();
-  modell.name = "Halle";
+  modell.name = "Halle"; // bleibt deutsch (Name im 3D-Modell, wie Dateien und Drucke)
   scene.add(modell);
   const zuEntsorgen: { dispose: () => void }[] = [];
   const merk = <T extends { dispose: () => void }>(x: T): T => {

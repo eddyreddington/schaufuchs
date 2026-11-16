@@ -1,5 +1,8 @@
+import { serverText } from "@schau/domain";
 import { useState, type FormEvent } from "react";
 import { fehlerText } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
+import { ot } from "../sprache-jetzt";
 import { trpc, type Ausgabe } from "../trpc";
 import { Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, Segmente, Suchfeld, useFrage, useMeldung } from "../ui";
 
@@ -21,19 +24,19 @@ function alsBase64(datei: Blob): Promise<string> {
  */
 async function verkleinern(datei: File): Promise<string> {
   const bitmap = await createImageBitmap(datei).catch(() => null);
-  if (!bitmap) throw new Error("Das Bild lässt sich nicht lesen. Bitte ein Foto als JPEG oder PNG wählen.");
+  if (!bitmap) throw new Error(ot().vorlagen.rassebilder.nichtLesbar);
   const faktor = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
   const leinwand = document.createElement("canvas");
   leinwand.width = Math.max(1, Math.round(bitmap.width * faktor));
   leinwand.height = Math.max(1, Math.round(bitmap.height * faktor));
   const g = leinwand.getContext("2d");
-  if (!g) throw new Error("Das Bild lässt sich hier nicht umwandeln.");
+  if (!g) throw new Error(ot().vorlagen.rassebilder.nichtUmwandelbar);
   g.fillStyle = "#ffffff";
   g.fillRect(0, 0, leinwand.width, leinwand.height);
   g.drawImage(bitmap, 0, 0, leinwand.width, leinwand.height);
   bitmap.close();
   const blob = await new Promise<Blob | null>((ok) => leinwand.toBlob(ok, "image/jpeg", 0.88));
-  if (!blob) throw new Error("Das Bild lässt sich hier nicht umwandeln.");
+  if (!blob) throw new Error(ot().vorlagen.rassebilder.nichtUmwandelbar);
   return alsBase64(blob);
 }
 
@@ -45,6 +48,9 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
   const liste = trpc.rassebild.liste.useQuery({ versionId });
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const ta = useOberflaeche();
+  const t = ta.vorlagen.rassebilder;
+  const sprache = useSprache();
   const [sparte, setSparte] = useState("");
   const [suche, setSuche] = useState("");
   const [stand, setStand] = useState<"alle" | "mit" | "ohne" | "ungeprueft">("alle");
@@ -57,7 +63,7 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
     onSuccess: (r) => {
       neu();
       // Ohne katalogtaugliche Lizenz bleibt das Bild ungeprüft – sagen, warum.
-      if (r.hinweis) meldung(`Bild gespeichert, aber noch nicht im Katalog: ${r.hinweis}`, "fehler");
+      if (r.hinweis) meldung(t.nochNichtImKatalog(serverText(r.hinweis, sprache)), "fehler");
     },
     onError: fehler,
   });
@@ -113,25 +119,25 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Suchfeld aria-label="Rasse suchen" placeholder="Rasse suchen" value={suche} onChange={(e) => setSuche(e.target.value)} className="sm:max-w-56" />
+        <Suchfeld aria-label={t.rasseSuchen} placeholder={t.rasseSuchen} value={suche} onChange={(e) => setSuche(e.target.value)} className="sm:max-w-56" />
         {/* Die Felder sind von Haus aus w-full – die Breite kommt vom umgebenden div. */}
         <div className="w-full sm:w-48">
-          <Auswahl aria-label="Sparte" kompakt value={sparte} onChange={(e) => setSparte(e.target.value)}>
-            <option value="">alle Sparten</option>
+          <Auswahl aria-label={t.sparte} kompakt value={sparte} onChange={(e) => setSparte(e.target.value)}>
+            <option value="">{t.alleSparten}</option>
             {sparten.map((s) => (
               <option key={s}>{s}</option>
             ))}
           </Auswahl>
         </div>
         <Segmente
-          label="Stand"
+          label={t.stand}
           wert={stand}
           onChange={setStand}
           optionen={[
-            { wert: "alle" as const, label: "Alle", anzahl: liste.data.length },
-            { wert: "mit" as const, label: "mit Bild", anzahl: mitBild },
-            { wert: "ohne" as const, label: "ohne Bild", anzahl: ohneBild },
-            { wert: "ungeprueft" as const, label: "ungeprüft", anzahl: ungeprueft },
+            { wert: "alle" as const, label: ta.allgemein.alle, anzahl: liste.data.length },
+            { wert: "mit" as const, label: t.mitBild, anzahl: mitBild },
+            { wert: "ohne" as const, label: t.ohneBild, anzahl: ohneBild },
+            { wert: "ungeprueft" as const, label: t.ungeprueft, anzahl: ungeprueft },
           ]}
         />
         <span className="ml-auto flex flex-wrap items-center gap-3">
@@ -139,7 +145,7 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
             <Knopf
               variante="leise"
               onClick={async () => {
-                if (!(await bestaetige({ titel: `${ungeprueftSichtbar.length} Bilder als geprüft markieren?`, text: "Sie kommen damit in den Katalog, Bilder ohne passende Lizenz bleiben ungeprüft.", knopf: "Markieren" }))) return;
+                if (!(await bestaetige({ titel: t.markierenFrage(ungeprueftSichtbar.length), text: t.markierenText, knopf: t.markieren }))) return;
                 let ok = 0;
                 const ohne: string[] = [];
                 // Einzeln: ein Bild ohne passende Lizenz (fehlt, NC/ND, CC BY ohne Urheber) hält die übrigen nicht auf.
@@ -151,40 +157,40 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
                     ohne.push(z.rasse);
                   }
                 }
-                meldung(`${ok} Bilder als geprüft markiert.${ohne.length ? ` Ohne passende Lizenzangabe ungeprüft geblieben: ${ohne.join(", ")}.` : ""}`, ohne.length ? "fehler" : "ok");
+                meldung([t.markiert(ok), ...(ohne.length ? [t.ohneLizenz(ohne.join(", "))] : [])].join(" "), ohne.length ? "fehler" : "ok");
               }}
             >
-              Angezeigte als geprüft markieren
+              {t.angezeigteMarkieren}
             </Knopf>
           )}
-          <HilfeLink abschnitt="rassebilder">Hilfe zu Rassebildern</HilfeLink>
+          <HilfeLink abschnitt="rassebilder">{t.hilfe}</HilfeLink>
         </span>
       </div>
-      {angezeigt.length === 0 && <Leer titel="Keine Treffer" />}
+      {angezeigt.length === 0 && <Leer titel={t.keineTreffer} />}
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {angezeigt.map((z) => (
           <li key={z.rasse} className="flex flex-col overflow-hidden rounded-xl border border-linie bg-weiss shadow-[0_1px_2px_rgb(16_20_28/0.04)]">
             <div className="flex h-40 items-center justify-center border-b border-linie bg-papier">
               {z.bild ? (
-                <img src={`/datei/rassebild/${z.bild.id}?v=${encodeURIComponent(String(z.bild.stand))}`} alt={`Rassebild ${z.rasse}`} loading="lazy" className="max-h-40 w-full object-contain" />
+                <img src={`/datei/rassebild/${z.bild.id}?v=${encodeURIComponent(String(z.bild.stand))}`} alt={t.bildVon(z.rasse)} loading="lazy" className="max-h-40 w-full object-contain" />
               ) : (
-                <span className="text-sm text-grau">kein Bild</span>
+                <span className="text-sm text-grau">{t.keinBild}</span>
               )}
             </div>
             <div className="flex flex-1 flex-col gap-1 p-3 text-sm">
               <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span className="font-semibold text-tinte">{z.rasse}</span>
-                {z.bild && !z.bild.geprueft && <Marke ton="warnung">ungeprüft</Marke>}
+                {z.bild && !z.bild.geprueft && <Marke ton="warnung">{t.ungeprueft}</Marke>}
               </span>
               <span className="text-grau">{z.sparte}</span>
               {z.bild && (
                 <span className="text-xs text-grau">
-                  {[z.bild.urheber, z.bild.lizenz].filter(Boolean).join(" · ") || "ohne Angaben"}
+                  {[z.bild.urheber, z.bild.lizenz].filter(Boolean).join(" · ") || t.ohneAngaben}
                   {/^https?:\/\//i.test(z.bild.quelle) && (
                     <>
                       {" · "}
                       <a href={z.bild.quelle} target="_blank" rel="noreferrer">
-                        Quelle
+                        {t.quelle}
                       </a>
                     </>
                   )}
@@ -194,20 +200,20 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
                 <div className="mt-auto flex flex-wrap gap-1 pt-2">
                   {z.bild && !z.bild.geprueft && (
                     <Knopf variante="primaer" className="min-h-8 px-2" onClick={() => setzen.mutate({ id: z.bild!.id, ...angabenVon(z.bild!), geprueft: true })}>
-                      Passt
+                      {t.passt}
                     </Knopf>
                   )}
                   <label className={knopfKlasse("zweit", false, "min-h-8 cursor-pointer px-2 focus-within:ring-2 focus-within:ring-band/25")}>
-                    {z.bild ? "Ersetzen" : "Bild hochladen"}
+                    {z.bild ? t.ersetzen : t.hochladen}
                     <input type="file" accept="image/jpeg,image/png" className="sr-only" onChange={(e) => { void datei(z, e.target.files?.[0]); e.target.value = ""; }} />
                   </label>
                   {z.bild && (
                     <>
                       <Knopf variante="leise" className="min-h-8 px-2" onClick={() => setAngaben(z)}>
-                        Angaben
+                        {t.angaben}
                       </Knopf>
-                      <Knopf variante="leise" className="min-h-8 px-2 text-kamm hover:bg-kamm-hell" onClick={async () => (await bestaetige({ titel: `Bild von „${z.rasse}“ löschen?`, knopf: "Löschen", gefahr: true })) && loeschen.mutate({ id: z.bild!.id })}>
-                        Löschen
+                      <Knopf variante="leise" className="min-h-8 px-2 text-kamm hover:bg-kamm-hell" onClick={async () => (await bestaetige({ titel: t.loeschenFrage(z.rasse), knopf: ta.allgemein.loeschen, gefahr: true })) && loeschen.mutate({ id: z.bild!.id })}>
+                        {ta.allgemein.loeschen}
                       </Knopf>
                     </>
                   )}
@@ -217,19 +223,19 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
           </li>
         ))}
       </ul>
-      {sichtbar.length > 200 && <p className="text-center text-sm text-grau">Erste 200 von {sichtbar.length} angezeigt – bitte eingrenzen.</p>}
+      {sichtbar.length > 200 && <p className="text-center text-sm text-grau">{t.erste200(sichtbar.length)}</p>}
       <Dialog
         offen={angaben != null}
         onSchliessen={() => {
           setAngaben(null);
           setNachUpload(false);
-        }} titel={`Bildangaben: ${angaben?.rasse ?? ""}`}>
+        }} titel={t.bildangaben(angaben?.rasse ?? "")}>
         {angaben?.bild && (
           <AngabenForm
             key={`${angaben.bild.id}-${String(angaben.bild.stand)}`}
             start={angabenVon(angaben.bild)}
             geprueft={nachUpload || angaben.bild.geprueft}
-            hinweis={nachUpload ? "Neues Foto: erst nach dem Speichern im Katalog." : undefined}
+            hinweis={nachUpload ? t.neuesFoto : undefined}
             speichern={(a, g) => setzen.mutate({ id: angaben.bild!.id, ...a, geprueft: g }, { onSuccess: () => { setAngaben(null); setNachUpload(false); } })}
           />
         )}
@@ -241,6 +247,8 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
 function AngabenForm({ start, geprueft, hinweis, speichern }: { start: Angaben; geprueft: boolean; hinweis?: string; speichern: (a: Angaben, geprueft: boolean) => void }) {
   const [a, setA] = useState(start);
   const [g, setG] = useState(geprueft);
+  const ta = useOberflaeche();
+  const t = ta.vorlagen.rassebilder;
   const senden = (e: FormEvent) => {
     e.preventDefault();
     speichern(a, g);
@@ -248,19 +256,19 @@ function AngabenForm({ start, geprueft, hinweis, speichern }: { start: Angaben; 
   return (
     <form onSubmit={senden} className="flex flex-col gap-4">
       {hinweis && <Hinweis ton="warnung">{hinweis}</Hinweis>}
-      <Feld label="Urheber (Fotograf)">{(id) => <Eingabe id={id} value={a.urheber} onChange={(e) => setA({ ...a, urheber: e.target.value })} />}</Feld>
-      <Feld label="Lizenz" hinweis="z. B. CC BY-SA 4.0; eigenes Foto: leer">
+      <Feld label={t.urheber}>{(id) => <Eingabe id={id} value={a.urheber} onChange={(e) => setA({ ...a, urheber: e.target.value })} />}</Feld>
+      <Feld label={t.lizenz} hinweis={t.lizenzHinweis}>
         {(id) => <Eingabe id={id} value={a.lizenz} onChange={(e) => setA({ ...a, lizenz: e.target.value })} />}
       </Feld>
-      <Feld label="Lizenz-Adresse">
-        {(id) => <Eingabe id={id} value={a.lizenzUrl} onChange={(e) => setA({ ...a, lizenzUrl: e.target.value })} placeholder="https://creativecommons.org/licenses/…" />}
+      <Feld label={t.lizenzAdresse}>
+        {(id) => <Eingabe id={id} value={a.lizenzUrl} onChange={(e) => setA({ ...a, lizenzUrl: e.target.value })} placeholder="https://creativecommons.org/licenses/…" /> /* bleibt deutsch: Beispieladresse */}
       </Feld>
-      <Feld label="Quelle (Adresse)">{(id) => <Eingabe id={id} value={a.quelle} onChange={(e) => setA({ ...a, quelle: e.target.value })} />}</Feld>
-      <Haken label="geprüft – kommt in den Katalog" checked={g} onChange={setG} />
+      <Feld label={t.quelleAdresse}>{(id) => <Eingabe id={id} value={a.quelle} onChange={(e) => setA({ ...a, quelle: e.target.value })} />}</Feld>
+      <Haken label={t.geprueft} checked={g} onChange={setG} />
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-linie pt-4">
-        <HilfeLink abschnitt="rassebilder">Hilfe zu Bildangaben</HilfeLink>
+        <HilfeLink abschnitt="rassebilder">{t.hilfeAngaben}</HilfeLink>
         <Knopf type="submit" variante="primaer">
-          Speichern
+          {ta.allgemein.speichern}
         </Knopf>
       </div>
     </form>

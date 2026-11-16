@@ -2,6 +2,7 @@ import { BRIEF_PLATZHALTER, unbekanntePlatzhalter, type BriefVorlage } from "@sc
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, Haken, Hinweis, Knopf, Laden, Segmente, SEITE, Seitenkopf, Speicherleiste, Textfeld, useAenderungenWarnen, useMeldung } from "../ui";
 import { BriefVorschau, pdfOeffnen } from "./druckvorlage-vorschau";
@@ -32,11 +33,13 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
   const meldung = useMeldung();
   const utils = trpc.useUtils();
   const gespeichert = useAenderungenWarnen(v);
+  const ta = useOberflaeche();
+  const t = ta.vorlagen.brief;
   const speichern = trpc.druckvorlage.briefSpeichern.useMutation({
     onSuccess: async () => {
       gespeichert();
       await utils.druckvorlage.brief.invalidate();
-      meldung("Briefvorlage gespeichert.");
+      meldung(t.gespeichert);
     },
   });
   const senden = (e?: FormEvent) => {
@@ -51,12 +54,12 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
   return (
     <>
       <Seitenkopf
-        titel="Briefvorlage"
-        unter="Meldebestätigung, Abrechnung, Quittungen und Serienbriefe des Vereins"
+        titel={t.titel}
+        unter={t.unter}
         hilfe="briefvorlage"
         aktionen={
           <Link to="/verein#druckvorlagen" className="text-sm font-semibold text-band no-underline hover:underline">
-            Zurück
+            {ta.allgemein.zurueck}
           </Link>
         }
       />
@@ -64,20 +67,20 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
         <form onSubmit={senden} className="flex min-w-0 flex-col gap-4">
           <Formular>
             <Briefbogen v={v} setze={setze} />
-            <FormAbschnitt titel="Fußzeile" unter="Drei Spalten, z. B. Anschrift, Bankverbindung, Vorstand. Alle leer: Vereinsname in einer Zeile." spalten={3}>
-              {(["Spalte links", "Spalte Mitte", "Spalte rechts"] as const).map((t, i) => (
-                <Feld key={t} label={t}>
+            <FormAbschnitt titel={t.fusszeile} unter={t.fusszeileUnter} spalten={3}>
+              {[t.spalteLinks, t.spalteMitte, t.spalteRechts].map((spalte, i) => (
+                <Feld key={i} label={spalte}>
                   {(fid) => <Textfeld id={fid} rows={4} maxLength={300} value={v.fuss[i]} onChange={(e) => setze("fuss", v.fuss.map((x, j) => (j === i ? e.target.value : x)) as BriefVorlage["fuss"])} />}
                 </Feld>
               ))}
             </FormAbschnitt>
-            <Texte titel="Meldebestätigung" unter="Im B-Bogen über und unter der Liste der Tiere" werte={v.meldebestaetigung} vorgabe={vorgabe.meldebestaetigung} setzen={(w) => setze("meldebestaetigung", w)} felder={[["einleitung", "Einleitung", 3, 1000], ["hinweise", "Hinweise zur Einlieferung (je Zeile einer)", 4, 2000], ["gruss", "Gruß", 2, 300]]} />
-            <Texte titel="Serienbrief" unter="Vorgabe für neue Serienbriefe" werte={v.serienbrief} vorgabe={vorgabe.serienbrief} setzen={(w) => setze("serienbrief", w)} felder={[["betreff", "Betreff", 1, 200], ["text", "Text", 8, 8000], ["gruss", "Gruß", 2, 300]]} />
+            <Texte titel={t.meldebestaetigung} unter={t.meldebestaetigungUnter} werte={v.meldebestaetigung} vorgabe={vorgabe.meldebestaetigung} setzen={(w) => setze("meldebestaetigung", w)} felder={[["einleitung", t.einleitung, 3, 1000], ["hinweise", t.hinweise, 4, 2000], ["gruss", t.gruss, 2, 300]]} />
+            <Texte titel={t.serienbrief} unter={t.serienbriefUnter} werte={v.serienbrief} vorgabe={vorgabe.serienbrief} setzen={(w) => setze("serienbrief", w)} felder={[["betreff", t.betreff, 1, 200], ["text", t.text, 8, 8000], ["gruss", t.gruss, 2, 300]]} />
             <div className="flex flex-col gap-1 px-5 py-4 text-sm text-grau">
-              <p className="font-semibold text-tinte">Platzhalter</p>
+              <p className="font-semibold text-tinte">{t.platzhalter}</p>
               <p>
                 {(Object.keys(BRIEF_PLATZHALTER) as (keyof typeof BRIEF_PLATZHALTER)[]).map((p, i) => (
-                  <span key={p} title={BRIEF_PLATZHALTER[p]}>
+                  <span key={p} title={t.platzhalterInfo[p]}>
                     {i > 0 && " · "}
                     <code>{`{${p}}`}</code>
                   </span>
@@ -86,7 +89,7 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
             </div>
             {falsch.length > 0 && (
               <div className="px-5 pb-4">
-                <Hinweis ton="warnung">Unbekannte Platzhalter bleiben so im Brief stehen: {falsch.map((f) => `{${f}}`).join(", ")}</Hinweis>
+                <Hinweis ton="warnung">{t.unbekannt(falsch.map((f) => `{${f}}`).join(", "))}</Hinweis>
               </div>
             )}
             {speichern.error && (
@@ -95,7 +98,7 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
               </p>
             )}
           </Formular>
-          <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setV(start)} onSpeichern={() => senden()} laedt={speichern.isPending} knopf="Vorlage speichern" />
+          <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setV(start)} onSpeichern={() => senden()} laedt={speichern.isPending} knopf={t.speichern} />
         </form>
         <div className="2xl:sticky 2xl:top-16">
           <BriefVorschau daten={v} />
@@ -106,29 +109,30 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
 }
 
 function Briefbogen({ v, setze }: { v: BriefVorlage; setze: Setze }) {
+  const t = useOberflaeche().vorlagen.brief;
   return (
-    <FormAbschnitt titel="Briefbogen" unter="DIN 5008 für Fensterumschläge DL und C6/5">
+    <FormAbschnitt titel={t.briefbogen} unter={t.briefbogenUnter}>
       <div className="md:col-span-2">
         <Segmente
-          label="Form"
+          label={t.form}
           wert={v.form}
           onChange={(w) => setze("form", w)}
           optionen={[
-            { wert: "B", label: "Form B – großer Briefkopf" },
-            { wert: "A", label: "Form A – kleiner Briefkopf" },
+            { wert: "B", label: t.formB },
+            { wert: "A", label: t.formA },
           ]}
         />
       </div>
-      <Feld label="Briefkopf" hinweis="Bis zu drei Zeilen (Form A: zwei), die erste fett. Leer: Vereinsname und Schau." className="md:col-span-2">
+      <Feld label={t.briefkopf} hinweis={t.briefkopfHinweis} className="md:col-span-2">
         {(fid) => <Textfeld id={fid} rows={3} maxLength={400} value={v.kopf} onChange={(e) => setze("kopf", e.target.value)} />}
       </Feld>
-      <Feld label="Absender über der Anschrift" hinweis="Kleine Zeile im Fenster, leer: Vereinsname" className="md:col-span-2">
+      <Feld label={t.absender} hinweis={t.absenderHinweis} className="md:col-span-2">
         {(fid) => <Eingabe id={fid} maxLength={120} value={v.absender} onChange={(e) => setze("absender", e.target.value)} />}
       </Feld>
       <div className="flex flex-col gap-2 md:col-span-2">
-        <Haken label="Logo der Schau im Briefkopf" checked={v.logo} onChange={(w) => setze("logo", w)} />
-        <Haken label="Farbig (sonst nur Schwarz und Grau)" checked={v.farbig} onChange={(w) => setze("farbig", w)} />
-        <Haken label="Falz- und Lochmarken" checked={v.falzmarken} onChange={(w) => setze("falzmarken", w)} />
+        <Haken label={t.logo} checked={v.logo} onChange={(w) => setze("logo", w)} />
+        <Haken label={t.farbig} checked={v.farbig} onChange={(w) => setze("farbig", w)} />
+        <Haken label={t.falzmarken} checked={v.falzmarken} onChange={(w) => setze("falzmarken", w)} />
       </div>
     </FormAbschnitt>
   );
@@ -137,6 +141,7 @@ function Briefbogen({ v, setze }: { v: BriefVorlage; setze: Setze }) {
 /** Textfelder eines Briefs mit „Vorgabe einsetzen“. */
 function Texte<T extends Record<string, string>>({ titel, unter, werte, vorgabe, setzen, felder }: { titel: string; unter: string; werte: T; vorgabe: T; setzen: (w: T) => void; felder: [keyof T & string, string, number, number][] }) {
   const istVorgabe = JSON.stringify(werte) === JSON.stringify(vorgabe);
+  const t = useOberflaeche().vorlagen.brief;
   return (
     <FormAbschnitt
       titel={titel}
@@ -145,7 +150,7 @@ function Texte<T extends Record<string, string>>({ titel, unter, werte, vorgabe,
       aktionen={
         !istVorgabe && (
           <Knopf variante="leise" onClick={() => setzen(vorgabe)}>
-            Vorgabe einsetzen
+            {t.vorgabeEinsetzen}
           </Knopf>
         )
       }
@@ -173,6 +178,7 @@ function Serienbrief({ texte, ungespeichert }: { texte: BriefVorlage["serienbrie
   const schauen = trpc.schau.liste.useQuery();
   const [schauId, setSchauId] = useState<number | null>(null);
   const sid = schauId ?? schauen.data?.[0]?.id ?? null;
+  const tb = useOberflaeche().vorlagen.brief;
   const [t, setT] = useState(texte);
   const [fehler, setFehler] = useState<string | null>(null);
   const [laeuft, setLaeuft] = useState(false);
@@ -184,27 +190,27 @@ function Serienbrief({ texte, ungespeichert }: { texte: BriefVorlage["serienbrie
       await pdfOeffnen("/datei/serienbrief.pdf", { auswahl, schauId: auswahl === "schau" ? sid : undefined, ...t });
       setFehler(null);
     } catch (e) {
-      setFehler(e instanceof Error ? e.message : "Serienbrief fehlgeschlagen.");
+      setFehler(e instanceof Error ? e.message : tb.serienbriefFehlgeschlagen);
     } finally {
       setLaeuft(false);
     }
   };
   return (
-    <Abschnitt id="serienbrief" titel="Serienbrief erstellen">
+    <Abschnitt id="serienbrief" titel={tb.serienbriefErstellen}>
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-end gap-3">
           <Segmente
-            label="Empfänger"
+            label={tb.empfaenger}
             wert={auswahl}
             onChange={setAuswahl}
             optionen={[
-              { wert: "mitglieder", label: "Vereinsmitglieder" },
-              { wert: "aussteller", label: "Alle Aussteller" },
-              { wert: "schau", label: "Aussteller einer Schau" },
+              { wert: "mitglieder", label: tb.mitglieder },
+              { wert: "aussteller", label: tb.alleAussteller },
+              { wert: "schau", label: tb.ausstellerEinerSchau },
             ]}
           />
           {auswahl === "schau" && (
-            <Feld label="Schau" className="min-w-64">
+            <Feld label={tb.schau} className="min-w-64">
               {(fid) => (
                 <Auswahl id={fid} value={sid ?? ""} onChange={(e) => setSchauId(Number(e.target.value))}>
                   {schauen.data?.map((s) => (
@@ -218,16 +224,16 @@ function Serienbrief({ texte, ungespeichert }: { texte: BriefVorlage["serienbrie
           )}
         </div>
         <p className="text-sm text-grau" role="status">
-          {!bereit ? "Noch keine Schau angelegt." : !anzahl.data ? "Empfänger werden gezählt …" : `${anzahl.data.anzahl} Empfänger${anzahl.data.ohneAnschrift ? `, davon ${anzahl.data.ohneAnschrift} ohne vollständige Anschrift` : ""}. Gesperrte und Test-Aussteller bekommen keinen Brief.`}
+          {!bereit ? tb.keineSchau : !anzahl.data ? tb.zaehlt : tb.anzahl(anzahl.data.anzahl, anzahl.data.ohneAnschrift)}
         </p>
-        <Feld label="Betreff">{(fid) => <Eingabe id={fid} maxLength={200} value={t.betreff} onChange={(e) => setT({ ...t, betreff: e.target.value })} />}</Feld>
-        <Feld label="Text">{(fid) => <Textfeld id={fid} rows={8} maxLength={8000} value={t.text} onChange={(e) => setT({ ...t, text: e.target.value })} />}</Feld>
-        <Feld label="Gruß">{(fid) => <Textfeld id={fid} rows={2} maxLength={300} value={t.gruss} onChange={(e) => setT({ ...t, gruss: e.target.value })} />}</Feld>
+        <Feld label={tb.betreff}>{(fid) => <Eingabe id={fid} maxLength={200} value={t.betreff} onChange={(e) => setT({ ...t, betreff: e.target.value })} />}</Feld>
+        <Feld label={tb.text}>{(fid) => <Textfeld id={fid} rows={8} maxLength={8000} value={t.text} onChange={(e) => setT({ ...t, text: e.target.value })} />}</Feld>
+        <Feld label={tb.gruss}>{(fid) => <Textfeld id={fid} rows={2} maxLength={300} value={t.gruss} onChange={(e) => setT({ ...t, gruss: e.target.value })} />}</Feld>
         <div className="flex flex-wrap items-center justify-end gap-3">
-          {ungespeichert && <span className="mr-auto text-sm text-grau">Die Vorlage hat ungespeicherte Änderungen – der Serienbrief nutzt die gespeicherte.</span>}
+          {ungespeichert && <span className="mr-auto text-sm text-grau">{tb.ungespeichert}</span>}
           {fehler && <span role="alert" className="text-sm font-semibold text-kamm">{fehler}</span>}
           <Knopf variante="primaer" laedt={laeuft} disabled={!bereit || !anzahl.data?.anzahl} onClick={erstellen}>
-            Serienbrief als PDF
+            {tb.alsPdf}
           </Knopf>
         </div>
       </div>

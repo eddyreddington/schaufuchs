@@ -3,13 +3,12 @@ import {
   AUFBEWAHRUNG_BELEGE_JAHRE,
   AUFBEWAHRUNG_VERKAUF_JAHRE,
   BAUSTEIN_ART_LISTE,
-  BAUSTEIN_ARTEN,
-  BAUSTEIN_KATEGORIE_LABEL,
   BAUSTEIN_KATEGORIEN,
   formatEuro,
   INAKTIV_JAHRE,
   KARENZ_TAGE,
   POSTAUSGANG_TAGE,
+  serverText,
   sortiereGruppen,
   type BausteinArt,
   type BausteinKategorie,
@@ -17,6 +16,7 @@ import {
 import { useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { datum, datumZeit, fehlerText } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { AutoAbmeldung } from "./verein-abmeldung";
 import { Druckvorlagen } from "./verein-druckvorlagen";
@@ -27,15 +27,16 @@ import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formul
 type Angaben = Ausgabe["verein"]["get"]["angaben"];
 
 export function Verein() {
+  const t = useOberflaeche().verein.seite;
   const v = trpc.verein.get.useQuery();
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Verein und Datenschutz"
+        titel={t.titel}
         hilfe="verein-und-datenschutz"
         aktionen={
           <Link to="/aussteller" className={knopfKlasse()}>
-            Aussteller: Auskunft und Löschung
+            {t.ausstellerAuskunft}
           </Link>
         }
       />
@@ -53,13 +54,15 @@ export function Verein() {
 }
 
 function Angabenformular({ daten }: { daten: Ausgabe["verein"]["get"] }) {
+  const t = useOberflaeche().verein.angaben;
+  const sprache = useSprache();
   const [a, setA] = useState<Angaben>(daten.angaben);
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const speichern = trpc.verein.speichern.useMutation({
     onSuccess: async () => {
       await utils.verein.get.invalidate();
-      meldung("Angaben gespeichert.");
+      meldung(t.gespeichert);
     },
   });
   const senden = (e: FormEvent) => {
@@ -81,28 +84,29 @@ function Angabenformular({ daten }: { daten: Ausgabe["verein"]["get"] }) {
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
       <form onSubmit={senden} className="flex min-w-0 flex-col gap-4">
-        {daten.fehlend.length > 0 && <Hinweis ton="warnung">Für Impressum und Datenschutzhinweise fehlt noch: {daten.fehlend.join(", ")}.</Hinweis>}
+        {/* Die fehlenden Angaben nennt die Fachlogik (fehlendeVereinsangaben) deutsch. */}
+        {daten.fehlend.length > 0 && <Hinweis ton="warnung">{t.fehlt(daten.fehlend.map((f) => serverText(f, sprache)).join(", "))}</Hinweis>}
         <Formular>
-          <FormAbschnitt id="impressum" titel="Anbieter" unter="Impressum nach § 5 DDG">
-            {feld("name", "Name des Vereins", { hinweis: "z. B. „Geflügelzuchtverein Musterstadt 1904 e. V.“", klasse: "md:col-span-2" })}
-            {feld("anschrift", "Anschrift", { zeilen: 2, hinweis: "Kein Postfach" })}
-            {feld("vertretung", "Vertretungsberechtigter Vorstand", { zeilen: 2, hinweis: "Je Zeile, z. B. „Max Muster (1. Vorsitzender)“" })}
-            {feld("email", "E-Mail-Adresse", { typ: "email" })}
-            {feld("telefon", "Telefon", { typ: "tel" })}
-            {feld("register", "Registereintrag", { hinweis: "z. B. „Amtsgericht Kassel, VR 1234“" })}
-            {feld("inhaltVerantwortlich", "Verantwortlich für den Inhalt (§ 18 MStV)", { hinweis: "Nur bei redaktionellen Inhalten" })}
-            {feld("impressumZusatz", "Weitere Angaben im Impressum", { zeilen: 2, klasse: "md:col-span-2" })}
+          <FormAbschnitt id="impressum" titel={t.anbieter} unter={t.anbieterUnter}>
+            {feld("name", t.name, { hinweis: t.nameHinweis, klasse: "md:col-span-2" })}
+            {feld("anschrift", t.anschrift, { zeilen: 2, hinweis: t.anschriftHinweis })}
+            {feld("vertretung", t.vertretung, { zeilen: 2, hinweis: t.vertretungHinweis })}
+            {feld("email", t.email, { typ: "email" })}
+            {feld("telefon", t.telefon, { typ: "tel" })}
+            {feld("register", t.register, { hinweis: t.registerHinweis })}
+            {feld("inhaltVerantwortlich", t.inhalt, { hinweis: t.inhaltHinweis })}
+            {feld("impressumZusatz", t.impressumZusatz, { zeilen: 2, klasse: "md:col-span-2" })}
           </FormAbschnitt>
-          <FormAbschnitt id="datenschutz" titel="Datenschutzhinweise" unter="Art. 13 DSGVO. Verantwortlich für den Text ist der Verein.">
-            {feld("datenschutzbeauftragter", "Datenschutzbeauftragter (falls benannt)", { zeilen: 2 })}
-            {feld("datenschutzZusatz", "Ergänzungen", { zeilen: 2, hinweis: "z. B. zum Hosting" })}
+          <FormAbschnitt id="datenschutz" titel={t.datenschutz} unter={t.datenschutzUnter}>
+            {feld("datenschutzbeauftragter", t.beauftragter, { zeilen: 2 })}
+            {feld("datenschutzZusatz", t.ergaenzungen, { zeilen: 2, hinweis: t.ergaenzungenHinweis })}
             <div className="flex flex-col gap-2 md:col-span-2">
-              <Feld label="Eigener vollständiger Text (ersetzt das Muster)" hinweis="Leer: Muster. Absätze mit Leerzeile trennen.">
+              <Feld label={t.eigenerText} hinweis={t.eigenerTextHinweis}>
                 {(id) => <Textfeld id={id} rows={a.datenschutzText ? 14 : 3} value={a.datenschutzText} onChange={(e) => setA({ ...a, datenschutzText: e.target.value })} />}
               </Feld>
               {!a.datenschutzText && (
                 <Knopf variante="leise" className="self-start" onClick={() => setA({ ...a, datenschutzText: daten.muster })}>
-                  Muster als eigenen Text übernehmen und bearbeiten
+                  {t.musterUebernehmen}
                 </Knopf>
               )}
             </div>
@@ -113,13 +117,14 @@ function Angabenformular({ daten }: { daten: Ausgabe["verein"]["get"] }) {
             </p>
           )}
         </Formular>
-        <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setA(daten.angaben)} onSpeichern={() => speichern.mutate(a)} laedt={speichern.isPending} knopf="Angaben speichern" />
+        <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setA(daten.angaben)} onSpeichern={() => speichern.mutate(a)} laedt={speichern.isPending} knopf={t.speichern} />
       </form>
       <aside className="flex flex-col gap-6 self-start xl:sticky xl:top-16">
-        <Abschnitt titel="So sieht es öffentlich aus" aktionen={<span className="text-sm text-grau">gespeicherter Stand</span>}>
-          <Vorschau titel="Impressum" abschnitte={daten.impressum} />
+        {/* Impressum und Datenschutzhinweise schreibt der Verein: Inhalt bleibt deutsch. */}
+        <Abschnitt titel={t.oeffentlich} aktionen={<span className="text-sm text-grau">{t.gespeicherterStand}</span>}>
+          <Vorschau titel={t.impressum} abschnitte={daten.impressum} />
           <details className="mt-4 border-t border-linie pt-3">
-            <summary className="cursor-pointer font-semibold">Datenschutzhinweise</summary>
+            <summary className="cursor-pointer font-semibold">{t.datenschutz}</summary>
             <div className="mt-2 max-h-[60vh] overflow-auto">
               <Vorschau abschnitte={daten.datenschutz} />
             </div>
@@ -146,6 +151,8 @@ function Vorschau({ titel, abschnitte }: { titel?: string; abschnitte: { titel: 
 
 /** Auskunft nach Art. 15 DSGVO für Käufer und Preisrichter – sie haben keinen Aussteller-Stammsatz. */
 function PersonenAuskunft() {
+  const o = useOberflaeche();
+  const t = o.verein.auskunft;
   const [name, setName] = useState("");
   const suche = trpc.verein.auskunftPerson.useMutation();
   const r = suche.data;
@@ -159,7 +166,8 @@ function PersonenAuskunft() {
     URL.revokeObjectURL(url);
   };
   return (
-    <Abschnitt id="auskunft" titel="Auskunft für Käufer und Preisrichter" aktionen={<HilfeLink abschnitt="aussteller-verwalten-auskunft-und-löschung">Hilfe zur Auskunft</HilfeLink>}>
+    // bleibt deutsch: Anker im Handbuch
+    <Abschnitt id="auskunft" titel={t.titel} aktionen={<HilfeLink abschnitt="aussteller-verwalten-auskunft-und-löschung">{t.hilfe}</HilfeLink>}>
       <form
         className="flex flex-wrap items-end gap-3"
         onSubmit={(e: FormEvent) => {
@@ -167,35 +175,35 @@ function PersonenAuskunft() {
           suche.mutate({ name });
         }}
       >
-        <Feld label="Name" className="w-full sm:w-72">
+        <Feld label={o.allgemein.name} className="w-full sm:w-72">
           {(id) => <Eingabe id={id} value={name} onChange={(e) => setName(e.target.value)} required minLength={3} maxLength={200} />}
         </Feld>
-        <Knopf type="submit" laedt={suche.isPending}>Suchen</Knopf>
-        {r && (r.kaeufe.length > 0 || r.preisrichter.length > 0) && <Knopf variante="leise" onClick={herunterladen}>Als JSON speichern</Knopf>}
+        <Knopf type="submit" laedt={suche.isPending}>{t.suchen}</Knopf>
+        {r && (r.kaeufe.length > 0 || r.preisrichter.length > 0) && <Knopf variante="leise" onClick={herunterladen}>{t.alsJson}</Knopf>}
       </form>
       {suche.error && <Hinweis ton="fehler" className="mt-3">{fehlerText(suche.error)}</Hinweis>}
-      {r && !r.kaeufe.length && !r.preisrichter.length && <p className="mt-3 text-grau">Keine Einträge zu „{r.gesucht}“.</p>}
+      {r && !r.kaeufe.length && !r.preisrichter.length && <p className="mt-3 text-grau">{t.keineEintraege(r.gesucht)}</p>}
       {r && r.kaeufe.length > 0 && (
         <div className="mt-4 overflow-x-auto">
-          <h3 className="mb-2 font-semibold">Käufe</h3>
+          <h3 className="mb-2 font-semibold">{t.kaeufe}</h3>
           <table className="tabelle bg-weiss">
             <thead>
               <tr>
-                <th>Schau</th>
-                <th className="text-right">Beleg</th>
-                <th>Datum</th>
-                <th>Name, Anschrift</th>
-                <th>Reg.-Nr.</th>
-                <th className="text-right">Preis</th>
+                <th>{t.schau}</th>
+                <th className="text-right">{t.beleg}</th>
+                <th>{o.allgemein.datum}</th>
+                <th>{t.nameAnschrift}</th>
+                <th>{t.regNr}</th>
+                <th className="text-right">{t.preis}</th>
               </tr>
             </thead>
             <tbody>
               {r.kaeufe.map((k) => (
                 <tr key={`${k.schau}-${k.belegNr}`}>
                   <td>{k.schau}</td>
-                  <td className="text-right tabular-nums">{k.belegNr}{k.storniertAm ? " (storniert)" : ""}</td>
+                  <td className="text-right tabular-nums">{k.belegNr}{k.storniertAm ? t.storniert : ""}</td>
                   <td className="tabular-nums">{datum(k.datum)}</td>
-                  <td>{[k.name, k.anschrift, k.erziehungsberechtigter && `Erziehungsberechtigte(r): ${k.erziehungsberechtigter}`].filter(Boolean).join(", ")}</td>
+                  <td>{[k.name, k.anschrift, k.erziehungsberechtigter && t.erziehungsberechtigt(k.erziehungsberechtigter)].filter(Boolean).join(", ")}</td>
                   <td>{k.registriernummer}</td>
                   <td className="text-right tabular-nums">{formatEuro(k.preisCent)}</td>
                 </tr>
@@ -206,25 +214,25 @@ function PersonenAuskunft() {
       )}
       {r && r.preisrichter.length > 0 && (
         <div className="mt-4 overflow-x-auto">
-          <h3 className="mb-2 font-semibold">Preisrichter</h3>
+          <h3 className="mb-2 font-semibold">{o.allgemein.preisrichter}</h3>
           <table className="tabelle bg-weiss">
             <thead>
               <tr>
-                <th>Schau</th>
-                <th>Name</th>
-                <th>Anschrift</th>
-                <th>Kontakt</th>
-                <th>PIN</th>
+                <th>{t.schau}</th>
+                <th>{o.allgemein.name}</th>
+                <th>{t.anschrift}</th>
+                <th>{t.kontakt}</th>
+                <th>{t.pin}</th>
               </tr>
             </thead>
             <tbody>
               {r.preisrichter.map((p, i) => (
                 <tr key={i}>
                   <td>{p.schau}</td>
-                  <td>{p.name}{p.istObmann ? " (Obmann)" : ""}</td>
+                  <td>{p.name}{p.istObmann ? t.obmann : ""}</td>
                   <td>{p.anschrift.replace(/\n/g, ", ")}</td>
                   <td>{[p.email, p.telefon].filter(Boolean).join(", ")}</td>
-                  <td>{p.pinGesetzt ? "gesetzt" : "–"}</td>
+                  <td>{p.pinGesetzt ? t.gesetzt : "–"}</td>
                 </tr>
               ))}
             </tbody>
@@ -236,46 +244,47 @@ function PersonenAuskunft() {
 }
 
 function Speicherfristen() {
+  const t = useOberflaeche().verein.speicherfristen;
   const meldung = useMeldung();
   const utils = trpc.useUtils();
   const lauf = trpc.verein.bereinigen.useMutation({
     onSuccess: async (n) => {
       await utils.verein.aussteller.invalidate();
       const teile = [
-        n.geloescht && `${n.geloescht} Aussteller gelöscht`,
-        n.gesperrt && `${n.gesperrt} gesperrt`,
-        n.geburtsdaten && `${n.geburtsdaten}× Geburtsdatum/IBAN entfernt`,
-        n.preisrichter && `${n.preisrichter} Preisrichter-Kontakte entfernt`,
-        n.kaeufer && `${n.kaeufer} Käuferdaten entfernt`,
-        n.spender && `${n.spender} Spenderdaten entfernt`,
-        n.mails && `${n.mails} Mails gelöscht`,
-        n.journal && `${n.journal} Einträge im Gesundheitsjournal gelöscht`,
-        n.nachweise && `${n.nachweise}× Impf-/Tierarztangaben entfernt`,
-        n.anschriften && `${n.anschriften} Anschriften gesperrter Aussteller entfernt`,
-        n.protokoll && `${n.protokoll} Protokolleinträge anonymisiert`,
-        n.belege && `${n.belege} Belege nach Fristende gelöscht`,
+        n.geloescht && t.geloescht(n.geloescht),
+        n.gesperrt && t.gesperrt(n.gesperrt),
+        n.geburtsdaten && t.geburtsdaten(n.geburtsdaten),
+        n.preisrichter && t.preisrichter(n.preisrichter),
+        n.kaeufer && t.kaeufer(n.kaeufer),
+        n.spender && t.spender(n.spender),
+        n.mails && t.mails(n.mails),
+        n.journal && t.journal(n.journal),
+        n.nachweise && t.nachweise(n.nachweise),
+        n.anschriften && t.anschriften(n.anschriften),
+        n.protokoll && t.protokoll(n.protokoll),
+        n.belege && t.belege(n.belege),
       ].filter(Boolean);
       // Fehlgeschlagene Löschungen nicht verschweigen: meist läuft noch eine Schau, die nie abgeschlossen wurde.
-      if (n.fehlgeschlagen) meldung(`${n.fehlgeschlagen} Aussteller konnten nicht gelöscht werden (laufende Meldung – Schau abschließen).${teile.length ? ` Außerdem: ${teile.join(", ")}.` : ""}`, "fehler");
-      else meldung(teile.length ? teile.join(", ") : "Nichts zu tun – alle Fristen sind eingehalten.");
+      if (n.fehlgeschlagen) meldung(`${t.fehlgeschlagen(n.fehlgeschlagen)}${teile.length ? t.ausserdem(teile.join(", ")) : ""}`, "fehler");
+      else meldung(teile.length ? teile.join(", ") : t.nichtsZuTun);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const fristen: [string, string][] = [
-    ["Bestätigungsmails", `${POSTAUSGANG_TAGE} Tage`],
-    ["Geburtsdatum, IBAN, Kontaktdaten und PIN der Preisrichter", `${KARENZ_TAGE} Tage nach dem Abschluss der Schau`],
-    ["Käuferdaten, Verkaufsaufzeichnungen, Tierliste, Gesundheitsjournal und Impfangaben", `${AUFBEWAHRUNG_VERKAUF_JAHRE} Jahre`],
-    ["Buchungsbelege (Meldegeld, Auszahlungen, Kaufbelege)", `${AUFBEWAHRUNG_BELEGE_JAHRE} Jahre ab Jahresende`],
-    [`Aussteller ohne Meldung seit ${INAKTIV_JAHRE} Jahren`, "gelöscht bzw. bis Fristende gesperrt"],
+    [t.bestaetigungsmails, t.tage(POSTAUSGANG_TAGE)],
+    [t.karenzDaten, t.karenzFrist(KARENZ_TAGE)],
+    [t.verkaufDaten, t.jahre(AUFBEWAHRUNG_VERKAUF_JAHRE)],
+    [t.belegeDaten, t.belegeFrist(AUFBEWAHRUNG_BELEGE_JAHRE)],
+    [t.inaktivDaten(INAKTIV_JAHRE), t.inaktivFrist],
   ];
   return (
     <Abschnitt
       id="speicherfristen"
-      titel="Speicherfristen"
+      titel={t.titel}
       aktionen={
         <span className="flex flex-wrap items-center gap-3">
-          <HilfeLink abschnitt="speicherfristen">Hilfe zu Speicherfristen</HilfeLink>
-          <Knopf laedt={lauf.isPending} onClick={() => lauf.mutate()}>Fristen jetzt anwenden</Knopf>
+          <HilfeLink abschnitt="speicherfristen">{t.hilfe}</HilfeLink>
+          <Knopf laedt={lauf.isPending} onClick={() => lauf.mutate()}>{t.anwenden}</Knopf>
         </span>
       }
     >
@@ -287,16 +296,18 @@ function Speicherfristen() {
           </div>
         ))}
       </dl>
-      <p className="mt-3 text-sm text-grau">Wird täglich automatisch angewendet.</p>
+      <p className="mt-3 text-sm text-grau">{t.taeglich}</p>
     </Abschnitt>
   );
 }
 
-const POST_STATUS = { wartet: ["Wartet", "info"], gesendet: ["Gesendet", "ok"], fehler: ["Nicht versendet", "fehler"] } as const;
+const POST_TON = { wartet: "info", gesendet: "ok", fehler: "fehler" } as const;
 
 /** Postausgang: Bestätigungsmails an Aussteller. Nicht versandte stehen oben und lassen sich erneut senden. */
-/** Textbausteine für die Bewertung am Tablet: je Merkmal und Geflügelart, in drei Kategorien. */
+/** Textbausteine für die Bewertung am Tablet: je Merkmal und Geflügelart, in drei Kategorien. Die Bausteine selbst bleiben deutsch. */
 function Textbausteine() {
+  const o = useOberflaeche();
+  const t = o.verein.textbausteine;
   const liste = trpc.bewertung.textbausteine.useQuery();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
@@ -337,7 +348,7 @@ function Textbausteine() {
   const grundbestand = trpc.bewertung.textbausteinGrundbestand.useMutation({
     onSuccess: async (r) => {
       await neu();
-      meldung(r.neu ? `${r.neu} Textbausteine aus dem Grundbestand übernommen.` : "Der Grundbestand ist schon vollständig vorhanden.");
+      meldung(r.neu ? t.grundbestandNeu(r.neu) : t.grundbestandVoll);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -353,24 +364,25 @@ function Textbausteine() {
   return (
     <Abschnitt
       id="textbausteine"
-      titel="Textbausteine für die Bewertung"
+      titel={t.titel}
       aktionen={
         <span className="flex flex-wrap items-center gap-3">
-          {daten.length > 0 && <span className="text-sm text-grau">{daten.length} Bausteine</span>}
-          <HilfeLink abschnitt="textbausteine-für-die-bewertung">Hilfe zu Textbausteinen</HilfeLink>
+          {daten.length > 0 && <span className="text-sm text-grau">{t.anzahl(daten.length)}</span>}
+          {/* bleibt deutsch: Anker im Handbuch */}
+          <HilfeLink abschnitt="textbausteine-für-die-bewertung">{t.hilfe}</HilfeLink>
           <Knopf onClick={() => grundbestand.mutate()} laedt={grundbestand.isPending}>
-            Grundbestand übernehmen
+            {t.grundbestand}
           </Knopf>
         </span>
       }
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Suchfeld aria-label="Suchen" value={suche} onChange={(e) => setSuche(e.target.value)} placeholder="Suchen, z. B. Kamm oder breit" />
+        <Suchfeld aria-label={t.suchen} value={suche} onChange={(e) => setSuche(e.target.value)} placeholder={t.suchenBeispiel} />
         <div className="w-full sm:w-56">
-          <Auswahl aria-label="Geflügelart" value={filterArt} onChange={(e) => setFilterArt(e.target.value as BausteinArt | "")}>
-            <option value="">alle Geflügelarten</option>
+          <Auswahl aria-label={t.gefluegelart} value={filterArt} onChange={(e) => setFilterArt(e.target.value as BausteinArt | "")}>
+            <option value="">{t.alleGefluegelarten}</option>
             {BAUSTEIN_ART_LISTE.filter((a) => a !== "alle").map((a) => (
-              <option key={a} value={a}>{BAUSTEIN_ARTEN[a]}</option>
+              <option key={a} value={a}>{t.arten[a]}</option>
             ))}
           </Auswahl>
         </div>
@@ -388,7 +400,7 @@ function Textbausteine() {
               <div className="grid gap-4 px-5 pb-4 md:grid-cols-3">
                 {BAUSTEIN_KATEGORIEN.map((k) => (
                   <div key={k}>
-                    <h4 className="mb-1 text-sm font-semibold text-grau">{BAUSTEIN_KATEGORIE_LABEL[k]}</h4>
+                    <h4 className="mb-1 text-sm font-semibold text-grau">{o.fach.BAUSTEIN_KATEGORIE_LABEL[k]}</h4>
                     <ul className="divide-y divide-linie">
                       {inGruppe.filter((b) => b.kategorie === k).map((b) => (
                         <li key={b.id} className="flex items-center justify-between gap-2 py-1">
@@ -396,14 +408,14 @@ function Textbausteine() {
                             {b.text}
                             {b.rasse ? (
                               <span className="ml-2">
-                                <Marke ton="info">nur {b.rasse}</Marke>
+                                <Marke ton="info">{t.nurRasse(b.rasse)}</Marke>
                               </span>
                             ) : (
-                              b.art !== "alle" && <span className="ml-2 text-xs text-grau">{BAUSTEIN_ARTEN[b.art as BausteinArt] ?? b.art}</span>
+                              b.art !== "alle" && <span className="ml-2 text-xs text-grau">{(t.arten as Record<string, string>)[b.art] ?? b.art}</span>
                             )}
                           </span>
-                          <button type="button" className="shrink-0 rounded px-1.5 text-sm text-grau hover:bg-kamm-hell hover:text-kamm" aria-label={`${b.text} löschen`} onClick={() => loeschen.mutate({ id: b.id })}>
-                            löschen
+                          <button type="button" className="shrink-0 rounded px-1.5 text-sm text-grau hover:bg-kamm-hell hover:text-kamm" aria-label={t.loeschenLabel(b.text)} onClick={() => loeschen.mutate({ id: b.id })}>
+                            {t.loeschen}
                           </button>
                         </li>
                       ))}
@@ -415,43 +427,43 @@ function Textbausteine() {
             </details>
           );
         })}
-        {liste.data && gruppen.length === 0 && <p className="px-5 py-6 text-center text-grau">{daten.length ? "Keine Treffer." : "Noch keine Textbausteine."}</p>}
+        {liste.data && gruppen.length === 0 && <p className="px-5 py-6 text-center text-grau">{daten.length ? t.keineTreffer : t.keine}</p>}
       </div>
       <form onSubmit={senden} className="mt-5 flex flex-col gap-3">
-        <h3 className="font-semibold">Neuer Textbaustein</h3>
+        <h3 className="font-semibold">{t.neu}</h3>
         <div className="grid items-start gap-3 md:grid-cols-[auto_minmax(10rem,1fr)_auto_minmax(12rem,1fr)]">
-        <Feld label="Kategorie">
+        <Feld label={t.kategorie}>
           {(id) => (
             <Auswahl id={id} value={kategorie} onChange={(e) => setKategorie(e.target.value as BausteinKategorie)}>
               {BAUSTEIN_KATEGORIEN.map((k) => (
-                <option key={k} value={k}>{BAUSTEIN_KATEGORIE_LABEL[k]}</option>
+                <option key={k} value={k}>{o.fach.BAUSTEIN_KATEGORIE_LABEL[k]}</option>
               ))}
             </Auswahl>
           )}
         </Feld>
-        <Feld label="Merkmal">
+        <Feld label={t.merkmal}>
           {(id) => (
             <>
-              <Eingabe id={id} list="baustein-gruppen" value={gruppe} onChange={(e) => setGruppe(e.target.value)} required maxLength={40} placeholder="z. B. Kamm" />
+              <Eingabe id={id} list="baustein-gruppen" value={gruppe} onChange={(e) => setGruppe(e.target.value)} required maxLength={40} placeholder={t.merkmalBeispiel} />
               <datalist id="baustein-gruppen">
                 {alleGruppen.map((g) => <option key={g} value={g} />)}
               </datalist>
             </>
           )}
         </Feld>
-        <Feld label="Geflügelart">
+        <Feld label={t.gefluegelart}>
           {(id) => (
             <Auswahl id={id} value={art} onChange={(e) => setArt(e.target.value as BausteinArt)}>
               {BAUSTEIN_ART_LISTE.map((a) => (
-                <option key={a} value={a}>{BAUSTEIN_ARTEN[a]}</option>
+                <option key={a} value={a}>{t.arten[a]}</option>
               ))}
             </Auswahl>
           )}
         </Feld>
-        <Feld label="Rasse (optional)" hinweis={rasseUnbekannt ? "Nicht im Verzeichnis – Vorschlag wählen" : undefined}>
+        <Feld label={t.rasse} hinweis={rasseUnbekannt ? t.rasseUnbekannt : undefined}>
           {(id) => (
             <>
-              <Eingabe id={id} list="baustein-rassen" value={rasse} onChange={(e) => rasseWaehlen(e.target.value)} maxLength={100} placeholder="für alle Rassen" />
+              <Eingabe id={id} list="baustein-rassen" value={rasse} onChange={(e) => rasseWaehlen(e.target.value)} maxLength={100} placeholder={t.alleRassen} />
               <datalist id="baustein-rassen">
                 {rassen.map((r) => <option key={`${r.sparte}-${r.name}`} value={r.name} />)}
               </datalist>
@@ -460,8 +472,8 @@ function Textbausteine() {
         </Feld>
         </div>
         <div className="grid items-end gap-3 md:grid-cols-[1fr_auto]">
-          <Feld label="Text">{(id) => <Eingabe id={id} value={text} maxLength={120} onChange={(e) => setText(e.target.value)} required />}</Feld>
-          <Knopf type="submit" laedt={speichern.isPending}>Hinzufügen</Knopf>
+          <Feld label={t.text}>{(id) => <Eingabe id={id} value={text} maxLength={120} onChange={(e) => setText(e.target.value)} required />}</Feld>
+          <Knopf type="submit" laedt={speichern.isPending}>{o.allgemein.hinzufuegen}</Knopf>
         </div>
       </form>
     </Abschnitt>
@@ -469,13 +481,15 @@ function Textbausteine() {
 }
 
 function Postausgang() {
+  const t = useOberflaeche().verein.postausgang;
+  const sprache = useSprache();
   const p = trpc.schau.postausgang.useQuery();
   const meldung = useMeldung();
   const utils = trpc.useUtils();
   const erneut = trpc.schau.postErneutSenden.useMutation({
     onSuccess: async () => {
       await utils.schau.postausgang.invalidate();
-      meldung("Versand angestoßen.");
+      meldung(t.angestossen);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -483,32 +497,32 @@ function Postausgang() {
   if (!p.data) return <Laden />;
   const offen = p.data.mails.filter((m) => m.status !== "gesendet");
   return (
-    <Abschnitt id="postausgang" titel="Postausgang" aktionen={<HilfeLink abschnitt="postausgang">Hilfe zum Postausgang</HilfeLink>}>
+    <Abschnitt id="postausgang" titel={t.titel} aktionen={<HilfeLink abschnitt="postausgang">{t.hilfe}</HilfeLink>}>
       {p.data.fehler ? (
-        <Hinweis ton="fehler">{p.data.fehler}</Hinweis>
+        <Hinweis ton="fehler">{serverText(p.data.fehler, sprache)}</Hinweis>
       ) : !p.data.eingerichtet ? (
-        <Hinweis ton="warnung">Der Mailversand ist nicht eingerichtet – Mails bleiben hier liegen.</Hinweis>
+        <Hinweis ton="warnung">{t.nichtEingerichtet}</Hinweis>
       ) : offen.some((m) => m.status === "fehler") ? (
-        <Hinweis ton="warnung">{offen.filter((m) => m.status === "fehler").length} Mails konnten nicht versendet werden.</Hinweis>
+        <Hinweis ton="warnung">{t.nichtVersendet(offen.filter((m) => m.status === "fehler").length)}</Hinweis>
       ) : null}
       {p.data.mails.length === 0 ? (
-        <Leer titel="Noch keine Mails" />
+        <Leer titel={t.keineMails} />
       ) : (
         <details open={offen.length > 0} className="mt-3">
           <summary className="cursor-pointer text-sm font-semibold text-grau hover:text-tinte">
-            {offen.length ? `${offen.length} nicht versandt, ` : ""}
-            {p.data.mails.length - offen.length} versandt (die letzten 100)
+            {offen.length ? t.offen(offen.length) : ""}
+            {t.versandt(p.data.mails.length - offen.length)}
           </summary>
           <div className="-mx-5 mt-2 overflow-x-auto border-t border-linie">
             <table className="tabelle">
               <thead>
                 <tr>
-                  <th className="pl-5">Erstellt</th>
-                  <th>An</th>
-                  <th>Betreff</th>
-                  <th>Stand</th>
+                  <th className="pl-5">{t.erstellt}</th>
+                  <th>{t.an}</th>
+                  <th>{t.betreff}</th>
+                  <th>{t.stand}</th>
                   <th className="pr-5">
-                    <span className="sr-only">Aktionen</span>
+                    <span className="sr-only">{t.aktionen}</span>
                   </th>
                 </tr>
               </thead>
@@ -519,10 +533,11 @@ function Postausgang() {
                     <td>{m.an}</td>
                     <td>{m.betreff}</td>
                     <td>
-                      <Marke ton={POST_STATUS[m.status][1]}>{POST_STATUS[m.status][0]}</Marke>
+                      <Marke ton={POST_TON[m.status]}>{t.status[m.status]}</Marke>
                       {m.status !== "gesendet" && (
                         <span className="block text-sm text-grau">
-                          {m.versuche} Versuche{m.naechsterVersuch ? `, nächster ab ${datumZeit(m.naechsterVersuch)}` : ", keine weiteren"}
+                          {t.versuche(m.versuche)}{m.naechsterVersuch ? t.naechster(datumZeit(m.naechsterVersuch)) : t.keineWeiteren}
+                          {/* Meldung des Mailservers, wie er sie schickt */}
                           {m.fehler && ` – ${m.fehler}`}
                         </span>
                       )}
@@ -530,7 +545,7 @@ function Postausgang() {
                     <td className="pr-5 text-right">
                       {m.status !== "gesendet" && p.data.eingerichtet && (
                         <Knopf variante="leise" laedt={erneut.isPending && erneut.variables?.id === m.id} onClick={() => erneut.mutate({ id: m.id })}>
-                          Erneut senden
+                          {t.erneut}
                         </Knopf>
                       )}
                     </td>

@@ -2,8 +2,9 @@
  * Grundriss der Halle bearbeiten (Entscheidung 019): Wände ziehen (rechtwinklig, 10-cm-Raster), eine Wand per Doppelklick
  * teilen, „Rechteck“ setzt zurück. Übernommen wird über die Einstellungen der Halle (Rückfrage „Plan neu setzen?“).
  */
-import { grundrissUebernehmen, type Halle, halleSchluessel, halleZumNeuSetzen, type KaefigMasse, type Punkt, pruefeHallenUmriss, pruefeUmriss, rechteckUmriss, umlaufsinn, umrissKanten, umrissMasse, umrissNormal, umrissVon, wandTeilen, wandZiehen } from "@schau/domain";
+import { grundrissUebernehmen, serverText, type Halle, halleSchluessel, halleZumNeuSetzen, type KaefigMasse, type Punkt, pruefeHallenUmriss, pruefeUmriss, rechteckUmriss, umlaufsinn, umrissKanten, umrissMasse, umrissNormal, umrissVon, wandTeilen, wandZiehen } from "@schau/domain";
 import { useRef, useState } from "react";
+import { useOberflaeche, useSprache } from "../sprache";
 import { Dialog, HilfeLink, Hinweis, Knopf } from "../ui";
 import { BAU, meter } from "./hallenplan-geometrie";
 
@@ -12,6 +13,7 @@ export function GrundrissKnopf({ halle, masse, uebernehmen }: { halle: Halle; ma
   const [offen, setOffen] = useState(false);
   // Stand der Halle beim Öffnen: hat sie inzwischen jemand anders geändert, wird nicht übernommen.
   const [basis, setBasis] = useState("");
+  const t = useOberflaeche().halleBild.grundriss;
   return (
     <>
       <Knopf
@@ -21,9 +23,9 @@ export function GrundrissKnopf({ halle, masse, uebernehmen }: { halle: Halle; ma
           setOffen(true);
         }}
       >
-        Grundriss bearbeiten
+        {t.knopf}
       </Knopf>
-      <Dialog offen={offen} onSchliessen={() => setOffen(false)} titel="Grundriss der Halle" breit>
+      <Dialog offen={offen} onSchliessen={() => setOffen(false)} titel={t.titel} breit>
         {offen && (
           <GrundrissEditor
             halle={halle}
@@ -47,6 +49,9 @@ const ohneDoppelte = (u: Punkt[]) => u.filter((p, i) => {
 });
 
 function GrundrissEditor({ halle, masse, abbrechen, fertig }: { halle: Halle; masse: KaefigMasse; abbrechen: () => void; fertig: (roh: Punkt[]) => Promise<void> }) {
+  const texte = useOberflaeche();
+  const t = texte.halleBild.grundriss;
+  const sprache = useSprache();
   const anfang = umrissVon(halle);
   const [u, setU] = useState<Punkt[]>(anfang);
   const [zug, setZug] = useState<{ i: number; start: Punkt; bild: { x: number; y: number }; d: number; gezogen: boolean } | null>(null);
@@ -57,7 +62,9 @@ function GrundrissEditor({ halle, masse, abbrechen, fertig }: { halle: Halle; ma
   const gespiegelt = umlaufsinn(gezogen) !== umlaufsinn(u);
   const anzeige = gespiegelt ? u : gezogen;
   // Geometrie, dann was nach dem Neu-Setzen bleibt (Flächen, Tische und Bänke) – eingesetzte Blöcke fallen dabei weg.
-  const fehler = (gespiegelt ? "Eine Wand lässt sich nicht über die gegenüberliegende Wand hinaus ziehen." : null) ?? pruefeUmriss(umrissNormal(anzeige)) ?? pruefeHallenUmriss(halleZumNeuSetzen(grundrissUebernehmen(halle, anzeige)), masse);
+  // Meldungen der Fachlogik kommen deutsch: in der Sprache der Oberfläche anzeigen.
+  const pruefung = pruefeUmriss(umrissNormal(anzeige)) ?? pruefeHallenUmriss(halleZumNeuSetzen(grundrissUebernehmen(halle, anzeige)), masse);
+  const fehler = (gespiegelt ? t.nichtUeberGegenwand : null) ?? (pruefung ? serverText(pruefung, sprache) : null);
   const geaendert = JSON.stringify(umrissNormal(anzeige)) !== JSON.stringify(umrissNormal(anfang)) || Math.min(...anzeige.map((p) => p.x)) !== 0 || Math.min(...anzeige.map((p) => p.y)) !== 0;
 
   // Wie in der Hauptzeichnung: die lange Seite waagrecht.
@@ -110,7 +117,7 @@ function GrundrissEditor({ halle, masse, abbrechen, fertig }: { halle: Halle; ma
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-grau">
-        Wand ziehen · Doppelklick teilt eine Wand · <HilfeLink abschnitt="grundriss">Hilfe zum Grundriss</HilfeLink>
+        {t.anleitung} <HilfeLink abschnitt="grundriss">{t.hilfe}</HilfeLink>
       </p>
       {/* Wie die Hauptzeichnung immer hell (eine Bauzeichnung), auch im Dunkelmodus. */}
       <div className="immer-hell rounded-md border border-linie bg-weiss">
@@ -122,7 +129,7 @@ function GrundrissEditor({ halle, masse, abbrechen, fertig }: { halle: Halle; ma
         onPointerMove={ziehen}
         onPointerUp={loslassen}
         onPointerCancel={() => setZug(null)}
-        aria-label={`Grundriss ${meter(m.breite)} × ${meter(m.laenge)} m`}
+        aria-label={t.bild(meter(m.breite), meter(m.laenge))}
       >
         <path d={`M${anzeige.map((p) => `${zuBild(p).x} ${zuBild(p).y}`).join("L")}Z`} fill={BAU.halle.fill} stroke="none" />
         {/* Eingänge und Flächen zur Orientierung (sie bleiben, wo sie in der Halle stehen). */}
@@ -173,9 +180,9 @@ function GrundrissEditor({ halle, masse, abbrechen, fertig }: { halle: Halle; ma
         </span>
         {fehler && <Hinweis ton="warnung">{fehler}</Hinweis>}
         <span className="ml-auto flex flex-wrap gap-2">
-          <Knopf onClick={() => setU(rechteckUmriss(halle.breite, halle.laenge))}>Rechteck</Knopf>
+          <Knopf onClick={() => setU(rechteckUmriss(halle.breite, halle.laenge))}>{t.rechteck}</Knopf>
           <Knopf variante="leise" onClick={abbrechen}>
-            Abbrechen
+            {texte.allgemein.abbrechen}
           </Knopf>
           <Knopf
             variante="primaer"
@@ -190,7 +197,7 @@ function GrundrissEditor({ halle, masse, abbrechen, fertig }: { halle: Halle; ma
               }
             }}
           >
-            Übernehmen
+            {t.uebernehmen}
           </Knopf>
         </span>
       </div>

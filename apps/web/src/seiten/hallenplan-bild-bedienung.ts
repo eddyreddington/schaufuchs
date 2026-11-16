@@ -3,9 +3,10 @@
  * Auswahlrahmen, Fläche aufziehen, Pfeiltasten, Drehen, eine Doppelreihe an die Wand ziehen und die Vorschau während
  * des Ziehens (`versatz`, `verschoben`, `reiheImEntwurf`). Die Zeichnung selbst steht in hallenplan-bild.tsx.
  */
-import { anKantenEinrasten, type Halle, type HallenFlaeche, type HallenTeil, pruefeVerschiebung, type Rechteck, type Reihe, type VerschiebePruefung, verschiebeTeile, wandAusrichtung, wandDrehungenAnwenden, type WandSeite, wandSeiteVon } from "@schau/domain";
+import { anKantenEinrasten, serverText, type Halle, type HallenFlaeche, type HallenTeil, pruefeVerschiebung, type Rechteck, type Reihe, type VerschiebePruefung, verschiebeTeile, wandAusrichtung, wandDrehungenAnwenden, type WandSeite, wandSeiteVon } from "@schau/domain";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { type Aendern, drehPruefung, freierPlatz, gedreht, gleich, groesseAendern, innen, type Plan, planKoerper, plattenDa, type Rahmen, RASTER, raster, reihenLage, vollstaendig, wandKandidatenImEntwurf, type Ziel, type Zug, zuTeilen } from "./hallenplan-geometrie";
+import { useOberflaeche, useSprache } from "../sprache";
+import { type Aendern, drehPruefung, freierPlatz, gedreht, gleich, groesseAendern, innen, type Plan, planKoerper, plattenDa, type Rahmen, RASTER, raster, reihenLage, vollstaendig, wandKandidatenImEntwurf, type Ziel, type Zug, zahlWort, zuTeilen } from "./hallenplan-geometrie";
 
 export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, aendern, mehrfach, melden, pfeilRef, zeichnen, gezeichnet, anWand, quer, svgRef }: {
   halle: Halle;
@@ -24,6 +25,10 @@ export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, ae
   quer: boolean;
   svgRef: { current: SVGSVGElement | null };
 }) {
+  const tb = useOberflaeche().halleBild.bedienung;
+  const sprache = useSprache();
+  /** Meldungen der Fachlogik (Prüfung der Lage) kommen deutsch: in der Sprache der Oberfläche melden. */
+  const meldeFach = (text: string) => melden?.(serverText(text, sprache));
   const [zug, setZugZustand] = useState<Zug | null>(null);
   const [rahmen, setRahmenZustand] = useState<Rahmen | null>(null);
   // Zusätzlich als Ref: Bewegen und Loslassen können schneller kommen, als React neu zeichnet – Loslassen liest dann den
@@ -221,7 +226,7 @@ export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, ae
         pr = { ok: true };
       }
     }
-    if (!pr.ok) return melden?.(pr.meldung);
+    if (!pr.ok) return meldeFach(pr.meldung);
     // Der Entwurf übernimmt die neue Lage sofort; gespeichert wird im Hintergrund – eine Änderung für die ganze Gruppe.
     // Landet ein Käfig an einer Wand, dreht ihn die Software so, dass die Rückwand an der Wand liegt (ein Schritt).
     let gedreht = 0;
@@ -232,9 +237,9 @@ export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, ae
         gedreht = d.length;
         return wandDrehungenAnwenden(v, d);
       },
-      { was: "Verschieben", festschreiben: ziele.some((t) => t.art === "reihe" || t.art === "platte") },
+      { was: tb.verschieben, festschreiben: ziele.some((t) => t.art === "reihe" || t.art === "platte") },
     );
-    if (gedreht) melden?.(`An der Wand gedreht: Rückwand zur Wand (${gedreht === 1 ? "1 Teil" : `${gedreht} Teile`}).`);
+    if (gedreht) melden?.(gedreht === 1 ? tb.anWandGedrehtEins : tb.anWandGedreht(zahlWort(gedreht, tb.teile)));
   };
   /**
    * Gehört schon zur Auswahl, ohne selbst gewählt zu sein: Grundplatte einer gewählten Reihe, freier Platz auf einer
@@ -267,8 +272,8 @@ export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, ae
     const t = zuTeilen([z], plan)[0];
     if (!t) return;
     const pr = drehPruefung(halle, plan, t);
-    if (!pr.ok) return melden?.(pr.meldung);
-    aendern((h) => gedreht(h, t), { was: "Drehen", festschreiben: t.art === "reihe" || t.art === "platte" });
+    if (!pr.ok) return meldeFach(pr.meldung);
+    aendern((h) => gedreht(h, t), { was: tb.drehen, festschreiben: t.art === "reihe" || t.art === "platte" });
   };
   /**
    * Pfeiltasten am Teil mit dem Fokus: gehört es zur Auswahl (auch als Platte einer gewählten Reihe), rückt die ganze
@@ -297,7 +302,7 @@ export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, ae
           },
           tabIndex: 0,
           role: "button",
-          "aria-label": `${name} – Pfeiltasten verschieben, R dreht, Entf entfernt`,
+          "aria-label": tb.bedienen(name),
           "aria-pressed": auswahl.some((a) => gleich(a, z)),
           className: "cursor-move focus:outline-none",
         }

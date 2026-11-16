@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
+import { ot } from "../sprache-jetzt";
 import { trpc } from "../trpc";
 import { Dialog, Eingabe, Feld, Hinweis, HilfeLink, Knopf, useMeldung } from "../ui";
 
@@ -12,7 +14,7 @@ function alsBase64(datei: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
-    r.onerror = () => reject(new Error("Datei konnte nicht gelesen werden."));
+    r.onerror = () => reject(new Error(ot().katalog.bilder.nichtGelesen));
     r.readAsDataURL(datei);
   });
 }
@@ -67,6 +69,7 @@ async function vorbereiten(datei: File, rolle: "logo" | "titel" | "beitrag"): Pr
 
 /** Wählt eine Bilddatei, prüft Typ und Größe und lädt sie hoch. Gibt die neue Bild-ID weiter. */
 export function BildHochladen({ schauId, rolle, beschriftung, fertig }: { schauId: number; rolle: "logo" | "titel" | "beitrag"; beschriftung: string; fertig: (id: number) => void }) {
+  const tb = useOberflaeche().katalog.bilder;
   const input = useRef<HTMLInputElement>(null);
   const meldung = useMeldung();
   const utils = trpc.useUtils();
@@ -79,13 +82,13 @@ export function BildHochladen({ schauId, rolle, beschriftung, fertig }: { schauI
   });
   const gewaehlt = async (datei: File | undefined) => {
     if (!datei) return;
-    if (!["image/jpeg", "image/png"].includes(datei.type)) return meldung("Bitte ein Bild im Format JPEG oder PNG wählen.", "fehler");
+    if (!["image/jpeg", "image/png"].includes(datei.type)) return meldung(tb.falschesFormat, "fehler");
     // Große Handyfotos sind kein Problem: der Browser rechnet sie vorher herunter.
-    if (datei.size > 40 * 1024 * 1024) return meldung("Das Bild ist größer als 40 MB. Bitte verkleinern.", "fehler");
+    if (datei.size > 40 * 1024 * 1024) return meldung(tb.ueber40, "fehler");
     const { base64, name } = await vorbereiten(datei, rolle);
     const bytes = Math.floor((base64.length * 3) / 4);
-    if (bytes > MAX_BYTES) return meldung("Das Bild ist auch verkleinert größer als 5 MB. Bitte als JPEG speichern.", "fehler");
-    if (rolle === "logo" && bytes > 600 * 1024) return meldung("Das Logo ist größer als 600 KB. Bitte verkleinern (z. B. 600 Pixel breit).", "fehler");
+    if (bytes > MAX_BYTES) return meldung(tb.ueber5, "fehler");
+    if (rolle === "logo" && bytes > 600 * 1024) return meldung(tb.logoZuGross, "fehler");
     hoch.mutate({ schauId, rolle, name, base64 });
   };
   return (
@@ -102,6 +105,8 @@ export function Vorschau({ schauId, bildId, alt, klein }: { schauId: number; bil
 
 /** Bildnachweis eines Vereinsbilds: Urheber, Lizenz, Quelle (leer bei eigenen Fotos) – erscheint im Katalog. */
 export function BildNachweis({ schauId, bildId }: { schauId: number; bildId: number }) {
+  const t = useOberflaeche();
+  const tb = t.katalog.bilder;
   const daten = trpc.katalogGestaltung.laden.useQuery({ schauId });
   const b = daten.data?.bilder.find((x) => x.id === bildId);
   const [offen, setOffen] = useState(false);
@@ -112,14 +117,14 @@ export function BildNachweis({ schauId, bildId }: { schauId: number; bildId: num
     onSuccess: () => {
       utils.katalogGestaltung.laden.invalidate();
       setOffen(false);
-      meldung("Bildnachweis gespeichert.");
+      meldung(tb.nachweisGespeichert);
     },
   });
   if (!b) return null;
-  const text = [b.urheber && `Foto: ${b.urheber}`, b.lizenz].filter(Boolean).join(" · ");
+  const text = [b.urheber && tb.foto(b.urheber), b.lizenz].filter(Boolean).join(" · ");
   return (
     <div className="text-sm">
-      <span className="text-grau">{text ? `Bildnachweis: ${text}` : "Eigenes Foto (kein Bildnachweis)"}</span>{" "}
+      <span className="text-grau">{text ? tb.nachweisText(text) : tb.eigenesFoto}</span>{" "}
       <button
         type="button"
         className="text-band hover:underline"
@@ -128,9 +133,9 @@ export function BildNachweis({ schauId, bildId }: { schauId: number; bildId: num
           setOffen(true);
         }}
       >
-        ändern
+        {tb.aendern}
       </button>
-      <Dialog offen={offen} onSchliessen={() => setOffen(false)} titel="Bildnachweis">
+      <Dialog offen={offen} onSchliessen={() => setOffen(false)} titel={tb.nachweis}>
         <form
           className="flex flex-col gap-4"
           onSubmit={(e) => {
@@ -138,18 +143,18 @@ export function BildNachweis({ schauId, bildId }: { schauId: number; bildId: num
             setzen.mutate({ schauId, id: bildId, ...w });
           }}
         >
-          <Feld label="Urheber (Fotograf)" hinweis="leer bei eigenen Fotos">{(fid) => <Eingabe id={fid} data-autofocus value={w.urheber} onChange={(e) => setW({ ...w, urheber: e.target.value })} />}</Feld>
-          <Feld label="Lizenz" hinweis="z. B. „CC BY-SA 4.0“, nicht NC oder ND">
+          <Feld label={tb.urheber} hinweis={tb.urheberHinweis}>{(fid) => <Eingabe id={fid} data-autofocus value={w.urheber} onChange={(e) => setW({ ...w, urheber: e.target.value })} />}</Feld>
+          <Feld label={tb.lizenz} hinweis={tb.lizenzHinweis}>
             {(fid) => <Eingabe id={fid} value={w.lizenz} onChange={(e) => setW({ ...w, lizenz: e.target.value })} />}
           </Feld>
-          <Feld label="Quelle (Adresse)">{(fid) => <Eingabe id={fid} value={w.quelle} onChange={(e) => setW({ ...w, quelle: e.target.value })} />}</Feld>
+          <Feld label={tb.quelle}>{(fid) => <Eingabe id={fid} value={w.quelle} onChange={(e) => setW({ ...w, quelle: e.target.value })} />}</Feld>
           {setzen.error && <Hinweis ton="fehler">{fehlerText(setzen.error)}</Hinweis>}
           <div className="flex flex-wrap items-center justify-end gap-2">
             <span className="mr-auto">
-              <HilfeLink abschnitt="katalog-gestalten">Hilfe zum Bildnachweis</HilfeLink>
+              <HilfeLink abschnitt="katalog-gestalten">{tb.hilfe}</HilfeLink>
             </span>
-            <Knopf type="button" onClick={() => setOffen(false)}>Abbrechen</Knopf>
-            <Knopf type="submit" variante="primaer" laedt={setzen.isPending}>Speichern</Knopf>
+            <Knopf type="button" onClick={() => setOffen(false)}>{t.allgemein.abbrechen}</Knopf>
+            <Knopf type="submit" variante="primaer" laedt={setzen.isPending}>{t.allgemein.speichern}</Knopf>
           </div>
         </form>
       </Dialog>

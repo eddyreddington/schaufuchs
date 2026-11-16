@@ -1,6 +1,7 @@
 /** Preisrichter-Tablet: Datentypen und was im Gerät liegt (Schlüssel in IndexedDB/localStorage, gemerkter Preisrichter, Aufräumen). */
 import type { Sondernote } from "@schau/domain";
 import { del, delMany, get, keys } from "idb-keyval";
+import { ot } from "../sprache-jetzt";
 import type { Ausgabe } from "../trpc";
 
 export type Daten = Ausgabe["richter"]["daten"];
@@ -39,7 +40,8 @@ export const gleicherStand = (a: Stand, b: Stand) => JSON.stringify(standVon(a))
 
 /** Grenze des Servers je Textfeld (services/bewertung.ts). */
 export const MAX_TEXT = 500;
-export const TEXT_ZU_LANG = `Text zu lang (höchstens ${MAX_TEXT} Zeichen).`;
+/** Meldung bei zu langem Text, in der aktuellen Sprache (zur Laufzeit aufrufen). */
+export const textZuLang = () => ot().tablet.textZuLang(MAX_TEXT);
 
 export const datenSchluessel = (slug: string, richterId: number) => `richter:${slug}:${richterId}`;
 const zuletztSchluessel = (slug: string) => `richter-zuletzt:${slug}`;

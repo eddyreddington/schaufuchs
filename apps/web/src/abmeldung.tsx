@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useOberflaeche } from "./sprache";
 
 /**
  * Automatische Abmeldung nach Untätigkeit (Frist je Rolle unter „Verein und Datenschutz“).
@@ -69,10 +70,11 @@ export function useAutoAbmeldung(minuten: number | null | undefined, lebenszeich
 
 /** Hinweis in der letzten Minute vor der automatischen Abmeldung. */
 export function AbmeldeHinweis({ rest }: { rest: number | null }) {
+  const t = useOberflaeche().rahmen.abmeldung;
   if (rest == null) return null;
   return (
     <div role="status" className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md rounded-md bg-tinte px-4 py-3 text-center text-sm text-papier shadow-lg">
-      Automatische Abmeldung in {Math.ceil(rest / 1000)} s. Zum Weiterarbeiten tippen oder eine Taste drücken.
+      {t.hinweis(Math.ceil(rest / 1000))}
     </div>
   );
 }

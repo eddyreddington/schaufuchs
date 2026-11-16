@@ -1,6 +1,7 @@
-import { bindungText, PREIS_ZIELGRUPPE_LABEL, PREIS_ZIELGRUPPEN, type GebuehrArt } from "@schau/domain";
+import { PREIS_ZIELGRUPPEN, type GebuehrArt, type OberflaecheTexte } from "@schau/domain";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { centZuText, fehlerText, formatEuro, parseEuro } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Auswahl, Dialog, Eingabe, Feld, Hinweis, Knopf, Speicherleiste, useAenderungenWarnen, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
 
@@ -8,20 +9,30 @@ import { Abschnitt, Auswahl, Dialog, Eingabe, Feld, Hinweis, Knopf, Speicherleis
 
 type Schau = Ausgabe["schau"]["get"];
 
-const GEBUEHR_ZEILEN: { art: GebuehrArt; jugend: boolean; label: string }[] = [
-  { art: "einzeltier", jugend: false, label: "Einzeltier" },
-  { art: "einzeltier", jugend: true, label: "Einzeltier Jugend" },
-  { art: "stamm", jugend: false, label: "Stamm" },
-  { art: "stamm", jugend: true, label: "Stamm Jugend" },
-  { art: "voliere", jugend: false, label: "Voliere" },
-  { art: "bruteier", jugend: false, label: "Satz Bruteier" },
-  { art: "kostenanteil", jugend: false, label: "Kostenanteil je Aussteller" },
-  { art: "kostenanteil", jugend: true, label: "Kostenanteil Jugend" },
-  { art: "katalog", jugend: false, label: "Katalog" },
-  { art: "katalog", jugend: true, label: "Katalog Jugend" },
+type ZeilenText = keyof OberflaecheTexte["ehrenpreise"]["gebuehren"]["zeilen"];
+
+/** Zeilen der Gebührentabelle; die Beschriftung kommt zur Laufzeit aus den Texten der Oberfläche. */
+const GEBUEHR_ZEILEN: { art: GebuehrArt; jugend: boolean; text: ZeilenText }[] = [
+  { art: "einzeltier", jugend: false, text: "einzeltier" },
+  { art: "einzeltier", jugend: true, text: "einzeltierJugend" },
+  { art: "stamm", jugend: false, text: "stamm" },
+  { art: "stamm", jugend: true, text: "stammJugend" },
+  { art: "voliere", jugend: false, text: "voliere" },
+  { art: "bruteier", jugend: false, text: "bruteier" },
+  { art: "kostenanteil", jugend: false, text: "kostenanteil" },
+  { art: "kostenanteil", jugend: true, text: "kostenanteilJugend" },
+  { art: "katalog", jugend: false, text: "katalog" },
+  { art: "katalog", jugend: true, text: "katalogJugend" },
 ];
 
+/** Gilt nur für Jugend/Senioren bzw. eine Sparte – wie bindungText() aus der Domain, in der Sprache der Oberfläche. */
+function bindung(t: OberflaecheTexte, p: { zielgruppe: Preisart["zielgruppe"]; sparte: string | null }): string {
+  return [p.zielgruppe !== "alle" ? t.fach.PREIS_ZIELGRUPPE_LABEL[p.zielgruppe] : "", p.sparte?.trim() ? t.ehrenpreise.preise.sparte(p.sparte.trim()) : ""].filter(Boolean).join(", ");
+}
+
 export function Gebuehren({ schau: s }: { schau: Schau }) {
+  const t = useOberflaeche();
+  const tg = t.ehrenpreise.gebuehren;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const start = () =>
@@ -38,7 +49,7 @@ export function Gebuehren({ schau: s }: { schau: Schau }) {
   const speichern = trpc.schau.gebuehrenSetzen.useMutation({
     onSuccess: () => {
       utils.schau.invalidate();
-      meldung("Gebühren gespeichert.");
+      meldung(tg.gespeichert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -49,35 +60,36 @@ export function Gebuehren({ schau: s }: { schau: Schau }) {
       const w = werte[`${z.art}-${z.jugend}`]!;
       if (!w.text.trim()) continue;
       const cent = parseEuro(w.text);
-      if (cent == null) return meldung(`Betrag bei „${z.label}“ ist ungültig.`, "fehler");
+      if (cent == null) return meldung(tg.betragUngueltig(tg.zeilen[z.text]), "fehler");
       gebuehren.push({ art: z.art, jugend: z.jugend, betragCent: cent, befreitPreisrichter: w.befreit });
     }
     speichern.mutate({ schauId: s.id, gebuehren });
   };
   const formular = useRef<HTMLFormElement>(null);
   return (
-    <Abschnitt id="gebuehren" titel="Standgeld und Gebühren">
+    <Abschnitt id="gebuehren" titel={tg.titel}>
       <form ref={formular} onSubmit={senden}>
         <table className="tabelle max-w-2xl">
           <thead>
             <tr>
-              <th>Position</th>
-              <th className="w-36">Betrag (€)</th>
-              <th>Preisrichter befreit</th>
+              <th>{tg.position}</th>
+              <th className="w-36">{tg.betragEuro}</th>
+              <th>{tg.preisrichterBefreit}</th>
             </tr>
           </thead>
           <tbody>
             {GEBUEHR_ZEILEN.map((z) => {
               const key = `${z.art}-${z.jugend}`;
               const w = werte[key]!;
+              const label = tg.zeilen[z.text];
               return (
                 <tr key={key}>
-                  <td>{z.label}</td>
+                  <td>{label}</td>
                   <td>
-                    <Eingabe aria-label={`Betrag ${z.label}`} inputMode="decimal" value={w.text} onChange={(e) => setWerte({ ...werte, [key]: { ...w, text: e.target.value } })} className="text-right" />
+                    <Eingabe aria-label={tg.betragZeile(label)} inputMode="decimal" value={w.text} onChange={(e) => setWerte({ ...werte, [key]: { ...w, text: e.target.value } })} className="text-right" />
                   </td>
                   <td>
-                    <input type="checkbox" aria-label={`${z.label}: Preisrichter befreit`} className="size-5 accent-band" checked={w.befreit} onChange={(e) => setWerte({ ...werte, [key]: { ...w, befreit: e.target.checked } })} />
+                    <input type="checkbox" aria-label={tg.befreitZeile(label)} className="size-5 accent-band" checked={w.befreit} onChange={(e) => setWerte({ ...werte, [key]: { ...w, befreit: e.target.checked } })} />
                   </td>
                 </tr>
               );
@@ -89,7 +101,7 @@ export function Gebuehren({ schau: s }: { schau: Schau }) {
           onVerwerfen={() => setWerte(start())}
           onSpeichern={() => formular.current?.requestSubmit()}
           laedt={speichern.isPending}
-          knopf="Gebühren speichern"
+          knopf={tg.speichern}
         />
       </form>
     </Abschnitt>
@@ -99,22 +111,24 @@ export function Gebuehren({ schau: s }: { schau: Schau }) {
 type Preisart = Schau["preisarten"][number];
 
 export function Preisarten({ schau: s }: { schau: Schau }) {
+  const t = useOberflaeche();
+  const tp = t.ehrenpreise.preise;
   const [bearbeiten, setBearbeiten] = useState<Partial<Preisart> | null>(null);
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
   const loeschen = trpc.schau.preisartLoeschen.useMutation({ onSuccess: () => utils.schau.get.invalidate(), onError: (e) => meldung(fehlerText(e), "fehler") });
   return (
-    <Abschnitt id="preise" titel="Preise" aktionen={<Knopf onClick={() => setBearbeiten({})}>Preisart hinzufügen</Knopf>}>
+    <Abschnitt id="preise" titel={tp.titel} aktionen={<Knopf onClick={() => setBearbeiten({})}>{tp.hinzufuegen}</Knopf>}>
       <div className="overflow-x-auto">
 <table className="tabelle">
         <thead>
           <tr>
-            <th>Kürzel</th>
-            <th>Name</th>
-            <th>Wert</th>
-            <th>Verteilung</th>
-            <th>ab Punkten</th>
+            <th>{tp.kuerzel}</th>
+            <th>{t.allgemein.name}</th>
+            <th>{tp.wert}</th>
+            <th>{tp.verteilung}</th>
+            <th>{tp.abPunkten}</th>
             <th />
           </tr>
         </thead>
@@ -126,23 +140,23 @@ export function Preisarten({ schau: s }: { schau: Schau }) {
               <td>{p.betragCent ? formatEuro(p.betragCent) : p.sachpreis || "–"}</td>
               <td>
                 {p.quelle === "stiftung"
-                  ? "gestiftet"
-                  : [p.schluesselProTiere ? `${p.anzahlProSchluessel} auf ${p.schluesselProTiere}${p.rundung === "angefangen" ? " angefangene" : ""} Tiere` : "", p.anzahlProPreisrichter ? `${p.anzahlProPreisrichter} je Preisrichter` : ""].filter(Boolean).join(" + ") || "–"}
+                  ? tp.gestiftet
+                  : [p.schluesselProTiere ? tp.schluessel(p.anzahlProSchluessel, p.schluesselProTiere, p.rundung === "angefangen") : "", p.anzahlProPreisrichter ? tp.jePreisrichter(p.anzahlProPreisrichter) : ""].filter(Boolean).join(" + ") || "–"}
               </td>
               <td>
                 {p.mindestpunkte ?? "–"}
-                {bindungText(p) && <span className="block text-sm text-grau">{bindungText(p)}</span>}
+                {bindung(t, p) && <span className="block text-sm text-grau">{bindung(t, p)}</span>}
               </td>
               <td className="text-right">
-                <Knopf variante="leise" onClick={() => setBearbeiten(p)}>Bearbeiten</Knopf>
-                <Knopf variante="leise" onClick={async () => (await bestaetige({ titel: `„${p.name}“ löschen?`, knopf: "Löschen", gefahr: true })) && loeschen.mutate({ schauId: s.id, id: p.id })}>Löschen</Knopf>
+                <Knopf variante="leise" onClick={() => setBearbeiten(p)}>{t.allgemein.bearbeiten}</Knopf>
+                <Knopf variante="leise" onClick={async () => (await bestaetige({ titel: tp.loeschenFrage(p.name), knopf: t.allgemein.loeschen, gefahr: true })) && loeschen.mutate({ schauId: s.id, id: p.id })}>{t.allgemein.loeschen}</Knopf>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 </div>
-      <Dialog offen={bearbeiten != null} onSchliessen={() => setBearbeiten(null)} titel={bearbeiten?.id ? "Preisart bearbeiten" : "Preisart hinzufügen"}>
+      <Dialog offen={bearbeiten != null} onSchliessen={() => setBearbeiten(null)} titel={bearbeiten?.id ? tp.bearbeitenTitel : tp.hinzufuegen}>
         {bearbeiten && <PreisartForm schauId={s.id} start={bearbeiten} fertig={() => setBearbeiten(null)} folge={s.preisarten.length + 1} />}
       </Dialog>
     </Abschnitt>
@@ -150,6 +164,8 @@ export function Preisarten({ schau: s }: { schau: Schau }) {
 }
 
 function PreisartForm({ schauId, start, fertig, folge }: { schauId: number; start: Partial<Preisart>; fertig: () => void; folge: number }) {
+  const t = useOberflaeche();
+  const tp = t.ehrenpreise.preise;
   const [p, setP] = useState({
     kuerzel: start.kuerzel ?? "",
     name: start.name ?? "",
@@ -178,7 +194,7 @@ function PreisartForm({ schauId, start, fertig, folge }: { schauId: number; star
     e.preventDefault();
     // Leer heißt 0 €, Unlesbares nicht still als 0 € speichern.
     const betragCent = p.betrag.trim() ? parseEuro(p.betrag) : 0;
-    if (betragCent == null) return setBetragFehler("Bitte einen Betrag wie 12,50 eingeben.");
+    if (betragCent == null) return setBetragFehler(tp.betragFehler);
     setBetragFehler(null);
     speichern.mutate({
       id: start.id,
@@ -200,48 +216,48 @@ function PreisartForm({ schauId, start, fertig, folge }: { schauId: number; star
   };
   return (
     <form onSubmit={senden} className="grid gap-4 sm:grid-cols-2">
-      <Feld label="Kürzel" hinweis="z. B. E, Z, LVEB">{(id) => <Eingabe id={id} value={p.kuerzel} maxLength={10} onChange={(e) => setP({ ...p, kuerzel: e.target.value })} required />}</Feld>
-      <Feld label="Name">{(id) => <Eingabe id={id} value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} required />}</Feld>
-      <Feld label="Geldbetrag (€)" fehler={betragFehler}>{(id) => <Eingabe id={id} inputMode="decimal" value={p.betrag} onChange={(e) => setP({ ...p, betrag: e.target.value })} />}</Feld>
-      <Feld label="oder Sachpreis">{(id) => <Eingabe id={id} value={p.sachpreis} onChange={(e) => setP({ ...p, sachpreis: e.target.value })} placeholder="z. B. Band, Medaille" />}</Feld>
-      <Feld label="Herkunft" className="sm:col-span-2">
+      <Feld label={tp.kuerzel} hinweis={tp.kuerzelBeispiel}>{(id) => <Eingabe id={id} value={p.kuerzel} maxLength={10} onChange={(e) => setP({ ...p, kuerzel: e.target.value })} required />}</Feld>
+      <Feld label={t.allgemein.name}>{(id) => <Eingabe id={id} value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} required />}</Feld>
+      <Feld label={tp.geldbetrag} fehler={betragFehler}>{(id) => <Eingabe id={id} inputMode="decimal" value={p.betrag} onChange={(e) => setP({ ...p, betrag: e.target.value })} />}</Feld>
+      <Feld label={tp.sachpreis}>{(id) => <Eingabe id={id} value={p.sachpreis} onChange={(e) => setP({ ...p, sachpreis: e.target.value })} placeholder={tp.sachpreisBeispiel} />}</Feld>
+      <Feld label={tp.herkunft} className="sm:col-span-2">
         {(id) => (
           <Auswahl id={id} value={p.quelle} onChange={(e) => setP({ ...p, quelle: e.target.value as typeof p.quelle })}>
-            <option value="standgeld">Aus dem Standgeld (über den Schlüssel)</option>
-            <option value="stiftung">Gestiftet (Anzahl über Stiftungen)</option>
+            <option value="standgeld">{tp.ausStandgeld}</option>
+            <option value="stiftung">{tp.ausStiftung}</option>
           </Auswahl>
         )}
       </Feld>
       {p.quelle === "standgeld" && (
         <>
-          <Feld label="Anzahl Preise" >{(id) => <Eingabe id={id} type="number" min={0} value={p.anzahl} onChange={(e) => setP({ ...p, anzahl: Number(e.target.value) })} />}</Feld>
-          <Feld label="auf … Tiere" hinweis="leer = ohne Schlüssel">{(id) => <Eingabe id={id} type="number" min={1} value={p.schluessel} onChange={(e) => setP({ ...p, schluessel: e.target.value })} />}</Feld>
-          <Feld label="Angebrochene Schlüssel" className="sm:col-span-2" >
+          <Feld label={tp.anzahlPreise}>{(id) => <Eingabe id={id} type="number" min={0} value={p.anzahl} onChange={(e) => setP({ ...p, anzahl: Number(e.target.value) })} />}</Feld>
+          <Feld label={tp.aufTiere} hinweis={tp.ohneSchluessel}>{(id) => <Eingabe id={id} type="number" min={1} value={p.schluessel} onChange={(e) => setP({ ...p, schluessel: e.target.value })} />}</Feld>
+          <Feld label={tp.angebrochen} className="sm:col-span-2">
             {(id) => (
               <Auswahl id={id} value={p.rundung} onChange={(e) => setP({ ...p, rundung: e.target.value as typeof p.rundung })}>
-                <option value="voll">nur volle zählen (abrunden)</option>
-                <option value="angefangen">angefangene zählen mit (aufrunden)</option>
+                <option value="voll">{tp.nurVolle}</option>
+                <option value="angefangen">{tp.angefangeneMit}</option>
               </Auswahl>
             )}
           </Feld>
         </>
       )}
-      <Feld label="Zusätzlich je Preisrichter">{(id) => <Eingabe id={id} type="number" min={0} value={p.jePr} onChange={(e) => setP({ ...p, jePr: Number(e.target.value) })} />}</Feld>
-      <Feld label="Mindestpunkte">{(id) => <Eingabe id={id} type="number" value={p.mindest} onChange={(e) => setP({ ...p, mindest: e.target.value })} placeholder="z. B. 94" />}</Feld>
-      <Feld label="Gilt für" >
+      <Feld label={tp.zusaetzlichJePreisrichter}>{(id) => <Eingabe id={id} type="number" min={0} value={p.jePr} onChange={(e) => setP({ ...p, jePr: Number(e.target.value) })} />}</Feld>
+      <Feld label={tp.mindestpunkte}>{(id) => <Eingabe id={id} type="number" value={p.mindest} onChange={(e) => setP({ ...p, mindest: e.target.value })} placeholder={tp.mindestBeispiel} />}</Feld>
+      <Feld label={tp.giltFuer}>
         {(id) => (
           <Auswahl id={id} value={p.zielgruppe} onChange={(e) => setP({ ...p, zielgruppe: e.target.value as typeof p.zielgruppe })}>
             {PREIS_ZIELGRUPPEN.map((z) => (
-              <option key={z} value={z}>{PREIS_ZIELGRUPPE_LABEL[z]}</option>
+              <option key={z} value={z}>{t.fach.PREIS_ZIELGRUPPE_LABEL[z]}</option>
             ))}
           </Auswahl>
         )}
       </Feld>
-      <Feld label="Nur Sparte" hinweis="leer = alle Sparten">
-        {(id) => <Eingabe id={id} value={p.sparte} onChange={(e) => setP({ ...p, sparte: e.target.value })} placeholder="alle Sparten" />}
+      <Feld label={tp.nurSparte} hinweis={tp.alleSpartenHinweis}>
+        {(id) => <Eingabe id={id} value={p.sparte} onChange={(e) => setP({ ...p, sparte: e.target.value })} placeholder={tp.alleSparten} />}
       </Feld>
       {speichern.error && <Hinweis ton="fehler" className="sm:col-span-2">{fehlerText(speichern.error)}</Hinweis>}
-      <Knopf type="submit" variante="primaer" laedt={speichern.isPending} className="sm:col-span-2">Speichern</Knopf>
+      <Knopf type="submit" variante="primaer" laedt={speichern.isPending} className="sm:col-span-2">{t.allgemein.speichern}</Knopf>
     </form>
   );
 }

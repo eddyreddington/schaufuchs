@@ -1,2 +1,148 @@
-/** Texte der Oberfläche: serverSchau (Entscheidung 022). */
-export const serverSchau = {};
+/**
+ * Meldungen des Servers (Entscheidung 022): Schau anlegen, Einstellungen, Gebühren, Anmeldung, Bremsen, Termine, Verein.
+ * Wortgleich wie im Server; `serverText()` erkennt sie und übersetzt. Teile: Meldungen, Prüfliste und Phase, Import.
+ */
+import { fach } from "./fach";
+import { serverSchauImport } from "./server-schau-import";
+import { serverSchauMeldung } from "./server-schau-meldung";
+import { serverSchauPruefung } from "./server-schau-pruefung";
+
+export const serverSchau = {
+  /** Eingesetzte Bezeichnungen (z. B. „Zurück zur Phase „…“ nur mit Grund.“) – wie in der Fachlogik. */
+  phasen: fach.PHASEN_LABEL,
+  meldearten: fach.MELDEART_LABEL,
+  auth: {
+    einrichtungscode: "Der Einrichtungscode stimmt nicht.",
+    eingerichtet: "Die Einrichtung ist bereits erfolgt.",
+    anmeldungFalsch: "E-Mail oder Passwort stimmt nicht.",
+    abgelaufen: "Die Anmeldung ist abgelaufen. Bitte noch einmal mit Passwort anmelden.",
+    codeFalsch: "Der Code stimmt nicht. Bitte den aktuellen Code aus der App eingeben.",
+    bisherigesPasswort: "Das bisherige Passwort stimmt nicht.",
+    benutzerFehlt: "Benutzer nicht gefunden.",
+    emailVergeben: "Diese E-Mail-Adresse lässt sich nicht verwenden. Bitte eine andere angeben.",
+    selbstSperren: "Sie können sich nicht selbst sperren.",
+    gesperrt: "Der Benutzer ist gesperrt. Bitte erst entsperren.",
+    selbstLoeschen: "Sie können sich nicht selbst löschen.",
+    eigeneRolle: "Die eigene Rolle ändert ein anderer Administrator.",
+    eigenesPasswort: "Das eigene Passwort bitte unter „Eigenes Passwort ändern“ ändern.",
+    einladungUngueltig: "Dieser Einladungslink ist ungültig oder abgelaufen. Bitte die Ausstellungsleitung um eine neue Einladung.",
+    einAdmin: "Es muss mindestens ein aktiver Administrator bleiben.",
+    passwortFalsch: "Das Passwort stimmt nicht.",
+    zweiFaktorSchon: "Die Zwei-Faktor-Anmeldung ist schon eingerichtet.",
+    neuBeginnen: "Bitte die Einrichtung neu beginnen.",
+    codeUhr: "Der Code stimmt nicht. Bitte prüfen, ob die Uhr des Telefons richtig geht, und den aktuellen Code eingeben.",
+    zweiFaktorNicht: "Die Zwei-Faktor-Anmeldung ist nicht eingerichtet.",
+    passwortOderCode: "Passwort oder Code stimmt nicht.",
+    zweiFaktorBenutzer: "Die Zwei-Faktor-Anmeldung ist für diesen Benutzer nicht eingerichtet.",
+  },
+  /** Bremsen gegen Durchprobieren und Massenabrufe (services/bremse.ts). */
+  bremse: {
+    fehlversuche: "Zu viele Fehlversuche. Bitte später erneut versuchen.",
+    adresse: "Zu viele Fehlversuche von dieser Adresse. Bitte 15 Minuten warten.",
+    kontoEineMinute: "Zu viele Fehlversuche für dieses Konto. Bitte bis zu 1 Minute warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.",
+    konto: (min: string) => `Zu viele Fehlversuche für dieses Konto. Bitte bis zu ${min} Minuten warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.`,
+    codes: "Zu viele falsche Codes. Bitte 15 Minuten warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.",
+    benutzer: "Zu viele neue Benutzer in kurzer Zeit. Bitte später weitermachen.",
+    passwort: "Zu viele Fehlversuche. Bitte 15 Minuten warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.",
+    einladung: "Zu viele Versuche mit Einladungslinks. Bitte 15 Minuten warten.",
+    willkommen: "Zu viele Willkommensmails in kurzer Zeit. Bitte später erneut versuchen.",
+    abrufeMinuten: "Zu viele Abrufe. Bitte in ein paar Minuten noch einmal.",
+    abrufeGleich: "Zu viele Abrufe. Bitte gleich noch einmal versuchen.",
+    bestaetigung: "Diese Bestätigung wurde heute schon mehrmals verschickt. Bitte morgen erneut versuchen.",
+    suche: "Zu viele Suchanfragen. Bitte einen Moment warten.",
+    anfragen: "Zu viele Anfragen. Bitte einen Moment warten.",
+    meldungen: "Zu viele Meldungen. Bitte später erneut versuchen.",
+    mails: "An diese E-Mail-Adresse wurden heute schon viele Bestätigungen geschickt. Bitte morgen erneut versuchen oder die Ausstellungsleitung fragen.",
+    tiere: "Von dieser Adresse wurden schon viele Tiere gemeldet. Weitere Meldungen bitte über die Ausstellungsleitung.",
+    einwilligung: "Die Einwilligung wurde gerade oft geändert. Bitte in einer Stunde erneut versuchen.",
+    vorschauen: "Zu viele Vorschauen. Bitte kurz warten.",
+  },
+  /** Schau anlegen, löschen, als Testschau kennzeichnen (mit den aufgezählten Hindernissen). */
+  anlegen: {
+    testVorlage: "Eine Testschau taugt nur als Vorlage für eine weitere Testschau.",
+    demoFuer: "Demodaten gibt es nur für eine Testschau.",
+    demoIn: "Demodaten gibt es nur in einer Testschau.",
+    demoFehler: (text: string) => `Demodaten nicht vollständig eingespielt: ${text}`,
+    nameEintippen: "Zur Bestätigung bitte den Namen der Schau genau eintippen.",
+    grundLoeschen: "Bitte einen Grund für das Löschen angeben.",
+    nurVorbereitung: "Löschen geht nur, solange die Schau in der Vorbereitung steht.",
+    nichtLoeschen: (was: string) => `Die Schau hat schon ${was} und lässt sich nicht löschen.`,
+    keinTest: (was: string) =>
+      `Die Schau hat schon ${was} – echte Aufzeichnungen, die nicht mit einer Testschau gelöscht werden dürfen. Sie lässt sich deshalb nicht als Testschau kennzeichnen.`,
+    meldungen: (n: string) => `${n} Meldung(en)`,
+    stiftungen: (n: string) => `${n} Stiftung(en)`,
+    spenden: (n: string) => `${n} Spende(n)`,
+    kassenbuchungen: (n: string) => `${n} Kassenbuchung(en)`,
+    tagesabschluesse: (n: string) => `${n} Tagesabschlüsse`,
+    tagesabschluesseTest: (n: string) => `${n} Tagesabschluss/-abschlüsse`,
+    auszahlungen: (n: string) => `${n} Auszahlung(en)`,
+    belege: (n: string) => `${n} Beleg(e)`,
+    gesundheit: (n: string) => `${n} Eintrag/Einträge im Gesundheitsjournal`,
+    zahlungen: (n: string) => `${n} Zahlung(en)`,
+    sepaDateien: (n: string) => `${n} SEPA-Datei(en)`,
+    verkaeufe: (n: string) => `${n} Verkauf/Verkäufe`,
+    dazugekommen: "Inzwischen sind Meldungen dazugekommen – bitte die Vorschau neu öffnen.",
+    echteAussteller: (namen: string) =>
+      `In dieser Schau sind echte Aussteller gemeldet: ${namen}. Ihre Meldungen gehen beim Kennzeichnen auf Test-Kopien über – bitte in der Vorschau bestätigen.`,
+    weitere: (namen: string, n: string) => `${namen} und ${n} weitere`,
+    testAussteller: "Dieser Aussteller gehört zu einer Testschau und kann in einer anderen Schau nicht gemeldet werden.",
+    echtInTest: "In einer Testschau lassen sich keine echten Aussteller melden – bitte einen Test-Aussteller neu anlegen.",
+  },
+  einstellungen: {
+    giroCode: "Für den GiroCode bitte Kontoinhaber und IBAN des Vereinskontos eintragen.",
+    kontoinhaber70: "Für den GiroCode darf der Kontoinhaber höchstens 70 Zeichen haben.",
+    ewr: "Das Vereinskonto liegt außerhalb des EWR – für den GiroCode bitte auch die BIC eintragen.",
+    kurzadresseVorbereitung: "Die Kurzadresse lässt sich nur in der Vorbereitung ändern – danach würden versandte Links und angemeldete Tablets ungültig.",
+    kurzadresseFest: "Die Kurzadresse lässt sich nicht mehr ändern: Es gibt schon Meldungen oder Tablet-PINs, deren Links daran hängen.",
+    kurzadresseVergeben: "Diese Kurzadresse ist schon vergeben.",
+    bewertungstag: "Der Bewertungstag liegt mehr als ein Jahr vor dem Anlegen der Schau oder mehr als drei Jahre in der Zukunft – bitte das Jahr prüfen.",
+    stammdatenFest: "Die Katalognummern sind festgeschrieben – die Stammdaten lassen sich nicht mehr wechseln.",
+    provision: "Es gibt schon Verkäufe – der Provisionssatz lässt sich nicht mehr ändern.",
+    reihenfolgeFest: "Die Katalognummern sind festgeschrieben – die Reihenfolge im Katalog lässt sich nicht mehr ändern.",
+    verzeichnisFest:
+      "Es gibt schon gemeldete Tiere – das Verzeichnis lässt sich nicht mehr wechseln. Fehlende Rassen oder Farbenschläge bitte unter „Rassen und Farbenschläge“ → „Ergänzen“ nachtragen (bei einem für alle Vereine bereitgestellten Verzeichnis: eigenes Verzeichnis einspielen, bevor gemeldet wird).",
+    teilschauenFest: "Die Katalognummern sind festgeschrieben – Teilschauen lassen sich nur noch umbenennen.",
+    teilschauBelegt: (name: string, n: string) => `Zur Teilschau „${name}“ gehören noch ${n} Meldungen – bitte erst einer anderen Teilschau zuordnen.`,
+    notenskalaFest: "Die Ergebnisse sind freigegeben – die Notenskala lässt sich nicht mehr ändern.",
+  },
+  gebuehren: {
+    auszahlungen: (nr: string) => `Es gibt schon Auszahlungen (Quittung ${nr}) – Gebühren und Preise lassen sich nicht mehr ändern.`,
+    sepaOffen: "Es gibt eine offene SEPA-Datei – erst buchen oder verwerfen.",
+    lastschriftOffen: "Es gibt eine offene Lastschriftdatei – erst buchen oder verwerfen.",
+    preisartFehlt: "Preisart nicht gefunden.",
+    bindung: (kuerzel: string, n: string) =>
+      `„${kuerzel}“ ist schon ${n}× vergeben – die Bindung (Jugend/Senioren, Sparte) lässt sich nicht mehr ändern. Bitte eine neue Preisart anlegen.`,
+    betrag: (kuerzel: string, n: string) => `„${kuerzel}“ ist schon ${n}× vergeben – Betrag und Quelle lassen sich nicht mehr ändern. Bitte eine neue Preisart anlegen.`,
+    wenigerPunkte: (kuerzel: string, nrn: string) => `„${kuerzel}“ ist schon an Tiere mit weniger Punkten vergeben (Nr. ${nrn}). Erst diese Preise entfernen.`,
+    loeschen: (kuerzel: string, n: string) => `„${kuerzel}“ ist schon ${n}× vergeben und lässt sich nicht löschen. Erst die Preise entfernen.`,
+  },
+  post: {
+    mailversand: "Der Mailversand ist nicht eingerichtet (SMTP_URL) – die Mail bleibt im Postausgang.",
+    mailFehlt: "Mail nicht gefunden oder schon versendet.",
+  },
+  /** Kommende Schauen und Kalender-Abos (Router und Abruf). */
+  termine: {
+    terminFehlt: "Termin nicht gefunden.",
+    kalenderFehlt: "Kalender nicht gefunden.",
+    hoechstensTermine: (n: string) => `Höchstens ${n} Termine. Bitte alte Termine löschen.`,
+    keineAenderung: "Für diesen Termin meldet die Quelle keine Änderung.",
+    hoechstensKalender: (n: string) => `Höchstens ${n} Kalender.`,
+    eigenesNetz: "Adressen im eigenen Netz können nicht abonniert werden.",
+    zuGross: "Die Kalenderdatei ist größer als 1 MB.",
+    zeit: "Der Server hat nicht rechtzeitig geantwortet.",
+    adresseUngueltig: "Die Adresse ist ungültig.",
+    nurHttps: "Nur Adressen mit https:// (oder webcal://).",
+    zugangsdaten: "Adressen mit Benutzername oder Passwort sind nicht erlaubt.",
+    nichtErreichbar: (host: string) => `Der Server ${host} ist nicht erreichbar (Name unbekannt).`,
+    weiterleitungen: "Zu viele Weiterleitungen.",
+    serverFehler: (status: string) => `Der Server antwortet mit Fehler ${status}.`,
+    keinKalender: "Unter der Adresse liegt kein Kalender im iCal-Format (.ics).",
+    abrufFehlgeschlagen: (text: string) => `Abruf fehlgeschlagen (${text}).`,
+  },
+  verein: {
+    vereinFehlt: "Verein nicht gefunden.",
+  },
+  meldung: serverSchauMeldung,
+  pruefung: serverSchauPruefung,
+  import: serverSchauImport,
+};

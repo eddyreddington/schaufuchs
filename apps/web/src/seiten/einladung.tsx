@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Eingabe, Feld, HilfeLink, Hinweis, Knopf, Laden, useSeitentitel } from "../ui";
 
@@ -9,7 +10,8 @@ import { Eingabe, Feld, HilfeLink, Hinweis, Knopf, Laden, useSeitentitel } from 
  * nie als Adresse an den Server (nur im Inhalt einer POST-Anfrage) und wird gleich aus der Adresszeile entfernt.
  */
 export function Einladung() {
-  useSeitentitel("Zugang einrichten");
+  const t = useOberflaeche().rahmen.einladung;
+  useSeitentitel(t.titel);
   const [token] = useState(() => window.location.hash.slice(1));
   const [passwort, setPasswort] = useState("");
   const [wiederholung, setWiederholung] = useState("");
@@ -34,7 +36,7 @@ export function Einladung() {
   const senden = (e: FormEvent) => {
     e.preventDefault();
     if (passwort !== wiederholung) {
-      setHinweis("Die beiden Passwörter stimmen nicht überein.");
+      setHinweis(t.ungleich);
       return;
     }
     setHinweis("");
@@ -51,12 +53,12 @@ export function Einladung() {
           <div className="mb-6 flex items-center gap-3">
             <img src="/icon.svg" alt="" className="size-10" />
             <div>
-              <h1 className="text-[1.45rem] font-bold leading-tight">Zugang einrichten</h1>
+              <h1 className="text-[1.45rem] font-bold leading-tight">{t.titel}</h1>
               <p className="text-sm text-grau">{daten?.verein || status.data?.appName || "SchauFUCHS"}</p>
             </div>
           </div>
           {!token ? (
-            <Hinweis ton="fehler">Dieser Link ist unvollständig. Bitte den Link aus der Einladungsmail vollständig öffnen.</Hinweis>
+            <Hinweis ton="fehler">{t.unvollstaendig}</Hinweis>
           ) : pruefen.error ? (
             <Hinweis ton="fehler">{fehlerText(pruefen.error)}</Hinweis>
           ) : !daten ? (
@@ -64,33 +66,33 @@ export function Einladung() {
           ) : (
             <form onSubmit={senden} className="flex flex-col gap-4">
               <div>
-                <p>Guten Tag {daten.name}, bitte legen Sie Ihr Passwort fest.</p>
+                <p>{t.gutenTag(daten.name)}</p>
                 <p className="mt-1 text-sm text-grau">
-                  Anmeldung mit <span className="font-semibold text-tinte">{daten.email}</span>
+                  {t.anmeldungMit} <span className="font-semibold text-tinte">{daten.email}</span>
                 </p>
               </div>
               {angemeldetAls && angemeldetAls.email !== daten.email && (
                 <Hinweis ton="warnung">
-                  Gerade ist {angemeldetAls.name} angemeldet – danach wechselt die Anmeldung zu {daten.name}.
+                  {t.wechsel(angemeldetAls.name, daten.name)}
                 </Hinweis>
               )}
               <input type="email" value={daten.email} autoComplete="username" readOnly hidden />
-              <Feld label="Neues Passwort" hinweis="Mindestens 10 Zeichen">
+              <Feld label={t.neuesPasswort} hinweis={t.mindestens10}>
                 {(id) => <Eingabe id={id} type="password" value={passwort} onChange={(e) => setPasswort(e.target.value)} required minLength={10} autoFocus autoComplete="new-password" />}
               </Feld>
-              <Feld label="Passwort wiederholen">
+              <Feld label={t.wiederholen}>
                 {(id) => <Eingabe id={id} type="password" value={wiederholung} onChange={(e) => setWiederholung(e.target.value)} required minLength={10} autoComplete="new-password" />}
               </Feld>
               {(hinweis || annehmen.error) && <Hinweis ton="fehler">{hinweis || fehlerText(annehmen.error!)}</Hinweis>}
               <Knopf type="submit" variante="primaer" gross className="mt-1" laedt={annehmen.isPending}>
-                Passwort festlegen und anmelden
+                {t.festlegen}
               </Knopf>
             </form>
           )}
         </div>
         <p className="text-center">
           <HilfeLink teil="helfer" abschnitt="die-einladungsmail">
-            Hilfe zum Zugang
+            {t.hilfe}
           </HilfeLink>
         </p>
       </div>

@@ -38,6 +38,9 @@ const BUCHSTABEN = /[A-Za-zÄÖÜäöüß]{2}/;
 const TECHNISCH = new Set(["className", "to", "href", "type", "key", "id", "name", "role", "variante", "ton", "symbol", "htmlFor", "autoComplete", "inputMode", "target", "rel", "lang", "src", "method", "form", "pattern", "accept", "download", "dir", "groesse", "breite", "art", "wert", "value", "data-testid", "enterKeyHint", "spellCheck", "capture", "loading", "decoding"]);
 const SICHTBAR = new Set(["title", "placeholder", "aria-label", "alt", "label", "titel", "hinweis", "beschriftung", "text", "unterzeile", "leer", "frage", "bestaetigen", "aria-description", "tooltip"]);
 
+/** Eigennamen und Tasten: in jeder Sprache gleich. */
+const EIGENNAME = /^(SchauFUCHS|GiroCode|Esc|Enter|Tab|Arrow\w*)$/;
+
 /** Sieht ein Text wie Oberfläche aus (nicht wie Klasse, Schlüssel, Pfad)? */
 export function wieText(s: string): boolean {
   const t = normal(s);
@@ -45,6 +48,11 @@ export function wieText(s: string): boolean {
   if (/^[a-z0-9_\-:./[\]#%()&>=!,+*'@~?$ ]*$/.test(t) && !/ [a-zäöü]{3,} [a-zäöü]{3,}/.test(t)) return false; // klein, technisch
   if (/^[A-Za-z0-9_.-]+$/.test(t) && !/^[A-ZÄÖÜ][a-zäöüß]+$/.test(t)) return false; // Bezeichner wie fooBar, ABC_1
   if (/^(image|application|text)\/|^https?:|^\/|^#|^\.|^data:|^[\w-]+\.(pdf|csv|xlsx|png|svg|json|js)$/.test(t)) return false;
+  if (/^[Mm][\d.,\s\-MmLlHhVvCcSsQqTtAaZz]*$/.test(t)) return false; // SVG-Pfad
+  if (!t.includes(" ") && t.includes("/")) return false; // Pfad oder Route
+  const woerter = t.split(" ");
+  if (woerter.every((w) => /^[a-z!:[\]/.\-0-9%#()]+$/i.test(w)) && woerter.filter((w) => w.includes("-")).length * 2 >= woerter.length) return false; // Klassen
+  if (EIGENNAME.test(t)) return false;
   return true;
 }
 
@@ -70,13 +78,13 @@ export function stuecke(datei: string, inhalt = readFileSync(datei, "utf8"), all
       const name = k.name.getText(quelle);
       if (TECHNISCH.has(name) || name.startsWith("on") && !SICHTBAR.has(name)) return;
       if (k.initializer && ts.isStringLiteral(k.initializer)) {
-        if (alle ? BUCHSTABEN.test(k.initializer.text) : SICHTBAR.has(name) ? BUCHSTABEN.test(k.initializer.text) : wieText(k.initializer.text)) neu(k, k.initializer.text, "attribut");
+        if (alle ? BUCHSTABEN.test(k.initializer.text) : SICHTBAR.has(name) ? BUCHSTABEN.test(k.initializer.text) && !EIGENNAME.test(k.initializer.text) : wieText(k.initializer.text)) neu(k, k.initializer.text, "attribut");
         return;
       }
     }
     if (ts.isPropertyAssignment(k) && /^(className|klasse|klassen)$/.test(k.name.getText(quelle))) return;
     if (ts.isJsxText(k)) {
-      if (BUCHSTABEN.test(k.text)) neu(k, k.text, "jsx");
+      if (BUCHSTABEN.test(k.text) && (alle || !EIGENNAME.test(normal(k.text)))) neu(k, k.text, "jsx");
     } else if (ts.isStringLiteral(k) || ts.isNoSubstitutionTemplateLiteral(k)) {
       // Schlüssel in Objekten und Vergleichswerte sind keine Oberfläche.
       const p = k.parent;

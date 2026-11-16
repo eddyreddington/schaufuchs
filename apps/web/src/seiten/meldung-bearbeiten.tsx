@@ -1,4 +1,4 @@
-import { gefordertCent, type Zahlart, ZAHLART_LABEL } from "@schau/domain";
+import { gefordertCent, type GebuehrArt, type Zahlart } from "@schau/domain";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AusstellerFelder, leererAussteller, type AusstellerDaten } from "../komponenten/aussteller";
@@ -6,10 +6,11 @@ import { alsEingabe, ausEintrag, neuePosition, PositionenEditor, pruefePositione
 import { datum, fehlerText, formatEuro, heuteIso, parseEuro } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
+import { useOberflaeche, useTexte } from "../sprache";
 import { Symbol } from "../symbole";
 import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Auswahl, Eingabe, Feld, Haken, Hinweis, Kennzahlen, Knopf, knopfKlasse, Laden, Marke, SEITE, Seitenkopf, Speicherleiste, Textfeld, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
-import { EINGANG_LABEL, STATUS_LABEL, STATUS_TON } from "./meldungen";
+import { STATUS_TON } from "./meldungen";
 
 export function MeldungBearbeiten() {
   const schauId = useSchauId();
@@ -28,6 +29,10 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
   const navigate = useNavigate();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const t = useOberflaeche();
+  const tm = t.meldung;
+  const tb = tm.bearbeiten;
+  const tx = useTexte();
   const [ausstellerId, setAusstellerId] = useState<number | undefined>(vorhanden?.aussteller.id);
   const adressen = trpc.meldung.adressVorschlaege.useQuery({ schauId }, { staleTime: 5 * 60_000 });
   const [a, setA] = useState<AusstellerDaten>(() => {
@@ -62,7 +67,7 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
     onSuccess: async (r) => {
       gespeichert.current = stand;
       await utils.meldung.invalidate();
-      meldung(`Meldung gespeichert. Betrag: ${formatEuro(r.betrag.summeCent)}`);
+      meldung(tb.gespeichert(formatEuro(r.betrag.summeCent)));
       // Absolut: relativ aufgelöst landete man auf …/meldungen/meldungen/5. replace, damit „Zurück“ nicht ins leere Formular führt.
       if (!vorhanden) navigate(`/schau/${schauId}/meldungen/${r.meldungId}`, { replace: true });
       else nachSpeichern();
@@ -71,7 +76,7 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
 
   const senden = (e: FormEvent) => {
     e.preventDefault();
-    const probleme = pruefePositionen(positionen);
+    const probleme = pruefePositionen(positionen, tx);
     setFehler(probleme);
     if (probleme.length) return;
     speichern.mutate({
@@ -103,52 +108,52 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel={vorhanden ? `${vorhanden.aussteller.nachname}, ${vorhanden.aussteller.vorname}` : "Meldung erfassen"}
-        unter={vorhanden ? `Eingegangen ${datum(vorhanden.meldung.eingegangenAm)} · ${EINGANG_LABEL[vorhanden.meldung.eingang]}` : undefined}
-        marke={vorhanden && <Marke ton={STATUS_TON[vorhanden.meldung.status]}>{STATUS_LABEL[vorhanden.meldung.status]}</Marke>}
+        titel={vorhanden ? `${vorhanden.aussteller.nachname}, ${vorhanden.aussteller.vorname}` : tm.meldungErfassen}
+        unter={vorhanden ? tb.eingegangen(datum(vorhanden.meldung.eingegangenAm), tm.eingang[vorhanden.meldung.eingang]) : undefined}
+        marke={vorhanden && <Marke ton={STATUS_TON[vorhanden.meldung.status]}>{tm.status[vorhanden.meldung.status]}</Marke>}
         hilfe={istAdmin ? "papiermeldungen-erfassen" : "eine-neue-meldung-erfassen"}
         hilfeTeil={istAdmin ? undefined : "helfer"}
-        hilfeText="Hilfe zu Meldungen"
+        hilfeText={tb.hilfe}
         aktionen={
           <Link to={`/schau/${schauId}/meldungen`} className={knopfKlasse("leise")}>
-            Zurück zur Liste
+            {tb.zurueck}
           </Link>
         }
       />
       {vorhanden && b && (
         <Kennzahlen
           werte={[
-            { label: "Tiere", wert: vorhanden.eintraege.length },
+            { label: t.allgemein.tiere, wert: vorhanden.eintraege.length },
             {
-              label: "Meldegeld",
+              label: tb.meldegeld,
               wert: formatEuro(b.summeCent),
-              zusatz: [b.stiftungCent > 0 && `+ ${formatEuro(b.stiftungCent)} Stiftung`, b.spendeCent > 0 && `+ ${formatEuro(b.spendeCent)} Spende`].filter(Boolean).join(" ") || undefined,
+              zusatz: [b.stiftungCent > 0 && tb.plusStiftung(formatEuro(b.stiftungCent)), b.spendeCent > 0 && tb.plusSpende(formatEuro(b.spendeCent))].filter(Boolean).join(" ") || undefined,
             },
-            { label: "Bezahlt", wert: formatEuro(b.bezahltCent) },
-            { label: "Offen", wert: formatEuro(Math.max(offen, 0)), zusatz: offen < 0 ? `${formatEuro(-offen)} zu viel` : undefined, ton: offen > 0 ? "warnung" : offen < 0 ? "warnung" : "ok" },
+            { label: tm.bezahlt, wert: formatEuro(b.bezahltCent) },
+            { label: tb.offen, wert: formatEuro(Math.max(offen, 0)), zusatz: offen < 0 ? tb.zuViel(formatEuro(-offen)) : undefined, ton: offen > 0 ? "warnung" : offen < 0 ? "warnung" : "ok" },
           ]}
         />
       )}
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <form id={formId} ref={formRef} onSubmit={senden} className="flex min-w-0 flex-col gap-6">
-          <Abschnitt titel="Aussteller">
+          <Abschnitt titel={t.allgemein.aussteller}>
             <div className="flex flex-col gap-4">
               {!vorhanden && <AusstellerSuche schauId={schauId} onWahl={(x) => { const { id, organisationId: _o, createdAt: _c, istPreisrichter: p, ...rest } = x; setAusstellerId(id); setA(rest); setIstPreisrichter(p); }} />}
               {ausstellerId && !vorhanden && (
                 <Hinweis className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2">
-                  <span>Bekannter Aussteller ausgewählt.</span>
+                  <span>{tb.bekannterGewaehlt}</span>
                   <button type="button" className="text-sm font-semibold text-band hover:underline" onClick={() => { setAusstellerId(undefined); setA(leererAussteller()); }}>
-                    Doch neu anlegen
+                    {tb.dochNeu}
                   </button>
                 </Hinweis>
               )}
               <AusstellerFelder a={a} setA={setA} vorschlaege={adressen.data} />
               <div className="flex flex-wrap gap-x-8 gap-y-3 border-t border-linie pt-4">
-                <Haken label="Jugendlicher" checked={istJugend} onChange={setIstJugend} />
-                <Haken label="Amtierender Preisrichter" checked={istPreisrichter} onChange={setIstPreisrichter} />
+                <Haken label={tb.jugendlicher} checked={istJugend} onChange={setIstJugend} />
+                <Haken label={tb.preisrichter} checked={istPreisrichter} onChange={setIstPreisrichter} />
               </div>
               {(schau.data?.teilschauen.length ?? 0) > 0 && (
-                <Feld label="Teilschau" className="max-w-md">
+                <Feld label={tb.teilschau} className="max-w-md">
                   {(id) => (
                     <Auswahl id={id} value={teilschau ?? schau.data!.teilschauen[0]!.id} onChange={(e) => setTeilschau(e.target.value)}>
                       {schau.data!.teilschauen.map((t) => (
@@ -161,44 +166,44 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
                 </Feld>
               )}
               {istJugend && (
-                <Feld label="Erziehungsberechtigter" hinweis={onlineZustimmung ? "Pflicht für die Veröffentlichung im Internet" : undefined} className="max-w-md">
+                <Feld label={tb.erziehungsberechtigter} hinweis={onlineZustimmung ? tb.pflichtInternet : undefined} className="max-w-md">
                   {(id) => <Eingabe id={id} value={erziehungsberechtigter} onChange={(e) => setErziehungsberechtigter(e.target.value)} autoComplete="off" />}
                 </Feld>
               )}
             </div>
           </Abschnitt>
 
-          <Abschnitt titel="Tiere">
-            {!versionId && <Hinweis ton="warnung" className="mb-4">Für diese Schau ist noch kein Verzeichnis der Rassen und Farbenschläge gewählt (Einstellungen).</Hinweis>}
+          <Abschnitt titel={t.allgemein.tiere}>
+            {!versionId && <Hinweis ton="warnung" className="mb-4">{tb.keinVerzeichnis}</Hinweis>}
             <PositionenEditor positionen={positionen} setPositionen={setPositionen} suche={suche} kaefigRegeln={schau.data?.kaefigRegeln} kaefigMasse={schau.data?.kaefigMasse} festgeschrieben={!!schau.data?.katalogGedruckt} />
           </Abschnitt>
 
-          <Abschnitt titel="Eingang">
+          <Abschnitt titel={tb.eingang}>
             <div className="flex flex-col gap-4">
               <div className="grid gap-4 md:grid-cols-[14rem_minmax(0,1fr)]">
-                <Feld label="Eingegangen per">
+                <Feld label={tb.eingegangenPer}>
                   {(id) => (
                     <Auswahl id={id} value={eingang} disabled={!!vorhanden} onChange={(e) => setEingang(e.target.value as typeof eingang)}>
-                      <option value="papier">{EINGANG_LABEL.papier}</option>
-                      <option value="email">{EINGANG_LABEL.email}</option>
-                      <option value="online">{EINGANG_LABEL.online}</option>
+                      <option value="papier">{tm.eingang.papier}</option>
+                      <option value="email">{tm.eingang.email}</option>
+                      <option value="online">{tm.eingang.online}</option>
                     </Auswahl>
                   )}
                 </Feld>
-                <Feld label="Bemerkung">{(id) => <Textfeld id={id} rows={2} value={bemerkung} onChange={(e) => setBemerkung(e.target.value)} />}</Feld>
+                <Feld label={tb.bemerkung}>{(id) => <Textfeld id={id} rows={2} value={bemerkung} onChange={(e) => setBemerkung(e.target.value)} />}</Feld>
               </div>
               <div className="flex flex-col gap-3 border-t border-linie pt-4">
-                <Haken label="Meldebogen ist unterschrieben (AAB und Sonderbestimmungen anerkannt)" checked={zustimmung} onChange={setZustimmung} hinweis="Sonst ohne Namen im Katalog" />
-                <Haken label="Widerspruch: im Katalog ohne Namen" checked={widerspruch} onChange={setWiderspruch} hinweis="Art. 21 DSGVO" />
+                <Haken label={tb.unterschrieben} checked={zustimmung} onChange={setZustimmung} hinweis={tb.unterschriebenHinweis} />
+                <Haken label={tb.widerspruch} checked={widerspruch} onChange={setWiderspruch} hinweis={tb.widerspruchHinweis} />
                 {!!schau.data?.erklaerungen.trim() && (
                   <Haken
-                    label="Pflichterklärungen zur Herkunft abgegeben"
+                    label={tb.erklaerungen}
                     checked={erklaerungen}
                     onChange={setErklaerungen}
                     hinweis={schau.data.erklaerungen.split("\n").filter((z) => z.trim()).join(" · ")}
                   />
                 )}
-                <Haken label="Veröffentlichung im Internet erlaubt" checked={onlineZustimmung} onChange={setOnlineZustimmung} hinweis="Nur bei ausdrücklicher Zustimmung" />
+                <Haken label={tb.internet} checked={onlineZustimmung} onChange={setOnlineZustimmung} hinweis={tb.internetHinweis} />
               </div>
             </div>
           </Abschnitt>
@@ -209,7 +214,7 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
             </Hinweis>
           )}
           {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
-          <Speicherleiste sichtbar={ungespeichert} laedt={speichern.isPending} knopf="Meldung speichern" onSpeichern={() => formRef.current?.requestSubmit()} />
+          <Speicherleiste sichtbar={ungespeichert} laedt={speichern.isPending} knopf={tb.speichern} onSpeichern={() => formRef.current?.requestSubmit()} />
         </form>
 
         {vorhanden && <Seitenleiste daten={vorhanden} schauId={schauId} />}
@@ -219,12 +224,13 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
 }
 
 function AusstellerSuche({ schauId, onWahl }: { schauId: number; onWahl: (a: Ausgabe["meldung"]["ausstellerSuche"][number]) => void }) {
+  const tb = useOberflaeche().meldung.bearbeiten;
   const [q, setQ] = useState("");
   const treffer = trpc.meldung.ausstellerSuche.useQuery({ schauId, q }, { enabled: q.trim().length >= 2 });
   return (
     <div className="flex max-w-xl flex-col gap-2">
-      <Feld label="Bekannten Aussteller suchen" hinweis="Name oder Registriernummer">
-        {(id) => <Eingabe id={id} value={q} onChange={(e) => setQ(e.target.value)} placeholder="z. B. Müller" />}
+      <Feld label={tb.suchen} hinweis={tb.suchenHinweis}>
+        {(id) => <Eingabe id={id} value={q} onChange={(e) => setQ(e.target.value)} placeholder={tb.suchenPlatzhalter} />}
       </Feld>
       {q.trim().length >= 2 && (treffer.data?.length ?? 0) > 0 && (
         <ul className="divide-y divide-linie overflow-hidden rounded-md border border-linie">
@@ -245,6 +251,9 @@ function AusstellerSuche({ schauId, onWahl }: { schauId: number; onWahl: (a: Aus
 function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number }) {
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const t = useOberflaeche();
+  const tm = t.meldung;
+  const ts = tm.seitenleiste;
   const m = daten.meldung;
   const neu = () => utils.meldung.invalidate();
   const status = trpc.meldung.statusSetzen.useMutation({ onSuccess: neu, onError: (e) => meldung(fehlerText(e), "fehler") });
@@ -252,15 +261,15 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
   const stornieren = trpc.meldung.zahlungStornieren.useMutation({
     onSuccess: () => {
       neu();
-      meldung("Zahlung storniert (Gegenbuchung).");
+      meldung(ts.zahlungStorniert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
-  const senden = trpc.meldung.bestaetigungSenden.useMutation({ onSuccess: () => meldung("E-Mail verschickt."), onError: (e) => meldung(fehlerText(e), "fehler") });
+  const senden = trpc.meldung.bestaetigungSenden.useMutation({ onSuccess: () => meldung(ts.mailVerschickt), onError: (e) => meldung(fehlerText(e), "fehler") });
   const verfall = trpc.meldung.verfallBuchen.useMutation({
     onSuccess: () => {
       neu();
-      meldung("Verfall gebucht.");
+      meldung(ts.verfallGebucht);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -269,56 +278,54 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
   // Storniert oder abgelehnt, aber Geld eingegangen: erstatten oder Verfall – sonst hält es den Abschluss auf.
   const ruht = m.status === "storniert" || m.status === "abgelehnt";
   const nochDa = daten.betrag.bezahltCent - m.verfallenCent;
-  const grundFrage = (titel: string, text?: string) => eingabe({ titel, text, feld: "Grund (bitte ohne Personennamen)", mindestens: 3 });
+  const grundFrage = (titel: string, text?: string) => eingabe({ titel, text, feld: ts.grund, mindestens: 3 });
 
   return (
     <aside className="flex flex-col gap-4">
-      <Abschnitt titel="Status" aktionen={<Marke ton={STATUS_TON[m.status]}>{STATUS_LABEL[m.status]}</Marke>}>
+      <Abschnitt titel={t.allgemein.status} aktionen={<Marke ton={STATUS_TON[m.status]}>{tm.status[m.status]}</Marke>}>
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
-            {(m.status === "offen" || (istAdmin && m.status !== "bestaetigt")) && <Knopf variante="primaer" onClick={() => status.mutate({ id: m.id, status: "bestaetigt" })}>Bestätigen</Knopf>}
+            {(m.status === "offen" || (istAdmin && m.status !== "bestaetigt")) && <Knopf variante="primaer" onClick={() => status.mutate({ id: m.id, status: "bestaetigt" })}>{ts.bestaetigen}</Knopf>}
             {istAdmin && m.status === "offen" && (
-              <Knopf variante="gefahr" onClick={async () => { const g = await grundFrage("Meldung ablehnen"); if (g) status.mutate({ id: m.id, status: "abgelehnt", grund: g }); }}>
-                Ablehnen
+              <Knopf variante="gefahr" onClick={async () => { const g = await grundFrage(ts.ablehnenTitel); if (g) status.mutate({ id: m.id, status: "abgelehnt", grund: g }); }}>
+                {ts.ablehnen}
               </Knopf>
             )}
             {m.status === "bestaetigt" && (
               <Knopf
                 onClick={async () => {
-                  if (await bestaetige({ titel: "Bestätigung zurücknehmen", text: "Die Meldung steht dann wieder auf „offen“.", knopf: "Zurücknehmen" })) {
-                    status.mutate({ id: m.id, status: "offen", grund: "Bestätigung zurückgenommen" });
+                  if (await bestaetige({ titel: ts.zuruecknehmenTitel, text: ts.zuruecknehmenText, knopf: ts.zuruecknehmen })) {
+                    status.mutate({ id: m.id, status: "offen", grund: "Bestätigung zurückgenommen" }); // bleibt deutsch (Protokoll)
                   }
                 }}
               >
-                Bestätigung zurücknehmen
+                {ts.zuruecknehmenTitel}
               </Knopf>
             )}
             {istAdmin && m.status === "bestaetigt" && (
-              <Knopf variante="gefahr" onClick={async () => { const g = await grundFrage("Meldung stornieren"); if (g) status.mutate({ id: m.id, status: "storniert", grund: g }); }}>
-                Stornieren
+              <Knopf variante="gefahr" onClick={async () => { const g = await grundFrage(ts.stornierenTitel); if (g) status.mutate({ id: m.id, status: "storniert", grund: g }); }}>
+                {ts.stornieren}
               </Knopf>
             )}
           </div>
           {m.verfallenCent > 0 && (
             <p className="text-sm text-grau">
-              Verfall gebucht: {formatEuro(m.verfallenCent)}
+              {ts.verfallBetrag(formatEuro(m.verfallenCent))}
               {m.verfallGrund ? ` – ${m.verfallGrund}` : ""}
             </p>
           )}
           {ruht && nochDa > 0 && (
             <Hinweis ton="warnung" className="flex flex-col items-start gap-2 text-sm">
-              <span>
-                Für diese {m.status === "storniert" ? "stornierte" : "abgelehnte"} Meldung sind {formatEuro(nochDa)} eingegangen: erstatten oder Verfall buchen.
-              </span>
+              <span>{m.status === "storniert" ? ts.ruhtStorniert(formatEuro(nochDa)) : ts.ruhtAbgelehnt(formatEuro(nochDa))}</span>
               {istAdmin && (
                 <Knopf
                   laedt={verfall.isPending}
                   onClick={async () => {
-                    const g = await grundFrage("Verfall buchen", `${formatEuro(nochDa)} behält der Verein.`);
+                    const g = await grundFrage(ts.verfallTitel, ts.verfallText(formatEuro(nochDa)));
                     if (g) verfall.mutate({ id: m.id, grund: g });
                   }}
                 >
-                  Verfall buchen …
+                  {ts.verfallKnopf}
                 </Knopf>
               )}
             </Hinweis>
@@ -326,55 +333,55 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
         </div>
       </Abschnitt>
 
-      <Abschnitt titel="Meldegeld">
+      <Abschnitt titel={tm.bearbeiten.meldegeld}>
         <div className="flex flex-col gap-4">
           <table className="w-full text-sm">
             <tbody>
               {daten.betrag.zeilen.map((z) => (
                 <tr key={z.art}>
-                  <td className="py-0.5">{z.anzahl} × {z.label}</td>
+                  <td className="py-0.5">{z.anzahl} × {t.fach.GEBUEHR_LABEL[z.art as GebuehrArt] ?? z.label}</td>
                   <td className="py-0.5 text-right">{formatEuro(z.summeCent)}</td>
                 </tr>
               ))}
               <tr className="border-t border-linie font-semibold">
-                <td className="pt-1.5">Summe</td>
+                <td className="pt-1.5">{ts.summe}</td>
                 <td className="pt-1.5 text-right">{formatEuro(daten.betrag.summeCent)}</td>
               </tr>
               {daten.betrag.stiftungCent > 0 && (
                 <tr>
-                  <td className="py-0.5">+ Ehrenpreisstiftung (zugesagt)</td>
+                  <td className="py-0.5">{ts.stiftung}</td>
                   <td className="py-0.5 text-right">{formatEuro(daten.betrag.stiftungCent)}</td>
                 </tr>
               )}
               {daten.betrag.spendeCent > 0 && (
                 <tr>
-                  <td className="py-0.5">+ Spende für die Ausstellung (zugesagt)</td>
+                  <td className="py-0.5">{ts.spende}</td>
                   <td className="py-0.5 text-right">{formatEuro(daten.betrag.spendeCent)}</td>
                 </tr>
               )}
             </tbody>
           </table>
           <div className="flex flex-col gap-1">
-            <h3 className="text-sm font-semibold">Zahlungen</h3>
+            <h3 className="text-sm font-semibold">{ts.zahlungen}</h3>
             <ul className="divide-y divide-linie text-sm">
               {daten.zahlungen.map((z) => {
                 const storniert = daten.zahlungen.some((x) => x.stornoVon === z.id);
                 return (
                   <li key={z.id} className={`flex items-center justify-between gap-2 py-1 ${storniert || z.stornoVon ? "text-grau" : ""}`}>
                     <span className="min-w-0">
-                      {datum(z.datum)} · {ZAHLART_LABEL[z.art as Zahlart] ?? "sonstige"}
-                      {z.stornoVon ? ` · Storno: ${z.grund}` : z.grund ? ` · ${z.grund}` : ""}
+                      {datum(z.datum)} · {t.fach.ZAHLART_LABEL[z.art as Zahlart] ?? t.fach.ZAHLART_LABEL.sonstige}
+                      {z.stornoVon ? ts.storno(z.grund) : z.grund ? ` · ${z.grund}` : ""}
                     </span>
                     <span className="flex shrink-0 items-center gap-1">
                       <span className={storniert ? "line-through" : ""}>{formatEuro(z.betragCent)}</span>
                       {!storniert && !z.stornoVon && istAdmin && (
                         <button
                           type="button"
-                          aria-label="Zahlung stornieren"
-                          title="Zahlung stornieren"
+                          aria-label={ts.zahlungStornieren}
+                          title={ts.zahlungStornieren}
                           className="rounded p-1 text-grau hover:bg-kamm-hell hover:text-kamm"
                           onClick={async () => {
-                            const g = await grundFrage("Zahlung stornieren", "Es wird eine Gegenbuchung erfasst.");
+                            const g = await grundFrage(ts.zahlungStornieren, ts.gegenbuchung);
                             if (g) stornieren.mutate({ id: z.id, grund: g });
                           }}
                         >
@@ -385,21 +392,21 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
                   </li>
                 );
               })}
-              {daten.zahlungen.length === 0 && <li className="py-1 text-grau">Noch keine Zahlung.</li>}
+              {daten.zahlungen.length === 0 && <li className="py-1 text-grau">{ts.keineZahlung}</li>}
             </ul>
           </div>
-          <p className={`font-semibold ${offen > 0 ? "text-kamm" : "text-stall"}`}>{offen > 0 ? `Offen: ${formatEuro(offen)}` : "Vollständig bezahlt"}</p>
+          <p className={`font-semibold ${offen > 0 ? "text-kamm" : "text-stall"}`}>{offen > 0 ? ts.offen(formatEuro(offen)) : ts.vollstaendig}</p>
           <ZahlungErfassen meldungId={m.id} vorschlag={Math.max(offen, 0)} />
         </div>
       </Abschnitt>
 
-      <Abschnitt titel="Für den Aussteller">
+      <Abschnitt titel={ts.fuerAussteller}>
         <div className="flex flex-col items-start gap-3 text-sm">
-          <a href={`/datei/${schauId}/a-bogen.pdf?meldung=${m.id}`} target="_blank" rel="noreferrer">A-Bogen zum Unterschreiben (PDF)</a>
-          <a href={`/datei/${schauId}/aussteller.pdf?meldung=${m.id}`} target="_blank" rel="noreferrer">B-Bogen und Ringkarten (PDF)</a>
-          <a href={daten.link} target="_blank" rel="noreferrer">Seite „Meine Meldung“</a>
+          <a href={`/datei/${schauId}/a-bogen.pdf?meldung=${m.id}`} target="_blank" rel="noreferrer">{ts.aBogen}</a>
+          <a href={`/datei/${schauId}/aussteller.pdf?meldung=${m.id}`} target="_blank" rel="noreferrer">{ts.bBogen}</a>
+          <a href={daten.link} target="_blank" rel="noreferrer">{ts.meineMeldung}</a>
           <Knopf onClick={() => senden.mutate({ id: m.id })} laedt={senden.isPending} disabled={!daten.aussteller.email}>
-            Eingangsbestätigung mailen
+            {ts.eingangMailen}
           </Knopf>
         </div>
       </Abschnitt>
@@ -416,11 +423,13 @@ function ZahlungErfassen({ meldungId, vorschlag }: { meldungId: number; vorschla
   useEffect(() => setBetrag(vorschlag ? (vorschlag / 100).toFixed(2).replace(".", ",") : ""), [vorschlag]);
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const t = useOberflaeche();
+  const tz = t.meldung.zahlung;
   const { eingabe } = useFrage();
   const erfassen = trpc.meldung.zahlungErfassen.useMutation({
     onSuccess: (r) => {
       utils.meldung.invalidate();
-      meldung(r.bestaetigt ? "Zahlung erfasst – Meldung ist jetzt bestätigt." : "Zahlung erfasst.");
+      meldung(r.bestaetigt ? tz.erfasstBestaetigt : tz.erfasst);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -430,26 +439,26 @@ function ZahlungErfassen({ meldungId, vorschlag }: { meldungId: number; vorschla
       onSubmit={async (e) => {
         e.preventDefault();
         const cent = parseEuro(betrag);
-        if (cent == null || cent === 0) return meldung("Betrag ungültig.", "fehler");
+        if (cent == null || cent === 0) return meldung(tz.betragUngueltig, "fehler");
         let grund = "";
-        if (cent < 0 && !istAdmin) return meldung("Erstattungen bucht die Ausstellungsleitung.", "fehler");
+        if (cent < 0 && !istAdmin) return meldung(tz.erstattungNurLeitung, "fehler");
         if (cent < 0) {
-          grund = (await eingabe({ titel: "Erstattung", text: "Negativer Betrag = Erstattung an den Aussteller.", feld: "Grund (bitte ohne Personennamen)", mindestens: 3 })) ?? "";
+          grund = (await eingabe({ titel: tz.erstattung, text: tz.erstattungText, feld: t.meldung.seitenleiste.grund, mindestens: 3 })) ?? "";
           if (!grund) return;
         }
         erfassen.mutate({ meldungId, betragCent: cent, datum: tag, art, grund });
       }}
     >
       <div className="grid grid-cols-2 gap-2">
-        <Eingabe aria-label="Betrag in Euro" inputMode="decimal" value={betrag} onChange={(e) => setBetrag(e.target.value)} placeholder="Betrag" />
-        <Eingabe aria-label="Datum" type="date" value={tag} onChange={(e) => setTag(e.target.value)} />
+        <Eingabe aria-label={tz.betragEuro} inputMode="decimal" value={betrag} onChange={(e) => setBetrag(e.target.value)} placeholder={t.allgemein.betrag} />
+        <Eingabe aria-label={t.allgemein.datum} type="date" value={tag} onChange={(e) => setTag(e.target.value)} />
       </div>
-      <Auswahl aria-label="Zahlart" value={art} onChange={(e) => setArt(e.target.value as typeof art)}>
-        {istAdmin && <option value="ueberweisung">Überweisung</option>}
-        <option value="bar">bar</option>
-        {istAdmin && <option value="sonstige">sonstige</option>}
+      <Auswahl aria-label={tz.zahlart} value={art} onChange={(e) => setArt(e.target.value as typeof art)}>
+        {istAdmin && <option value="ueberweisung">{t.fach.ZAHLART_LABEL.ueberweisung}</option>}
+        <option value="bar">{t.fach.ZAHLART_LABEL.bar}</option>
+        {istAdmin && <option value="sonstige">{t.fach.ZAHLART_LABEL.sonstige}</option>}
       </Auswahl>
-      <Knopf type="submit" laedt={erfassen.isPending}>Zahlung erfassen</Knopf>
+      <Knopf type="submit" laedt={erfassen.isPending}>{tz.erfassen}</Knopf>
     </form>
   );
 }

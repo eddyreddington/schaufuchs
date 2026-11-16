@@ -1,24 +1,10 @@
+import { serverText } from "@schau/domain";
 import { useEffect, useState } from "react";
 import { datumZeit } from "../lib";
 import { useSchauId } from "../rahmen";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { Hinweis, Knopf, KnopfLink, Laden, Marke, SEITE as SEITENWURZEL, Seitenkopf, Suchfeld, TabellenRahmen } from "../ui";
-
-const TABELLE: Record<string, string> = {
-  schau: "Schau",
-  meldung: "Meldung",
-  zahlung: "Zahlung",
-  katalogeintrag: "Katalog",
-  bewertung: "Bewertung",
-  preisvergabe: "Preis",
-  verkauf: "Verkauf",
-  auszahlung: "Abrechnung",
-  gebuehr: "Gebühren",
-  pr_einteilung: "Einteilung",
-  kassenbewegung: "Kasse",
-  kassenabschluss: "Tagesabschluss",
-  gesundheit: "Gesundheit",
-};
 
 /** Einträge je Seite; die Suche läuft auf dem Server über das ganze Protokoll. */
 const SEITE = 200;
@@ -30,7 +16,10 @@ function kurz(wert: unknown): string {
   return t.length > 140 ? `${t.slice(0, 140)} …` : t;
 }
 
+/** Die Einträge selbst (Aktion, Werte, Grund) bleiben deutsch, nur die Seite drumherum wird übersetzt. */
 export function Protokoll() {
+  const t = useOberflaeche().verein.protokoll;
+  const bereiche: Record<string, string> = t.bereiche;
   const schauId = useSchauId();
   const [q, setQ] = useState("");
   const [suche, setSuche] = useState("");
@@ -48,29 +37,30 @@ export function Protokoll() {
   return (
     <div className={SEITENWURZEL}>
       <Seitenkopf
-        titel="Protokoll"
+        titel={t.titel}
+        // bleibt deutsch: Anker im Handbuch
         hilfe="protokoll-und-prüfliste"
         aktionen={
           <>
-            {!pruefen && <Knopf onClick={() => setPruefen(true)}>Unveränderbarkeit prüfen</Knopf>}
-            <KnopfLink href={`/datei/${schauId}/protokoll.csv`}>Export (CSV)</KnopfLink>
-            <KnopfLink href={`/datei/${schauId}/protokoll.json`} title="Zum Nachrechnen der Hash-Kette">Prüfexport (JSON)</KnopfLink>
+            {!pruefen && <Knopf onClick={() => setPruefen(true)}>{t.pruefen}</Knopf>}
+            <KnopfLink href={`/datei/${schauId}/protokoll.csv`}>{t.exportCsv}</KnopfLink>
+            <KnopfLink href={`/datei/${schauId}/protokoll.json`} title={t.pruefexportTitel}>{t.pruefexport}</KnopfLink>
           </>
         }
       />
       {pruefen && <KettenPruefung schauId={schauId} />}
       <TabellenRahmen
-        kopf={<Suchfeld aria-label="Protokoll durchsuchen" placeholder="Katalognummer, Name …" value={q} onChange={(e) => setQ(e.target.value)} />}
+        kopf={<Suchfeld aria-label={t.durchsuchen} placeholder={t.platzhalter} value={q} onChange={(e) => setQ(e.target.value)} />}
         fuss={
           !daten.isLoading && zeilen.length > 0 ? (
             <>
               <span>
-                {zeilen.length} Einträge{daten.hasNextPage ? ", weitere ältere vorhanden" : ""}
-                {suche ? ` zu „${suche}“` : ""}
+                {t.eintraege(zeilen.length)}{daten.hasNextPage ? t.weitere : ""}
+                {suche ? t.zu(suche) : ""}
               </span>
               {daten.hasNextPage && (
                 <Knopf variante="leise" laedt={daten.isFetchingNextPage} onClick={() => daten.fetchNextPage()}>
-                  Ältere laden
+                  {t.aeltere}
                 </Knopf>
               )}
             </>
@@ -82,16 +72,16 @@ export function Protokoll() {
             <Laden />
           </div>
         ) : zeilen.length === 0 ? (
-          <p className="px-4 py-10 text-center text-grau">Keine Einträge gefunden.</p>
+          <p className="px-4 py-10 text-center text-grau">{t.keine}</p>
         ) : (
           <table className="tabelle text-sm">
             <thead>
               <tr>
-                <th>Zeit</th>
-                <th>Wer</th>
-                <th>Bereich</th>
-                <th>Aktion</th>
-                <th>Details</th>
+                <th>{t.zeit}</th>
+                <th>{t.wer}</th>
+                <th>{t.bereich}</th>
+                <th>{t.aktion}</th>
+                <th>{t.details}</th>
               </tr>
             </thead>
             <tbody>
@@ -100,13 +90,13 @@ export function Protokoll() {
                   <td className="whitespace-nowrap text-grau tabular-nums">{datumZeit(z.zeitpunkt)}</td>
                   <td className="text-tinte">{z.wer}</td>
                   <td>
-                    <Marke>{TABELLE[z.tabelle] ?? z.tabelle}</Marke>
+                    <Marke>{bereiche[z.tabelle] ?? z.tabelle}</Marke>
                   </td>
-                  <td>{z.aktion}</td>
+                  <td>{z.aktion /* bleibt deutsch: Protokolleintrag */}</td>
                   <td className="max-w-[50ch] break-words text-grau">
-                    {z.alt != null && <span>vorher: {kurz(z.alt)} </span>}
-                    {z.neu != null && <span>neu: {kurz(z.neu)}</span>}
-                    {z.grund && <span className="block font-semibold text-tinte">Grund: {z.grund}</span>}
+                    {z.alt != null && <span>{t.vorher} {kurz(z.alt)} </span>}
+                    {z.neu != null && <span>{t.neu} {kurz(z.neu)}</span>}
+                    {z.grund && <span className="block font-semibold text-tinte">{t.grund} {z.grund}</span>}
                   </td>
                 </tr>
               ))}
@@ -120,26 +110,27 @@ export function Protokoll() {
 
 /** Prüft die Hash-Kette (erst nach Knopfdruck eingeblendet) und zeigt das Ergebnis. */
 function KettenPruefung({ schauId }: { schauId: number }) {
+  const t = useOberflaeche().verein.protokoll;
+  const sprache = useSprache();
   const p = trpc.schau.protokollPruefen.useQuery({ schauId });
   if (p.isLoading) return <Laden />;
   if (!p.data) return null;
   const vermerke = [
-    p.data.ohneKette ? `${p.data.ohneKette} vor der Hash-Kette` : "",
-    p.data.anonymisiert ? `${p.data.anonymisiert} anonymisiert (vermerkt)` : "",
-    p.data.vermerkt ? `${p.data.vermerkt} ${p.data.vermerkt === 1 ? "Lücke" : "Lücken"} durch entfernten Demo-/Test-Verein (vermerkt)` : "",
+    p.data.ohneKette ? t.ohneKette(p.data.ohneKette) : "",
+    p.data.anonymisiert ? t.anonymisiert(p.data.anonymisiert) : "",
+    p.data.vermerkt ? t.luecken(p.data.vermerkt) : "",
   ].filter(Boolean);
   return p.data.fehler.length ? (
     <Hinweis ton="fehler">
-      {p.data.fehler.length} Eintrag/Einträge stimmen nicht mit der Hash-Kette überein:{" "}
-      {p.data.fehler.slice(0, 10).map((f) => `Nr. ${f.id} (${f.grund})`).join(", ")}. Bitte den Administrator informieren.
+      {t.fehler(p.data.fehler.length, p.data.fehler.slice(0, 10).map((f) => t.fehlerNr(f.id, serverText(f.grund, sprache))).join(", "))}
     </Hinweis>
   ) : (
     <Hinweis ton="ok" className="flex flex-col gap-1">
-      <span className="font-semibold">{p.data.geprueft} Einträge geprüft – unverändert.</span>
+      <span className="font-semibold">{t.geprueft(p.data.geprueft)}</span>
       {vermerke.length > 0 && <span className="text-sm">{vermerke.join(" · ")}</span>}
       {p.data.kopf.id != null && (
         <span className="text-sm">
-          Stand der Kette: Nr. {p.data.kopf.id}, Prüfwert <span className="nummer break-all">{p.data.kopf.pruefwert}</span>
+          {t.kette(p.data.kopf.id)} <span className="nummer break-all">{p.data.kopf.pruefwert}</span>
         </span>
       )}
     </Hinweis>

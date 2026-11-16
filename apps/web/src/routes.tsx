@@ -41,7 +41,7 @@ import { UngespeichertWaechter } from "./ui";
 function Wurzel() {
   return (
     <>
-      {/* Sprache nur unter /s/… (Seiten für Aussteller, Entscheidung 020), sonst deutsch. */}
+      {/* Sprache: Seiten für Aussteller nach Link und Browser (020), sonst die des Benutzers (022). */}
       <SpracheRahmen>
         <UngespeichertWaechter />
         <Outlet />

@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { KATALOG_GLIEDERUNG, type KatalogGliederungsTeil, type KatalogSeitenbereich, type KatalogTeil } from "@schau/domain";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Auswahl, Dialog, Eingabe, Feld, Haken, Hinweis, Knopf, Marke, Textfeld, useAenderungenWarnen, useFrage, useMeldung } from "../ui";
 import { Schalter } from "./katalog-gestalten-bausteine";
@@ -9,29 +10,6 @@ import type { Art, Beitrag, Form } from "./katalog-gestalten-form";
 
 /* Katalog gestalten, Reiter „Teile und Reihenfolge“: Gliederung mit Seitenzahlen, Beiträge (Grußworte, Seiten, Anzeigen). */
 
-const ARTEN: Record<Art, { titel: string; neu: string }> = {
-  grusswort: { titel: "Grußworte", neu: "Grußwort hinzufügen" },
-  seite: { titel: "Freie Seiten", neu: "Seite hinzufügen" },
-  anzeige: { titel: "Anzeigen und Förderer", neu: "Anzeige hinzufügen" },
-};
-
-/** Warum ein Teil im Katalog fehlt, obwohl er nicht abgewählt ist. */
-const ENTFAELLT: Partial<Record<KatalogGliederungsTeil, string>> = {
-  grussworte: "noch keine",
-  seiten: "noch keine",
-  anzeigen: "noch keine",
-  preisrichter: "noch keine Preisrichter",
-  preise: "noch keine Preise",
-  bestimmungen: "kein Text unter „Einstellungen“",
-  ehrentafel: "erst mit Ergebnissen",
-  tierteil: "noch keine Katalognummern",
-  rassenverzeichnis: "noch keine Katalognummern",
-  ausstellerverzeichnis: "noch keine Aussteller mit Namen",
-  bildnachweis: "keine Bilder mit Nachweis",
-  kommendeSchauen: "keine Termine nach dieser Schau",
-  notizen: "Seitenzahl geht schon auf",
-};
-const seitenText = (b: KatalogSeitenbereich) => (b.von === b.bis ? `S. ${b.von}` : `S. ${b.von}–${b.bis}`);
 
 export function Gliederung({
   schauId,
@@ -56,6 +34,11 @@ export function Gliederung({
   waehle: (s: KatalogGliederungsTeil, von: number | null) => void;
   zeigeTeil: (s: KatalogGliederungsTeil) => void;
 }) {
+  const t = useOberflaeche();
+  const tt = t.katalog.teile;
+  /** Warum ein Teil im Katalog fehlt, obwohl er nicht abgewählt ist. */
+  const entfaellt: Partial<Record<KatalogGliederungsTeil, string>> = tt.entfaellt;
+  const seitenText = (b: KatalogSeitenbereich) => (b.von === b.bis ? tt.seite(b.von) : tt.seiten(b.von, b.bis));
   const [bearbeiten, setBearbeiten] = useState<Partial<Beitrag> | null>(null);
   const art = bearbeiten?.art ?? "grusswort";
   return (
@@ -72,25 +55,25 @@ export function Gliederung({
               <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md px-2 py-1.5 transition-colors ${markiert === g.schluessel ? "bg-band-hell" : "hover:bg-papier"}`}>
                 <span className="w-16 shrink-0 text-right text-sm text-grau tabular-nums">{bereich ? seitenText(bereich) : "–"}</span>
                 <button type="button" className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 py-1 text-left" onClick={() => waehle(g.schluessel, bereich?.von ?? null)}>
-                  <span className={abgewaehlt ? "text-grau line-through" : "font-semibold text-tinte"}>{g.name}</span>
-                  {fehlt && ENTFAELLT[g.schluessel] && <span className="text-sm text-grau">entfällt: {g.schluessel === "ehrentafel" && mitErgebnis ? "keine Preisträger" : ENTFAELLT[g.schluessel]}</span>}
-                  {(g.schluessel === "preisrichter" || g.schluessel === "bestimmungen") && abgewaehlt && <Marke ton="warnung">gehört in den Katalog</Marke>}
-                  {g.schluessel === "notizen" && abgewaehlt && <span className="text-sm text-grau">Füllseiten bleiben leer</span>}
+                  <span className={abgewaehlt ? "text-grau line-through" : "font-semibold text-tinte"}>{t.katalog.gliederung[g.schluessel]}</span>
+                  {fehlt && entfaellt[g.schluessel] && <span className="text-sm text-grau">{tt.entfaelltText(g.schluessel === "ehrentafel" && mitErgebnis ? tt.keinePreistraeger : entfaellt[g.schluessel]!)}</span>}
+                  {(g.schluessel === "preisrichter" || g.schluessel === "bestimmungen") && abgewaehlt && <Marke ton="warnung">{tt.gehoertInKatalog}</Marke>}
+                  {g.schluessel === "notizen" && abgewaehlt && <span className="text-sm text-grau">{tt.fuellseitenLeer}</span>}
                 </button>
                 {"teil" in g ? (
-                  <Schalter label={`${g.name} im Katalog`} an={!abgewaehlt} onChange={(v) => teilAn(g.teil, v)} />
+                  <Schalter label={t.katalog.gestalten.imKatalogLabel(t.katalog.gliederung[g.schluessel])} an={!abgewaehlt} onChange={(v) => teilAn(g.teil, v)} />
                 ) : "beitraege" in g ? (
-                  <Knopf variante="leise" onClick={() => setBearbeiten({ art: g.beitraege })}>+ {ARTEN[g.beitraege].neu.replace(" hinzufügen", "")}</Knopf>
+                  <Knopf variante="leise" onClick={() => setBearbeiten({ art: g.beitraege })}>+ {tt.arten[g.beitraege].kurz}</Knopf>
                 ) : g.schluessel === "titel" || g.schluessel === "leitung" ? (
-                  <Knopf variante="leise" onClick={() => zeigeTeil(g.schluessel)}>Bearbeiten</Knopf>
+                  <Knopf variante="leise" onClick={() => zeigeTeil(g.schluessel)}>{t.allgemein.bearbeiten}</Knopf>
                 ) : (
-                  <span className="text-sm text-grau">immer</span>
+                  <span className="text-sm text-grau">{tt.immer}</span>
                 )}
               </div>
               {g.schluessel === "tierteil" && (
                 <div className="flex flex-wrap gap-x-6 gap-y-2 px-2 pt-1 sm:pl-[5.25rem]">
-                  <Haken label="Rassebilder drucken" checked={d.rassebilder} onChange={(v) => set("rassebilder", v)} />
-                  <Haken label="Jede Sparte auf neuer Seite" checked={d.sparteNeueSeite} onChange={(v) => set("sparteNeueSeite", v)} />
+                  <Haken label={tt.rassebilder} checked={d.rassebilder} onChange={(v) => set("rassebilder", v)} />
+                  <Haken label={tt.sparteNeueSeite} checked={d.sparteNeueSeite} onChange={(v) => set("sparteNeueSeite", v)} />
                 </div>
               )}
               {"beitraege" in g && liste.length > 0 && <BeitragListe schauId={schauId} art={g.beitraege} beitraege={liste} bearbeiten={setBearbeiten} />}
@@ -98,7 +81,7 @@ export function Gliederung({
           );
         })}
       </ol>
-      <Dialog offen={bearbeiten != null} onSchliessen={() => setBearbeiten(null)} titel={bearbeiten?.id ? `${ARTEN[art].titel}: bearbeiten` : ARTEN[art].neu} breit>
+      <Dialog offen={bearbeiten != null} onSchliessen={() => setBearbeiten(null)} titel={bearbeiten?.id ? tt.bearbeitenTitel(tt.arten[art].titel) : tt.arten[art].neu} breit>
         {bearbeiten && <BeitragForm schauId={schauId} art={art} start={bearbeiten} fertig={() => setBearbeiten(null)} />}
       </Dialog>
     </div>
@@ -107,6 +90,8 @@ export function Gliederung({
 
 /** Beiträge einer Art: Reihenfolge per Ziehen (Griff) oder ↑ ↓, speichert sofort. */
 function BeitragListe({ schauId, art, beitraege, bearbeiten }: { schauId: number; art: Art; beitraege: Beitrag[]; bearbeiten: (b: Beitrag) => void }) {
+  const t = useOberflaeche();
+  const tt = t.katalog.teile;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
@@ -161,7 +146,7 @@ function BeitragListe({ schauId, art, beitraege, bearbeiten }: { schauId: number
           <span
             className="cursor-grab touch-none select-none px-1 text-lg text-grau active:cursor-grabbing"
             aria-hidden
-            title="Zum Verschieben ziehen"
+            title={tt.ziehen}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
               setGezogen(b.id);
@@ -174,14 +159,14 @@ function BeitragListe({ schauId, art, beitraege, bearbeiten }: { schauId: number
           </span>
           {b.bildId ? <Vorschau schauId={schauId} bildId={b.bildId} alt="" klein /> : null}
           <span className="min-w-[10rem] flex-1">
-            <span className="font-semibold text-tinte">{b.titel || "(ohne Titel)"}</span>
-            {art === "anzeige" && <span className="text-sm text-grau"> · {GROESSE[b.groesse]}</span>}
+            <span className="font-semibold text-tinte">{b.titel || tt.ohneTitel}</span>
+            {art === "anzeige" && <span className="text-sm text-grau"> · {tt.groesse[b.groesse]}</span>}
           </span>
           <span className="flex flex-wrap gap-0.5">
-            <Knopf variante="leise" aria-label={`${b.titel || "Beitrag"} nach oben`} disabled={i === 0 || ordnen.isPending} onClick={() => schiebe(i, -1)}>↑</Knopf>
-            <Knopf variante="leise" aria-label={`${b.titel || "Beitrag"} nach unten`} disabled={i === liste.length - 1 || ordnen.isPending} onClick={() => schiebe(i, 1)}>↓</Knopf>
-            <Knopf variante="leise" onClick={() => bearbeiten(b)}>Bearbeiten</Knopf>
-            <Knopf variante="leise" onClick={async () => (await bestaetige({ titel: `„${b.titel || "Beitrag"}“ löschen?`, knopf: "Löschen", gefahr: true })) && loeschen.mutate({ schauId, id: b.id })}>Löschen</Knopf>
+            <Knopf variante="leise" aria-label={tt.nachOben(b.titel || tt.beitrag)} disabled={i === 0 || ordnen.isPending} onClick={() => schiebe(i, -1)}>↑</Knopf>
+            <Knopf variante="leise" aria-label={tt.nachUnten(b.titel || tt.beitrag)} disabled={i === liste.length - 1 || ordnen.isPending} onClick={() => schiebe(i, 1)}>↓</Knopf>
+            <Knopf variante="leise" onClick={() => bearbeiten(b)}>{t.allgemein.bearbeiten}</Knopf>
+            <Knopf variante="leise" onClick={async () => (await bestaetige({ titel: tt.loeschenFrage(b.titel || tt.beitrag), knopf: t.allgemein.loeschen, gefahr: true })) && loeschen.mutate({ schauId, id: b.id })}>{t.allgemein.loeschen}</Knopf>
           </span>
         </li>
       ))}
@@ -189,25 +174,12 @@ function BeitragListe({ schauId, art, beitraege, bearbeiten }: { schauId: number
   );
 }
 
-const GROESSE: Record<Beitrag["groesse"], string> = { ganz: "ganze Seite", halb: "halbe Seite", viertel: "Viertelseite" };
-
-const FELDER: Record<Art, { titel: string; titelHinweis: string; unterzeile: string; unterHinweis: string; text: string; bild: string }> = {
-  grusswort: {
-    titel: "Überschrift",
-    titelHinweis: "z. B. „Grußwort des Bürgermeisters“",
-    unterzeile: "Name und Funktion (Unterschrift)",
-    unterHinweis: "z. B. „Hans Beispiel, Bürgermeister der Stadt Musterstadt“",
-    text: "Text",
-    bild: "Porträtfoto",
-  },
-  seite: { titel: "Überschrift", titelHinweis: "z. B. „Hallenplan“", unterzeile: "Unterzeile", unterHinweis: "optional", text: "Text", bild: "Bild (z. B. Hallenplan)" },
-  anzeige: { titel: "Firma / Förderer", titelHinweis: "z. B. „Futtermittel Müller GmbH“", unterzeile: "Ort / Kontakt", unterHinweis: "optional, bei Anzeigen ohne Bild", text: "Anzeigentext", bild: "Fertige Anzeige als Bild" },
-};
-
 function BeitragForm({ schauId, art, start, fertig }: { schauId: number; art: Art; start: Partial<Beitrag>; fertig: () => void }) {
   const [b, setB] = useState({ titel: start.titel ?? "", unterzeile: start.unterzeile ?? "", text: start.text ?? "", bildId: start.bildId ?? null, groesse: start.groesse ?? ("ganz" as const) });
   const gespeichert = useAenderungenWarnen(b);
-  const f = FELDER[art];
+  const t = useOberflaeche();
+  const tt = t.katalog.teile;
+  const f = tt.felder[art];
   const utils = trpc.useUtils();
   const speichern = trpc.katalogGestaltung.beitragSpeichern.useMutation({
     onSuccess: () => {
@@ -230,32 +202,32 @@ function BeitragForm({ schauId, art, start, fertig }: { schauId: number; art: Ar
         {(fid) => <Eingabe id={fid} value={b.unterzeile} onChange={(e) => set("unterzeile", e.target.value)} />}
       </Feld>
       {art === "anzeige" && (
-        <Feld label="Größe">
+        <Feld label={tt.groesseLabel}>
           {(fid) => (
             <Auswahl id={fid} value={b.groesse} onChange={(e) => set("groesse", e.target.value as typeof b.groesse)}>
-              {Object.entries(GROESSE).map(([k, v]) => (
+              {Object.entries(tt.groesse).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
               ))}
             </Auswahl>
           )}
         </Feld>
       )}
-      <Feld label={f.text} hinweis="Leerzeile = neuer Absatz.">
+      <Feld label={f.text} hinweis={tt.absatzHinweis}>
         {(fid) => <Textfeld id={fid} rows={art === "grusswort" ? 12 : 6} value={b.text} onChange={(e) => set("text", e.target.value)} />}
       </Feld>
       <div className="flex flex-col gap-2">
         <span className="text-sm font-semibold">{f.bild}</span>
         <div className="flex flex-wrap items-center gap-3">
           {b.bildId && <Vorschau schauId={schauId} bildId={b.bildId} alt={f.bild} klein />}
-          <BildHochladen schauId={schauId} rolle="beitrag" beschriftung={b.bildId ? "Anderes Bild" : "Bild wählen"} fertig={(id) => set("bildId", id)} />
-          {b.bildId && <Knopf type="button" variante="leise" onClick={() => set("bildId", null)}>Ohne Bild</Knopf>}
+          <BildHochladen schauId={schauId} rolle="beitrag" beschriftung={b.bildId ? tt.anderesBild : tt.bildWaehlen} fertig={(id) => set("bildId", id)} />
+          {b.bildId && <Knopf type="button" variante="leise" onClick={() => set("bildId", null)}>{tt.ohneBild}</Knopf>}
         </div>
         {b.bildId && art !== "anzeige" && <BildNachweis schauId={schauId} bildId={b.bildId} />}
       </div>
       {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
       <div className="flex flex-wrap justify-end gap-2">
-        <Knopf type="button" onClick={fertig}>Abbrechen</Knopf>
-        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>Speichern</Knopf>
+        <Knopf type="button" onClick={fertig}>{t.allgemein.abbrechen}</Knopf>
+        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>{t.allgemein.speichern}</Knopf>
       </div>
     </form>
   );

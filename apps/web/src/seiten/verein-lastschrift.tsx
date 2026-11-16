@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, HilfeLink, Laden, Speicherleiste, useAenderungenWarnen, useMeldung } from "../ui";
 
@@ -13,6 +14,7 @@ export function GlaeubigerId() {
 
 function Bearbeiten({ start }: { start: string }) {
   const [id, setId] = useState(start);
+  const tg = useOberflaeche().kasse.glaeubigerId;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const gespeichert = useAenderungenWarnen(id);
@@ -20,7 +22,7 @@ function Bearbeiten({ start }: { start: string }) {
     onSuccess: async () => {
       gespeichert();
       await utils.lastschrift.einstellungen.invalidate();
-      meldung("Gläubiger-ID gespeichert.");
+      meldung(tg.gespeichert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -31,13 +33,13 @@ function Bearbeiten({ start }: { start: string }) {
   return (
     <form onSubmit={senden}>
       <Formular>
-        <FormAbschnitt id="lastschrift" titel="SEPA-Lastschrift" unter="Gläubiger-ID für den Einzug des Meldegelds" aktionen={<HilfeLink abschnitt="sepa-lastschrift">Hilfe zur Lastschrift</HilfeLink>}>
-          <Feld label="Gläubiger-Identifikationsnummer" hinweis="Bei der Deutschen Bundesbank beantragt, z. B. DE98ZZZ09999999999; leer = keine Lastschrift">
+        <FormAbschnitt id="lastschrift" titel={tg.titel} unter={tg.unter} aktionen={<HilfeLink abschnitt="sepa-lastschrift">{tg.hilfe}</HilfeLink>}>
+          <Feld label={tg.feld} hinweis={tg.hinweis}>
             {(fid) => <Eingabe id={fid} value={id} maxLength={40} onChange={(e) => setId(e.target.value)} autoComplete="off" />}
           </Feld>
         </FormAbschnitt>
       </Formular>
-      <Speicherleiste sichtbar={id !== start} onVerwerfen={() => setId(start)} onSpeichern={senden} laedt={speichern.isPending} knopf="Gläubiger-ID speichern" />
+      <Speicherleiste sichtbar={id !== start} onVerwerfen={() => setId(start)} onSpeichern={senden} laedt={speichern.isPending} knopf={tg.speichern} />
     </form>
   );
 }

@@ -1,7 +1,8 @@
-import { bewertungsText, passtZuPreisart } from "@schau/domain";
+import { bewertungsText, passtZuPreisart, serverText } from "@schau/domain";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { centZuText, datum, fehlerText, formatEuro, formatKatalognummer, parseEuro } from "../lib";
 import { useSchauId } from "../rahmen";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, Laden, Marke, SEITE, Seitenkopf, TabellenRahmen, useFrage, useMeldung } from "../ui";
 
@@ -34,7 +35,11 @@ export function Preise() {
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { eingabe, bestaetige } = useFrage();
-  const reklamationsGrund = (text: string) => eingabe({ titel: "Reklamation", text, feld: "Grund der Reklamation (bitte ohne Personennamen)", mindestens: 3 });
+  const t = useOberflaeche();
+  const tp = t.schautage.preise;
+  const g = t.schautage.gemeinsam;
+  const sprache = useSprache();
+  const reklamationsGrund = (text: string) => eingabe({ titel: tp.reklamation, text: serverText(text, sprache), feld: tp.reklamationFeld, mindestens: 3 });
   const [pr, setPr] = useState<number | "">("");
   const [stiftung, setStiftung] = useState<Partial<Daten["stiftungen"][number]> | null>(null);
   // Gestifteter Preis: erst die Stiftung wählen (Betrag und Vorgabe des Stifters).
@@ -44,8 +49,8 @@ export function Preise() {
     onSuccess: neu,
     onError: (e, v) => {
       // Aussteller schon abgerechnet: nur als Reklamation der AL mit Grund (z. B. versehentlich entzogener Preis).
-      if (e.data?.code === "CONFLICT" && e.message.includes("Reklamation") && !v.grund) {
-        void reklamationsGrund(e.message).then((g) => g != null && vergeben.mutate({ ...v, grund: g }));
+      if (e.data?.code === "CONFLICT" && e.message.includes("Reklamation") && !v.grund) { // bleibt deutsch (Vergleich mit der Meldung des Servers)
+        void reklamationsGrund(e.message).then((grund) => grund != null && vergeben.mutate({ ...v, grund }));
         return;
       }
       meldung(fehlerText(e), "fehler");
@@ -55,8 +60,8 @@ export function Preise() {
     onSuccess: neu,
     onError: (e, v) => {
       // Aussteller schon abgerechnet: Preisentzug nur als Reklamation mit Grund (die Differenz erscheint in der Abrechnung).
-      if (e.data?.code === "CONFLICT" && e.message.includes("Reklamation") && !v.grund) {
-        void reklamationsGrund(e.message).then((g) => g != null && entfernen.mutate({ ...v, grund: g }));
+      if (e.data?.code === "CONFLICT" && e.message.includes("Reklamation") && !v.grund) { // bleibt deutsch (Vergleich mit der Meldung des Servers)
+        void reklamationsGrund(e.message).then((grund) => grund != null && entfernen.mutate({ ...v, grund }));
         return;
       }
       meldung(fehlerText(e), "fehler");
@@ -65,15 +70,15 @@ export function Preise() {
   const freigeben = trpc.preise.freigeben.useMutation({
     onSuccess: (_r, v) => {
       utils.invalidate();
-      meldung(v.freigegeben ? "Ergebnisse freigegeben." : "Freigabe zurückgenommen.");
+      meldung(v.freigegeben ? tp.freigegebenMeldung : tp.zurueckgenommenMeldung);
     },
     onError: (e, v) => {
       // Hinweise (frühe Phase, freie Preise aus dem Kontingent): bewusst bestätigen, dann freigeben.
       if (e.data?.code === "PRECONDITION_FAILED" && !v.trotzdem) {
         void bestaetige(
           v.freigegeben
-            ? { titel: "Trotzdem freigeben?", text: e.message, knopf: "Freigeben" }
-            : { titel: "Trotzdem zurücknehmen?", text: e.message, knopf: "Zurücknehmen", gefahr: true },
+            ? { titel: tp.trotzdemFreigeben, text: serverText(e.message, sprache), knopf: tp.freigeben }
+            : { titel: tp.trotzdemZuruecknehmen, text: serverText(e.message, sprache), knopf: tp.zuruecknehmen, gefahr: true },
         ).then((ja) => ja && freigeben.mutate({ ...v, trotzdem: true }));
         return;
       }
@@ -83,14 +88,14 @@ export function Preise() {
   const barErhalten = trpc.preise.stiftungBarErhalten.useMutation({
     onSuccess: () => {
       neu();
-      meldung("Stiftung als Einlage im Kassenbuch gebucht (mit Eigenbeleg).");
+      meldung(tp.stiftungGebucht);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const loeschen = trpc.preise.stiftungLoeschen.useMutation({
     onSuccess: () => {
       neu();
-      meldung("Stiftung gelöscht.");
+      meldung(tp.stiftungGeloescht);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -110,12 +115,12 @@ export function Preise() {
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Preise und Freigabe"
-        unter={`${d.eintraege.length} Tiere mit Punkten, ${preiseVergeben} Preise vergeben`}
+        titel={tp.titel}
+        unter={tp.unter(d.eintraege.length, preiseVergeben)}
         marke={
           <>
-            {d.freigegeben && <Marke ton="ok">freigegeben</Marke>}
-            {!istAdmin && <Marke>nur lesen</Marke>}
+            {d.freigegeben && <Marke ton="ok">{g.freigegeben}</Marke>}
+            {!istAdmin && <Marke>{g.nurLesen}</Marke>}
           </>
         }
         hilfe="phase-preise-freigabe-preise-vergeben"
@@ -125,33 +130,33 @@ export function Preise() {
             <Knopf
               onClick={async () => {
                 const grund = await eingabe({
-                  titel: "Freigabe zurücknehmen?",
-                  text: "Die Bewertung öffnet sich wieder; ein gedruckter oder veröffentlichter Katalog kann dann abweichen.",
-                  feld: "Grund",
+                  titel: tp.freigabeZuruecknehmenFrage,
+                  text: tp.freigabeZuruecknehmenText,
+                  feld: tp.grund,
                   mindestens: 3,
-                  knopf: "Zurücknehmen",
+                  knopf: tp.zuruecknehmen,
                   gefahr: true,
                 });
                 if (grund != null) freigeben.mutate({ schauId, freigegeben: false, grund });
               }}
             >
-              Freigabe zurücknehmen
+              {tp.freigabeZuruecknehmen}
             </Knopf>
           ) : (
             <Knopf variante="primaer" laedt={freigeben.isPending} onClick={() => freigeben.mutate({ schauId, freigegeben: true })}>
-              Ergebnisse freigeben
+              {tp.ergebnisseFreigeben}
             </Knopf>
           ))
         }
       />
 
-      <Teil titel={d.kontingentJe === "schau" ? "Kontingent (gemeinsam für die Schau)" : "Kontingente je Preisrichter"}>
+      <Teil titel={d.kontingentJe === "schau" ? tp.kontingentSchau : tp.kontingentRichter}>
         <table className="tabelle">
           <thead>
             <tr>
-              <th>{d.kontingentJe === "schau" ? "Bereich" : "Preisrichter"}</th>
-              <th className="text-right">Tiere</th>
-              <th className="text-right">bewertet</th>
+              <th>{d.kontingentJe === "schau" ? tp.bereich : t.allgemein.preisrichter}</th>
+              <th className="text-right">{t.allgemein.tiere}</th>
+              <th className="text-right">{tp.bewertet}</th>
               {d.preisarten.filter((p) => p.quelle === "standgeld").map((p) => <th key={p.id} className="text-right">{p.kuerzel}</th>)}
             </tr>
           </thead>
@@ -173,34 +178,34 @@ export function Preise() {
       </Teil>
 
       <Teil
-        titel="Tiere mit Punkten"
+        titel={tp.tiereMitPunkten}
         kopf={
-          <Auswahl aria-label="Preisrichter" value={pr} onChange={(e) => setPr(e.target.value ? Number(e.target.value) : "")} className="max-w-64">
-            <option value="">Alle Preisrichter</option>
+          <Auswahl aria-label={t.allgemein.preisrichter} value={pr} onChange={(e) => setPr(e.target.value ? Number(e.target.value) : "")} className="max-w-64">
+            <option value="">{g.allePreisrichter}</option>
             {d.kontingente.map((k) => <option key={k.preisrichterId} value={k.preisrichterId}>{k.name}</option>)}
           </Auswahl>
         }
         fuss={
           liste.length > 0 ? (
             <>
-              <span>{liste.length} {liste.length === 1 ? "Tier" : "Tiere"}</span>
-              <span>{liste.reduce((n, e) => n + e.preise.length, 0)} Preise</span>
+              <span>{g.tiere(liste.length)}</span>
+              <span>{tp.preiseAnzahl(liste.reduce((n, e) => n + e.preise.length, 0))}</span>
             </>
           ) : undefined
         }
       >
         {liste.length === 0 ? (
-          <p className="px-4 py-10 text-center text-grau">Noch keine Tiere mit Punkten.</p>
+          <p className="px-4 py-10 text-center text-grau">{tp.keineTiere}</p>
         ) : (
           <div className="max-h-[70vh] overflow-auto">
             <table className="tabelle">
               <thead className="sticky top-0 z-10 bg-weiss">
                 <tr>
-                  <th className="text-right">Nr.</th>
-                  <th>Tier</th>
-                  <th>Note</th>
-                  <th>Preise</th>
-                  <th>vergeben</th>
+                  <th className="text-right">{g.nr}</th>
+                  <th>{t.allgemein.tier}</th>
+                  <th>{tp.note}</th>
+                  <th>{tp.preise}</th>
+                  <th>{tp.vergeben}</th>
                 </tr>
               </thead>
               <tbody>
@@ -218,11 +223,11 @@ export function Preise() {
                           <button
                             key={p.preisartId}
                             type="button"
-                            title={p.stiftungId ? `Gestiftet von ${d.stiftungen.find((st) => st.id === p.stiftungId)?.stifter ?? "?"} – Preis entfernen` : "Preis entfernen"}
+                            title={p.stiftungId ? tp.gestiftetVon(d.stiftungen.find((st) => st.id === p.stiftungId)?.stifter ?? "?") : tp.preisEntfernen}
                             disabled={!istAdmin}
                             className="inline-flex items-center gap-1 whitespace-nowrap rounded-[5px] border border-band/30 bg-band-hell px-1.5 py-px text-sm font-semibold text-band-dunkel enabled:hover:border-kamm/40 enabled:hover:bg-kamm-hell enabled:hover:text-kamm"
                             onClick={async () =>
-                              (await bestaetige({ titel: `${p.name} bei ${formatKatalognummer(e)} entfernen?`, knopf: "Entfernen", gefahr: true })) &&
+                              (await bestaetige({ titel: tp.entfernenFrage(p.name, formatKatalognummer(e)), knopf: t.allgemein.entfernen, gefahr: true })) &&
                               entfernen.mutate({ schauId, preisvergabeId: p.vergabeId })
                             }
                           >
@@ -270,36 +275,37 @@ export function Preise() {
       </Teil>
 
       <Teil
-        titel="Stiftungen"
-        aktionen={istAdmin && <Knopf onClick={() => setStiftung({})}>Stiftung eintragen</Knopf>}
+        titel={tp.stiftungen}
+        aktionen={istAdmin && <Knopf onClick={() => setStiftung({})}>{tp.stiftungEintragen}</Knopf>}
         fuss={
           d.stiftungen.some((s) => s.betragCent > 0) ? (
             // Abstimmung: was an Geldstiftungen eingegangen ist und was davon als Preisgeld vergeben wurde.
             <>
               <span>
-                Eingegangen {formatEuro(geldOhneMeldung.filter((s) => s.eingegangenAm).reduce((n, s) => n + s.betragCent, 0))} von {formatEuro(geldOhneMeldung.reduce((n, s) => n + s.betragCent, 0))}
-                {" · "}mit Meldegeld zugesagt {formatEuro(d.stiftungen.filter((s) => s.meldungId != null).reduce((n, s) => n + s.betragCent, 0))}
+                {tp.eingegangen(formatEuro(geldOhneMeldung.filter((s) => s.eingegangenAm).reduce((n, s) => n + s.betragCent, 0)), formatEuro(geldOhneMeldung.reduce((n, s) => n + s.betragCent, 0)))}
+                {" · "}
+                {tp.mitMeldegeldZugesagt(formatEuro(d.stiftungen.filter((s) => s.meldungId != null).reduce((n, s) => n + s.betragCent, 0)))}
               </span>
               <span>
-                als Preisgeld vergeben {formatEuro(d.eintraege.reduce((n, e) => n + e.preise.filter((p) => p.stiftungId != null).reduce((m, p) => m + p.betragCent, 0), 0))}
+                {tp.alsPreisgeld(formatEuro(d.eintraege.reduce((n, e) => n + e.preise.filter((p) => p.stiftungId != null).reduce((m, p) => m + p.betragCent, 0), 0)))}
               </span>
             </>
           ) : undefined
         }
       >
         {d.stiftungen.length === 0 ? (
-          <p className="px-4 py-10 text-center text-grau">Noch keine Stiftungen.</p>
+          <p className="px-4 py-10 text-center text-grau">{tp.keineStiftungen}</p>
         ) : (
           <table className="tabelle">
             <thead>
               <tr>
-                <th>Stifter</th>
-                <th>Preisart</th>
-                <th className="text-right">Anzahl</th>
-                <th className="text-right">vergeben</th>
-                <th className="text-right">Betrag</th>
-                <th>Vorgabe</th>
-                <th>Eingang</th>
+                <th>{tp.stifter}</th>
+                <th>{tp.preisart}</th>
+                <th className="text-right">{tp.anzahl}</th>
+                <th className="text-right">{tp.vergeben}</th>
+                <th className="text-right">{t.allgemein.betrag}</th>
+                <th>{tp.vorgabe}</th>
+                <th>{tp.eingang}</th>
                 <th />
               </tr>
             </thead>
@@ -317,33 +323,33 @@ export function Preise() {
                   </td>
                   <td>{d.preisarten.find((p) => p.id === s.preisartId)?.name ?? "–"}</td>
                   <td className="text-right tabular-nums">{s.anzahl}</td>
-                  <td className="text-right tabular-nums">{s.preisartId == null ? <Marke ton="warnung">keine Preisart</Marke> : benutzt(s.id)}</td>
+                  <td className="text-right tabular-nums">{s.preisartId == null ? <Marke ton="warnung">{tp.keinePreisart}</Marke> : benutzt(s.id)}</td>
                   <td className="whitespace-nowrap text-right tabular-nums">{formatEuro(s.betragCent)}</td>
                   <td className="text-sm">{s.vorgabe}</td>
                   <td className="whitespace-nowrap">{datum(s.eingegangenAm)}</td>
                   <td>
                     <div className="flex flex-wrap items-center justify-end gap-0.5">
-                      {s.kassenbewegungId != null && <Marke ton="ok">in der Kasse</Marke>}
+                      {s.kassenbewegungId != null && <Marke ton="ok">{tp.inDerKasse}</Marke>}
                       {istAdmin && s.meldungId == null && s.kassenbewegungId == null && !s.eingegangenAm && s.betragCent > 0 && (
                         <Knopf
                           variante="leise"
                           className={ZEILE}
                           laedt={barErhalten.isPending}
                           onClick={async () =>
-                            (await bestaetige({ titel: `${formatEuro(s.betragCent)} von ${s.stifter} bar erhalten?`, text: "Wird als Einlage ins Kassenbuch gebucht (mit Eigenbeleg).", knopf: "Bar erhalten" })) &&
+                            (await bestaetige({ titel: tp.barErhaltenFrage(formatEuro(s.betragCent), s.stifter), text: tp.barErhaltenText, knopf: tp.barErhalten })) &&
                             barErhalten.mutate({ schauId, id: s.id })
                           }
                         >
-                          Bar erhalten
+                          {tp.barErhalten}
                         </Knopf>
                       )}
-                      {istAdmin && <Knopf variante="leise" className={ZEILE} onClick={() => setStiftung(s)}>Bearbeiten</Knopf>}
+                      {istAdmin && <Knopf variante="leise" className={ZEILE} onClick={() => setStiftung(s)}>{t.allgemein.bearbeiten}</Knopf>}
                       {istAdmin && (
                         <Knopf
                           variante="leise"
                           className={`${ZEILE} text-grau hover:bg-kamm-hell hover:text-kamm`}
-                          aria-label="Stiftung löschen"
-                          onClick={async () => (await bestaetige({ titel: "Stiftung löschen?", knopf: "Löschen", gefahr: true })) && loeschen.mutate({ schauId, id: s.id })}
+                          aria-label={tp.stiftungLoeschen}
+                          onClick={async () => (await bestaetige({ titel: tp.stiftungLoeschenFrage, knopf: t.allgemein.loeschen, gefahr: true })) && loeschen.mutate({ schauId, id: s.id })}
                         >
                           ✕
                         </Knopf>
@@ -357,10 +363,10 @@ export function Preise() {
         )}
       </Teil>
 
-      <Dialog offen={stiftungWahl != null} onSchliessen={() => setStiftungWahl(null)} titel={`Gestifteter Preis für Nr. ${stiftungWahl?.nr ?? ""}`}>
+      <Dialog offen={stiftungWahl != null} onSchliessen={() => setStiftungWahl(null)} titel={tp.gestifteterPreis(stiftungWahl?.nr ?? "")}>
         {stiftungWahl && (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-grau">Stiftung wählen, Vorgabe prüfen.</p>
+            <p className="text-sm text-grau">{tp.stiftungWaehlen}</p>
             {d.stiftungen
               .filter((st) => st.preisartId === stiftungWahl.preisartId)
               .map((st) => {
@@ -376,8 +382,9 @@ export function Preise() {
                       setStiftungWahl(null);
                     }}
                   >
-                    <span className="font-semibold">{st.stifter}</span> · {frei} von {st.anzahl} frei{st.betragCent ? ` · ${formatEuro(Math.floor(st.betragCent / st.anzahl))} je Preis` : ""}
-                    {st.vorgabe && <span className="block text-sm text-grau">Vorgabe: {st.vorgabe}</span>}
+                    <span className="font-semibold">{st.stifter}</span> · {tp.frei(frei, st.anzahl)}
+                    {st.betragCent ? ` · ${tp.jePreis(formatEuro(Math.floor(st.betragCent / st.anzahl)))}` : ""}
+                    {st.vorgabe && <span className="block text-sm text-grau">{tp.vorgabeZeile(st.vorgabe)}</span>}
                   </button>
                 );
               })}
@@ -389,14 +396,14 @@ export function Preise() {
                   setStiftungWahl(null);
                 }}
               >
-                Ohne bestimmte Stiftung (zusätzlich je Preisrichter)
+                {tp.ohneStiftung}
               </Knopf>
             )}
           </div>
         )}
       </Dialog>
 
-      <Dialog offen={stiftung != null} onSchliessen={() => setStiftung(null)} titel="Stiftung">
+      <Dialog offen={stiftung != null} onSchliessen={() => setStiftung(null)} titel={tp.stiftung}>
         {stiftung && <StiftungForm schauId={schauId} start={stiftung} preisarten={d.preisarten} fertig={() => setStiftung(null)} />}
       </Dialog>
     </div>
@@ -414,48 +421,50 @@ function StiftungForm({ schauId, start, preisarten, fertig }: { schauId: number;
     onlineNennen: start.onlineNennen ?? false,
   });
   const utils = trpc.useUtils();
+  const t = useOberflaeche();
+  const tp = t.schautage.preise;
   const [fehler, setFehler] = useState<string | null>(null);
   const speichern = trpc.preise.stiftungSpeichern.useMutation({ onSuccess: () => { utils.preise.invalidate(); fertig(); } });
   const senden = (e: FormEvent) => {
     e.preventDefault();
     // Leeres Feld heißt 0 € (z. B. Sachpreis); Unlesbares nicht stillschweigend als 0 € speichern.
     const betragCent = s.betrag.trim() ? parseEuro(s.betrag) : 0;
-    if (betragCent == null) return setFehler("Betrag ungültig, bitte z. B. 12,50 eingeben.");
+    if (betragCent == null) return setFehler(tp.betragUngueltig);
     setFehler(null);
     speichern.mutate({ schauId, id: start.id, stifter: s.stifter, preisartId: s.preisartId, anzahl: s.anzahl, betragCent, vorgabe: s.vorgabe, eingegangenAm: s.eingegangenAm, onlineNennen: s.onlineNennen });
   };
   return (
     <form onSubmit={senden} className="flex flex-col gap-4">
-      <Feld label="Stifter">{(id) => <Eingabe id={id} value={s.stifter} onChange={(e) => setS({ ...s, stifter: e.target.value })} required />}</Feld>
-      <Feld label="Preisart" hinweis="Nur gestiftete Preisarten zählen.">
+      <Feld label={tp.stifter}>{(id) => <Eingabe id={id} value={s.stifter} onChange={(e) => setS({ ...s, stifter: e.target.value })} required />}</Feld>
+      <Feld label={tp.preisart} hinweis={tp.preisartHinweis}>
         {(id) => (
           <Auswahl id={id} value={s.preisartId ?? ""} onChange={(e) => setS({ ...s, preisartId: e.target.value ? Number(e.target.value) : null })}>
-            <option value="">– ohne –</option>
+            <option value="">{tp.ohne}</option>
             {preisarten.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.kuerzel})</option>)}
           </Auswahl>
         )}
       </Feld>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Feld label="Anzahl">{(id) => <Eingabe id={id} type="number" min={1} value={s.anzahl} onChange={(e) => setS({ ...s, anzahl: Number(e.target.value) })} />}</Feld>
-        <Feld label="Betrag (€)" fehler={fehler}>{(id) => <Eingabe id={id} inputMode="decimal" value={s.betrag} aria-invalid={!!fehler} onChange={(e) => setS({ ...s, betrag: e.target.value })} />}</Feld>
+        <Feld label={tp.anzahl}>{(id) => <Eingabe id={id} type="number" min={1} value={s.anzahl} onChange={(e) => setS({ ...s, anzahl: Number(e.target.value) })} />}</Feld>
+        <Feld label={tp.betragEuro} fehler={fehler}>{(id) => <Eingabe id={id} inputMode="decimal" value={s.betrag} aria-invalid={!!fehler} onChange={(e) => setS({ ...s, betrag: e.target.value })} />}</Feld>
         {start.meldungId ? (
           // Mit der Meldung zugesagt: gezahlt wird zusammen mit dem Meldegeld (Zahlung an der Meldung), sonst zählte es doppelt.
-          <p className="self-end text-sm text-grau">Wird mit dem Meldegeld bezahlt – Zahlung bitte an der Meldung erfassen.</p>
+          <p className="self-end text-sm text-grau">{tp.mitMeldegeldBezahlt}</p>
         ) : (
-          <Feld label="Eingang">{(id) => <Eingabe id={id} type="date" value={s.eingegangenAm ?? ""} onChange={(e) => setS({ ...s, eingegangenAm: e.target.value || null })} />}</Feld>
+          <Feld label={tp.eingang}>{(id) => <Eingabe id={id} type="date" value={s.eingegangenAm ?? ""} onChange={(e) => setS({ ...s, eingegangenAm: e.target.value || null })} />}</Feld>
         )}
       </div>
-      <Feld label="Vorgabe des Stifters">{(id) => <Eingabe id={id} value={s.vorgabe} onChange={(e) => setS({ ...s, vorgabe: e.target.value })} placeholder="z. B. bestes Tier Zwerg-Wyandotten" />}</Feld>
+      <Feld label={tp.vorgabeStifter}>{(id) => <Eingabe id={id} value={s.vorgabe} onChange={(e) => setS({ ...s, vorgabe: e.target.value })} placeholder={tp.vorgabePlatzhalter} />}</Feld>
       {!start.meldungId && (
         <Haken
-          label="Der Stifter ist einverstanden, im Online-Katalog genannt zu werden (gedruckt steht er immer)."
+          label={tp.onlineNennen}
           checked={s.onlineNennen}
           onChange={(v) => setS({ ...s, onlineNennen: v })}
         />
       )}
       {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
       <div className="flex justify-end">
-        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>Speichern</Knopf>
+        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>{t.allgemein.speichern}</Knopf>
       </div>
     </form>
   );

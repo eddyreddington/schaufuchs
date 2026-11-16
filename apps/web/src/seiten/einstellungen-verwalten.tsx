@@ -1,6 +1,8 @@
+import { serverText } from "@schau/domain";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fehlerText } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Dialog, Eingabe, FehlerAnzeige, Feld, Hinweis, Knopf, Laden, useFrage, useMeldung } from "../ui";
 
@@ -13,27 +15,28 @@ type Schau = Ausgabe["schau"]["get"];
  * die Aussteller benachrichtigt; die Erstattungen stehen danach in der Abrechnung.
  */
 export function SchauAbsagen({ schau: s }: { schau: Schau }) {
+  const tv = useOberflaeche().schau.einstellungen.verwalten;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { eingabe } = useFrage();
   const absagen = trpc.schau.absagen.useMutation({
     onSuccess: (r) => {
       utils.schau.invalidate();
-      meldung(`Abgesagt: ${r.storniert} Meldung(en) storniert, ${r.benachrichtigt} Aussteller per E-Mail benachrichtigt. Die Erstattungen stehen unter „Abrechnung“.`);
+      meldung(tv.abgesagt(r.storniert, r.benachrichtigt));
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   return (
-    <Abschnitt titel="Schau absagen">
+    <Abschnitt titel={tv.absagen}>
       <Knopf
         variante="gefahr"
         laedt={absagen.isPending}
         onClick={async () => {
-          const g = await eingabe({ titel: `„${s.name}“ absagen`, text: "Das lässt sich nicht rückgängig machen: Alle Meldungen werden storniert und die Aussteller benachrichtigt.", feld: "Grund (steht in der E-Mail an die Aussteller)", mindestens: 3, knopf: "Schau absagen", gefahr: true });
+          const g = await eingabe({ titel: tv.absagenTitel(s.name), text: tv.absagenText, feld: tv.absagenGrund, mindestens: 3, knopf: tv.absagen, gefahr: true });
           if (g) absagen.mutate({ id: s.id, grund: g });
         }}
       >
-        Schau absagen …
+        {tv.absagenPunkte}
       </Knopf>
     </Abschnitt>
   );
@@ -44,6 +47,8 @@ export function SchauAbsagen({ schau: s }: { schau: Schau }) {
  * prüft das. Zur Sicherheit den Namen eintippen und einen Grund angeben (steht im Protokoll des Vereins).
  */
 export function SchauLoeschen({ schau: s }: { schau: Schau }) {
+  const t = useOberflaeche();
+  const tv = t.schau.einstellungen.verwalten;
   const navigate = useNavigate();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
@@ -51,31 +56,31 @@ export function SchauLoeschen({ schau: s }: { schau: Schau }) {
   const loeschen = trpc.schau.loeschen.useMutation({
     onSuccess: async () => {
       await utils.schau.liste.invalidate();
-      meldung(`Die Schau „${s.name}“ ist gelöscht.`);
+      meldung(tv.geloescht(s.name));
       navigate("/");
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const starten = async () => {
-    const was = s.test ? "mit allen Meldungen, Test-Ausstellern, Bewertungen, Kasse und Belegen" : "mit allen Einstellungen, Preisrichtern und Katalogseiten";
+    const was = s.test ? tv.loeschenWasTest : tv.loeschenWas;
     const name = await eingabe({
-      titel: "Schau löschen",
-      text: `Die Schau „${s.name}“ ${was} endgültig löschen?`,
-      feld: "Zur Bestätigung bitte den Namen der Schau eintippen",
+      titel: tv.loeschen,
+      text: tv.loeschenFrage(s.name, was),
+      feld: tv.bitteNamenEintippen,
       einzeilig: true,
-      knopf: "Weiter",
+      knopf: t.allgemein.weiter,
       gefahr: true,
     });
     if (name == null) return;
-    if (name.trim() !== s.name.trim()) return meldung("Der Name stimmt nicht – nichts gelöscht.", "fehler");
-    const grund = await eingabe({ titel: "Schau löschen", feld: "Grund für das Löschen (steht im Protokoll des Vereins)", mindestens: 3, knopf: "Endgültig löschen", gefahr: true });
+    if (name.trim() !== s.name.trim()) return meldung(tv.nameFalsch, "fehler");
+    const grund = await eingabe({ titel: tv.loeschen, feld: tv.loeschenGrund, mindestens: 3, knopf: tv.endgueltigLoeschen, gefahr: true });
     if (grund == null) return;
     loeschen.mutate({ id: s.id, name, grund });
   };
   return (
-    <Abschnitt titel="Schau löschen">
+    <Abschnitt titel={tv.loeschen}>
       <Knopf variante="gefahr" laedt={loeschen.isPending} onClick={starten}>
-        Schau löschen …
+        {tv.loeschenPunkte}
       </Knopf>
     </Abschnitt>
   );
@@ -86,13 +91,14 @@ export function SchauLoeschen({ schau: s }: { schau: Schau }) {
  * wenn darin echte Aussteller gemeldet sind, und nennt sie.
  */
 export function AlsTestschau({ schau: s }: { schau: Schau }) {
+  const tv = useOberflaeche().schau.einstellungen.verwalten;
   const [offen, setOffen] = useState(false);
   return (
-    <Abschnitt titel="Testschau">
+    <Abschnitt titel={tv.testschau}>
       <Knopf variante="zweit" onClick={() => setOffen(true)}>
-        Als Testschau kennzeichnen …
+        {tv.alsTestschauPunkte}
       </Knopf>
-      <Dialog offen={offen} onSchliessen={() => setOffen(false)} titel="Als Testschau kennzeichnen">
+      <Dialog offen={offen} onSchliessen={() => setOffen(false)} titel={tv.alsTestschau}>
         {offen && <TestschauDialog schau={s} fertig={() => setOffen(false)} />}
       </Dialog>
     </Abschnitt>
@@ -101,6 +107,9 @@ export function AlsTestschau({ schau: s }: { schau: Schau }) {
 
 /** Zeigt vorher, wer Test-Aussteller wird (oder wer als echter Aussteller das Kennzeichnen verhindert). */
 function TestschauDialog({ schau: s, fertig }: { schau: Schau; fertig: () => void }) {
+  const t = useOberflaeche();
+  const tv = t.schau.einstellungen.verwalten;
+  const sprache = useSprache();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const vorschau = trpc.schau.testschauVorschau.useQuery({ id: s.id }, { staleTime: 0 });
@@ -108,7 +117,7 @@ function TestschauDialog({ schau: s, fertig }: { schau: Schau; fertig: () => voi
   const kennzeichnen = trpc.schau.alsTestschau.useMutation({
     onSuccess: async (r) => {
       await Promise.all([utils.schau.invalidate(), utils.verein.invalidate(), utils.meldung.invalidate()]);
-      meldung(`„${s.name}“ ist jetzt eine Testschau${r.aussteller ? ` – ${r.aussteller} Aussteller gehören nur noch zu ihr` : ""}${r.kopien ? `, ${r.kopien} Test-Kopien angelegt` : ""}.`);
+      meldung(tv.istTestschau(s.name, r.aussteller, r.kopien));
       fertig();
     },
   });
@@ -118,11 +127,8 @@ function TestschauDialog({ schau: s, fertig }: { schau: Schau; fertig: () => voi
   if (hindernisse.length) {
     return (
       <div className="flex flex-col gap-3">
-        <Hinweis ton="fehler">
-          Die Schau hat schon {hindernisse.join(", ")}. Das sind echte Aufzeichnungen – eine Testschau ließe sich samt allem löschen. Deshalb lässt sie sich nicht als
-          Testschau kennzeichnen.
-        </Hinweis>
-        <Knopf onClick={fertig}>Schließen</Knopf>
+        <Hinweis ton="fehler">{tv.hindernisse(hindernisse.map((h) => serverText(h, sprache)).join(", "))}</Hinweis>
+        <Knopf onClick={fertig}>{t.allgemein.schliessen}</Knopf>
       </div>
     );
   }
@@ -136,30 +142,24 @@ function TestschauDialog({ schau: s, fertig }: { schau: Schau; fertig: () => voi
     >
       {werden.length > 0 && (
         <>
-          <p>
-            {werden.length === 1 ? "Dieser Aussteller wird Test-Aussteller und verschwindet" : `Diese ${werden.length} Aussteller werden Test-Aussteller und verschwinden`} aus „Aussteller“
-            und aus echten Schauen. Bitte prüfen, dass keine echte Person dabei ist:
-          </p>
+          <p>{werden.length === 1 ? tv.werdenEiner : tv.werdenMehrere(werden.length)}</p>
           <ul className="max-h-48 list-disc overflow-y-auto rounded border border-linie py-2 pl-8">{werden.map((n, i) => <li key={i}>{n}</li>)}</ul>
         </>
       )}
       {kopien.length > 0 && (
         <>
-          <p>
-            {kopien.length === 1 ? "Dieser echte Aussteller bleibt" : `Diese ${kopien.length} echten Aussteller bleiben`}, wie {kopien.length === 1 ? "er ist" : "sie sind"}. Seine bzw. ihre
-            Meldungen in dieser Schau gehen auf eine Test-Kopie über, die nur Name und Verein trägt:
-          </p>
+          <p>{kopien.length === 1 ? tv.kopienEiner : tv.kopienMehrere(kopien.length)}</p>
           <ul className="max-h-48 list-disc overflow-y-auto rounded border border-linie py-2 pl-8">{kopien.map((n, i) => <li key={i}>{n}</li>)}</ul>
         </>
       )}
-      {!werden.length && !kopien.length && <p>Die Schau hat noch keine Meldungen.</p>}
-      <p className="text-grau">Das lässt sich nicht rückgängig machen.</p>
-      <Feld label="Zur Bestätigung den Namen der Schau eintippen" hinweis={`„${s.name}“`}>
+      {!werden.length && !kopien.length && <p>{tv.keineMeldungen}</p>}
+      <p className="text-grau">{tv.nichtRueckgaengig}</p>
+      <Feld label={tv.namenEintippen} hinweis={tv.inAnfuehrung(s.name)}>
         {(id) => <Eingabe id={id} value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />}
       </Feld>
       {kennzeichnen.error && <Hinweis ton="fehler">{fehlerText(kennzeichnen.error)}</Hinweis>}
       <Knopf type="submit" variante="gefahr" disabled={name.trim() !== s.name.trim()} laedt={kennzeichnen.isPending}>
-        Endgültig als Testschau kennzeichnen
+        {tv.endgueltigTestschau}
       </Knopf>
     </form>
   );
@@ -167,6 +167,7 @@ function TestschauDialog({ schau: s, fertig }: { schau: Schau; fertig: () => voi
 
 /** Testschau: Demodaten neu einspielen (alles Bisherige der Testschau wird ersetzt, Einstellungen bleiben). */
 export function Demodaten({ schau: s }: { schau: Schau }) {
+  const tv = useOberflaeche().schau.einstellungen.verwalten;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const navigate = useNavigate();
@@ -179,16 +180,16 @@ export function Demodaten({ schau: s }: { schau: Schau }) {
       await utils.invalidate();
       setOffen(false);
       setName("");
-      meldung(`Demodaten neu eingespielt: ${r.ok ? `${r.meldungen} Meldungen, ${r.tiere} Tiere` : ""}, Phase „Einlieferung“.`);
+      meldung(tv.demoNeuGemeldet(r.ok ? tv.demoZahlen(r.meldungen, r.tiere) : ""));
       navigate(`/schau/${s.id}`);
     },
   });
   return (
-    <Abschnitt titel="Demodaten">
+    <Abschnitt titel={tv.demodaten}>
       <Knopf variante="zweit" onClick={() => setOffen(true)}>
-        Demodaten neu einspielen …
+        {tv.demoNeuPunkte}
       </Knopf>
-      <Dialog offen={offen} onSchliessen={() => !neu.isPending && setOffen(false)} titel="Demodaten neu einspielen">
+      <Dialog offen={offen} onSchliessen={() => !neu.isPending && setOffen(false)} titel={tv.demoNeu}>
         <form
           className="flex flex-col gap-3"
           onSubmit={(e) => {
@@ -196,13 +197,13 @@ export function Demodaten({ schau: s }: { schau: Schau }) {
             neu.mutate({ id: s.id, name });
           }}
         >
-          <p>Alles, was bisher in „{s.name}“ gemeldet, bewertet, verkauft oder abgerechnet wurde, wird gelöscht und durch frische Demodaten ersetzt.</p>
-          <Feld label="Zur Bestätigung den Namen der Schau eintippen" hinweis={`„${s.name}“`}>
+          <p>{tv.demoText(s.name)}</p>
+          <Feld label={tv.namenEintippen} hinweis={tv.inAnfuehrung(s.name)}>
             {(id) => <Eingabe id={id} value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />}
           </Feld>
           {neu.error && <Hinweis ton="fehler">{fehlerText(neu.error)}</Hinweis>}
           <Knopf type="submit" variante="gefahr" disabled={name.trim() !== s.name.trim()} laedt={neu.isPending}>
-            {neu.isPending ? "Demodaten werden eingespielt …" : "Demodaten neu einspielen"}
+            {neu.isPending ? tv.demoLaeuft : tv.demoNeu}
           </Knopf>
         </form>
       </Dialog>

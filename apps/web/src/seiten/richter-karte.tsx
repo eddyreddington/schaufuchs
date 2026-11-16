@@ -1,10 +1,11 @@
 /** Preisrichter-Tablet: Bewertungskarte eines Tieres (Note, Texte mit Bausteinen, Preise). */
-import { bausteinFuerTier, bewertungsText, brauchtObmann, erlaubtePunkte, MELDEART_LABEL, SONDERNOTE_LABEL, SONDERNOTEN, sortiereGruppen, type NotenStufe, type Sondernote } from "@schau/domain";
+import { bausteinFuerTier, bewertungsText, brauchtObmann, erlaubtePunkte, SONDERNOTEN, sortiereGruppen, type NotenStufe, type Sondernote } from "@schau/domain";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fehlerText, formatKatalognummer } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { direkt } from "../trpc";
 import { Hinweis, Knopf, useFrage, useMeldung } from "../ui";
-import { gleicherStand, MAX_TEXT, standVon, TEXT_ZU_LANG, type Daten, type Eingabe, type Stand, type Tier } from "./richter-geraet";
+import { gleicherStand, MAX_TEXT, standVon, textZuLang, type Daten, type Eingabe, type Stand, type Tier } from "./richter-geraet";
 
 export function Karte({
   tier,
@@ -23,6 +24,8 @@ export function Karte({
   neuLaden: () => void;
   beiAenderung: (ungespeichert: boolean) => void;
 }) {
+  const o = useOberflaeche();
+  const t = o.tablet.karte;
   const [wert, setWert] = useState<{ punkte: number | null; sondernote: Sondernote | null }>({ punkte: tier.punkte, sondernote: tier.sondernote });
   const [texte, setTexte] = useState({ vorzuege: tier.vorzuege, wuensche: tier.wuensche, maengel: tier.maengel });
   // Bausteine der Geflügelart dieses Tieres und – falls an eine Rasse gebunden – seiner Rasse, je Merkmal; die der Rasse
@@ -30,6 +33,7 @@ export function Karte({
   const passende = useMemo(
     () =>
       daten.textbausteine
+        // bleibt deutsch: „Gesamteindruck“ ist der Name der Bausteingruppe
         .map((b) => ({ ...b, gruppe: b.gruppe ?? "Gesamteindruck", art: b.art ?? "alle", rasse: b.rasse ?? null }))
         .filter((b) => bausteinFuerTier(b, { sparte: tier.sparte, rasse: tier.rasse ?? null, bezeichnung: tier.bezeichnung }))
         .sort((x, y) => Number(!x.rasse) - Number(!y.rasse)),
@@ -90,7 +94,7 @@ export function Karte({
       return;
     }
     const neu = texte[feld] ? `${texte[feld]}, ${text}` : text;
-    if (neu.length > MAX_TEXT) return meldung(TEXT_ZU_LANG, "fehler");
+    if (neu.length > MAX_TEXT) return meldung(textZuLang(), "fehler");
     setTexte({ ...texte, [feld]: neu });
   };
 
@@ -101,47 +105,49 @@ export function Karte({
         <div className="min-w-0">
           <p className="font-display text-2xl font-bold leading-tight [font-stretch:112%]">{tier.bezeichnung}</p>
           <p className="mt-1 text-xl text-grau">
-            {tier.geschlecht} {tier.alter}
-            {tier.art !== "einzeltier" && `, ${MELDEART_LABEL[tier.art]}`}
-            {tier.istJugend && ", Jugend"}
+            {tier.geschlecht} {o.tablet.alter[tier.alter]}
+            {tier.art !== "einzeltier" && `, ${o.fach.MELDEART_LABEL[tier.art]}`}
+            {tier.istJugend && t.jugend}
           </p>
-          {tier.kaefig && tier.kaefig !== String(tier.katalogNr) && <p className="text-grau">Käfig {tier.kaefig}</p>}
-          {tier.fehlt && <p className="mt-1 font-semibold text-kamm">Als fehlend gemeldet – keine Bewertung möglich.</p>}
+          {tier.kaefig && tier.kaefig !== String(tier.katalogNr) && <p className="text-grau">{t.kaefig(tier.kaefig)}</p>}
+          {tier.fehlt && <p className="mt-1 font-semibold text-kamm">{t.fehlendGemeldet}</p>}
         </div>
       </div>
 
       {geaendert && (
         <Hinweis ton="warnung">
-          <p className="font-semibold">Diese Bewertung wurde inzwischen anderswo geändert. Speichern überschreibt die Änderung.</p>
+          <p className="font-semibold">{t.anderswoGeaendert}</p>
           <p className="mt-1 text-sm">
-            Jetzt gespeichert: {geaendert.punkte != null || geaendert.sondernote != null ? bewertungsText(geaendert, daten.skala) : "keine Note"}
-            {geaendert.vorzuege && `; Vorzüge: ${geaendert.vorzuege}`}
-            {geaendert.wuensche && `; Wünsche: ${geaendert.wuensche}`}
-            {geaendert.maengel && `; Mängel: ${geaendert.maengel}`}
+            {t.jetztGespeichert(
+              geaendert.punkte != null || geaendert.sondernote != null ? bewertungsText(geaendert, daten.skala) : o.tablet.keineNote,
+              geaendert.vorzuege,
+              geaendert.wuensche,
+              geaendert.maengel,
+            )}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <Knopf variante="primaer" className="min-h-11" onClick={() => uebernehmen(geaendert)}>Änderung übernehmen</Knopf>
-            <Knopf className="min-h-11" onClick={() => setGeaendert(null)}>Meine Eingaben behalten</Knopf>
+            <Knopf variante="primaer" className="min-h-11" onClick={() => uebernehmen(geaendert)}>{t.uebernehmen}</Knopf>
+            <Knopf className="min-h-11" onClick={() => setGeaendert(null)}>{t.behalten}</Knopf>
           </div>
         </Hinweis>
       )}
 
       <fieldset disabled={!offen}>
-        <legend className="mb-2 text-lg font-semibold">Note</legend>
+        <legend className="mb-2 text-lg font-semibold">{t.note}</legend>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
           {erlaubtePunkte(daten.skala).map((p) => (
             <PunktKnopf key={p} aktiv={wert.punkte === p} onClick={() => setWert({ punkte: p, sondernote: null })} text={bewertungsText({ punkte: p, sondernote: null }, daten.skala)} />
           ))}
           {SONDERNOTEN.map((s) => (
-            <PunktKnopf key={s} aktiv={wert.sondernote === s} onClick={() => setWert({ punkte: null, sondernote: s })} text={bewertungsText({ punkte: null, sondernote: s })} klein={SONDERNOTE_LABEL[s].name} />
+            <PunktKnopf key={s} aktiv={wert.sondernote === s} onClick={() => setWert({ punkte: null, sondernote: s })} text={bewertungsText({ punkte: null, sondernote: s })} klein={o.fach.SONDERNOTE_LABEL[s].name} />
           ))}
         </div>
       </fieldset>
 
       {offen && gruppen.length > 1 && (
         <div>
-          <p className="mb-1 text-lg font-semibold">Textbausteine zu</p>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Merkmal für die Textbausteine">
+          <p className="mb-1 text-lg font-semibold">{t.bausteineZu}</p>
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t.merkmal}>
             {gruppen.map((g) => (
               <button
                 key={g}
@@ -159,7 +165,7 @@ export function Karte({
 
       {(["vorzuege", "wuensche", "maengel"] as const).map((feld) => {
         const kat = feld === "vorzuege" ? "vorzug" : feld === "wuensche" ? "wunsch" : "mangel";
-        const label = feld === "vorzuege" ? "Vorzüge" : feld === "wuensche" ? "Wünsche" : "Mängel";
+        const label = o.fach.BAUSTEIN_KATEGORIE_LABEL[kat];
         const bausteine = passende.filter((b) => b.kategorie === kat && b.gruppe === gruppe);
         return (
           <div key={feld}>
@@ -175,7 +181,7 @@ export function Karte({
             />
             {texte[feld].length > MAX_TEXT - 100 && (
               <p className={`text-right text-sm ${texte[feld].length >= MAX_TEXT ? "font-semibold text-kamm" : "text-grau"}`}>
-                {texte[feld].length} von {MAX_TEXT} Zeichen
+                {t.zeichen(texte[feld].length, MAX_TEXT)}
               </p>
             )}
             {bausteine.length > 0 && offen && (
@@ -200,26 +206,26 @@ export function Karte({
             disabled={!gewaehlt}
             onClick={() => speichern({ katalogeintragId: tier.id, ...wert, ...texte })}
           >
-            Speichern und nächstes Tier
+            {t.speichernWeiter}
           </Knopf>
           {(tier.punkte != null || tier.sondernote != null) && (
             <Knopf gross onClick={async () =>
-                (await bestaetige({ titel: `Note von Nr. ${formatKatalognummer(tier)} zurücknehmen?`, text: "Note und Texte werden gelöscht.", knopf: "Zurücknehmen", gefahr: true })) &&
+                (await bestaetige({ titel: t.zuruecknehmenTitel(formatKatalognummer(tier)), text: t.zuruecknehmenText, knopf: t.zuruecknehmenKnopf, gefahr: true })) &&
                 zuruecknehmen(tier.id)
               }>
-              Note zurücknehmen
+              {t.zuruecknehmen}
             </Knopf>
           )}
         </div>
       )}
-      {brauchtObmann(wert, daten.skala as NotenStufe[]) && !tier.obmannBestaetigt && <Hinweis ton="warnung">Diese Note muss der Obmann bestätigen.</Hinweis>}
-      {wert.sondernote && <p className="-mt-2 text-sm text-grau">{SONDERNOTE_LABEL[wert.sondernote].hinweis}</p>}
+      {brauchtObmann(wert, daten.skala as NotenStufe[]) && !tier.obmannBestaetigt && <Hinweis ton="warnung">{t.obmannMuss}</Hinweis>}
+      {wert.sondernote && <p className="-mt-2 text-sm text-grau">{o.fach.SONDERNOTE_LABEL[wert.sondernote].hinweis}</p>}
 
       {tier.punkte != null && !tier.wartet && (
         <section className="rounded-xl border border-linie bg-weiss p-4">
-          <h2 className="mb-2 font-sans text-lg font-semibold">Preise</h2>
+          <h2 className="mb-2 font-sans text-lg font-semibold">{t.preise}</h2>
           {!online ? (
-            <p className="text-grau">Preise vergeben nur mit Verbindung.</p>
+            <p className="text-grau">{t.preiseOffline}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {daten.preisarten
@@ -236,7 +242,7 @@ export function Karte({
                     onClick={() => preis(p.id, hat)}
                     className={`min-h-12 rounded-md border-2 px-4 font-semibold ${hat ? "border-band bg-band text-auf-band" : "border-linie-stark bg-weiss text-tinte hover:border-band"}`}
                   >
-                    {p.kuerzel} <span className="font-normal">{hat ? "vergeben" : `(${k ? k.verfuegbar - k.vergeben : 0} frei)`}</span>
+                    {p.kuerzel} <span className="font-normal">{hat ? t.vergeben : t.frei(k ? k.verfuegbar - k.vergeben : 0)}</span>
                   </button>
                 );
               })}

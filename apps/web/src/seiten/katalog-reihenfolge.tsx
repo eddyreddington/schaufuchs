@@ -1,24 +1,24 @@
-import { SORTIER_FEST, SORTIER_LABEL, SORTIER_RICHTUNG, SORTIERUNG_STANDARD, sortierungNormal, type KatalogSortierung, type SortierKriterium } from "@schau/domain";
+import { SORTIER_FEST, SORTIER_RICHTUNG, SORTIERUNG_STANDARD, sortierungNormal, type KatalogSortierung, type SortierKriterium } from "@schau/domain";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Auswahl, Haken, HilfeLink, Knopf, Speicherleiste, useMeldung, useUngespeichertWarnung } from "../ui";
 
 type Schau = Ausgabe["schau"]["get"];
-
-/** Kurzer Zusatz für Merkmale ohne Richtung. */
-const OHNE_RICHTUNG: Partial<Record<SortierKriterium, string>> = {
-  verein: "Tiere eines Vereins zusammen",
-  aussteller: "Tiere eines Ausstellers zusammen",
-  ausstellernummer: "nach Nummer des Ausstellers",
-};
 
 /**
  * Reihenfolge der Katalognummern: Kriterien mit Haken, Richtung und Hoch/Runter. Sparte, Rasse und Farbenschlag sind
  * immer an und behalten ihre Reihenfolge untereinander. Gilt beim nächsten Vergeben; nach dem Festschreiben gesperrt.
  */
 export function KatalogReihenfolge({ schau: s, istAdmin }: { schau: Schau; istAdmin: boolean }) {
+  const t = useOberflaeche();
+  const tr = t.katalog.reihenfolge;
+  const sortierLabel = t.fach.SORTIER_LABEL;
+  /** Kurzer Zusatz für Merkmale ohne Richtung. */
+  const ohneRichtung: Partial<Record<SortierKriterium, string>> = tr.ohneRichtung;
+  const richtungen: Partial<Record<SortierKriterium, { normal: string; umgekehrt: string }>> = tr.richtung;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const gespeichert = sortierungNormal(s.katalogSortierung);
@@ -28,7 +28,7 @@ export function KatalogReihenfolge({ schau: s, istAdmin }: { schau: Schau; istAd
   const speichern = trpc.schau.katalogSortierungSetzen.useMutation({
     onSuccess: (r) => {
       utils.schau.get.invalidate({ id: s.id });
-      if (r.geaendert) meldung("Reihenfolge gespeichert – gilt beim nächsten Vergeben.");
+      if (r.geaendert) meldung(tr.gespeichert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -46,35 +46,35 @@ export function KatalogReihenfolge({ schau: s, istAdmin }: { schau: Schau; istAd
       return neu;
     });
   const aendern = (i: number, teil: { aus?: boolean; umgekehrt?: boolean }) => setListe((l) => sortierungNormal(l.map((x, j) => (j === i ? { ...x, ...teil } : x))));
-  const gliederung = [s.jugendSeparat && "Jugend am Ende", s.kaefigFolge?.length && "nach Käfigblöcken", s.staemmeVorn && "Volieren und Stämme vorn"].filter(Boolean).join(", ");
+  const gliederung = [s.jugendSeparat && tr.jugendAmEnde, s.kaefigFolge?.length && tr.nachKaefigbloecken, s.staemmeVorn && tr.staemmeVorn].filter(Boolean).join(", ");
 
   return (
-    <Abschnitt id="reihenfolge" titel="Reihenfolge der Nummern" aktionen={<HilfeLink abschnitt="reihenfolge-der-katalognummern">Hilfe zur Reihenfolge</HilfeLink>}>
+    <Abschnitt id="reihenfolge" titel={tr.titel} aktionen={<HilfeLink abschnitt="reihenfolge-der-katalognummern">{tr.hilfe}</HilfeLink>}>
       <p className="mb-3 text-sm text-grau">
-        Vorweg: {gliederung || "keine Gliederung"} (<Link to={`/schau/${s.id}/einstellungen#katalog`}>Einstellungen</Link>)
+        {tr.vorweg} {gliederung || tr.keineGliederung} (<Link to={`/schau/${s.id}/einstellungen#katalog`}>{tr.einstellungen}</Link>)
       </p>
       <ol className="flex max-w-2xl flex-col divide-y divide-linie rounded-lg border border-linie">
         {liste.map((x, i) => {
-          const richtung = SORTIER_RICHTUNG[x.kriterium];
-          const label = `${i + 1}. ${SORTIER_LABEL[x.kriterium]}`;
+          const richtung = SORTIER_RICHTUNG[x.kriterium] && richtungen[x.kriterium];
+          const label = `${i + 1}. ${sortierLabel[x.kriterium]}`;
           return (
             <li key={x.kriterium} className={`flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 ${x.aus ? "text-grau" : ""}`}>
               <div className="min-w-[11rem] flex-1">
                 {fest(i) ? <span className="text-sm">{label}</span> : <Haken label={label} checked={!x.aus} onChange={(v) => aendern(i, { aus: !v })} disabled={gesperrt} />}
               </div>
               {richtung ? (
-                <Auswahl kompakt aria-label={`Richtung ${SORTIER_LABEL[x.kriterium]}`} className="w-auto text-sm" value={x.umgekehrt ? "1" : "0"} disabled={gesperrt || x.aus} onChange={(e) => aendern(i, { umgekehrt: e.target.value === "1" })}>
-                  <option value="0">{richtung[0]}</option>
-                  <option value="1">{richtung[1]}</option>
+                <Auswahl kompakt aria-label={tr.richtungLabel(sortierLabel[x.kriterium])} className="w-auto text-sm" value={x.umgekehrt ? "1" : "0"} disabled={gesperrt || x.aus} onChange={(e) => aendern(i, { umgekehrt: e.target.value === "1" })}>
+                  <option value="0">{richtung.normal}</option>
+                  <option value="1">{richtung.umgekehrt}</option>
                 </Auswahl>
               ) : (
-                <span className="text-sm text-grau">{OHNE_RICHTUNG[x.kriterium] ?? "nach Verzeichnis"}</span>
+                <span className="text-sm text-grau">{ohneRichtung[x.kriterium] ?? tr.nachVerzeichnis}</span>
               )}
               <div className="flex gap-1">
-                <Knopf variante="leise" aria-label={`${SORTIER_LABEL[x.kriterium]} nach oben`} disabled={gesperrt || !kannTauschen(i, -1)} onClick={() => tauschen(i, -1)}>
+                <Knopf variante="leise" aria-label={tr.nachOben(sortierLabel[x.kriterium])} disabled={gesperrt || !kannTauschen(i, -1)} onClick={() => tauschen(i, -1)}>
                   ↑
                 </Knopf>
-                <Knopf variante="leise" aria-label={`${SORTIER_LABEL[x.kriterium]} nach unten`} disabled={gesperrt || !kannTauschen(i, 1)} onClick={() => tauschen(i, 1)}>
+                <Knopf variante="leise" aria-label={tr.nachUnten(sortierLabel[x.kriterium])} disabled={gesperrt || !kannTauschen(i, 1)} onClick={() => tauschen(i, 1)}>
                   ↓
                 </Knopf>
               </div>
@@ -85,12 +85,12 @@ export function KatalogReihenfolge({ schau: s, istAdmin }: { schau: Schau; istAd
       {!gesperrt && (
         <div className="mt-3 flex flex-wrap gap-2">
           <Knopf variante="leise" disabled={JSON.stringify(liste) === JSON.stringify(SORTIERUNG_STANDARD)} onClick={() => setListe(SORTIERUNG_STANDARD.map((x) => ({ ...x })))}>
-            Vorgabe
+            {tr.vorgabe}
           </Knopf>
         </div>
       )}
-      {s.katalogGedruckt && <p className="mt-3 text-sm text-grau">Festgeschrieben</p>}
-      <Speicherleiste sichtbar={geaendert && !gesperrt} onVerwerfen={() => setListe(gespeichert)} onSpeichern={() => speichern.mutate({ id: s.id, sortierung: liste })} laedt={speichern.isPending} knopf="Reihenfolge speichern" />
+      {s.katalogGedruckt && <p className="mt-3 text-sm text-grau">{tr.festgeschrieben}</p>}
+      <Speicherleiste sichtbar={geaendert && !gesperrt} onVerwerfen={() => setListe(gespeichert)} onSpeichern={() => speichern.mutate({ id: s.id, sortierung: liste })} laedt={speichern.isPending} knopf={tr.speichern} />
     </Abschnitt>
   );
 }

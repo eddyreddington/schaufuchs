@@ -45,4 +45,7 @@ export function centZuText(cent: number | null | undefined): string {
   return (cent / 100).toFixed(2).replace(".", ",");
 }
 
-export const ALTER_LABEL = { jung: "jung", alt: "alt" } as const;
+/** Alter eines Tiers („jung“/„alt“) in der Sprache der Oberfläche (zur Laufzeit lesen). */
+export function alterLabel(alter: "jung" | "alt"): string {
+  return ot().rahmen.alter[alter];
+}

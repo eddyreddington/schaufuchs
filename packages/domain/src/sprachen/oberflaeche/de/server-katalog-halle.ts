@@ -1,0 +1,70 @@
+/**
+ * Meldungen des Servers zum Hallenplan (Entscheidung 022): routers/katalog/hallenplan.ts, gemeinsam.ts, kaefige.ts,
+ * routers/hallenentwurf.ts und die Prüfungen der Fachlogik (Grundriss, Entfernen, Tier versetzen).
+ */
+export const halle = {
+  plan: {
+    halleAnlegen: "Erst die Halle anlegen.",
+    zuGross: "Die Halle ist zu groß (höchstens 20.000 m²).",
+    festgeschrieben: "Der Plan wurde inzwischen festgeschrieben – er wird neu geladen, bitte die Änderung noch einmal machen.",
+    nachmeldung: "Der Plan hat sich inzwischen geändert (Nachmeldung oder Storno) – er wird neu geladen, bitte die Änderung noch einmal machen.",
+    automatik: "Erst „Automatisch planen“ ausschalten – sonst stellt die Software die Käfige wieder nach der Katalogfolge.",
+    veraltet: "Der feste Plan passt nicht mehr zu Halle oder Käfigmaßen – erst „Plan neu setzen“.",
+    geaendert: "Der Plan hat sich inzwischen geändert – er wird neu geladen, bitte noch einmal.",
+    eingeliefertEins: (nr: string) => `Nr. ${nr} ist schon eingeliefert – das Tier muss in der Halle umgesetzt werden.`,
+    eingeliefertZwei: (a: string, b: string) => `Nr. ${a} und Nr. ${b} sind schon eingeliefert – die Tiere müssen in der Halle umgesetzt werden.`,
+    ohneNummer: "ohne Nummer",
+    gedruckt: "Der Katalog ist gedruckt – Käfigplätze und Karten stimmen erst wieder nach „Käfigplätze nach Plan“.",
+    kaefigFehlt: "Käfig nicht gefunden.",
+    andererBearbeiter: "Die Halle wurde inzwischen von jemand anderem geändert – der Plan wird neu geladen, bitte die Änderung noch einmal machen.",
+    andererBearbeiterKurz: "Die Halle wurde inzwischen von jemand anderem geändert – der Plan wird neu geladen, bitte noch einmal.",
+    grundriss: "Ein anderer Grundriss geht im festen Plan nur mit „Plan neu setzen“.",
+    neuSetzenBestaetigen: "Der Plan ist festgeschrieben – erst bestätigen, dass er neu gesetzt wird.",
+    reiheFehlt: "Diese Reihe gibt es nicht (mehr) – der Plan wird neu geladen.",
+    plattenOhneHalle: "Bitte zuerst unter „Hallenplan“ die Halle anlegen – die Grundplatten gehören zu ihr.",
+  },
+  entwurf: {
+    fehlt: "Entwurf nicht gefunden.",
+    hoechstens: (n: string) => `Höchstens ${n} Entwürfe je Schau – bitte erst einen löschen.`,
+    abgeschlossen: "Die Schau ist abgeschlossen.",
+    andereSchau: "Dieser Entwurf gehört zu einer anderen Schau.",
+    passtNicht: "Der Entwurf passt nicht mehr zu dieser Version und lässt sich nicht laden.",
+    entscheiden: "Entscheiden lässt sich nur für einen Entwurf dieser Schau.",
+  },
+  /** Grundriss (Entscheidung 019): pruefeUmriss und pruefeHallenUmriss in der Domain. */
+  umriss: {
+    ecken: "Der Grundriss braucht mindestens 4 Ecken.",
+    rechtwinklig: "Der Grundriss muss rechtwinklig sein: jede Wand waagrecht oder senkrecht.",
+    ueberschneiden: "Zwei Wände überschneiden sich – der Grundriss muss eine geschlossene Fläche sein.",
+    mindestgroesse: "Die Halle muss mindestens 3 × 3 m groß sein.",
+    wand: "Jede Wand muss mindestens 0,5 m lang sein.",
+    masse: "Breite und Länge passen nicht zum Grundriss.",
+    flaeche: (name: string) => `„${name}“ liegt außerhalb des Grundrisses – bitte erst verschieben oder entfernen.`,
+    voliere: "Eine Voliere liegt außerhalb des Grundrisses – bitte erst verschieben oder entfernen.",
+    kaefigblock: "Ein Käfigblock liegt außerhalb des Grundrisses – bitte erst verschieben oder entfernen.",
+    tisch: "Ein Tisch liegt außerhalb des Grundrisses – bitte erst verschieben oder entfernen.",
+    bank: "Eine Bank liegt außerhalb des Grundrisses – bitte erst verschieben oder entfernen.",
+    garnitur: "Eine Garnitur liegt außerhalb des Grundrisses – bitte erst verschieben oder entfernen.",
+  },
+  /** Leere Plätze und Teile entfernen: pruefeEntfernt und pruefeTeileEntfernt in der Domain. */
+  entfernen: {
+    nurFest: "Leere Plätze lassen sich nur im festen Plan entfernen.",
+    platteFehlt: (reihe: string) => `Diese Grundplatte in R${reihe} gibt es im festen Plan nicht (mehr) – der Plan wird neu geladen.`,
+    platteBelegtNr: (platte: string, reihe: string, nr: string) => `Grundplatte ${platte} in R${reihe} ist belegt (Nr. ${nr}) – nur Leeres lässt sich entfernen.`,
+    platteBelegt: (platte: string, reihe: string) => `Grundplatte ${platte} in R${reihe} ist belegt – nur Leeres lässt sich entfernen.`,
+    platzFehlt: (reihe: string) => `Diesen Platz in R${reihe} gibt es im festen Plan nicht (mehr) – der Plan wird neu geladen.`,
+    platzBelegtNr: (reihe: string, nr: string) => `Der Platz in R${reihe} ist belegt (Nr. ${nr}) – nur Leeres lässt sich entfernen.`,
+    platzBelegt: (reihe: string) => `Der Platz in R${reihe} ist belegt – nur Leeres lässt sich entfernen.`,
+    teileBelegt: (teile: string) => `Belegt, bleibt stehen: ${teile} – nur Leeres lässt sich entfernen.`,
+  },
+  /** Tier im festen Plan versetzen: tierVersetzen in der Domain. */
+  versetzen: {
+    tierFehlt: "Dieses Tier gibt es im Plan nicht (mehr).",
+    voliere: "Volieren lassen sich hier nicht versetzen.",
+    schonDort: "Das Tier steht schon dort.",
+    kaefigFehlt: "Diesen Käfig gibt es im Plan nicht (mehr).",
+    groesse: "Der Käfig hat eine andere Größe.",
+    tauschen: "Tauschen geht nur zwischen zwei Tieren mit festem Käfig – bitte einen freien Käfig wählen.",
+    keinFester: "Das Tier hat keinen festen Käfig.",
+  },
+};

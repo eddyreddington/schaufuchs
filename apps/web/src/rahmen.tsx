@@ -1,11 +1,11 @@
-import { anmeldeZiel, PHASEN_LABEL, ruecksprungZiel, VERSION, type Phase } from "@schau/domain";
+import { anmeldeZiel, ruecksprungZiel, VERSION, type OberflaecheTexte, type Phase } from "@schau/domain";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AbmeldeHinweis, useAutoAbmeldung } from "./abmeldung";
 import { fehlerText } from "./lib";
 import { useFarbmodus, type Farbmodus } from "./modus";
-import { allgemeineGruppen, leistenLink, MenueGruppen, SCHAU_GRUPPEN, useKlappzustand } from "./seitenmenue";
-import { SprachWahl } from "./sprache";
+import { allgemeineGruppen, leistenLink, MenueGruppen, schauGruppen, useKlappzustand } from "./seitenmenue";
+import { SprachWahl, useOberflaeche } from "./sprache";
 import { Symbol, type SymbolName } from "./symbole";
 import { direkt, trpc } from "./trpc";
 import { Eingabe, FehlerAnzeige, Feld, Hinweis, Knopf, Laden, Marke, SCHMAL, SEITENRAND, SpeicherPlatz, useMeldung, useSeitentitel } from "./ui";
@@ -15,21 +15,22 @@ export function useSchauId(): number {
 }
 
 /** Bezeichnung der aktuellen Seite für die Pfadzeile. */
-function seitenName(pfad: string, imSchau: boolean, istAdmin: boolean): string {
+function seitenName(pfad: string, imSchau: boolean, istAdmin: boolean, t: OberflaecheTexte): string {
+  const a = t.rahmen.app, m = t.rahmen.menue;
   if (imSchau) {
     const rest = pfad.replace(/^\/schau\/\d+\/?/, "").replace(/\/$/, "");
-    for (const g of SCHAU_GRUPPEN) for (const s of g.seiten) if (s.pfad === rest) return s.label;
-    if (rest === "protokoll") return "Protokoll";
-    if (rest.startsWith("meldungen/")) return rest === "meldungen/neu" ? "Neue Meldung" : "Meldung";
+    for (const g of schauGruppen(t)) for (const s of g.seiten) if (s.pfad === rest) return s.label;
+    if (rest === "protokoll") return a.protokoll;
+    if (rest.startsWith("meldungen/")) return rest === "meldungen/neu" ? a.neueMeldung : a.meldung;
     return "";
   }
-  if (pfad === "/") return "Schauen";
-  if (pfad.startsWith("/stammdaten")) return "Rassen und Farbenschläge";
-  if (pfad.startsWith("/benutzer")) return istAdmin ? "Benutzer" : "Mein Zugang";
-  if (pfad.startsWith("/aussteller")) return "Aussteller";
-  if (pfad.startsWith("/spender")) return "Spender";
-  if (pfad.startsWith("/import")) return "Import";
-  if (pfad.startsWith("/verein")) return "Verein und Datenschutz";
+  if (pfad === "/") return a.schauen;
+  if (pfad.startsWith("/stammdaten")) return m.stammdaten;
+  if (pfad.startsWith("/benutzer")) return istAdmin ? m.benutzer : m.meinZugang;
+  if (pfad.startsWith("/aussteller")) return m.aussteller;
+  if (pfad.startsWith("/spender")) return m.spender;
+  if (pfad.startsWith("/import")) return m.import;
+  if (pfad.startsWith("/verein")) return m.vereinDatenschutz;
   return "";
 }
 
@@ -38,6 +39,8 @@ export function AppRahmen() {
   const utils = trpc.useUtils();
   const navigate = useNavigate();
   const meldung = useMeldung();
+  const t = useOberflaeche();
+  const ta = t.rahmen.app;
   const ort = useLocation();
   const [menueOffen, setMenueOffen] = useState(false);
   /** Platz in der Kopfleiste für „Speichern“ (Speicherleiste der Seiten). */
@@ -108,11 +111,11 @@ export function AppRahmen() {
   const hilfe = (
     <a href="/hilfe" target="_blank" rel="noreferrer" className={leistenLink({ isActive: false })}>
       <Symbol name="hilfe" />
-      Hilfe
+      {t.allgemein.hilfe}
     </a>
   );
   // In einer Schau sind Verein und Einrichtung ohne gemerkte Wahl eingeklappt, sonst offen.
-  const allgemeineLinks = <MenueGruppen gruppen={allgemeineGruppen(istAdmin)} vorgabeOffen={() => !schauId} klapp={klapp} label={schauId ? "Allgemein" : "Hauptnavigation"} nachher={hilfe} />;
+  const allgemeineLinks = <MenueGruppen gruppen={allgemeineGruppen(istAdmin, t)} vorgabeOffen={() => !schauId} klapp={klapp} label={schauId ? ta.allgemein : ta.hauptnavigation} nachher={hilfe} />;
   const leiste = (
     <div className="flex min-h-full flex-col gap-4 px-2.5 py-3 text-[0.95rem]">
       <Link to="/" className="flex items-center gap-3 px-1.5 py-1 font-display text-[1.15rem] font-bold text-tinte no-underline [font-stretch:112%]">
@@ -120,13 +123,13 @@ export function AppRahmen() {
         <span className="flex flex-col leading-tight">
           {status.data.appName}
           {/* Version dezent unter dem Namen: hilft bei Rückfragen und zeigt, ob ein Update angekommen ist. */}
-          <span className="font-sans text-xs font-normal text-grau [font-stretch:100%]">Version {VERSION}</span>
+          <span className="font-sans text-xs font-normal text-grau [font-stretch:100%]">{ta.version} {VERSION}</span>
         </span>
       </Link>
       {schauId ? (
         <>
           <SchauWahl id={schauId} />
-          <MenueGruppen gruppen={SCHAU_GRUPPEN.map((g) => ({ ...g, seiten: g.seiten.filter((x) => !x.nurAdmin || istAdmin) }))} basis={`/schau/${schauId}`} vorgabeOffen={(g) => !!phase && !!g.phasen?.includes(phase)} klapp={klapp} label="Bereiche der Schau" />
+          <MenueGruppen gruppen={schauGruppen(t).map((g) => ({ ...g, seiten: g.seiten.filter((x) => !x.nurAdmin || istAdmin) }))} basis={`/schau/${schauId}`} vorgabeOffen={(g) => !!phase && !!g.phasen?.includes(phase)} klapp={klapp} label={ta.bereicheDerSchau} />
           <div className="mt-auto border-t border-linie pt-3">{allgemeineLinks}</div>
         </>
       ) : (
@@ -135,15 +138,15 @@ export function AppRahmen() {
       <BenutzerMenue name={b.name} verein={status.data.organisationName ?? ""} rolle={b.rolle} abmelden={() => abmelden.mutate()} meldetAb={abmelden.isPending} />
     </div>
   );
-  const seite = seitenName(ort.pathname, !!schauId, b.rolle === "admin");
+  const seite = seitenName(ort.pathname, !!schauId, b.rolle === "admin", t);
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)] print:block">
-      <a href="#inhalt" className="sprunglink nicht-drucken">Zum Inhalt springen</a>
+      <a href="#inhalt" className="sprunglink nicht-drucken">{ta.zumInhalt}</a>
       {/* Breit: feste Seitenleiste. Schmal: oben eine Zeile mit „Menü“, die Leiste fährt von links herein. */}
       <aside className="nicht-drucken hidden border-r border-linie bg-papier lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">{leiste}</aside>
       {menueOffen && (
-        <div className="nicht-drucken fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menü">
-          <button type="button" aria-label="Menü schließen" className="absolute inset-0 bg-kopf/40" onClick={() => setMenueOffen(false)} />
+        <div className="nicht-drucken fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label={ta.menue}>
+          <button type="button" aria-label={ta.menueSchliessen} className="absolute inset-0 bg-kopf/40" onClick={() => setMenueOffen(false)} />
           {/* Ein Link im Menü schließt es, auch wenn er auf die aktuelle Seite oder in einen neuen Tab führt. */}
           <div ref={schublade} onClick={(e) => (e.target as HTMLElement).closest("a") && setMenueOffen(false)} className="absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto border-r border-linie bg-papier shadow-xl">{leiste}</div>
         </div>
@@ -151,7 +154,7 @@ export function AppRahmen() {
       <div className="flex min-w-0 flex-col">
         {/* Kopfleiste bleibt oben stehen: rechts erscheint „Speichern“, sobald eine Seite Ungespeichertes hat (Speicherleiste). */}
         <div className="nicht-drucken sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-linie bg-weiss px-4 lg:px-6">
-          <button ref={menueKnopf} type="button" aria-expanded={menueOffen} onClick={() => setMenueOffen(true)} className="-ml-1.5 flex items-center gap-1.5 rounded-md px-1.5 py-1 text-tinte hover:bg-papier lg:hidden" aria-label="Menü öffnen">
+          <button ref={menueKnopf} type="button" aria-expanded={menueOffen} onClick={() => setMenueOffen(true)} className="-ml-1.5 flex items-center gap-1.5 rounded-md px-1.5 py-1 text-tinte hover:bg-papier lg:hidden" aria-label={ta.menueOeffnen}>
             <Symbol name="menue" className="size-5" />
           </button>
           <Pfad schauId={schauId} seite={seite} />
@@ -174,19 +177,21 @@ export function AppRahmen() {
 function Pfad({ schauId, seite }: { schauId: number | null; seite: string }) {
   const schau = trpc.schau.get.useQuery({ id: schauId ?? 0 }, { enabled: !!schauId });
   const s = schauId ? schau.data : undefined;
+  const t = useOberflaeche();
+  const uebersicht = t.rahmen.menue.uebersicht;
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-[0.93rem] text-grau">
       {s && (
         <>
           <Link to={`/schau/${s.id}`} className="truncate text-grau no-underline hover:text-tinte hover:underline">{s.name}</Link>
-          {seite && seite !== "Übersicht" && <span aria-hidden className="text-grau/60">/</span>}
+          {seite && seite !== uebersicht && <span aria-hidden className="text-grau/60">/</span>}
         </>
       )}
-      {seite && !(s && seite === "Übersicht") && <span className="truncate font-medium text-tinte">{seite}</span>}
+      {seite && !(s && seite === uebersicht) && <span className="truncate font-medium text-tinte">{seite}</span>}
       {s && (
         <span className="ml-auto flex shrink-0 gap-2">
-          {s.test && <Marke ton="warnung">Testschau</Marke>}
-          {s.abgesagtAm && <Marke ton="fehler">Abgesagt</Marke>}
+          {s.test && <Marke ton="warnung">{t.rahmen.app.testschau}</Marke>}
+          {s.abgesagtAm && <Marke ton="fehler">{t.rahmen.app.abgesagt}</Marke>}
         </span>
       )}
     </div>
@@ -221,6 +226,7 @@ function SchauWahl({ id }: { id: number }) {
   const { offen, setOffen, ref } = useAufklapper();
   const liste = trpc.schau.liste.useQuery(undefined, { enabled: offen });
   const s = schau.data;
+  const t = useOberflaeche();
   return (
     <div ref={ref} className="relative">
       <button
@@ -237,7 +243,7 @@ function SchauWahl({ id }: { id: number }) {
         {s && (
           <span className="flex w-full flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[0.85rem] text-grau">
             <span className="min-w-0 truncate">{s.ort}</span>
-            <Marke ton="info">{PHASEN_LABEL[s.phase as Phase]}</Marke>
+            <Marke ton="info">{t.fach.PHASEN_LABEL[s.phase as Phase]}</Marke>
           </span>
         )}
       </button>
@@ -246,27 +252,29 @@ function SchauWahl({ id }: { id: number }) {
           {liste.data?.map((x) => (
             <Link key={x.id} to={`/schau/${x.id}`} className={`flex flex-col rounded-md px-2.5 py-2 no-underline hover:bg-papier ${x.id === id ? "bg-band-hell" : ""}`}>
               <span className="font-medium text-tinte">{x.name}</span>
-              <span className="text-[0.85rem] text-grau">{PHASEN_LABEL[x.phase as Phase]}{x.test ? ", Testschau" : ""}</span>
+              <span className="text-[0.85rem] text-grau">{t.rahmen.app.phaseTest(t.fach.PHASEN_LABEL[x.phase as Phase], x.test)}</span>
             </Link>
           ))}
-          {!liste.data && <p className="px-2.5 py-2 text-grau">Wird geladen …</p>}
-          <Link to="/" className="mt-1 block border-t border-linie px-2.5 pb-1 pt-2 text-[0.9rem] no-underline">Alle Schauen</Link>
+          {!liste.data && <p className="px-2.5 py-2 text-grau">{t.allgemein.laden}</p>}
+          <Link to="/" className="mt-1 block border-t border-linie px-2.5 pb-1 pt-2 text-[0.9rem] no-underline">{t.rahmen.app.alleSchauen}</Link>
         </div>
       )}
     </div>
   );
 }
 
-const MODI: { wert: Farbmodus; label: string; symbol: SymbolName }[] = [
-  { wert: "system", label: "System", symbol: "bildschirm" },
-  { wert: "hell", label: "Hell", symbol: "sonne" },
-  { wert: "dunkel", label: "Dunkel", symbol: "mond" },
+/** Farbmodi mit Symbol; die Beschriftung kommt aus den Texten (benutzerMenue[wert]). */
+const MODI: { wert: Farbmodus; symbol: SymbolName }[] = [
+  { wert: "system", symbol: "bildschirm" },
+  { wert: "hell", symbol: "sonne" },
+  { wert: "dunkel", symbol: "mond" },
 ];
 
 /** Angemeldeter Benutzer unten in der Leiste; ein Klick zeigt Verein, Farbmodus, „Mein Zugang“ und „Abmelden“. */
 function BenutzerMenue({ name, verein, rolle, abmelden, meldetAb }: { name: string; verein: string; rolle: string; abmelden: () => void; meldetAb: boolean }) {
   const { offen, setOffen, ref } = useAufklapper();
   const [modus, setModus] = useFarbmodus();
+  const t = useOberflaeche().rahmen.benutzerMenue;
   const teile = name.trim().split(/\s+/).filter(Boolean);
   const initialen = ((teile[0]?.[0] ?? "") + (teile.length > 1 ? (teile.at(-1)?.[0] ?? "") : "")).toLocaleUpperCase("de");
   return (
@@ -289,9 +297,10 @@ function BenutzerMenue({ name, verein, rolle, abmelden, meldetAb }: { name: stri
         <div className="absolute inset-x-0 bottom-full z-40 mb-2 rounded-lg border border-linie-stark bg-weiss p-4 text-tinte shadow-xl">
           <p className="font-semibold">{name}</p>
           {verein && <p className="text-grau">{verein}</p>}
-          <p className="mt-1 text-xs text-grau">{rolle === "admin" ? "Administrator" : "Mitarbeiter"}, SchauFUCHS {VERSION}</p>
+          {/* Produktname, in allen Sprachen gleich (bleibt deutsch) */}
+          <p className="mt-1 text-xs text-grau">{rolle === "admin" ? t.administrator : t.mitarbeiter}, SchauFUCHS {VERSION}</p>
           <div className="mt-3 flex flex-col gap-1.5 border-t border-linie pt-3">
-            <span className="text-[0.85rem] text-grau" id="farbmodus-label">Darstellung</span>
+            <span className="text-[0.85rem] text-grau" id="farbmodus-label">{t.darstellung}</span>
             <div role="group" aria-labelledby="farbmodus-label" className="grid grid-cols-3 gap-0.5 rounded-md border border-linie-stark bg-papier p-0.5">
               {MODI.map((m) => (
                 <button
@@ -302,7 +311,7 @@ function BenutzerMenue({ name, verein, rolle, abmelden, meldetAb }: { name: stri
                   className={`flex items-center justify-center gap-1.5 rounded px-1.5 py-1 text-[0.85rem] ${modus === m.wert ? "bg-weiss font-semibold text-tinte shadow-sm" : "text-grau hover:text-tinte"}`}
                 >
                   <Symbol name={m.symbol} className="size-3.5" />
-                  {m.label}
+                  {t[m.wert]}
                 </button>
               ))}
             </div>
@@ -310,10 +319,10 @@ function BenutzerMenue({ name, verein, rolle, abmelden, meldetAb }: { name: stri
           <SprachWahl hell mitLabel className="mt-3 border-t border-linie pt-3" />
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-linie pt-3">
             <NavLink to="/benutzer" onClick={() => setOffen(false)} className="rounded px-1 py-1">
-              Mein Zugang
+              {t.meinZugang}
             </NavLink>
             <Knopf className="ml-auto" disabled={meldetAb} onClick={abmelden}>
-              Abmelden
+              {t.abmelden}
             </Knopf>
           </div>
         </div>
@@ -368,7 +377,8 @@ export function Anmelden() {
     },
   });
   const einrichten = trpc.auth.einrichten.useMutation(fertig);
-  useSeitentitel("Anmelden");
+  const t = useOberflaeche().rahmen.anmelden;
+  useSeitentitel(t.titel);
 
   if (status.isLoading) return <Laden />;
   if (status.data?.benutzer) return <Navigate to={ziel} replace />;
@@ -385,18 +395,18 @@ export function Anmelden() {
           }}
           className="w-full max-w-md rounded-xl border border-linie-stark bg-weiss p-8 shadow-xl"
         >
-          <h1 className="text-2xl font-bold">Bestätigungscode</h1>
-          <p className="mb-6 mt-1 text-grau">Bitte den 6-stelligen Code aus Ihrer Authenticator-App eingeben. Ohne Telefon geht auch ein Notfallcode.</p>
+          <h1 className="text-2xl font-bold">{t.bestaetigungscode}</h1>
+          <p className="mb-6 mt-1 text-grau">{t.codeHinweis}</p>
           <div className="flex flex-col gap-4">
-            <Feld label="Code">
+            <Feld label={t.code}>
               {(id) => (
                 <Eingabe id={id} value={einmalcode} onChange={(e) => setEinmalcode(e.target.value)} required autoFocus autoComplete="one-time-code" inputMode="text" className="nummer text-center text-2xl tracking-[0.3em]" maxLength={9} />
               )}
             </Feld>
             {anmeldenCode.error && <Hinweis ton="fehler">{fehlerText(anmeldenCode.error)}</Hinweis>}
-            <Knopf type="submit" variante="primaer" gross laedt={anmeldenCode.isPending}>Anmelden</Knopf>
+            <Knopf type="submit" variante="primaer" gross laedt={anmeldenCode.isPending}>{t.anmelden}</Knopf>
             <button type="button" className="text-sm text-band underline" onClick={() => { setZweiterSchritt(null); setEinmalcode(""); }}>
-              Zurück zur Anmeldung
+              {t.zurueck}
             </button>
           </div>
         </form>
@@ -417,32 +427,32 @@ export function Anmelden() {
           <img src="/icon.svg" alt="" className="size-16" />
           <div>
             <h1 className="text-2xl font-bold">{status.data?.appName ?? "SchauFUCHS"}</h1>
-            <p className="text-grau">{ersteinrichtung ? "Ersteinrichtung für Ihren Verein" : "Anmeldung für Ausstellungsleitung und Helfer"}</p>
+            <p className="text-grau">{ersteinrichtung ? t.ersteinrichtung : t.anmeldungFuer}</p>
           </div>
         </div>
         <div className="flex flex-col gap-4">
-          {suche.get("untaetig") && !ersteinrichtung && <Hinweis>Sie wurden nach längerer Untätigkeit automatisch abgemeldet.</Hinweis>}
+          {suche.get("untaetig") && !ersteinrichtung && <Hinweis>{t.untaetig}</Hinweis>}
           {ersteinrichtung && (
             <>
-              <Feld label="Name des Vereins">{(id) => <Eingabe id={id} value={organisation} onChange={(e) => setOrganisation(e.target.value)} required />}</Feld>
-              <Feld label="Ihr Name">{(id) => <Eingabe id={id} value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />}</Feld>
+              <Feld label={t.vereinName}>{(id) => <Eingabe id={id} value={organisation} onChange={(e) => setOrganisation(e.target.value)} required />}</Feld>
+              <Feld label={t.ihrName}>{(id) => <Eingabe id={id} value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />}</Feld>
               {status.data?.einrichtungsCodeNoetig && (
-                <Feld label="Einrichtungscode" hinweis="Steht als EINRICHTUNG_CODE in der Konfiguration des Servers.">
+                <Feld label={t.einrichtungscode} hinweis={t.einrichtungscodeHinweis}>
                   {(id) => <Eingabe id={id} type="password" value={code} onChange={(e) => setCode(e.target.value)} required autoComplete="off" />}
                 </Feld>
               )}
             </>
           )}
-          <Feld label="E-Mail-Adresse">{(id) => <Eingabe id={id} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />}</Feld>
-          <Feld label="Passwort" hinweis={ersteinrichtung ? "Mindestens 10 Zeichen." : undefined}>
+          <Feld label={t.email}>{(id) => <Eingabe id={id} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />}</Feld>
+          <Feld label={t.passwort} hinweis={ersteinrichtung ? t.mindestens10 : undefined}>
             {(id) => <Eingabe id={id} type="password" value={passwort} onChange={(e) => setPasswort(e.target.value)} required autoComplete={ersteinrichtung ? "new-password" : "current-password"} />}
           </Feld>
           {m.error && <Hinweis ton="fehler">{fehlerText(m.error)}</Hinweis>}
           <Knopf type="submit" variante="primaer" gross laedt={m.isPending}>
-            {ersteinrichtung ? "Verein anlegen und anmelden" : "Anmelden"}
+            {ersteinrichtung ? t.vereinAnlegen : t.anmelden}
           </Knopf>
           <a href="/hilfe" target="_blank" rel="noreferrer" className="text-center text-sm text-band">
-            Hilfe zur Anmeldung und zur Software
+            {t.hilfe}
           </a>
           <SprachWahl hell className="mx-auto w-44" />
         </div>

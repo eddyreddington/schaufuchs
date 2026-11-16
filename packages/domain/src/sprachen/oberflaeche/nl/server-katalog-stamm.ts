@@ -1,0 +1,48 @@
+import type { OberflaecheTexte } from "..";
+
+export const stamm: OberflaecheTexte["serverKatalog"]["stamm"] = {
+  bild: {
+    groesser2: "De afbeelding is groter dan 2 MB. Maak deze kleiner (bijv. 2000 pixels breed).",
+    groesser2Kurz: "De afbeelding is groter dan 2 MB. Maak deze kleiner.",
+    groesser5: "De afbeelding is groter dan 5 MB.",
+    logo: "Het logo is groter dan 600 KB. Maak het kleiner (bijv. 600 pixels breed) – het staat op elk bewijs.",
+    format: "Alleen afbeeldingen in JPEG- of PNG-formaat.",
+    nurJpeg: "Alleen afbeeldingen in JPEG-formaat. Sla de foto op als JPEG.",
+    lesen: "De afbeelding kan niet worden gelezen. Sla deze opnieuw op als JPEG of PNG.",
+    lesenJpeg: "De afbeelding kan niet worden gelezen. Sla deze opnieuw op als JPEG.",
+    beschaedigt: "De afbeelding kan niet worden gelezen (beschadigd of onvolledig). Sla deze opnieuw op.",
+    unvollstaendig: "De afbeelding is onvolledig. Sla deze opnieuw op of download haar opnieuw.",
+    pixel: (breite: string, hoehe: string) => `Met ${breite} × ${hoehe} pixels is de afbeelding te groot. Maak deze kleiner.`,
+    pixel1200: (breite: string, hoehe: string) => `Met ${breite} × ${hoehe} pixels is de afbeelding te groot. Maak deze kleiner (bijv. 1200 pixels breed).`,
+    png: (breite: string, hoehe: string) => `Met ${breite} × ${hoehe} pixels is de PNG-afbeelding met transparante achtergrond te groot voor het drukken van de catalogus. Sla deze op als JPEG of verklein haar tot maximaal 1,5 miljoen pixels (bijv. 1500 × 1000).`,
+    fremd: "Deze afbeelding hoort niet bij de show.",
+    fehlt: "Afbeelding niet gevonden.",
+    beitragFehlt: "Bijdrage niet gevonden.",
+    beitragUnbekannt: "Onbekende bijdrage.",
+  },
+  lizenz: {
+    fehlt: "Licentie ontbreekt – bijv. „eigen afbeelding”, „publiek domein”, „CC0” of „CC BY-SA 4.0”.",
+    nc: "Licentie „niet-commercieel” (NC): de catalogus wordt verkocht – deze afbeelding mag er niet in.",
+    nd: "Licentie „geen afgeleide werken” (ND): in de catalogus wordt de afbeelding bijgesneden en verkleind – deze afbeelding mag er niet in.",
+    urheber: "Maker ontbreekt – de CC BY-licentie vereist naamsvermelding.",
+    link: "Link naar de licentie ontbreekt – geef het adres van de licentie op (bijv. https://creativecommons.org/licenses/by-sa/4.0/).",
+  },
+  stammdaten: {
+    versionUnbekannt: "Deze versie van de stamgegevens bestaat niet.",
+    keineZeilen: "Het bestand bevat geen geldige regels.",
+    versionFehlt: "Versie niet gevonden.",
+    nichtErgaenzen: "Deze versie is voor alle verenigingen beschikbaar gesteld en kan niet worden aangevuld. Lees een eigen lijst in.",
+    nichtLoeschen: "Deze versie is voor alle verenigingen beschikbaar gesteld en kan niet worden verwijderd.",
+    schonDa: (rasse: string) => `Alle opgegeven kleurslagen bestaan al bij „${rasse}”.`,
+    verwendet: "Deze versie wordt door een show gebruikt.",
+    verweisen: "Ingeschreven dieren verwijzen naar deze versie – ze kan niet worden verwijderd.",
+    anfuehrung: (zeile: string) => `Regel ${zeile}: aanhalingstekens niet gesloten.`,
+    dreiSpalten: (zeile: string) => `Regel ${zeile}: drie kolommen verwacht (Sparte;Rasse;Farbenschlag).`,
+    mehrSpalten: (zeile: string) => `Regel ${zeile}: meer dan drie kolommen – scheidingsteken in een veld? Zet het veld tussen aanhalingstekens.`,
+    doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Regel ${zeile}: dubbel (${rasse}, ${farbenschlag}).`,
+  },
+  druckvorlage: {
+    fehlt: "Sjabloon niet gevonden.",
+    andereSchau: "Dit sjabloon hoort bij een andere show.",
+  },
+};

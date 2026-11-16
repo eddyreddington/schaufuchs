@@ -4,8 +4,10 @@
  * demselben Plan wie die 2D-Zeichnung; die Szene baut hallenplan-3d-welt.ts. three.js lädt nur mit dieser Seite
  * (dynamischer Import), die übrigen Seiten bleiben klein.
  */
-import { verkleidungVon, hallenSzene, richterFarbe, type Halle, type Hallenplan, type KaefigMasse, type Aufsteller, type SzeneTier, KAEFIG_TYP_LABEL } from "@schau/domain";
+import { verkleidungVon, hallenSzene, LOCALE, richterFarbe, type Halle, type Hallenplan, type KaefigMasse, type Aufsteller, type SzeneTier, KAEFIG_TYP_LABEL } from "@schau/domain";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useOberflaeche, useSprache } from "../sprache";
+import { ot } from "../sprache-jetzt";
 import { HilfeLink, Knopf, KnopfLink } from "../ui";
 import { hell } from "./hallenplan-3d-bausteine";
 import { Steuerkreuz } from "./hallenplan-3d-steuerkreuz";
@@ -35,6 +37,9 @@ export default function Hallenplan3D({
   /** Für die Bild-Adresse des Logos der Sockelverkleidung. */
   schauId: number;
 }) {
+  const texte = useOberflaeche();
+  const t = texte.halleBild.dreiD;
+  const sprache = useSprache();
   const szene = useMemo(() => hallenSzene(halle, plan, masse, aufsteller, new Map(farben)), [halle, plan, masse, aufsteller, farben]);
   const kastenRef = useRef<HTMLDivElement>(null);
   const rahmenRef = useRef<HTMLDivElement>(null);
@@ -55,7 +60,7 @@ export default function Hallenplan3D({
     try {
       w = baueWelt(kasten, szene, richterIndex, schauId, verkleidungVon(aufsteller), setRundgang);
     } catch {
-      setFehler("3D-Ansicht nicht möglich (WebGL fehlt).");
+      setFehler(ot().halleBild.dreiD.keinWebgl);
       return;
     }
     welt.current = w;
@@ -137,18 +142,18 @@ export default function Hallenplan3D({
   const belegt = szene.kaefige.filter((k) => k.tier).length;
   const legende = richter.filter((r) => richterIndex.has(r.id));
   return (
-    <main ref={rahmenRef} aria-label="Hallenplan in 3D" tabIndex={-1} className="fixed inset-0 flex flex-col bg-weiss outline-none">
+    <main ref={rahmenRef} aria-label={t.hallenplan} tabIndex={-1} className="fixed inset-0 flex flex-col bg-weiss outline-none">
       <div className="flex flex-wrap items-center gap-2 border-b border-linie px-3 py-2">
-        <h1 className="mr-2 text-lg font-semibold">Halle in 3D{seite.schau ? <span className="font-normal text-grau"> · {seite.schau}</span> : null}</h1>
+        <h1 className="mr-2 text-lg font-semibold">{t.halle}{seite.schau ? <span className="font-normal text-grau"> · {seite.schau}</span> : null}</h1>
         <span className="text-sm text-grau">
-          {belegt} Tiere · {szene.kaefige.length - belegt} freie Plätze · {szene.volieren.length} Volieren · Stand {new Date(seite.stand).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+          {t.zahlen(belegt, szene.kaefige.length - belegt, szene.volieren.length, new Date(seite.stand).toLocaleTimeString(LOCALE[sprache], { hour: "2-digit", minute: "2-digit" }))}
         </span>
         <span className="ml-auto flex flex-wrap items-center gap-2">
           {(
             [
-              ["rundum", "Rundum"],
-              ["oben", "Von oben"],
-              ["gang", "Im Gang"],
+              ["rundum", t.rundum],
+              ["oben", t.vonOben],
+              ["gang", t.imGang],
             ] as const
           ).map(([a, text]) => (
             <Knopf key={a} variante={ansicht === a ? "primaer" : "zweit"} aria-pressed={ansicht === a} onClick={() => waehle(a)}>
@@ -156,14 +161,14 @@ export default function Hallenplan3D({
             </Knopf>
           ))}
           <Knopf variante={rundgang ? "primaer" : "zweit"} disabled={szene.rundgang.length < 2} onClick={() => welt.current?.bewegung.rundgang(!rundgang)}>
-            {rundgang ? "Rundgang anhalten" : "Rundgang"}
+            {rundgang ? t.rundgangAnhalten : t.rundgang}
           </Knopf>
-          <Knopf onClick={() => void welt.current?.herunterladen().catch(() => setFehler("3D-Modell konnte nicht erstellt werden."))}>3D-Modell herunterladen</Knopf>
+          <Knopf onClick={() => void welt.current?.herunterladen().catch(() => setFehler(t.modellFehler))}>{t.herunterladen}</Knopf>
           <Knopf laedt={seite.laedt} onClick={seite.aktualisieren}>
-            Neu laden
+            {t.neuLaden}
           </Knopf>
-          <HilfeLink abschnitt="hallenplan-3d">Hilfe zur 3D-Ansicht</HilfeLink>
-          <KnopfLink href={seite.zurueck}>Zum Hallenplan</KnopfLink>
+          <HilfeLink abschnitt="hallenplan-3d">{t.hilfe}</HilfeLink>
+          <KnopfLink href={seite.zurueck}>{t.zumHallenplan}</KnopfLink>
         </span>
       </div>
       <div className="relative min-h-0 flex-1">
@@ -171,7 +176,7 @@ export default function Hallenplan3D({
         {!fehler && <Steuerkreuz bewegung={() => welt.current?.bewegung} zentrieren={() => waehle(ansicht)} />}
         {fehler && <p className="absolute left-3 top-3 rounded-md bg-weiss px-3 py-2 text-sm text-kamm shadow">{fehler}</p>}
         {legende.length > 0 && (
-          <ul className="pointer-events-none absolute bottom-3 left-3 flex max-w-[60%] flex-wrap gap-x-3 gap-y-1 rounded-md bg-weiss/90 px-3 py-2 text-xs shadow" aria-label="Preisrichter">
+          <ul className="pointer-events-none absolute bottom-3 left-3 flex max-w-[60%] flex-wrap gap-x-3 gap-y-1 rounded-md bg-weiss/90 px-3 py-2 text-xs shadow" aria-label={texte.allgemein.preisrichter}>
             {legende.map((r) => (
               <li key={r.id} className="flex items-center gap-1.5">
                 <span className="inline-block size-3 rounded-sm border border-linie" style={{ background: hell(richterFarbe(richterIndex.get(r.id)!)) }} />
@@ -196,10 +201,16 @@ export default function Hallenplan3D({
 
 /** Angaben beim Draufzeigen: Nummer und Rasse, nie der Aussteller. */
 function kaefigText(k: Treffer, richterName: Map<number, string>): string[] {
-  if (k.art === "voliere") return k.tier ? [`${k.tier.nr ? `Nr. ${k.tier.nr} · ` : ""}${k.tier.rasse}`, k.name, ...richterZeile(k.tier, richterName)] : [k.name, "frei"];
+  const o = ot();
+  const d = o.halleBild.dreiD;
+  if (k.art === "voliere") {
+    // Name der Voliere aus der Fachlogik („Voliere 3“): die Bezeichnung in der Sprache der Oberfläche.
+    const name = k.name.replace(new RegExp(`^${KAEFIG_TYP_LABEL.voliere}`), o.fach.KAEFIG_TYP_LABEL.voliere);
+    return k.tier ? [`${k.tier.nr ? d.nr(k.tier.nr) : ""}${k.tier.rasse}`, name, ...richterZeile(k.tier, richterName)] : [name, d.frei];
+  }
   const t = k.kaefig.tier;
-  if (!t) return ["Freier Platz", `${KAEFIG_TYP_LABEL[k.kaefig.typ]} · ${k.kaefig.ort}`];
-  return [`${t.nr ? `Nr. ${t.nr} · ` : ""}${t.rasse}`, `${t.sparte} · ${k.kaefig.ort}`, ...richterZeile(t, richterName)];
+  if (!t) return [d.freierPlatz, `${o.fach.KAEFIG_TYP_LABEL[k.kaefig.typ]} · ${k.kaefig.ort}`];
+  return [`${t.nr ? d.nr(t.nr) : ""}${t.rasse}`, `${t.sparte} · ${k.kaefig.ort}`, ...richterZeile(t, richterName)];
 }
 
-const richterZeile = (t: SzeneTier, n: Map<number, string>) => (t.preisrichterId != null && n.get(t.preisrichterId) ? [`Preisrichter: ${n.get(t.preisrichterId)}`] : []);
+const richterZeile = (t: SzeneTier, n: Map<number, string>) => (t.preisrichterId != null && n.get(t.preisrichterId) ? [ot().halleBild.dreiD.preisrichter(n.get(t.preisrichterId)!)] : []);

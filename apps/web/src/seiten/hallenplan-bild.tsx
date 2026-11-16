@@ -1,9 +1,10 @@
 /**
  * Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
  */
-import { istRechteckUmriss, tuerOeffnung, umrissNormal, umrissSperren, umrissVersetzt, umrissVon, type Blick, blockPlatz, dreheBlick, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenObjekt, istMoebel, kaefigKanten, kaefigName, type KaefigPlatz, type KaefigTyp, type MoebelArt, moebelStuecke, objektFront, type PlanKaefig, type Rechteck, reihenSchilder, RICHTER_FARBE, richterFarbe, richterSchraffur, type Strecke, type WandSeite } from "@schau/domain";
+import { istRechteckUmriss, tuerOeffnung, umrissNormal, umrissSperren, umrissVersetzt, umrissVon, type Blick, blockPlatz, dreheBlick, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenObjekt, istMoebel, kaefigKanten, type KaefigPlatz, type KaefigTyp, type MoebelArt, moebelStuecke, objektFront, type PlanKaefig, type Rechteck, reihenSchilder, RICHTER_FARBE, richterFarbe, richterSchraffur, type Strecke, type WandSeite } from "@schau/domain";
 import { useLayoutEffect, useRef } from "react";
-import { type Aendern, BAU, type Daten, huelle, meter, objektLage, platzWeg, RAND_CM, RASTER, type Ziel, zielPlaetze, zuTeilen } from "./hallenplan-geometrie";
+import { useOberflaeche } from "../sprache";
+import { type Aendern, BAU, type Daten, huelle, kaefigBezeichnung, meter, objektLage, platzWeg, RAND_CM, RASTER, type Ziel, zielPlaetze, zuTeilen } from "./hallenplan-geometrie";
 import { usePlanBedienung } from "./hallenplan-bild-bedienung";
 import { Muster } from "./hallenplan-teile";
 
@@ -64,6 +65,8 @@ export function PlanBild({
   waehlen: (z: Ziel[]) => void;
   aendern: Aendern;
 }) {
+  const tg = useOberflaeche().halleBild;
+  const t = tg.bild;
   const svgRef = useRef<SVGSVGElement>(null);
   const kastenRef = useRef<HTMLDivElement>(null);
   // Zoom: die Mitte des sichtbaren Ausschnitts bleibt stehen.
@@ -130,7 +133,7 @@ export function PlanBild({
               onKeyDown: (e: React.KeyboardEvent) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), zeigeKaefig(k.id)),
               tabIndex: 0,
               role: "button",
-              "aria-label": `Käfig ${k.nr ?? "ohne Nummer"}: ${k.rasse} – Angaben anzeigen`,
+              "aria-label": t.kaefigAngaben(k.nr ?? tg.geometrie.ohneNummer, k.rasse),
               className: "cursor-pointer focus:outline-none",
             }
           : {})}
@@ -144,7 +147,7 @@ export function PlanBild({
             {k.nr}
           </text>
         )}
-        <title>{`${k.nr ? `Nr. ${k.nr}: ` : ""}${k.rasse}`}</title>
+        <title>{k.nr ? t.kaefigTitel(k.nr, k.rasse) : k.rasse}</title>
         {markierterKaefig === k.id && <rect x={g.x - rand * 1.5} y={g.y - rand * 1.5} width={g.width + rand * 3} height={g.height + rand * 3} fill="none" stroke="#171b24" strokeWidth={rand * 1.2} />}
       </g>
     );
@@ -182,7 +185,7 @@ export function PlanBild({
         viewBox={`${-RAND_CM} ${-RAND_CM} ${W + 2 * RAND_CM} ${H + 2 * RAND_CM}`}
         className={`${zoom !== 1 ? (voll ? "" : "h-auto") : voll ? "h-full w-full" : klein ? "h-auto w-full" : "h-auto w-full min-w-[40rem]"} ${bearbeiten ? "touch-none select-none" : ""} ${zeichnen ? "cursor-crosshair" : ""} print:h-auto print:w-full`}
         role="img"
-        aria-label={`Hallenplan, ${meter(halle.breite)} × ${meter(halle.laenge)} m`}
+        aria-label={t.hallenplan(meter(halle.breite), meter(halle.laenge))}
         onPointerMove={ziehen}
         onPointerUp={loslassen}
         onPointerCancel={(e) => {
@@ -245,7 +248,7 @@ export function PlanBild({
             </text>
           ))}
         <text x={W} y={H + RAND_CM * 0.85} fontSize={schrift * 0.55} textAnchor="end" dominantBaseline="central" fill={BAU.raster.text}>
-          Meter
+          {t.meter}
         </text>
         {/* Wände: kräftig und außen um die Halle entlang des Grundrisses, an Eingängen offen. */}
         <path d={`${pfad(umrissVersetzt(umriss, wand))} ${pfad(umriss)}`} fill={BAU.wand} fillRule="evenodd" />
@@ -329,7 +332,7 @@ export function PlanBild({
                 return (
                   <g
                     key={`p${i}`}
-                    {...bedienbar(pz, `Grundplatte ${i + 1} in Reihe R${reihe.nr}${(aufPlatteNr.get(i) ?? []).some((k) => k.nr) ? ` (Käfige ${(aufPlatteNr.get(i) ?? []).map((k) => k.nr).filter(Boolean).join(", ")})` : ""}`)}
+                    {...bedienbar(pz, `${t.grundplatteInReihe(i + 1, reihe.nr)}${(aufPlatteNr.get(i) ?? []).some((k) => k.nr) ? t.mitKaefigen((aufPlatteNr.get(i) ?? []).map((k) => k.nr).filter(Boolean).join(", ")) : ""}`)}
                   >
                     <rect {...g} fill={BAU.platte.fill} stroke={BAU.platte.stroke} {...strich(0.8)} />
                   </g>
@@ -350,12 +353,12 @@ export function PlanBild({
                 // Plätze auf einer für eine Nachmeldung angebauten Platte gehören zu ihr (die Platte ist belegt).
                 const einzeln = !f.angebaut && (f.platte == null || (reihe.platten[f.platte]?.belegt ?? 0) > 0);
                 return (
-                  <g key={`frei${i}`} {...(einzeln ? bedienbar(fz, `Freier Platz in R${reihe.nr}${f.platte != null ? `, Grundplatte ${f.platte + 1}` : ""}`) : { pointerEvents: bearbeiten ? "none" : undefined })}>
+                  <g key={`frei${i}`} {...(einzeln ? bedienbar(fz, `${tg.geometrie.freierPlatzIn(reihe.nr)}${f.platte != null ? tg.geometrie.grundplatteZusatz(f.platte + 1) : ""}`) : { pointerEvents: bearbeiten ? "none" : undefined })}>
                     <rect {...g} fill="#ffffff" stroke="#7c8696" {...strich(0.8)} strokeDasharray={`${rand * 0.8} ${rand * 0.6}`} />
                     <text x={g.x + g.width / 2} y={g.y + g.height / 2} fontSize={Math.min(g.width, g.height) * 0.3} textAnchor="middle" dominantBaseline="central" fill="#7c8696">
-                      frei
+                      {t.frei}
                     </text>
-                    <title>{`Freier Platz (${kaefigName(f.typ as KaefigTyp)})${f.etage ? `, ${f.etage + 1}. Etage` : ""}`}</title>
+                    <title>{`${t.freierPlatzTitel(kaefigBezeichnung(f.typ as KaefigTyp))}${f.etage ? t.etage(f.etage + 1) : ""}`}</title>
                     {markiert(fz) && auswahlRahmen(g)}
                   </g>
                 );
@@ -364,7 +367,7 @@ export function PlanBild({
               {reihe.platten.map((pl, i) => (da[i] ? waende(aufPlatte(pl.rechteck, i), dreheBlick(frontDerReihe(reihe, plan.quer, pl.drehung ?? 0), lage.vorschauDrehung(i)), `w${i}`) : null))}
               {/* Die ganze Reihe greift man an ihrer Beschriftung „R…“. */}
               {b && (
-                <g {...bedienbar(z, `Reihe R${reihe.nr}`)}>
+                <g {...bedienbar(z, tg.geometrie.reiheR(reihe.nr))}>
                   <rect {...b} fill="transparent" />
                   <text x={b.x + b.width / 2} y={b.y + b.height / 2} fontSize={schildSchrift} textAnchor="middle" dominantBaseline="central" fontWeight="bold" fill={reihe.kaefige.length ? "#2d4bd2" : "#7c8696"}>
                     R{reihe.nr}
@@ -398,9 +401,9 @@ export function PlanBild({
                 <>
                   <rect {...g} fill={BAU.voliere.fill} stroke={BAU.voliere.stroke} {...strich(2.2)} />
                   <text x={g.x + g.width / 2} y={g.y + g.height / 2} fontSize={Math.min(schrift, Math.min(g.width, g.height) * 0.4)} textAnchor="middle" dominantBaseline="central" fill="#171b24">
-                    {o.tier ? (o.tier.nr ? `V ${o.tier.nr}` : "V") : "V (frei)"}
+                    {o.tier ? (o.tier.nr ? `V ${o.tier.nr}` : "V") : t.voliereFrei}
                   </text>
-                  <title>{o.tier ? `${o.name}: ${o.tier.nr ? `Nr. ${o.tier.nr}, ` : ""}${o.tier.rasse}` : `${o.name}: frei`}</title>
+                  <title>{o.tier ? (o.tier.nr ? t.voliereNrTier(o.name, o.tier.nr, o.tier.rasse) : `${o.name}: ${o.tier.rasse}`) : t.voliereLeer(o.name)}</title>
                   {o.tier && zeigeKaefig && <rect {...g} fill="transparent" className="cursor-pointer" onClick={() => zeigeKaefig(o.tier!.id)} />}
                   {waende(verschoben(lage, z), objektFront({ front: halle.objekte?.find((x) => x.id === o.id)?.front, rechteck: lage }))}
                 </>
@@ -425,7 +428,7 @@ export function PlanBild({
                       return kaefig(k, verschoben({ ...q, x: q.x + lage.x - o.rechteck.x, y: q.y + lage.y - o.rechteck.y }, z));
                     })}
                   {waende(verschoben(lage, z), objektFront({ front: halle.objekte?.find((x) => x.id === o.id)?.front, rechteck: lage }))}
-                  <title>{o.kaefige?.length ? `${o.name} – ${o.kaefige.length} von ${o.plaetze} belegt` : `${o.name} – leer (Reserve)`}</title>
+                  <title>{o.kaefige?.length ? t.blockBelegt(o.name, o.kaefige.length, o.plaetze) : t.blockLeer(o.name)}</title>
                 </>
               )}
               {markiert(z) && auswahlRahmen(g)}
@@ -444,7 +447,7 @@ export function PlanBild({
           />
         )}
         {zielWahl && (
-          <g aria-label="Ziel für das Tier wählen">
+          <g aria-label={t.zielWaehlen}>
             {zielPlaetze(plan, halle).map((z) => {
               const gleich = z.typ === zielWahl.typ;
               const selbst = z.tierId === zielWahl.tierId;
@@ -459,7 +462,7 @@ export function PlanBild({
                   strokeWidth={rand * 0.5}
                   className={gleich && !selbst ? "cursor-pointer" : "cursor-not-allowed"}
                   role="button"
-                  aria-label={`${z.tierId == null ? "Freier Käfig" : `Käfig Nr. ${z.nr ?? "ohne Nummer"}`}${gleich ? "" : " (andere Größe)"}`}
+                  aria-label={`${z.tierId == null ? t.freierKaefig : t.kaefigNr(z.nr ?? tg.geometrie.ohneNummer)}${gleich ? "" : t.andereGroesse}`}
                   onPointerDown={(e) => {
                     e.stopPropagation();
                     e.preventDefault();

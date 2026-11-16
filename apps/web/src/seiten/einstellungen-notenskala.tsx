@@ -1,6 +1,7 @@
 import { STANDARD_NOTENSKALA, type NotenStufe } from "@schau/domain";
 import { useState } from "react";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Eingabe, Knopf, Speicherleiste, useAenderungenWarnen, useMeldung } from "../ui";
 
@@ -9,6 +10,8 @@ import { Abschnitt, Eingabe, Knopf, Speicherleiste, useAenderungenWarnen, useMel
 type Schau = Ausgabe["schau"]["get"];
 
 export function Notenskala({ schau: s }: { schau: Schau }) {
+  const t = useOberflaeche().schau.einstellungen;
+  const tn = t.notenskala;
   const ausSchau = () => s.notenskala.map((n) => ({ ...n, punkteText: n.punkte.join(", ") }));
   const [zeilen, setZeilen] = useState(ausSchau);
   const gespeichert = useAenderungenWarnen(zeilen);
@@ -18,7 +21,7 @@ export function Notenskala({ schau: s }: { schau: Schau }) {
     onSuccess: () => {
       gespeichert();
       utils.schau.get.invalidate();
-      meldung("Notenskala gespeichert.");
+      meldung(tn.gespeichert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -28,22 +31,22 @@ export function Notenskala({ schau: s }: { schau: Schau }) {
     speichern.mutate({ schauId: s.id, skala });
   };
   return (
-    <Abschnitt id="notenskala" titel="Notenskala">
-      <p className="mb-3 text-sm text-grau">Übliche BDRG-Skala, vor der Bewertung mit den AAB abgleichen</p>
+    <Abschnitt id="notenskala" titel={t.seite.abschnitte.notenskala}>
+      <p className="mb-3 text-sm text-grau">{tn.hinweis}</p>
       <table className="tabelle max-w-2xl">
         <thead>
           <tr>
-            <th>Kürzel</th>
-            <th>Note</th>
-            <th>Punkte</th>
+            <th>{tn.kuerzel}</th>
+            <th>{tn.note}</th>
+            <th>{tn.punkte}</th>
           </tr>
         </thead>
         <tbody>
           {zeilen.map((z, i) => (
             <tr key={i}>
-              <td><Eingabe aria-label="Kürzel" value={z.kuerzel} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, kuerzel: e.target.value } : x)))} /></td>
-              <td><Eingabe aria-label="Note" value={z.name} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></td>
-              <td><Eingabe aria-label="Punkte" value={z.punkteText} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, punkteText: e.target.value } : x)))} /></td>
+              <td><Eingabe aria-label={tn.kuerzel} value={z.kuerzel} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, kuerzel: e.target.value } : x)))} /></td>
+              <td><Eingabe aria-label={tn.note} value={z.name} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} /></td>
+              <td><Eingabe aria-label={tn.punkte} value={z.punkteText} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, punkteText: e.target.value } : x)))} /></td>
             </tr>
           ))}
         </tbody>
@@ -54,7 +57,7 @@ export function Notenskala({ schau: s }: { schau: Schau }) {
           onVerwerfen={() => setZeilen(ausSchau())}
           onSpeichern={() => senden(false)}
           laedt={speichern.isPending}
-          knopf="Notenskala speichern"
+          knopf={tn.speichern}
         />
         <Knopf
           variante="leise"
@@ -63,7 +66,7 @@ export function Notenskala({ schau: s }: { schau: Schau }) {
             senden(true);
           }}
         >
-          Auf Standard zurücksetzen
+          {tn.standard}
         </Knopf>
       </div>
     </Abschnitt>

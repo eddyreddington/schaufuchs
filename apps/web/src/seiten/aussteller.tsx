@@ -1,6 +1,7 @@
 import { SepaMandate } from "./aussteller-mandate";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { datum, fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, Laden, Marke, SEITE, Seitenkopf, Segmente, Suchfeld, TabellenRahmen, useMeldung } from "../ui";
 
@@ -8,20 +9,15 @@ import { Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, L
  * Aussteller des Vereins verwalten: Vereinsmitglieder und Externe getrennt, anlegen, Stammdaten ändern,
  * Auskunft (Art. 15 DSGVO) und Löschen (Art. 17). Nur Ausstellungsleitung (Administratoren).
  */
-const GRUPPEN = [
-  ["mitglieder", "Vereinsmitglieder"],
-  ["externe", "Externe Aussteller"],
-  ["alle", "Alle"],
-] as const;
-const FILTER = [
-  ["aktiv", "Aktiv"],
-  ["gesperrt", "Gesperrt"],
-  ["geloescht", "Gelöscht"],
-] as const;
-type Gruppe = (typeof GRUPPEN)[number][0];
+/** Beschriftungen: `t.meldung.aussteller.gruppen` und `.filter`. */
+const GRUPPEN = ["mitglieder", "externe", "alle"] as const;
+const FILTER = ["aktiv", "gesperrt", "geloescht"] as const;
+type Gruppe = (typeof GRUPPEN)[number];
 type Zeile = Ausgabe["verein"]["aussteller"][number];
 
 export function AusstellerSeite() {
+  const t = useOberflaeche();
+  const ta = t.meldung.aussteller;
   const [eingabe, setEingabe] = useState("");
   const [q, setQ] = useState("");
   // Suche erst nach einer kurzen Tipp-Pause (jede Abfrage geht über alle Aussteller).
@@ -33,7 +29,7 @@ export function AusstellerSeite() {
   // Startansicht: Mitglieder, sobald die Schreibweisen festgelegt sind – vorher wäre die Liste leer.
   const [gewaehlt, setGruppe] = useState<Gruppe | null>(null);
   const gruppe: Gruppe = gewaehlt ?? (angaben.data?.eigene.length ? "mitglieder" : "alle");
-  const [filter, setFilter] = useState<(typeof FILTER)[number][0]>("aktiv");
+  const [filter, setFilter] = useState<(typeof FILTER)[number]>("aktiv");
   const [schauId, setSchauId] = useState<number | null>(null);
   const schauen = trpc.schau.liste.useQuery();
   const echteSchauen = (schauen.data ?? []).filter((s) => !s.test);
@@ -49,36 +45,37 @@ export function AusstellerSeite() {
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Aussteller"
-        unter={eigene.length ? <>Vereinsmitglieder: {eigene.map((n, i) => <span key={n}>{i > 0 && " oder "}„{n}“</span>)}</> : undefined}
+        titel={t.allgemein.aussteller}
+        unter={eigene.length ? <>{ta.mitgliederVor} {eigene.map((n, i) => <span key={n}>{i > 0 && ` ${ta.oder} `}{ta.zitat(n)}</span>)}</> : undefined}
+        // bleibt deutsch (Anker im Handbuch)
         hilfe="aussteller-verwalten-auskunft-und-löschung"
         aktionen={
           <>
             <Knopf disabled={!angaben.data} onClick={() => setSchreibweisen(true)}>
-              Schreibweisen festlegen
+              {ta.schreibweisenFestlegen}
             </Knopf>
             {/* Hier angelegt ist immer ein echter Aussteller; Test-Aussteller entstehen über Meldungen in der Testschau. */}
             {!testGewaehlt && (
               <Knopf variante="primaer" onClick={() => setBearbeiten({})}>
-                Aussteller anlegen
+                {ta.anlegen}
               </Knopf>
             )}
           </>
         }
       />
 
-      {angaben.data && !eigene.length && <Hinweis ton="warnung">Die Schreibweisen Ihres Vereins sind noch nicht festgelegt.</Hinweis>}
-      {testGewaehlt && <Hinweis ton="warnung">Test-Aussteller: Sie gehören nur zu dieser Testschau.</Hinweis>}
+      {angaben.data && !eigene.length && <Hinweis ton="warnung">{ta.nochNichtFestgelegt}</Hinweis>}
+      {testGewaehlt && <Hinweis ton="warnung">{ta.testHinweis}</Hinweis>}
 
       <TabellenRahmen
         kopf={
           <>
-            <Suchfeld aria-label="Aussteller suchen" placeholder="Name, Ort, Verein, E-Mail, Reg.-Nr." value={eingabe} onChange={(e) => setEingabe(e.target.value)} />
-            <Segmente label="Gruppe" wert={gruppe} onChange={setGruppe} optionen={GRUPPEN.map(([k, l]) => ({ wert: k, label: l }))} />
+            <Suchfeld aria-label={ta.suchen} placeholder={ta.suchPlatzhalter} value={eingabe} onChange={(e) => setEingabe(e.target.value)} />
+            <Segmente label={ta.gruppe} wert={gruppe} onChange={setGruppe} optionen={GRUPPEN.map((k) => ({ wert: k, label: ta.gruppen[k] }))} />
             <div className="ml-auto flex w-full flex-wrap gap-2 sm:w-auto">
               <div className="w-full sm:w-64">
                 <Auswahl
-                  aria-label="Schau"
+                  aria-label={ta.schau}
                   value={schauId ?? ""}
                   onChange={(e) => {
                     const id = e.target.value ? Number(e.target.value) : null;
@@ -87,24 +84,24 @@ export function AusstellerSeite() {
                     if (testSchauen.some((s) => s.id === id)) setGruppe("alle");
                   }}
                 >
-                  <option value="">alle Schauen</option>
+                  <option value="">{ta.alleSchauen}</option>
                   {echteSchauen.map((s) => (
                     <option key={s.id} value={s.id}>
-                      gemeldet in „{s.name}“
+                      {ta.gemeldetIn(s.name)}
                     </option>
                   ))}
                   {testSchauen.map((s) => (
                     <option key={s.id} value={s.id}>
-                      Test-Aussteller der Testschau „{s.name}“
+                      {ta.testAusstellerDer(s.name)}
                     </option>
                   ))}
                 </Auswahl>
               </div>
               <div className="w-full sm:w-36">
-                <Auswahl aria-label="Status" value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
-                  {FILTER.map(([k, l]) => (
+                <Auswahl aria-label={t.allgemein.status} value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
+                  {FILTER.map((k) => (
                     <option key={k} value={k}>
-                      {l}
+                      {ta.filter[k]}
                     </option>
                   ))}
                 </Auswahl>
@@ -114,7 +111,7 @@ export function AusstellerSeite() {
         }
         fuss={
           liste.data?.length ? (
-            <span>{liste.data.length === 500 ? "Die ersten 500 – bitte die Suche eingrenzen." : `${liste.data.length} Aussteller`}</span>
+            <span>{liste.data.length === 500 ? ta.ersten500 : ta.anzahl(liste.data.length)}</span>
           ) : undefined
         }
       >
@@ -128,20 +125,20 @@ export function AusstellerSeite() {
           </div>
         ) : !liste.data.length ? (
           <p className="px-4 py-10 text-center text-grau">
-            {q ? "Keine Treffer." : gruppe === "mitglieder" && !eigene.length ? "Noch keine Vereinsmitglieder – erst die Schreibweisen festlegen." : "Keine Einträge."}
+            {q ? t.meldung.keineTreffer : gruppe === "mitglieder" && !eigene.length ? ta.nochKeineMitglieder : ta.keineEintraege}
           </p>
         ) : (
           <table className="tabelle">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Verein</th>
-                <th>Wohnort</th>
-                <th className="text-right">Meldungen</th>
-                <th>Zuletzt gemeldet</th>
-                <th>Status</th>
+                <th>{t.allgemein.name}</th>
+                <th>{t.meldung.verein}</th>
+                <th>{ta.wohnort}</th>
+                <th className="text-right">{ta.meldungen}</th>
+                <th>{ta.zuletztGemeldet}</th>
+                <th>{t.allgemein.status}</th>
                 <th>
-                  <span className="sr-only">Aktionen</span>
+                  <span className="sr-only">{ta.aktionen}</span>
                 </th>
               </tr>
             </thead>
@@ -167,6 +164,8 @@ const zeilenAktion = `${zeilenAktionBasis} hover:bg-papier hover:text-tinte`;
 const zeilenAktionGefahr = `${zeilenAktionBasis} hover:bg-kamm-hell hover:text-kamm`;
 
 function AusstellerZeile({ x, bearbeiten, loeschen }: { x: Zeile; bearbeiten: () => void; loeschen: () => void }) {
+  const t = useOberflaeche();
+  const ta = t.meldung.aussteller;
   const aktiv = !x.geloeschtAm && !x.gesperrtAm;
   const name = `${x.nachname}, ${x.vorname}`;
   return (
@@ -183,8 +182,8 @@ function AusstellerZeile({ x, bearbeiten, loeschen }: { x: Zeile; bearbeiten: ()
       <td>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span>{x.verein || "–"}</span>
-          {x.mitglied ? <Marke ton="ok">Mitglied</Marke> : <Marke>extern</Marke>}
-          {x.mitgliedVonHand != null && <span className="text-sm text-grau">(von Hand)</span>}
+          {x.mitglied ? <Marke ton="ok">{ta.mitglied}</Marke> : <Marke>{ta.extern}</Marke>}
+          {x.mitgliedVonHand != null && <span className="text-sm text-grau">{ta.vonHand}</span>}
         </div>
       </td>
       <td>{[x.plz, x.ort].filter(Boolean).join(" ") || "–"}</td>
@@ -192,30 +191,31 @@ function AusstellerZeile({ x, bearbeiten, loeschen }: { x: Zeile; bearbeiten: ()
       <td>{datum(x.letzteMeldung)}</td>
       <td>
         {x.geloeschtAm ? (
-          <Marke>gelöscht {datum(x.geloeschtAm)}</Marke>
+          <Marke>{ta.geloescht(datum(x.geloeschtAm))}</Marke>
         ) : x.gesperrtAm ? (
-          <Marke ton="warnung">gesperrt bis {datum(x.loeschenAb)}</Marke>
+          <Marke ton="warnung">{ta.gesperrtBis(datum(x.loeschenAb))}</Marke>
         ) : (
-          <Marke ton="ok">aktiv</Marke>
+          <Marke ton="ok">{ta.aktiv}</Marke>
         )}
       </td>
       <td>
         <div className="flex flex-wrap justify-end gap-0.5 lg:flex-nowrap">
           {aktiv && (
             <button type="button" className={zeilenAktion} onClick={bearbeiten}>
-              Bearbeiten
+              {t.allgemein.bearbeiten}
             </button>
           )}
           {!x.geloeschtAm && (
             <>
               <a className={zeilenAktion} href={`/datei/aussteller/${x.id}/auskunft.pdf`} target="_blank" rel="noreferrer">
-                Auskunft
+                {ta.auskunft}
               </a>
               <a className={zeilenAktion} href={`/datei/aussteller/${x.id}/auskunft.json`} download>
+                {/* bleibt deutsch: Dateiformat JSON */}
                 JSON
               </a>
               <button type="button" className={zeilenAktionGefahr} onClick={loeschen}>
-                Löschen
+                {t.allgemein.loeschen}
               </button>
             </>
           )}
@@ -244,8 +244,9 @@ const LEER: Formular = { vorname: "", nachname: "", strasse: "", plz: "", ort: "
 
 function BearbeitenDialog({ id, eigene, schliessen }: { id?: number; eigene: string[]; schliessen: () => void }) {
   const vorhanden = trpc.verein.ausstellerDaten.useQuery({ id: id ?? 0 }, { enabled: !!id, gcTime: 0, staleTime: 0 });
+  const ta = useOberflaeche().meldung.aussteller;
   return (
-    <Dialog offen onSchliessen={schliessen} titel={id ? "Aussteller bearbeiten" : "Aussteller anlegen"} breit>
+    <Dialog offen onSchliessen={schliessen} titel={id ? ta.bearbeitenTitel : ta.anlegen} breit>
       {!id ? (
         <Formular start={LEER} startMitglied={null} eigene={eigene} schliessen={schliessen} />
       ) : vorhanden.error ? (
@@ -277,10 +278,12 @@ function Formular({ id, start, startMitglied, eigene, schliessen }: { id?: numbe
   const [doppelt, setDoppelt] = useState(false);
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const t = useOberflaeche();
+  const ta = t.meldung.aussteller;
   const speichern = trpc.verein.ausstellerSpeichern.useMutation({
     onSuccess: async () => {
       await Promise.all([utils.verein.aussteller.invalidate(), utils.verein.vereinsangaben.invalidate(), id ? utils.verein.ausstellerDaten.invalidate({ id }) : null]);
-      meldung(id ? "Änderungen gespeichert." : `${f.vorname} ${f.nachname} angelegt.`);
+      meldung(id ? ta.geaendert : ta.angelegt(`${f.vorname} ${f.nachname}`));
       schliessen();
     },
     onError: (e) => setDoppelt(!id && e.data?.code === "CONFLICT"),
@@ -301,29 +304,29 @@ function Formular({ id, start, startMitglied, eigene, schliessen }: { id?: numbe
   return (
     <form className="flex flex-col gap-4" onSubmit={(e) => senden(e)}>
       <div className="grid gap-4 sm:grid-cols-2">
-        {feld("vorname", "Vorname", { pflicht: true })}
-        {feld("nachname", "Nachname", { pflicht: true })}
-        {feld("strasse", "Straße und Hausnummer", { klasse: "sm:col-span-2" })}
-        {feld("plz", "PLZ")}
-        {feld("ort", "Ort")}
-        {feld("telefon", "Telefon", { typ: "tel" })}
-        {feld("email", "E-Mail", { typ: "email" })}
-        {feld("verein", "Verein", { hinweis: "z. B. „GZV Musterstadt 1904“" })}
-        {feld("kreisverband", "Kreisverband")}
-        {feld("registriernummer", "Registriernummer (Viehverkehrsordnung)")}
-        <Feld label="Vereinsmitglied">
+        {feld("vorname", ta.vorname, { pflicht: true })}
+        {feld("nachname", ta.nachname, { pflicht: true })}
+        {feld("strasse", ta.strasse, { klasse: "sm:col-span-2" })}
+        {feld("plz", ta.plz)}
+        {feld("ort", ta.ort)}
+        {feld("telefon", ta.telefon, { typ: "tel" })}
+        {feld("email", ta.email, { typ: "email" })}
+        {feld("verein", t.meldung.verein, { hinweis: ta.vereinHinweis })}
+        {feld("kreisverband", ta.kreisverband)}
+        {feld("registriernummer", ta.registriernummer)}
+        <Feld label={ta.vereinsmitglied}>
           {(fid) => (
             <Auswahl id={fid} value={mitglied} onChange={(e) => setMitglied(e.target.value as typeof mitglied)}>
-              <option value="auto">Automatisch nach Verein ({autoMitglied ? "Mitglied" : "extern"})</option>
-              <option value="ja">Ja, Mitglied</option>
-              <option value="nein">Nein, extern</option>
+              <option value="auto">{ta.automatisch(autoMitglied ? ta.mitglied : ta.extern)}</option>
+              <option value="ja">{ta.jaMitglied}</option>
+              <option value="nein">{ta.neinExtern}</option>
             </Auswahl>
           )}
         </Feld>
-        {feld("iban", "IBAN", { hinweis: "Freiwillig" })}
-        {feld("kontoinhaber", "Kontoinhaber", { hinweis: "Leer: der Aussteller selbst" })}
+        {feld("iban", "IBAN", { hinweis: ta.freiwillig })}
+        {feld("kontoinhaber", ta.kontoinhaber, { hinweis: ta.kontoinhaberHinweis })}
         <div className="sm:col-span-2">
-          <Haken label="Ist Preisrichter" hinweis="Vorschlag für neue Meldungen" checked={f.istPreisrichter} onChange={(v) => setF({ ...f, istPreisrichter: v })} />
+          <Haken label={ta.istPreisrichter} hinweis={ta.istPreisrichterHinweis} checked={f.istPreisrichter} onChange={(v) => setF({ ...f, istPreisrichter: v })} />
         </div>
       </div>
       {speichern.error && (
@@ -331,15 +334,15 @@ function Formular({ id, start, startMitglied, eigene, schliessen }: { id?: numbe
           {fehlerText(speichern.error)}
           {doppelt && (
             <div className="mt-2">
-              <Knopf onClick={() => speichern.mutate({ id, daten: f, mitglied, trotzdem: true })}>Trotzdem neu anlegen</Knopf>
+              <Knopf onClick={() => speichern.mutate({ id, daten: f, mitglied, trotzdem: true })}>{ta.trotzdem}</Knopf>
             </div>
           )}
         </Hinweis>
       )}
       <div className="flex flex-wrap justify-end gap-2 border-t border-linie pt-4">
-        <Knopf onClick={schliessen}>Abbrechen</Knopf>
+        <Knopf onClick={schliessen}>{t.allgemein.abbrechen}</Knopf>
         <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>
-          {id ? "Speichern" : "Anlegen"}
+          {id ? t.allgemein.speichern : t.allgemein.anlegen}
         </Knopf>
       </div>
     </form>
@@ -352,10 +355,12 @@ function SchreibweisenDialog({ daten, schliessen }: { daten: Ausgabe["verein"]["
   const [neu, setNeu] = useState("");
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const t = useOberflaeche();
+  const ta = t.meldung.aussteller;
   const setzen = trpc.verein.vereinsnamenSetzen.useMutation({
     onSuccess: async () => {
       await Promise.all([utils.verein.aussteller.invalidate(), utils.verein.vereinsangaben.invalidate()]);
-      meldung("Schreibweisen gespeichert.");
+      meldung(ta.schreibweisenGespeichert);
       schliessen();
     },
   });
@@ -377,13 +382,13 @@ function SchreibweisenDialog({ daten, schliessen }: { daten: Ausgabe["verein"]["
     <label key={n} className="flex items-center gap-2 py-1">
       <input type="checkbox" className="size-[1.05rem] accent-band" checked={gewaehlt.has(n)} onChange={() => umschalten(n)} />
       <span>{n}</span>
-      {anzahl != null && <span className="text-sm text-grau">({anzahl} Aussteller)</span>}
+      {anzahl != null && <span className="text-sm text-grau">{ta.anzahlKlammer(anzahl)}</span>}
     </label>
   );
   return (
-    <Dialog offen onSchliessen={schliessen} titel="Schreibweisen Ihres Vereins" breit>
+    <Dialog offen onSchliessen={schliessen} titel={ta.schreibweisenTitel} breit>
       <div className="flex flex-col gap-4">
-        <p>Aussteller mit diesen Vereinsangaben gelten als Vereinsmitglied.</p>
+        <p>{ta.schreibweisenText}</p>
         <div className="max-h-[45vh] overflow-auto rounded-md border border-linie px-3 py-2">
           {daten.angaben.length || nurGespeichert.length || zusatz.length ? (
             <>
@@ -391,7 +396,7 @@ function SchreibweisenDialog({ daten, schliessen }: { daten: Ausgabe["verein"]["
               {[...nurGespeichert, ...zusatz].map((n) => zeile(n))}
             </>
           ) : (
-            <p className="text-grau">Noch keine Vereinsangaben vorhanden.</p>
+            <p className="text-grau">{ta.keineAngaben}</p>
           )}
         </div>
         <form
@@ -403,16 +408,16 @@ function SchreibweisenDialog({ daten, schliessen }: { daten: Ausgabe["verein"]["
             setNeu("");
           }}
         >
-          <Feld label="Weitere Schreibweise" className="w-full sm:w-80">
-            {(fid) => <Eingabe id={fid} value={neu} onChange={(e) => setNeu(e.target.value)} placeholder="z. B. GZV Musterstadt 1904 e. V." />}
+          <Feld label={ta.weitere} className="w-full sm:w-80">
+            {(fid) => <Eingabe id={fid} value={neu} onChange={(e) => setNeu(e.target.value)} placeholder={ta.weiterePlatzhalter} />}
           </Feld>
-          <Knopf type="submit">Hinzufügen</Knopf>
+          <Knopf type="submit">{t.allgemein.hinzufuegen}</Knopf>
         </form>
         {setzen.error && <Hinweis ton="fehler">{fehlerText(setzen.error)}</Hinweis>}
         <div className="flex flex-wrap justify-end gap-2 border-t border-linie pt-4">
-          <Knopf onClick={schliessen}>Abbrechen</Knopf>
+          <Knopf onClick={schliessen}>{t.allgemein.abbrechen}</Knopf>
           <Knopf variante="primaer" laedt={setzen.isPending} onClick={() => setzen.mutate({ namen: [...gewaehlt] })}>
-            Speichern
+            {t.allgemein.speichern}
           </Knopf>
         </div>
       </div>
@@ -424,16 +429,18 @@ function LoeschenDialog({ ziel, schliessen }: { ziel: { id: number; name: string
   const [grund, setGrund] = useState("");
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const t = useOberflaeche();
+  const ta = t.meldung.aussteller;
   const loeschen = trpc.verein.ausstellerLoeschen.useMutation({
     onSuccess: async (r) => {
       await Promise.all([utils.verein.aussteller.invalidate(), utils.verein.vereinsangaben.invalidate()]);
-      meldung(r.art === "gelöscht" ? "Daten gelöscht." : `Kontakt- und Bankdaten gelöscht, der Rest ist bis ${datum(r.loeschenAb)} gesperrt und wird dann gelöscht.`);
+      meldung(r.art === "gelöscht" ? ta.datenGeloescht : ta.teilGeloescht(datum(r.loeschenAb)));
       setGrund("");
       schliessen();
     },
   });
   return (
-    <Dialog offen={!!ziel} onSchliessen={schliessen} titel={`Daten von ${ziel?.name ?? ""} löschen`}>
+    <Dialog offen={!!ziel} onSchliessen={schliessen} titel={ta.loeschenTitel(ziel?.name ?? "")}>
       <form
         className="flex flex-col gap-4"
         onSubmit={(e) => {
@@ -441,15 +448,15 @@ function LoeschenDialog({ ziel, schliessen }: { ziel: { id: number; name: string
           if (ziel) loeschen.mutate({ id: ziel.id, grund });
         }}
       >
-        <p>Kontakt- und Bankdaten werden gelöscht; was aufbewahrt werden muss, bleibt bis zum Fristende gesperrt.</p>
-        <Feld label="Grund" hinweis="Ohne Namen, z. B. „Löschwunsch per E-Mail vom 06.11.2026“">
+        <p>{ta.loeschenText}</p>
+        <Feld label={ta.grund} hinweis={ta.grundHinweis}>
           {(id) => <Eingabe id={id} value={grund} onChange={(e) => setGrund(e.target.value)} required minLength={3} autoFocus />}
         </Feld>
         {loeschen.error && <Hinweis ton="fehler">{fehlerText(loeschen.error)}</Hinweis>}
         <div className="flex flex-wrap justify-end gap-2">
-          <Knopf onClick={schliessen}>Abbrechen</Knopf>
+          <Knopf onClick={schliessen}>{t.allgemein.abbrechen}</Knopf>
           <Knopf type="submit" variante="gefahr" laedt={loeschen.isPending}>
-            Endgültig löschen
+            {ta.endgueltig}
           </Knopf>
         </div>
       </form>

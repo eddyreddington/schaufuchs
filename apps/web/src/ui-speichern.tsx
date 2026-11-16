@@ -1,6 +1,7 @@
 /** Speichern in der Kopfleiste: Speicherleiste bei ungespeicherten Änderungen, Speicherstatus bei sofortigem Speichern. */
 import { createContext, useContext } from "react";
 import { createPortal } from "react-dom";
+import { useOberflaeche } from "./sprache";
 import { cx } from "./ui-basis";
 import { Knopf } from "./ui-knoepfe";
 
@@ -11,8 +12,12 @@ export const SpeicherPlatz = createContext<HTMLElement | null>(null);
  * Bei ungespeicherten Änderungen: „Speichern“ (und „Verwerfen“) oben rechts in der Kopfleiste – dort bleibt es beim
  * Scrollen sichtbar, auf allen Seiten an derselben Stelle. Ohne Rahmen (Seiten ohne Kopfleiste) als Leiste am unteren Rand.
  */
-export function Speicherleiste({ sichtbar, onVerwerfen, onSpeichern, laedt, text = "Ungespeicherte Änderungen", knopf = "Speichern" }: { sichtbar: boolean; onVerwerfen?: () => void; onSpeichern: () => void; laedt?: boolean; text?: string; knopf?: string }) {
+export function Speicherleiste({ sichtbar, onVerwerfen, onSpeichern, laedt, text: eigenerText, knopf: eigenerKnopf }: { sichtbar: boolean; onVerwerfen?: () => void; onSpeichern: () => void; laedt?: boolean; text?: string; knopf?: string }) {
   const platz = useContext(SpeicherPlatz);
+  const t = useOberflaeche();
+  // Vorgaben in der Sprache der Oberfläche: „Ungespeicherte Änderungen“ und „Speichern“.
+  const text = eigenerText ?? t.rahmen.speichern.ungespeichert;
+  const knopf = eigenerKnopf ?? t.allgemein.speichern;
   if (!sichtbar) return null;
   if (platz)
     return createPortal(
@@ -23,7 +28,7 @@ export function Speicherleiste({ sichtbar, onVerwerfen, onSpeichern, laedt, text
         </span>
         {onVerwerfen && (
           <Knopf variante="leise" onClick={onVerwerfen}>
-            Verwerfen
+            {t.rahmen.speichern.verwerfen}
           </Knopf>
         )}
         <Knopf variante="primaer" laedt={laedt} onClick={onSpeichern}>
@@ -40,7 +45,7 @@ export function Speicherleiste({ sichtbar, onVerwerfen, onSpeichern, laedt, text
       </span>
       {onVerwerfen && (
         <Knopf variante="leise" onClick={onVerwerfen}>
-          Verwerfen
+          {t.rahmen.speichern.verwerfen}
         </Knopf>
       )}
       <Knopf variante="primaer" laedt={laedt} onClick={onSpeichern}>
@@ -51,11 +56,7 @@ export function Speicherleiste({ sichtbar, onVerwerfen, onSpeichern, laedt, text
 }
 
 export type SpeicherStand = "speichert" | "gespeichert" | "fehler";
-const SPEICHER_STAND: Record<SpeicherStand, { text: string; farbe: string }> = {
-  speichert: { text: "Wird gespeichert …", farbe: "text-grau" },
-  gespeichert: { text: "Gespeichert", farbe: "text-stall" },
-  fehler: { text: "Nicht gespeichert", farbe: "text-kamm" },
-};
+const SPEICHER_FARBE: Record<SpeicherStand, string> = { speichert: "text-grau", gespeichert: "text-stall", fehler: "text-kamm" };
 
 /**
  * Seiten, die jede Änderung sofort speichern (Hallenplan): oben rechts in der Kopfleiste steht statt „Speichern“, ob
@@ -63,8 +64,10 @@ const SPEICHER_STAND: Record<SpeicherStand, { text: string; farbe: string }> = {
  */
 export function SpeicherStatus({ stand, eingebettet }: { stand: SpeicherStand | null; eingebettet?: boolean }) {
   const platz = useContext(SpeicherPlatz);
+  const t = useOberflaeche().rahmen.speichern;
   if (!stand) return null;
-  const { text, farbe } = SPEICHER_STAND[stand];
+  const text = { speichert: t.wirdGespeichert, gespeichert: t.gespeichert, fehler: t.nichtGespeichert }[stand];
+  const farbe = SPEICHER_FARBE[stand];
   const inhalt = (
     <span role="status" aria-live="polite" className={cx("flex items-center gap-2 text-[0.93rem] font-semibold", farbe)}>
       <span aria-hidden className={cx("size-2 rounded-full bg-current", stand === "speichert" && "animate-pulse")} />

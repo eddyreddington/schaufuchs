@@ -81,8 +81,9 @@ export function baueLandschaft(scene: THREE.Scene, B: number, L: number, merk: <
         depthWrite: false,
         fog: false,
         uniforms: { oben: { value: new THREE.Color("#9dbcd8") }, horizont: { value: new THREE.Color(HORIZONT) }, unten: { value: new THREE.Color("#d6ddd0") } },
+        // bleibt deutsch (Shader-Code, kein Text)
         vertexShader: "varying vec3 p; void main() { p = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
-        fragmentShader:
+        fragmentShader: // bleibt deutsch (Shader-Code, kein Text)
           "uniform vec3 oben; uniform vec3 horizont; uniform vec3 unten; varying vec3 p; void main() { float h = p.y; vec3 f = h > 0.0 ? mix(horizont, oben, pow(clamp(h * 1.6, 0.0, 1.0), 0.75)) : mix(horizont, unten, clamp(-h * 4.0, 0.0, 1.0)); gl_FragColor = vec4(f, 1.0); }",
       }),
     ),

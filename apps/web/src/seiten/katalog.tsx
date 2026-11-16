@@ -1,14 +1,14 @@
-import { MELDEART_LABEL } from "@schau/domain";
 import { useMemo, useState } from "react";
 import { fehlerText, formatEuro, formatKatalognummer } from "../lib";
 import { useSchauId } from "../rahmen";
+import { useOberflaeche } from "../sprache";
 import { KatalogReihenfolge } from "./katalog-reihenfolge";
 import { trpc } from "../trpc";
 import { Abschnitt, FehlerAnzeige, Knopf, KnopfLink, Laden, Leer, Marke, SEITE, Seitenkopf, Suchfeld, TabellenRahmen, useFrage, useMeldung } from "../ui";
 
-export const EINTRAG_STATUS_LABEL = { gemeldet: "gemeldet", katalogisiert: "im Katalog", eingeliefert: "eingeliefert", fehlt: "fehlt", ausgesetzt: "ausgegeben" } as const;
-
 export function Katalog() {
+  const t = useOberflaeche();
+  const tk = t.katalog.nummern;
   const schauId = useSchauId();
   const schau = trpc.schau.get.useQuery({ id: schauId });
   const liste = trpc.katalog.liste.useQuery({ schauId });
@@ -22,17 +22,17 @@ export function Katalog() {
   const vergeben = trpc.katalog.nummernVergeben.useMutation({
     onSuccess: (r) => {
       neu();
-      meldung(r.nachmeldungen ? `${r.geaendert} Nachmeldungen nummeriert.` : `${r.geaendert} Katalognummern vergeben.`);
+      meldung(r.nachmeldungen ? tk.nachmeldungenNummeriert(r.geaendert) : tk.nummernVergebenMeldung(r.geaendert));
       if (r.ausserhalbDerFolge.length) {
-        meldung(`Nicht ganz in Ausstellungsfolge: ${r.ausserhalbDerFolge.join(", ")} – im Katalognachtrag vermerken.`, "fehler");
+        meldung(tk.ausserhalbFolge(r.ausserhalbDerFolge.join(", ")), "fehler");
       }
       // Einteilung nach Rassen: was beim Übertragen auf die Nummern auffiel.
       const e = r.einteilung;
       if (e?.nichtUebernommen.length) {
-        meldung(`Preisrichter-Bereiche nicht neu berechnet, bewertete Tiere würden wechseln (Nr. ${e.nichtUebernommen.slice(0, 10).join(", ")}) – Einteilung unter „Preisrichter“ speichern.`, "fehler");
+        meldung(tk.bereicheNichtNeu(e.nichtUebernommen.slice(0, 10).join(", ")), "fehler");
       } else if (e && (e.ohne > 0 || e.abweichend.length)) {
-        const teile = [e.ohne > 0 ? `${e.ohne} Tiere ohne Preisrichter (Rasse nicht eingeteilt)` : "", e.abweichend.length ? `Unternummern einer anderen Rasse beim Preisrichter der Hauptnummer: ${e.abweichend.join(", ")}` : ""];
-        meldung(`Preisrichter: ${teile.filter(Boolean).join("; ")}. Bitte unter „Preisrichter“ prüfen.`, "fehler");
+        const teile = [e.ohne > 0 ? tk.ohnePreisrichter(e.ohne) : "", e.abweichend.length ? tk.unternummernAbweichend(e.abweichend.join(", ")) : ""];
+        meldung(tk.preisrichterPruefen(teile.filter(Boolean).join("; ")), "fehler");
       }
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
@@ -40,7 +40,7 @@ export function Katalog() {
   const gedruckt = trpc.katalog.gedrucktSetzen.useMutation({
     onSuccess: (_r, v) => {
       neu();
-      meldung(v.gedruckt ? "Katalognummern festgeschrieben." : "Festschreibung aufgehoben.");
+      meldung(v.gedruckt ? tk.festgeschriebenMeldung : tk.aufgehobenMeldung);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -63,9 +63,9 @@ export function Katalog() {
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Katalognummern"
-        unter={eintraege.length ? `${eintraege.length} Tiere, ${eintraege.length - ohneNr} nummeriert` : undefined}
-        marke={s.katalogGedruckt ? <Marke ton="ok">festgeschrieben</Marke> : ohneNrMarke ? <Marke ton="warnung">{ohneNr} ohne Nummer</Marke> : undefined}
+        titel={tk.titel}
+        unter={eintraege.length ? tk.unter(eintraege.length, eintraege.length - ohneNr) : undefined}
+        marke={s.katalogGedruckt ? <Marke ton="ok">{tk.festgeschrieben}</Marke> : ohneNrMarke ? <Marke ton="warnung">{tk.ohneNummer(ohneNr)}</Marke> : undefined}
         hilfe="katalognummern-vergeben"
         aktionen={
           istAdmin && (
@@ -75,28 +75,28 @@ export function Katalog() {
                   variante="leise"
                   onClick={async () =>
                     (await bestaetige({
-                      titel: "Festschreibung aufheben?",
-                      text: "Beim nächsten Vergeben werden alle Nummern neu gesetzt – gedruckte Bewertungskarten passen dann nicht mehr.",
-                      knopf: "Festschreibung aufheben",
+                      titel: tk.aufhebenTitel,
+                      text: tk.aufhebenText,
+                      knopf: tk.aufhebenKnopf,
                       gefahr: true,
                     })) && gedruckt.mutate({ schauId, gedruckt: false })
                   }
                 >
-                  Festschreibung aufheben
+                  {tk.aufhebenKnopf}
                 </Knopf>
               ) : (
                 <Knopf
                   onClick={async () =>
-                    (await bestaetige({ titel: "Katalognummern festschreiben?", text: "Danach ändern sich vergebene Nummern nicht mehr.", knopf: "Festschreiben" })) &&
+                    (await bestaetige({ titel: tk.festschreibenTitel, text: tk.festschreibenText, knopf: tk.festschreibenKnopf })) &&
                     gedruckt.mutate({ schauId, gedruckt: true })
                   }
                   disabled={eintraege.length === 0 || ohneNr === eintraege.length}
                 >
-                  Nummern festschreiben
+                  {tk.nummernFestschreiben}
                 </Knopf>
               )}
               <Knopf variante="primaer" laedt={vergeben.isPending} onClick={() => vergeben.mutate({ schauId })} disabled={!s.katalogGedruckt ? false : ohneNr === 0}>
-                {s.katalogGedruckt ? "Nachmeldungen nummerieren" : "Katalognummern vergeben"}
+                {s.katalogGedruckt ? tk.nachmeldungenNummerieren : tk.nummernVergeben}
               </Knopf>
             </>
           )
@@ -105,47 +105,46 @@ export function Katalog() {
 
       <KatalogReihenfolge schau={s} istAdmin={istAdmin} />
 
-      <Abschnitt titel="Drucken und Exportieren">
+      <Abschnitt titel={tk.drucken}>
         <div className="flex flex-wrap gap-2">
           {[
-            ["Bewertungskarten (PDF)", `/datei/${schauId}/bewertungskarten.pdf`],
-            ["B-Bögen und Ringkarten (PDF)", `/datei/${schauId}/aussteller.pdf`],
-            ["Ergebnisliste (CSV für Excel)", `/datei/${schauId}/ergebnisse.csv`],
-          ].map(([t, href]) => (
+            [tk.bewertungskartenPdf, `/datei/${schauId}/bewertungskarten.pdf`],
+            [tk.bBoegenPdf, `/datei/${schauId}/aussteller.pdf`],
+            [tk.ergebnislisteCsv, `/datei/${schauId}/ergebnisse.csv`],
+          ].map(([text, href]) => (
             <KnopfLink key={href} href={href} target="_blank" rel="noreferrer">
-              {t}
+              {text}
             </KnopfLink>
           ))}
         </div>
       </Abschnitt>
 
       {eintraege.length === 0 ? (
-        <Leer titel="Noch keine Tiere im Katalog" />
+        <Leer titel={tk.leer} />
       ) : (
         <TabellenRahmen
-          kopf={<Suchfeld aria-label="Katalog durchsuchen" placeholder="Nummer, Rasse oder Aussteller" value={filter} onChange={(e) => setFilter(e.target.value)} />}
+          kopf={<Suchfeld aria-label={tk.durchsuchen} placeholder={tk.suchePlatzhalter} value={filter} onChange={(e) => setFilter(e.target.value)} />}
           fuss={
             <>
               <span>
-                {sichtbar.length} {sichtbar.length === 1 ? "Tier" : "Tiere"}
-                {filter.trim() && ` von ${eintraege.length}`}
+                {filter.trim() ? tk.anzahlVon(sichtbar.length, eintraege.length) : tk.anzahl(sichtbar.length)}
               </span>
-              {ohneNr > 0 && <span>{ohneNr} ohne Nummer</span>}
+              {ohneNr > 0 && <span>{tk.ohneNummer(ohneNr)}</span>}
             </>
           }
         >
           {sichtbar.length === 0 ? (
-            <p className="px-4 py-10 text-center text-grau">Keine Treffer.</p>
+            <p className="px-4 py-10 text-center text-grau">{tk.keineTreffer}</p>
           ) : (
             <table className="tabelle">
               <thead>
                 <tr>
-                  <th className="text-right">Nr.</th>
-                  <th>Rasse, Farbenschlag</th>
-                  <th>Tier</th>
-                  <th>Aussteller</th>
-                  <th className="text-right">Verkauf</th>
-                  <th>Status</th>
+                  <th className="text-right">{tk.nr}</th>
+                  <th>{tk.rasseFarbenschlag}</th>
+                  <th>{tk.tier}</th>
+                  <th>{tk.aussteller}</th>
+                  <th className="text-right">{tk.verkauf}</th>
+                  <th>{tk.statusSpalte}</th>
                 </tr>
               </thead>
               <tbody>
@@ -154,16 +153,16 @@ export function Katalog() {
                     <td className="nummer whitespace-nowrap text-right text-lg">{e.katalogNr == null ? <span className="font-sans text-base font-normal text-grau">–</span> : formatKatalognummer(e)}</td>
                     <td>
                       <span className="font-semibold text-tinte">{e.bezeichnung}</span>
-                      <span className="block text-sm text-grau">{e.sparte}{e.istJugend && ", Jugend"}</span>
+                      <span className="block text-sm text-grau">{e.sparte}{e.istJugend && tk.jugend}</span>
                     </td>
                     <td className="whitespace-nowrap">
                       {e.geschlecht} {e.alter}
-                      {e.art !== "einzeltier" && <span className="block text-sm text-grau">{MELDEART_LABEL[e.art]}</span>}
+                      {e.art !== "einzeltier" && <span className="block text-sm text-grau">{t.fach.MELDEART_LABEL[e.art]}</span>}
                     </td>
                     <td>{e.ausstellerName}</td>
                     <td className="text-right tabular-nums">{e.verkaufspreisCent ? formatEuro(e.verkaufspreisCent) : ""}</td>
                     <td>
-                      <Marke ton={e.status === "fehlt" ? "fehler" : e.status === "eingeliefert" || e.status === "ausgesetzt" ? "ok" : "neutral"}>{EINTRAG_STATUS_LABEL[e.status]}</Marke>
+                      <Marke ton={e.status === "fehlt" ? "fehler" : e.status === "eingeliefert" || e.status === "ausgesetzt" ? "ok" : "neutral"}>{tk.status[e.status]}</Marke>
                     </td>
                   </tr>
                 ))}

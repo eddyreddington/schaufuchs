@@ -2,7 +2,8 @@
  * Reine Rechnungen des Hallenplan-Editors (ohne React): Auswahl und Teile, Lage und Versatz von Reihen,
  * Platten und Objekten, Hindernisse (`planKoerper`), Texte zu Teilen. Die Fachregeln selbst stehen in packages/domain.
  */
-import { AUSSEN_NAME, istRechteckUmriss, umrissNormal, umrissSperren, auswahlBereinigen, blockPlatz, dreheBlick, dreheRechteck, type Drehung, eingangsGang, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenTeil, istMoebel, type KaefigMasse, kaefigName, type KaefigPlatz, type KaefigTyp, mitteVon, MOEBEL_NAME, nummernBereiche, objektFront, type PlanAuswahlTeil, type PlanKaefig, type PlanKoerper, pruefeLage, type Rechteck, type Reihe, teilGroesse, teilSchluessel, type VerschiebePruefung, type WandKandidat, type WandSeite } from "@schau/domain";
+import { istRechteckUmriss, KAEFIG_TYP_LABEL, LOCALE, umrissNormal, umrissSperren, auswahlBereinigen, blockPlatz, dreheBlick, dreheRechteck, type Drehung, eingangsGang, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenTeil, istMoebel, type KaefigMasse, kaefigName, type KaefigPlatz, type KaefigTyp, mitteVon, nummernBereiche, objektFront, type PlanAuswahlTeil, type PlanKaefig, type PlanKoerper, pruefeLage, type Rechteck, type Reihe, teilGroesse, teilSchluessel, type VerschiebePruefung, type WandKandidat, type WandSeite } from "@schau/domain";
+import { aktuelleSprache, ot } from "../sprache-jetzt";
 import { type Ausgabe } from "../trpc";
 
 export type Daten = Ausgabe["katalog"]["hallenplan"];
@@ -42,18 +43,37 @@ export const alsNummer = (nr: string | null) => {
   return t ? { katalogNr: Number(t[1]), suffix: t[2] ?? "" } : { katalogNr: null, suffix: "" };
 };
 
+/** Texte der Zeichnung und der Teile in der Sprache der Oberfläche (zur Laufzeit lesen). */
+const tg = () => ot().halleBild.geometrie;
+
+/** Wörter mit Zahl: Formen für 1, wenige (Polnisch/Tschechisch 2–4) und viele. */
+export type Formen = { eins: string; wenige: string; viele: string };
+/** Zahl mit passender Wortform in der Sprache der Oberfläche („1 Grundplatte“, „3 Grundplatten“). */
+export function zahlWort(n: number, f: Formen): string {
+  const form = new Intl.PluralRules(LOCALE[aktuelleSprache()]).select(n);
+  return `${n} ${form === "one" ? f.eins : form === "few" ? f.wenige : f.viele}`;
+}
+
+/** Käfigbezeichnung wie `kaefigName` (Maße bleiben), die Bezeichnung der Käfigart in der Sprache der Oberfläche. */
+export function kaefigBezeichnung(typ: KaefigTyp, masse?: KaefigMasse | null): string {
+  const name = kaefigName(typ, masse);
+  const de = KAEFIG_TYP_LABEL[typ];
+  return name.startsWith(de) ? `${ot().fach.KAEFIG_TYP_LABEL[typ]}${name.slice(de.length)}` : name;
+}
+
 export function lage(r: Reihe, alle: Reihe[], quer: boolean): string {
+  const t = tg();
   // Von Hand gedreht oder verschoben: die berechnete Lage stimmt nicht mehr – die Zeichnung zeigt, wo sie steht.
-  if (r.drehung) return `von Hand gedreht (${r.drehung}°), siehe Plan`;
-  if (r.versatz.dx || r.versatz.dy) return "von Hand verschoben, siehe Plan";
+  if (r.drehung) return t.vonHandGedreht(r.drehung);
+  if (r.versatz.dx || r.versatz.dy) return t.vonHandVerschoben;
   if (r.art === "wand") {
-    if (quer) return r.front === "rechts" ? "an der vorderen Stirnwand" : "an der hinteren Stirnwand";
-    return r.front === "rechts" ? "an der linken Wand" : "an der rechten Wand";
+    if (quer) return r.front === "rechts" ? t.vordereStirnwand : t.hintereStirnwand;
+    return r.front === "rechts" ? t.linkeWand : t.rechteWand;
   }
   const doppel = alle.filter((x) => x.art === "doppel");
   const nr = Math.floor(doppel.indexOf(r) / 2) + 1;
-  if (quer) return `Doppelreihe ${nr}, Front nach ${r.front === "links" ? "vorn" : "hinten"}`;
-  return `Doppelreihe ${nr}, Front ${r.front === "links" ? "links" : "rechts"}`;
+  if (quer) return r.front === "links" ? t.doppelreiheVorn(nr) : t.doppelreiheHinten(nr);
+  return r.front === "links" ? t.doppelreiheLinks(nr) : t.doppelreiheRechts(nr);
 }
 
 /** Fehlende Käfige einsetzen – alle oder (`nur`) einen Block dieser Käfigart. */
@@ -62,7 +82,7 @@ export type FehlendeSetzen = (nur?: KaefigTyp) => void;
 export function zusammenfassen(typen: KaefigTyp[], masse: KaefigMasse): string {
   const n = new Map<KaefigTyp, number>();
   for (const t of typen) n.set(t, (n.get(t) ?? 0) + 1);
-  return [...n.entries()].map(([t, k]) => `${k} × ${kaefigName(t, masse)}`).join(", ");
+  return [...n.entries()].map(([t, k]) => `${k} × ${kaefigBezeichnung(t, masse)}`).join(", ");
 }
 
 export function richterNamen(k: PlanKaefig[], richter: { id: number; name: string }[]): string {
@@ -117,13 +137,14 @@ export type Aktionen = { ausrichten: () => void; drehen: () => void; zurueckAnPl
 export const anzahl = (n: number, eins: string, viele: string) => `${n} ${n === 1 ? eins : viele}`;
 /** Was „Entfernen“ wegnimmt, als Aufzählung („1 Grundplatte und 2 freie Plätze“); leer: nichts. */
 export function entfernenText(e: { platten: number; plaetze: number; teile: number; flaechen: number }): string {
+  const w = tg();
   const t = [
-    e.platten && anzahl(e.platten, "Grundplatte", "Grundplatten"),
-    e.plaetze && anzahl(e.plaetze, "freier Platz", "freie Plätze"),
-    e.teile && anzahl(e.teile, "eingesetztes Teil", "eingesetzte Teile"),
-    e.flaechen && anzahl(e.flaechen, "Fläche", "Flächen"),
+    e.platten && zahlWort(e.platten, w.grundplatten),
+    e.plaetze && zahlWort(e.plaetze, w.freiePlaetze),
+    e.teile && zahlWort(e.teile, w.eingesetzteTeile),
+    e.flaechen && zahlWort(e.flaechen, w.flaechen),
   ].filter((x): x is string => !!x);
-  return t.length > 1 ? `${t.slice(0, -1).join(", ")} und ${t.at(-1)}` : (t[0] ?? "");
+  return t.length > 1 ? w.aufzaehlung(t.slice(0, -1).join(", "), t.at(-1)!) : (t[0] ?? "");
 }
 /**
  * Ziehen: die ganze Auswahl (bereinigt, siehe `auswahlBereinigen`) bzw. beim Ändern der Größe eine Fläche. start:
@@ -266,7 +287,7 @@ export function planKoerper(halle: Halle, plan: NonNullable<Daten["plan"]>): Pla
   for (const reihe of plan.reihen) {
     const { aufPlatte } = reihenLage(halle, reihe);
     const da = plattenDa(halle, reihe);
-    reihe.platten.forEach((pl, i) => da[i] && k.push({ teil: { art: "platte", reihe: reihe.nr, i }, name: `Grundplatte ${i + 1} in R${reihe.nr}`, rechteck: aufPlatte(pl.rechteck, i) }));
+    reihe.platten.forEach((pl, i) => da[i] && k.push({ teil: { art: "platte", reihe: reihe.nr, i }, name: tg().grundplatteInR(i + 1, reihe.nr), rechteck: aufPlatte(pl.rechteck, i) }));
   }
   for (const o of plan.objekte) {
     const l = objektLage(halle, o);
@@ -276,7 +297,7 @@ export function planKoerper(halle: Halle, plan: NonNullable<Daten["plan"]>): Pla
   // Bereichen dürfen Tische und Bänke stehen.
   halle.flaechen.forEach((f, i) => k.push({ teil: { art: "flaeche", i }, name: f.name, rechteck: flaecheRechteck(f), ...(f.art === "volieren" ? { nurGrenze: true } : { flaeche: true, ...(f.art === "sperre" ? { freiBereich: true } : {}) }) }));
   // Freier Grundriss (Entscheidung 019): außerhalb ist Wand – für Käfige, Teile, Tische und Bänke.
-  if (!istRechteckUmriss(halle.umriss)) for (const q of umrissSperren(umrissNormal(halle.umriss!))) k.push({ teil: null, name: AUSSEN_NAME, rechteck: q });
+  if (!istRechteckUmriss(halle.umriss)) for (const q of umrissSperren(umrissNormal(halle.umriss!))) k.push({ teil: null, name: ot().fach.AUSSEN_NAME, rechteck: q });
   // Tische und Bänke stehen frei, auch im Gang vor den Käfigen (Rückmeldung 14.11.2026).
   // Vor Eingängen und Notausgängen bleibt ein Gang frei (in Fluchtrichtung, so breit wie der Ausgang): keine Reihe, Platte
   // oder eingesetztes Teil dort hinein. Seitlich daneben darf man bis an den Ausgang heran.
@@ -286,12 +307,12 @@ export function planKoerper(halle: Halle, plan: NonNullable<Daten["plan"]>): Pla
     const x1 = Math.max(0, z.x), y1 = Math.max(0, z.y);
     const x2 = Math.min(halle.breite, z.x + z.b), y2 = Math.min(halle.laenge, z.y + z.h);
     // Tische und Bänke dürfen hinein (der Plan gibt einen Hinweis), Käfige nicht.
-    k.push({ teil: null, name: `Gang vor „${f.name}“`, rechteck: { x: x1, y: y1, b: x2 - x1, h: y2 - y1 }, flaeche: true, fluchtweg: true });
+    k.push({ teil: null, name: tg().gangVor(f.name), rechteck: { x: x1, y: y1, b: x2 - x1, h: y2 - y1 }, flaeche: true, fluchtweg: true });
   }
   for (const v of plan.volieren) {
     // Im festen Plan stehen die Volieren auf ihren festen Plätzen (sie gehen nicht mit ihrem Bereich mit).
     const i = plan.fest ? -1 : halle.flaechen.findIndex((f) => f.art === "volieren" && innen(v.rechteck, flaecheRechteck(f)));
-    k.push({ teil: i >= 0 ? { art: "flaeche", i } : null, name: v.nr ? `Voliere Nr. ${v.nr}` : "Voliere", rechteck: v.rechteck });
+    k.push({ teil: i >= 0 ? { art: "flaeche", i } : null, name: v.nr ? tg().voliereNr(v.nr) : tg().voliere, rechteck: v.rechteck });
   }
   return k;
 }
@@ -373,18 +394,19 @@ export const BLOCK_TYPEN = ["grosskaefig", "huehner", "zwerghuehner", "tauben", 
 export type TeilInfo = { art: string; name: string; status: string; leer: boolean; zeilen: [string, string][]; flaeche?: number; moebel?: string; tiere?: { id: number; nr: string | null; rasse: string; typ: string }[] };
 
 export function teilInfo(halle: Halle, plan: Plan, masse: KaefigMasse, z: Ziel): TeilInfo | null {
+  const t = tg();
   const quer = halle.laenge > halle.breite;
   // Lage wie in der Zeichnung (dort liegt eine lange Halle quer): Abstand von der linken und oberen Wand.
   const lage = (q: Rechteck): [string, string][] => {
     const g = quer ? { x: q.y, y: q.x, b: q.h, h: q.b } : q;
     return [
-      ["Lage", `links ${meter(g.x)} m · oben ${meter(g.y)} m`],
-      ["Größe", `${meter(g.b)} × ${meter(g.h)} m`],
+      [t.lage, t.lageWert(meter(g.x), meter(g.y))],
+      [t.groesse, `${meter(g.b)} × ${meter(g.h)} m`],
     ];
   };
-  const nr = (k: { nr: string | null }[]) => nummernBereiche(k.map((x) => alsNummer(x.nr))) || "ohne Nummer";
-  const frei = (n: number) => `leer · ${anzahl(n, "freier Platz", "freie Plätze")}`;
-  const weg = (v: { dx: number; dy: number } | undefined) => (v && (v.dx || v.dy) ? `${meter(Math.hypot(v.dx, v.dy))} m` : "nein");
+  const nr = (k: { nr: string | null }[]) => nummernBereiche(k.map((x) => alsNummer(x.nr))) || t.ohneNummer;
+  const frei = (n: number) => t.leerFrei(zahlWort(n, t.freiePlaetze));
+  const weg = (v: { dx: number; dy: number } | undefined) => (v && (v.dx || v.dy) ? `${meter(Math.hypot(v.dx, v.dy))} m` : t.nein);
   if (z.art === "platte" || z.art === "platz") {
     const r = plan.reihen.find((x) => x.nr === z.reihe);
     if (!r) return null;
@@ -393,11 +415,11 @@ export function teilInfo(halle: Halle, plan: Plan, masse: KaefigMasse, z: Ziel):
       const f = freierPlatz(plan, z);
       if (!f || platzWeg(halle, r, f, plattenDa(halle, r))) return null;
       return {
-        art: "Freier Platz",
-        name: `Freier Platz in R${r.nr}${f.platte != null ? `, Grundplatte ${f.platte + 1}` : ""}`,
-        status: "leer",
+        art: t.freierPlatz,
+        name: `${t.freierPlatzIn(r.nr)}${f.platte != null ? t.grundplatteZusatz(f.platte + 1) : ""}`,
+        status: t.leer,
         leer: true,
-        zeilen: [["Käfig", kaefigName(f.typ as KaefigTyp, masse)], ...lage(aufPlatte(f.rechteck, f.platte))],
+        zeilen: [[t.kaefig, kaefigBezeichnung(f.typ as KaefigTyp, masse)], ...lage(aufPlatte(f.rechteck, f.platte))],
       };
     }
     const pl = r.platten[z.i];
@@ -405,16 +427,16 @@ export function teilInfo(halle: Halle, plan: Plan, masse: KaefigMasse, z: Ziel):
     const drauf = r.kaefige.filter((k) => k.platte === z.i);
     const e = (halle.plattenVersatz ?? []).find((x) => x.reihe === r.nr && x.platte === z.i);
     return {
-      art: "Grundplatte",
-      name: `Grundplatte ${z.i + 1} in R${r.nr}`,
-      status: drauf.length ? `${drauf.length} von ${pl.plaetze} belegt` : frei(pl.plaetze - drauf.length),
+      art: t.grundplatte,
+      name: t.grundplatteInR(z.i + 1, r.nr),
+      status: drauf.length ? t.belegtVon(drauf.length, pl.plaetze) : frei(pl.plaetze - drauf.length),
       leer: drauf.length === 0,
       zeilen: [
-        ["Käfige", pl.gemischt ? plattenKaefige(r, z.i, masse) : `${pl.plaetze} × ${kaefigName(pl.typ as KaefigTyp, masse)}`],
-        ...(drauf.length ? ([["Nummern", nr(drauf)]] as [string, string][]) : []),
+        [t.kaefigeZeile, pl.gemischt ? plattenKaefige(r, z.i, masse) : `${pl.plaetze} × ${kaefigBezeichnung(pl.typ as KaefigTyp, masse)}`],
+        ...(drauf.length ? ([[t.nummern, nr(drauf)]] as [string, string][]) : []),
         ...lage(aufPlatte(pl.rechteck, z.i)),
-        ["Drehung", `${e?.drehung ?? 0}°`],
-        ["Verschoben", weg(e)],
+        [t.drehung, `${e?.drehung ?? 0}°`],
+        [t.verschoben, weg(e)],
       ],
       tiere: drauf,
     };
@@ -427,16 +449,16 @@ export function teilInfo(halle: Halle, plan: Plan, masse: KaefigMasse, z: Ziel):
     const da = plattenDa(halle, r);
     const q = r.platten.flatMap((pl, i) => (da[i] ? [aufPlatte(pl.rechteck, i)] : []));
     return {
-      art: "Reihe",
-      name: `Reihe R${r.nr}`,
-      status: r.kaefige.length ? `${anzahl(r.kaefige.length, "Käfig", "Käfige")} belegt` : "leer",
+      art: t.reihe,
+      name: t.reiheR(r.nr),
+      status: r.kaefige.length ? t.kaefigeBelegt(zahlWort(r.kaefige.length, t.kaefige)) : t.leer,
       leer: r.kaefige.length === 0,
       zeilen: [
-        ["Grundplatten", String(q.length)],
-        ...(r.kaefige.length ? ([["Nummern", nr(r.kaefige)]] as [string, string][]) : []),
+        [t.grundplattenZeile, String(q.length)],
+        ...(r.kaefige.length ? ([[t.nummern, nr(r.kaefige)]] as [string, string][]) : []),
         ...(q.length ? lage(huelleRechteck(q)) : []),
-        ["Drehung", `${e?.drehung ?? 0}°`],
-        ["Verschoben", weg(e)],
+        [t.drehung, `${e?.drehung ?? 0}°`],
+        [t.verschoben, weg(e)],
       ],
     };
   }
@@ -445,21 +467,22 @@ export function teilInfo(halle: Halle, plan: Plan, masse: KaefigMasse, z: Ziel):
     const ol = o && objektLage(halle, o);
     // Eben eingesetzt, der Plan ist noch nicht neu gerechnet: schon anzeigen (leer).
     const neu = !o ? (halle.objekte ?? []).find((x) => x.id === z.id) : null;
-    if (neu && istMoebel(neu)) return { art: MOEBEL_NAME[neu.art], name: `Neue${neu.art === "tisch" ? "r" : ""} ${MOEBEL_NAME[neu.art]}`, status: "neu", leer: true, zeilen: [], moebel: neu.id };
-    if (neu) return { art: neu.art === "voliere" ? "Voliere" : "Käfigblock", name: neu.art === "voliere" ? "Neue Voliere" : `Neuer Block ${kaefigName(neu.typ ?? "huehner", masse)}`, status: "leer", leer: true, zeilen: [] };
+    const moebelName = ot().fach.MOEBEL_NAME;
+    if (neu && istMoebel(neu)) return { art: moebelName[neu.art], name: t.neuesMoebel(neu.art, moebelName[neu.art]), status: t.neu, leer: true, zeilen: [], moebel: neu.id };
+    if (neu) return { art: neu.art === "voliere" ? t.voliere : t.kaefigblock, name: neu.art === "voliere" ? t.neueVoliere : t.neuerBlock(kaefigBezeichnung(neu.typ ?? "huehner", masse)), status: t.leer, leer: true, zeilen: [] };
     if (!o || !ol) return null;
     if (istMoebel(o)) {
       const e = (halle.objekte ?? []).find((x) => x.id === o.id);
-      return { art: MOEBEL_NAME[o.art], name: o.name, status: "kein Käfigplatz", leer: true, zeilen: [...lage(ol.lage), ["Drehung", `${e?.drehung ?? 0}°`]], moebel: o.id };
+      return { art: moebelName[o.art], name: o.name, status: t.keinKaefigplatz, leer: true, zeilen: [...lage(ol.lage), [t.drehung, `${e?.drehung ?? 0}°`]], moebel: o.id };
     }
     const drin = [...(o.tier ? [o.tier] : []), ...(o.kaefige ?? [])];
     const e = (halle.objekte ?? []).find((x) => x.id === o.id);
     return {
-      art: o.art === "voliere" ? "Voliere" : "Käfigblock",
+      art: o.art === "voliere" ? t.voliere : t.kaefigblock,
       name: o.name,
-      status: drin.length ? (o.art === "voliere" ? "belegt" : `${drin.length} von ${o.plaetze} belegt`) : o.art === "voliere" ? "leer" : frei(o.plaetze),
+      status: drin.length ? (o.art === "voliere" ? t.belegt : t.belegtVon(drin.length, o.plaetze)) : o.art === "voliere" ? t.leer : frei(o.plaetze),
       leer: drin.length === 0,
-      zeilen: [...(drin.length ? ([["Nummern", nr(drin)]] as [string, string][]) : []), ...lage(ol.lage), ["Drehung", `${e?.drehung ?? 0}°`]],
+      zeilen: [...(drin.length ? ([[t.nummern, nr(drin)]] as [string, string][]) : []), ...lage(ol.lage), [t.drehung, `${e?.drehung ?? 0}°`]],
       tiere: drin,
     };
   }
@@ -468,9 +491,9 @@ export function teilInfo(halle: Halle, plan: Plan, masse: KaefigMasse, z: Ziel):
   const q = flaecheRechteck(f);
   const volieren = f.art === "volieren" ? plan.volieren.filter((v) => innen(v.rechteck, q)) : [];
   return {
-    art: f.art === "eingang" ? "Eingang / Ausgang" : f.art === "volieren" ? "Volierenbereich" : "Freier Bereich",
+    art: f.art === "eingang" ? t.eingang : f.art === "volieren" ? t.volierenbereich : t.freierBereich,
     name: f.name,
-    status: volieren.length ? `${anzahl(volieren.length, "Voliere", "Volieren")}` : "leer",
+    status: volieren.length ? zahlWort(volieren.length, t.volieren) : t.leer,
     leer: volieren.length === 0,
     zeilen: lage(q),
     flaeche: z.i,
@@ -490,12 +513,18 @@ export function wandText(halle: Pick<Halle, "richtung" | "breite" | "laenge">, s
   const entlangLaenge = (halle.richtung ?? "quer") === "quer";
   const laengeWaagrecht = halle.laenge > halle.breite;
   const waagrecht = entlangLaenge === laengeWaagrecht;
-  return waagrecht ? (seite === "anfang" ? "links" : "rechts") : seite === "anfang" ? "oben" : "unten";
+  const w = tg().wand;
+  return waagrecht ? (seite === "anfang" ? w.links : w.rechts) : seite === "anfang" ? w.oben : w.unten;
 }
 
+/** Lage des Hauptgangs je Richtung der Reihen – in der Sprache der Oberfläche (beim Zugriff gelesen). */
 export const HAUPTGANG_LAGE: Record<"quer" | "laengs", Record<"anfang" | "ende" | "beide" | "mitte" | "keiner", string>> = {
-  quer: { anfang: "an der linken Längsseite", ende: "an der rechten Längsseite", beide: "an beiden Längsseiten", mitte: "längs durch die Mitte", keiner: "kein Hauptgang" },
-  laengs: { anfang: "an der vorderen Stirnseite", ende: "an der hinteren Stirnseite", beide: "an beiden Stirnseiten", mitte: "quer durch die Mitte", keiner: "kein Hauptgang" },
+  get quer() {
+    return tg().hauptgang.quer;
+  },
+  get laengs() {
+    return tg().hauptgang.laengs;
+  },
 };
 
 /** Grundplatten zusammen nach Käfigart: „12 × 70 × 70 × 70 cm (3 je Platte), 8 × 50 × 50 × 50 cm (4 je Platte)“. Eine
@@ -503,19 +532,21 @@ export const HAUPTGANG_LAGE: Record<"quer" | "laengs", Record<"anfang" | "ende" 
 export function plattenJeArt(reihen: Reihe[], masse: KaefigMasse): string {
   const n = new Map<string, { typ: KaefigTyp; plaetze: number; gemischt: boolean; anzahl: number }>();
   for (const pl of reihen.flatMap((r) => r.platten.filter((p) => !p.entfernt))) {
+    // bleibt deutsch (Schlüssel, kein Text)
     const k = pl.gemischt ? `${pl.typ}|gemischt` : `${pl.typ}|${pl.plaetze}`;
     const z = n.get(k) ?? { typ: pl.typ as KaefigTyp, plaetze: pl.plaetze, gemischt: !!pl.gemischt, anzahl: 0 };
     z.anzahl++;
     n.set(k, z);
   }
-  return [...n.values()].map((z) => `${z.anzahl} × ${kaefigName(z.typ, masse)} (${z.gemischt ? "gemischt" : `${z.plaetze} je Platte`})`).join(", ") || "–";
+  const t = tg();
+  return [...n.values()].map((z) => `${z.anzahl} × ${kaefigBezeichnung(z.typ, masse)} (${z.gemischt ? t.gemischt : t.jePlatte(z.plaetze)})`).join(", ") || "–";
 }
 
 /** Käfige auf einer Grundplatte je Art (belegt und frei): „1 × 70 × 70 × 70 cm, 3 × 40 × 40 × 40 cm“. */
 export function plattenKaefige(r: Reihe, i: number, masse: KaefigMasse): string {
   const n = new Map<KaefigTyp, number>();
   for (const k of [...r.kaefige, ...(r.freiePlaetze ?? [])]) if (k.platte === i) n.set(k.typ as KaefigTyp, (n.get(k.typ as KaefigTyp) ?? 0) + 1);
-  return [...n].map(([t, a]) => `${a} × ${kaefigName(t, masse)}`).join(", ");
+  return [...n].map(([t, a]) => `${a} × ${kaefigBezeichnung(t, masse)}`).join(", ");
 }
 
 /** Tiefe, mit der ein Eingang in die Halle gezeichnet wird (die Reihen halten davon ohnehin einen Gang Abstand). */

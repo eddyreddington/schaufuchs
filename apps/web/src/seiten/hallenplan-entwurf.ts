@@ -6,9 +6,10 @@
 import { type Halle, halleSchluessel, plattenStand } from "@schau/domain";
 import { useEffect, useRef, useState } from "react";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { useMeldung } from "../ui";
-import { type Aendern, anzahl, type Plan, type Schritt, vollstaendig, vonHandBewegt } from "./hallenplan-geometrie";
+import { type Aendern, type Plan, type Schritt, vollstaendig, vonHandBewegt, zahlWort } from "./hallenplan-geometrie";
 
 /** Zustand und Speicherwege des Entwurfs (Rückgabe von `useHallenEntwurf`). */
 export type HallenEntwurf = ReturnType<typeof useHallenEntwurf>;
@@ -16,6 +17,7 @@ export type HallenEntwurf = ReturnType<typeof useHallenEntwurf>;
 export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { schauId: number; halle: Halle; plan: Plan; auswahlAufheben: () => void }) {
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const t = useOberflaeche().halleBild.entwurf;
   /** Festschreiben ist unterwegs (automatisch vor dem ersten Verschieben). */
   const festUnterwegs = useRef(false);
   const setzen = trpc.katalog.halleSetzen.useMutation({
@@ -50,7 +52,7 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
   const aendern: Aendern = (f, opt = {}) => {
     // Während der Plan neu gesetzt wird, ist der Stand auf dem Server ein anderer als hier – erst danach weiter ändern.
     if (neuUnterwegs.current) {
-      meldung("Der Plan wird gerade neu gesetzt – bitte gleich noch einmal.", "warnung");
+      meldung(t.neuUnterwegs, "warnung");
       return entwurfRef.current;
     }
     // Stand, auf dem die Änderung beruht: hat inzwischen jemand anders gespeichert, lehnt der Server ab.
@@ -58,7 +60,7 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
     const vorher = entwurfRef.current;
     const neu = vonHandBewegt(vorher, vollstaendig(f(entwurfRef.current)));
     if (halleSchluessel(neu) === basis) return neu;
-    const schritt: Schritt | null = opt.ohneVerlauf ? null : { vorher, nachher: neu, was: opt.was ?? "Änderung" };
+    const schritt: Schritt | null = opt.ohneVerlauf ? null : { vorher, nachher: neu, was: opt.was ?? t.aenderung };
     if (schritt) verlaufSetzen({ zurueck: [...verlauf.current.zurueck.slice(-99), schritt], vor: [] });
     entwurfRef.current = neu;
     setEntwurf(neu);
@@ -98,7 +100,7 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
   const festschreiben = trpc.katalog.planFestschreiben.useMutation({
     onSuccess: async () => {
       await utils.katalog.hallenplan.invalidate({ schauId });
-      meldung("Automatisch planen ist aus – die Käfige bleiben, wo sie stehen.");
+      meldung(t.automatischAus);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
     onSettled: () => {
@@ -128,9 +130,9 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
         gespeichert = true;
         // Der Verlauf gehörte zur alten Aufstellung.
         verlaufSetzen({ zurueck: [], vor: [] });
-        const bloecke = e.eingesetzt ? `, ${anzahl(e.eingesetzt, "Käfigblock", "Käfigblöcke")} eingesetzt` : "";
-        if (e.ohne) meldung(`Plan neu gesetzt${bloecke} – ${anzahl(e.ohne, "Tier hat", "Tiere haben")} keinen Platz.`, "warnung");
-        else meldung(`Plan neu gesetzt${bloecke}.`);
+        const bloecke = e.eingesetzt ? t.eingesetzt(zahlWort(e.eingesetzt, t.kaefigbloecke)) : "";
+        if (e.ohne) meldung(t.neuGesetztOhne(bloecke, zahlWort(e.ohne, t.ohnePlatz)), "warnung");
+        else meldung(t.neuGesetzt(bloecke));
       })
       .catch(() => {})
       .finally(async () => {

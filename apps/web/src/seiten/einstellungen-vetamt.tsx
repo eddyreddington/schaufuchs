@@ -1,5 +1,6 @@
 import { veterinaeramtSuchen, veterinaeramtText, veterinaeramtZurSchau, type Veterinaeramt } from "@schau/domain";
 import { useId, useMemo, useState } from "react";
+import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Eingabe, Feld, Knopf } from "../ui";
 
@@ -9,6 +10,7 @@ import { Eingabe, Feld, Knopf } from "../ui";
  * Vorschlag darunter. Freier Text bleibt möglich.
  */
 export function VetAmtFeld({ wert, setzen, schauOrt }: { wert: string; setzen: (v: string) => void; schauOrt: string }) {
+  const tv = useOberflaeche().schau.einstellungen.vetamt;
   const verzeichnis = trpc.schau.veterinaeraemter.useQuery(undefined, { staleTime: Infinity });
   const liste: Veterinaeramt[] = verzeichnis.data?.eintraege ?? [];
   const [offen, setOffen] = useState(false);
@@ -21,7 +23,7 @@ export function VetAmtFeld({ wert, setzen, schauOrt }: { wert: string; setzen: (
     setOffen(false);
   };
   return (
-    <Feld label="Zuständiges Veterinäramt" hinweis={liste.length ? "Kreis oder Ort eintippen" : undefined}>
+    <Feld label={tv.label} hinweis={liste.length ? tv.hinweis : undefined}>
       {(fid) => (
         <div className="relative">
           <Eingabe
@@ -77,7 +79,7 @@ export function VetAmtFeld({ wert, setzen, schauOrt }: { wert: string; setzen: (
           )}
           {vorschlag && (
             <Knopf variante="leise" className="mt-1 h-auto min-h-0 px-0 py-0.5 text-left text-sm" onClick={() => waehlen(vorschlag)}>
-              Vorschlag: {vorschlag.amt}
+              {tv.vorschlag(vorschlag.amt)}
             </Knopf>
           )}
         </div>

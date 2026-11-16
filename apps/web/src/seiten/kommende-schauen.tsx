@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { TERMIN_EBENE_INFO, TERMIN_EBENEN, TERMINE_KEINE, zeitraumDe, type TerminEbene } from "@schau/domain";
+import { LOCALE, serverText, TERMIN_EBENE_INFO, TERMIN_EBENEN, TERMINE_KEINE, zeitraumDe, type Sprache, type TerminEbene } from "@schau/domain";
 import { datumZeit, fehlerText, heuteIso } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { Auswahl, Dialog, Eingabe, Feld, Haken, HilfeLink, Hinweis, Knopf, Marke, useAenderungenWarnen, useFrage, useMeldung } from "../ui";
 
@@ -11,11 +12,20 @@ type Abo = Daten["abos"][number];
 /** Seite des BDRG mit den Bundes- und Landesverbandsschauen – nachsehen und von Hand eintragen (kein automatischer Abruf ohne Zustimmung des BDRG). */
 const BDRG_TERMINE = "https://www.bdrg.de/termine/bundesschauen";
 
+/** Zeitraum in der Sprache der Oberfläche; Deutsch genau wie im Katalog (`zeitraumDe`). */
+function zeitraum(von: string, bis: string | null, sprache: Sprache): string {
+  if (sprache === "de" || sprache === "de-CH") return zeitraumDe(von, bis);
+  const f = new Intl.DateTimeFormat(LOCALE[sprache], { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  const tag = (x: string) => new Date(`${x}T12:00:00Z`);
+  return !bis || bis <= von ? f.format(tag(von)) : f.formatRange(tag(von), tag(bis));
+}
+
 /**
  * Katalogseite „Kommende Schauen“: Kreis und Landesverband für diesen Katalog wählen, Termine eintragen, Vorschläge aus
  * abonnierten Kalendern prüfen. Die Termine gelten für alle Schauen des Vereins.
  */
 export function KommendeSchauen({ schauId, istAdmin }: { schauId: number; istAdmin: boolean }) {
+  const tx = useOberflaeche().preisrichter.termine;
   const daten = trpc.termine.laden.useQuery({ schauId });
   const [bearbeiten, setBearbeiten] = useState<Partial<Termin> | null>(null);
   const [aboBearbeiten, setAboBearbeiten] = useState<Partial<Abo> | null>(null);
@@ -32,17 +42,18 @@ export function KommendeSchauen({ schauId, istAdmin }: { schauId: number; istAdm
   const uebernommen = d.termine.filter((t) => t.status === "uebernommen");
   return (
     <div className="divide-y divide-linie">
-      <Gruppe titel="Im Katalog dieser Schau" aktionen={<HilfeLink abschnitt="kommende-schauen">Hilfe zu „Kommende Schauen“</HilfeLink>}>
+      <Gruppe titel={tx.imKatalog} aktionen={<HilfeLink abschnitt="kommende-schauen">{tx.hilfe}</HilfeLink>}>
         <Drucken schauId={schauId} an={!d.teilAusgeblendet} istAdmin={istAdmin} />
-        {!d.schautage && <Hinweis ton="warnung">Ohne Bewertungstag fehlt die Seite im Katalog.</Hinweis>}
+        {!d.schautage && <Hinweis ton="warnung">{tx.ohneBewertungstag}</Hinweis>}
         <Wahl schauId={schauId} daten={d} istAdmin={istAdmin} />
       </Gruppe>
 
       {(vorschlaege.length > 0 || abweichungen.length > 0) && <Pruefen vorschlaege={vorschlaege} abweichungen={abweichungen} istAdmin={istAdmin} />}
 
-      <Gruppe titel="Seite im Katalog">
+      {/* Vorschau der gedruckten Seite: Überschriften und Zeiträume wie im Katalog (bleibt deutsch). */}
+      <Gruppe titel={tx.seiteImKatalog}>
         {d.vorschau.length === 0 ? (
-          <p className="text-sm text-grau">Keine Termine nach dieser Schau, die Seite entfällt.</p>
+          <p className="text-sm text-grau">{tx.keineDanach}</p>
         ) : (
           <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
             {d.vorschau.map((g) => (
@@ -55,7 +66,7 @@ export function KommendeSchauen({ schauId, istAdmin }: { schauId: number; istAdm
                       {t.ort ? <span className="text-grau"> · {t.ort}</span> : null}
                     </li>
                   ))}
-                  {g.gekuerzt > 0 && <li className="text-grau">… und {g.gekuerzt} weitere (gekürzt)</li>}
+                  {g.gekuerzt > 0 && <li className="text-grau">{tx.gekuerzt(g.gekuerzt)}</li>}
                 </ul>
               </div>
             ))}
@@ -64,27 +75,27 @@ export function KommendeSchauen({ schauId, istAdmin }: { schauId: number; istAdm
       </Gruppe>
 
       <Gruppe
-        titel="Alle Termine"
+        titel={tx.alleTermine}
         anzahl={uebernommen.length}
         aktionen={
           <div className="flex flex-wrap items-center gap-3">
             <a className="text-sm text-grau no-underline hover:text-tinte hover:underline" href={BDRG_TERMINE} target="_blank" rel="noreferrer">
-              Termine beim BDRG
+              {tx.beimBdrg}
             </a>
-            {istAdmin && <Knopf onClick={() => setBearbeiten({ ebene: "kreis" })}>Termin eintragen</Knopf>}
+            {istAdmin && <Knopf onClick={() => setBearbeiten({ ebene: "kreis" })}>{tx.eintragen}</Knopf>}
           </div>
         }
       >
-        {uebernommen.length === 0 ? <p className="text-sm text-grau">Noch keine Termine eingetragen.</p> : <TerminListe termine={uebernommen} istAdmin={istAdmin} bearbeiten={setBearbeiten} />}
+        {uebernommen.length === 0 ? <p className="text-sm text-grau">{tx.keineTermine}</p> : <TerminListe termine={uebernommen} istAdmin={istAdmin} bearbeiten={setBearbeiten} />}
       </Gruppe>
 
       <Abos abos={d.abos} istAdmin={istAdmin} bearbeiten={setAboBearbeiten} />
       <Veroeffentlichen an={d.veroeffentlichen} adresse={d.kalenderAdresse} istAdmin={istAdmin} />
 
-      <Dialog offen={bearbeiten != null} onSchliessen={() => setBearbeiten(null)} titel={bearbeiten?.id ? "Termin bearbeiten" : "Termin eintragen"} breit>
+      <Dialog offen={bearbeiten != null} onSchliessen={() => setBearbeiten(null)} titel={bearbeiten?.id ? tx.terminBearbeiten : tx.eintragen} breit>
         {bearbeiten && <TerminForm start={bearbeiten} kreise={d.kreise} laender={d.laender} fertig={() => setBearbeiten(null)} />}
       </Dialog>
-      <Dialog offen={aboBearbeiten != null} onSchliessen={() => setAboBearbeiten(null)} titel={aboBearbeiten?.id ? "Kalender bearbeiten" : "Kalender abonnieren"} breit>
+      <Dialog offen={aboBearbeiten != null} onSchliessen={() => setAboBearbeiten(null)} titel={aboBearbeiten?.id ? tx.kalenderBearbeiten : tx.kalenderAbonnieren} breit>
         {aboBearbeiten && <AboForm start={aboBearbeiten} fertig={() => setAboBearbeiten(null)} />}
       </Dialog>
     </div>
@@ -122,22 +133,25 @@ function Zeile({ vorne, titel, angaben, aktionen, blass }: { vorne?: ReactNode; 
 }
 
 function Drucken({ schauId, an, istAdmin }: { schauId: number; an: boolean; istAdmin: boolean }) {
+  const tx = useOberflaeche().preisrichter.termine.drucken;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const setzen = trpc.termine.druckenSetzen.useMutation({
     onSuccess: (_, v) => {
       utils.termine.laden.invalidate();
       utils.katalogGestaltung.laden.invalidate();
-      meldung(v.an ? "Die Seite steht im Katalog." : "Die Seite wird nicht gedruckt.");
+      meldung(v.an ? tx.an : tx.aus);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   return (
-    <Haken label="Seite „Kommende Schauen“ im Katalog drucken" checked={an} disabled={!istAdmin || setzen.isPending} onChange={(v) => setzen.mutate({ schauId, an: v })} />
+    <Haken label={tx.label} checked={an} disabled={!istAdmin || setzen.isPending} onChange={(v) => setzen.mutate({ schauId, an: v })} />
   );
 }
 
 function Wahl({ schauId, daten, istAdmin }: { schauId: number; daten: Daten; istAdmin: boolean }) {
+  const tx = useOberflaeche().preisrichter.termine.wahl;
+  const sprache = useSprache();
   const [kreis, setKreis] = useState(daten.wahl.kreis);
   const [land, setLand] = useState(daten.wahl.land);
   useEffect(() => {
@@ -149,7 +163,7 @@ function Wahl({ schauId, daten, istAdmin }: { schauId: number; daten: Daten; ist
   const setzen = trpc.termine.wahlSetzen.useMutation({
     onSuccess: () => {
       utils.termine.laden.invalidate();
-      meldung("Auswahl gespeichert.");
+      meldung(tx.gespeichert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -158,22 +172,22 @@ function Wahl({ schauId, daten, istAdmin }: { schauId: number; daten: Daten; ist
   const optionen = (liste: string[], wert: string) => (wert && wert !== TERMINE_KEINE && !liste.includes(wert) ? [wert, ...liste] : liste);
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <Feld label="Kreisschauen im Katalog">
+      <Feld label={tx.kreise}>
         {(fid) => (
           <Auswahl id={fid} value={kreis} disabled={!istAdmin || setzen.isPending} onChange={(e) => (setKreis(e.target.value), speichern(e.target.value, land))}>
-            <option value="">alle Kreise</option>
-            <option value={TERMINE_KEINE}>keine Kreisschauen</option>
+            <option value="">{tx.alleKreise}</option>
+            <option value={TERMINE_KEINE}>{tx.keineKreise}</option>
             {optionen(daten.kreise, kreis).map((k) => (
               <option key={k} value={k}>{k}</option>
             ))}
           </Auswahl>
         )}
       </Feld>
-      <Feld label="Landesschauen im Katalog">
+      <Feld label={tx.laender}>
         {(fid) => (
           <Auswahl id={fid} value={land} disabled={!istAdmin || setzen.isPending} onChange={(e) => (setLand(e.target.value), speichern(kreis, e.target.value))}>
-            <option value="">alle Landesverbände</option>
-            <option value={TERMINE_KEINE}>keine Landesschauen</option>
+            <option value="">{tx.alleLaender}</option>
+            <option value={TERMINE_KEINE}>{tx.keineLaender}</option>
             {optionen(daten.laender, land).map((l) => (
               <option key={l} value={l}>{l}</option>
             ))}
@@ -182,7 +196,7 @@ function Wahl({ schauId, daten, istAdmin }: { schauId: number; daten: Daten; ist
       </Feld>
       {daten.schautage && (
         <p className="text-sm text-grau md:col-span-2">
-          Diese Schau: <span className="tabular-nums">{zeitraumDe(daten.schautage.von, daten.schautage.bis)}</span>, im Katalog nur Termine danach
+          {tx.dieseSchau} <span className="tabular-nums">{zeitraum(daten.schautage.von, daten.schautage.bis, sprache)}</span>{tx.nurDanach}
         </p>
       )}
     </div>
@@ -190,20 +204,23 @@ function Wahl({ schauId, daten, istAdmin }: { schauId: number; daten: Daten; ist
 }
 
 function Pruefen({ vorschlaege, abweichungen, istAdmin }: { vorschlaege: Termin[]; abweichungen: Termin[]; istAdmin: boolean }) {
+  const o = useOberflaeche();
+  const tx = o.preisrichter.termine.pruefen;
+  const sprache = useSprache();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const fertig = () => utils.termine.laden.invalidate();
   const pruefen = trpc.termine.pruefen.useMutation({ onSuccess: fertig, onError: (e) => meldung(fehlerText(e), "fehler") });
   const abweichung = trpc.termine.abweichung.useMutation({ onSuccess: fertig, onError: (e) => meldung(fehlerText(e), "fehler") });
   return (
-    <Gruppe titel="Zu prüfen" anzahl={vorschlaege.length + abweichungen.length}>
+    <Gruppe titel={tx.titel} anzahl={vorschlaege.length + abweichungen.length}>
       {vorschlaege.length > 0 && (
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Marke ton="warnung">Neu aus Kalendern</Marke>
+            <Marke ton="warnung">{tx.neu}</Marke>
             {istAdmin && vorschlaege.length > 1 && (
               <Knopf disabled={pruefen.isPending} onClick={() => pruefen.mutate({ ids: vorschlaege.map((t) => t.id), aktion: "uebernehmen" })}>
-                Alle {vorschlaege.length} übernehmen
+                {tx.alleUebernehmen(vorschlaege.length)}
               </Knopf>
             )}
           </div>
@@ -212,12 +229,12 @@ function Pruefen({ vorschlaege, abweichungen, istAdmin }: { vorschlaege: Termin[
               <Zeile
                 key={t.id}
                 titel={t.name}
-                angaben={[zeitraumDe(t.von, t.bis), t.ort, `${TERMIN_EBENE_INFO[t.ebene].name}: ${verbandVon(t) || "–"}`, t.quelle].filter(Boolean).join(" · ")}
+                angaben={[zeitraum(t.von, t.bis, sprache), t.ort, `${o.fach.TERMIN_EBENE_INFO[t.ebene].name}: ${verbandVon(t) || "–"}`, t.quelle].filter(Boolean).join(" · ")}
                 aktionen={
                   istAdmin && (
                     <>
-                      <Knopf variante="primaer" disabled={pruefen.isPending} onClick={() => pruefen.mutate({ ids: [t.id], aktion: "uebernehmen" })}>Übernehmen</Knopf>
-                      <Knopf variante="leise" disabled={pruefen.isPending} onClick={() => pruefen.mutate({ ids: [t.id], aktion: "verwerfen" })}>Verwerfen</Knopf>
+                      <Knopf variante="primaer" disabled={pruefen.isPending} onClick={() => pruefen.mutate({ ids: [t.id], aktion: "uebernehmen" })}>{tx.uebernehmen}</Knopf>
+                      <Knopf variante="leise" disabled={pruefen.isPending} onClick={() => pruefen.mutate({ ids: [t.id], aktion: "verwerfen" })}>{tx.verwerfen}</Knopf>
                     </>
                   )
                 }
@@ -229,7 +246,7 @@ function Pruefen({ vorschlaege, abweichungen, istAdmin }: { vorschlaege: Termin[
       {abweichungen.length > 0 && (
         <div className="flex flex-col gap-1">
           <div>
-            <Marke ton="warnung">Geändert laut Quelle</Marke>
+            <Marke ton="warnung">{tx.geaendert}</Marke>
           </div>
           <ul className="flex flex-col divide-y divide-linie">
             {abweichungen.map((t) => {
@@ -241,10 +258,10 @@ function Pruefen({ vorschlaege, abweichungen, istAdmin }: { vorschlaege: Termin[
                   titel={t.name}
                   angaben={
                     entfallen ? (
-                      <>Nicht mehr im Kalender „{t.quelle}“</>
+                      <>{tx.nichtMehr(t.quelle)}</>
                     ) : (
                       <>
-                        Bisher: {zeitraumDe(t.von, t.bis)}{t.ort ? `, ${t.ort}` : ""} → laut Quelle: <strong className="font-semibold text-tinte">{a.name !== t.name ? `${a.name}, ` : ""}{zeitraumDe(a.von, a.bis)}{a.ort ? `, ${a.ort}` : ""}</strong>
+                        {tx.bisher} {zeitraum(t.von, t.bis, sprache)}{t.ort ? `, ${t.ort}` : ""} {tx.lautQuelle} <strong className="font-semibold text-tinte">{a.name !== t.name ? `${a.name}, ` : ""}{zeitraum(a.von, a.bis, sprache)}{a.ort ? `, ${a.ort}` : ""}</strong>
                       </>
                     )
                   }
@@ -252,9 +269,9 @@ function Pruefen({ vorschlaege, abweichungen, istAdmin }: { vorschlaege: Termin[
                     istAdmin && (
                       <>
                         <Knopf variante={entfallen ? "gefahr" : "primaer"} disabled={abweichung.isPending} onClick={() => abweichung.mutate({ id: t.id, aktion: "uebernehmen" })}>
-                          {entfallen ? "Termin löschen" : "Änderung übernehmen"}
+                          {entfallen ? tx.terminLoeschen : tx.aenderungUebernehmen}
                         </Knopf>
-                        <Knopf variante="leise" disabled={abweichung.isPending} onClick={() => abweichung.mutate({ id: t.id, aktion: "ignorieren" })}>Behalten wie bisher</Knopf>
+                        <Knopf variante="leise" disabled={abweichung.isPending} onClick={() => abweichung.mutate({ id: t.id, aktion: "ignorieren" })}>{tx.behalten}</Knopf>
                       </>
                     )
                   }
@@ -271,6 +288,9 @@ function Pruefen({ vorschlaege, abweichungen, istAdmin }: { vorschlaege: Termin[
 const verbandVon = (t: { ebene: TerminEbene; kreisverband: string; landesverband: string }) => (t.ebene === "kreis" ? t.kreisverband : t.ebene === "land" ? t.landesverband : "");
 
 function TerminListe({ termine, istAdmin, bearbeiten }: { termine: Termin[]; istAdmin: boolean; bearbeiten: (t: Termin) => void }) {
+  const o = useOberflaeche();
+  const tx = o.preisrichter.termine.liste;
+  const sprache = useSprache();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
@@ -282,19 +302,19 @@ function TerminListe({ termine, istAdmin, bearbeiten }: { termine: Termin[]; ist
         <Zeile
           key={t.id}
           blass={(t.bis ?? t.von) < heute}
-          vorne={<Marke>{TERMIN_EBENE_INFO[t.ebene].name}</Marke>}
+          vorne={<Marke>{o.fach.TERMIN_EBENE_INFO[t.ebene].name}</Marke>}
           titel={t.name}
-          angaben={[zeitraumDe(t.von, t.bis), t.ort, verbandVon(t), `Quelle: ${t.quelle}`].filter(Boolean).join(" · ")}
+          angaben={[zeitraum(t.von, t.bis, sprache), t.ort, verbandVon(t), tx.quelle(t.quelle)].filter(Boolean).join(" · ")}
           aktionen={
             istAdmin && (
               <>
-                <Knopf variante="leise" onClick={() => bearbeiten(t)}>Bearbeiten</Knopf>
+                <Knopf variante="leise" onClick={() => bearbeiten(t)}>{o.allgemein.bearbeiten}</Knopf>
                 <Knopf
                   variante="leise"
                   disabled={loeschen.isPending}
-                  onClick={async () => (await bestaetige({ titel: `„${t.name}“ löschen?`, text: "Der Termin steht dann in keinem Katalog des Vereins mehr.", knopf: "Löschen", gefahr: true })) && loeschen.mutate({ id: t.id })}
+                  onClick={async () => (await bestaetige({ titel: tx.loeschenFrage(t.name), text: tx.loeschenText, knopf: o.allgemein.loeschen, gefahr: true })) && loeschen.mutate({ id: t.id })}
                 >
-                  Löschen
+                  {o.allgemein.loeschen}
                 </Knopf>
               </>
             )
@@ -306,6 +326,8 @@ function TerminListe({ termine, istAdmin, bearbeiten }: { termine: Termin[]; ist
 }
 
 function TerminForm({ start, kreise, laender, fertig }: { start: Partial<Termin>; kreise: string[]; laender: string[]; fertig: () => void }) {
+  const o = useOberflaeche();
+  const tx = o.preisrichter.termine.form;
   const [t, setT] = useState({
     name: start.name ?? "",
     ort: start.ort ?? "",
@@ -335,26 +357,26 @@ function TerminForm({ start, kreise, laender, fertig }: { start: Partial<Termin>
     <form onSubmit={senden} className="grid gap-4 md:grid-cols-2">
       {start.aboId && (
         <div className="md:col-span-2">
-          <Marke ton="info">Aus einem abonnierten Kalender</Marke>
+          <Marke ton="info">{tx.ausAbo}</Marke>
         </div>
       )}
-      <Feld label="Name der Schau" className="md:col-span-2" hinweis="z. B. „108. Nationale“">
+      <Feld label={tx.name} className="md:col-span-2" hinweis={tx.nameHinweis}>
         {(fid) => <Eingabe id={fid} required value={t.name} onChange={(e) => set("name", e.target.value)} />}
       </Feld>
-      <Feld label="Beginn">{(fid) => <Eingabe id={fid} type="date" required value={t.von} onChange={(e) => set("von", e.target.value)} />}</Feld>
-      <Feld label="Ende" hinweis="leer bei eintägigen Schauen">{(fid) => <Eingabe id={fid} type="date" min={t.von || undefined} value={t.bis} onChange={(e) => set("bis", e.target.value)} />}</Feld>
-      <Feld label="Ort" hinweis="z. B. „Leipzig, Neue Messe“">{(fid) => <Eingabe id={fid} value={t.ort} onChange={(e) => set("ort", e.target.value)} />}</Feld>
-      <Feld label="Ebene">
+      <Feld label={tx.beginn}>{(fid) => <Eingabe id={fid} type="date" required value={t.von} onChange={(e) => set("von", e.target.value)} />}</Feld>
+      <Feld label={tx.ende} hinweis={tx.endeHinweis}>{(fid) => <Eingabe id={fid} type="date" min={t.von || undefined} value={t.bis} onChange={(e) => set("bis", e.target.value)} />}</Feld>
+      <Feld label={tx.ort} hinweis={tx.ortHinweis}>{(fid) => <Eingabe id={fid} value={t.ort} onChange={(e) => set("ort", e.target.value)} />}</Feld>
+      <Feld label={tx.ebene}>
         {(fid) => (
           <Auswahl id={fid} value={t.ebene} onChange={(e) => set("ebene", e.target.value as TerminEbene)}>
             {TERMIN_EBENEN.map((e) => (
-              <option key={e} value={e}>{TERMIN_EBENE_INFO[e].titel}</option>
+              <option key={e} value={e}>{o.fach.TERMIN_EBENE_INFO[e].titel}</option>
             ))}
           </Auswahl>
         )}
       </Feld>
       {t.ebene === "kreis" && (
-        <Feld label="Kreisverband">
+        <Feld label={tx.kreisverband}>
           {(fid) => (
             <>
               <Eingabe id={fid} list="kreise" value={t.kreisverband} onChange={(e) => set("kreisverband", e.target.value)} />
@@ -364,7 +386,7 @@ function TerminForm({ start, kreise, laender, fertig }: { start: Partial<Termin>
         </Feld>
       )}
       {t.ebene === "land" && (
-        <Feld label="Landesverband">
+        <Feld label={tx.landesverband}>
           {(fid) => (
             <>
               <Eingabe id={fid} list="laender" value={t.landesverband} onChange={(e) => set("landesverband", e.target.value)} />
@@ -373,22 +395,25 @@ function TerminForm({ start, kreise, laender, fertig }: { start: Partial<Termin>
           )}
         </Feld>
       )}
-      <Feld label="Quelle (steht im Katalog)" hinweis="leer = „eigene Eintragung“">
+      <Feld label={tx.quelle} hinweis={tx.quelleHinweis}>
         {(fid) => <Eingabe id={fid} value={t.quelle} onChange={(e) => set("quelle", e.target.value)} />}
       </Feld>
-      <Feld label="Link zur Quelle" hinweis="optional">
-        {(fid) => <Eingabe id={fid} type="url" placeholder="https://…" value={t.quelleUrl} onChange={(e) => set("quelleUrl", e.target.value)} />}
+      <Feld label={tx.link} hinweis={tx.optional}>
+        {(fid) => <Eingabe id={fid} type="url" placeholder={tx.linkPlatzhalter} value={t.quelleUrl} onChange={(e) => set("quelleUrl", e.target.value)} />}
       </Feld>
       {speichern.error && <Hinweis ton="fehler" className="md:col-span-2">{fehlerText(speichern.error)}</Hinweis>}
       <div className="flex flex-wrap justify-end gap-2 md:col-span-2">
-        <Knopf type="button" onClick={fertig}>Abbrechen</Knopf>
-        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>Speichern</Knopf>
+        <Knopf type="button" onClick={fertig}>{o.allgemein.abbrechen}</Knopf>
+        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>{o.allgemein.speichern}</Knopf>
       </div>
     </form>
   );
 }
 
 function Abos({ abos, istAdmin, bearbeiten }: { abos: Abo[]; istAdmin: boolean; bearbeiten: (a: Partial<Abo>) => void }) {
+  const o = useOberflaeche();
+  const tx = o.preisrichter.termine.abos;
+  const sprache = useSprache();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
@@ -396,53 +421,53 @@ function Abos({ abos, istAdmin, bearbeiten }: { abos: Abo[]; istAdmin: boolean; 
   const abrufen = trpc.termine.aboAbrufen.useMutation({
     onSuccess: (r) => {
       fertig();
-      meldung(r.ok ? `Abgerufen: ${r.anzahl} Termine im Kalender, ${r.neu} neu, ${r.geaendert} geändert.` : `Abruf fehlgeschlagen: ${r.fehler}`, r.ok ? "ok" : "fehler");
+      meldung(r.ok ? tx.abgerufen(r.anzahl, r.neu, r.geaendert) : tx.fehlgeschlagen(serverText(r.fehler, sprache)), r.ok ? "ok" : "fehler");
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const loeschen = trpc.termine.aboLoeschen.useMutation({ onSuccess: fertig, onError: (e) => meldung(fehlerText(e), "fehler") });
   return (
-    <Gruppe titel="Abonnierte Kalender" anzahl={abos.length} aktionen={istAdmin && <Knopf onClick={() => bearbeiten({ ebene: "kreis", aktiv: true })}>Kalender abonnieren</Knopf>}>
+    <Gruppe titel={tx.titel} anzahl={abos.length} aktionen={istAdmin && <Knopf onClick={() => bearbeiten({ ebene: "kreis", aktiv: true })}>{o.preisrichter.termine.kalenderAbonnieren}</Knopf>}>
       {abos.length === 0 ? (
-        <p className="text-sm text-grau">Kein Kalender abonniert.</p>
+        <p className="text-sm text-grau">{tx.keine}</p>
       ) : (
         <ul className="-my-2.5 flex flex-col divide-y divide-linie">
           {abos.map((a) => (
             <Zeile
               key={a.id}
-              vorne={<Marke>{TERMIN_EBENE_INFO[a.ebene].name}</Marke>}
+              vorne={<Marke>{o.fach.TERMIN_EBENE_INFO[a.ebene].name}</Marke>}
               titel={
                 <span className="flex flex-wrap items-center gap-2">
                   {a.name}
-                  {!a.aktiv && <Marke>pausiert</Marke>}
+                  {!a.aktiv && <Marke>{tx.pausiert}</Marke>}
                 </span>
               }
               angaben={
                 <>
                   <span className="block truncate">{a.url}</span>
                   {a.letzterFehler ? (
-                    <span className="block text-kamm">Letzter Abruf {datumZeit(a.letzterAbruf)} fehlgeschlagen: {a.letzterFehler}</span>
+                    <span className="block text-kamm">{tx.letzterFehler(datumZeit(a.letzterAbruf), serverText(a.letzterFehler, sprache))}</span>
                   ) : a.letzterErfolg ? (
-                    <span className="block">Abgerufen {datumZeit(a.letzterErfolg)} · {a.anzahl} Termine im Kalender</span>
+                    <span className="block">{tx.erfolg(datumZeit(a.letzterErfolg), a.anzahl)}</span>
                   ) : (
-                    <span className="block">Noch nicht abgerufen</span>
+                    <span className="block">{tx.nochNicht}</span>
                   )}
                 </>
               }
               aktionen={
                 istAdmin && (
                   <>
-                    <Knopf variante="leise" laedt={abrufen.isPending && abrufen.variables?.id === a.id} disabled={abrufen.isPending} onClick={() => abrufen.mutate({ id: a.id })}>Jetzt abrufen</Knopf>
-                    <Knopf variante="leise" onClick={() => bearbeiten(a)}>Bearbeiten</Knopf>
+                    <Knopf variante="leise" laedt={abrufen.isPending && abrufen.variables?.id === a.id} disabled={abrufen.isPending} onClick={() => abrufen.mutate({ id: a.id })}>{tx.jetzt}</Knopf>
+                    <Knopf variante="leise" onClick={() => bearbeiten(a)}>{o.allgemein.bearbeiten}</Knopf>
                     <Knopf
                       variante="leise"
                       disabled={loeschen.isPending}
                       onClick={async () =>
-                        (await bestaetige({ titel: `Abo „${a.name}“ beenden?`, text: "Offene Vorschläge verschwinden, übernommene Termine bleiben.", knopf: "Abo beenden", gefahr: true })) &&
+                        (await bestaetige({ titel: tx.beendenFrage(a.name), text: tx.beendenText, knopf: tx.aboBeenden, gefahr: true })) &&
                         loeschen.mutate({ id: a.id })
                       }
                     >
-                      Beenden
+                      {tx.beenden}
                     </Knopf>
                   </>
                 )
@@ -456,6 +481,9 @@ function Abos({ abos, istAdmin, bearbeiten }: { abos: Abo[]; istAdmin: boolean; 
 }
 
 function AboForm({ start, fertig }: { start: Partial<Abo>; fertig: () => void }) {
+  const o = useOberflaeche();
+  const tx = o.preisrichter.termine.aboForm;
+  const sprache = useSprache();
   const [a, setA] = useState({ name: start.name ?? "", url: start.url ?? "", ebene: (start.ebene ?? "kreis") as TerminEbene, kreisverband: start.kreisverband ?? "", landesverband: start.landesverband ?? "", aktiv: start.aktiv ?? true });
   const gespeichert = useAenderungenWarnen(a);
   const utils = trpc.useUtils();
@@ -468,7 +496,7 @@ function AboForm({ start, fertig }: { start: Partial<Abo>; fertig: () => void })
       // Gleich einmal abrufen, damit Fehler in der Adresse sofort sichtbar werden.
       if (a.aktiv) {
         const r = await abrufen.mutateAsync({ id }).catch(() => null);
-        if (r) meldung(r.ok ? `Abgerufen: ${r.neu} neue Termine zum Prüfen.` : `Abruf fehlgeschlagen: ${r.fehler}`, r.ok ? "ok" : "fehler");
+        if (r) meldung(r.ok ? tx.neueTermine(r.neu) : o.preisrichter.termine.abos.fehlgeschlagen(serverText(r.fehler, sprache)), r.ok ? "ok" : "fehler");
       }
       utils.termine.laden.invalidate();
     },
@@ -480,52 +508,53 @@ function AboForm({ start, fertig }: { start: Partial<Abo>; fertig: () => void })
   };
   return (
     <form onSubmit={senden} className="grid gap-4 md:grid-cols-2">
-      <Feld label="Name" hinweis="Quelle im Katalog, z. B. „Kalender KV Musterkreis“">
+      <Feld label={o.allgemein.name} hinweis={tx.nameHinweis}>
         {(fid) => <Eingabe id={fid} required value={a.name} onChange={(e) => set("name", e.target.value)} />}
       </Feld>
-      <Feld label="Ebene der Termine">
+      <Feld label={tx.ebene}>
         {(fid) => (
           <Auswahl id={fid} value={a.ebene} onChange={(e) => set("ebene", e.target.value as TerminEbene)}>
             {TERMIN_EBENEN.map((e) => (
-              <option key={e} value={e}>{TERMIN_EBENE_INFO[e].titel}</option>
+              <option key={e} value={e}>{o.fach.TERMIN_EBENE_INFO[e].titel}</option>
             ))}
           </Auswahl>
         )}
       </Feld>
-      <Feld label="Adresse des Kalenders" className="md:col-span-2">
-        {(fid) => <Eingabe id={fid} required inputMode="url" placeholder="https://…/schauen.ics" value={a.url} onChange={(e) => set("url", e.target.value)} />}
+      <Feld label={tx.adresse} className="md:col-span-2">
+        {(fid) => <Eingabe id={fid} required inputMode="url" placeholder={tx.adressePlatzhalter} value={a.url} onChange={(e) => set("url", e.target.value)} />}
       </Feld>
-      {a.ebene === "kreis" && <Feld label="Kreisverband">{(fid) => <Eingabe id={fid} value={a.kreisverband} onChange={(e) => set("kreisverband", e.target.value)} />}</Feld>}
-      {a.ebene === "land" && <Feld label="Landesverband">{(fid) => <Eingabe id={fid} value={a.landesverband} onChange={(e) => set("landesverband", e.target.value)} />}</Feld>}
+      {a.ebene === "kreis" && <Feld label={o.preisrichter.termine.form.kreisverband}>{(fid) => <Eingabe id={fid} value={a.kreisverband} onChange={(e) => set("kreisverband", e.target.value)} />}</Feld>}
+      {a.ebene === "land" && <Feld label={o.preisrichter.termine.form.landesverband}>{(fid) => <Eingabe id={fid} value={a.landesverband} onChange={(e) => set("landesverband", e.target.value)} />}</Feld>}
       <div className="md:col-span-2">
-        <Haken label="Täglich abrufen" checked={a.aktiv} onChange={(v) => set("aktiv", v)} />
+        <Haken label={tx.taeglich} checked={a.aktiv} onChange={(v) => set("aktiv", v)} />
       </div>
       {speichern.error && <Hinweis ton="fehler" className="md:col-span-2">{fehlerText(speichern.error)}</Hinweis>}
       <div className="flex flex-wrap justify-end gap-2 md:col-span-2">
-        <Knopf type="button" onClick={fertig}>Abbrechen</Knopf>
-        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>Speichern</Knopf>
+        <Knopf type="button" onClick={fertig}>{o.allgemein.abbrechen}</Knopf>
+        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>{o.allgemein.speichern}</Knopf>
       </div>
     </form>
   );
 }
 
 function Veroeffentlichen({ an, adresse, istAdmin }: { an: boolean; adresse: string; istAdmin: boolean }) {
+  const tx = useOberflaeche().preisrichter.termine.veroeffentlichen;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const setzen = trpc.termine.veroeffentlichenSetzen.useMutation({ onSuccess: () => utils.termine.laden.invalidate(), onError: (e) => meldung(fehlerText(e), "fehler") });
   return (
-    <Gruppe titel="Eigene Schauen als Kalender">
+    <Gruppe titel={tx.titel}>
       <Haken
-        label="Unsere Schauen als Kalender veröffentlichen"
+        label={tx.label}
         checked={an}
         disabled={!istAdmin || setzen.isPending}
         onChange={(v) => setzen.mutate({ an: v })}
       />
       {an && (
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-grau">Adresse zum Weitergeben:</span>
+          <span className="text-grau">{tx.adresse}</span>
           <code className="min-w-0 break-all rounded-md border border-linie bg-papier px-2 py-1 font-mono text-[0.85rem]">{adresse}</code>
-          <Knopf variante="leise" onClick={() => void navigator.clipboard?.writeText(adresse).then(() => meldung("Adresse kopiert."))}>Kopieren</Knopf>
+          <Knopf variante="leise" onClick={() => void navigator.clipboard?.writeText(adresse).then(() => meldung(tx.kopiert))}>{tx.kopieren}</Knopf>
         </div>
       )}
     </Gruppe>

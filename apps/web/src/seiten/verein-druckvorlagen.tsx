@@ -1,6 +1,6 @@
-import { KARTEN_FORMAT_LABEL } from "@schau/domain";
 import { Link } from "react-router-dom";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Abschnitt, FehlerAnzeige, HilfeLink, Knopf, knopfKlasse, Laden, Leer, useFrage, useMeldung } from "../ui";
 
@@ -10,25 +10,27 @@ export function Druckvorlagen() {
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
+  const ta = useOberflaeche();
+  const t = ta.vorlagen.liste;
   const loeschen = trpc.druckvorlage.loeschen.useMutation({
     onSuccess: async () => {
       await utils.druckvorlage.liste.invalidate();
-      meldung("Vorlage gelöscht.");
+      meldung(t.geloescht);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const weg = async (id: number, name: string) => {
-    if (await bestaetige({ titel: `„${name}“ löschen?`, text: "Schauen, die sie nutzen, drucken danach wieder mit der Vorgabe.", knopf: "Löschen", gefahr: true })) loeschen.mutate({ id });
+    if (await bestaetige({ titel: t.loeschenFrage(name), text: t.loeschenText, knopf: ta.allgemein.loeschen, gefahr: true })) loeschen.mutate({ id });
   };
   return (
     <Abschnitt
       id="druckvorlagen"
-      titel="Druckvorlagen"
+      titel={t.titel}
       aktionen={
         <span className="flex flex-wrap items-center gap-3">
-          <HilfeLink abschnitt="druckvorlagen">Hilfe zu Druckvorlagen</HilfeLink>
+          <HilfeLink abschnitt="druckvorlagen">{t.hilfe}</HilfeLink>
           <Link to="/verein/druckvorlagen/neu" className={knopfKlasse("zweit")}>
-            Neue Bewertungskarte
+            {t.neueKarte}
           </Link>
         </span>
       }
@@ -36,12 +38,12 @@ export function Druckvorlagen() {
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-y border-linie py-2">
         <div className="min-w-0 flex-1">
           <Link to="/verein/briefvorlage" className="font-semibold text-tinte no-underline hover:underline">
-            Briefvorlage
+            {t.briefvorlage}
           </Link>
-          <span className="block text-sm text-grau">Briefbogen, Fußzeile und Texte für Meldebestätigung, Abrechnung, Quittungen und Serienbriefe</span>
+          <span className="block text-sm text-grau">{t.briefvorlageUnter}</span>
         </div>
         <Link to="/verein/briefvorlage#serienbrief" className={knopfKlasse("leise")}>
-          Serienbrief
+          {t.serienbrief}
         </Link>
       </div>
       {q.error ? (
@@ -49,7 +51,7 @@ export function Druckvorlagen() {
       ) : !q.data ? (
         <Laden />
       ) : q.data.length === 0 ? (
-        <Leer titel="Noch keine eigene Bewertungskarte">Ohne Vorlage druckt SchauFUCHS die Bewertungskarten in DIN A6, vier je A4-Bogen.</Leer>
+        <Leer titel={t.leer}>{t.leerText}</Leer>
       ) : (
         <ul className="divide-y divide-linie border-y border-linie">
           {q.data.map((v) => (
@@ -59,12 +61,12 @@ export function Druckvorlagen() {
                   {v.name}
                 </Link>
                 <span className="block text-sm text-grau">
-                  Bewertungskarte · {KARTEN_FORMAT_LABEL[v.daten.format.art]} · {v.daten.modus === "vordruck" ? "Vordruck bedrucken" : "ganze Karte"}
-                  {v.schauName ? ` · nur Schau „${v.schauName}“` : ""}
+                  {t.zeile(ta.fach.KARTEN_FORMAT_LABEL[v.daten.format.art], v.daten.modus === "vordruck" ? t.vordruck : t.ganzeKarte)}
+                  {v.schauName ? t.nurSchau(v.schauName) : ""}
                 </span>
               </div>
               <Knopf variante="leise" onClick={() => weg(v.id, v.name)}>
-                Löschen
+                {ta.allgemein.loeschen}
               </Knopf>
             </li>
           ))}

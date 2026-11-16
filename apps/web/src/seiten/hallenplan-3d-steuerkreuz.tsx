@@ -3,11 +3,14 @@
  * (solange gedrückt) und die gewählte Ansicht wieder einnehmen.
  */
 import type { PointerEvent as ZeigerEreignis, ReactNode } from "react";
+import { useOberflaeche } from "../sprache";
 import type { Bewegung, Richtung } from "./hallenplan-3d-steuerung";
 
+// bleibt deutsch (CSS-Klassen, kein Text)
 const KLASSE = "flex size-10 select-none items-center justify-center rounded-md border border-linie bg-weiss/90 text-lg text-tinte shadow-sm hover:bg-papier active:bg-linie touch-none";
 
 export function Steuerkreuz({ bewegung, zentrieren }: { bewegung: () => Bewegung | undefined; zentrieren: () => void }) {
+  const t = useOberflaeche().halleBild.dreiD;
   const halte = (r: Richtung, titel: string, zeichen: ReactNode) => {
     const los = () => bewegung()?.halten(r, false);
     return (
@@ -37,23 +40,23 @@ export function Steuerkreuz({ bewegung, zentrieren }: { bewegung: () => Bewegung
     );
   };
   return (
-    <div className="absolute bottom-3 right-3 flex items-end gap-2" role="group" aria-label="Steuerung">
+    <div className="absolute bottom-3 right-3 flex items-end gap-2" role="group" aria-label={t.steuerung}>
       <div className="grid grid-cols-3 gap-1">
-        {halte("dreheLinks", "Nach links drehen (Q)", "⟲")}
-        {halte("vor", "Vorwärts (W, ↑)", "▲")}
-        {halte("dreheRechts", "Nach rechts drehen (E)", "⟳")}
-        {halte("links", "Nach links (A, ←)", "◀")}
-        <button type="button" className={KLASSE} title="Ansicht zurücksetzen" aria-label="Ansicht zurücksetzen" onClick={zentrieren}>
+        {halte("dreheLinks", t.dreheLinks, "⟲")}
+        {halte("vor", t.vor, "▲")}
+        {halte("dreheRechts", t.dreheRechts, "⟳")}
+        {halte("links", t.links, "◀")}
+        <button type="button" className={KLASSE} title={t.zuruecksetzen} aria-label={t.zuruecksetzen} onClick={zentrieren}>
           ⌂
         </button>
-        {halte("rechts", "Nach rechts (D, →)", "▶")}
+        {halte("rechts", t.rechts, "▶")}
         <span />
-        {halte("zurueck", "Rückwärts (S, ↓)", "▼")}
+        {halte("zurueck", t.zurueck, "▼")}
         <span />
       </div>
       <div className="flex flex-col gap-1">
-        {halte("naeher", "Näher (+)", "+")}
-        {halte("weiter", "Weiter weg (−)", "−")}
+        {halte("naeher", t.naeher, "+")}
+        {halte("weiter", t.weiter, "−")}
       </div>
     </div>
   );

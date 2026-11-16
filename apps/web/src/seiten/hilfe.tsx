@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { Hinweis, Laden, LESEBREITE, useSeitentitel } from "../ui";
 
@@ -8,10 +9,11 @@ import { Hinweis, Laden, LESEBREITE, useSeitentitel } from "../ui";
  * Seiten unter public/hilfe (HTML, Bilder, PDF). Ohne Anmeldung lesbar (auch vor dem ersten Anmelden und am Tablet) und
  * mit der App zwischengespeichert, damit sie in der Halle auch ohne Netz geht.
  */
+// `datei`: Name der PDF beim Herunterladen – Drucke und PDF bleiben deutsch; angezeigt wird der übersetzte Titel.
 const TEILE = [
-  { key: "ausstellungsleitung", titel: "Ausstellungsleitung" },
-  { key: "helfer", titel: "Helfer" },
-  { key: "preisrichter", titel: "Preisrichter" },
+  { key: "ausstellungsleitung", datei: "Ausstellungsleitung" }, // bleibt deutsch
+  { key: "helfer", datei: "Helfer" }, // bleibt deutsch
+  { key: "preisrichter", datei: "Preisrichter" }, // bleibt deutsch
 ] as const;
 type Teil = (typeof TEILE)[number]["key"];
 
@@ -23,7 +25,10 @@ export function Hilfe() {
   const navigate = useNavigate();
   const status = trpc.auth.status.useQuery(undefined, { retry: false });
   const aktiv = TEILE.find((t) => t.key === teil);
-  useSeitentitel(aktiv ? `Hilfe – ${aktiv.titel}` : "Hilfe");
+  const texte = useOberflaeche();
+  const tx = texte.rahmen.hilfe;
+  const sprache = useSprache();
+  useSeitentitel(aktiv ? tx.titelTeil(tx.teile[aktiv.key]) : tx.titel);
   const [html, setHtml] = useState<string | null>(null);
   const [fehler, setFehler] = useState(false);
   // In einem eigenen Tab geöffnet (Link mit target=_blank): Verlauf beginnt hier. Gemerkt je Tab, damit es auch nach
@@ -94,9 +99,9 @@ export function Hilfe() {
         <div className="flex w-full flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2 lg:px-6">
           <Link to={zurueck} className="flex items-center gap-2 font-semibold text-auf-kopf no-underline">
             <img src="/icon.svg" alt="" className="size-8" />
-            Hilfe
+            {tx.titel}
           </Link>
-          <nav aria-label="Handbücher" className="flex flex-wrap gap-0.5 text-sm sm:border-l sm:border-auf-kopf/15 sm:pl-4">
+          <nav aria-label={tx.handbuecher} className="flex flex-wrap gap-0.5 text-sm sm:border-l sm:border-auf-kopf/15 sm:pl-4">
             {TEILE.map((t) => (
               <Link
                 key={t.key}
@@ -104,16 +109,16 @@ export function Hilfe() {
                 aria-current={t.key === aktiv.key ? "page" : undefined}
                 className={`rounded-md px-2.5 py-1.5 no-underline ${t.key === aktiv.key ? "bg-auf-kopf/12 font-semibold text-auf-kopf" : "text-auf-kopf/70 hover:bg-auf-kopf/8 hover:text-auf-kopf"}`}
               >
-                {t.titel}
+                {tx.teile[t.key]}
               </Link>
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-0.5 text-sm">
             <button type="button" disabled={html == null} className={KOPF_KNOPF} onClick={() => window.print()}>
-              Drucken
+              {tx.drucken}
             </button>
             <a href={`/hilfe/${aktiv.key}.pdf`} target="_blank" rel="noreferrer" className={`${KOPF_KNOPF} no-underline`}>
-              Als PDF
+              {tx.alsPdf}
             </a>
             {/* Die Hilfe öffnet in einem eigenen Tab: dann schließt „Schließen“ ihn, sonst geht es zurück. */}
             <button
@@ -127,17 +132,20 @@ export function Hilfe() {
                 } else navigate(-1);
               }}
             >
-              {eigenerTab ? "Schließen" : "Zurück"}
+              {eigenerTab ? texte.allgemein.schliessen : texte.allgemein.zurueck}
             </button>
           </div>
         </div>
       </header>
       <div className="nicht-drucken border-b border-linie bg-weiss">
         <div className={`${LESEBREITE} flex flex-wrap items-center gap-x-4 gap-y-1 py-2 text-sm`}>
-          <span className="text-grau">Handbücher zum Ausdrucken</span>
+          {/* Das Handbuch ist deutsch: in anderen Sprachen ein kurzer Hinweis. */}
+          {!sprache.startsWith("de") && <span className="font-semibold">{tx.nurDeutsch}</span>}
+          <span className="text-grau">{tx.zumAusdrucken}</span>
+          {/* Dateiname der PDF bleibt deutsch. */}
           {TEILE.map((t) => (
-            <a key={t.key} href={`/hilfe/${t.key}.pdf`} download={`Handbuch ${t.titel}.pdf`} className="font-semibold text-band no-underline hover:underline">
-              {t.titel} (PDF)
+            <a key={t.key} href={`/hilfe/${t.key}.pdf`} download={`Handbuch ${t.datei}.pdf`} className="font-semibold text-band no-underline hover:underline">
+              {tx.pdf(tx.teile[t.key])}
             </a>
           ))}
         </div>
@@ -145,7 +153,7 @@ export function Hilfe() {
       <div className={`${LESEBREITE} flex gap-8 py-8`}>
         {inhalt.length > 2 && (
           <aside className="nicht-drucken sticky top-6 hidden max-h-[85vh] w-64 shrink-0 self-start overflow-y-auto lg:block">
-            <p className="mb-2 text-sm font-semibold text-grau">Inhalt</p>
+            <p className="mb-2 text-sm font-semibold text-grau">{tx.inhalt}</p>
             <ul className="flex flex-col gap-1 text-sm">
               {inhalt.map((h) => (
                 <li key={h.id}>
@@ -168,7 +176,7 @@ export function Hilfe() {
         )}
         <main id="inhalt" className="min-w-0 flex-1">
           {fehler ? (
-            <Hinweis ton="fehler">Das Handbuch ließ sich nicht laden. Ohne Netz nur, wenn es vorher online geöffnet war.</Hinweis>
+            <Hinweis ton="fehler">{tx.ladeFehler}</Hinweis>
           ) : html == null ? (
             <Laden />
           ) : (

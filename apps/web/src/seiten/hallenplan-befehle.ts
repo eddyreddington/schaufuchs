@@ -3,8 +3,9 @@
  * nummerieren, Einstellungen der Halle (mit „Plan neu setzen?“), Automatik an/aus, an den Wänden ausrichten und eine
  * Einzelreihe an der Wand. Jeder Befehl fragt nach, wo es nötig ist, und wartet auf laufende Speicherungen.
  */
-import { grundrissUebernehmen, type Punkt, belegungImPlan, festGeometrie, type Halle, halleSchluessel, type KaefigPlatz, platzImPlan, vonHandGeplant, wandAusrichtung, wandDrehungenAnwenden, type WandSeite } from "@schau/domain";
+import { grundrissUebernehmen, type Punkt, belegungImPlan, festGeometrie, type Halle, halleSchluessel, type KaefigPlatz, platzImPlan, serverText, vonHandGeplant, wandAusrichtung, wandDrehungenAnwenden, type WandSeite } from "@schau/domain";
 import { fehlerText } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { useFrage, useMeldung } from "../ui";
 import { type HallenEntwurf } from "./hallenplan-entwurf";
@@ -22,6 +23,9 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
+  const t = useOberflaeche();
+  const tb = t.halleWerkzeuge.befehle;
+  const sprache = useSprache();
   const { entwurfRef, aendern, kette, offen, festUnterwegs, neuUnterwegs, verlauf, verlaufSetzen, festMachen, festschreiben, neuSetzen, neuSetzenMit } = e;
   /**
    * Einen Schritt des Verlaufs anwenden. Ändert er im festen Plan die Einstellungen der Halle (Maße, Gänge, Reihen,
@@ -42,9 +46,9 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
       const da = s.von ? (belegungImPlan(plan, s.von)?.tierId ?? null) : null;
       if (da !== s.getauscht) {
         verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: verlauf.current.vor });
-        return meldung("Rückgängig geht nicht mehr – der Plan wurde inzwischen geändert.", "warnung");
+        return meldung(tb.rueckgaengigNichtMehr, "warnung");
       }
-      const r = await tierZug(s.tierId, s.ziel, s.von, s.getauscht, `Rückgängig: ${s.was}`);
+      const r = await tierZug(s.tierId, s.ziel, s.von, s.getauscht, `Rückgängig: ${s.was}`); // bleibt deutsch (Protokoll)
       if (r === "abbruch") return;
       if (!r) return verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: verlauf.current.vor });
       verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: [...verlauf.current.vor, s] });
@@ -52,10 +56,10 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     }
     if (halleSchluessel(s.nachher) !== halleSchluessel(entwurfRef.current)) {
       verlaufSetzen({ zurueck: [], vor: [] });
-      return meldung("Rückgängig geht nicht mehr – der Plan wurde inzwischen geändert.", "warnung");
+      return meldung(tb.rueckgaengigNichtMehr, "warnung");
     }
     setAuswahl([]);
-    if (!(await schrittAnwenden(s.vorher, `Rückgängig: ${s.was}`))) return;
+    if (!(await schrittAnwenden(s.vorher, `Rückgängig: ${s.was}`))) return; // bleibt deutsch (Protokoll)
     verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: [...verlauf.current.vor, s] });
   };
   const wiederholen = async () => {
@@ -65,9 +69,9 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
       setAuswahl([]);
       if ((belegungImPlan(plan, s.ziel)?.tierId ?? null) !== s.getauscht) {
         verlaufSetzen({ zurueck: verlauf.current.zurueck, vor: verlauf.current.vor.filter((x) => x !== s) });
-        return meldung("Wiederholen geht nicht mehr – der Plan wurde inzwischen geändert.", "warnung");
+        return meldung(tb.wiederholenNichtMehr, "warnung");
       }
-      const r = await tierZug(s.tierId, s.von, s.ziel, s.getauscht, `Wiederholt: ${s.was}`);
+      const r = await tierZug(s.tierId, s.von, s.ziel, s.getauscht, `Wiederholt: ${s.was}`); // bleibt deutsch (Protokoll)
       if (r === "abbruch") return;
       if (!r) return verlaufSetzen({ zurueck: verlauf.current.zurueck, vor: verlauf.current.vor.filter((x) => x !== s) });
       verlaufSetzen({ zurueck: [...verlauf.current.zurueck, s], vor: verlauf.current.vor.filter((x) => x !== s) });
@@ -75,10 +79,10 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     }
     if (halleSchluessel(s.vorher) !== halleSchluessel(entwurfRef.current)) {
       verlaufSetzen({ zurueck: [], vor: [] });
-      return meldung("Wiederholen geht nicht mehr – der Plan wurde inzwischen geändert.", "warnung");
+      return meldung(tb.wiederholenNichtMehr, "warnung");
     }
     setAuswahl([]);
-    if (!(await schrittAnwenden(s.nachher, `Wiederholt: ${s.was}`))) return;
+    if (!(await schrittAnwenden(s.nachher, `Wiederholt: ${s.was}`))) return; // bleibt deutsch (Protokoll)
     verlaufSetzen({ zurueck: [...verlauf.current.zurueck, s], vor: verlauf.current.vor.filter((x) => x !== s) });
   };
   const versetzenMut = trpc.katalog.tierVersetzen.useMutation();
@@ -89,14 +93,14 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
    */
   const tierZug = async (tierId: number, von: KaefigPlatz | null, ziel: KaefigPlatz | null, erwartet: number | null, grund = ""): Promise<{ getauscht: number | null } | "abbruch" | null> => {
     if (offen.current > 0) {
-      meldung("Der Plan wird noch gespeichert – bitte gleich noch einmal.", "warnung");
+      meldung(tb.nochGespeichert, "warnung");
       return "abbruch";
     }
     const eingabe = { schauId, tierId, von, ziel, erwartet, grund };
     try {
       let r = await versetzenMut.mutateAsync(eingabe);
       if (r.rueckfrage) {
-        if (!(await bestaetige({ titel: "Tier versetzen?", text: r.rueckfrage, knopf: "Versetzen" }))) return "abbruch";
+        if (!(await bestaetige({ titel: tb.versetzenTitel, text: serverText(r.rueckfrage, sprache), knopf: tb.versetzenKnopf }))) return "abbruch";
         r = await versetzenMut.mutateAsync({ ...eingabe, bestaetigt: true });
       }
       return { getauscht: r.getauscht ?? null };
@@ -114,9 +118,9 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     setVersetzen(null);
     const von = platzImPlan(plan, v.tierId);
     const da = belegungImPlan(plan, ziel);
-    const nrVon = (id: number) => plan.reihen.flatMap((r) => r.kaefige).concat(plan.objekte.flatMap((o) => o.kaefige ?? [])).find((k) => k.id === id)?.nr ?? "ohne Nummer";
+    const nrVon = (id: number) => plan.reihen.flatMap((r) => r.kaefige).concat(plan.objekte.flatMap((o) => o.kaefige ?? [])).find((k) => k.id === id)?.nr ?? tb.ohneNummer;
     if (!plan.fest) {
-      if (festUnterwegs.current) return meldung("Der Plan wird gerade festgeschrieben – bitte gleich noch einmal.", "warnung");
+      if (festUnterwegs.current) return meldung(t.halleWerkzeuge.gemeinsam.festGerade, "warnung");
       festUnterwegs.current = true;
       try {
         await festMachen();
@@ -128,7 +132,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     }
     const r = await tierZug(v.tierId, von, ziel, da?.tierId ?? null);
     if (!r || r === "abbruch") return;
-    const was = r.getauscht != null ? `Nr. ${v.nr ?? "–"} und Nr. ${nrVon(r.getauscht)} getauscht` : `Nr. ${v.nr ?? "–"} versetzt`;
+    const was = r.getauscht != null ? tb.getauscht(v.nr ?? "–", nrVon(r.getauscht)) : tb.versetzt(v.nr ?? "–");
     verlaufSetzen({ zurueck: [...verlauf.current.zurueck.slice(-99), { art: "tier", tierId: v.tierId, von, ziel, getauscht: r.getauscht, was }], vor: [] });
     meldung(`${was}.`);
   };
@@ -136,19 +140,15 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     onSuccess: async (e) => {
       // Nummern hängen an vielen Stellen (Katalog, Preisrichter, Meldungen): alles neu laden.
       await utils.invalidate();
-      if (e.aufgerueckt) meldung(`${e.aufgerueckt} ${e.aufgerueckt === 1 ? "Tier ist" : "Tiere sind"} lückenlos aufgerückt.`);
+      if (e.aufgerueckt) meldung(tb.aufgerueckt(e.aufgerueckt));
       if (e.aufrueckenGesperrt)
-        meldung("Schon Tiere eingeliefert: nur nummeriert, nicht aufgerückt.", "warnung");
-      if (!e.geaendert) meldung(e.modus === "nummern" ? "Die Katalognummern folgen schon dem Plan." : "Die Käfigplätze folgen schon dem Plan.");
+        meldung(tb.aufrueckenGesperrt, "warnung");
+      if (!e.geaendert) meldung(e.modus === "nummern" ? tb.nummernFolgenSchon : tb.plaetzeFolgenSchon);
       else
-        meldung(
-          e.modus === "nummern"
-            ? `${e.geaendert} Katalognummern neu nach dem Plan vergeben${e.ohnePlatz ? ` – ${e.ohnePlatz} Tiere ohne Platz stehen am Ende` : ""}.`
-            : `${e.geaendert} Käfigplätze neu nach dem Plan vergeben – die Katalognummern bleiben.`,
-        );
-      if (e.ohnePreisrichter) meldung(`${e.ohnePreisrichter} Tiere sind nach den neuen Nummern keinem Preisrichter zugeteilt – bitte unter „Preisrichter“ prüfen.`, "warnung");
+        meldung(e.modus === "nummern" ? tb.nummernNeu(e.geaendert, e.ohnePlatz ?? 0) : tb.plaetzeNeu(e.geaendert));
+      if (e.ohnePreisrichter) meldung(tb.ohnePreisrichter(e.ohnePreisrichter), "warnung");
       if (e.einteilungVonHand)
-        meldung("Preisrichter sind von Hand nach Nummernbereichen eingeteilt – bitte unter „Preisrichter“ neu einteilen.", "fehler");
+        meldung(tb.einteilungVonHand, "fehler");
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -158,14 +158,14 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
       !(await bestaetige(
         d.katalogGedruckt
           ? {
-              titel: "Käfigplätze nach dem Plan vergeben?",
-              text: "Die Käfignummern laufen in Planfolge neu durch, gedruckte Karten bitte neu drucken.",
-              knopf: "Käfigplätze vergeben",
+              titel: tb.plaetzeTitel,
+              text: tb.plaetzeText,
+              knopf: tb.plaetzeKnopf,
             }
           : {
-              titel: "Katalognummern nach dem Plan vergeben?",
-              text: `Die Tiere bekommen neue Katalognummern ab ${d.katalogStart} in Planfolge.`,
-              knopf: "Neu nummerieren",
+              titel: tb.nummernTitel,
+              text: tb.nummernText(d.katalogStart),
+              knopf: tb.nummernKnopf,
             },
       ))
     )
@@ -177,36 +177,36 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
   const anWaendenAusrichten = async () => {
     await kette.current.catch(() => {});
     const d = wandAusrichtung(entwurfRef.current, wandKandidatenImEntwurf(entwurfRef.current, plan, null));
-    if (!d.length) return meldung("Alle Käfige an den Wänden stehen mit der Rückwand zur Wand.");
+    if (!d.length) return meldung(tb.alleAnWand);
     if (
       !(await bestaetige({
-        titel: "Käfige an den Wänden ausrichten?",
-        text: `${d.length === 1 ? "1 Teil steht" : `${d.length} Teile stehen`} mit der Front zur Wand und ${d.length === 1 ? "wird" : "werden"} umgedreht – die Käfignummern darauf laufen dann andersherum.`,
-        knopf: "Ausrichten",
+        titel: tb.wandTitel,
+        text: d.length === 1 ? tb.wandEins : tb.wandViele(d.length),
+        knopf: tb.wandKnopf,
       }))
     )
       return;
     aendern((h) => wandDrehungenAnwenden(h, wandAusrichtung(h, wandKandidatenImEntwurf(h, plan, null))), {
-      was: "An den Wänden ausrichten",
-      grund: `An den Wänden ausgerichtet: ${d.length} ${d.length === 1 ? "Teil" : "Teile"} gedreht`,
+      was: tb.wandWas,
+      grund: `An den Wänden ausgerichtet: ${d.length} ${d.length === 1 ? "Teil" : "Teile"} gedreht`, // bleibt deutsch (Protokoll)
       festschreiben: d.some((x) => x.teil.art === "platte"),
     });
-    meldung(`${d.length === 1 ? "1 Teil" : `${d.length} Teile`} gedreht – Rückwand an der Wand.`);
+    meldung(d.length === 1 ? tb.wandGedrehtEins : tb.wandGedreht(d.length));
   };
   const neuSetzenFragen = async () =>
     (await bestaetige({
-      titel: "Plan neu setzen?",
-      text: "Alle Käfige werden neu aufgestellt, Verschobenes und eingesetzte Teile fallen weg.",
-      knopf: "Plan neu setzen",
+      titel: tb.neuTitel,
+      text: tb.neuText,
+      knopf: tb.neuKnopf,
       gefahr: true,
-    })) && neuSetzenMit(null, "Plan neu setzen");
+    })) && neuSetzenMit(null, "Plan neu setzen"); // bleibt deutsch (Protokoll)
   /**
    * Andere Einstellungen der Halle (auch Rückgängig/Wiederholen davon): Plan neu setzen. Steht etwas von Hand Geplantes
    * oder ist der Plan fest, vorher Rückfrage. `f` wirkt auf den Stand nach der Rückfrage (inzwischen Gespeichertes bleibt).
    */
   const halleNeuSetzen = async (f: (h: Halle) => Halle, grund: string): Promise<boolean> => {
     if (neuUnterwegs.current) {
-      meldung("Der Plan wird gerade neu gesetzt – bitte gleich noch einmal.", "warnung");
+      meldung(tb.neuGerade, "warnung");
       return false;
     }
     // Erst alle laufenden Speicherungen abwarten (z. B. ein eben verschobener Block), dann mit dem frischen Stand prüfen.
@@ -223,12 +223,11 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
         aendern(f, { was: grund, grund });
         return true;
       }
-      const was = grundrissNeu ? "Ein anderer Grundriss geht" : "Die Reihenrichtung ändert sich";
-      if (!(await bestaetige({ titel: "Automatisch planen einschalten?", text: `${was} nur mit neu gesetztem Plan – alle Käfige werden neu aufgestellt.`, knopf: "Einschalten und neu setzen", gefahr: true })))
+      if (!(await bestaetige({ titel: tb.automatikTitel, text: grundrissNeu ? tb.grundrissNurNeu : tb.richtungNurNeu, knopf: tb.einschaltenKnopf, gefahr: true })))
         return false;
       return neuSetzenMit(f(entwurfRef.current), grund);
     }
-    if (vonHandGeplant(entwurfRef.current) && !(await bestaetige({ titel: "Plan neu setzen?", text: "Mit den neuen Einstellungen der Halle werden alle Käfige neu aufgestellt.", knopf: "Neu setzen", gefahr: true })))
+    if (vonHandGeplant(entwurfRef.current) && !(await bestaetige({ titel: tb.neuTitel, text: tb.neuEinstellungen, knopf: tb.neuSetzenKnopf, gefahr: true })))
       return false;
     return neuSetzenMit(f(entwurfRef.current), grund);
   };
@@ -237,7 +236,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
    * Möbel lassen die Käfige stehen). An = Plan neu setzen (Rückfrage: Verschobenes und eingesetzte Teile fallen weg).
    */
   const automatikUmschalten = async () => {
-    if (neuUnterwegs.current || festUnterwegs.current) return meldung("Der Plan wird gerade gespeichert – bitte gleich noch einmal.", "warnung");
+    if (neuUnterwegs.current || festUnterwegs.current) return meldung(tb.gespeichertGerade, "warnung");
     await kette.current.catch(() => {});
     const fest = utils.katalog.hallenplan.getData({ schauId })?.plan?.fest ?? plan.fest;
     if (!fest) {
@@ -247,23 +246,23 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     }
     if (
       await bestaetige({
-        titel: "Automatisch planen einschalten?",
-        text: "Alle Käfige werden neu aufgestellt, Verschobenes und eingesetzte Teile fallen weg.",
-        knopf: "Einschalten und neu setzen",
+        titel: tb.automatikTitel,
+        text: tb.neuText,
+        knopf: tb.einschaltenKnopf,
         gefahr: true,
       })
     )
-      neuSetzenMit(null, "Automatisch planen eingeschaltet");
+      neuSetzenMit(null, "Automatisch planen eingeschaltet"); // bleibt deutsch (Protokoll)
   };
   /** Einstellung der Halle ändern (Maße, Gänge, Reihen, Grundplatten): der Plan wird neu gesetzt (siehe `halleNeuSetzen`). */
-  const aendernHalle = (patch: Partial<Halle>, was: string): Promise<boolean> => halleNeuSetzen((h) => ({ ...h, ...patch }), `Halle: ${was}`);
+  const aendernHalle = (patch: Partial<Halle>, was: string): Promise<boolean> => halleNeuSetzen((h) => ({ ...h, ...patch }), `Halle: ${was}`); // bleibt deutsch (Protokoll)
   /** Eine Doppelreihe an die Wand gezogen: dort eine Einzelreihe stellen, die übrigen Reihen ordnen sich neu. */
   const wandreihe = trpc.katalog.wandreiheStellen.useMutation({
     onSuccess: async (e) => {
       verlaufSetzen({ zurueck: [], vor: [] });
       setAuswahl([]);
       await utils.katalog.hallenplan.invalidate({ schauId });
-      meldung(e.neuGesetzt ? "Einzelreihe gestellt – die Käfige sind neu aufgestellt." : "Einzelreihe gestellt – die Reihen sind neu geordnet.");
+      meldung(e.neuGesetzt ? tb.einzelreiheNeu : tb.einzelreiheGeordnet);
     },
     onError: async (e) => {
       meldung(fehlerText(e), "fehler");
@@ -273,9 +272,9 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
   const anWandFragen = async (nr: number, seite: WandSeite) => {
     if (
       !(await bestaetige({
-        titel: "An der Wand eine Einzelreihe stellen?",
-        text: plan.fest ? "Die übrigen Reihen ordnen sich neu und alle Käfige werden neu aufgestellt." : "Die übrigen Reihen ordnen sich neu, eingesetzte Käfigblöcke werden neu gesetzt.",
-        knopf: "Einzelreihe stellen",
+        titel: tb.einzelreiheTitel,
+        text: plan.fest ? tb.einzelreiheFest : tb.einzelreiheLose,
+        knopf: tb.einzelreiheKnopf,
         gefahr: !!plan.fest,
       }))
     )
@@ -287,10 +286,10 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
   const grundrissSetzen = async (roh: Punkt[], basis: string): Promise<boolean> => {
     // Der Grundriss ist in den Koordinaten der Halle beim Öffnen gezeichnet: hat sie inzwischen jemand anders geändert, nicht übernehmen.
     if (halleSchluessel(entwurfRef.current) !== basis) {
-      meldung("Die Halle wurde inzwischen geändert – bitte den Grundriss noch einmal öffnen.", "warnung");
+      meldung(tb.grundrissVeraltet, "warnung");
       return false;
     }
-    return halleNeuSetzen((h) => grundrissUebernehmen(h, roh), "Halle: Grundriss");
+    return halleNeuSetzen((h) => grundrissUebernehmen(h, roh), "Halle: Grundriss"); // bleibt deutsch (Protokoll)
   };
   return { grundrissSetzen, rueckgaengig, wiederholen, zielGewaehlt, versetzenMut, nachPlan, nachPlanFragen, anWaendenAusrichten, neuSetzenFragen, automatikUmschalten, aendernHalle, wandreihe, anWandFragen, neuSetzenLaeuft: neuSetzen.isPending };
 }

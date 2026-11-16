@@ -1,6 +1,8 @@
-import { AUSSTELLER_FELDER, IMPORT_FELDER, type ImportFeld, TIER_FELDER } from "@schau/domain";
+import { AUSSTELLER_FELDER, type ImportFeld, serverText, TIER_FELDER } from "@schau/domain";
 import { useRef, useState } from "react";
 import { datumZeit, fehlerText } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
+import { ot } from "../sprache-jetzt";
 import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Auswahl, FehlerAnzeige, Feld, Haken, Hinweis, Kennzahlen, Knopf, Laden, Leer, Marke, SEITE, Segmente, Seitenkopf, TabellenRahmen, useFrage, useMeldung } from "../ui";
 
@@ -14,7 +16,7 @@ function alsBase64(datei: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
-    r.onerror = () => reject(new Error("Datei konnte nicht gelesen werden."));
+    r.onerror = () => reject(new Error(ot().preisrichter.import.dateiNichtLesbar));
     r.readAsDataURL(datei);
   });
 }
@@ -24,6 +26,8 @@ function alsBase64(datei: Blob): Promise<string> {
  * übernehmen; frühere Importe zurücknehmen. Erklärungen im Handbuch („Import aus anderen Programmen“).
  */
 export function ImportSeite() {
+  const t = useOberflaeche();
+  const tx = t.preisrichter.import;
   const [art, setArt] = useState<Art>("meldungen");
   const [schauId, setSchauId] = useState<number | null>(null);
   const [dateiname, setDateiname] = useState("");
@@ -58,7 +62,7 @@ export function ImportSeite() {
   };
   const uebernehmen = trpc.datenimport.uebernehmen.useMutation({
     onSuccess: async (r) => {
-      meldung(art === "meldungen" ? `${r.meldungen} Meldungen mit ${r.tiere} Tieren übernommen${r.ausgelassen ? `, ${r.ausgelassen} Zeilen ausgelassen` : ""}.` : `${r.aussteller} Aussteller angelegt.`);
+      meldung(art === "meldungen" ? tx.uebernommen(r.meldungen, r.tiere, r.ausgelassen) : tx.ausstellerAngelegt(r.aussteller));
       zuruecksetzen();
       await utils.datenimport.laeufe.invalidate();
     },
@@ -77,7 +81,7 @@ export function ImportSeite() {
   const eingabe = (r = rassen) => ({ art, schauId: art === "meldungen" ? (schauId ?? undefined) : undefined, dateiname, tabelle: JSON.stringify(tabelle ?? []), zuordnung, mitKopf, rassen: r });
   const dateiGewaehlt = async (d: File | undefined) => {
     if (!d) return;
-    if (d.size > MAX_BYTES) return meldung("Die Datei ist zu groß (höchstens 8 MB).", "fehler");
+    if (d.size > MAX_BYTES) return meldung(tx.zuGross, "fehler");
     const r = await lesen.mutateAsync({ dateiname: d.name, base64: await alsBase64(d) }).catch(() => null);
     if (!r) return;
     setDateiname(d.name);
@@ -85,7 +89,7 @@ export function ImportSeite() {
     setZuordnung(r.zuordnung);
     verwerfen();
     setRassen({});
-    if (r.abgeschnitten) meldung("Nur die ersten 60 Spalten werden gelesen.", "warnung");
+    if (r.abgeschnitten) meldung(tx.spaltenAbgeschnitten, "warnung");
   };
   const rasseWaehlen = (schluessel: string, id: number | null) => {
     const neu = { ...rassen, [schluessel]: id };
@@ -98,33 +102,33 @@ export function ImportSeite() {
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Import"
+        titel={tx.titel}
         hilfe="import"
         aktionen={
           bericht && (
             <Knopf variante="primaer" disabled={!bereit || pruefen.isPending} laedt={uebernehmen.isPending} onClick={() => uebernehmen.mutate({ ...eingabe(), bestaetigen, zustimmung })}>
-              {art === "meldungen" ? `${gut} Zeilen übernehmen` : "Aussteller übernehmen"}
+              {art === "meldungen" ? tx.zeilenUebernehmen(gut) : tx.ausstellerUebernehmen}
             </Knopf>
           )
         }
       />
 
-      <Abschnitt titel="1. Datei">
+      <Abschnitt titel={tx.datei}>
         <div className="flex flex-col gap-4">
           <Segmente<Art>
-            label="Was wird importiert?"
+            label={tx.wasImportieren}
             wert={art}
             onChange={(a) => {
               setArt(a);
               verwerfen();
             }}
             optionen={[
-              { wert: "meldungen", label: "Meldungen in eine Schau" },
-              { wert: "aussteller", label: "Aussteller ins Verzeichnis" },
+              { wert: "meldungen", label: tx.artMeldungen },
+              { wert: "aussteller", label: tx.artAussteller },
             ]}
           />
           {art === "meldungen" && (
-            <Feld label="Schau" className="max-w-md">
+            <Feld label={tx.schau} className="max-w-md">
               {(id) => (
                 <Auswahl
                   id={id}
@@ -135,7 +139,7 @@ export function ImportSeite() {
                     setRassen({});
                   }}
                 >
-                  <option value="">Bitte wählen</option>
+                  <option value="">{tx.bitteWaehlen}</option>
                   {offeneSchauen.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -145,7 +149,7 @@ export function ImportSeite() {
               )}
             </Feld>
           )}
-          <Feld label="Datei (Excel .xlsx oder CSV)" className="max-w-md">
+          <Feld label={tx.dateiLabel} className="max-w-md">
             {(id) => <input key={dateiFeld} id={id} type="file" accept=".xlsx,.csv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(e) => void dateiGewaehlt(e.target.files?.[0])} className="text-sm" />}
           </Feld>
           {lesen.isPending && <Laden />}
@@ -176,20 +180,20 @@ export function ImportSeite() {
         <>
           <Kennzahlen
             werte={[
-              { label: "Zeilen", wert: bericht.zeilen.length },
-              { label: "Übernehmbar", wert: gut, ton: gut ? "ok" : "warnung" },
-              { label: "Mit Fehlern", wert: bericht.zeilen.length - gut, ton: bericht.zeilen.length - gut ? "fehler" : undefined },
-              { label: "Aussteller neu / vorhanden", wert: `${bericht.aussteller.filter((a) => !a.vorhanden).length} / ${bericht.aussteller.filter((a) => a.vorhanden).length}` },
+              { label: tx.zeilen, wert: bericht.zeilen.length },
+              { label: tx.uebernehmbar, wert: gut, ton: gut ? "ok" : "warnung" },
+              { label: tx.mitFehlern, wert: bericht.zeilen.length - gut, ton: bericht.zeilen.length - gut ? "fehler" : undefined },
+              { label: tx.ausstellerNeuVorhanden, wert: `${bericht.aussteller.filter((a) => !a.vorhanden).length} / ${bericht.aussteller.filter((a) => a.vorhanden).length}` },
             ]}
           />
-          {bericht.schau?.test && <Hinweis ton="warnung">Testschau: Alle Aussteller entstehen als Test-Aussteller.</Hinweis>}
+          {bericht.schau?.test && <Hinweis ton="warnung">{tx.testschau}</Hinweis>}
           {art === "meldungen" && bericht.rassen.length > 0 && <Rassen bericht={bericht} waehlen={rasseWaehlen} laedt={pruefen.isPending} />}
           <Zeilen bericht={bericht} />
           {art === "meldungen" && (
-            <Abschnitt titel="Optionen">
+            <Abschnitt titel={tx.optionen}>
               <div className="flex flex-col gap-3">
-                <Haken label="Meldungen gleich bestätigen (ohne Bestätigungsmail)" checked={bestaetigen} onChange={setBestaetigen} />
-                <Haken label="Teilnahmebedingungen liegen unterschrieben vor" checked={zustimmung} onChange={setZustimmung} />
+                <Haken label={tx.gleichBestaetigen} checked={bestaetigen} onChange={setBestaetigen} />
+                <Haken label={tx.zustimmung} checked={zustimmung} onChange={setZustimmung} />
               </div>
             </Abschnitt>
           )}
@@ -202,6 +206,7 @@ export function ImportSeite() {
 }
 
 function Spalten({ art, tabelle, zuordnung, mitKopf, setMitKopf, setZuordnung, pruefen, laedt, gesperrt }: { art: Art; tabelle: string[][]; zuordnung: (ImportFeld | null)[]; mitKopf: boolean; setMitKopf: (v: boolean) => void; setZuordnung: (z: (ImportFeld | null)[]) => void; pruefen: () => void; laedt: boolean; gesperrt: boolean }) {
+  const tx = useOberflaeche().preisrichter.import.spalten;
   const felder = art === "meldungen" ? [...AUSSTELLER_FELDER, ...TIER_FELDER] : AUSSTELLER_FELDER;
   const breite = Math.max(...tabelle.map((z) => z.length));
   const beispiel = tabelle.slice(mitKopf ? 1 : 0, (mitKopf ? 1 : 0) + 3);
@@ -210,11 +215,11 @@ function Spalten({ art, tabelle, zuordnung, mitKopf, setMitKopf, setZuordnung, p
     <TabellenRahmen
       kopf={
         <div className="flex w-full flex-wrap items-center justify-between gap-3">
-          <h2 className="text-[1.07rem] font-semibold">2. Spalten zuordnen</h2>
+          <h2 className="text-[1.07rem] font-semibold">{tx.titel}</h2>
           <div className="flex flex-wrap items-center gap-4">
-            <Haken label="Erste Zeile ist Überschrift" checked={mitKopf} onChange={setMitKopf} />
+            <Haken label={tx.ersteZeile} checked={mitKopf} onChange={setMitKopf} />
             <Knopf variante="primaer" laedt={laedt} disabled={gesperrt} onClick={pruefen}>
-              Prüfen
+              {tx.pruefen}
             </Knopf>
           </div>
         </div>
@@ -225,12 +230,12 @@ function Spalten({ art, tabelle, zuordnung, mitKopf, setMitKopf, setZuordnung, p
           <tr>
             {Array.from({ length: breite }, (_, i) => (
               <th key={i} className="min-w-40 align-top">
-                {mitKopf && <span className="mb-1 block text-sm font-normal text-grau">{tabelle[0]?.[i] || `Spalte ${i + 1}`}</span>}
-                <Auswahl kompakt aria-label={`Feld für Spalte ${i + 1}`} value={zuordnung[i] ?? ""} onChange={(e) => setze(i, (e.target.value || null) as ImportFeld | null)}>
-                  <option value="">nicht übernehmen</option>
+                {mitKopf && <span className="mb-1 block text-sm font-normal text-grau">{tabelle[0]?.[i] || tx.spalte(i + 1)}</span>}
+                <Auswahl kompakt aria-label={tx.feldFuer(i + 1)} value={zuordnung[i] ?? ""} onChange={(e) => setze(i, (e.target.value || null) as ImportFeld | null)}>
+                  <option value="">{tx.nicht}</option>
                   {felder.map((f) => (
                     <option key={f} value={f}>
-                      {IMPORT_FELDER[f]}
+                      {tx.felder[f]}
                     </option>
                   ))}
                 </Auswahl>
@@ -255,15 +260,16 @@ function Spalten({ art, tabelle, zuordnung, mitKopf, setMitKopf, setZuordnung, p
 }
 
 function Rassen({ bericht, waehlen, laedt }: { bericht: Bericht; waehlen: (schluessel: string, id: number | null) => void; laedt: boolean }) {
-  const QUELLE = { gewaehlt: "gewählt", gelernt: "wie beim letzten Import", genau: "genau gefunden" } as const;
+  const t = useOberflaeche();
+  const tx = t.preisrichter.import.rassen;
   return (
-    <TabellenRahmen kopf={<h2 className="text-[1.07rem] font-semibold">3. Rassen und Farbenschläge</h2>}>
+    <TabellenRahmen kopf={<h2 className="text-[1.07rem] font-semibold">{tx.titel}</h2>}>
       <table className="tabelle">
         <thead>
           <tr>
-            <th>In der Datei</th>
-            <th className="text-right">Tiere</th>
-            <th>Im Verzeichnis</th>
+            <th>{tx.inDatei}</th>
+            <th className="text-right">{t.allgemein.tiere}</th>
+            <th>{tx.imVerzeichnis}</th>
           </tr>
         </thead>
         <tbody>
@@ -278,16 +284,16 @@ function Rassen({ bericht, waehlen, laedt }: { bericht: Bericht; waehlen: (schlu
                 <td className="text-right tabular-nums">{r.anzahl}</td>
                 <td>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Auswahl kompakt aria-label={`Zuordnung für ${r.rasse} ${r.farbenschlag}`} disabled={laedt} value={r.farbenschlagId ?? ""} onChange={(e) => waehlen(r.schluessel, e.target.value ? Number(e.target.value) : null)}>
-                      <option value="">– auslassen –</option>
-                      {r.farbenschlagId != null && !r.vorschlaege.some((v) => v.id === r.farbenschlagId) && <option value={r.farbenschlagId}>(zugeordnet)</option>}
+                    <Auswahl kompakt aria-label={tx.zuordnungFuer(r.rasse, r.farbenschlag)} disabled={laedt} value={r.farbenschlagId ?? ""} onChange={(e) => waehlen(r.schluessel, e.target.value ? Number(e.target.value) : null)}>
+                      <option value="">{tx.auslassen}</option>
+                      {r.farbenschlagId != null && !r.vorschlaege.some((v) => v.id === r.farbenschlagId) && <option value={r.farbenschlagId}>{tx.zugeordnet}</option>}
                       {r.vorschlaege.map((v) => (
                         <option key={v.id} value={v.id}>
                           {v.rasse}, {v.farbenschlag}
                         </option>
                       ))}
                     </Auswahl>
-                    {r.quelle ? <Marke ton="ok">{QUELLE[r.quelle]}</Marke> : <Marke ton="warnung">{r.vorschlaege.length ? "bitte wählen" : "kein Vorschlag"}</Marke>}
+                    {r.quelle ? <Marke ton="ok">{tx.quelle[r.quelle]}</Marke> : <Marke ton="warnung">{r.vorschlaege.length ? tx.bitteWaehlen : tx.keinVorschlag}</Marke>}
                   </div>
                 </td>
               </tr>
@@ -299,6 +305,9 @@ function Rassen({ bericht, waehlen, laedt }: { bericht: Bericht; waehlen: (schlu
 }
 
 function Zeilen({ bericht }: { bericht: Bericht }) {
+  const t = useOberflaeche();
+  const tx = t.preisrichter.import.zeilenListe;
+  const sprache = useSprache();
   const [alle, setAlle] = useState(false);
   const auffaellig = bericht.zeilen.filter((z) => z.fehler.length || z.hinweise.length);
   const liste = (alle ? bericht.zeilen : auffaellig).slice(0, ZEILEN_ANZEIGE);
@@ -307,26 +316,26 @@ function Zeilen({ bericht }: { bericht: Bericht }) {
     <TabellenRahmen
       kopf={
         <div className="flex w-full flex-wrap items-center justify-between gap-3">
-          <h2 className="text-[1.07rem] font-semibold">{alle ? "Alle Zeilen" : "Zeilen mit Fehlern oder Hinweisen"}</h2>
+          <h2 className="text-[1.07rem] font-semibold">{alle ? tx.alle : tx.auffaellige}</h2>
           <Knopf variante="leise" onClick={() => setAlle(!alle)}>
-            {alle ? "Nur auffällige zeigen" : "Alle zeigen"}
+            {alle ? tx.nurAuffaellige : tx.alleZeigen}
           </Knopf>
         </div>
       }
-      fuss={gesamt > ZEILEN_ANZEIGE ? `Die ersten ${ZEILEN_ANZEIGE} von ${gesamt} Zeilen.` : undefined}
+      fuss={gesamt > ZEILEN_ANZEIGE ? tx.ersten(ZEILEN_ANZEIGE, gesamt) : undefined}
     >
       {liste.length === 0 ? (
         <div className="p-4">
-          <Leer titel="Keine Auffälligkeiten" />
+          <Leer titel={tx.keine} />
         </div>
       ) : (
         <table className="tabelle">
           <thead>
             <tr>
-              <th className="text-right">Zeile</th>
-              <th>Aussteller</th>
-              <th>Tier</th>
-              <th>Fehler und Hinweise</th>
+              <th className="text-right">{tx.zeile}</th>
+              <th>{t.allgemein.aussteller}</th>
+              <th>{t.allgemein.tier}</th>
+              <th>{tx.fehlerHinweise}</th>
             </tr>
           </thead>
           <tbody>
@@ -341,12 +350,12 @@ function Zeilen({ bericht }: { bericht: Bericht }) {
                 <td>
                   {z.fehler.map((f) => (
                     <span key={f} className="block font-semibold text-kamm">
-                      {f}
+                      {serverText(f, sprache)}
                     </span>
                   ))}
                   {z.hinweise.map((h) => (
                     <span key={h} className="block text-sm text-grau">
-                      {h}
+                      {serverText(h, sprache)}
                     </span>
                   ))}
                 </td>
@@ -360,13 +369,15 @@ function Zeilen({ bericht }: { bericht: Bericht }) {
 }
 
 function Laeufe() {
+  const t = useOberflaeche();
+  const tx = t.preisrichter.import.laeufe;
   const q = trpc.datenimport.laeufe.useQuery();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
   const zurueck = trpc.datenimport.zuruecknehmen.useMutation({
     onSuccess: async (r) => {
-      meldung(`Zurückgenommen: ${r.meldungen} Meldungen, ${r.aussteller} Aussteller.`);
+      meldung(tx.zurueckgenommen(r.meldungen, r.aussteller));
       await utils.datenimport.laeufe.invalidate();
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
@@ -375,16 +386,16 @@ function Laeufe() {
   if (!q.data) return <Laden />;
   if (!q.data.length) return null;
   return (
-    <TabellenRahmen kopf={<h2 className="text-[1.07rem] font-semibold">Frühere Importe</h2>}>
+    <TabellenRahmen kopf={<h2 className="text-[1.07rem] font-semibold">{tx.titel}</h2>}>
       <table className="tabelle">
         <thead>
           <tr>
-            <th>Zeitpunkt</th>
-            <th>Datei</th>
-            <th>Ziel</th>
-            <th className="text-right">Aussteller neu</th>
-            <th className="text-right">Meldungen</th>
-            <th className="text-right">Tiere</th>
+            <th>{tx.zeitpunkt}</th>
+            <th>{tx.datei}</th>
+            <th>{tx.ziel}</th>
+            <th className="text-right">{tx.ausstellerNeu}</th>
+            <th className="text-right">{tx.meldungen}</th>
+            <th className="text-right">{t.allgemein.tiere}</th>
             <th />
           </tr>
         </thead>
@@ -393,22 +404,22 @@ function Laeufe() {
             <tr key={l.id}>
               <td>{datumZeit(l.createdAt)}</td>
               <td>{l.dateiname || "–"}</td>
-              <td>{l.art === "meldungen" ? (l.schau ?? "Schau gelöscht") : "Ausstellerverzeichnis"}</td>
+              <td>{l.art === "meldungen" ? (l.schau ?? tx.schauGeloescht) : tx.verzeichnis}</td>
               <td className="text-right tabular-nums">{l.anzahlAussteller}</td>
               <td className="text-right tabular-nums">{l.anzahlMeldungen}</td>
               <td className="text-right tabular-nums">{l.anzahlTiere}</td>
               <td className="text-right">
                 {l.zurueckgenommenAm ? (
-                  <Marke>zurückgenommen</Marke>
+                  <Marke>{tx.marke}</Marke>
                 ) : (
                   <Knopf
                     variante="gefahr"
                     laedt={zurueck.isPending && zurueck.variables?.id === l.id}
                     onClick={async () => {
-                      if (await bestaetige({ titel: "Import zurücknehmen?", text: "Die Meldungen und neu angelegten Aussteller dieses Imports werden gelöscht – nur, solange nichts weiter damit geschehen ist.", knopf: "Zurücknehmen", gefahr: true })) zurueck.mutate({ id: l.id });
+                      if (await bestaetige({ titel: tx.frage, text: tx.frageText, knopf: tx.zuruecknehmen, gefahr: true })) zurueck.mutate({ id: l.id });
                     }}
                   >
-                    Zurücknehmen
+                    {tx.zuruecknehmen}
                   </Knopf>
                 )}
               </td>

@@ -1,0 +1,48 @@
+import type { OberflaecheTexte } from "..";
+
+export const stamm: OberflaecheTexte["serverKatalog"]["stamm"] = {
+  bild: {
+    groesser2: "L’image dépasse 2 Mo. Veuillez la réduire (p. ex. 2000 pixels de large).",
+    groesser2Kurz: "L’image dépasse 2 Mo. Veuillez la réduire.",
+    groesser5: "L’image dépasse 5 Mo.",
+    logo: "Le logo dépasse 600 Ko. Veuillez le réduire (p. ex. 600 pixels de large) – il figure sur chaque reçu.",
+    format: "Uniquement des images au format JPEG ou PNG.",
+    nurJpeg: "Uniquement des images au format JPEG. Veuillez enregistrer la photo en JPEG.",
+    lesen: "L’image est illisible. Veuillez l’enregistrer à nouveau en JPEG ou PNG.",
+    lesenJpeg: "L’image est illisible. Veuillez l’enregistrer à nouveau en JPEG.",
+    beschaedigt: "L’image est illisible (endommagée ou incomplète). Veuillez l’enregistrer à nouveau.",
+    unvollstaendig: "L’image est incomplète. Veuillez l’enregistrer ou la télécharger à nouveau.",
+    pixel: (breite: string, hoehe: string) => `Avec ${breite} × ${hoehe} pixels, l’image est trop grande. Veuillez la réduire.`,
+    pixel1200: (breite: string, hoehe: string) => `Avec ${breite} × ${hoehe} pixels, l’image est trop grande. Veuillez la réduire (p. ex. 1200 pixels de large).`,
+    png: (breite: string, hoehe: string) => `Avec ${breite} × ${hoehe} pixels, l’image PNG à fond transparent est trop grande pour l’impression du catalogue. Veuillez l’enregistrer en JPEG ou la réduire à 1,5 million de pixels au maximum (p. ex. 1500 × 1000).`,
+    fremd: "Cette image n’appartient pas à l’exposition.",
+    fehlt: "Image introuvable.",
+    beitragFehlt: "Article introuvable.",
+    beitragUnbekannt: "Article inconnu.",
+  },
+  lizenz: {
+    fehlt: "Licence manquante – p. ex. « image personnelle », « domaine public », « CC0 » ou « CC BY-SA 4.0 ».",
+    nc: "Licence « non commerciale » (NC) : le catalogue est vendu – cette image ne peut pas y figurer.",
+    nd: "Licence « pas de modification » (ND) : dans le catalogue, l’image est recadrée et réduite – cette image ne peut pas y figurer.",
+    urheber: "Auteur manquant – la licence CC BY exige la mention du nom.",
+    link: "Lien vers la licence manquant – veuillez indiquer l’adresse de la licence (p. ex. https://creativecommons.org/licenses/by-sa/4.0/).",
+  },
+  stammdaten: {
+    versionUnbekannt: "Cette version des données de base n’existe pas.",
+    keineZeilen: "Le fichier ne contient aucune ligne valable.",
+    versionFehlt: "Version introuvable.",
+    nichtErgaenzen: "Cette version est mise à disposition de tous les clubs et ne peut pas être complétée. Veuillez importer votre propre liste.",
+    nichtLoeschen: "Cette version est mise à disposition de tous les clubs et ne peut pas être supprimée.",
+    schonDa: (rasse: string) => `Toutes les variétés indiquées existent déjà pour « ${rasse} ».`,
+    verwendet: "Cette version est utilisée par une exposition.",
+    verweisen: "Des animaux inscrits renvoient à cette version – elle ne peut pas être supprimée.",
+    anfuehrung: (zeile: string) => `Ligne ${zeile} : guillemets non fermés.`,
+    dreiSpalten: (zeile: string) => `Ligne ${zeile} : trois colonnes attendues (Sparte;Rasse;Farbenschlag).`,
+    mehrSpalten: (zeile: string) => `Ligne ${zeile} : plus de trois colonnes – séparateur dans un champ ? Mettez le champ entre guillemets.`,
+    doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Ligne ${zeile} : doublon (${rasse}, ${farbenschlag}).`,
+  },
+  druckvorlage: {
+    fehlt: "Modèle introuvable.",
+    andereSchau: "Ce modèle appartient à une autre exposition.",
+  },
+};

@@ -1,8 +1,9 @@
-import { AUFSTELLER_STANDARD, verkleidungVon, type Aufsteller, ETAGEN_MAX, KAEFIG_FUER, KAEFIG_RICHTWERT, KAEFIG_TYPEN, kaefigeJePlatte, kaefigMass, platteFuer, kaefigName, kaefigNameLang, type KaefigMasse, type KaefigTyp } from "@schau/domain";
+import { AUFSTELLER_STANDARD, verkleidungVon, type Aufsteller, ETAGEN_MAX, KAEFIG_TYP_LABEL, KAEFIG_TYPEN, kaefigeJePlatte, kaefigMass, platteFuer, kaefigName, type KaefigMasse, type KaefigTyp, type OberflaecheTexte, serverText } from "@schau/domain";
 import { useState } from "react";
 import { fehlerText } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, Laden, Leer, Seitenkopf, Speicherleiste, useMeldung } from "../ui";
 
@@ -11,7 +12,23 @@ import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hin
  * Käfignummern (= Katalognummern) dazugehören. Darunter die Käfiggröße je Rasse – Abweichungen legt die
  * Ausstellungsleitung fest (z. B. große Hühnerrassen im Großkäfig).
  */
+/** Name einer Käfigart wie `kaefigName`, die Bezeichnung (Stamm, Voliere …) in der Sprache der Oberfläche. */
+export function kaefigNameIn(t: OberflaecheTexte, typ: KaefigTyp, masse?: KaefigMasse | null): string {
+  const name = kaefigName(typ, masse);
+  const de = KAEFIG_TYP_LABEL[typ];
+  return name.startsWith(de) ? `${t.fach.KAEFIG_TYP_LABEL[typ]}${name.slice(de.length)}` : name;
+}
+
+/** Wie `kaefigNameLang` (Maß mit Verwendungszweck), in der Sprache der Oberfläche. */
+function kaefigNameLangIn(t: OberflaecheTexte, typ: KaefigTyp, masse?: KaefigMasse | null): string {
+  const name = kaefigNameIn(t, typ, masse);
+  return name === t.fach.KAEFIG_TYP_LABEL[typ] || typ === "stamm" || typ === "voliere" ? name : `${name} – ${t.fach.KAEFIG_FUER[typ]}`;
+}
+
 export function Kaefige() {
+  const t = useOberflaeche();
+  const tk = t.halle.kaefige;
+  const sprache = useSprache();
   const schauId = useSchauId();
   const istAdmin = useIstAdmin();
   const bedarf = trpc.katalog.kaefigbedarf.useQuery({ schauId });
@@ -24,43 +41,44 @@ export function Kaefige() {
   if (bedarf.error) return <FehlerAnzeige fehler={bedarf.error} nochmal={() => bedarf.refetch()} />;
   if (!bedarf.data) return <Laden />;
   const d = bedarf.data;
-  const summe = (k: "gemeldet" | "bestaetigt") => d.typen.reduce((n, t) => n + t[k], 0);
+  const summe = (k: "gemeldet" | "bestaetigt") => d.typen.reduce((n, x) => n + x[k], 0);
   return (
     <div className="flex flex-col gap-6">
       <Seitenkopf
-        titel="Käfige"
-        unter={`${summe("gemeldet")} Käfige gemeldet, ${summe("bestaetigt")} bestätigt`}
+        titel={tk.titel}
+        unter={tk.unter(summe("gemeldet"), summe("bestaetigt"))}
+        // bleibt deutsch (Anker im Handbuch)
         hilfe="käfige-käfigbedarf"
-        aktionen={<Knopf onClick={() => window.print()}>Drucken</Knopf>}
+        aktionen={<Knopf onClick={() => window.print()}>{tk.drucken}</Knopf>}
       />
-      <Abschnitt titel="Käfigmaße und Bedarf">
+      <Abschnitt titel={tk.masseUndBedarf}>
         <div className="overflow-x-auto">
           <table className="tabelle">
             <thead>
               <tr>
-                <th scope="col">Käfig (Breite × Tiefe × Höhe)</th>
-                <th scope="col">für</th>
-                <th scope="col">Richtwert (Kantenlänge)</th>
-                <th scope="col" className="text-right">gemeldet</th>
-                <th scope="col" className="text-right">bestätigt</th>
-                <th scope="col">Käfignummern (bestätigt)</th>
+                <th scope="col">{tk.spalteMass}</th>
+                <th scope="col">{tk.spalteFuer}</th>
+                <th scope="col">{tk.spalteRichtwert}</th>
+                <th scope="col" className="text-right">{tk.gemeldet}</th>
+                <th scope="col" className="text-right">{tk.bestaetigt}</th>
+                <th scope="col">{tk.spalteNummern}</th>
               </tr>
             </thead>
             <tbody>
-              {d.typen.map((t) => (
-                <tr key={t.typ} className={t.gemeldet ? "" : "text-grau"}>
+              {d.typen.map((x) => (
+                <tr key={x.typ} className={x.gemeldet ? "" : "text-grau"}>
                   <td>
-                    <MassZelle schauId={schauId} typ={t.typ as KaefigTyp} masse={d.masse} label={t.label} darf={istAdmin} />
+                    <MassZelle schauId={schauId} typ={x.typ as KaefigTyp} masse={d.masse} label={kaefigNameIn(t, x.typ as KaefigTyp, d.masse)} darf={istAdmin} />
                   </td>
-                  <td className="text-sm">{KAEFIG_FUER[t.typ as KaefigTyp]}</td>
-                  <td className="text-sm text-grau">{KAEFIG_RICHTWERT[t.typ as KaefigTyp]}</td>
-                  <td className="text-right">{t.gemeldet}</td>
-                  <td className="text-right">{t.bestaetigt}</td>
-                  <td>{t.nummern || "–"}</td>
+                  <td className="text-sm">{t.fach.KAEFIG_FUER[x.typ as KaefigTyp]}</td>
+                  <td className="text-sm text-grau">{t.fach.KAEFIG_RICHTWERT[x.typ as KaefigTyp]}</td>
+                  <td className="text-right">{x.gemeldet}</td>
+                  <td className="text-right">{x.bestaetigt}</td>
+                  <td>{x.nummern || "–"}</td>
                 </tr>
               ))}
               <tr className="font-bold">
-                <td>Zusammen</td>
+                <td>{tk.zusammen}</td>
                 <td />
                 <td />
                 <td className="text-right">{summe("gemeldet")}</td>
@@ -72,33 +90,33 @@ export function Kaefige() {
         </div>
         {(d.ohneKaefig > 0 || d.einzelwahl > 0) && (
           <p className="mt-3 text-sm text-grau">
-            {[d.ohneKaefig > 0 ? `Dazu ${d.ohneKaefig} Satz Bruteier ohne Käfig.` : "", d.einzelwahl > 0 ? `${d.einzelwahl} ${d.einzelwahl === 1 ? "Tier steht" : "Tiere stehen"} in einem anderen Käfig.` : ""].filter(Boolean).join(" ")}
+            {[d.ohneKaefig > 0 ? tk.ohneKaefig(d.ohneKaefig) : "", d.einzelwahl > 0 ? (d.einzelwahl === 1 ? tk.einzelwahlEins : tk.einzelwahl(d.einzelwahl)) : ""].filter(Boolean).join(" ")}
           </p>
         )}
       </Abschnitt>
       <Grundplatten key={`${d.platte.laenge}-${d.platte.tiefe}-${JSON.stringify(d.jePlatte)}-${JSON.stringify(d.plattenMass)}-${JSON.stringify(d.etagen)}`} schauId={schauId} d={d} darf={istAdmin} />
       <AufstellerFeld key={JSON.stringify(d.aufsteller)} schauId={schauId} aufsteller={d.aufsteller} darf={istAdmin} />
-      <Abschnitt titel="Käfiggröße je Rasse">
-        {!istAdmin && <Hinweis className="mb-3">Ändern kann nur die Ausstellungsleitung.</Hinweis>}
+      <Abschnitt titel={tk.groesseJeRasse}>
+        {!istAdmin && <Hinweis className="mb-3">{tk.nurLeitung}</Hinweis>}
         {d.nachBloecken && d.nummernVergeben && (
           <Hinweis ton="warnung" className="mb-3">
             {d.festgeschrieben
-              ? "Katalognummern festgeschrieben: Änderungen hier ändern keine Käfignummern."
-              : "Nach einer Änderung unter „Katalognummern“ neu nummerieren."}
+              ? tk.nummernFest
+              : tk.neuNummerieren}
           </Hinweis>
         )}
         {d.rassen.length === 0 ? (
-          <Leer titel="Noch keine gemeldeten Einzeltiere" />
+          <Leer titel={tk.keineEinzeltiere} />
         ) : (
           <div className="overflow-x-auto">
             <table className="tabelle">
               <thead>
                 <tr>
-                  <th scope="col">Rasse</th>
-                  <th scope="col">Sparte</th>
-                  <th scope="col" className="text-right">Tiere</th>
-                  <th scope="col">Käfiggröße</th>
-                  <th scope="col">Vorschlag</th>
+                  <th scope="col">{tk.rasse}</th>
+                  <th scope="col">{tk.sparte}</th>
+                  <th scope="col" className="text-right">{t.allgemein.tiere}</th>
+                  <th scope="col">{tk.kaefiggroesse}</th>
+                  <th scope="col">{tk.vorschlag}</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,27 +127,27 @@ export function Kaefige() {
                     <td className="text-right">{r.anzahl}</td>
                     <td>
                       <Auswahl
-                        aria-label={`Käfiggröße für ${r.rasse}`}
+                        aria-label={tk.groesseFuer(r.rasse)}
                         disabled={!istAdmin || regel.isPending}
                         value={r.typ === r.auto ? "" : r.typ}
                         onChange={(e) => regel.mutate({ schauId, rasse: r.rasse, typ: (e.target.value || null) as KaefigTyp | null })}
                         className="max-w-64"
                       >
-                        <option value="">automatisch ({kaefigNameLang(r.auto, d.masse)})</option>
-                        {KAEFIG_TYPEN.filter((t) => t !== "stamm" && t !== "voliere" && t !== r.auto).map((t) => (
-                          <option key={t} value={t}>{kaefigNameLang(t, d.masse)}</option>
+                        <option value="">{tk.automatisch(kaefigNameLangIn(t, r.auto, d.masse))}</option>
+                        {KAEFIG_TYPEN.filter((x) => x !== "stamm" && x !== "voliere" && x !== r.auto).map((x) => (
+                          <option key={x} value={x}>{kaefigNameLangIn(t, x, d.masse)}</option>
                         ))}
                       </Auswahl>
                     </td>
                     <td className="text-sm">
                       {r.vorschlag && r.vorschlag.typ !== r.typ ? (
                         <span className="flex flex-wrap items-center gap-2">
-                          <span title={r.vorschlag.grund}>
-                            {kaefigName(r.vorschlag.typ, d.masse)} <span className="text-grau">({r.vorschlag.grund})</span>
+                          <span title={serverText(r.vorschlag.grund, sprache)}>
+                            {kaefigNameIn(t, r.vorschlag.typ, d.masse)} <span className="text-grau">({serverText(r.vorschlag.grund, sprache)})</span>
                           </span>
                           {istAdmin && (
                             <Knopf variante="leise" className="min-h-8 px-2" laedt={regel.isPending} onClick={() => regel.mutate({ schauId, rasse: r.rasse, typ: r.vorschlag!.typ })}>
-                              übernehmen
+                              {tk.uebernehmen}
                             </Knopf>
                           )}
                         </span>
@@ -150,6 +168,8 @@ export function Kaefige() {
 
 /** Maß einer Käfigart: Anzeige, für die Ausstellungsleitung zum Ändern (drei Zahlen in cm) und zurück auf den Richtwert. */
 function MassZelle({ schauId, typ, masse, label, darf }: { schauId: number; typ: KaefigTyp; masse: KaefigMasse; label: string; darf: boolean }) {
+  const t = useOberflaeche();
+  const tk = t.halle.kaefige;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const [offen, setOffen] = useState(false);
@@ -168,7 +188,7 @@ function MassZelle({ schauId, typ, masse, label, darf }: { schauId: number; typ:
     return (
       <span className="flex flex-wrap items-center gap-2">
         <span className="font-bold">{label}</span>
-        {!masse[typ] && <span className="text-xs text-grau">(Richtwert)</span>}
+        {!masse[typ] && <span className="text-xs text-grau">{tk.richtwertKlammer}</span>}
         {darf && (
           <Knopf
             variante="leise"
@@ -179,13 +199,13 @@ function MassZelle({ schauId, typ, masse, label, darf }: { schauId: number; typ:
               setOffen(true);
             }}
           >
-            Maße ändern
+            {tk.masseAendern}
           </Knopf>
         )}
       </span>
     );
   const feld = (k: "breite" | "tiefe" | "hoehe", name: string) => (
-    <Eingabe aria-label={`${name} in cm`} placeholder={name} inputMode="decimal" value={wert[k]} onChange={(e) => setWert({ ...wert, [k]: e.target.value })} className="w-20 px-2 py-1 text-sm" />
+    <Eingabe aria-label={tk.inCm(name)} placeholder={name} inputMode="decimal" value={wert[k]} onChange={(e) => setWert({ ...wert, [k]: e.target.value })} className="w-20 px-2 py-1 text-sm" />
   );
   return (
     <form
@@ -194,23 +214,24 @@ function MassZelle({ schauId, typ, masse, label, darf }: { schauId: number; typ:
         e.preventDefault();
         const mass = { breite: zahl(wert.breite), tiefe: zahl(wert.tiefe), hoehe: zahl(wert.hoehe) };
         if (![mass.breite, mass.tiefe, mass.hoehe].every((n) => Number.isFinite(n) && n >= 10)) {
-          meldung("Bitte Breite, Tiefe und Höhe als Zahlen in cm eintragen (mindestens 10).", "fehler");
+          meldung(tk.masseFalsch, "fehler");
           return;
         }
         setzen.mutate({ schauId, typ, mass });
       }}
     >
-      {feld("breite", "Breite")} × {feld("tiefe", "Tiefe")} × {feld("hoehe", "Höhe")} cm
+      {/* bleibt deutsch: Einheit cm */}
+      {feld("breite", t.halle.breite)} × {feld("tiefe", t.halle.tiefe)} × {feld("hoehe", t.halle.hoehe)} cm
       <Knopf variante="primaer" type="submit" className="min-h-8 px-2" laedt={setzen.isPending}>
-        Speichern
+        {t.allgemein.speichern}
       </Knopf>
       {masse[typ] && (
         <Knopf variante="leise" className="min-h-8 px-2" onClick={() => setzen.mutate({ schauId, typ, mass: null })}>
-          Richtwert
+          {tk.richtwert}
         </Knopf>
       )}
       <Knopf variante="leise" className="min-h-8 px-2" onClick={() => setOffen(false)}>
-        Abbrechen
+        {t.allgemein.abbrechen}
       </Knopf>
     </form>
   );
@@ -221,6 +242,8 @@ function MassZelle({ schauId, typ, masse, label, darf }: { schauId: number; typ:
  * (leer = automatisch aus Platte und Käfigbreite). Gilt für den Hallenplan; dazu der Plattenbedarf je Käfigart.
  */
 function Grundplatten({ schauId, d, darf }: { schauId: number; d: Ausgabe["katalog"]["kaefigbedarf"]; darf: boolean }) {
+  const t = useOberflaeche();
+  const tk = t.halle.kaefige;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const [je, setJe] = useState<Record<string, string>>(Object.fromEntries(Object.entries(d.jePlatte).map(([k, v]) => [k, String(v)])));
@@ -237,7 +260,7 @@ function Grundplatten({ schauId, d, darf }: { schauId: number; d: Ausgabe["katal
     onSuccess: async () => {
       setStand(JSON.stringify({ je, eigen, et }));
       await Promise.all([utils.katalog.kaefigbedarf.invalidate(), utils.katalog.hallenplan.invalidate(), utils.schau.get.invalidate()]);
-      meldung("Grundplatten gespeichert. Ist der Hallenplan festgeschrieben, dort „Plan neu setzen“, damit er die neuen Platten nutzt.");
+      meldung(tk.grundplattenGespeichert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -252,52 +275,53 @@ function Grundplatten({ schauId, d, darf }: { schauId: number; d: Ausgabe["katal
   ) as Partial<Record<KaefigTyp, { laenge: number; tiefe: number }>>;
   const etagen = Object.fromEntries(Object.entries(et).filter(([, v]) => v.trim() !== "").map(([k, v]) => [k, Math.min(ETAGEN_MAX, Math.max(1, Math.round(zahl(v)) || 1))])) as Partial<Record<KaefigTyp, number>>;
   const halbVoll = Object.entries(eigen).some(([, v]) => (zahl(v.laenge) > 0) !== (zahl(v.tiefe) > 0));
-  const typen = d.typen.filter((t) => t.typ !== "voliere");
+  const typen = d.typen.filter((x) => x.typ !== "voliere");
   return (
-    <Abschnitt titel="Grundplatten">
-      {!d.hatHalle && <Hinweis className="mb-3">Erst unter „Hallenplan“ die Halle anlegen.</Hinweis>}
+    <Abschnitt titel={tk.grundplatten}>
+      {!d.hatHalle && <Hinweis className="mb-3">{tk.erstHalle}</Hinweis>}
       <div className="overflow-x-auto">
         <table className="tabelle">
           <thead>
             <tr>
-              <th scope="col">Käfig</th>
-              <th scope="col">Platte (Länge × Tiefe cm)</th>
-              <th scope="col" className="text-right">automatisch je Platte</th>
-              <th scope="col">Käfige je Platte</th>
-              <th scope="col">Etagen</th>
-              <th scope="col" className="text-right">Platten für die gemeldeten (mindestens)</th>
+              <th scope="col">{tk.spalteKaefig}</th>
+              <th scope="col">{tk.spaltePlatte}</th>
+              <th scope="col" className="text-right">{tk.spalteAutoJePlatte}</th>
+              <th scope="col">{t.halle.kaefigeJePlatte}</th>
+              <th scope="col">{tk.spalteEtagen}</th>
+              <th scope="col" className="text-right">{tk.spaltePlatten}</th>
             </tr>
           </thead>
           <tbody>
-            {typen.map((t) => {
-              const mass = kaefigMass(t.typ as KaefigTyp, d.masse);
-              const typ = t.typ as KaefigTyp;
+            {typen.map((k) => {
+              const mass = kaefigMass(k.typ as KaefigTyp, d.masse);
+              const typ = k.typ as KaefigTyp;
+              const name = kaefigNameIn(t, typ, d.masse);
               const auto = mass ? kaefigeJePlatte(typ, mass.breite, { platte, jePlatte: {}, plattenMass }) : null;
               const n = mass ? kaefigeJePlatte(typ, mass.breite, { platte, jePlatte, plattenMass }) : null;
               const vorgabe = mass ? platteFuer(typ, mass, { platte, jePlatte, plattenMass: {} }) : null;
-              const wert = eigen[t.typ] ?? { laenge: "", tiefe: "" };
+              const wert = eigen[k.typ] ?? { laenge: "", tiefe: "" };
               return (
-                <tr key={t.typ} className={t.gemeldet ? "" : "text-grau"}>
-                  <td className="font-bold">{t.label}</td>
+                <tr key={k.typ} className={k.gemeldet ? "" : "text-grau"}>
+                  <td className="font-bold">{name}</td>
                   <td>
                     <span className="flex items-center gap-1">
                     <Eingabe
-                      aria-label={`Plattenlänge für ${t.label}`}
+                      aria-label={tk.plattenlaengeFuer(name)}
                       inputMode="decimal"
                       placeholder={vorgabe ? String(vorgabe.laenge) : ""}
                       value={wert.laenge}
-                      onChange={(e) => setEigen({ ...eigen, [t.typ]: { ...wert, laenge: e.target.value } })}
+                      onChange={(e) => setEigen({ ...eigen, [k.typ]: { ...wert, laenge: e.target.value } })}
                       disabled={!darf}
                       className="px-2 py-1 text-sm"
                       style={{ width: "4.5rem" }}
                     />
                     ×
                     <Eingabe
-                      aria-label={`Plattentiefe für ${t.label}`}
+                      aria-label={tk.plattentiefeFuer(name)}
                       inputMode="decimal"
                       placeholder={vorgabe ? String(vorgabe.tiefe) : ""}
                       value={wert.tiefe}
-                      onChange={(e) => setEigen({ ...eigen, [t.typ]: { ...wert, tiefe: e.target.value } })}
+                      onChange={(e) => setEigen({ ...eigen, [k.typ]: { ...wert, tiefe: e.target.value } })}
                       disabled={!darf}
                       className="px-2 py-1 text-sm"
                       style={{ width: "4.5rem" }}
@@ -307,11 +331,11 @@ function Grundplatten({ schauId, d, darf }: { schauId: number; d: Ausgabe["katal
                   <td className="text-right">{auto ?? "–"}</td>
                   <td>
                     <Eingabe
-                      aria-label={`Käfige je Platte für ${t.label}`}
+                      aria-label={tk.jePlatteFuer(name)}
                       inputMode="numeric"
                       placeholder={auto != null ? String(auto) : ""}
-                      value={je[t.typ] ?? ""}
-                      onChange={(e) => setJe({ ...je, [t.typ]: e.target.value })}
+                      value={je[k.typ] ?? ""}
+                      onChange={(e) => setJe({ ...je, [k.typ]: e.target.value })}
                       disabled={!darf}
                       className="px-2 py-1 text-sm"
                       style={{ width: "4rem" }}
@@ -319,24 +343,24 @@ function Grundplatten({ schauId, d, darf }: { schauId: number; d: Ausgabe["katal
                   </td>
                   <td>
                     <Eingabe
-                      aria-label={`Etagen für ${t.label}`}
+                      aria-label={tk.etagenFuer(name)}
                       inputMode="numeric"
                       placeholder="1"
-                      value={et[t.typ] ?? ""}
-                      onChange={(e) => setEt({ ...et, [t.typ]: e.target.value })}
+                      value={et[k.typ] ?? ""}
+                      onChange={(e) => setEt({ ...et, [k.typ]: e.target.value })}
                       disabled={!darf}
                       className="px-2 py-1 text-sm"
                       style={{ width: "3.5rem" }}
                     />
                   </td>
-                  <td className="text-right">{n && t.gemeldet ? Math.ceil(t.gemeldet / (n * (etagen[typ] ?? 1))) : "–"}</td>
+                  <td className="text-right">{n && k.gemeldet ? Math.ceil(k.gemeldet / (n * (etagen[typ] ?? 1))) : "–"}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-      {halbVoll && <Hinweis className="mt-3">Plattenmaß: Länge und Tiefe angeben oder beide leer lassen.</Hinweis>}
+      {halbVoll && <Hinweis className="mt-3">{tk.halbVoll}</Hinweis>}
       <Speicherleiste
         sichtbar={geaendert}
         onVerwerfen={() => {
@@ -347,7 +371,7 @@ function Grundplatten({ schauId, d, darf }: { schauId: number; d: Ausgabe["katal
         }}
         onSpeichern={() => !halbVoll && speichern.mutate({ schauId, platte, jePlatte, plattenMass, etagen })}
         laedt={speichern.isPending}
-        knopf="Grundplatten speichern"
+        knopf={tk.grundplattenSpeichern}
       />
     </Abschnitt>
   );
@@ -358,6 +382,7 @@ function Grundplatten({ schauId, d, darf }: { schauId: number; d: Ausgabe["katal
  * 3D-Ansicht des Hallenplans. Höhe leer = Vorgabe.
  */
 function AufstellerFeld({ schauId, aufsteller, darf }: { schauId: number; aufsteller: Aufsteller; darf: boolean }) {
+  const tk = useOberflaeche().halle.kaefige;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const v = verkleidungVon(aufsteller);
@@ -372,14 +397,14 @@ function AufstellerFeld({ schauId, aufsteller, darf }: { schauId: number; aufste
   const speichern = trpc.katalog.aufstellerSetzen.useMutation({
     onSuccess: async () => {
       await neuLaden();
-      meldung("Aufsteller gespeichert.");
+      meldung(tk.aufstellerGespeichert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const bildSetzen = trpc.katalog.sockelBildSetzen.useMutation({
     onSuccess: async () => {
       await neuLaden();
-      meldung("Logo der Verkleidung gespeichert.");
+      meldung(tk.logoGespeichert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -388,34 +413,34 @@ function AufstellerFeld({ schauId, aufsteller, darf }: { schauId: number; aufste
   const hochladen = async (datei: File | undefined) => {
     if (!datei) return;
     const b = await sockelBildVorbereiten(datei).catch(() => null);
-    if (!b) return meldung("Das Bild lässt sich nicht lesen.", "fehler");
+    if (!b) return meldung(tk.bildUnlesbar, "fehler");
     bildSetzen.mutate({ schauId, ...b });
   };
   return (
-    <Abschnitt titel="Aufsteller" aktionen={<HilfeLink abschnitt="hallenplan-3d">Hilfe zu Aufstellern</HilfeLink>}>
+    <Abschnitt titel={tk.aufsteller} aktionen={<HilfeLink abschnitt="hallenplan-3d">{tk.hilfeAufsteller}</HilfeLink>}>
       <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
-        <Feld label="Höhe bis Oberkante Grundplatte (cm)" fehler={falsch ? "0 bis 300 cm" : null}>
+        <Feld label={tk.hoeheGrundplatte} fehler={falsch ? tk.hoeheFalsch : null}>
           {(id) => <Eingabe id={id} inputMode="decimal" placeholder={String(AUFSTELLER_STANDARD.hoehe)} value={wert} onChange={(e) => setWert(e.target.value)} disabled={!darf} style={{ width: "7rem" }} />}
         </Feld>
         <div className="pb-2">
-          <Haken label="Sockelverkleidung" checked={an} onChange={setAn} disabled={!darf} />
+          <Haken label={tk.sockelverkleidung} checked={an} onChange={setAn} disabled={!darf} />
         </div>
-        <Feld label="Farbe der Verkleidung">
+        <Feld label={tk.farbe}>
           {(id) => <input id={id} type="color" value={farbe} onChange={(e) => setFarbe(e.target.value)} disabled={!darf || !an} className="h-10 w-16 cursor-pointer rounded border border-linie bg-weiss disabled:opacity-50" />}
         </Feld>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <span className="text-sm font-semibold">Logo bzw. Banner der Verkleidung (z. B. vom Futtermittel-Sponsor)</span>
-        {v.bildId != null ? <img src={`/datei/${schauId}/bild/${v.bildId}`} alt="Logo der Verkleidung" className="h-12 max-w-[16rem] rounded border border-linie object-contain" /> : <span className="text-sm text-grau">keins</span>}
+        <span className="text-sm font-semibold">{tk.logoBanner}</span>
+        {v.bildId != null ? <img src={`/datei/${schauId}/bild/${v.bildId}`} alt={tk.logo} className="h-12 max-w-[16rem] rounded border border-linie object-contain" /> : <span className="text-sm text-grau">{tk.keins}</span>}
         {darf && (
           <>
             <label className="cursor-pointer text-sm font-semibold text-band-dunkel underline">
-              {v.bildId != null ? "Anderes Logo" : "Logo hochladen"}
+              {v.bildId != null ? tk.anderesLogo : tk.logoHochladen}
               <input type="file" accept="image/png,image/jpeg" className="sr-only" disabled={bildSetzen.isPending} onChange={(e) => void hochladen(e.target.files?.[0]).finally(() => (e.target.value = ""))} />
             </label>
             {v.bildId != null && (
               <Knopf variante="leise" laedt={bildWeg.isPending} onClick={() => bildWeg.mutate({ schauId })}>
-                Logo entfernen
+                {tk.logoEntfernen}
               </Knopf>
             )}
           </>
@@ -430,7 +455,7 @@ function AufstellerFeld({ schauId, aufsteller, darf }: { schauId: number; aufste
         }}
         onSpeichern={los}
         laedt={speichern.isPending}
-        knopf="Aufsteller speichern"
+        knopf={tk.aufstellerSpeichern}
       />
     </Abschnitt>
   );
@@ -462,11 +487,12 @@ async function sockelBildVorbereiten(datei: File): Promise<{ base64: string; nam
     g.fillRect(0, 0, c.width, c.height);
     blob = await new Promise<Blob | null>((ok) => c.toBlob(ok, "image/jpeg", 0.88));
   }
+  // bleibt deutsch (interner Fehler, nie angezeigt: der Aufrufer meldet „Das Bild lässt sich nicht lesen.“)
   if (!blob) throw new Error("Bild nicht lesbar");
   const base64 = await new Promise<string>((ok, nein) => {
     const r = new FileReader();
     r.onload = () => ok(String(r.result).split(",")[1] ?? "");
-    r.onerror = () => nein(new Error("Datei nicht lesbar"));
+    r.onerror = () => nein(new Error("Datei nicht lesbar")); // bleibt deutsch (intern, nie angezeigt)
     r.readAsDataURL(blob);
   });
   return { base64, name: `${datei.name.replace(/\.[^.]+$/, "")}.${blob.type === "image/png" ? "png" : "jpg"}` };

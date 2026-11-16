@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { fehlerText } from "../lib";
+import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Abschnitt, Auswahl, Feld, HilfeLink, Knopf, knopfKlasse, Laden, useMeldung } from "../ui";
 
@@ -8,6 +9,8 @@ import { Abschnitt, Auswahl, Feld, HilfeLink, Knopf, knopfKlasse, Laden, useMeld
  * des Vereins oder die für diese Schau abgewandelte Fassung) und Absprung in den Designer.
  */
 export function DruckAbschnitt({ schauId, darfAendern }: { schauId: number; darfAendern: boolean }) {
+  const t = useOberflaeche().schau.einstellungen;
+  const td = t.druck;
   const q = trpc.druckvorlage.fuerSchau.useQuery({ schauId }, { enabled: darfAendern });
   const utils = trpc.useUtils();
   const meldung = useMeldung();
@@ -15,7 +18,7 @@ export function DruckAbschnitt({ schauId, darfAendern }: { schauId: number; darf
   const waehlen = trpc.druckvorlage.waehlen.useMutation({
     onSuccess: async () => {
       await utils.druckvorlage.fuerSchau.invalidate({ schauId });
-      meldung("Druckvorlage gewählt.");
+      meldung(td.gewaehlt);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -24,34 +27,34 @@ export function DruckAbschnitt({ schauId, darfAendern }: { schauId: number; darf
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   return (
-    <Abschnitt id="druck" titel="Druck" aktionen={<HilfeLink abschnitt="druckvorlagen">Hilfe zu Druckvorlagen</HilfeLink>}>
+    <Abschnitt id="druck" titel={t.seite.abschnitte.druck} aktionen={<HilfeLink abschnitt="druckvorlagen">{td.hilfe}</HilfeLink>}>
       {!darfAendern ? (
-        <p className="text-sm text-grau">Nur Administratoren wählen die Druckvorlage.</p>
+        <p className="text-sm text-grau">{td.nurAdmin}</p>
       ) : !q.data ? (
         <Laden />
       ) : (
         <div className="flex flex-wrap items-end gap-3">
-          <Feld label="Bewertungskarten" className="min-w-64">
+          <Feld label={td.karten} className="min-w-64">
             {(fid) => (
               <Auswahl id={fid} value={q.data.vorlageId ?? ""} disabled={waehlen.isPending} onChange={(e) => waehlen.mutate({ schauId, vorlageId: e.target.value ? Number(e.target.value) : null })}>
-                <option value="">Vorgabe (A6, vier je A4)</option>
+                <option value="">{td.vorgabe}</option>
                 {q.data.wahl.map((w) => (
                   <option key={w.id} value={w.id}>
                     {w.name}
-                    {w.schauId ? " (nur diese Schau)" : ""}
+                    {w.schauId ? td.nurDieseSchau : ""}
                   </option>
                 ))}
               </Auswahl>
             )}
           </Feld>
           <Knopf laedt={anpassen.isPending} onClick={() => anpassen.mutate({ schauId })}>
-            Für diese Schau anpassen
+            {td.anpassen}
           </Knopf>
           <Link to={`/verein#druckvorlagen`} className={knopfKlasse("leise")}>
-            Vorlagen des Vereins
+            {td.vereinsVorlagen}
           </Link>
           <Link to="/verein/briefvorlage" className={knopfKlasse("leise")}>
-            Briefvorlage
+            {td.briefvorlage}
           </Link>
         </div>
       )}

@@ -5,14 +5,18 @@ import { useSchauId } from "../rahmen";
 import { trpc } from "../trpc";
 import { Abschnitt, Eingabe, FehlerAnzeige, Feld, Hinweis, Kennzahlen, Knopf, KnopfLink, Laden, Marke, SEITE, Segmente, Seitenkopf, Suchfeld, TabellenRahmen, useFrage, useMeldung } from "../ui";
 import { useIstAdmin } from "../rolle";
+import { useOberflaeche } from "../sprache";
+import { ot } from "../sprache-jetzt";
 
 /** Fragt einen Pflicht-Grund im Rückfrage-Dialog ab (OK erst ab 3 Zeichen). null = abgebrochen. */
 function grundAbfragen(eingabe: ReturnType<typeof useFrage>["eingabe"], titel: string, text: string, knopf: string): Promise<string | null> {
-  return eingabe({ titel, text, feld: "Grund", mindestens: 3, knopf, gefahr: true });
+  return eingabe({ titel, text, feld: ot().kasse.grund, mindestens: 3, knopf, gefahr: true });
 }
 
 export function Abrechnung() {
   const schauId = useSchauId();
+  const t = useOberflaeche();
+  const ta = t.kasse.abrechnung;
   // Regelmäßig nachladen: an der Kasse bleibt die Seite lange offen, während noch verkauft wird.
   const liste = trpc.kasse.abrechnung.useQuery({ schauId }, { refetchInterval: 30_000 });
   const datei = trpc.kasse.ueberweisungsdatei.useQuery({ schauId });
@@ -29,7 +33,7 @@ export function Abrechnung() {
   const auszahlen = trpc.kasse.auszahlen.useMutation({
     onSuccess: (a, v) => {
       neuLaden();
-      meldung(`Abgerechnet – Quittung ${a.quittungNr} über ${formatEuro(Math.abs(a.betragCent))}${a.betragCent < 0 ? " (an den Verein)" : ""}.`);
+      meldung((a.betragCent < 0 ? ta.abgerechnetVerein : ta.abgerechnet)(a.quittungNr, formatEuro(Math.abs(a.betragCent))));
       setLetzteQuittung({ ausstellerId: v.ausstellerId, quittungNr: a.quittungNr });
       // Versuch; blockiert der Browser das Fenster, bleibt der Druck-Knopf oben stehen.
       window.open(`/datei/${schauId}/abrechnung.pdf?aussteller=${v.ausstellerId}&quittung=${a.quittungNr}`, "_blank");
@@ -37,7 +41,7 @@ export function Abrechnung() {
     onError: (e, v) => {
       // Kassenbuch weist nicht genug Bargeld aus: die Ausstellungsleitung kann nach Rückfrage trotzdem buchen.
       if (e.data?.code === "PRECONDITION_FAILED" && !v.trotzdem) {
-        void bestaetige({ titel: "Trotzdem buchen?", text: e.message, knopf: "Trotzdem buchen" }).then((ja) => ja && auszahlen.mutate({ ...v, trotzdem: true }));
+        void bestaetige({ titel: t.kasse.trotzdemTitel, text: fehlerText(e), knopf: t.kasse.trotzdemKnopf }).then((ja) => ja && auszahlen.mutate({ ...v, trotzdem: true }));
         return;
       }
       // Betrag hat sich geändert: Liste neu laden, damit der neue Betrag angezeigt wird.
@@ -51,12 +55,12 @@ export function Abrechnung() {
     const frage =
       art === "bar"
         ? z.nochOffenCent > 0
-          ? `${betrag} bar an ${z.name} auszahlen?`
-          : `${betrag} bar von ${z.name} erhalten?`
+          ? ta.barAuszahlen(betrag, z.name)
+          : ta.barErhalten(betrag, z.name)
         : z.nochOffenCent > 0
-          ? `${betrag} per Überweisung an ${z.name} buchen? Die Überweisung führen Sie selbst im Onlinebanking aus.`
-          : `Ist die Rückforderung über ${betrag} von ${z.name} bereits auf dem Vereinskonto eingegangen? Erst dann buchen.`;
-    if (!(await bestaetige({ titel: art === "bar" ? "Bar abrechnen" : "Überweisung buchen", text: frage, knopf: "Buchen" }))) return;
+          ? ta.ueberweisungAn(betrag, z.name)
+          : ta.rueckforderungEingegangen(betrag, z.name);
+    if (!(await bestaetige({ titel: art === "bar" ? ta.barAbrechnen : ta.ueberweisungBuchen, text: frage, knopf: t.kasse.buchen }))) return;
     auszahlen.mutate({ schauId, ausstellerId: z.ausstellerId, art, erwartetCent: z.nochOffenCent, eingangBestaetigt: art === "ueberweisung" && z.nochOffenCent < 0 });
   };
   const stornieren = trpc.kasse.auszahlungStornieren.useMutation({ onSuccess: neuLaden, onError: (e) => meldung(fehlerText(e), "fehler") });
@@ -65,21 +69,21 @@ export function Abrechnung() {
   const erstellen = trpc.kasse.ueberweisungsdateiErstellen.useMutation({
     onSuccess: (l) => {
       neuLaden();
-      meldung(`SEPA-Datei mit ${l.posten.length} Überweisungen erstellt.`);
+      meldung(ta.sepaErstellt(l.posten.length));
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const verwerfen = trpc.kasse.ueberweisungsdateiVerwerfen.useMutation({
     onSuccess: () => {
       neuLaden();
-      meldung("SEPA-Datei verworfen.");
+      meldung(ta.sepaVerworfen);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const buchen = trpc.kasse.ueberweisungenBuchen.useMutation({
     onSuccess: (r) => {
       neuLaden();
-      meldung(`${r.anzahl} Überweisungen über ${formatEuro(r.summeCent)} als ausgezahlt gebucht.`);
+      meldung(ta.ueberwiesenGebucht(r.anzahl, formatEuro(r.summeCent)));
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -108,74 +112,82 @@ export function Abrechnung() {
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Abrechnung"
-        unter={`${liste.data.length} Aussteller, ${offen} noch abzurechnen`}
+        titel={ta.titel}
+        unter={ta.unter(liste.data.length, offen)}
         hilfe="abrechnung"
         aktionen={
           <>
-            <KnopfLink href={`/datei/${schauId}/abrechnung.pdf`} target="_blank" rel="noreferrer">Gesamtliste (PDF)</KnopfLink>
-            <KnopfLink href={`/datei/${schauId}/abrechnung.csv`}>Export für Excel (CSV)</KnopfLink>
+            <KnopfLink href={`/datei/${schauId}/abrechnung.pdf`} target="_blank" rel="noreferrer">{ta.gesamtlistePdf}</KnopfLink>
+            <KnopfLink href={`/datei/${schauId}/abrechnung.csv`}>{ta.exportCsv}</KnopfLink>
           </>
         }
       />
       <Erstattungen schauId={schauId} />
       {letzteQuittung && (
         <Hinweis ton="ok" className="flex flex-wrap items-center justify-between gap-3">
-          <span>Abgerechnet{quittungName ? `: ${quittungName}` : ""} – Quittung {letzteQuittung.quittungNr}.</span>
+          <span>{quittungName ? ta.letzteQuittungName(quittungName, letzteQuittung.quittungNr) : ta.letzteQuittung(letzteQuittung.quittungNr)}</span>
           <KnopfLink variante="primaer" href={`/datei/${schauId}/abrechnung.pdf?aussteller=${letzteQuittung.ausstellerId}&quittung=${letzteQuittung.quittungNr}`} target="_blank" rel="noreferrer">
-            Quittung {letzteQuittung.quittungNr} drucken
+            {ta.quittungDrucken(letzteQuittung.quittungNr)}
           </KnopfLink>
         </Hinweis>
       )}
       {abweichungen > 0 && (
         <Hinweis ton="warnung">
-          Bei {abweichungen} Aussteller{abweichungen === 1 ? "" : "n"} weicht der Saldo vom ausgezahlten Betrag ab.
+          {ta.abweichungen(abweichungen)}
         </Hinweis>
       )}
       <Kennzahlen
         werte={[
-          { label: "Preisgeld", wert: formatEuro(summe((z) => z.preisgeldCent)) },
-          { label: "Verkaufserlöse", wert: formatEuro(summe((z) => z.verkaufCent)) },
-          { label: "Provision (Verein)", wert: formatEuro(summe((z) => z.provisionCent)) },
-          { label: "Auszuzahlen gesamt", wert: formatEuro(summe((z) => Math.max(z.saldoCent, 0))) },
+          { label: ta.preisgeld, wert: formatEuro(summe((z) => z.preisgeldCent)) },
+          { label: ta.verkaufserloese, wert: formatEuro(summe((z) => z.verkaufCent)) },
+          { label: ta.provisionVerein, wert: formatEuro(summe((z) => z.provisionCent)) },
+          { label: ta.auszuzahlenGesamt, wert: formatEuro(summe((z) => Math.max(z.saldoCent, 0))) },
         ]}
       />
-      <Abschnitt titel="Überweisungen per SEPA-Datei">
+      <Abschnitt titel={ta.sepaTitel}>
         {lauf ? (
           // Offene Datei: gebucht wird genau ihr Inhalt, nicht der aktuelle Stand der Liste.
           <div className="flex flex-col gap-4">
-            <p>
-              SEPA-Datei vom {datumZeit(lauf.erstelltAm)} ({lauf.erstelltVon}): <span className="font-semibold">{lauf.posten.length} Überweisungen</span> über{" "}
-              <span className="font-semibold">{formatEuro(lauf.summeCent)}</span>, Ausführung am {datum(lauf.ausfuehrungAm)}.
-            </p>
-            {!istAdmin && <p className="text-sm text-grau">Herunterladen, buchen und verwerfen: Ausstellungsleitung.</p>}
+            {(() => {
+              const [vor, anzahl, mitte, summe, nach] = ta.laufText(datumZeit(lauf.erstelltAm), lauf.erstelltVon, lauf.posten.length, formatEuro(lauf.summeCent), datum(lauf.ausfuehrungAm));
+              return (
+                <p>
+                  {vor}
+                  <span className="font-semibold">{anzahl}</span>
+                  {mitte}
+                  <span className="font-semibold">{summe}</span>
+                  {nach}
+                </p>
+              );
+            })()}
+            {!istAdmin && <p className="text-sm text-grau">{ta.nurLeitungDatei}</p>}
             {istAdmin && (
               <div className="flex flex-wrap items-end gap-2">
                 <KnopfLink variante="primaer" href={`/datei/${schauId}/ueberweisungen.xml`}>
-                  SEPA-Datei herunterladen
+                  {ta.sepaHerunterladen}
                 </KnopfLink>
                 <Knopf
                   laedt={buchen.isPending}
                   onClick={async () =>
                     (await bestaetige({
-                      titel: "Als überwiesen buchen",
-                      text: `${lauf.posten.length} Überweisungen über ${formatEuro(lauf.summeCent)} als ausgezahlt buchen? Nur tun, wenn die Bank die Datei angenommen hat.`,
-                      knopf: "Buchen",
+                      titel: ta.alsUeberwiesen,
+                      text: ta.alsUeberwiesenFrage(lauf.posten.length, formatEuro(lauf.summeCent)),
+                      knopf: t.kasse.buchen,
                     })) &&
                     buchen.mutate({ schauId, nachrichtId: lauf.nachrichtId, ausstellerIds: lauf.posten.map((p) => p.ausstellerId) })
                   }
                 >
-                  Als überwiesen buchen
+                  {ta.alsUeberwiesen}
                 </Knopf>
                 <Knopf
                   variante="leise"
                   laedt={verwerfen.isPending}
                   onClick={async () => {
-                    const g = await grundAbfragen(eingabe, "SEPA-Datei verwerfen", "Warum wird die SEPA-Datei verworfen (z. B. von der Bank abgelehnt)?", "Verwerfen");
+                    const g = await grundAbfragen(eingabe, ta.sepaVerwerfenTitel, ta.sepaVerwerfenFrage, ta.verwerfen);
                     if (g != null) verwerfen.mutate({ schauId, nachrichtId: lauf.nachrichtId, grund: g });
                   }}
                 >
-                  Datei verwerfen
+                  {ta.dateiVerwerfen}
                 </Knopf>
               </div>
             )}
@@ -189,26 +201,33 @@ export function Abrechnung() {
             </dl>
           </div>
         ) : !istAdmin ? (
-          <p className="text-grau">Nur durch die Ausstellungsleitung.</p>
+          <p className="text-grau">{ta.nurLeitung}</p>
         ) : schau.data && schau.data.phase !== "abrechnung" ? (
-          <p className="text-grau">Erst in der Phase „Abrechnung“ möglich.</p>
+          <p className="text-grau">{ta.erstInAbrechnung}</p>
         ) : !schau.data?.vereinIban ? (
-          <Hinweis ton="warnung">Vereinskonto fehlt – IBAN und Kontoinhaber in den Einstellungen eintragen.</Hinweis>
+          <Hinweis ton="warnung">{ta.vereinskontoFehlt}</Hinweis>
         ) : ueberweisbar.length === 0 ? (
           <p className="text-grau">
-            Keine offenen Überweisungen.{ohneIban > 0 && ` ${ohneIban} Aussteller ohne IBAN (bar).`}
+            {ta.keineOffenen}
+            {ohneIban > 0 && ` ${ta.ohneIbanBar(ohneIban)}`}
           </p>
         ) : (
           <div className="flex flex-col gap-4">
-            <p>
-              <span className="font-semibold">{ueberweisbar.length} Aussteller</span> mit IBAN, zusammen{" "}
-              <span className="font-semibold">{formatEuro(ueberweisbar.reduce((s, z) => s + z.nochOffenCent, 0))}</span>
-              {ohneIban > 0 && <span className="text-grau"> · {ohneIban} ohne IBAN (bar)</span>}
-            </p>
+            {(() => {
+              const [anzahl, mitte, summe] = ta.mitIban(ueberweisbar.length, formatEuro(ueberweisbar.reduce((s, z) => s + z.nochOffenCent, 0)));
+              return (
+                <p>
+                  <span className="font-semibold">{anzahl}</span>
+                  {mitte}
+                  <span className="font-semibold">{summe}</span>
+                  {ohneIban > 0 && <span className="text-grau"> · {ta.ohneIbanKurz(ohneIban)}</span>}
+                </p>
+              );
+            })()}
             <div className="flex flex-wrap items-end gap-3">
-              <Feld label="Ausführung am">{(id) => <Eingabe id={id} type="date" value={ausfuehrung} onChange={(e) => setAusfuehrung(e.target.value)} className="w-44" />}</Feld>
+              <Feld label={ta.ausfuehrungAm}>{(id) => <Eingabe id={id} type="date" value={ausfuehrung} onChange={(e) => setAusfuehrung(e.target.value)} className="w-44" />}</Feld>
               <Knopf variante="primaer" laedt={erstellen.isPending} onClick={() => erstellen.mutate({ schauId, ausfuehrungAm: ausfuehrung })}>
-                SEPA-Datei erstellen
+                {ta.sepaErstellen}
               </Knopf>
             </div>
           </div>
@@ -217,15 +236,15 @@ export function Abrechnung() {
       <TabellenRahmen
         kopf={
           <>
-            <Suchfeld aria-label="Aussteller suchen" placeholder="Aussteller suchen" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Suchfeld aria-label={ta.ausstellerSuchen} placeholder={ta.ausstellerSuchen} value={q} onChange={(e) => setQ(e.target.value)} />
             <Segmente
-              label="Stand"
+              label={ta.stand}
               wert={filter}
               onChange={setFilter}
               optionen={[
-                { wert: "" as const, label: "Alle", anzahl: liste.data.length },
-                { wert: "offen" as const, label: "offen", anzahl: offen },
-                { wert: "erledigt" as const, label: "erledigt", anzahl: liste.data.length - offen },
+                { wert: "" as const, label: t.allgemein.alle, anzahl: liste.data.length },
+                { wert: "offen" as const, label: ta.offen, anzahl: offen },
+                { wert: "erledigt" as const, label: ta.erledigt, anzahl: liste.data.length - offen },
               ]}
             />
           </>
@@ -233,24 +252,24 @@ export function Abrechnung() {
         fuss={
           zeilen.length > 0 ? (
             <>
-              <span>{zeilen.length} Aussteller</span>
-              <span>Saldo {formatEuro(zeilenSaldo)}</span>
+              <span>{ta.anzahlAussteller(zeilen.length)}</span>
+              <span>{ta.saldoBetrag(formatEuro(zeilenSaldo))}</span>
             </>
           ) : undefined
         }
       >
         {zeilen.length === 0 ? (
-          <p className="px-4 py-10 text-center text-grau">{q || filter ? "Keine Treffer." : "Keine Aussteller."}</p>
+          <p className="px-4 py-10 text-center text-grau">{q || filter ? ta.keineTreffer : ta.keineAussteller}</p>
         ) : (
           <table className="tabelle">
             <thead>
               <tr>
-                <th>Aussteller</th>
-                <th className="text-right">Preisgeld</th>
-                <th className="text-right">Verkauf</th>
-                <th className="text-right">Provision</th>
-                <th className="text-right">Meldegeld offen / zu viel</th>
-                <th className="text-right">Saldo</th>
+                <th>{t.allgemein.aussteller}</th>
+                <th className="text-right">{ta.preisgeld}</th>
+                <th className="text-right">{ta.verkauf}</th>
+                <th className="text-right">{ta.provision}</th>
+                <th className="text-right">{ta.meldegeldOffen}</th>
+                <th className="text-right">{ta.saldo}</th>
                 <th />
               </tr>
             </thead>
@@ -259,13 +278,13 @@ export function Abrechnung() {
                 <tr key={z.ausstellerId}>
                   <td>
                     <span className="font-semibold text-tinte">{z.name}</span>
-                    <span className="block text-sm text-grau">{z.ort}, {z.tiere} Tiere</span>
-                    <span className="block text-sm text-grau">{z.iban ? `IBAN ${formatIban(z.iban)}` : "ohne IBAN – bar"}</span>
+                    <span className="block text-sm text-grau">{ta.ortTiere(z.ort ?? "", z.tiere)}</span>
+                    <span className="block text-sm text-grau">{z.iban ? `IBAN ${formatIban(z.iban)}` : ta.ohneIban}</span>
                   </td>
                   <td className="text-right tabular-nums">{formatEuro(z.preisgeldCent)}</td>
                   <td className="text-right tabular-nums">
                     {formatEuro(z.verkaufCent)}
-                    {z.verkaufAusstehendCent > 0 && <span className="block text-sm text-kamm">+ {formatEuro(z.verkaufAusstehendCent)} Überweisung offen</span>}
+                    {z.verkaufAusstehendCent > 0 && <span className="block text-sm text-kamm">{ta.plusUeberweisungOffen(formatEuro(z.verkaufAusstehendCent))}</span>}
                   </td>
                   <td className="text-right tabular-nums">{z.provisionCent ? `−${formatEuro(z.provisionCent)}` : formatEuro(0)}</td>
                   <td className="text-right tabular-nums">{z.offenCent ? `−${formatEuro(z.offenCent)}` : z.ueberzahltCent ? `+${formatEuro(z.ueberzahltCent)}` : "–"}</td>
@@ -273,25 +292,25 @@ export function Abrechnung() {
                     {formatEuro(z.saldoCent)}
                     {z.differenzCent !== 0 && (
                       <span className="mt-1 block">
-                        <Marke ton="warnung">Abweichung {z.differenzCent > 0 ? "+" : "−"}{formatEuro(Math.abs(z.differenzCent))}</Marke>
+                        <Marke ton="warnung">{ta.abweichung} {z.differenzCent > 0 ? "+" : "−"}{formatEuro(Math.abs(z.differenzCent))}</Marke>
                       </span>
                     )}
                   </td>
                   <td className="whitespace-nowrap text-right">
                     {z.inUeberweisung ? (
-                      <Marke ton="info">in SEPA-Datei, {formatEuro(z.inUeberweisung.betragCent)}</Marke>
+                      <Marke ton="info">{ta.inSepa(formatEuro(z.inUeberweisung.betragCent))}</Marke>
                     ) : z.imEinzug ? (
-                      <Marke ton="info">Meldegeld in Lastschrift, {formatEuro(z.imEinzug.betragCent)}</Marke>
+                      <Marke ton="info">{ta.inLastschrift(formatEuro(z.imEinzug.betragCent))}</Marke>
                     ) : z.auszahlung ? (
                       <span className="flex flex-col items-end gap-1.5">
-                        <Marke ton="ok">ausgezahlt {formatEuro(z.ausgezahltCent)}</Marke>
+                        <Marke ton="ok">{ta.ausgezahlt(formatEuro(z.ausgezahltCent))}</Marke>
                         <span className="flex flex-wrap justify-end gap-x-3 text-sm">
                           {z.buchungen.map((b) =>
                             b.storniertAm ? (
-                              <span key={b.id} className="text-grau line-through" title={`storniert: ${b.stornoGrund}`}>Quittung {b.quittungNr}</span>
+                              <span key={b.id} className="text-grau line-through" title={ta.storniertGrund(b.stornoGrund ?? "")}>{ta.quittung(b.quittungNr)}</span>
                             ) : (
                               <a key={b.id} href={`/datei/${schauId}/abrechnung.pdf?aussteller=${z.ausstellerId}&quittung=${b.quittungNr}`} target="_blank" rel="noreferrer" className="text-tinte hover:text-band">
-                                Quittung {b.quittungNr} ({b.art === "ueberweisung" ? "überwiesen" : "bar"} {formatEuro(b.betragCent)})
+                                {(b.art === "ueberweisung" ? ta.quittungUeberwiesen : ta.quittungBar)(b.quittungNr, formatEuro(b.betragCent))}
                               </a>
                             ),
                           )}
@@ -300,40 +319,40 @@ export function Abrechnung() {
                           {/* Nachzahlungen und Rückforderungen bucht nur die Ausstellungsleitung. */}
                           {z.nochOffenCent !== 0 && istAdmin && kasseOffen && (
                             <Knopf variante="primaer" onClick={() => abrechnen(z, "bar")}>
-                              Differenz {z.nochOffenCent > 0 ? "bar auszahlen" : "bar zurückfordern"} {formatEuro(Math.abs(z.nochOffenCent))}
+                              {(z.nochOffenCent > 0 ? ta.differenzAuszahlen : ta.differenzZurueckfordern)(formatEuro(Math.abs(z.nochOffenCent)))}
                             </Knopf>
                           )}
                           {z.nochOffenCent !== 0 && istAdmin && kasseOffen && (
                             <Knopf variante="leise" onClick={() => abrechnen(z, "ueberweisung")}>
-                              {z.nochOffenCent > 0 ? "als Überweisung" : "Überweisung eingegangen"}
+                              {z.nochOffenCent > 0 ? ta.alsUeberweisung : ta.ueberweisungEingegangen}
                             </Knopf>
                           )}
-                          {z.nochOffenCent !== 0 && !istAdmin && <span className="text-sm text-grau">Differenz: Ausstellungsleitung</span>}
+                          {z.nochOffenCent !== 0 && !istAdmin && <span className="text-sm text-grau">{ta.differenzLeitung}</span>}
                           {istAdmin && schau.data?.phase !== "abgeschlossen" && (
                             <Knopf
                               variante="leise"
                               onClick={async () => {
                                 const g = await grundAbfragen(
                                   eingabe,
-                                  `Quittung ${z.auszahlung!.quittungNr} stornieren?`,
-                                  "Nur, wenn kein Geld geflossen ist (Fehlbuchung, Überweisung zurückgebucht). Für Korrekturen „Differenz“ verwenden.",
-                                  "Stornieren",
+                                  ta.quittungStornierenTitel(z.auszahlung!.quittungNr),
+                                  ta.quittungStornierenText,
+                                  t.kasse.stornieren,
                                 );
                                 if (g != null) stornieren.mutate({ schauId, id: z.auszahlung!.id, grund: g });
                               }}
                             >
-                              Stornieren
+                              {t.kasse.stornieren}
                             </Knopf>
                           )}
                         </span>
                       </span>
                     ) : z.saldoCent === 0 ? (
-                      <span className="text-sm text-grau">nichts offen</span>
+                      <span className="text-sm text-grau">{ta.nichtsOffen}</span>
                     ) : !kasseOffen ? (
-                      <span className="text-sm text-grau">offen {formatEuro(z.nochOffenCent)}</span>
+                      <span className="text-sm text-grau">{ta.offenBetrag(formatEuro(z.nochOffenCent))}</span>
                     ) : (
                       <Knopf variante={z.ueberweisbar ? "zweit" : "primaer"} onClick={() => abrechnen(z, "bar")}>
-                        Bar abrechnen {formatEuro(Math.abs(z.nochOffenCent))}
+                        {ta.barAbrechnen} {formatEuro(Math.abs(z.nochOffenCent))}
                       </Knopf>
                     )}
                   </td>
@@ -352,6 +371,8 @@ export function Abrechnung() {
  * bucht die Ausstellungsleitung die Erstattungen gesammelt – vorher lässt sich die Schau nicht abschließen.
  */
 function Erstattungen({ schauId }: { schauId: number }) {
+  const t = useOberflaeche();
+  const te = t.kasse.abrechnung.erstattungen;
   const liste = trpc.meldung.zuErstatten.useQuery({ schauId });
   const schau = trpc.schau.get.useQuery({ id: schauId });
   const istAdmin = useIstAdmin();
@@ -363,7 +384,7 @@ function Erstattungen({ schauId }: { schauId: number }) {
     onSuccess: (r) => {
       utils.meldung.invalidate();
       utils.kasse.invalidate();
-      meldung(`${r.gebucht} Erstattung(en) gebucht.`);
+      meldung(te.gebucht(r.gebucht));
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -372,27 +393,25 @@ function Erstattungen({ schauId }: { schauId: number }) {
   const summeRest = zuErstatten.reduce((n, x) => n + x.restCent, 0);
   return (
     <TabellenRahmen
-      kopf={<h2 className="text-[1.07rem] font-semibold text-tinte">{schau.data?.abgesagtAm ? `Erstattungen – Schau abgesagt (${schau.data.absageGrund})` : "Stornierte Meldungen mit Zahlungseingang"}</h2>}
+      kopf={<h2 className="text-[1.07rem] font-semibold text-tinte">{schau.data?.abgesagtAm ? te.abgesagt(schau.data.absageGrund ?? "") : te.titel}</h2>}
       fuss={
         <>
-          <span>
-            {liste.data.length} {liste.data.length === 1 ? "Meldung" : "Meldungen"}, zu erstatten {formatEuro(summeRest)}
-          </span>
+          <span>{te.fuss(liste.data.length, formatEuro(summeRest))}</span>
           {istAdmin && zuErstatten.length > 0 && (
             <span className="flex flex-wrap items-center gap-2">
               <label className="flex items-center gap-2">
-                Überwiesen am
+                {te.ueberwiesenAm}
                 <Eingabe type="date" value={tag} onChange={(e) => setTag(e.target.value)} className="w-44" />
               </label>
               <Knopf
                 variante="primaer"
                 laedt={buchen.isPending}
                 onClick={async () => {
-                  if (await bestaetige({ titel: "Erstattungen buchen", text: `${zuErstatten.length} Erstattung(en) über zusammen ${formatEuro(summeRest)} als überwiesen buchen? Erst buchen, wenn das Geld tatsächlich überwiesen ist.`, knopf: "Buchen" }))
+                  if (await bestaetige({ titel: te.buchenTitel, text: te.buchenFrage(zuErstatten.length, formatEuro(summeRest)), knopf: t.kasse.buchen }))
                     buchen.mutate({ schauId, datum: tag, meldungIds: zuErstatten.map((x) => x.meldungId) });
                 }}
               >
-                Erstattungen als überwiesen buchen
+                {te.buchenKnopf}
               </Knopf>
             </span>
           )}
@@ -402,10 +421,10 @@ function Erstattungen({ schauId }: { schauId: number }) {
       <table className="tabelle">
         <thead>
           <tr>
-            <th>Aussteller</th>
-            <th>Kontoinhaber</th>
-            <th>IBAN</th>
-            <th className="text-right">Betrag</th>
+            <th>{t.allgemein.aussteller}</th>
+            <th>{te.kontoinhaber}</th>
+            <th>{"IBAN"}</th>
+            <th className="text-right">{t.allgemein.betrag}</th>
           </tr>
         </thead>
         <tbody>
@@ -413,7 +432,7 @@ function Erstattungen({ schauId }: { schauId: number }) {
             <tr key={x.meldungId}>
               <td className="font-semibold text-tinte">{x.name}</td>
               <td>{x.kontoinhaber}</td>
-              <td className="whitespace-nowrap tabular-nums">{x.iban ? formatIban(x.iban) : <span className="text-kamm">keine IBAN</span>}</td>
+              <td className="whitespace-nowrap tabular-nums">{x.iban ? formatIban(x.iban) : <span className="text-kamm">{te.keineIban}</span>}</td>
               <td className="text-right tabular-nums">{formatEuro(x.restCent)}</td>
             </tr>
           ))}

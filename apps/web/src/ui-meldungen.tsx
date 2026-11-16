@@ -1,5 +1,6 @@
-/** Rückmeldungen als Toast unten rechts (useMeldung). */
+/** Rückmeldungen als Toast unten rechts (useMeldung). Außerhalb des Routers: Texte über ot(). */
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { ot } from "./sprache-jetzt";
 import { cx, TON, type Ton } from "./ui-basis";
 
 // ── Rückmeldungen (Toast) ──────────────────────────────────────────────
@@ -28,8 +29,8 @@ export function MeldungenAnbieter({ children }: { children: ReactNode }) {
           <div key={m.id} role={m.ton === "fehler" ? "alert" : undefined} className={cx("flex items-start gap-3 rounded-lg border px-4 py-3 font-semibold text-tinte shadow-lg", TON[m.ton])}>
             <span className="flex-1">{m.text}</span>
             {m.ton === "fehler" && (
-              <button type="button" onClick={() => schliessen(m.id)} className="-my-1 min-h-9 px-2 text-sm underline" aria-label="Meldung schließen">
-                Schließen
+              <button type="button" onClick={() => schliessen(m.id)} className="-my-1 min-h-9 px-2 text-sm underline" aria-label={ot().rahmen.dialog.meldungSchliessen}>
+                {ot().allgemein.schliessen}
               </button>
             )}
           </div>

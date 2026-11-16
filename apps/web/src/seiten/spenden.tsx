@@ -1,8 +1,9 @@
-import { SPENDE_WEG_LABEL } from "@schau/domain";
+import { serverText } from "@schau/domain";
 import { Link } from "react-router-dom";
 import { datum, fehlerText, formatEuro } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
 import { FehlerAnzeige, Hinweis, Kennzahlen, Knopf, Laden, Leer, Marke, SEITE, Seitenkopf, TabellenRahmen, useFrage, useMeldung } from "../ui";
 import { SpendeErfassen } from "./spende-erfassen";
@@ -16,6 +17,8 @@ type Zeile = Ausgabe["spenden"]["liste"][number];
 export function Spenden() {
   const schauId = useSchauId();
   const istAdmin = useIstAdmin();
+  const t = useOberflaeche().ehrenpreise.spenden;
+  const sprache = useSprache();
   const q = trpc.spenden.liste.useQuery({ schauId });
   const steuer = trpc.spenden.steuer.useQuery(undefined, { enabled: istAdmin });
   const gueltig = (q.data ?? []).filter((z) => !z.spende.storniertAm);
@@ -23,22 +26,22 @@ export function Spenden() {
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Spenden"
-        unter={q.data ? `${gueltig.length} ${gueltig.length === 1 ? "Spende" : "Spenden"}` : undefined}
+        titel={t.liste.titel}
+        unter={q.data ? t.liste.anzahl(gueltig.length) : undefined}
         hilfe="spenden"
         aktionen={
           istAdmin && (
             <Link to="/spender" className="text-sm font-semibold text-band no-underline hover:underline">
-              Spenderverzeichnis
+              {t.liste.verzeichnis}
             </Link>
           )
         }
       />
       {istAdmin && steuer.data?.sperre && (
         <Hinweis ton="warnung">
-          Zuwendungsbestätigungen sind gesperrt: {steuer.data.sperre}{" "}
+          {t.liste.gesperrt} {serverText(steuer.data.sperre, sprache)}{" "}
           <Link to="/verein#steuer" className="font-semibold">
-            Steuerliche Angaben
+            {t.steuer.titel}
           </Link>
         </Hinweis>
       )}
@@ -51,9 +54,9 @@ export function Spenden() {
           <Kennzahlen
             spalten={3}
             werte={[
-              { label: "Geldspenden", wert: formatEuro(summe((z) => z.spende.art === "geld")), zusatz: `davon bar ${formatEuro(summe((z) => z.spende.weg === "bar" && z.spende.art === "geld"))}` },
-              { label: "Sachspenden (Wert)", wert: formatEuro(summe((z) => z.spende.art === "sache")) },
-              { label: "Noch nicht eingegangen", wert: formatEuro(summe((z) => !z.datum)), zusatz: "mit dem Meldegeld zugesagt" },
+              { label: t.liste.geldspenden, wert: formatEuro(summe((z) => z.spende.art === "geld")), zusatz: t.liste.davonBar(formatEuro(summe((z) => z.spende.weg === "bar" && z.spende.art === "geld"))) },
+              { label: t.liste.sachspenden, wert: formatEuro(summe((z) => z.spende.art === "sache")) },
+              { label: t.liste.nichtEingegangen, wert: formatEuro(summe((z) => !z.datum)), zusatz: t.liste.mitMeldegeld },
             ]}
           />
           <SpendenTabelle schauId={schauId} zeilen={q.data} istAdmin={istAdmin} />
@@ -65,6 +68,9 @@ export function Spenden() {
 }
 
 function SpendenTabelle({ schauId, zeilen, istAdmin }: { schauId: number; zeilen: Zeile[]; istAdmin: boolean }) {
+  const o = useOberflaeche();
+  const t = o.ehrenpreise.spenden.liste;
+  const sprache = useSprache();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { eingabe } = useFrage();
@@ -72,34 +78,34 @@ function SpendenTabelle({ schauId, zeilen, istAdmin }: { schauId: number; zeilen
   const bestaetigen = trpc.spenden.bestaetigen.useMutation({
     onSuccess: async (r) => {
       await neu();
-      meldung(`Zuwendungsbestätigung Nr. ${r.nummer} ausgestellt – zum Drucken in der Spalte „Bestätigung“.`);
+      meldung(t.ausgestellt(r.nummer));
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const stornieren = trpc.spenden.stornieren.useMutation({
     onSuccess: async () => {
       await neu();
-      meldung("Spende storniert.");
+      meldung(t.storniert);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const storno = async (z: Zeile) => {
-    const grund = await eingabe({ titel: `Spende S-${z.spende.id} stornieren?`, text: z.spende.weg === "bar" ? "Das Geld geht aus der Kasse zurück; es entsteht ein Stornobeleg." : undefined, feld: "Grund", mindestens: 3, knopf: "Stornieren", gefahr: true });
+    const grund = await eingabe({ titel: t.stornoFrage(z.spende.id), text: z.spende.weg === "bar" ? t.stornoBar : undefined, feld: t.grund, mindestens: 3, knopf: t.stornieren, gefahr: true });
     if (grund) stornieren.mutate({ spendeId: z.spende.id, grund });
   };
-  if (!zeilen.length) return <Leer titel="Noch keine Spende" />;
+  if (!zeilen.length) return <Leer titel={t.keine} />;
   return (
     <TabellenRahmen>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-linie text-left text-xs text-grau">
-              <th className="px-4 py-2 font-semibold">Beleg</th>
-              <th className="px-2 py-2 font-semibold">Eingang</th>
-              <th className="px-2 py-2 font-semibold">Spender</th>
-              <th className="px-2 py-2 font-semibold">Art</th>
-              <th className="px-2 py-2 text-right font-semibold">Betrag</th>
-              <th className="px-2 py-2 font-semibold">Bestätigung</th>
+              <th className="px-4 py-2 font-semibold">{t.beleg}</th>
+              <th className="px-2 py-2 font-semibold">{t.eingang}</th>
+              <th className="px-2 py-2 font-semibold">{t.spender}</th>
+              <th className="px-2 py-2 font-semibold">{t.art}</th>
+              <th className="px-2 py-2 text-right font-semibold">{o.allgemein.betrag}</th>
+              <th className="px-2 py-2 font-semibold">{t.bestaetigung}</th>
               <th className="px-4 py-2" />
             </tr>
           </thead>
@@ -112,33 +118,33 @@ function SpendenTabelle({ schauId, zeilen, istAdmin }: { schauId: number; zeilen
                 <tr key={sp.id} className={storniert ? "text-grau line-through" : undefined}>
                   <td className="px-4 py-2 tabular-nums">
                     {sp.weg === "meldung" ? (
-                      <span className="text-grau">mit Meldung</span>
+                      <span className="text-grau">{t.mitMeldung}</span>
                     ) : (
                       <a href={`/datei/${schauId}/beleg/${storniert ? "spende-storno" : "spende"}/${sp.id}.pdf`} target="_blank" rel="noreferrer">
                         S-{sp.id}
                       </a>
                     )}
                   </td>
-                  <td className="px-2 py-2 tabular-nums">{z.datum ? datum(z.datum) : <Marke ton="warnung">offen</Marke>}</td>
+                  <td className="px-2 py-2 tabular-nums">{z.datum ? datum(z.datum) : <Marke ton="warnung">{t.offen}</Marke>}</td>
                   <td className="px-2 py-2">{name}</td>
                   <td className="px-2 py-2">
-                    {sp.art === "sache" ? `Sache: ${sp.sache?.bezeichnung ?? ""}` : `Geld, ${SPENDE_WEG_LABEL[sp.weg]}`}
-                    {sp.gegenleistung && <span className="block text-xs text-grau">mit Gegenleistung (Sponsoring)</span>}
+                    {sp.art === "sache" ? t.sache(sp.sache?.bezeichnung ?? "") : t.geld(o.fach.SPENDE_WEG_LABEL[sp.weg])}
+                    {sp.gegenleistung && <span className="block text-xs text-grau">{t.mitGegenleistung}</span>}
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums">{formatEuro(sp.betragCent)}</td>
                   <td className="px-2 py-2">
                     {storniert ? (
-                      <span className="no-underline">storniert</span>
+                      <span className="no-underline">{t.storniertMarke}</span>
                     ) : z.bestaetigungId ? (
                       <a href={`/datei/zuwendungsbestaetigung/${z.bestaetigungId}.pdf`} target="_blank" rel="noreferrer">
-                        Nr. {z.bestaetigungNr}
+                        {t.nr(z.bestaetigungNr!)}
                       </a>
                     ) : z.sperren.length ? (
-                      <span className="text-xs text-grau" title={z.sperren.join(" ")}>
-                        {z.sperren[0]}
+                      <span className="text-xs text-grau" title={z.sperren.map((g) => serverText(g, sprache)).join(" ")}>
+                        {serverText(z.sperren[0]!, sprache)}
                       </span>
                     ) : (
-                      <span className="text-xs text-grau">möglich</span>
+                      <span className="text-xs text-grau">{t.moeglich}</span>
                     )}
                   </td>
                   <td className="whitespace-nowrap px-4 py-2 text-right">
@@ -146,12 +152,12 @@ function SpendenTabelle({ schauId, zeilen, istAdmin }: { schauId: number; zeilen
                       <span className="inline-flex gap-2">
                         {!z.bestaetigungId && !z.sperren.length && (
                           <Knopf variante="leise" laedt={bestaetigen.isPending && bestaetigen.variables?.spendeId === sp.id} onClick={() => bestaetigen.mutate({ spendeId: sp.id })}>
-                            Bestätigen
+                            {t.bestaetigen}
                           </Knopf>
                         )}
                         {!z.bestaetigungId && (
                           <Knopf variante="leise" onClick={() => storno(z)}>
-                            Stornieren
+                            {t.stornieren}
                           </Knopf>
                         )}
                       </span>

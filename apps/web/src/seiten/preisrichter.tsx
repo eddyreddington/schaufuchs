@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from "react";
+import { serverText } from "@schau/domain";
 import { fehlerText } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
 import { trpc, type Ausgabe } from "../trpc";
@@ -11,6 +13,8 @@ type Richter = Ausgabe["preisrichter"]["liste"]["richter"][number];
 const ZEILE = "min-h-8 px-2 text-sm";
 
 export function Preisrichter() {
+  const t = useOberflaeche();
+  const tx = t.preisrichter.seite;
   const schauId = useSchauId();
   const istAdmin = useIstAdmin();
   const daten = trpc.preisrichter.liste.useQuery({ schauId });
@@ -24,7 +28,7 @@ export function Preisrichter() {
   const entsperren = trpc.preisrichter.sperreAufheben.useMutation({
     onSuccess: async () => {
       await utils.preisrichter.liste.invalidate();
-      meldung("Sperre aufgehoben.");
+      meldung(tx.sperreAufgehoben);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -40,21 +44,21 @@ export function Preisrichter() {
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Preisrichter"
-        unter={richter.length ? `${richter.length} Preisrichter, ${tiere} Tiere zugeteilt, ${bewertet} bewertet` : undefined}
+        titel={t.allgemein.preisrichter}
+        unter={richter.length ? tx.unter(richter.length, tiere, bewertet) : undefined}
         hilfe="preisrichter-anlegen"
-        aktionen={istAdmin && <Knopf variante="primaer" onClick={() => setBearbeiten({})}>Preisrichter hinzufügen</Knopf>}
+        aktionen={istAdmin && <Knopf variante="primaer" onClick={() => setBearbeiten({})}>{tx.hinzufuegen}</Knopf>}
       />
       {richter.length === 0 ? (
-        <Leer titel="Noch keine Preisrichter" />
+        <Leer titel={tx.leer} />
       ) : (
         <TabellenRahmen
           fuss={
             <>
-              <span>{richter.length} Preisrichter{ohneZuteilung > 0 && <span className="font-semibold text-kamm">, {ohneZuteilung} Tiere ohne Preisrichter</span>}</span>
+              <span>{tx.anzahl(richter.length)}{ohneZuteilung > 0 && <span className="font-semibold text-kamm">{tx.ohneZuteilung(ohneZuteilung)}</span>}</span>
               {tabletLink && (
                 <span className="min-w-0 break-all">
-                  Tablet:{" "}
+                  {tx.tablet}{" "}
                   <a href={tabletLink} target="_blank" rel="noreferrer">
                     {tabletLink}
                   </a>
@@ -66,11 +70,11 @@ export function Preisrichter() {
           <table className="tabelle">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Bereich</th>
-                <th className="text-right">Tiere</th>
-                <th className="text-right">bewertet</th>
-                <th>Tablet</th>
+                <th>{t.allgemein.name}</th>
+                <th>{tx.bereich}</th>
+                <th className="text-right">{t.allgemein.tiere}</th>
+                <th className="text-right">{tx.bewertet}</th>
+                <th>{tx.tabletSpalte}</th>
                 <th />
               </tr>
             </thead>
@@ -86,23 +90,23 @@ export function Preisrichter() {
                       ) : (
                         <span className="font-semibold text-tinte">{r.name}</span>
                       )}
-                      {r.istObmann && <Marke ton="info">Obmann</Marke>}
+                      {r.istObmann && <Marke ton="info">{tx.obmann}</Marke>}
                     </span>
-                    <span className="block text-sm text-grau">{[r.sparten.length ? `bewertet: ${r.sparten.join(", ")}` : "alle Sparten", r.telefon, r.email].filter(Boolean).join(" · ")}</span>
+                    <span className="block text-sm text-grau">{[r.sparten.length ? tx.bewertetSparten(r.sparten.join(", ")) : tx.alleSparten, r.telefon, r.email].filter(Boolean).join(" · ")}</span>
                   </td>
                   <td className="nummer whitespace-nowrap">{r.einteilung.map((e) => `${e.vonNr}–${e.bisNr}`).join(", ") || <span className="font-sans font-normal text-grau">–</span>}</td>
                   <td className="text-right tabular-nums">{r.tiere}</td>
                   <td className="text-right tabular-nums">{r.bewertet}</td>
                   <td>
                     <span className="flex flex-wrap gap-1">
-                      {r.hatPin ? <Marke ton="ok">PIN gesetzt</Marke> : <Marke ton="warnung">keine PIN</Marke>}
-                      {r.pinWartet && <Marke ton="warnung">Fehlversuche – Wartezeit</Marke>}
+                      {r.hatPin ? <Marke ton="ok">{tx.pinGesetzt}</Marke> : <Marke ton="warnung">{tx.keinePin}</Marke>}
+                      {r.pinWartet && <Marke ton="warnung">{tx.wartezeit}</Marke>}
                     </span>
                   </td>
                   <td>
                     <div className="flex flex-wrap justify-end gap-0.5">
                       {/* Auch ohne Wartezeit: die Sperre je Adresse oder Gerät sieht man dem Preisrichter nicht an. */}
-                      {istAdmin && r.hatPin && <Knopf variante="leise" className={ZEILE} onClick={() => entsperren.mutate({ schauId, id: r.id })}>Sperre aufheben</Knopf>}
+                      {istAdmin && r.hatPin && <Knopf variante="leise" className={ZEILE} onClick={() => entsperren.mutate({ schauId, id: r.id })}>{tx.sperreAufheben}</Knopf>}
                       {istAdmin && (
                         <Knopf
                           variante="leise"
@@ -112,28 +116,28 @@ export function Preisrichter() {
                             if (
                               r.hatPin &&
                               !(await bestaetige({
-                                titel: `Neue PIN für ${r.name}?`,
-                                text: `Alle Tablets von ${r.name} werden abgemeldet; wartende Bewertungen bleiben im Gerät.`,
-                                knopf: "Neue PIN erzeugen",
+                                titel: tx.neuePinFrage(r.name),
+                                text: tx.neuePinText(r.name),
+                                knopf: tx.neuePinErzeugen,
                               }))
                             )
                               return;
                             pinErzeugen.mutate({ schauId, id: r.id }, { onSuccess: (x) => setPin({ name: r.name, pin: x.pin }) });
                           }}
                         >
-                          {r.hatPin ? "Neue PIN" : "PIN erzeugen"}
+                          {r.hatPin ? tx.neuePin : tx.pinErzeugen}
                         </Knopf>
                       )}
-                      <a href={`/datei/${schauId}/preisrichter/${r.id}/liste.pdf`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>Liste</a>
-                      <a href={`/datei/${schauId}/bewertungskarten.pdf?preisrichter=${r.id}`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>Karten</a>
+                      <a href={`/datei/${schauId}/preisrichter/${r.id}/liste.pdf`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>{tx.liste}</a>
+                      <a href={`/datei/${schauId}/bewertungskarten.pdf?preisrichter=${r.id}`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>{tx.karten}</a>
                       {istAdmin && (
                         <>
-                          <Knopf variante="leise" className={ZEILE} onClick={() => setBearbeiten(r)}>Bearbeiten</Knopf>
+                          <Knopf variante="leise" className={ZEILE} onClick={() => setBearbeiten(r)}>{t.allgemein.bearbeiten}</Knopf>
                           <Knopf
                             variante="leise"
                             className={`${ZEILE} text-grau hover:bg-kamm-hell hover:text-kamm`}
-                            onClick={async () => (await bestaetige({ titel: `${r.name} löschen?`, knopf: "Löschen", gefahr: true })) && loeschen.mutate({ schauId, id: r.id })}
-                            aria-label={`${r.name} löschen`}
+                            onClick={async () => (await bestaetige({ titel: tx.loeschenFrage(r.name), knopf: t.allgemein.loeschen, gefahr: true })) && loeschen.mutate({ schauId, id: r.id })}
+                            aria-label={tx.loeschenLabel(r.name)}
                           >
                             ✕
                           </Knopf>
@@ -154,18 +158,20 @@ export function Preisrichter() {
         <Einteilung key={JSON.stringify(richter.map((r) => [r.id, r.einteilung.map((e) => [e.vonNr, e.bisNr])]))} schauId={schauId} richter={richter} nummeriert={nummeriert} ohneZuteilung={ohneZuteilung} />
       )}
 
-      <Dialog offen={bearbeiten != null} onSchliessen={() => setBearbeiten(null)} titel={bearbeiten?.id ? "Preisrichter bearbeiten" : "Preisrichter hinzufügen"}>
+      <Dialog offen={bearbeiten != null} onSchliessen={() => setBearbeiten(null)} titel={bearbeiten?.id ? tx.bearbeitenTitel : tx.hinzufuegen}>
         {bearbeiten && <RichterForm schauId={schauId} versionId={schau.data?.stammdatenVersionId ?? null} start={bearbeiten} fertig={() => setBearbeiten(null)} />}
       </Dialog>
-      <Dialog offen={pin != null} onSchliessen={() => setPin(null)} titel={`PIN für ${pin?.name}`}>
+      <Dialog offen={pin != null} onSchliessen={() => setPin(null)} titel={tx.pinFuer(pin?.name ?? "")}>
         <p className="nummer text-center text-6xl tracking-[0.2em]">{pin?.pin}</p>
-        <p className="mt-4 text-center text-grau">Nur jetzt sichtbar – bitte notieren.</p>
+        <p className="mt-4 text-center text-grau">{tx.pinNotieren}</p>
       </Dialog>
     </div>
   );
 }
 
 function RichterForm({ schauId, versionId, start, fertig }: { schauId: number; versionId: number | null; start: Partial<Richter>; fertig: () => void }) {
+  const t = useOberflaeche();
+  const tx = t.preisrichter.form;
   const [r, setR] = useState({ name: start.name ?? "", anschrift: start.anschrift ?? "", email: start.email ?? "", telefon: start.telefon ?? "", istObmann: start.istObmann ?? false, sparten: start.sparten ?? [], anschriftImKatalog: start.anschriftImKatalog ?? false });
   // Sparten aus dem Verzeichnis der Schau; dazu gespeicherte, die es dort nicht (mehr) gibt, damit sie nicht still verschwinden.
   const gliederung = trpc.stammdaten.gliederung.useQuery({ versionId: versionId ?? 0 }, { enabled: versionId != null });
@@ -178,22 +184,22 @@ function RichterForm({ schauId, versionId, start, fertig }: { schauId: number; v
   };
   return (
     <form onSubmit={senden} className="flex flex-col gap-4">
-      <Feld label="Name">{(id) => <Eingabe id={id} value={r.name} onChange={(e) => setR({ ...r, name: e.target.value })} required autoFocus />}</Feld>
-      <Feld label="Anschrift">{(id) => <Eingabe id={id} value={r.anschrift} onChange={(e) => setR({ ...r, anschrift: e.target.value })} />}</Feld>
+      <Feld label={t.allgemein.name}>{(id) => <Eingabe id={id} value={r.name} onChange={(e) => setR({ ...r, name: e.target.value })} required autoFocus />}</Feld>
+      <Feld label={tx.anschrift}>{(id) => <Eingabe id={id} value={r.anschrift} onChange={(e) => setR({ ...r, anschrift: e.target.value })} />}</Feld>
       <Haken
-        label="Anschrift im gedruckten Katalog nennen"
-        hinweis="Nur mit Einverständnis des Preisrichters."
+        label={tx.anschriftImKatalog}
+        hinweis={tx.anschriftHinweis}
         checked={r.anschriftImKatalog}
         onChange={(v) => setR({ ...r, anschriftImKatalog: v })}
       />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Feld label="Telefon">{(id) => <Eingabe id={id} value={r.telefon} onChange={(e) => setR({ ...r, telefon: e.target.value })} />}</Feld>
-        <Feld label="E-Mail">{(id) => <Eingabe id={id} type="email" value={r.email} onChange={(e) => setR({ ...r, email: e.target.value })} />}</Feld>
+        <Feld label={tx.telefon}>{(id) => <Eingabe id={id} value={r.telefon} onChange={(e) => setR({ ...r, telefon: e.target.value })} />}</Feld>
+        <Feld label={tx.email}>{(id) => <Eingabe id={id} type="email" value={r.email} onChange={(e) => setR({ ...r, email: e.target.value })} />}</Feld>
       </div>
-      <Haken label="Obmann" hinweis="Bestätigt die Note „vorzüglich“." checked={r.istObmann} onChange={(v) => setR({ ...r, istObmann: v })} />
+      <Haken label={t.preisrichter.seite.obmann} hinweis={tx.obmannHinweis} checked={r.istObmann} onChange={(v) => setR({ ...r, istObmann: v })} />
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-semibold">
-          Bewertet diese Sparten <span className="font-normal text-grau">(keine = alle)</span>
+          {tx.sparten} <span className="font-normal text-grau">{tx.spartenLeer}</span>
         </legend>
         <div className="grid gap-1 sm:grid-cols-2">
           {sparten.map((sp) => (
@@ -203,13 +209,17 @@ function RichterForm({ schauId, versionId, start, fertig }: { schauId: number; v
       </fieldset>
       {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
       <div className="flex justify-end">
-        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>Speichern</Knopf>
+        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>{t.allgemein.speichern}</Knopf>
       </div>
     </form>
   );
 }
 
 function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: number; richter: Richter[]; nummeriert: number; ohneZuteilung: number }) {
+  const t = useOberflaeche();
+  const sprache = useSprache();
+  const te = t.preisrichter.einteilung;
+  const tx = te.nummern;
   const nachRassen = trpc.preisrichter.zuteilung.useQuery({ schauId });
   const mitRassen = (nachRassen.data?.regeln.length ?? 0) > 0;
   const start = () => richter.flatMap((r) => r.einteilung.map((e) => ({ preisrichterId: r.id, von: String(e.vonNr), bis: String(e.bisNr) })));
@@ -233,12 +243,12 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
     onSuccess: () => {
       utils.preisrichter.liste.invalidate();
       utils.preisrichter.zuteilung.invalidate();
-      meldung("Einteilung gespeichert.");
+      meldung(te.gespeichert);
     },
     onError: (e, eingabe) => {
       // Wechseln schon bewertete Tiere den Preisrichter, erst nachfragen: Kontingent und Preise gehen mit.
       if (e.data?.code === "CONFLICT" && !eingabe.bestaetigt) {
-        void bestaetige({ titel: "Trotzdem speichern?", text: `${e.message}\n\nKontingent und Preise dieser Tiere gehen auf den neuen Preisrichter über.`, knopf: "Speichern" }).then(
+        void bestaetige({ titel: te.trotzdemFrage, text: `${serverText(e.message, sprache)}\n\n${te.uebergang}`, knopf: t.allgemein.speichern }).then(
           (ja) => ja && speichern.mutate({ ...eingabe, bestaetigt: true }),
         );
         return;
@@ -250,9 +260,9 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
   const speichernNummern = async () =>
     (!mitRassen ||
       (await bestaetige({
-        titel: "Einteilung speichern?",
-        text: "Die Einteilung nach Rassen gilt dann nicht mehr; die Bereiche folgen neuen Nummern nicht mehr von selbst.",
-        knopf: "Speichern",
+        titel: tx.speichernFrage,
+        text: tx.speichernText,
+        knopf: t.allgemein.speichern,
       }))) &&
     speichern.mutate({ schauId, einteilung: zeilen.filter((z) => z.von && z.bis).map((z) => ({ preisrichterId: z.preisrichterId, vonNr: Number(z.von), bisNr: Number(z.bis) })) });
   const vorschlagen = async () => {
@@ -265,30 +275,30 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
   return (
     <Abschnitt
       id="einteilung-nummern"
-      titel="Einteilung nach Nummern"
+      titel={tx.titel}
       aktionen={
         <div className="flex flex-wrap items-center gap-2">
-          {mitRassen && nummeriert > 0 && <Marke ton="info">folgt der Einteilung nach Rassen</Marke>}
+          {mitRassen && nummeriert > 0 && <Marke ton="info">{tx.folgtRassen}</Marke>}
           <Knopf onClick={vorschlagen} disabled={nummeriert === 0}>
-            Gleichmäßig verteilen
+            {te.verteilen}
           </Knopf>
         </div>
       }
     >
       {nummeriert === 0 ? (
-        <p className="text-sm text-grau">Noch keine Katalognummern vergeben.</p>
+        <p className="text-sm text-grau">{tx.keineNummern}</p>
       ) : (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-grau">
-            {nummeriert} Tiere im Katalog{ohneZuteilung > 0 && <span className="font-semibold text-kamm">, davon {ohneZuteilung} ohne Preisrichter</span>}
+            {tx.imKatalog(nummeriert)}{ohneZuteilung > 0 && <span className="font-semibold text-kamm">{tx.davonOhne(ohneZuteilung)}</span>}
           </p>
-          {fehlend.length > 0 && <Hinweis ton="warnung">Kein Preisrichter für: {fehlend.join(", ")}.</Hinweis>}
+          {fehlend.length > 0 && <Hinweis ton="warnung">{te.keinRichterFuer(fehlend.join(", "))}</Hinweis>}
           <table className="tabelle max-w-2xl">
             <thead>
               <tr>
-                <th>Preisrichter</th>
-                <th className="text-right">von Nr.</th>
-                <th className="text-right">bis Nr.</th>
+                <th>{t.allgemein.preisrichter}</th>
+                <th className="text-right">{tx.vonNr}</th>
+                <th className="text-right">{tx.bisNr}</th>
                 <th />
               </tr>
             </thead>
@@ -297,7 +307,7 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
                 <tr key={i}>
                   <td>
                     <Auswahl
-                      aria-label="Preisrichter"
+                      aria-label={t.allgemein.preisrichter}
                       value={z.preisrichterId}
                       onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, preisrichterId: Number(e.target.value) } : x)))}
                     >
@@ -308,19 +318,19 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
                       ))}
                     </Auswahl>
                   </td>
-                  <td><Eingabe aria-label="von" type="number" className="w-24 text-right tabular-nums" value={z.von} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, von: e.target.value } : x)))} /></td>
-                  <td><Eingabe aria-label="bis" type="number" className="w-24 text-right tabular-nums" value={z.bis} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, bis: e.target.value } : x)))} /></td>
-                  <td className="text-right"><Knopf variante="leise" className={`${ZEILE} text-grau hover:bg-kamm-hell hover:text-kamm`} aria-label="Zeile entfernen" onClick={() => setZeilen(zeilen.filter((_, j) => j !== i))}>✕</Knopf></td>
+                  <td><Eingabe aria-label={tx.von} type="number" className="w-24 text-right tabular-nums" value={z.von} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, von: e.target.value } : x)))} /></td>
+                  <td><Eingabe aria-label={tx.bis} type="number" className="w-24 text-right tabular-nums" value={z.bis} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, bis: e.target.value } : x)))} /></td>
+                  <td className="text-right"><Knopf variante="leise" className={`${ZEILE} text-grau hover:bg-kamm-hell hover:text-kamm`} aria-label={tx.zeileEntfernen} onClick={() => setZeilen(zeilen.filter((_, j) => j !== i))}>✕</Knopf></td>
                 </tr>
               ))}
             </tbody>
           </table>
           <div className="flex flex-wrap gap-2">
-            <Knopf onClick={() => setZeilen([...zeilen, { preisrichterId: richter[0]!.id, von: "", bis: "" }])}>Bereich hinzufügen</Knopf>
+            <Knopf onClick={() => setZeilen([...zeilen, { preisrichterId: richter[0]!.id, von: "", bis: "" }])}>{tx.bereichHinzufuegen}</Knopf>
           </div>
         </div>
       )}
-      <Speicherleiste sichtbar={geaendert} onVerwerfen={() => { setZeilen(start()); setFehlend([]); }} onSpeichern={speichernNummern} laedt={speichern.isPending} text="Einteilung nach Nummern geändert" knopf="Nummern-Einteilung speichern" />
+      <Speicherleiste sichtbar={geaendert} onVerwerfen={() => { setZeilen(start()); setFehlend([]); }} onSpeichern={speichernNummern} laedt={speichern.isPending} text={tx.geaendert} knopf={tx.speichernKnopf} />
     </Abschnitt>
   );
 }
@@ -333,6 +343,10 @@ const schl = (sparte: string, rasse: string, farbe = "") => JSON.stringify([spar
  * Katalognummern; die Bereiche nach Nummern rechnet die Software daraus.
  */
 function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: Richter[] }) {
+  const t = useOberflaeche();
+  const sprache = useSprache();
+  const te = t.preisrichter.einteilung;
+  const tx = te.rassen;
   const daten = trpc.preisrichter.zuteilung.useQuery({ schauId });
   const utils = trpc.useUtils();
   const meldung = useMeldung();
@@ -354,12 +368,12 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
       setOffen(null);
       utils.preisrichter.zuteilung.invalidate();
       utils.preisrichter.liste.invalidate();
-      const zusatz = [x.ohne ? `${x.ohne} Tiere ohne Preisrichter` : "", x.abweichend.length ? `Nachmeldungen bei der Nummer davor: ${x.abweichend.join(", ")}` : ""].filter(Boolean).join("; ");
-      meldung(x.bereiche ? `Einteilung gespeichert, Nummernbereiche neu berechnet.${zusatz ? ` ${zusatz}.` : ""}` : "Einteilung gespeichert. Die Nummernbereiche entstehen beim Vergeben der Katalognummern.");
+      const zusatz = [x.ohne ? tx.tiereOhne(x.ohne) : "", x.abweichend.length ? tx.nachmeldungen(x.abweichend.join(", ")) : ""].filter(Boolean).join("; ");
+      meldung(x.bereiche ? `${tx.gespeichertBereiche}${zusatz ? ` ${zusatz}.` : ""}` : tx.gespeichertOhneBereiche);
     },
     onError: (e, eingabe) => {
       if (e.data?.code === "CONFLICT" && !eingabe.bestaetigt) {
-        void bestaetige({ titel: "Trotzdem speichern?", text: `${e.message}\n\nKontingent und Preise dieser Tiere gehen auf den neuen Preisrichter über.`, knopf: "Speichern" }).then(
+        void bestaetige({ titel: te.trotzdemFrage, text: `${serverText(e.message, sprache)}\n\n${te.uebergang}`, knopf: t.allgemein.speichern }).then(
           (ja) => ja && speichern.mutate({ ...eingabe, bestaetigt: true }),
         );
         return;
@@ -425,18 +439,18 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
   return (
     <Abschnitt
       id="einteilung-rassen"
-      titel="Einteilung nach Rassen"
+      titel={tx.titel}
       aktionen={
         <Knopf onClick={vorschlagen} disabled={!gruppen.length} laedt={vorschlag.isFetching}>
-          Gleichmäßig verteilen
+          {te.verteilen}
         </Knopf>
       }
     >
       {!gruppen.length ? (
-        <p className="text-sm text-grau">Noch keine Tiere gemeldet.</p>
+        <p className="text-sm text-grau">{tx.keineTiere}</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {fehlend.length > 0 && <Hinweis ton="warnung">Kein Preisrichter für: {fehlend.join(", ")}.</Hinweis>}
+          {fehlend.length > 0 && <Hinweis ton="warnung">{te.keinRichterFuer(fehlend.join(", "))}</Hinweis>}
           <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-grau">
             {richter.map((r) => (
               <span key={r.id}>
@@ -445,7 +459,7 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
             ))}
             {ohne > 0 && (
               <span className="font-semibold text-kamm">
-                ohne Preisrichter <span className="tabular-nums">{ohne}</span>
+                {tx.ohnePreisrichter} <span className="tabular-nums">{ohne}</span>
               </span>
             )}
           </p>
@@ -454,9 +468,9 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
               <table key={sp} className="tabelle max-w-3xl">
                 <thead>
                   <tr>
-                    <th>{sp || "ohne Sparte"}</th>
-                    <th className="text-right">Tiere</th>
-                    <th className="w-64">Preisrichter</th>
+                    <th>{sp || tx.ohneSparte}</th>
+                    <th className="text-right">{t.allgemein.tiere}</th>
+                    <th className="w-64">{t.allgemein.preisrichter}</th>
                     <th />
                   </tr>
                 </thead>
@@ -470,11 +484,11 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
                         <tr key={k}>
                           <td className="font-semibold text-tinte">{g.rasse}</td>
                           <td className="text-right tabular-nums">{g.anzahl}</td>
-                          <td>{auswahl(g.sparte, aktuell[k] ?? "", (v) => setze(k, v), "– keiner –", `Preisrichter für ${g.rasse}`)}</td>
+                          <td>{auswahl(g.sparte, aktuell[k] ?? "", (v) => setze(k, v), tx.keiner, tx.richterFuer(g.rasse))}</td>
                           <td className="text-right">
                             {g.farben.length > 1 && (
                               <Knopf variante="leise" className={ZEILE} onClick={() => setOffen(new Set(istAuf ? [...auf].filter((x) => x !== k) : [...auf, k]))} aria-expanded={istAuf}>
-                                {istAuf ? "zuklappen" : "Farbenschläge"}
+                                {istAuf ? tx.zuklappen : tx.farbenschlaege}
                               </Knopf>
                             )}
                           </td>
@@ -485,9 +499,9 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
                           const fk = schl(g.sparte, g.rasse, f.farbenschlag);
                           zeilen.push(
                             <tr key={fk}>
-                              <td className="pl-8 text-grau">{f.farbenschlag || "(ohne Farbenschlag)"}</td>
+                              <td className="pl-8 text-grau">{f.farbenschlag || tx.ohneFarbenschlag}</td>
                               <td className="text-right tabular-nums">{f.anzahl}</td>
-                              <td>{f.farbenschlag ? auswahl(g.sparte, aktuell[fk] ?? "", (v) => setze(fk, v), "wie die Rasse", `Preisrichter für ${g.rasse} ${f.farbenschlag}`) : <span className="text-grau">wie die Rasse</span>}</td>
+                              <td>{f.farbenschlag ? auswahl(g.sparte, aktuell[fk] ?? "", (v) => setze(fk, v), tx.wieRasse, tx.richterFuer(`${g.rasse} ${f.farbenschlag}`)) : <span className="text-grau">{tx.wieRasse}</span>}</td>
                               <td />
                             </tr>,
                           );
@@ -500,7 +514,7 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
           </div>
         </div>
       )}
-      <Speicherleiste sichtbar={geaendert} onVerwerfen={verwerfen} onSpeichern={speichernRassen} laedt={speichern.isPending} text="Einteilung nach Rassen geändert" knopf="Rassen-Einteilung speichern" />
+      <Speicherleiste sichtbar={geaendert} onVerwerfen={verwerfen} onSpeichern={speichernRassen} laedt={speichern.isPending} text={tx.geaendert} knopf={tx.speichernKnopf} />
     </Abschnitt>
   );
 }

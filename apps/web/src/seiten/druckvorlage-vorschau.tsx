@@ -1,7 +1,9 @@
-import type { BriefVorlage, KartenVorlage } from "@schau/domain";
+import { serverText, type BriefVorlage, type KartenVorlage } from "@schau/domain";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { pdfjs, PdfSeite } from "../pdf-anzeige";
+import { useOberflaeche } from "../sprache";
+import { aktuelleSprache, ot } from "../sprache-jetzt";
 import { Knopf } from "../ui";
 
 /** Wartezeit nach der letzten Änderung, bevor die Vorschau neu erzeugt wird. */
@@ -10,7 +12,11 @@ const PAUSE_MS = 600;
 /** Holt ein PDF der Druckvorlagen-Adressen (/datei/druckvorlage/…) für einen noch nicht gespeicherten Stand. */
 async function hole(pfad: string, koerper: unknown, signal?: AbortSignal) {
   const r = await fetch(pfad, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(koerper), signal });
-  if (!r.ok) throw new Error(r.status === 429 ? "Zu viele Vorschauen. Bitte kurz warten." : (await r.text()) || "Vorschau fehlgeschlagen.");
+  if (!r.ok) {
+    const t = ot().vorlagen.vorschau;
+    // Meldungen des Servers (datei-druckvorlage.ts) kommen deutsch und werden hier übersetzt.
+    throw new Error(r.status === 429 ? t.zuViele : serverText(await r.text(), aktuelleSprache()) || t.fehlgeschlagen);
+  }
   return new Uint8Array(await r.arrayBuffer());
 }
 
@@ -26,7 +32,7 @@ export async function pdfOeffnen(pfad: string, koerper: unknown) {
     const ziel = fenster ?? window.open(url, "_blank");
     if (!ziel) {
       URL.revokeObjectURL(url);
-      throw new Error("Der Browser hat das PDF-Fenster gesperrt. Bitte Pop-ups für diese Seite erlauben.");
+      throw new Error(ot().vorlagen.vorschau.gesperrt);
     }
     ziel.opener = null;
     if (fenster) fenster.location.href = url;
@@ -47,6 +53,10 @@ export function PdfLiveVorschau({ pfad, koerper, unter, extra, seitenformat = "a
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
   const schluessel = JSON.stringify(koerper);
+  const t = useOberflaeche().vorlagen.vorschau;
+  // Für die Fehlermeldung im Effekt, ohne ihn bei einem Sprachwechsel neu zu starten.
+  const fehlgeschlagen = useRef(t.fehlgeschlagen);
+  fehlgeschlagen.current = t.fehlgeschlagen;
 
   useEffect(() => {
     const ab = new AbortController();
@@ -66,7 +76,7 @@ export function PdfLiveVorschau({ pfad, koerper, unter, extra, seitenformat = "a
         });
         setFehler(null);
       } catch (e) {
-        if (!ab.signal.aborted) setFehler(e instanceof Error ? e.message : "Vorschau fehlgeschlagen.");
+        if (!ab.signal.aborted) setFehler(e instanceof Error ? e.message : fehlgeschlagen.current);
       } finally {
         if (!ab.signal.aborted) setLaeuft(false);
       }
@@ -91,17 +101,17 @@ export function PdfLiveVorschau({ pfad, koerper, unter, extra, seitenformat = "a
   );
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-xl border border-linie bg-weiss shadow-[0_1px_2px_rgb(16_20_28/0.04)]" aria-label="Vorschau">
+    <section className="min-w-0 overflow-hidden rounded-xl border border-linie bg-weiss shadow-[0_1px_2px_rgb(16_20_28/0.04)]" aria-label={t.titel}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-linie px-4 py-2.5">
-        <h2 className="text-[0.95rem] font-semibold">Vorschau</h2>
+        <h2 className="text-[0.95rem] font-semibold">{t.titel}</h2>
         <span className="text-sm text-grau" role="status">
-          {fehler ? <span className="text-kamm">{fehler}</span> : laeuft ? "wird erstellt …" : unter}
+          {fehler ? <span className="text-kamm">{fehler}</span> : laeuft ? t.wirdErstellt : unter}
         </span>
         <div className="ml-auto flex flex-wrap items-center gap-3">
           {extra}
           {pdf && (
             <a href={pdf.url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-band no-underline hover:underline">
-              Als PDF öffnen
+              {t.alsPdf}
             </a>
           )}
         </div>
@@ -110,7 +120,7 @@ export function PdfLiveVorschau({ pfad, koerper, unter, extra, seitenformat = "a
         {pdf ? (
           <PdfSeite doc={pdf.doc} nr={1} breite={520} className="w-[520px] max-w-full shadow-[0_1px_3px_rgb(16_20_28/0.12),0_12px_32px_rgb(16_20_28/0.10)]" />
         ) : (
-          <div className={`flex ${seitenformat} w-[520px] max-w-full items-center justify-center bg-weiss text-sm text-grau ring-1 ring-linie`}>{fehler ? "" : "wird erstellt …"}</div>
+          <div className={`flex ${seitenformat} w-[520px] max-w-full items-center justify-center bg-weiss text-sm text-grau ring-1 ring-linie`}>{fehler ? "" : t.wirdErstellt}</div>
         )}
       </div>
     </section>
@@ -123,17 +133,18 @@ export function PdfLiveVorschau({ pfad, koerper, unter, extra, seitenformat = "a
  */
 export function KartenVorschau({ daten, schauId }: { daten: KartenVorlage; schauId: number | null }) {
   const [fehler, setFehler] = useState<string | null>(null);
-  const probedruck = () => pdfOeffnen("/datei/druckvorlage/probedruck.pdf", { daten, schauId }).then(() => setFehler(null), (e: unknown) => setFehler(e instanceof Error ? e.message : "Probedruck fehlgeschlagen."));
+  const t = useOberflaeche().vorlagen.vorschau;
+  const probedruck = () => pdfOeffnen("/datei/druckvorlage/probedruck.pdf", { daten, schauId }).then(() => setFehler(null), (e: unknown) => setFehler(e instanceof Error ? e.message : t.probedruckFehlgeschlagen));
   return (
     <PdfLiveVorschau
       pfad="/datei/druckvorlage/vorschau.pdf"
       koerper={{ daten, schauId }}
-      unter="ein Bogen mit Beispielkarten"
+      unter={t.bogen}
       extra={
         <>
           {fehler && <span className="text-sm text-kamm" role="alert">{fehler}</span>}
           <Knopf variante="leise" onClick={probedruck}>
-            Probedruck
+            {t.probedruck}
           </Knopf>
         </>
       }
@@ -143,5 +154,6 @@ export function KartenVorschau({ daten, schauId }: { daten: KartenVorlage; schau
 
 /** Briefvorlage: Beispielbrief mit dem Serienbrief-Text an eine Beispielperson, nach dem ungespeicherten Stand. */
 export function BriefVorschau({ daten }: { daten: BriefVorlage }) {
-  return <PdfLiveVorschau pfad="/datei/druckvorlage/brief.pdf" koerper={{ daten }} unter="Beispielbrief an Karla Muster" />;
+  const t = useOberflaeche().vorlagen.vorschau;
+  return <PdfLiveVorschau pfad="/datei/druckvorlage/brief.pdf" koerper={{ daten }} unter={t.beispielbrief} />;
 }

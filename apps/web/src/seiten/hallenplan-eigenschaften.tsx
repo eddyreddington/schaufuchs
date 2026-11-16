@@ -2,13 +2,15 @@
  * Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle
  * (`HalleEigenschaften`) mit ihren Eingabefeldern.
  */
-import { type Punkt, type Halle, type HallenFlaeche, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, kaefigName, type KaefigTyp, MOEBEL_NAME, moebelMass, type WandSeite } from "@schau/domain";
+import { type Punkt, type Halle, type HallenFlaeche, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, type KaefigTyp, LOCALE, moebelMass, type WandSeite } from "@schau/domain";
 import { type InputHTMLAttributes, type ReactNode, useEffect, useRef, useState } from "react";
+import { useOberflaeche, useSprache } from "../sprache";
 import { Auswahl, Eingabe, Feld, Haken, Knopf, Marke } from "../ui";
 import { WzSymbol } from "./hallenplan-werkzeuge";
 import { type Aendern, type Aktionen, BLOCK_TYPEN, type FehlendeSetzen, HAUPTGANG_LAGE, meter, type Plan, teilInfo, type TeilInfo, type Versetzen, wandText, type Ziel, zuCm } from "./hallenplan-geometrie";
 import { AutomatikSchalter, OhnePlatz } from "./hallenplan-teile";
 import { GrundrissKnopf } from "./hallenplan-grundriss";
+import { kaefigNameIn } from "./kaefige";
 
 /**
  * Eigenschaften der Auswahl: was gewählt ist, Belegung, Lage, Größe, Drehung und die passenden Aktionen. `kompakt`: als
@@ -56,6 +58,8 @@ export function Eigenschaften({
   /** Schmale Ansicht: Einstellungen der Halle im Dialog. */
   halleOeffnen: () => void;
 }) {
+  const t = useOberflaeche();
+  const te = t.halle.eigenschaften;
   const infos = auswahl.map((z) => teilInfo(halle, plan, masse, z)).filter((x): x is TeilInfo => !!x);
   const eins = auswahl.length === 1 ? (infos[0] ?? null) : null;
   const knopf = (symbol: Parameters<typeof WzSymbol>[0]["name"], text: string, tun: () => void, opt: { kuerzel?: string; gefahr?: boolean; disabled?: boolean } = {}) => (
@@ -68,30 +72,30 @@ export function Eigenschaften({
   const knoepfe =
     auswahl.length > 1 ? (
       <>
-        {knopf("raster", "Am Raster ausrichten", a.ausrichten, { kuerzel: "A" })}
-        {knopf("entfernen", "Leeres entfernen", a.entfernen, { kuerzel: "Entf", gefahr: true })}
-        {knopf("auswahl", "Auswahl aufheben", a.aufheben, { kuerzel: "Esc" })}
+        {knopf("raster", te.amRaster, a.ausrichten, { kuerzel: "A" })}
+        {knopf("entfernen", te.leeresEntfernen, a.entfernen, { kuerzel: te.tasteEntf, gefahr: true })}
+        {knopf("auswahl", te.auswahlAufheben, a.aufheben, { kuerzel: "Esc" })}
       </>
     ) : eins ? (
       <>
-        {knopf("drehen", "Drehen", a.drehen, { kuerzel: "R", disabled: !a.dreht })}
-        {a.zurueck && knopf("zurueck", "An ihren Platz zurück", a.zurueckAnPlatz)}
+        {knopf("drehen", te.drehen, a.drehen, { kuerzel: "R", disabled: !a.dreht })}
+        {a.zurueck && knopf("zurueck", te.anPlatzZurueck, a.zurueckAnPlatz)}
         {a.einzelreihe?.seiten.map((seite) => (
           <div key={seite} className="contents">
             {knopf("einpassen", a.einzelreihe!.text(seite), () => a.einzelreihe!.stellen(seite))}
           </div>
         ))}
-        {knopf("entfernen", "Entfernen", a.entfernen, { kuerzel: "Entf", gefahr: true, disabled: !eins.leer })}
+        {knopf("entfernen", t.allgemein.entfernen, a.entfernen, { kuerzel: te.tasteEntf, gefahr: true, disabled: !eins.leer })}
       </>
     ) : null;
   const flaeche = eins?.flaeche != null ? halle.flaechen[eins.flaeche] : null;
-  const zeichnenText = zeichnen && `${zeichnen === "eingang" ? "Eingang" : zeichnen === "volieren" ? "Volierenbereich" : "Freien Bereich"} aufziehen`;
+  const zeichnenText = zeichnen && (zeichnen === "eingang" ? te.eingangAufziehen : zeichnen === "volieren" ? te.volierenAufziehen : te.freiAufziehen);
   if (kompakt && zeichnen)
     return (
       <div className="nicht-drucken flex h-14 shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap border-b border-linie bg-papier px-3 lg:hidden" aria-live="polite">
         <span className="truncate font-semibold">{zeichnenText}</span>
         <Knopf className="ml-auto shrink-0 px-3" onClick={zeichnenAus}>
-          Abbrechen
+          {t.allgemein.abbrechen}
         </Knopf>
       </div>
     );
@@ -100,20 +104,18 @@ export function Eigenschaften({
       <div className="nicht-drucken flex h-14 shrink-0 items-center gap-3 overflow-hidden whitespace-nowrap border-b border-linie bg-papier px-3 lg:hidden" aria-live="polite">
         {auswahl.length === 0 ? (
           mehrfach ? (
-            <span className="truncate font-semibold">Mehrfachauswahl</span>
+            <span className="truncate font-semibold">{te.mehrfachauswahl}</span>
           ) : (
             <>
-              <span className="truncate font-semibold">
-                Halle {meter(halle.breite)} × {meter(halle.laenge)} m
-              </span>
+              <span className="truncate font-semibold">{te.halleMasse(meter(halle.breite), meter(halle.laenge))}</span>
               <Knopf className="ml-auto shrink-0 px-3" onClick={halleOeffnen}>
-                Einstellungen der Halle
+                {te.einstellungenHalle}
               </Knopf>
             </>
           )
         ) : auswahl.length > 1 ? (
           <>
-            <span className="shrink-0 font-semibold">{auswahl.length} Teile gewählt</span>
+            <span className="shrink-0 font-semibold">{te.teileGewaehlt(auswahl.length)}</span>
             <span className="min-w-0 flex-1 truncate text-sm text-grau">{infos.map((i) => i.name).join(", ")}</span>
           </>
         ) : eins ? (
@@ -121,10 +123,11 @@ export function Eigenschaften({
             <span className="min-w-0 shrink truncate font-semibold">{eins.name}</span>
             <Marke ton={eins.leer ? "ok" : "neutral"}>{eins.status}</Marke>
             {flaeche && eins.flaeche != null && <NameFeld key={`f${eins.flaeche}`} i={eins.flaeche} name={flaeche.name} aendern={aendern} />}
-            <span className="min-w-0 flex-1 truncate text-sm text-grau">{eins.zeilen.find(([k]) => k === "Käfige" || k === "Käfig" || k === "Nummern")?.[1]}</span>
+            <span className="min-w-0 flex-1 truncate text-sm text-grau">{/* bleibt deutsch: Vergleich mit den Schlüsseln aus teilInfo (hallenplan-geometrie.ts) */}
+            {eins.zeilen.find(([k]) => k === "Käfige" || k === "Käfig" || k === "Nummern")?.[1]}</span>
             {detailsOeffnen && (eins.flaeche != null || (eins.tiere?.length ?? 0) > 0) && (
               <Knopf className="shrink-0 px-3" onClick={detailsOeffnen}>
-                Eigenschaften
+                {t.halle.eigenschaftenTitel}
               </Knopf>
             )}
           </>
@@ -135,26 +138,26 @@ export function Eigenschaften({
       </div>
     );
   return (
-    <aside className={imDialog ? "flex flex-col gap-4" : "nicht-drucken hidden w-72 shrink-0 flex-col gap-4 self-start p-4 lg:sticky lg:top-14 lg:flex"} aria-label="Eigenschaften der Auswahl" aria-live="polite">
+    <aside className={imDialog ? "flex flex-col gap-4" : "nicht-drucken hidden w-72 shrink-0 flex-col gap-4 self-start p-4 lg:sticky lg:top-14 lg:flex"} aria-label={te.eigenschaftenAuswahl} aria-live="polite">
       {zeichnen ? (
         <>
-          <PanelKopf ueber="Einsetzen" titel={zeichnenText || ""} />
-          <Knopf onClick={zeichnenAus}>Abbrechen</Knopf>
+          <PanelKopf ueber={te.einsetzen} titel={zeichnenText || ""} />
+          <Knopf onClick={zeichnenAus}>{t.allgemein.abbrechen}</Knopf>
         </>
       ) : auswahl.length === 0 ? (
         mehrfach ? (
-          <PanelKopf ueber="Auswahl" titel="Mehrfachauswahl" />
+          <PanelKopf ueber={te.auswahl} titel={te.mehrfachauswahl} />
         ) : (
           hallePanel
         )
       ) : auswahl.length > 1 ? (
         <>
-          <PanelKopf ueber="Auswahl" titel={`${auswahl.length} Teile gewählt`} />
+          <PanelKopf ueber={te.auswahl} titel={te.teileGewaehlt(auswahl.length)} />
           <ul className="flex max-h-48 flex-col gap-1 overflow-auto text-sm">
             {infos.map((i, n) => (
               <li key={n} className="flex items-center justify-between gap-2">
                 <span className="truncate">{i.name}</span>
-                <Marke ton={i.leer ? "ok" : "neutral"}>{i.leer ? "leer" : "belegt"}</Marke>
+                <Marke ton={i.leer ? "ok" : "neutral"}>{i.leer ? te.leer : te.belegt}</Marke>
               </li>
             ))}
           </ul>
@@ -180,22 +183,22 @@ export function Eigenschaften({
           <div className="flex flex-col gap-2">{knoepfe}</div>
           {eins.tiere && eins.tiere.length > 0 && (
             <div className="flex flex-col gap-2 border-t border-linie pt-4">
-              <Gruppenkopf>Tiere</Gruppenkopf>
+              <Gruppenkopf>{t.allgemein.tiere}</Gruppenkopf>
               <ul className="flex max-h-56 flex-col gap-1 overflow-auto text-sm">
-                {eins.tiere.map((t) => (
-                  <li key={t.id} className="flex items-center justify-between gap-2">
+                {eins.tiere.map((x) => (
+                  <li key={x.id} className="flex items-center justify-between gap-2">
                     <span className="truncate">
-                      {t.nr ? `Nr. ${t.nr} ` : ""}
-                      {t.rasse}
+                      {x.nr ? `${t.halle.nr(x.nr)} ` : ""}
+                      {x.rasse}
                     </span>
                     <span className="flex shrink-0 gap-3">
-                      {versetzen && t.typ !== "voliere" && (
-                        <button type="button" className="font-semibold text-band hover:underline" onClick={() => versetzen({ tierId: t.id, nr: t.nr, rasse: t.rasse, typ: t.typ as KaefigTyp })}>
-                          Versetzen
+                      {versetzen && x.typ !== "voliere" && (
+                        <button type="button" className="font-semibold text-band hover:underline" onClick={() => versetzen({ tierId: x.id, nr: x.nr, rasse: x.rasse, typ: x.typ as KaefigTyp })}>
+                          {te.versetzen}
                         </button>
                       )}
-                      <button type="button" className="font-semibold text-band hover:underline" onClick={() => angaben(t.id)}>
-                        Angaben
+                      <button type="button" className="font-semibold text-band hover:underline" onClick={() => angaben(x.id)}>
+                        {te.angaben}
                       </button>
                     </span>
                   </li>
@@ -254,6 +257,7 @@ export function enterUebernimmt(e: React.KeyboardEvent, uebernehmen: () => Promi
  * Rückfrage) springt auf den gespeicherten Wert zurück.
  */
 export function MeterFeld({ label, cm, setzen, min = 0, max = 50000 }: { label: string; cm: number; setzen: (cm: number) => boolean | Promise<boolean> | void; min?: number; max?: number }) {
+  const t = useOberflaeche().halle;
   const [wert, setWert] = useState(meter(cm));
   useEffect(() => setWert(meter(cm)), [cm]);
   // Eine Übernahme zur Zeit (Enter und das Verlassen des Felds, wenn die Rückfrage aufgeht, kämen sonst doppelt).
@@ -275,25 +279,26 @@ export function MeterFeld({ label, cm, setzen, min = 0, max = 50000 }: { label: 
   };
   return (
     <Feld label={label}>
-      {(id) => <MitEinheit id={id} einheit="m" aria-label={`${label} in Metern`} inputMode="decimal" value={wert} onChange={(e) => setWert(e.target.value)} onBlur={() => void uebernehmen()} onKeyDown={(e) => enterUebernimmt(e, uebernehmen)} />}
+      {(id) => <MitEinheit id={id} einheit="m" aria-label={t.inMetern(label)} inputMode="decimal" value={wert} onChange={(e) => setWert(e.target.value)} onBlur={() => void uebernehmen()} onKeyDown={(e) => enterUebernimmt(e, uebernehmen)} />}
     </Feld>
   );
 }
 
 /** Ein gewählter Tisch, eine Bank oder Garnitur: Maße (Länge, Tiefe, bei der Garnitur die Tiefe der Bänke), dazu die Lage. */
 export function MoebelFelder({ halle, id, aendern, zeilen }: { halle: Halle; id: string; aendern: Aendern; zeilen: [string, string][] }) {
+  const t = useOberflaeche();
   const o = (halle.objekte ?? []).find((x) => x.id === id);
   if (!o || !istMoebel(o)) return null;
   const m = moebelMass(o);
   const setze = (patch: Partial<HallenObjekt>) => {
-    aendern((h) => ({ ...h, objekte: (h.objekte ?? []).map((x) => (x.id === id ? { ...x, ...patch } : x)) }), { was: `${MOEBEL_NAME[o.art]} ändern` });
+    aendern((h) => ({ ...h, objekte: (h.objekte ?? []).map((x) => (x.id === id ? { ...x, ...patch } : x)) }), { was: t.halle.eigenschaften.aendern(t.fach.MOEBEL_NAME[o.art]) });
   };
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-x-2 gap-y-3">
-        <MeterFeld label="Länge" cm={m.laenge} min={30} max={2000} setzen={(v) => setze({ laenge: v })} />
-        <MeterFeld label={o.art === "garnitur" ? "Tiefe Tisch" : "Tiefe"} cm={m.tiefe} min={10} max={500} setzen={(v) => setze({ tiefe: v })} />
-        {o.art === "garnitur" && <MeterFeld label="Tiefe Bank" cm={m.bankTiefe} min={10} max={200} setzen={(v) => setze({ bankTiefe: v })} />}
+        <MeterFeld label={t.halle.laenge} cm={m.laenge} min={30} max={2000} setzen={(v) => setze({ laenge: v })} />
+        <MeterFeld label={o.art === "garnitur" ? t.halle.eigenschaften.tiefeTisch : t.halle.tiefe} cm={m.tiefe} min={10} max={500} setzen={(v) => setze({ tiefe: v })} />
+        {o.art === "garnitur" && <MeterFeld label={t.halle.eigenschaften.tiefeBank} cm={m.bankTiefe} min={10} max={200} setzen={(v) => setze({ bankTiefe: v })} />}
       </div>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
         {zeilen.map(([k, v]) => (
@@ -309,6 +314,8 @@ export function MoebelFelder({ halle, id, aendern, zeilen }: { halle: Halle; id:
 
 /** Eine gewählte Fläche: Name, Art, Lage und Größe (wie in der Zeichnung: von links und von oben). */
 export function FlaecheFelder({ halle, i, aendern }: { halle: Halle; i: number; aendern: Aendern }) {
+  const t = useOberflaeche().halle;
+  const te = t.eigenschaften;
   const f = halle.flaechen[i];
   if (!f) return null;
   const quer = halle.laenge > halle.breite;
@@ -316,25 +323,25 @@ export function FlaecheFelder({ halle, i, aendern }: { halle: Halle; i: number; 
   const setzeG = (patch: Partial<typeof g>) => {
     const n = { ...g, ...patch };
     const neu = quer ? { x: n.y, y: n.x, breite: n.h, tiefe: n.b } : { x: n.x, y: n.y, breite: n.b, tiefe: n.h };
-    aendern((h) => ({ ...h, flaechen: h.flaechen.map((x, j) => (j === i ? { ...x, ...neu } : x)) }), { was: "Fläche ändern" });
+    aendern((h) => ({ ...h, flaechen: h.flaechen.map((x, j) => (j === i ? { ...x, ...neu } : x)) }), { was: te.flaecheAendern });
   };
   return (
     <div className="flex flex-col gap-3">
       <NameFeld i={i} name={f.name} aendern={aendern} breit />
-      <Feld label="Art">
+      <Feld label={te.art}>
         {(id) => (
-          <Auswahl id={id} value={f.art} onChange={(e) => aendern((h) => ({ ...h, flaechen: h.flaechen.map((x, j) => (j === i ? { ...x, art: e.target.value as HallenFlaeche["art"] } : x)) }), { was: "Fläche ändern" })}>
-            <option value="eingang">Eingang / Ausgang</option>
-            <option value="sperre">Freier Bereich</option>
-            <option value="volieren">Volierenbereich</option>
+          <Auswahl id={id} value={f.art} onChange={(e) => aendern((h) => ({ ...h, flaechen: h.flaechen.map((x, j) => (j === i ? { ...x, art: e.target.value as HallenFlaeche["art"] } : x)) }), { was: te.flaecheAendern })}>
+            <option value="eingang">{te.eingangAusgang}</option>
+            <option value="sperre">{te.freierBereich}</option>
+            <option value="volieren">{te.volierenbereich}</option>
           </Auswahl>
         )}
       </Feld>
       <div className="grid grid-cols-2 gap-x-2 gap-y-3">
-        <MeterFeld label="Von links" cm={g.x} min={0} setzen={(v) => setzeG({ x: v })} />
-        <MeterFeld label="Von oben" cm={g.y} min={0} setzen={(v) => setzeG({ y: v })} />
-        <MeterFeld label="Breite" cm={g.b} min={20} setzen={(v) => setzeG({ b: v })} />
-        <MeterFeld label="Höhe" cm={g.h} min={20} setzen={(v) => setzeG({ h: v })} />
+        <MeterFeld label={te.vonLinks} cm={g.x} min={0} setzen={(v) => setzeG({ x: v })} />
+        <MeterFeld label={te.vonOben} cm={g.y} min={0} setzen={(v) => setzeG({ y: v })} />
+        <MeterFeld label={t.breite} cm={g.b} min={20} setzen={(v) => setzeG({ b: v })} />
+        <MeterFeld label={t.hoehe} cm={g.h} min={20} setzen={(v) => setzeG({ h: v })} />
       </div>
     </div>
   );
@@ -366,49 +373,50 @@ export function HalleEigenschaften({
   setzen?: FehlendeSetzen;
   vorschlaege: () => void;
 }) {
+  const t = useOberflaeche();
+  const te = t.halle.eigenschaften;
+  const sprache = useSprache();
   const richtung = halle.richtung ?? "quer";
   const hg = halle.hauptgang ?? HAUPTGANG_STANDARD;
   const gruppe = "flex flex-col gap-3 border-t border-linie pt-4";
   return (
     <div className="flex flex-col gap-4">
       {/* Im Dialog „Halle“ (Tablet) steht der Titel schon im Dialog. */}
-      <PanelKopf ueber="Nichts gewählt" titel="Halle" className="[dialog_&]:hidden" />
+      <PanelKopf ueber={te.nichtsGewaehlt} titel={te.halle} className="[dialog_&]:hidden" />
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
-          <Gruppenkopf>Platz</Gruppenkopf>
-          {plan.nichtPlatziert.length > 0 && <Marke ton="fehler">{plan.nichtPlatziert.length} ohne Platz</Marke>}
+          <Gruppenkopf>{te.platz}</Gruppenkopf>
+          {plan.nichtPlatziert.length > 0 && <Marke ton="fehler">{te.ohnePlatz(plan.nichtPlatziert.length)}</Marke>}
         </div>
-        {plan.nichtPlatziert.length === 0 ? <span className="text-sm tabular-nums">Alle {platziert} Käfige haben Platz</span> : <OhnePlatz plan={plan} halle={halle} masse={masse} setzen={setzen} />}
+        {plan.nichtPlatziert.length === 0 ? <span className="text-sm tabular-nums">{te.alleHabenPlatz(platziert)}</span> : <OhnePlatz plan={plan} halle={halle} masse={masse} setzen={setzen} />}
       </div>
       <div className={gruppe}>
-        <Gruppenkopf>Maße</Gruppenkopf>
+        <Gruppenkopf>{te.masse}</Gruppenkopf>
         {halle.umriss ? (
           // Freier Grundriss: Breite und Länge ergeben sich aus den Wänden.
-          <span className="text-sm tabular-nums">
-            {meter(halle.breite)} × {meter(halle.laenge)} m, freier Grundriss
-          </span>
+          <span className="text-sm tabular-nums">{te.freierGrundriss(meter(halle.breite), meter(halle.laenge))}</span>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            <MeterFeld label="Breite" cm={halle.breite} min={300} setzen={(v) => aendernHalle({ breite: v }, "Breite")} />
-            <MeterFeld label="Länge" cm={halle.laenge} min={300} setzen={(v) => aendernHalle({ laenge: v }, "Länge")} />
+            <MeterFeld label={t.halle.breite} cm={halle.breite} min={300} setzen={(v) => aendernHalle({ breite: v }, t.halle.breite)} />
+            <MeterFeld label={t.halle.laenge} cm={halle.laenge} min={300} setzen={(v) => aendernHalle({ laenge: v }, t.halle.laenge)} />
           </div>
         )}
         {grundriss && <GrundrissKnopf halle={halle} masse={masse} uebernehmen={grundriss} />}
       </div>
       <div className={gruppe}>
-        <Gruppenkopf>Gänge</Gruppenkopf>
+        <Gruppenkopf>{te.gaenge}</Gruppenkopf>
         <div className="grid grid-cols-2 gap-2">
-          <MeterFeld label="Gang mindestens" cm={halle.gang} min={50} max={1000} setzen={(v) => aendernHalle({ gang: v }, "Gangbreite")} />
-          {hg.lage !== "keiner" && <MeterFeld label="Hauptgang" cm={hg.breite} min={50} max={2000} setzen={(v) => aendernHalle({ hauptgang: { ...hg, breite: v } }, "Hauptgang")} />}
+          <MeterFeld label={t.halle.gangMindestens} cm={halle.gang} min={50} max={1000} setzen={(v) => aendernHalle({ gang: v }, te.gangbreite)} />
+          {hg.lage !== "keiner" && <MeterFeld label={te.hauptgang} cm={hg.breite} min={50} max={2000} setzen={(v) => aendernHalle({ hauptgang: { ...hg, breite: v } }, te.hauptgang)} />}
         </div>
-        <Feld label="Lage Hauptgang">
+        <Feld label={te.lageHauptgang}>
           {(id) => (
             <Auswahl
               id={id}
               value={hg.lage}
               onChange={(e) => {
                 const lage = e.target.value as typeof hg.lage;
-                void aendernHalle({ hauptgang: { lage, breite: lage === "keiner" ? 0 : hg.breite || HAUPTGANG_STANDARD.breite } }, "Hauptgang");
+                void aendernHalle({ hauptgang: { lage, breite: lage === "keiner" ? 0 : hg.breite || HAUPTGANG_STANDARD.breite } }, te.hauptgang);
               }}
             >
               {(["anfang", "ende", "beide", "mitte", "keiner"] as const).map((l) => (
@@ -421,8 +429,8 @@ export function HalleEigenschaften({
         </Feld>
       </div>
       <div className={gruppe}>
-        <Gruppenkopf>Reihen</Gruppenkopf>
-        <div className="flex gap-0.5 rounded-md border border-linie-stark bg-papier p-0.5" role="radiogroup" aria-label="Reihen laufen">
+        <Gruppenkopf>{te.reihen}</Gruppenkopf>
+        <div className="flex gap-0.5 rounded-md border border-linie-stark bg-papier p-0.5" role="radiogroup" aria-label={te.reihenLaufen}>
           {(["quer", "laengs"] as const).map((x) => (
             <button
               key={x}
@@ -430,53 +438,53 @@ export function HalleEigenschaften({
               role="radio"
               aria-checked={richtung === x}
               className={`min-h-8 flex-1 rounded text-sm ${richtung === x ? "bg-weiss font-semibold text-tinte shadow-sm" : "text-grau hover:text-tinte"}`}
-              onClick={() => richtung !== x && void aendernHalle({ richtung: x }, "Reihenrichtung")}
+              onClick={() => richtung !== x && void aendernHalle({ richtung: x }, te.reihenrichtung)}
             >
-              {x === "quer" ? "quer" : "längs"}
+              {x === "quer" ? te.quer : te.laengs}
             </button>
           ))}
         </div>
-        <Feld label="Einzelreihen an den Wänden">
+        <Feld label={te.einzelreihen}>
           {(id) => (
             <Auswahl
               id={id}
               value={!halle.wandreihen ? "keine" : (halle.wandreiheSeite ?? "beide")}
               onChange={(e) => {
                 const w = e.target.value;
-                void aendernHalle(w === "keine" ? { wandreihen: false, wandreiheSeite: undefined } : { wandreihen: true, wandreiheSeite: w === "beide" ? undefined : (w as WandSeite) }, "Wandreihen");
+                void aendernHalle(w === "keine" ? { wandreihen: false, wandreiheSeite: undefined } : { wandreihen: true, wandreiheSeite: w === "beide" ? undefined : (w as WandSeite) }, te.wandreihen);
               }}
             >
-              <option value="beide">an beiden Wänden</option>
-              <option value="anfang">nur {wandText(halle, "anfang")}</option>
-              <option value="ende">nur {wandText(halle, "ende")}</option>
-              <option value="keine">keine</option>
+              <option value="beide">{te.anBeidenWaenden}</option>
+              <option value="anfang">{te.nur(wandText(halle, "anfang"))}</option>
+              <option value="ende">{te.nur(wandText(halle, "ende"))}</option>
+              <option value="keine">{te.keine}</option>
             </Auswahl>
           )}
         </Feld>
-        <Haken label="bündig an Wänden ohne Eingang" checked={halle.wandBuendig ?? true} onChange={(v) => void aendernHalle({ wandBuendig: v }, "bündig")} />
+        <Haken label={te.buendig} checked={halle.wandBuendig ?? true} onChange={(v) => void aendernHalle({ wandBuendig: v }, te.buendigKurz)} />
       </div>
       <details className="border-t border-linie pt-4">
-        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-grau hover:text-tinte">Grundplatten je Käfigart</summary>
+        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-grau hover:text-tinte">{te.grundplattenJeArt}</summary>
         <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-3">
-          {BLOCK_TYPEN.map((t) => {
-            const mass = kaefigMass(t, masse);
-            const vorgabe = mass ? kaefigeJePlatte(t, mass.breite, { platte: halle.platte, plattenMass: halle.plattenMass }) : null;
-            return <JePlatteFeld key={t} label={kaefigName(t, masse)} wert={halle.jePlatte?.[t]} vorgabe={vorgabe} setzen={(v) => aendernHalle({ jePlatte: { ...(halle.jePlatte ?? {}), [t]: v } }, "Käfige je Platte")} />;
+          {BLOCK_TYPEN.map((k) => {
+            const mass = kaefigMass(k, masse);
+            const vorgabe = mass ? kaefigeJePlatte(k, mass.breite, { platte: halle.platte, plattenMass: halle.plattenMass }) : null;
+            return <JePlatteFeld key={k} label={kaefigNameIn(t, k, masse)} wert={halle.jePlatte?.[k]} vorgabe={vorgabe} setzen={(v) => aendernHalle({ jePlatte: { ...(halle.jePlatte ?? {}), [k]: v } }, t.halle.kaefigeJePlatte)} />;
           })}
         </div>
       </details>
       <div className={gruppe}>
-        <Gruppenkopf>Aufstellung</Gruppenkopf>
+        <Gruppenkopf>{te.aufstellung}</Gruppenkopf>
         <Knopf className="w-full justify-start" onClick={vorschlaege}>
           <WzSymbol name="vorschlaege" klein />
-          Stellvorschläge ansehen
+          {te.stellvorschlaegeAnsehen}
         </Knopf>
       </div>
       <div className="flex flex-col gap-2 border-t border-linie pt-4 text-sm">
         <div className="flex items-center justify-between gap-2">
-          <Gruppenkopf>Plan</Gruppenkopf>
+          <Gruppenkopf>{te.plan}</Gruppenkopf>
         </div>
-        <AutomatikSchalter an={!plan.fest} umschalten={automatik} festAm={plan.fest ? new Date(plan.fest.am).toLocaleDateString("de-DE") : null} />
+        <AutomatikSchalter an={!plan.fest} umschalten={automatik} festAm={plan.fest ? new Date(plan.fest.am).toLocaleDateString(LOCALE[sprache]) : null} />
       </div>
     </div>
   );
@@ -484,6 +492,7 @@ export function HalleEigenschaften({
 
 /** Käfige je Grundplatte für eine Käfigart; leer = Vorgabe (grau im Feld). */
 export function JePlatteFeld({ label, wert, vorgabe, setzen }: { label: string; wert: number | undefined; vorgabe: number | null; setzen: (v: number | undefined) => Promise<boolean> }) {
+  const te = useOberflaeche().halle.eigenschaften;
   const [text, setText] = useState(wert ? String(wert) : "");
   useEffect(() => setText(wert ? String(wert) : ""), [wert]);
   const laeuft = useRef(false);
@@ -504,7 +513,7 @@ export function JePlatteFeld({ label, wert, vorgabe, setzen }: { label: string; 
   };
   return (
     <Feld label={label}>
-      {(id) => <Eingabe id={id} inputMode="numeric" placeholder={vorgabe ? `${vorgabe} (Vorgabe)` : "Maß fehlt"} value={text} onChange={(e) => setText(e.target.value)} onBlur={() => void uebernehmen()} onKeyDown={(e) => enterUebernimmt(e, uebernehmen)} className="tabular-nums" />}
+      {(id) => <Eingabe id={id} inputMode="numeric" placeholder={vorgabe ? te.vorgabe(vorgabe) : te.massFehlt} value={text} onChange={(e) => setText(e.target.value)} onBlur={() => void uebernehmen()} onKeyDown={(e) => enterUebernimmt(e, uebernehmen)} className="tabular-nums" />}
     </Feld>
   );
 }
@@ -514,6 +523,7 @@ export function JePlatteFeld({ label, wert, vorgabe, setzen }: { label: string; 
  * die Fläche, für die das Feld geöffnet wurde.
  */
 export function NameFeld({ i, name, aendern, breit }: { i: number; name: string; aendern: Aendern; breit?: boolean }) {
+  const te = useOberflaeche().halle.eigenschaften;
   const [wert, setWert] = useState(name);
   const stand = useRef({ wert: name, gespeichert: name });
   const uhr = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -523,14 +533,14 @@ export function NameFeld({ i, name, aendern, breit }: { i: number; name: string;
     const neu = stand.current.wert.trim().slice(0, 100);
     if (!neu || neu === stand.current.gespeichert) return;
     stand.current.gespeichert = neu;
-    aendern((h) => ({ ...h, flaechen: h.flaechen.map((f, j) => (j === i ? { ...f, name: neu } : f)) }), { was: "Umbenennen" });
+    aendern((h) => ({ ...h, flaechen: h.flaechen.map((f, j) => (j === i ? { ...f, name: neu } : f)) }), { was: te.umbenennen });
   };
   const sichernRef = useRef(sichern);
   sichernRef.current = sichern;
   useEffect(() => () => sichernRef.current(), []);
   return (
     <Eingabe
-      aria-label="Name der Fläche"
+      aria-label={te.nameFlaeche}
       value={wert}
       maxLength={100}
       onChange={(e) => {

@@ -1,5 +1,7 @@
+import { LOCALE } from "@schau/domain";
 import { useMemo, useState, type FormEvent } from "react";
 import { datum, fehlerText } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
 import { Rassebilder } from "./rassebilder";
 import { trpc } from "../trpc";
 import { Dialog, Eingabe, FehlerAnzeige, Feld, HilfeLink, Hinweis, Knopf, Laden, Leer, Marke, SEITE, Seitenkopf, Suchfeld, TabellenRahmen, Textfeld, useFrage, useMeldung } from "../ui";
@@ -14,6 +16,11 @@ export function Stammdaten() {
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
+  const ta = useOberflaeche();
+  const t = ta.vorlagen.stammdaten;
+  const sprache = useSprache();
+  const zahl = (n: number) => n.toLocaleString(LOCALE[sprache]);
+  const gesamt = (versionen.data ?? []).reduce((n, v) => n + v.farbenschlaege, 0);
   const loeschen = trpc.stammdaten.loeschen.useMutation({
     onSuccess: () => utils.stammdaten.versionen.invalidate(),
     onError: (e) => meldung(fehlerText(e), "fehler"),
@@ -22,40 +29,39 @@ export function Stammdaten() {
 
   const einspielenKnopf = istAdmin && (
     <Knopf variante="primaer" onClick={() => setNeu(true)}>
-      Verzeichnis einspielen
+      {t.einspielen}
     </Knopf>
   );
 
   return (
     <div className={SEITE}>
-      <Seitenkopf titel="Rassen und Farbenschläge" hilfe="rassen-und-farbenschläge" aktionen={einspielenKnopf} />
+      {/* bleibt deutsch: Abschnitt im Handbuch */}
+      <Seitenkopf titel={t.titel} hilfe="rassen-und-farbenschläge" aktionen={einspielenKnopf} />
       {versionen.error ? (
         <FehlerAnzeige fehler={versionen.error} nochmal={() => versionen.refetch()} />
       ) : versionen.isLoading ? (
         <Laden />
       ) : versionen.data?.length === 0 ? (
-        <Leer titel="Noch kein Verzeichnis vorhanden">{einspielenKnopf && <div className="mt-2">{einspielenKnopf}</div>}</Leer>
+        <Leer titel={t.leer}>{einspielenKnopf && <div className="mt-2">{einspielenKnopf}</div>}</Leer>
       ) : (
         <TabellenRahmen
           fuss={
             <>
-              <span>
-                {versionen.data?.length} {versionen.data?.length === 1 ? "Version" : "Versionen"}
-              </span>
-              <span>{(versionen.data ?? []).reduce((n, v) => n + v.farbenschlaege, 0).toLocaleString("de-DE")} Farbenschläge</span>
+              <span>{t.versionen(versionen.data?.length ?? 0)}</span>
+              <span>{t.farbenschlaege(zahl(gesamt), gesamt)}</span>
             </>
           }
         >
           <table className="tabelle">
             <thead>
               <tr>
-                <th>Name</th>
-                <th className="text-right">Jahr</th>
-                <th>Quelle</th>
-                <th className="text-right">Farbenschläge</th>
-                <th>Eingespielt</th>
+                <th>{ta.allgemein.name}</th>
+                <th className="text-right">{t.jahr}</th>
+                <th>{t.quelle}</th>
+                <th className="text-right">{t.farbenschlaegeSpalte}</th>
+                <th>{t.eingespielt}</th>
                 <th>
-                  <span className="sr-only">Aktionen</span>
+                  <span className="sr-only">{t.aktionen}</span>
                 </th>
               </tr>
             </thead>
@@ -68,34 +74,34 @@ export function Stammdaten() {
                     </button>
                     {!v.eigene && (
                       <span className="mt-1 block">
-                        <Marke>für alle Vereine bereitgestellt</Marke>
+                        <Marke>{t.fuerAlle}</Marke>
                       </span>
                     )}
                   </td>
                   <td className="text-right tabular-nums">{v.jahr}</td>
                   <td className="text-grau">{v.quelle || "–"}</td>
-                  <td className="text-right tabular-nums">{v.farbenschlaege.toLocaleString("de-DE")}</td>
+                  <td className="text-right tabular-nums">{zahl(v.farbenschlaege)}</td>
                   <td className="whitespace-nowrap tabular-nums">{datum(v.createdAt)}</td>
                   <td className="whitespace-nowrap text-right">
                     <span className="inline-flex flex-wrap justify-end gap-1">
                       <Knopf variante="leise" className="min-h-8 px-2" onClick={() => setAnsicht(v.id)}>
-                        Ansehen
+                        {t.ansehen}
                       </Knopf>
                       <Knopf variante="leise" className="min-h-8 px-2" onClick={() => setBilder({ id: v.id, name: v.name })}>
-                        Bilder
+                        {t.bilder}
                       </Knopf>
                       {istAdmin && v.eigene && (
                         <Knopf variante="leise" className="min-h-8 px-2" onClick={() => setErgaenzen({ id: v.id, name: v.name })}>
-                          Ergänzen
+                          {t.ergaenzen}
                         </Knopf>
                       )}
                       {istAdmin && v.eigene && (
                         <Knopf
                           variante="leise"
                           className="min-h-8 px-2 text-kamm hover:bg-kamm-hell"
-                          onClick={async () => (await bestaetige({ titel: `„${v.name}“ löschen?`, knopf: "Löschen", gefahr: true })) && loeschen.mutate({ id: v.id })}
+                          onClick={async () => (await bestaetige({ titel: ta.vorlagen.liste.loeschenFrage(v.name), knopf: ta.allgemein.loeschen, gefahr: true })) && loeschen.mutate({ id: v.id })}
                         >
-                          Löschen
+                          {ta.allgemein.loeschen}
                         </Knopf>
                       )}
                     </span>
@@ -106,16 +112,16 @@ export function Stammdaten() {
           </table>
         </TabellenRahmen>
       )}
-      <Dialog offen={neu} onSchliessen={() => setNeu(false)} titel="Verzeichnis einspielen" breit>
+      <Dialog offen={neu} onSchliessen={() => setNeu(false)} titel={t.einspielen} breit>
         <Import fertig={() => setNeu(false)} />
       </Dialog>
-      <Dialog offen={ergaenzen != null} onSchliessen={() => setErgaenzen(null)} titel={`Ergänzen: ${ergaenzen?.name ?? ""}`} breit>
+      <Dialog offen={ergaenzen != null} onSchliessen={() => setErgaenzen(null)} titel={t.ergaenzenTitel(ergaenzen?.name ?? "")} breit>
         {ergaenzen && <Ergaenzen versionId={ergaenzen.id} />}
       </Dialog>
-      <Dialog offen={bilder != null} onSchliessen={() => setBilder(null)} titel={`Rassebilder: ${bilder?.name ?? ""}`} breit>
+      <Dialog offen={bilder != null} onSchliessen={() => setBilder(null)} titel={t.rassebilderTitel(bilder?.name ?? "")} breit>
         {bilder && <Rassebilder versionId={bilder.id} istAdmin={istAdmin} />}
       </Dialog>
-      <Dialog offen={ansicht != null} onSchliessen={() => setAnsicht(null)} titel="Verzeichnis" breit>
+      <Dialog offen={ansicht != null} onSchliessen={() => setAnsicht(null)} titel={t.verzeichnis} breit>
         {ansicht != null && <Baum versionId={ansicht} />}
       </Dialog>
     </div>
@@ -129,10 +135,12 @@ function Import({ fertig }: { fertig: () => void }) {
   const [csv, setCsv] = useState("");
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const ta = useOberflaeche();
+  const t = ta.vorlagen.stammdaten;
   const imp = trpc.stammdaten.importieren.useMutation({
     onSuccess: (r) => {
       utils.stammdaten.versionen.invalidate();
-      meldung(`${r.farbenschlaege} Farbenschläge eingespielt.${r.hinweise.length ? ` ${r.hinweise.length} Zeilen übersprungen.` : ""}`);
+      meldung([t.importiert(r.farbenschlaege), ...(r.hinweise.length ? [t.uebersprungen(r.hinweise.length)] : [])].join(" "));
       fertig();
     },
   });
@@ -148,21 +156,21 @@ function Import({ fertig }: { fertig: () => void }) {
   return (
     <form onSubmit={senden} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-3">
-        <Feld label="Name" className="sm:col-span-2">{(id) => <Eingabe id={id} value={name} onChange={(e) => setName(e.target.value)} required />}</Feld>
-        <Feld label="Jahr">{(id) => <Eingabe id={id} type="number" value={jahr} onChange={(e) => setJahr(Number(e.target.value))} required />}</Feld>
+        <Feld label={ta.allgemein.name} className="sm:col-span-2">{(id) => <Eingabe id={id} value={name} onChange={(e) => setName(e.target.value)} required />}</Feld>
+        <Feld label={t.jahr}>{(id) => <Eingabe id={id} type="number" value={jahr} onChange={(e) => setJahr(Number(e.target.value))} required />}</Feld>
       </div>
-      <Feld label="Quelle" hinweis="z. B. „BDRG-Verzeichnis, Stand August 2026“">{(id) => <Eingabe id={id} value={quelle} onChange={(e) => setQuelle(e.target.value)} />}</Feld>
-      <Feld label="Datei" hinweis="CSV: Sparte;Rasse;Farbenschlag">
+      <Feld label={t.quelle} hinweis={t.quelleHinweis}>{(id) => <Eingabe id={id} value={quelle} onChange={(e) => setQuelle(e.target.value)} />}</Feld>
+      <Feld label={t.datei} hinweis={t.dateiHinweis}>
         {(id) => <input id={id} type="file" accept=".csv,.txt,text/csv" onChange={(e) => datei(e.target.files?.[0])} className="text-sm file:mr-3 file:rounded-md file:border file:border-linie-stark file:bg-weiss file:px-3 file:py-1.5 file:font-semibold file:text-tinte hover:file:bg-papier" />}
       </Feld>
-      <Feld label="Inhalt">
-        {(id) => <Textfeld id={id} rows={8} value={csv} onChange={(e) => setCsv(e.target.value)} placeholder="Sparte;Rasse;Farbenschlag" className="font-mono text-sm" required />}
+      <Feld label={t.inhalt}>
+        {(id) => <Textfeld id={id} rows={8} value={csv} onChange={(e) => setCsv(e.target.value)} placeholder={t.inhaltPlatzhalter} className="font-mono text-sm" required />}
       </Feld>
       {imp.error && <Hinweis ton="fehler">{fehlerText(imp.error)}</Hinweis>}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-linie pt-4">
-        <HilfeLink abschnitt="verzeichnis-einspielen">Hilfe zum Einspielen</HilfeLink>
+        <HilfeLink abschnitt="verzeichnis-einspielen">{t.hilfeEinspielen}</HilfeLink>
         <Knopf type="submit" variante="primaer" laedt={imp.isPending}>
-          Einspielen
+          {t.einspielenKnopf}
         </Knopf>
       </div>
     </form>
@@ -177,6 +185,7 @@ function Ergaenzen({ versionId }: { versionId: number }) {
   const [farben, setFarben] = useState("");
   const utils = trpc.useUtils();
   const meldung = useMeldung();
+  const t = useOberflaeche().vorlagen.stammdaten;
   const gleich = (a: string, b: string) => a.trim().localeCompare(b.trim(), "de", { sensitivity: "accent" }) === 0;
   const sp = gliederung.data?.sparten.find((s) => gleich(s.name, sparte));
   const rassen = useMemo(() => (sp ? (gliederung.data?.rassen ?? []).filter((r) => r.sparteId === sp.id) : []), [sp, gliederung.data]);
@@ -187,10 +196,10 @@ function Ergaenzen({ versionId }: { versionId: number }) {
   const speichern = trpc.stammdaten.ergaenzen.useMutation({
     onSuccess: async (r) => {
       await Promise.all([utils.stammdaten.versionen.invalidate(), utils.stammdaten.gliederung.invalidate({ versionId }), utils.stammdaten.baum.invalidate({ versionId }), utils.stammdaten.suche.invalidate()]);
-      const teile = [`${r.angelegt.length} Farbenschl${r.angelegt.length === 1 ? "ag" : "äge"} bei „${r.rasse}“ aufgenommen`];
-      if (r.neueRasse) teile.push("Rasse neu angelegt");
-      if (r.neueSparte) teile.push("Sparte neu angelegt");
-      if (r.schonDa.length) teile.push(`schon vorhanden: ${r.schonDa.join(", ")}`);
+      const teile = [t.aufgenommen(r.angelegt.length, r.rasse)];
+      if (r.neueRasse) teile.push(t.rasseNeu);
+      if (r.neueSparte) teile.push(t.sparteNeu);
+      if (r.schonDa.length) teile.push(t.schonVorhanden(r.schonDa.join(", ")));
       meldung(`${teile.join(" · ")}.`);
       setFarben("");
     },
@@ -204,7 +213,7 @@ function Ergaenzen({ versionId }: { versionId: number }) {
   return (
     <form onSubmit={senden} className="flex flex-col gap-4">
       <div className="grid gap-4 md:grid-cols-2">
-        <Feld label="Sparte" hinweis={sparte.trim() ? (sp ? "vorhanden" : "wird neu angelegt") : "z. B. Hühner, Zwerghühner, Tauben"}>
+        <Feld label={t.sparte} hinweis={sparte.trim() ? (sp ? t.vorhanden : t.wirdNeu) : t.sparteBeispiel}>
           {(id) => (
             <>
               <Eingabe id={id} list="ergaenzen-sparten" value={sparte} onChange={(e) => { setSparte(e.target.value); setRasse(""); }} required autoComplete="off" />
@@ -214,7 +223,7 @@ function Ergaenzen({ versionId }: { versionId: number }) {
             </>
           )}
         </Feld>
-        <Feld label="Rasse" hinweis={rasse.trim() ? (ra ? `vorhanden, ${vorhandeneFarben.length || "…"} Farbenschläge` : "wird neu angelegt") : sp ? `${rassen.length} Rassen in dieser Sparte` : "erst die Sparte wählen"}>
+        <Feld label={t.rasse} hinweis={rasse.trim() ? (ra ? t.rasseVorhanden(vorhandeneFarben.length) : t.wirdNeu) : sp ? t.rassenInSparte(rassen.length) : t.erstSparte}>
           {(id) => (
             <>
               <Eingabe id={id} list="ergaenzen-rassen" value={rasse} onChange={(e) => setRasse(e.target.value)} required autoComplete="off" disabled={!sparte.trim()} />
@@ -225,19 +234,20 @@ function Ergaenzen({ versionId }: { versionId: number }) {
           )}
         </Feld>
       </div>
-      <Feld label="Farbenschläge" hinweis="Einer je Zeile">
+      <Feld label={t.farbenschlaegeSpalte} hinweis={t.einerJeZeile}>
         {(id) => <Textfeld id={id} rows={5} value={farben} onChange={(e) => setFarben(e.target.value)} required />}
       </Feld>
       {ra && vorhandeneFarben.length > 0 && (
         <p className="text-sm text-grau">
-          Bisher bei {ra.name}: {vorhandeneFarben.join(", ")}
+          {t.bisherBei(ra.name, vorhandeneFarben.join(", "))}
         </p>
       )}
       {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-linie pt-4">
-        <HilfeLink abschnitt="ergänzen-fehlende-rasse-oder-farbenschlag">Hilfe zum Ergänzen</HilfeLink>
+        {/* bleibt deutsch: Abschnitt im Handbuch */}
+        <HilfeLink abschnitt="ergänzen-fehlende-rasse-oder-farbenschlag">{t.hilfeErgaenzen}</HilfeLink>
         <Knopf type="submit" variante="primaer" laedt={speichern.isPending} disabled={!liste.length}>
-          Aufnehmen
+          {t.aufnehmen}
         </Knopf>
       </div>
     </form>
@@ -247,30 +257,31 @@ function Ergaenzen({ versionId }: { versionId: number }) {
 function Baum({ versionId }: { versionId: number }) {
   const baum = trpc.stammdaten.baum.useQuery({ versionId });
   const [filter, setFilter] = useState("");
+  const t = useOberflaeche().vorlagen.stammdaten;
   if (baum.error) return <FehlerAnzeige fehler={baum.error} nochmal={() => baum.refetch()} />;
   if (baum.isLoading) return <Laden />;
   const f = filter.toLowerCase();
   const zeilen = (baum.data ?? []).filter((z) => !f || `${z.sparte} ${z.rasse} ${z.farbenschlag}`.toLowerCase().includes(f));
   return (
     <TabellenRahmen
-      kopf={<Suchfeld aria-label="Rassen und Farbenschläge durchsuchen" placeholder="Sparte, Rasse oder Farbenschlag" value={filter} onChange={(e) => setFilter(e.target.value)} />}
+      kopf={<Suchfeld aria-label={t.durchsuchen} placeholder={t.suchPlatzhalter} value={filter} onChange={(e) => setFilter(e.target.value)} />}
       fuss={
         <span>
-          {zeilen.length === (baum.data ?? []).length ? `${zeilen.length} Farbenschläge` : `${zeilen.length} von ${(baum.data ?? []).length} Farbenschlägen`}
+          {zeilen.length === (baum.data ?? []).length ? t.farbenschlaege(String(zeilen.length), zeilen.length) : t.vonFarbenschlaegen(zeilen.length, (baum.data ?? []).length)}
         </span>
       }
     >
       <div className="max-h-[60vh] overflow-auto">
         {zeilen.length === 0 ? (
-          <p className="px-4 py-10 text-center text-grau">Keine Treffer.</p>
+          <p className="px-4 py-10 text-center text-grau">{t.keineTreffer}</p>
         ) : (
           <table className="tabelle">
             <thead>
               <tr>
-                <th className="text-right">Folge</th>
-                <th>Sparte</th>
-                <th>Rasse</th>
-                <th>Farbenschlag</th>
+                <th className="text-right">{t.folge}</th>
+                <th>{t.sparte}</th>
+                <th>{t.rasse}</th>
+                <th>{t.farbenschlag}</th>
               </tr>
             </thead>
             <tbody>

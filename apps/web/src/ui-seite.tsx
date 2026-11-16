@@ -1,7 +1,7 @@
 /** Bausteine einer Seite: Hinweise, Marken, Seitenkopf, Abschnitte, Tabellenrahmen, Suche, Kennzahlen, Lade- und Leerzustand. */
 import { useEffect, type InputHTMLAttributes, type ReactNode } from "react";
 import { fehlerText } from "./lib";
-import { useTexte } from "./sprache";
+import { useOberflaeche, useTexte } from "./sprache";
 import { Symbol } from "./symbole";
 import { cx, TON, type Ton } from "./ui-basis";
 import { feldKlasse } from "./ui-felder";
@@ -28,6 +28,7 @@ export function Marke({ ton = "neutral", children }: { ton?: Ton | "neutral"; ch
 /** Fenstertitel je Seite – für Tabs, Verlauf und Screenreader. */
 export function useSeitentitel(titel: string) {
   useEffect(() => {
+    // Produktname, in allen Sprachen gleich (bleibt deutsch)
     document.title = titel ? `${titel} – SchauFUCHS` : "SchauFUCHS";
   }, [titel]);
 }
@@ -70,6 +71,7 @@ export function Seitenkopf({
   marke?: ReactNode;
 }) {
   useSeitentitel(titel);
+  const t = useOberflaeche().rahmen.seite;
   return (
     <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
       <div className="min-w-0">
@@ -83,7 +85,7 @@ export function Seitenkopf({
         <div className="flex flex-wrap items-center gap-2">
           {hilfe && (
             <span className="mr-2">
-              <HilfeLink abschnitt={hilfe} teil={hilfeTeil}>{hilfeText ?? `Hilfe zu ${titel}`}</HilfeLink>
+              <HilfeLink abschnitt={hilfe} teil={hilfeTeil}>{hilfeText ?? t.hilfeZu(titel)}</HilfeLink>
             </span>
           )}
           {aktionen}
@@ -217,14 +219,15 @@ export function Laden() {
 
 /** Ladefehler einer Seite, wahlweise mit „Erneut versuchen“. */
 export function FehlerAnzeige({ fehler, nochmal }: { fehler: unknown; nochmal?: () => void }) {
+  const t = useOberflaeche().rahmen.seite;
   if (!fehler) return null;
   return (
     <Hinweis ton="fehler" className="my-4">
-      <p className="font-semibold">Die Daten konnten nicht geladen werden.</p>
+      <p className="font-semibold">{t.ladeFehler}</p>
       <p>{fehlerText(fehler)}</p>
       {nochmal && (
         <Knopf className="mt-3" onClick={nochmal}>
-          Erneut versuchen
+          {t.erneutVersuchen}
         </Knopf>
       )}
     </Hinweis>

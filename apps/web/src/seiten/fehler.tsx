@@ -1,5 +1,5 @@
 import { isRouteErrorResponse, Link, useParams, useRouteError } from "react-router-dom";
-import { useTexte } from "../sprache";
+import { useOberflaeche, useTexte } from "../sprache";
 import { Knopf, knopfKlasse, SCHMAL, SEITE, SEITENRAND, useSeitentitel } from "../ui";
 
 /**
@@ -14,6 +14,7 @@ export function FehlerSeite({ imRahmen }: { imRahmen?: boolean }) {
   if (fehler) console.error(fehler);
   // Auf den Seiten für Aussteller in deren Sprache, sonst deutsch (Entscheidung 020).
   const t = useTexte().fehler;
+  const zurSchau = useOberflaeche().rahmen.fehler.zurSchau;
   const titel = nichtGefunden ? t.seiteFehlt : t.aufgetreten;
   useSeitentitel(titel);
   return (
@@ -36,7 +37,7 @@ export function FehlerSeite({ imRahmen }: { imRahmen?: boolean }) {
         </Link>
         {Number(schauId) > 0 && (
           <Link to={`/schau/${schauId}`} className={knopfKlasse()}>
-            Zur Übersicht der Schau
+            {zurSchau}
           </Link>
         )}
       </div>

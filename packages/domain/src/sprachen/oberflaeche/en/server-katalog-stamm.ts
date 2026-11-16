@@ -1,0 +1,48 @@
+import type { OberflaecheTexte } from "..";
+
+export const stamm: OberflaecheTexte["serverKatalog"]["stamm"] = {
+  bild: {
+    groesser2: "The image is larger than 2 MB. Please make it smaller (e.g. 2000 pixels wide).",
+    groesser2Kurz: "The image is larger than 2 MB. Please make it smaller.",
+    groesser5: "The image is larger than 5 MB.",
+    logo: "The logo is larger than 600 KB. Please make it smaller (e.g. 600 pixels wide) – it appears on every receipt.",
+    format: "Only images in JPEG or PNG format.",
+    nurJpeg: "Only images in JPEG format. Please save the photo as JPEG.",
+    lesen: "The image cannot be read. Please save it again as JPEG or PNG.",
+    lesenJpeg: "The image cannot be read. Please save it again as JPEG.",
+    beschaedigt: "The image cannot be read (damaged or incomplete). Please save it again.",
+    unvollstaendig: "The image is incomplete. Please save or download it again.",
+    pixel: (breite: string, hoehe: string) => `At ${breite} × ${hoehe} pixels, the image is too large. Please make it smaller.`,
+    pixel1200: (breite: string, hoehe: string) => `At ${breite} × ${hoehe} pixels, the image is too large. Please make it smaller (e.g. 1200 pixels wide).`,
+    png: (breite: string, hoehe: string) => `At ${breite} × ${hoehe} pixels, the PNG image with a transparent background is too large for printing the catalogue. Please save it as JPEG or reduce it to at most 1.5 million pixels (e.g. 1500 × 1000).`,
+    fremd: "This image does not belong to the show.",
+    fehlt: "Image not found.",
+    beitragFehlt: "Article not found.",
+    beitragUnbekannt: "Unknown article.",
+  },
+  lizenz: {
+    fehlt: "Licence missing – e.g. “own image”, “public domain”, “CC0” or “CC BY-SA 4.0”.",
+    nc: "Licence “non-commercial” (NC): the catalogue is sold – this image must not be included.",
+    nd: "Licence “no derivatives” (ND): in the catalogue the image is cropped and reduced – this image must not be included.",
+    urheber: "Author missing – the CC BY licence requires attribution.",
+    link: "Link to the licence missing – please enter the address of the licence (e.g. https://creativecommons.org/licenses/by-sa/4.0/).",
+  },
+  stammdaten: {
+    versionUnbekannt: "This master data version does not exist.",
+    keineZeilen: "The file contains no valid lines.",
+    versionFehlt: "Version not found.",
+    nichtErgaenzen: "This version is provided for all clubs and cannot be extended. Please import your own list.",
+    nichtLoeschen: "This version is provided for all clubs and cannot be deleted.",
+    schonDa: (rasse: string) => `All the colour varieties given already exist for “${rasse}”.`,
+    verwendet: "This version is used by a show.",
+    verweisen: "Entered animals refer to this version – it cannot be deleted.",
+    anfuehrung: (zeile: string) => `Line ${zeile}: quotation marks not closed.`,
+    dreiSpalten: (zeile: string) => `Line ${zeile}: three columns expected (Sparte;Rasse;Farbenschlag).`,
+    mehrSpalten: (zeile: string) => `Line ${zeile}: more than three columns – separator in a field? Put the field in quotation marks.`,
+    doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Line ${zeile}: duplicate (${rasse}, ${farbenschlag}).`,
+  },
+  druckvorlage: {
+    fehlt: "Template not found.",
+    andereSchau: "This template belongs to another show.",
+  },
+};

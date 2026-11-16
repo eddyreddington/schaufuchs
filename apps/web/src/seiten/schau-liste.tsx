@@ -1,7 +1,8 @@
-import { PHASEN, PHASEN_LABEL, type Phase } from "@schau/domain";
+import { PHASEN, serverText, type Phase } from "@schau/domain";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { datum, fehlerText } from "../lib";
+import { useOberflaeche, useSprache } from "../sprache";
 import { Symbol } from "../symbole";
 import { trpc } from "../trpc";
 import { Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, Laden, Leer, Marke, SEITE, Seitenkopf, Segmente, Suchfeld, TabellenRahmen, useMeldung } from "../ui";
@@ -12,6 +13,8 @@ type Stand = "" | "laufend" | "abgeschlossen";
 const PHASE_TON = (p: Phase) => (p === "abgeschlossen" || p === "vorbereitung" ? "neutral" : "info");
 
 export function SchauListe() {
+  const t = useOberflaeche();
+  const tl = t.schau.liste;
   const liste = trpc.schau.liste.useQuery();
   const status = trpc.auth.status.useQuery();
   const [neu, setNeu] = useState(false);
@@ -28,14 +31,14 @@ export function SchauListe() {
   );
   const anlegenKnopf = istAdmin && (
     <Knopf variante="primaer" onClick={() => setNeu(true)}>
-      Neue Schau anlegen
+      {tl.neuAnlegen}
     </Knopf>
   );
   return (
     <div className={SEITE}>
       <Seitenkopf
-        titel="Schauen"
-        hilfe={istAdmin ? "schau-anlegen" : "eine-schau-auswählen"}
+        titel={tl.titel}
+        hilfe={istAdmin ? "schau-anlegen" : "eine-schau-auswählen" /* bleibt deutsch: Anker im Handbuch */}
         hilfeTeil={istAdmin ? undefined : "helfer"}
         aktionen={anlegenKnopf}
       />
@@ -44,44 +47,40 @@ export function SchauListe() {
       ) : liste.isLoading ? (
         <Laden />
       ) : alle.length === 0 ? (
-        <Leer titel="Noch keine Schau angelegt">{anlegenKnopf && <div className="mt-2">{anlegenKnopf}</div>}</Leer>
+        <Leer titel={tl.keineSchau}>{anlegenKnopf && <div className="mt-2">{anlegenKnopf}</div>}</Leer>
       ) : (
         <TabellenRahmen
           kopf={
             <>
-              <Suchfeld aria-label="Schau suchen" placeholder="Name oder Ort" value={q} onChange={(e) => setQ(e.target.value)} />
+              <Suchfeld aria-label={tl.suchen} placeholder={tl.suchePlatzhalter} value={q} onChange={(e) => setQ(e.target.value)} />
               <Segmente
-                label="Stand"
+                label={tl.stand}
                 wert={stand}
                 onChange={setStand}
                 optionen={[
-                  { wert: "" as const, label: "Alle", anzahl: alle.length },
-                  { wert: "laufend" as const, label: "Laufend", anzahl: laufend },
-                  { wert: "abgeschlossen" as const, label: "Abgeschlossen", anzahl: alle.length - laufend },
+                  { wert: "" as const, label: t.allgemein.alle, anzahl: alle.length },
+                  { wert: "laufend" as const, label: tl.laufend, anzahl: laufend },
+                  { wert: "abgeschlossen" as const, label: tl.abgeschlossen, anzahl: alle.length - laufend },
                 ]}
               />
             </>
           }
           fuss={
             <>
-              <span>
-                {sichtbar.length} {sichtbar.length === 1 ? "Schau" : "Schauen"}
-              </span>
-              <span>
-                {laufend} laufend, {alle.length - laufend} abgeschlossen
-              </span>
+              <span>{tl.anzahl(sichtbar.length)}</span>
+              <span>{tl.standZahlen(laufend, alle.length - laufend)}</span>
             </>
           }
         >
           {sichtbar.length === 0 ? (
-            <p className="px-4 py-10 text-center text-grau">Keine Treffer.</p>
+            <p className="px-4 py-10 text-center text-grau">{tl.keineTreffer}</p>
           ) : (
             <>
               <div aria-hidden className="hidden grid-cols-[minmax(0,1fr)_8rem_8rem_12rem_1rem] gap-x-6 border-b border-linie-stark px-4 py-2 text-sm font-semibold text-grau md:grid">
-                <span>Schau</span>
-                <span>Meldeschluss</span>
-                <span>Bewertung</span>
-                <span>Phase</span>
+                <span>{tl.spalteSchau}</span>
+                <span>{tl.spalteMeldeschluss}</span>
+                <span>{tl.spalteBewertung}</span>
+                <span>{tl.spaltePhase}</span>
                 <span />
               </div>
               <ul className="divide-y divide-linie">
@@ -96,20 +95,21 @@ export function SchauListe() {
                         <span className="min-w-0">
                           <span className="flex flex-wrap items-center gap-2">
                             <span className="truncate font-semibold group-hover:text-band">{s.name}</span>
-                            {s.test && <Marke ton="warnung">Testschau</Marke>}
+                            {s.test && <Marke ton="warnung">{tl.testschau}</Marke>}
                           </span>
                           <span className="block truncate text-sm text-grau">
                             {s.ort || "–"}
                             <span className="md:hidden">
-                              {" · "}Meldeschluss {datum(s.meldeschluss)}
-                              {s.bewertungAm && ` · Bewertung ${datum(s.bewertungAm)}`}
+                              {" · "}
+                              {tl.meldeschlussAm(datum(s.meldeschluss))}
+                              {s.bewertungAm && tl.bewertungZusatz(datum(s.bewertungAm))}
                             </span>
                           </span>
                         </span>
                         <span className="hidden text-sm tabular-nums md:block">{datum(s.meldeschluss)}</span>
                         <span className="hidden text-sm tabular-nums md:block">{datum(s.bewertungAm)}</span>
                         <span className="flex items-center gap-2 justify-self-end md:justify-self-start">
-                          <Marke ton={PHASE_TON(s.phase)}>{PHASEN_LABEL[s.phase]}</Marke>
+                          <Marke ton={PHASE_TON(s.phase)}>{t.fach.PHASEN_LABEL[s.phase]}</Marke>
                           <span className="hidden text-xs tabular-nums text-grau lg:inline">
                             {schritt}/{PHASEN.length}
                           </span>
@@ -124,7 +124,7 @@ export function SchauListe() {
           )}
         </TabellenRahmen>
       )}
-      <Dialog offen={neu} onSchliessen={() => setNeu(false)} titel="Neue Schau anlegen">
+      <Dialog offen={neu} onSchliessen={() => setNeu(false)} titel={tl.neuAnlegen}>
         <NeueSchau schauen={alle} />
       </Dialog>
     </div>
@@ -143,10 +143,13 @@ function NeueSchau({ schauen }: { schauen: { id: number; name: string; ort: stri
   const [ort, setOrt] = useState(neueste?.ort ?? "");
   const navigate = useNavigate();
   const meldung = useMeldung();
+  const t = useOberflaeche();
+  const tn = t.schau.neu;
+  const sprache = useSprache();
   const anlegen = trpc.schau.anlegen.useMutation({
     onSuccess: (r) => {
-      if (r.demodaten?.ok) meldung(`Testschau mit Demodaten angelegt: ${r.demodaten.meldungen} Meldungen, ${r.demodaten.tiere} Tiere, Phase „Einlieferung“.`);
-      else if (r.demodaten) meldung(`Testschau angelegt. ${r.demodaten.fehler} – unter Einstellungen „Demodaten neu einspielen“ erneut versuchen.`, "fehler");
+      if (r.demodaten?.ok) meldung(tn.angelegtDemo(r.demodaten.meldungen, r.demodaten.tiere));
+      else if (r.demodaten) meldung(tn.angelegtFehler(serverText(r.demodaten.fehler, sprache)), "fehler");
       navigate(r.demodaten?.ok ? `/schau/${r.id}` : `/schau/${r.id}/einstellungen`);
     },
   });
@@ -157,12 +160,12 @@ function NeueSchau({ schauen }: { schauen: { id: number; name: string; ort: stri
   };
   return (
     <form onSubmit={senden} className="flex flex-col gap-4">
-      <Feld label="Name der Schau" hinweis="z. B. „72. Kreisverbandsschau 2026“">
+      <Feld label={tn.name} hinweis={tn.nameHinweis}>
         {(id) => <Eingabe id={id} value={name} onChange={(e) => setName(e.target.value)} required minLength={3} autoFocus data-autofocus />}
       </Feld>
-      <Feld label="Ort / Halle">{(id) => <Eingabe id={id} value={ort} onChange={(e) => setOrt(e.target.value)} />}</Feld>
+      <Feld label={tn.ort}>{(id) => <Eingabe id={id} value={ort} onChange={(e) => setOrt(e.target.value)} />}</Feld>
       {vorlagen.length > 0 && (
-        <Feld label="Vorlage" hinweis={vorlage ? "Ohne Meldungen, Geld und Termine" : undefined}>
+        <Feld label={tn.vorlage} hinweis={vorlage ? tn.vorlageHinweis : undefined}>
           {(id) => (
             <Auswahl
               id={id}
@@ -173,12 +176,12 @@ function NeueSchau({ schauen }: { schauen: { id: number; name: string; ort: stri
                 if (v && !ort.trim()) setOrt(v.ort);
               }}
             >
-              <option value="">keine – mit Startwerten beginnen</option>
+              <option value="">{tn.keineVorlage}</option>
               {[...vorlagen]
                 .sort((a, b) => b.id - a.id)
                 .map((x) => (
                   <option key={x.id} value={x.id}>
-                    aus „{x.name}“{x.test ? " (Testschau)" : ""} übernehmen
+                    {tn.ausVorlage(x.name, x.test)}
                   </option>
                 ))}
             </Auswahl>
@@ -186,19 +189,19 @@ function NeueSchau({ schauen }: { schauen: { id: number; name: string; ort: stri
         </Feld>
       )}
       <Haken
-        label="Testschau"
+        label={t.schau.liste.testschau}
         checked={test}
         onChange={(v) => {
           setTest(v);
           if (!v && schauen.find((x) => String(x.id) === vorlage)?.test) setVorlage(neueste ? String(neueste.id) : "");
         }}
-        hinweis="Mit Demodaten, nicht umkehrbar"
+        hinweis={tn.testHinweis}
       />
       {anlegen.error && <Hinweis ton="fehler">{fehlerText(anlegen.error)}</Hinweis>}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-linie pt-4">
-        <HilfeLink abschnitt="schau-anlegen">Hilfe zu Vorlage und Testschau</HilfeLink>
+        <HilfeLink abschnitt="schau-anlegen">{tn.hilfe}</HilfeLink>
         <Knopf type="submit" variante="primaer" laedt={anlegen.isPending}>
-          {anlegen.isPending && test ? "Demodaten werden eingespielt …" : "Schau anlegen"}
+          {anlegen.isPending && test ? tn.demoLaeuft : tn.anlegen}
         </Knopf>
       </div>
     </form>
