@@ -453,6 +453,14 @@ describe("Datenschutz", () => {
     expect(imp.map((a) => a.titel)).toEqual(["Angaben nach § 5 DDG", "Vertreten durch", "Kontakt", "Registereintrag"]);
   });
 
+  test("Muster: E-Mail-Adresse nur online Pflicht, auf dem Meldebogen freiwillig", () => {
+    const meldung = datenschutzAbschnitte(leer).find((a) => a.titel === "Meldung zur Schau")!.absaetze.join(" ");
+    expect(meldung).toContain("Ohne Name, Anschrift, Verein und Registriernummer ist keine Meldung möglich.");
+    expect(meldung).toContain("Bei der Online-Meldung brauchen wir außerdem Ihre E-Mail-Adresse");
+    expect(meldung).toContain("auf dem Meldebogen (Papier) ist sie freiwillig");
+    expect(meldung).not.toContain("Ohne Name, Anschrift, E-Mail-Adresse");
+  });
+
   test("Eigener Datenschutztext ersetzt das Muster", () => {
     expect(datenschutzAbschnitte(leer).map((a) => a.titel)).toContain("Ihre Rechte");
     expect(datenschutzAbschnitte({ ...leer, datenschutzText: "Eigener Text\n\nZweiter Absatz" })).toEqual([{ titel: "", absaetze: ["Eigener Text", "Zweiter Absatz"] }]);

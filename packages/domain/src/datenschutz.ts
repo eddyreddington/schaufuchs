@@ -110,7 +110,7 @@ export function datenschutzAbschnitte(v: Vereinsangaben): Textabschnitt[] {
       absaetze: [
         "Mit der Meldung erheben wir Name, Anschrift, Telefon, E-Mail-Adresse, Ortsverein, Kreisverband, Registriernummer nach Viehverkehrsverordnung und die gemeldeten Tiere. Bei einer Jugendmeldung kommen das Geburtsdatum (für den Jugendtarif) und der Name eines Erziehungsberechtigten hinzu, freiwillig die IBAN für die Überweisung von Preisgeld und Verkaufserlös.",
         "Wir brauchen diese Angaben, um die Schau nach den Allgemeinen Ausstellungsbestimmungen (AAB) und den Sonderbestimmungen durchzuführen: Meldegeld, Katalognummern, Käfige, Bewertung, Preise, Tierverkauf, Tierausgabe und Abrechnung. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.",
-        "Ohne Name, Anschrift, E-Mail-Adresse, Verein und Registriernummer ist keine Meldung möglich. Telefon und IBAN sind freiwillig; ohne IBAN wird bar ausgezahlt.",
+        "Ohne Name, Anschrift, Verein und Registriernummer ist keine Meldung möglich. Bei der Online-Meldung brauchen wir außerdem Ihre E-Mail-Adresse für die Eingangsbestätigung und den Link zu „Meine Meldung“; auf dem Meldebogen (Papier) ist sie freiwillig – ohne sie gibt es keine Bestätigung per E-Mail. Telefon und IBAN sind freiwillig; ohne IBAN wird bar ausgezahlt.",
       ],
     },
     {

@@ -1,5 +1,12 @@
 # SchauFUCHS 1.6 – Versionshinweise
 
+## 1.6.1 (16.11.2026)
+
+- Mustertext der Datenschutzhinweise, Abschnitt „Meldung zur Schau“: Die E-Mail-Adresse ist nur bei der
+  Online-Meldung Pflicht (für Eingangsbestätigung und Link zu „Meine Meldung“), auf dem Meldebogen aus Papier freiwillig.
+  Bisher hieß es, ohne E-Mail-Adresse sei keine Meldung möglich. Vereine mit eigenem Datenschutztext betrifft das nicht.
+- `sudo schaufuchs update` sichert vorher und holt 1.6.1. Daten und Tabellen ändern sich nicht.
+
 ## 1.6.0 (16.11.2026)
 
 Gegenüber 1.5.0 ist neu:
