@@ -46,6 +46,6 @@ export function centZuText(cent: number | null | undefined): string {
 }
 
 /** Alter eines Tiers („jung“/„alt“) in der Sprache der Oberfläche (zur Laufzeit lesen). */
-export function alterLabel(alter: "jung" | "alt"): string {
-  return ot().rahmen.alter[alter];
+export function alterLabel(alter: string | null | undefined): string {
+  return alter === "jung" || alter === "alt" ? ot().rahmen.alter[alter] : (alter ?? "");
 }

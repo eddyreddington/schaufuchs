@@ -1,6 +1,6 @@
 import { KAEFIG_TYPEN, kaefigMass, serverText, type KaefigMasse, type KaefigTyp, type Nachweisart, type OberflaecheTexte } from "@schau/domain";
 import { useEffect, useState, type FormEvent } from "react";
-import { datumZeit, fehlerText, formatEuro, formatKatalognummer, heuteIso } from "../lib";
+import { datumZeit, fehlerText, formatEuro, formatKatalognummer, heuteIso, alterLabel } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
@@ -250,7 +250,7 @@ function AusstellerKarte({ t, schauId, modus }: { t: Treffer; schauId: number; m
                   <td data-label={g.nr} className="nummer text-right text-lg">{formatKatalognummer(x)}</td>
                   <td data-label={o.allgemein.tier}>
                     <span className="text-tinte">{x.bezeichnung}</span>
-                    <span className="block text-sm text-grau">{x.geschlecht} {x.alter}</span>
+                    <span className="block text-sm text-grau">{x.geschlecht} {alterLabel(x.alter)}</span>
                     {(x.verkaufBelegNr != null || x.gesperrt) && (
                       <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                         {x.verkaufBelegNr != null && (
@@ -475,7 +475,7 @@ function Gesundheit({ schauId }: { schauId: number }) {
                 <tr key={g.id}>
                   <td data-label={tg.zeit} className="whitespace-nowrap text-sm text-grau">{datumZeit(g.zeitpunkt)}</td>
                   <td data-label={o.allgemein.tier}>
-                    <span className="font-semibold text-tinte">{g.tier ? `${formatKatalognummer(g.tier)} ${g.tier.bezeichnung}, ${g.tier.geschlecht} ${g.tier.alter}` : g.tierText || tg.allgemein}</span>
+                    <span className="font-semibold text-tinte">{g.tier ? `${formatKatalognummer(g.tier)} ${g.tier.bezeichnung}, ${g.tier.geschlecht} ${alterLabel(g.tier.alter)}` : g.tierText || tg.allgemein}</span>
                     {g.tier && <span className="block text-sm text-grau">{g.tier.aussteller}</span>}
                   </td>
                   <td data-label={tg.befund}>

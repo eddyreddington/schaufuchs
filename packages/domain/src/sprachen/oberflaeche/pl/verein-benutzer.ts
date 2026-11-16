@@ -9,7 +9,7 @@ export function mnoga(n: number, jeden: string, kilka: string, wiele: string): s
 }
 
 export const benutzer: OberflaecheTexte["verein"]["benutzer"] = {
-  rolle: { admin: "Admin", mitarbeiter: "Pomocnik" },
+  rolle: { admin: "Administrator", mitarbeiter: "Pomocnik" },
   rolleSpalte: "Rola",
   email: "Adres e-mail",
   zugang: "Dostęp",

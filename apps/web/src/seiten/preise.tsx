@@ -1,6 +1,6 @@
 import { bewertungsText, passtZuPreisart, serverText } from "@schau/domain";
 import { useState, type FormEvent, type ReactNode } from "react";
-import { centZuText, datum, fehlerText, formatEuro, formatKatalognummer, parseEuro } from "../lib";
+import { centZuText, datum, fehlerText, formatEuro, formatKatalognummer, parseEuro, alterLabel } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
@@ -213,7 +213,7 @@ export function Preise() {
                   <tr key={e.id}>
                     <td className="nummer text-right text-lg">{formatKatalognummer(e)}</td>
                     <td>
-                      <span className="font-semibold text-tinte">{e.bezeichnung}</span>, {e.geschlecht} {e.alter}
+                      <span className="font-semibold text-tinte">{e.bezeichnung}</span>, {e.geschlecht} {alterLabel(e.alter)}
                       <span className="block text-sm text-grau">{e.ausstellerName}</span>
                     </td>
                     <td className="whitespace-nowrap font-semibold">{bewertungsText({ punkte: e.punkte, sondernote: e.sondernote }, skala)}</td>

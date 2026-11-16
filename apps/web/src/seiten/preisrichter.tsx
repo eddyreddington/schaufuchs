@@ -292,7 +292,7 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
           <p className="text-sm text-grau">
             {tx.imKatalog(nummeriert)}{ohneZuteilung > 0 && <span className="font-semibold text-kamm">{tx.davonOhne(ohneZuteilung)}</span>}
           </p>
-          {fehlend.length > 0 && <Hinweis ton="warnung">{te.keinRichterFuer(fehlend.join(", "))}</Hinweis>}
+          {fehlend.length > 0 && <Hinweis ton="warnung">{te.keinRichterFuer(fehlend.map((f) => serverText(f, sprache)).join(", "))}</Hinweis>}
           <table className="tabelle max-w-2xl">
             <thead>
               <tr>
@@ -450,7 +450,7 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
         <p className="text-sm text-grau">{tx.keineTiere}</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {fehlend.length > 0 && <Hinweis ton="warnung">{te.keinRichterFuer(fehlend.join(", "))}</Hinweis>}
+          {fehlend.length > 0 && <Hinweis ton="warnung">{te.keinRichterFuer(fehlend.map((f) => serverText(f, sprache)).join(", "))}</Hinweis>}
           <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-grau">
             {richter.map((r) => (
               <span key={r.id}>

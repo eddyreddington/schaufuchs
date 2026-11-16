@@ -6,6 +6,7 @@ import { fach } from "./fach";
 import { serverSchauImport } from "./server-schau-import";
 import { serverSchauMeldung } from "./server-schau-meldung";
 import { serverSchauPruefung } from "./server-schau-pruefung";
+import { serverSchauZusatz } from "./server-schau-zusatz";
 
 export const serverSchau = {
   /** Eingesetzte Bezeichnungen (z. B. „Zurück zur Phase „…“ nur mit Grund.“) – wie in der Fachlogik. */
@@ -144,5 +145,6 @@ export const serverSchau = {
   },
   meldung: serverSchauMeldung,
   pruefung: serverSchauPruefung,
+  zusatz: serverSchauZusatz,
   import: serverSchauImport,
 };

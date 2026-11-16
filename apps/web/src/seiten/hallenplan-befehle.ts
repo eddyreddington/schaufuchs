@@ -3,7 +3,8 @@
  * nummerieren, Einstellungen der Halle (mit „Plan neu setzen?“), Automatik an/aus, an den Wänden ausrichten und eine
  * Einzelreihe an der Wand. Jeder Befehl fragt nach, wo es nötig ist, und wartet auf laufende Speicherungen.
  */
-import { grundrissUebernehmen, type Punkt, belegungImPlan, festGeometrie, type Halle, halleSchluessel, type KaefigPlatz, platzImPlan, serverText, vonHandGeplant, wandAusrichtung, wandDrehungenAnwenden, type WandSeite } from "@schau/domain";
+import { aktuelleSprache } from "../sprache-jetzt";
+import { aufDeutsch, grundrissUebernehmen, type Punkt, belegungImPlan, festGeometrie, type Halle, halleSchluessel, type KaefigPlatz, platzImPlan, serverText, vonHandGeplant, wandAusrichtung, wandDrehungenAnwenden, type WandSeite } from "@schau/domain";
 import { fehlerText } from "../lib";
 import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
@@ -48,7 +49,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
         verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: verlauf.current.vor });
         return meldung(tb.rueckgaengigNichtMehr, "warnung");
       }
-      const r = await tierZug(s.tierId, s.ziel, s.von, s.getauscht, `Rückgängig: ${s.was}`); // bleibt deutsch (Protokoll)
+      const r = await tierZug(s.tierId, s.ziel, s.von, s.getauscht, `Rückgängig: ${aufDeutsch(s.was, aktuelleSprache())}`); // bleibt deutsch (Protokoll)
       if (r === "abbruch") return;
       if (!r) return verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: verlauf.current.vor });
       verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: [...verlauf.current.vor, s] });
@@ -59,7 +60,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
       return meldung(tb.rueckgaengigNichtMehr, "warnung");
     }
     setAuswahl([]);
-    if (!(await schrittAnwenden(s.vorher, `Rückgängig: ${s.was}`))) return; // bleibt deutsch (Protokoll)
+    if (!(await schrittAnwenden(s.vorher, `Rückgängig: ${aufDeutsch(s.was, aktuelleSprache())}`))) return; // bleibt deutsch (Protokoll)
     verlaufSetzen({ zurueck: verlauf.current.zurueck.filter((x) => x !== s), vor: [...verlauf.current.vor, s] });
   };
   const wiederholen = async () => {

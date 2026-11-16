@@ -1,7 +1,7 @@
 import type { OberflaecheTexte } from "..";
 
 export const benutzer: OberflaecheTexte["verein"]["benutzer"] = {
-  rolle: { admin: "Admin", mitarbeiter: "Helper" },
+  rolle: { admin: "Administrator", mitarbeiter: "Helper" },
   rolleSpalte: "Role",
   email: "E-mail address",
   zugang: "Access",

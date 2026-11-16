@@ -3,6 +3,7 @@ import { fach } from "./fach";
 import { serverSchauImport } from "./server-schau-import";
 import { serverSchauMeldung } from "./server-schau-meldung";
 import { serverSchauPruefung } from "./server-schau-pruefung";
+import { serverSchauZusatz } from "./server-schau-zusatz";
 
 /** Počet v textu serveru (řetězec): 1 / 2–4 / 5+. */
 const mn = (n: string, jedno: string, nekolik: string, mnoho: string) => {
@@ -144,5 +145,6 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
   },
   meldung: serverSchauMeldung,
   pruefung: serverSchauPruefung,
+  zusatz: serverSchauZusatz,
   import: serverSchauImport,
 };

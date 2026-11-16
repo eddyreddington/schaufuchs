@@ -3,6 +3,7 @@ import { fach } from "./fach";
 import { serverSchauImport } from "./server-schau-import";
 import { serverSchauMeldung } from "./server-schau-meldung";
 import { serverSchauPruefung } from "./server-schau-pruefung";
+import { serverSchauZusatz } from "./server-schau-zusatz";
 
 export const serverSchau: OberflaecheTexte["serverSchau"] = {
   phasen: fach.PHASEN_LABEL,
@@ -137,5 +138,6 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
   },
   meldung: serverSchauMeldung,
   pruefung: serverSchauPruefung,
+  zusatz: serverSchauZusatz,
   import: serverSchauImport,
 };

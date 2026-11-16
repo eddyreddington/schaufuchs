@@ -680,16 +680,1096 @@ Tests: `spenden.test.ts`
 
 - `fr`
 
-### index.ts (102 Z.)
+### index.ts (79 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### nl.ts (276 Z.)
 
 - `nl`
 
+### allgemein.ts (35 Z.)
+
+- `allgemein`
+
+### ehrenpreise-spenden.ts (128 Z.)
+
+- `spenden`
+
+### ehrenpreise.ts (149 Z.)
+
+- `ehrenpreise`
+
+### fach.ts (182 Z.)
+
+- `fach`
+
+### halle-bild.ts (179 Z.)
+
+- `halleBild`
+
+### halle-werkzeuge.ts (239 Z.)
+
+- `halleWerkzeuge`
+
+### halle.ts (185 Z.)
+
+- `halle`
+
+### index.ts (22 Z.)
+Sammelt alle Exporte (`export * from …`).
+
+### kasse-abrechnung.ts (108 Z.)
+
+- `pocet()` – Číslo s podstatným jménem ve správném tvaru (1 / 2–4 / 5+).
+- `abrechnung`
+
+### kasse-kassenbuch.ts (79 Z.)
+
+- `kassenbuch`
+
+### kasse.ts (117 Z.)
+
+- `kasse`
+
+### katalog-farben.ts (70 Z.)
+
+- `farben`
+
+### katalog-teile.ts (85 Z.)
+
+- `teile`
+- `gliederung`
+
+### katalog.ts (179 Z.)
+
+- `katalog`
+
+### meldung-aussteller.ts (98 Z.)
+
+- `aussteller`
+- `mandate`
+
+### meldung.ts (113 Z.)
+
+- `meldung`
+
+### preisrichter-import.ts (99 Z.)
+
+- `preisrichterImport`
+
+### preisrichter-termine.ts (104 Z.)
+
+- `preisrichterTermine`
+
+### preisrichter.ts (96 Z.)
+
+- `preisrichter`
+
+### rahmen.ts (138 Z.)
+
+- `rahmen`
+
+### schau-einstellungen.ts (183 Z.)
+
+- `schauEinstellungen`
+
+### schau.ts (130 Z.)
+
+- `schau`
+
+### schautage.ts (219 Z.)
+
+- `schautage`
+
+### server-kasse-geld.ts (76 Z.)
+
+- `kasse`
+- `auszahlung`
+- `kassenbuch`
+- `sepa`
+- `verkauf`
+
+### server-kasse-lastschrift.ts (81 Z.)
+
+- `lastschrift`
+- `spenden`
+
+### server-kasse-preise.ts (118 Z.)
+
+- `preise`
+- `bewertung`
+- `preisrichter`
+- `meisterschaft`
+
+### server-kasse.ts (6 Z.)
+
+- `serverKasse`
+
+### server-katalog-halle.ts (65 Z.)
+
+- `halle`
+
+### server-katalog-katalog.ts (64 Z.)
+
+- `katalog`
+
+### server-katalog-pruefung.ts (106 Z.)
+
+- `pruefung`
+
+### server-katalog-stamm.ts (48 Z.)
+
+- `stamm`
+
+### server-katalog.ts (7 Z.)
+
+- `serverKatalog`
+
+### server-schau-import.ts (68 Z.)
+
+- `serverSchauImport`
+
+### server-schau-meldung.ts (95 Z.)
+
+- `serverSchauMeldung`
+
+### server-schau-pruefung.ts (137 Z.)
+
+- `serverSchauPruefung`
+
+### server-schau-zusatz.ts (19 Z.)
+
+- `serverSchauZusatz`
+
+### server-schau.ts (150 Z.)
+
+- `serverSchau`
+
+### tablet.ts (118 Z.)
+
+- `tablet`
+
+### verein-benutzer.ts (144 Z.)
+
+- `mnozne()` – České množné číslo: 1 → jeden, 2–4 → několik, jinak → mnoho.
+- `benutzer`
+
+### verein.ts (200 Z.)
+
+- `verein`
+
+### vorlagen.ts (225 Z.)
+
+- `vorlagen`
+
+### allgemein.ts (34 Z.)
+
+- `allgemein` – Wörter, die in vielen Bereichen vorkommen (nur lesen; Bereiche führen eigene Texte in ihrer Gruppe).
+
+### ehrenpreise-spenden.ts (128 Z.)
+
+- `spenden` – Texte der Oberfläche: ehrenpreise, Teil Spenden (Entscheidung 022).
+
+### ehrenpreise.ts (150 Z.)
+Texte der Oberfläche: ehrenpreise (Entscheidung 022) – Gebühren, Preisarten, Meisterschaften, Spenden.
+
+- `ehrenpreise`
+
+### fach.ts (66 Z.)
+Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt.
+
+- `fach`
+
+### halle-bild.ts (177 Z.)
+
+- `halleBild` – Texte der Oberfläche: halleBild (Entscheidung 022) – Zeichnung des Hallenplans, Entwürfe, Grundriss, 3D-Ansicht.
+
+### halle-werkzeuge.ts (245 Z.)
+
+- `halleWerkzeuge` – Texte der Oberfläche: halleWerkzeuge (Entscheidung 022) – Werkzeugleiste, Befehle und Aktionen des Hallenplan-Editors, kleine Teile (Tiere ohne Pla …
+
+### halle.ts (184 Z.)
+
+- `halle` – Texte der Oberfläche: halle – Seiten „Käfige“ und „Hallenplan“ mit den Eigenschaften im Editor (Entscheidung 022).
+
+### index.ts (25 Z.)
+Deutsche Texte der Oberfläche (Verwaltung, Helfer, Tablet) – Grundlage aller Übersetzungen (Entscheidung 022).
+Sammelt alle Exporte (`export * from …`).
+
+### kasse-abrechnung.ts (95 Z.)
+
+- `abrechnung` – Texte der Oberfläche: kasse.abrechnung – Abrechnung mit den Ausstellern, SEPA-Überweisungen, Erstattungen (Entscheidung 022).
+
+### kasse-kassenbuch.ts (75 Z.)
+
+- `kassenbuch` – Texte der Oberfläche: kasse.kassenbuch – Barkasse, Tagesabschluss, Belegarchiv (Entscheidung 022).
+
+### kasse.ts (115 Z.)
+Texte der Oberfläche: kasse – Tierverkauf, Abrechnung, Kassenbuch, Lastschrift (Entscheidung 022).
+
+- `kasse`
+
+### katalog-farben.ts (72 Z.)
+
+- `farben` – Texte der Oberfläche: katalog.farben – Namen der Farbvorschläge und Farbpaare im Reiter „Aufbau“ (Entscheidung 022).
+
+### katalog-teile.ts (87 Z.)
+
+- `teile` – Texte der Oberfläche: katalog.teile und katalog.gliederung – Reiter „Teile und Reihenfolge“ mit Beiträgen (Entscheidung 022).
+- `gliederung` – Namen der Teile in der Gliederung (Schlüssel wie `KATALOG_GLIEDERUNG` der Domain; dort stehen die Namen für das PDF).
+
+### katalog.ts (186 Z.)
+Texte der Oberfläche: katalog – Katalognummern, Reihenfolge, Katalog gestalten mit Vorschau (Entscheidung 022).
+
+- `katalog`
+
+### meldung-aussteller.ts (95 Z.)
+
+- `aussteller` – Texte der Oberfläche: meldung, Teil Aussteller des Vereins (seiten/aussteller.tsx) und SEPA-Mandate (seiten/aussteller-mandate.tsx).
+- `mandate`
+
+### meldung.ts (114 Z.)
+Texte der Oberfläche: meldung (Entscheidung 022) – Meldungen erfassen und bearbeiten, Aussteller des Vereins, SEPA-Mandate.
+
+- `meldung`
+
+### preisrichter-import.ts (75 Z.)
+Texte der Oberfläche: preisrichter, Teil import – Import aus Altprogrammen (Entscheidungen 015, 022).
+
+- `preisrichterImport`
+
+### preisrichter-termine.ts (99 Z.)
+
+- `preisrichterTermine` – Texte der Oberfläche: preisrichter, Teil termine – Katalogseite „Kommende Schauen“ (Entscheidung 022).
+
+### preisrichter.ts (94 Z.)
+Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mit Einteilung, dazu die Seiten „Kommende Schauen“ (`termine`) und Impor …
+
+- `preisrichter`
+
+### rahmen.ts (151 Z.)
+
+- `rahmen` – Texte der Oberfläche: rahmen (Entscheidung 022) – App-Rahmen mit Seitenmenü und Benutzermenü, Anmeldung, Einladung, Hilfe-Rahmen, Fehlerseite und d …
+
+### schau-einstellungen.ts (190 Z.)
+
+- `schauEinstellungen` – Texte der Oberfläche: schau.einstellungen (Entscheidung 022) – Seite „Einstellungen“ der Schau und ihre Abschnitte.
+
+### schau.ts (129 Z.)
+Texte der Oberfläche: schau (Entscheidung 022) – Liste der Schauen, Übersicht; Einstellungen in schau-einstellungen.
+
+- `schau`
+
+### schautage.ts (215 Z.)
+
+- `schautage` – Texte der Oberfläche: schautage – Einlieferung, Tierausgabe, Tiergesundheit, Bewertung am PC, Preise (Entscheidung 022).
+
+### server-kasse-geld.ts (84 Z.)
+Meldungen des Servers zur Kasse (routers/kasse/*, services/kasse.ts) mit SEPA-Überweisung aus der Fachlogik (sepa.ts) – Teil von serverKasse (Entsc …
+
+- `kasse` – Gemeinsame Prüfungen der Kasse (services/kasse.ts, routers/kasse/gemeinsam.ts).
+- `auszahlung` – Auszahlung, Nachzahlung, Rückforderung und Storno (routers/kasse/auszahlung.ts).
+- `kassenbuch` – Barkasse: Einlage, Entnahme, Tagesabschluss (routers/kasse/kassenbuch.ts).
+- `sepa` – SEPA-Sammelüberweisung (routers/kasse/sepa.ts) und Prüfungen beim Erzeugen der Datei (domain sepa.ts).
+- `verkauf` – Tierverkauf, Storno, Zahlungseingang (routers/kasse/verkauf.ts).
+
+### server-kasse-lastschrift.ts (88 Z.)
+Meldungen des Servers zu SEPA-Lastschrift (routers/lastschrift.ts, domain lastschrift.ts) und Spenden (routers/spenden.ts, services/zuwendungsbesta …
+
+- `lastschrift` – Gläubiger-ID, Mandate, Lastschriftdatei, Rücklastschrift.
+- `spenden` – Spenden, Spender und Zuwendungsbestätigungen.
+
+### server-kasse-preise.ts (132 Z.)
+Meldungen des Servers zu Preisen und Stiftungen (routers/preise.ts, services/preise.ts, domain preise.ts), Bewertung und Tablet (routers/bewertung. …
+
+- `preise` – Preise vergeben und entfernen, Stiftungen, Freigabe der Ergebnisse.
+- `bewertung` – Bewertung am PC und am Tablet, Obmann, Textbausteine, Anmeldung am Tablet.
+- `preisrichter` – Einteilung der Preisrichter (routers/preisrichter.ts).
+- `meisterschaft` – Gründe und Hinweise der Meisterschaftswertung (domain meisterschaft.ts).
+
+### server-kasse.ts (11 Z.)
+Texte der Oberfläche: serverKasse (Entscheidung 022) – Meldungen des Servers zu Kasse, SEPA, Lastschrift, Spenden, Preisen, Bewertung, Einteilung d …
+
+- `serverKasse`
+
+### server-katalog-halle.ts (70 Z.)
+
+- `halle` – Meldungen des Servers zum Hallenplan (Entscheidung 022): routers/katalog/hallenplan.ts, gemeinsam.ts, kaefige.ts, routers/hallenentwurf.ts und die …
+
+### server-katalog-katalog.ts (68 Z.)
+
+- `katalog` – Meldungen des Servers zu Katalog und Einlieferung (Entscheidung 022): routers/katalog/einlieferung.ts, nummern.ts, gesundheit.ts, die Nachweise (pr …
+
+### server-katalog-pruefung.ts (110 Z.)
+
+- `pruefung` – Meldungen des Servers (Entscheidung 022): Zugang und Umfang der Anfrage (apps/server/src/trpc.ts), Kurztexte der Eingabeprüfung (kurzerPruefText, S …
+
+### server-katalog-stamm.ts (52 Z.)
+
+- `stamm` – Meldungen des Servers zu Bildern, Katalog-Gestaltung, Stammdaten, Rassebildern und Druckvorlagen (Entscheidung 022): routers/katalog-gestaltung.ts, …
+
+### server-katalog.ts (10 Z.)
+Texte der Oberfläche: serverKatalog (Entscheidung 022) – Meldungen des Servers zu Eingabeprüfung und Zugang, Hallenplan, Katalog und Einlieferung, …
+
+- `serverKatalog`
+
+### server-schau-import.ts (71 Z.)
+
+- `serverSchauImport` – Import von Ausstellern und Meldungen aus Tabellen (routers/import.ts, services/import.ts, import/xlsx.ts und die Zeilenprüfung der Fachlogik) – Tei …
+
+### server-schau-meldung.ts (102 Z.)
+Meldungen des Servers zu Meldungen, Zahlungen und Ausstellern (Teil von serverSchau, Entscheidung 022).
+
+- `serverSchauMeldung`
+
+### server-schau-pruefung.ts (135 Z.)
+
+- `serverSchauPruefung` – Prüfliste der Übersicht (services/pruefung.ts) und Phasenwechsel (routers/schau/phase.ts) – Teil von serverSchau.
+
+### server-schau-zusatz.ts (18 Z.)
+
+- `serverSchauZusatz` – Weitere Meldungen: Prüfung der Protokollkette (services/protokoll-suche.ts), Katalog-Vorschau (datei-katalog.ts), Mailserver (services/post.ts) – T …
+
+### server-schau.ts (150 Z.)
+Meldungen des Servers (Entscheidung 022): Schau anlegen, Einstellungen, Gebühren, Anmeldung, Bremsen, Termine, Verein.
+
+- `serverSchau`
+
+### tablet.ts (119 Z.)
+
+- `tablet` – Texte der Oberfläche: tablet – Preisrichter-Tablet (Entscheidung 022).
+
+### verein-benutzer.ts (141 Z.)
+
+- `benutzer` – Texte der Oberfläche: verein.benutzer – Benutzerliste, Seite eines Benutzers, eigener Zugang (Entscheidung 022).
+
+### verein.ts (209 Z.)
+Texte der Oberfläche: verein – Verein und Datenschutz, automatische Abmeldung, Benutzer, Protokoll (Entscheidung 022).
+
+- `verein`
+
+### vorlagen.ts (226 Z.)
+Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungskarte), Briefvorlage und Serienbrief, Rassen und Farbenschläge (Verzei …
+
+- `vorlagen`
+
+### allgemein.ts (35 Z.)
+
+- `allgemein`
+
+### ehrenpreise-spenden.ts (127 Z.)
+
+- `spenden`
+
+### ehrenpreise.ts (144 Z.)
+
+- `ehrenpreise`
+
+### fach.ts (182 Z.)
+
+- `fach`
+
+### halle-bild.ts (175 Z.)
+
+- `halleBild`
+
+### halle-werkzeuge.ts (235 Z.)
+
+- `halleWerkzeuge`
+
+### halle.ts (184 Z.)
+
+- `halle`
+
+### index.ts (22 Z.)
+Sammelt alle Exporte (`export * from …`).
+
+### kasse-abrechnung.ts (102 Z.)
+
+- `abrechnung`
+
+### kasse-kassenbuch.ts (75 Z.)
+
+- `kassenbuch`
+
+### kasse.ts (115 Z.)
+
+- `kasse`
+
+### katalog-farben.ts (70 Z.)
+
+- `farben`
+
+### katalog-teile.ts (85 Z.)
+
+- `teile`
+- `gliederung`
+
+### katalog.ts (177 Z.)
+
+- `katalog`
+
+### meldung-aussteller.ts (97 Z.)
+
+- `aussteller`
+- `mandate`
+
+### meldung.ts (110 Z.)
+
+- `meldung`
+
+### preisrichter-import.ts (97 Z.)
+
+- `preisrichterImport`
+
+### preisrichter-termine.ts (102 Z.)
+
+- `preisrichterTermine`
+
+### preisrichter.ts (93 Z.)
+
+- `preisrichter`
+
+### rahmen.ts (135 Z.)
+
+- `rahmen`
+
+### schau-einstellungen.ts (183 Z.)
+
+- `schauEinstellungen`
+
+### schau.ts (123 Z.)
+
+- `schau`
+
+### schautage.ts (217 Z.)
+
+- `schautage`
+
+### server-kasse-geld.ts (76 Z.)
+
+- `kasse`
+- `auszahlung`
+- `kassenbuch`
+- `sepa`
+- `verkauf`
+
+### server-kasse-lastschrift.ts (81 Z.)
+
+- `lastschrift`
+- `spenden`
+
+### server-kasse-preise.ts (118 Z.)
+
+- `preise`
+- `bewertung`
+- `preisrichter`
+- `meisterschaft`
+
+### server-kasse.ts (6 Z.)
+
+- `serverKasse`
+
+### server-katalog-halle.ts (65 Z.)
+
+- `halle`
+
+### server-katalog-katalog.ts (64 Z.)
+
+- `katalog`
+
+### server-katalog-pruefung.ts (106 Z.)
+
+- `pruefung`
+
+### server-katalog-stamm.ts (48 Z.)
+
+- `stamm`
+
+### server-katalog.ts (7 Z.)
+
+- `serverKatalog`
+
+### server-schau-import.ts (68 Z.)
+
+- `serverSchauImport`
+
+### server-schau-meldung.ts (95 Z.)
+
+- `serverSchauMeldung`
+
+### server-schau-pruefung.ts (130 Z.)
+
+- `serverSchauPruefung`
+
+### server-schau-zusatz.ts (19 Z.)
+
+- `serverSchauZusatz`
+
+### server-schau.ts (143 Z.)
+
+- `serverSchau`
+
+### tablet.ts (120 Z.)
+
+- `tablet`
+
+### verein-benutzer.ts (137 Z.)
+
+- `benutzer`
+
+### verein.ts (199 Z.)
+
+- `verein`
+
+### vorlagen.ts (224 Z.)
+
+- `vorlagen`
+
+### allgemein.ts (35 Z.)
+
+- `allgemein`
+
+### ehrenpreise-spenden.ts (127 Z.)
+
+- `spenden`
+
+### ehrenpreise.ts (144 Z.)
+
+- `ehrenpreise`
+
+### fach.ts (182 Z.)
+
+- `fach`
+
+### halle-bild.ts (175 Z.)
+
+- `halleBild`
+
+### halle-werkzeuge.ts (235 Z.)
+
+- `halleWerkzeuge`
+
+### halle.ts (184 Z.)
+
+- `halle`
+
+### index.ts (22 Z.)
+Sammelt alle Exporte (`export * from …`).
+
+### kasse-abrechnung.ts (105 Z.)
+
+- `abrechnung`
+
+### kasse-kassenbuch.ts (78 Z.)
+
+- `kassenbuch`
+
+### kasse.ts (118 Z.)
+
+- `kasse`
+
+### katalog-farben.ts (70 Z.)
+
+- `farben`
+
+### katalog-teile.ts (85 Z.)
+
+- `teile`
+- `gliederung`
+
+### katalog.ts (177 Z.)
+
+- `katalog`
+
+### meldung-aussteller.ts (97 Z.)
+
+- `aussteller`
+- `mandate`
+
+### meldung.ts (110 Z.)
+
+- `meldung`
+
+### preisrichter-import.ts (98 Z.)
+
+- `preisrichterImport`
+
+### preisrichter-termine.ts (103 Z.)
+
+- `preisrichterTermine`
+
+### preisrichter.ts (93 Z.)
+
+- `preisrichter`
+
+### rahmen.ts (135 Z.)
+
+- `rahmen`
+
+### schau-einstellungen.ts (183 Z.)
+
+- `schauEinstellungen`
+
+### schau.ts (123 Z.)
+
+- `schau`
+
+### schautage.ts (217 Z.)
+
+- `schautage`
+
+### server-kasse-geld.ts (76 Z.)
+
+- `kasse`
+- `auszahlung`
+- `kassenbuch`
+- `sepa`
+- `verkauf`
+
+### server-kasse-lastschrift.ts (81 Z.)
+
+- `lastschrift`
+- `spenden`
+
+### server-kasse-preise.ts (121 Z.)
+
+- `preise`
+- `bewertung`
+- `preisrichter`
+- `meisterschaft`
+
+### server-kasse.ts (6 Z.)
+
+- `serverKasse`
+
+### server-katalog-halle.ts (65 Z.)
+
+- `halle`
+
+### server-katalog-katalog.ts (64 Z.)
+
+- `katalog`
+
+### server-katalog-pruefung.ts (106 Z.)
+
+- `pruefung`
+
+### server-katalog-stamm.ts (48 Z.)
+
+- `stamm`
+
+### server-katalog.ts (7 Z.)
+
+- `serverKatalog`
+
+### server-schau-import.ts (69 Z.)
+
+- `serverSchauImport`
+
+### server-schau-meldung.ts (97 Z.)
+
+- `serverSchauMeldung`
+
+### server-schau-pruefung.ts (131 Z.)
+
+- `serverSchauPruefung`
+
+### server-schau-zusatz.ts (19 Z.)
+
+- `serverSchauZusatz`
+
+### server-schau.ts (143 Z.)
+
+- `serverSchau`
+
+### tablet.ts (120 Z.)
+
+- `tablet`
+
+### verein-benutzer.ts (139 Z.)
+
+- `benutzer`
+
+### verein.ts (200 Z.)
+
+- `verein`
+
+### vorlagen.ts (225 Z.)
+
+- `vorlagen`
+
+### index.ts (57 Z.)
+Texte der ganzen Oberfläche – Anmeldung, Verwaltung, Helfer, Preisrichter-Tablet – in allen Sprachen (Entscheidung 022).
+Sammelt alle Exporte (`export * from …`).
+
+### allgemein.ts (35 Z.)
+
+- `allgemein`
+
+### ehrenpreise-spenden.ts (127 Z.)
+
+- `spenden`
+
+### ehrenpreise.ts (144 Z.)
+
+- `ehrenpreise`
+
+### fach.ts (182 Z.)
+
+- `fach`
+
+### halle-bild.ts (175 Z.)
+
+- `halleBild`
+
+### halle-werkzeuge.ts (235 Z.)
+
+- `halleWerkzeuge`
+
+### halle.ts (184 Z.)
+
+- `halle`
+
+### index.ts (22 Z.)
+Sammelt alle Exporte (`export * from …`).
+
+### kasse-abrechnung.ts (102 Z.)
+
+- `abrechnung`
+
+### kasse-kassenbuch.ts (77 Z.)
+
+- `kassenbuch`
+
+### kasse.ts (117 Z.)
+
+- `kasse`
+
+### katalog-farben.ts (70 Z.)
+
+- `farben`
+
+### katalog-teile.ts (85 Z.)
+
+- `teile`
+- `gliederung`
+
+### katalog.ts (177 Z.)
+
+- `katalog`
+
+### meldung-aussteller.ts (97 Z.)
+
+- `aussteller`
+- `mandate`
+
+### meldung.ts (110 Z.)
+
+- `meldung`
+
+### preisrichter-import.ts (98 Z.)
+
+- `preisrichterImport`
+
+### preisrichter-termine.ts (102 Z.)
+
+- `preisrichterTermine`
+
+### preisrichter.ts (93 Z.)
+
+- `preisrichter`
+
+### rahmen.ts (135 Z.)
+
+- `rahmen`
+
+### schau-einstellungen.ts (183 Z.)
+
+- `schauEinstellungen`
+
+### schau.ts (123 Z.)
+
+- `schau`
+
+### schautage.ts (217 Z.)
+
+- `schautage`
+
+### server-kasse-geld.ts (76 Z.)
+
+- `kasse`
+- `auszahlung`
+- `kassenbuch`
+- `sepa`
+- `verkauf`
+
+### server-kasse-lastschrift.ts (81 Z.)
+
+- `lastschrift`
+- `spenden`
+
+### server-kasse-preise.ts (118 Z.)
+
+- `preise`
+- `bewertung`
+- `preisrichter`
+- `meisterschaft`
+
+### server-kasse.ts (6 Z.)
+
+- `serverKasse`
+
+### server-katalog-halle.ts (65 Z.)
+
+- `halle`
+
+### server-katalog-katalog.ts (64 Z.)
+
+- `katalog`
+
+### server-katalog-pruefung.ts (106 Z.)
+
+- `pruefung`
+
+### server-katalog-stamm.ts (48 Z.)
+
+- `stamm`
+
+### server-katalog.ts (7 Z.)
+
+- `serverKatalog`
+
+### server-schau-import.ts (69 Z.)
+
+- `serverSchauImport`
+
+### server-schau-meldung.ts (95 Z.)
+
+- `serverSchauMeldung`
+
+### server-schau-pruefung.ts (130 Z.)
+
+- `serverSchauPruefung`
+
+### server-schau-zusatz.ts (19 Z.)
+
+- `serverSchauZusatz`
+
+### server-schau.ts (143 Z.)
+
+- `serverSchau`
+
+### tablet.ts (120 Z.)
+
+- `tablet`
+
+### verein-benutzer.ts (138 Z.)
+
+- `benutzer`
+
+### verein.ts (200 Z.)
+
+- `verein`
+
+### vorlagen.ts (224 Z.)
+
+- `vorlagen`
+
+### allgemein.ts (35 Z.)
+
+- `allgemein`
+
+### ehrenpreise-spenden.ts (128 Z.)
+
+- `spenden`
+
+### ehrenpreise.ts (149 Z.)
+
+- `ehrenpreise`
+
+### fach.ts (182 Z.)
+
+- `fach`
+
+### halle-bild.ts (180 Z.)
+
+- `halleBild`
+
+### halle-werkzeuge.ts (240 Z.)
+
+- `halleWerkzeuge`
+
+### halle.ts (186 Z.)
+
+- `halle`
+
+### index.ts (22 Z.)
+Sammelt alle Exporte (`export * from …`).
+
+### kasse-abrechnung.ts (110 Z.)
+
+- `liczba()` – Liczba z rzeczownikiem w odpowiedniej formie (1 / 2–4 / 5+).
+- `abrechnung`
+
+### kasse-kassenbuch.ts (79 Z.)
+
+- `kassenbuch`
+
+### kasse.ts (118 Z.)
+
+- `kasse`
+
+### katalog-farben.ts (70 Z.)
+
+- `farben`
+
+### katalog-teile.ts (85 Z.)
+
+- `teile`
+- `gliederung`
+
+### katalog.ts (181 Z.)
+
+- `katalog`
+
+### meldung-aussteller.ts (99 Z.)
+
+- `aussteller`
+- `mandate`
+
+### meldung.ts (114 Z.)
+
+- `meldung`
+
+### preisrichter-import.ts (100 Z.)
+
+- `preisrichterImport`
+
+### preisrichter-termine.ts (105 Z.)
+
+- `preisrichterTermine`
+
+### preisrichter.ts (97 Z.)
+
+- `preisrichter`
+
+### rahmen.ts (142 Z.)
+
+- `rahmen`
+
+### schau-einstellungen.ts (183 Z.)
+
+- `schauEinstellungen`
+
+### schau.ts (132 Z.)
+
+- `schau`
+
+### schautage.ts (220 Z.)
+
+- `schautage`
+
+### server-kasse-geld.ts (76 Z.)
+
+- `kasse`
+- `auszahlung`
+- `kassenbuch`
+- `sepa`
+- `verkauf`
+
+### server-kasse-lastschrift.ts (81 Z.)
+
+- `lastschrift`
+- `spenden`
+
+### server-kasse-preise.ts (118 Z.)
+
+- `preise`
+- `bewertung`
+- `preisrichter`
+- `meisterschaft`
+
+### server-kasse.ts (6 Z.)
+
+- `serverKasse`
+
+### server-katalog-halle.ts (65 Z.)
+
+- `halle`
+
+### server-katalog-katalog.ts (64 Z.)
+
+- `katalog`
+
+### server-katalog-pruefung.ts (106 Z.)
+
+- `pruefung`
+
+### server-katalog-stamm.ts (48 Z.)
+
+- `stamm`
+
+### server-katalog.ts (7 Z.)
+
+- `serverKatalog`
+
+### server-schau-import.ts (68 Z.)
+
+- `serverSchauImport`
+
+### server-schau-meldung.ts (95 Z.)
+
+- `serverSchauMeldung`
+
+### server-schau-pruefung.ts (138 Z.)
+
+- `serverSchauPruefung`
+
+### server-schau-zusatz.ts (19 Z.)
+
+- `serverSchauZusatz`
+
+### server-schau.ts (149 Z.)
+
+- `serverSchau`
+
+### tablet.ts (118 Z.)
+
+- `tablet`
+
+### verein-benutzer.ts (146 Z.)
+
+- `mnoga()` – Polska liczba mnoga: 1 → jeden, 2–4 (bez 12–14) → kilka, reszta → wiele.
+- `benutzer`
+
+### verein.ts (200 Z.)
+
+- `verein`
+
+### vorlagen.ts (229 Z.)
+
+- `vorlagen`
+
+### server.ts (126 Z.)
+Meldungen des Servers (Fehler, Prüfungen, Hinweise) in der Sprache der Oberfläche (Entscheidung 022).
+
+- `serverText()` – Meldung des Servers in der Sprache der Oberfläche.
+
 ### pl.ts (284 Z.)
 
 - `pl`
+
+### uebersetzung.ts (4 Z.)
+
+- `Uebersetzung` (Typ) – Jede Übersetzung hat genau die Schlüssel des deutschen Textes; Platzhalter als Funktionen mit denselben Werten.
+
+### umschreiben.ts (27 Z.)
+Umschreibungen der deutschen Grundlage: Schweizer Schreibung und französische Satzzeichen (Entscheidung 020).
+
+- `umschreiben()` – Wendet `f` auf jeden Text an – bei Texten mit Platzhaltern nur auf den festen Teil: eingesetzte Werte (Schauname, Grund, Adresse) bleiben, wie der …
+- `ohneEszett()` – Schweizer Schreibung: wie Deutsch, aber „ss“ statt „ß“.
+- `franzoesischeZeichen()` – Französische Satzzeichen: geschütztes Leerzeichen vor : ; ?
 
 ### stammdaten.ts (101 Z.)
 
@@ -817,14 +1897,14 @@ Tests: `zuwendungsbestaetigung.test.ts`
 - `betragFelder()` – Betrag in Ziffern und Buchstaben (BMF Nr. 5).
 - `sachSaetze()` – Text der Sachzuwendung: Bezeichnung und die zutreffenden Sätze zur Herkunft und zu den Unterlagen.
 
-Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `preisbindung.test.ts`, `sprachen.test.ts`, `stiftung.test.ts`
+Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `oberflaeche.test.ts`, `preisbindung.test.ts`, `sprachen.test.ts`, `stiftung.test.ts`
 
 ## tRPC-Prozeduren `apps/server/src/routers`
 
 Aufruf im Web als `trpc.<bereich>.<prozedur>`. Rolle: öffentlich (ohne Anmeldung), angemeldet (jede Rolle), admin (Ausstellungsleitung, mit Zwei-Faktor), richter (Tablet). Feinere Rechte prüft die Prozedur selbst.
 
-### routers/auth/anmeldung.ts (189 Z.) → `auth`
-Anmeldung: Status, Ersteinrichtung, Anmelden (auch zweiter Schritt), Abmelden, eigenes Passwort ändern.
+### routers/auth/anmeldung.ts (194 Z.) → `auth`
+Anmeldung: Status, Ersteinrichtung, Anmelden (auch zweiter Schritt), Abmelden, eigenes Passwort und eigene Sprache.
 
 - `auth.status` query · öffentlich
 - `auth.einrichten` mutation · öffentlich – Ersteinrichtung: legt Verein und ersten Administrator an.
@@ -832,6 +1912,7 @@ Anmeldung: Status, Ersteinrichtung, Anmelden (auch zweiter Schritt), Abmelden, e
 - `auth.anmeldenCode` mutation · öffentlich – Zweiter Schritt der Anmeldung: Code aus der Authenticator-App oder ein Notfallcode.
 - `auth.abmelden` mutation · öffentlich
 - `auth.passwortAendern` mutation · angemeldet
+- `auth.spracheSetzen` mutation · angemeldet – Sprache der Oberfläche für das eigene Konto merken (Entscheidung 022); gilt auf jedem Gerät nach der Anmeldung.
 
 ### routers/auth/benutzer.ts (251 Z.) → `auth`
 Benutzerverwaltung durch die Ausstellungsleitung: Liste, Angaben, Anlegen, Sperren, Löschen, Rolle, Passwort, Sperre aufheben.
@@ -1229,269 +2310,269 @@ Kommende Schauen: Termine anderer Schauen pflegen (von Hand oder aus abonnierten
 
 Route aus `apps/web/src/routes.tsx`, dahinter die aufgerufenen Prozeduren.
 
-### abrechnung.tsx (424 Z.) – `/schau/:schauId/abrechnung`
+### abrechnung.tsx (443 Z.) – `/schau/:schauId/abrechnung`
 Prozeduren: auth.status, kasse.abrechnung, kasse.auszahlen, kasse.auszahlungStornieren, kasse.ueberweisungenBuchen, kasse.ueberweisungsdatei, kasse.ueberweisungsdateiErstellen, kasse.ueberweisungsdateiVerwerfen, meldung.erstattungenBuchen, meldung.zuErstatten, schau.get
 
-### aussteller-mandate.tsx (91 Z.)
+### aussteller-mandate.tsx (95 Z.)
 Prozeduren: lastschrift.mandatAnlegen, lastschrift.mandatWiderrufen, lastschrift.mandate
 
-### aussteller.tsx (458 Z.) – `/aussteller`
+### aussteller.tsx (465 Z.) – `/aussteller`
 Prozeduren: schau.liste, verein.aussteller, verein.ausstellerDaten, verein.ausstellerLoeschen, verein.ausstellerSpeichern, verein.vereinsangaben, verein.vereinsnamenSetzen
 
-### benutzer-bearbeiten.tsx (229 Z.)
+### benutzer-bearbeiten.tsx (241 Z.)
 Seite eines Benutzers (für Administratoren): Angaben, Zugang, Passwort neu setzen, Zwei-Faktor zurücksetzen.
 Prozeduren: auth.benutzerAbmelden, auth.benutzerAktiv, auth.benutzerLoeschen, auth.benutzerPasswortSetzen, auth.benutzerRolle, auth.benutzerSpeichern, auth.benutzerWillkommen, auth.sperreAufheben, auth.zweiFaktorZuruecksetzen
 
-### benutzer-eigener-zugang.tsx (139 Z.)
+### benutzer-eigener-zugang.tsx (145 Z.)
 Eigener Zugang: Passwort ändern und Zwei-Faktor-Anmeldung einrichten oder abschalten.
 Prozeduren: auth.passwortAendern, auth.zweiFaktorAbschalten, auth.zweiFaktorBestaetigen, auth.zweiFaktorEinrichten, auth.zweiFaktorStatus
 
-### benutzer-teile.tsx (54 Z.)
+### benutzer-teile.tsx (57 Z.)
 Benutzer: gemeinsame Teile der Seiten (Rollennamen, Statusmarken, Rücklink, Neuladen nach Änderungen).
 
-### benutzer.tsx (228 Z.) – `/benutzer`, `/benutzer/neu`, `/benutzer/:benutzerId`
+### benutzer.tsx (237 Z.) – `/benutzer`, `/benutzer/neu`, `/benutzer/:benutzerId`
 Prozeduren: auth.benutzerAnlegen, auth.benutzerGet, auth.benutzerListe, auth.status
 
-### bewertung.tsx (326 Z.) – `/schau/:schauId/bewertung`
+### bewertung.tsx (335 Z.) – `/schau/:schauId/bewertung`
 Prozeduren: auth.status, bewertung.liste, bewertung.obmannBestaetigen, bewertung.setzen, bewertung.zuruecksetzen
 
-### briefvorlage.tsx (236 Z.) – `/verein/briefvorlage`
+### briefvorlage.tsx (242 Z.) – `/verein/briefvorlage`
 Prozeduren: druckvorlage.brief, druckvorlage.briefSpeichern, druckvorlage.serienbriefAnzahl, schau.liste
 
-### druckvorlage-vorschau.tsx (147 Z.)
+### druckvorlage-vorschau.tsx (159 Z.)
 
-### druckvorlage.tsx (229 Z.) – `/verein/druckvorlagen/:vorlageId`
+### druckvorlage.tsx (231 Z.) – `/verein/druckvorlagen/:vorlageId`
 Prozeduren: druckvorlage.liste, druckvorlage.speichern, druckvorlage.vorgabe
 
-### einladung.tsx (99 Z.) – `/einladung`
+### einladung.tsx (101 Z.) – `/einladung`
 Prozeduren: auth.einladungAnnehmen, auth.einladungPruefen, auth.status
 
-### einlieferung.tsx (497 Z.) – `/schau/:schauId/einlieferung`
+### einlieferung.tsx (518 Z.) – `/schau/:schauId/einlieferung`
 Prozeduren: auth.status, halle.gesundheit, halle.gesundheitErfassen, halle.gesundheitFreigeben, halle.kaefigSetzen, halle.ringnummerSetzen, halle.statusSetzen, halle.suche, halle.vetSetzen, meldung.zahlungErfassen, schau.get
 
-### einstellungen-druck.tsx (60 Z.)
+### einstellungen-druck.tsx (63 Z.)
 Prozeduren: druckvorlage.fuerSchau, druckvorlage.fuerSchauAnpassen, druckvorlage.waehlen
 
-### einstellungen-meisterschaften.tsx (267 Z.)
+### einstellungen-meisterschaften.tsx (269 Z.)
 Prozeduren: meisterschaft.regeln, meisterschaft.speichern
 
-### einstellungen-notenskala.tsx (71 Z.)
+### einstellungen-notenskala.tsx (74 Z.)
 Prozeduren: schau.notenskalaSetzen
 
-### einstellungen-preise.tsx (247 Z.)
+### einstellungen-preise.tsx (263 Z.)
 Prozeduren: schau.gebuehrenSetzen, schau.preisartLoeschen, schau.preisartSpeichern
 
-### einstellungen-stammangaben.tsx (301 Z.)
+### einstellungen-stammangaben.tsx (306 Z.)
 Prozeduren: schau.aktualisieren, stammdaten.versionen
 
-### einstellungen-teilschauen.tsx (69 Z.)
+### einstellungen-teilschauen.tsx (73 Z.)
 Prozeduren: schau.teilschauenSetzen
 
-### einstellungen-verwalten.tsx (211 Z.)
+### einstellungen-verwalten.tsx (212 Z.)
 Prozeduren: schau.absagen, schau.alsTestschau, schau.demodatenNeu, schau.loeschen, schau.testschauVorschau
 
-### einstellungen-vetamt.tsx (87 Z.)
+### einstellungen-vetamt.tsx (89 Z.)
 Prozeduren: schau.veterinaeraemter
 
-### einstellungen.tsx (125 Z.) – `/schau/:schauId/einstellungen`
+### einstellungen.tsx (114 Z.) – `/schau/:schauId/einstellungen`
 Prozeduren: auth.status, schau.get, schau.protokoll
 
-### fehler.tsx (45 Z.)
+### fehler.tsx (46 Z.)
 
 ### hallenplan-3d-bausteine.ts (283 Z.)
 Bausteine der 3D-Halle: Texturen (Gitter, Stoff, Turnhallenwand), Geometrien (Kasten, Schürzen, Innenseiten), Figuren, Schilder.
 
-### hallenplan-3d-landschaft.ts (287 Z.)
+### hallenplan-3d-landschaft.ts (288 Z.)
 Umgebung der 3D-Halle (nur zur Anschauung, ohne Maße): Himmel mit Wolken, Wiese, ein heller Hof um die Halle, vor dem Haupteingang ein Parkplatz, g …
 
-### hallenplan-3d-seite.tsx (54 Z.) – `/schau/:schauId/hallenplan/3d`
+### hallenplan-3d-seite.tsx (56 Z.) – `/schau/:schauId/hallenplan/3d`
 Hallenplan in 3D als eigene Seite (eigener Browser-Tab, ohne Seitenleiste): zeigt den gespeicherten Stand des Plans.
 Prozeduren: auth.status, katalog.hallenplan, schau.get
 
-### hallenplan-3d-steuerkreuz.tsx (60 Z.)
+### hallenplan-3d-steuerkreuz.tsx (63 Z.)
 Steuerkreuz unten rechts in der 3D-Ansicht – für Tablet und Maus, was am Rechner die Tasten tun: gehen, drehen, zoomen (solange gedrückt) und die g …
 
 ### hallenplan-3d-steuerung.ts (271 Z.)
 Bewegung der Kamera in der 3D-Ansicht über das Ziehen mit Maus oder Finger hinaus: weiches Auslaufen, Zoom zum Mauszeiger, per Doppelklick sanft hi …
 
-### hallenplan-3d-welt.ts (547 Z.)
+### hallenplan-3d-welt.ts (548 Z.)
 Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und Steuerung.
 
-### hallenplan-3d.tsx (205 Z.)
+### hallenplan-3d.tsx (216 Z.)
 Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben oder im Gang in Augenhöhe, mit Tasten oder Steuerkreuz gehen und als a …
 
-### hallenplan-aktionen.ts (206 Z.)
+### hallenplan-aktionen.ts (216 Z.)
 Werkzeuge des Hallenplan-Editors für die Auswahl und für neue Teile: am Raster ausrichten, drehen, an den Platz zurück, Leeres entfernen, Teile und …
 
 ### hallenplan-befehle.ts (296 Z.)
 Befehle des Hallenplan-Editors, die über den Entwurf hinausgehen: Rückgängig/Wiederholen, Tier versetzen, nach Plan nummerieren, Einstellungen der …
 Prozeduren: katalog.nummernNachPlan, katalog.tierVersetzen, katalog.wandreiheStellen
 
-### hallenplan-bild-bedienung.ts (307 Z.)
+### hallenplan-bild-bedienung.ts (312 Z.)
 Bedienung der Hallenplan-Zeichnung: Teile greifen, ziehen und loslassen (mit Prüfung gegen Wände und andere Teile), Auswahlrahmen, Fläche aufziehen …
 
-### hallenplan-bild.tsx (478 Z.)
+### hallenplan-bild.tsx (481 Z.)
 Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
 
-### hallenplan-eigenschaften.tsx (547 Z.)
+### hallenplan-eigenschaften.tsx (557 Z.)
 Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle (`HalleEigenschaften`) mit ihren Eingabefe …
 
-### hallenplan-entwuerfe.tsx (162 Z.)
+### hallenplan-entwuerfe.tsx (166 Z.)
 Prozeduren: hallenentwurf.entscheiden, hallenentwurf.laden, hallenentwurf.liste, hallenentwurf.loeschen, hallenentwurf.speichern, hallenentwurf.umbenennen
 
-### hallenplan-entwurf.ts (149 Z.)
+### hallenplan-entwurf.ts (151 Z.)
 Entwurf des Hallenplan-Editors und alles, was ihn speichert: jede Änderung wirkt sofort im Entwurf und geht der Reihe nach an den Server (`kette`), …
 Prozeduren: katalog.halleSetzen, katalog.planFestschreiben, katalog.planNeuSetzen
 
-### hallenplan-geometrie.ts (534 Z.)
+### hallenplan-geometrie.ts (565 Z.)
 Reine Rechnungen des Hallenplan-Editors (ohne React): Auswahl und Teile, Lage und Versatz von Reihen, Platten und Objekten, Hindernisse (`planKoerp …
 
-### hallenplan-grundriss.tsx (199 Z.)
+### hallenplan-grundriss.tsx (206 Z.)
 Grundriss der Halle bearbeiten (Entscheidung 019): Wände ziehen (rechtwinklig, 10-cm-Raster), eine Wand per Doppelklick teilen, „Rechteck“ setzt zu …
 
-### hallenplan-teile.tsx (229 Z.)
+### hallenplan-teile.tsx (253 Z.)
 Kleine Teile des Hallenplans: Muster und Legende, Tiere ohne Platz, Sparten in den Reihen, Angaben zu einem Käfig, Schalter „Automatisch planen“.
 Prozeduren: katalog.kaefigInfo
 
-### hallenplan-uebersicht.tsx (201 Z.)
+### hallenplan-uebersicht.tsx (209 Z.)
 Anzeige unter dem Hallenplan: Legende der Zeichnung, „Platz“ (gestellt, ohne Platz, frei) und die Aufbauliste je Reihe.
 
-### hallenplan-vorschlaege.tsx (193 Z.)
+### hallenplan-vorschlaege.tsx (208 Z.)
 Stellvorschläge: dieselbe Halle in allen möglichen Aufstellungen, je mit Skizze (`HallenSkizze`).
 Prozeduren: katalog.planNeuSetzen, katalog.stellVorschlaege, katalog.stellVorschlaegeEntwurf
 
-### hallenplan-werkzeuge.tsx (301 Z.)
+### hallenplan-werkzeuge.tsx (302 Z.)
 Bausteine der Werkzeugleiste im Hallenplan-Editor: Symbole, Werkzeugknöpfe mit Tooltip (Name und Tastenkürzel), Gruppen und aufklappbare Menüs.
 
-### hallenplan-werkzeugleiste.tsx (206 Z.)
+### hallenplan-werkzeugleiste.tsx (211 Z.)
 Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen, Zoom, Menü „Plan“).
 
-### hallenplan.tsx (473 Z.) – `/schau/:schauId/hallenplan`
+### hallenplan.tsx (478 Z.) – `/schau/:schauId/hallenplan`
 Seite „Hallenplan“: neue Halle anlegen und der Editor (`Plan`) mit Speichern, Rückgängig, Auswahl und Tastatur.
 Prozeduren: katalog.halleSetzen, katalog.hallenplan
 
-### hilfe.tsx (182 Z.) – `/hilfe`, `/hilfe/:teil`
+### hilfe.tsx (190 Z.) – `/hilfe`, `/hilfe/:teil`
 Prozeduren: auth.status
 
-### import.tsx (421 Z.) – `/import`
+### import.tsx (432 Z.) – `/import`
 Prozeduren: datenimport.laeufe, datenimport.lesen, datenimport.pruefen, datenimport.uebernehmen, datenimport.zuruecknehmen, schau.liste
 
-### kaefige.tsx (473 Z.) – `/schau/:schauId/kaefige`
+### kaefige.tsx (499 Z.) – `/schau/:schauId/kaefige`
 Prozeduren: katalog.aufstellerSetzen, katalog.kaefigMassSetzen, katalog.kaefigRegelSetzen, katalog.kaefigbedarf, katalog.plattenSetzen, katalog.sockelBildEntfernen, katalog.sockelBildSetzen
 
-### kassenbuch.tsx (334 Z.) – `/schau/:schauId/kassenbuch`
+### kassenbuch.tsx (337 Z.) – `/schau/:schauId/kassenbuch`
 Prozeduren: kasse.belege, kasse.kassenbewegung, kasse.kassenbuch, kasse.tagesabschluss
 
-### katalog-gestalten-aufbau.tsx (269 Z.)
+### katalog-gestalten-aufbau.tsx (279 Z.)
 
 ### katalog-gestalten-bausteine.tsx (55 Z.)
 
-### katalog-gestalten-bilder.tsx (158 Z.)
+### katalog-gestalten-bilder.tsx (163 Z.)
 Prozeduren: katalogGestaltung.bildAngabenSetzen, katalogGestaltung.bildHochladen, katalogGestaltung.laden
 
 ### katalog-gestalten-form.ts (33 Z.)
 
-### katalog-gestalten-teile.tsx (262 Z.)
+### katalog-gestalten-teile.tsx (234 Z.)
 Prozeduren: katalogGestaltung.beitraegeOrdnen, katalogGestaltung.beitragLoeschen, katalogGestaltung.beitragSpeichern
 
-### katalog-gestalten-titelseite.tsx (93 Z.)
+### katalog-gestalten-titelseite.tsx (96 Z.)
 Prozeduren: katalogGestaltung.bildLoeschen
 
-### katalog-gestalten.tsx (203 Z.) – `/schau/:schauId/katalog/gestalten`
+### katalog-gestalten.tsx (201 Z.) – `/schau/:schauId/katalog/gestalten`
 Prozeduren: auth.status, katalogGestaltung.laden, katalogGestaltung.speichern, schau.get, termine.laden
 
 ### katalog-reihenfolge.tsx (96 Z.)
 Prozeduren: schau.katalogSortierungSetzen
 
-### katalog-vorschau.tsx (141 Z.)
+### katalog-vorschau.tsx (145 Z.)
 
-### katalog.tsx (177 Z.) – `/schau/:schauId/katalog`
+### katalog.tsx (176 Z.) – `/schau/:schauId/katalog`
 Prozeduren: auth.status, katalog.gedrucktSetzen, katalog.liste, katalog.nummernVergeben, schau.get
 
-### kommende-schauen.tsx (534 Z.)
+### kommende-schauen.tsx (563 Z.)
 Prozeduren: termine.aboAbrufen, termine.aboLoeschen, termine.aboSpeichern, termine.abweichung, termine.druckenSetzen, termine.laden, termine.loeschen, termine.pruefen, termine.speichern, termine.veroeffentlichenSetzen, termine.wahlSetzen
 
-### lastschrift.tsx (214 Z.) – `/schau/:schauId/lastschrift`
+### lastschrift.tsx (218 Z.) – `/schau/:schauId/lastschrift`
 Prozeduren: lastschrift.buchen, lastschrift.datei, lastschrift.erstellen, lastschrift.ruecklastschrift, lastschrift.uebersicht, lastschrift.verwerfen
 
-### meisterschaften.tsx (84 Z.) – `/schau/:schauId/meisterschaften`
+### meisterschaften.tsx (90 Z.) – `/schau/:schauId/meisterschaften`
 Prozeduren: meisterschaft.ergebnisse
 
-### meldung-bearbeiten.tsx (455 Z.) – `/schau/:schauId/meldungen/neu`, `/schau/:schauId/meldungen/:meldungId`
+### meldung-bearbeiten.tsx (464 Z.) – `/schau/:schauId/meldungen/neu`, `/schau/:schauId/meldungen/:meldungId`
 Prozeduren: meldung.adressVorschlaege, meldung.ausstellerSuche, meldung.bestaetigungSenden, meldung.get, meldung.speichern, meldung.statusSetzen, meldung.verfallBuchen, meldung.zahlungErfassen, meldung.zahlungStornieren, schau.get, stammdaten.suche
 
-### meldungen.tsx (130 Z.) – `/schau/:schauId/meldungen`
+### meldungen.tsx (129 Z.) – `/schau/:schauId/meldungen`
 Prozeduren: meldung.liste, schau.get
 
 ### oeffentlich.tsx (565 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
 Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.meineMeldung, oeffentlich.melden, oeffentlich.onlineVeroeffentlichung, oeffentlich.rechtstexte, oeffentlich.schau
 
-### preise.tsx (462 Z.) – `/schau/:schauId/preise`
+### preise.tsx (471 Z.) – `/schau/:schauId/preise`
 Prozeduren: auth.status, preise.entfernen, preise.freigeben, preise.stiftungBarErhalten, preise.stiftungLoeschen, preise.stiftungSpeichern, preise.uebersicht, preise.vergeben, schau.get
 
-### preisrichter.tsx (506 Z.) – `/schau/:schauId/preisrichter`
+### preisrichter.tsx (520 Z.) – `/schau/:schauId/preisrichter`
 Prozeduren: preisrichter.einteilungSetzen, preisrichter.einteilungVorschlagen, preisrichter.liste, preisrichter.loeschen, preisrichter.pinErzeugen, preisrichter.speichern, preisrichter.sperreAufheben, preisrichter.zuteilung, preisrichter.zuteilungSetzen, preisrichter.zuteilungVorschlagen, schau.get, stammdaten.gliederung
 
-### protokoll.tsx (147 Z.) – `/schau/:schauId/protokoll`
+### protokoll.tsx (138 Z.) – `/schau/:schauId/protokoll`
 Prozeduren: schau.protokoll, schau.protokollPruefen
 
-### rassebilder.tsx (268 Z.)
+### rassebilder.tsx (276 Z.)
 Prozeduren: rassebild.angabenSetzen, rassebild.hochladen, rassebild.liste, rassebild.loeschen
 
-### richter-anmeldung.tsx (171 Z.)
+### richter-anmeldung.tsx (170 Z.)
 Preisrichter-Tablet: Anmeldung mit Name und PIN, Hinweis auf noch nicht übertragene Bewertungen im Gerät.
 Prozeduren: richter.anmeldeInfo, richter.anmelden
 
-### richter-geraet.ts (95 Z.)
+### richter-geraet.ts (97 Z.)
 Preisrichter-Tablet: Datentypen und was im Gerät liegt (Schlüssel in IndexedDB/localStorage, gemerkter Preisrichter, Aufräumen).
 
-### richter-karte.tsx (263 Z.)
+### richter-karte.tsx (269 Z.)
 Preisrichter-Tablet: Bewertungskarte eines Tieres (Note, Texte mit Bausteinen, Preise).
 
-### richter-obmann.tsx (40 Z.)
+### richter-obmann.tsx (43 Z.)
 Preisrichter-Tablet: Ansicht für den Obmann zum Bestätigen von Noten.
 
-### richter-tablet.tsx (568 Z.)
+### richter-tablet.tsx (550 Z.)
 Preisrichter-Tablet nach der Anmeldung: Tierliste, Ausgang und Abgleich mit dem Server, abgelehnte Bewertungen.
 
 ### richter.tsx (55 Z.) – `/richter/:slug`
 Bewertung am Tablet für Preisrichter.
 Prozeduren: auth.status
 
-### schau-liste.tsx (206 Z.) – `/`
+### schau-liste.tsx (209 Z.) – `/`
 Prozeduren: auth.status, schau.anlegen, schau.liste
 
-### spende-erfassen.tsx (178 Z.)
+### spende-erfassen.tsx (184 Z.)
 Prozeduren: spenden.erfassen, spenden.spender, spenden.spenderSpeichern
 
-### spenden.tsx (168 Z.) – `/schau/:schauId/spenden`
+### spenden.tsx (174 Z.) – `/schau/:schauId/spenden`
 Prozeduren: spenden.bestaetigen, spenden.liste, spenden.steuer, spenden.stornieren
 
-### spender.tsx (181 Z.) – `/spender`
+### spender.tsx (187 Z.) – `/spender`
 Prozeduren: spenden.bestaetigungStornieren, spenden.sammelbestaetigen, spenden.spender, spenden.spenderDetails, spenden.spenderSpeichern
 
-### stammdaten.tsx (291 Z.) – `/stammdaten`
+### stammdaten.tsx (302 Z.) – `/stammdaten`
 Prozeduren: auth.status, stammdaten.baum, stammdaten.ergaenzen, stammdaten.gliederung, stammdaten.importieren, stammdaten.loeschen, stammdaten.versionen
 
-### uebersicht.tsx (302 Z.) – `/schau/:schauId`
+### uebersicht.tsx (297 Z.) – `/schau/:schauId`
 Prozeduren: auth.status, schau.phaseSetzen, schau.uebersicht
 
-### verein-abmeldung.tsx (53 Z.)
+### verein-abmeldung.tsx (56 Z.)
 Prozeduren: verein.abmeldung, verein.abmeldungSpeichern
 
-### verein-druckvorlagen.tsx (75 Z.)
+### verein-druckvorlagen.tsx (77 Z.)
 Prozeduren: druckvorlage.liste, druckvorlage.loeschen
 
-### verein-lastschrift.tsx (43 Z.)
+### verein-lastschrift.tsx (45 Z.)
 Prozeduren: lastschrift.einstellungen, lastschrift.glaeubigerIdSetzen
 
-### verein-steuer.tsx (75 Z.)
+### verein-steuer.tsx (78 Z.)
 Prozeduren: spenden.steuer, spenden.steuerSpeichern
 
-### verein.tsx (546 Z.) – `/verein`
+### verein.tsx (561 Z.) – `/verein`
 Prozeduren: bewertung.textbausteinGrundbestand, bewertung.textbausteinLoeschen, bewertung.textbausteinSpeichern, bewertung.textbausteine, schau.postErneutSenden, schau.postausgang, stammdaten.gliederung, stammdaten.versionen, verein.auskunftPerson, verein.bereinigen, verein.get, verein.speichern
 
-### verkauf.tsx (340 Z.) – `/schau/:schauId/verkauf`
+### verkauf.tsx (339 Z.) – `/schau/:schauId/verkauf`
 Prozeduren: auth.status, kasse.angebot, kasse.offeneUeberweisungen, kasse.stornieren, kasse.tierSuchen, kasse.verkaeufe, kasse.verkaufen, kasse.zahlungseingangVerkauf, schau.get
 
 ## Weitere Dateien
@@ -1576,7 +2657,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `schema-kasse.ts` (79 Z.) – Kassenbuch und Belegarchiv: Kassenbewegungen, Tagesabschlüsse, Belege; SEPA-Überweisungsläufe. · KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, sepaLauf
 - `schema-katalog.ts` (142 Z.) – Katalog-Gestaltung: Druckvorlagen, Gestaltung, Bilder, Rassebilder, Beiträge (Grußworte, Anzeigen). · KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, druckvorlage, katalogGestaltung, bild, rassebild, katalogBeitrag
 - `schema-lastschrift.ts` (74 Z.) – SEPA-Lastschrift (Entscheidung 018): Mandate der Aussteller und Lastschriftläufe je Schau. · sepaMandat, lastschriftLauf
-- `schema-mandant.ts` (131 Z.) – Mandant (Verein) mit Benutzern und Sitzungen; Stammdaten des Verzeichnisses (Sparten, Rassen, Farbenschläge je Version). · organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag
+- `schema-mandant.ts` (133 Z.) – Mandant (Verein) mit Benutzern und Sitzungen; Stammdaten des Verzeichnisses (Sparten, Rassen, Farbenschläge je Version). · organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag
 - `schema-meldung.ts` (165 Z.) – Aussteller und Meldungen: Aussteller, Meldung, Zahlung des Meldegelds, Katalogeinträge (Tiere). · aussteller, meldung, zahlung, katalogeintrag
 - `schema-protokoll.ts` (73 Z.) – Protokoll und Post: Änderungsprotokoll mit Hash-Kette und ihren Vermerken, Postausgang. · aenderung, postausgang, aenderungKette, aenderungGeloescht, aenderungAnonymisiert
 - `schema-schau.ts` (143 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
@@ -1589,7 +2670,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 ### Server sonst `apps/server/src`
 
-- `auth.ts` (189 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
+- `auth.ts` (190 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
 - `besucher-adresse.ts` (31 Z.) – Adresse des Besuchers für die Bremsen (tRPC-Kontext und öffentliche Dateien), auch hinter einem eigenen Proxy (TRUST_PROXY). · clientIp
 - `config.ts` (30 Z.) · config
 - `csv.ts` (15 Z.) – CSV für Excel: Semikolon, BOM, Schutz vor Formel-Injektion. · csv
@@ -1614,26 +2695,27 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 - `aussteller.tsx` (138 Z.) · leererAussteller, AusstellerFelder
 - `girocode.tsx` (42 Z.) – Überweisung des Meldegelds für Aussteller (Entscheidung 021): Bankverbindung, Verwendungszweck mit Referenz und der GiroCode zum Scannen mit der Ba … · Ueberweisung
-- `positionen.tsx` (479 Z.) · neuePosition, alsEingabe, pruefePositionen, ausEintrag, FarbenschlagWahl, PositionenEditor
-- `abmeldung.tsx` (78 Z.) · eingabeVorMs, useAutoAbmeldung, AbmeldeHinweis
-- `lib.ts` (42 Z.) · fehlerText, datum, datumZeit, heuteIso, centZuText, ALTER_LABEL
+- `positionen.tsx` (480 Z.) · neuePosition, alsEingabe, pruefePositionen, ausEintrag, FarbenschlagWahl, PositionenEditor
+- `abmeldung.tsx` (80 Z.) · eingabeVorMs, useAutoAbmeldung, AbmeldeHinweis
+- `lib.ts` (51 Z.) · fehlerText, datum, datumZeit, heuteIso, centZuText, alterLabel
 - `main.tsx` (22 Z.)
 - `modus.ts` (46 Z.) · setzeFarbmodus, useFarbmodus
 - `pdf-anzeige.tsx` (43 Z.) – PDF im Browser anzeigen (pdf.js), gemeinsam für die Live-Vorschauen von Katalog und Druckvorlagen. · pdfjs, PdfSeite
-- `rahmen.tsx` (449 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
+- `rahmen.tsx` (462 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
 - `rolle.ts` (9 Z.) · useIstAdmin
 - `routes.tsx` (120 Z.) · router
-- `seitenmenue.tsx` (190 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · SCHAU_GRUPPEN, allgemeineGruppen, useKlappzustand, MenueGruppen
-- `sprache.tsx` (110 Z.) – Sprache der Seiten für Aussteller (Entscheidung 020): alles unter `/s/…` – öffentliche Schauseite, Online-Meldung, Meine Meldung, Ergebnisse, Impre … · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, SprachWahl, fehlerFuerAussteller
+- `seitenmenue.tsx` (194 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · schauGruppen, allgemeineGruppen, useKlappzustand, MenueGruppen
+- `sprache-jetzt.ts` (20 Z.) – Sprache der Oberfläche für Code außerhalb von Komponenten (Fehlertexte, Datum, Rückfragen): `SpracheRahmen` setzt sie, Komponenten nehmen besser `u … · setzeAktuelleSprache, aktuelleSprache, ot
+- `sprache.tsx` (144 Z.) – Sprache der Oberfläche. · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, useOberflaeche, SprachWahl, fehlerFuerAussteller
 - `symbole.tsx` (45 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui-basis.ts` (11 Z.) · cx, TON
-- `ui-dialog.tsx` (124 Z.) – Dialog und Rückfragen als eigener Dialog (useFrage statt prompt/confirm). · Dialog, FragenAnbieter, useFrage
+- `ui-dialog.tsx` (128 Z.) – Dialog und Rückfragen als eigener Dialog (useFrage statt prompt/confirm). · Dialog, FragenAnbieter, useFrage
 - `ui-felder.tsx` (71 Z.) – Formularfelder: Feld mit Beschriftung, Eingabe, Textfeld, Auswahl, Haken. · feldKlasse, Feld, Eingabe, Textfeld, Auswahl, Haken
 - `ui-knoepfe.tsx` (45 Z.) – Knöpfe: Knopf, Link im Aussehen eines Knopfs und ihre Klassen. · knopfKlasse, Knopf, KnopfLink
-- `ui-meldungen.tsx` (42 Z.) – Rückmeldungen als Toast unten rechts (useMeldung). · MeldungenAnbieter, useMeldung
-- `ui-seite.tsx` (232 Z.) – Bausteine einer Seite: Hinweise, Marken, Seitenkopf, Abschnitte, Tabellenrahmen, Suche, Kennzahlen, Lade- und Leerzustand. · Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, Kennzahlen, Leer, Laden, FehlerAnzeige
-- `ui-speichern.tsx` (76 Z.) – Speichern in der Kopfleiste: Speicherleiste bei ungespeicherten Änderungen, Speicherstatus bei sofortigem Speichern. · SpeicherPlatz, Speicherleiste, SpeicherStatus
+- `ui-meldungen.tsx` (43 Z.) – Rückmeldungen als Toast unten rechts (useMeldung). · MeldungenAnbieter, useMeldung
+- `ui-seite.tsx` (235 Z.) – Bausteine einer Seite: Hinweise, Marken, Seitenkopf, Abschnitte, Tabellenrahmen, Suche, Kennzahlen, Lade- und Leerzustand. · Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, Kennzahlen, Leer, Laden, FehlerAnzeige
+- `ui-speichern.tsx` (79 Z.) – Speichern in der Kopfleiste: Speicherleiste bei ungespeicherten Änderungen, Speicherstatus bei sofortigem Speichern. · SpeicherPlatz, Speicherleiste, SpeicherStatus
 - `ui-ungespeichert.tsx` (65 Z.) – Warnung vor dem Verlassen mit ungespeicherten Eingaben (Formulare anmelden, ein Wächter im Wurzel-Layout). · useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter
 - `ui.tsx` (33 Z.) – Einstieg für alle UI-Bausteine – Seiten importieren von hier.
 
@@ -1700,5 +2782,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `57-sprachen.ts` (91 Z.) – Sprachen der Seiten und Mails für Aussteller (Entscheidung 020): Schauseite, Fehlermeldungen der Online-Meldung, Sprache an der Meldung, Bestätigun …
 - `58-a-bogen.ts` (66 Z.) – A-Bogen (Meldebogen zum Ausfüllen und Unterschreiben): leer öffentlich über die Schauseite, leer und vorausgefüllt für die Ausstellungsleitung.
 - `59-girocode.ts` (146 Z.) – Überweisung mit Referenz und GiroCode (Entscheidung 021): nur mit vollständigem Vereinskonto, Referenz je Meldung im Verwendungszweck, Code über de …
+- `60-oberflaeche-sprache.ts` (29 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

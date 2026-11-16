@@ -34,3 +34,24 @@ export function oberflaeche(sprache: Sprache): OberflaecheTexte {
 }
 
 export { serverText } from "./server";
+
+const rueck = new Map<Sprache, Map<string, string>>();
+/**
+ * Fester Text der Oberfläche zurück auf Deutsch (z. B. ein Name eines Bearbeitungsschritts, der ins Protokoll geht – das
+ * Protokoll bleibt deutsch). Nur für Texte ohne Platzhalter; Unbekanntes bleibt, wie es ist.
+ */
+export function aufDeutsch(text: string, sprache: Sprache): string {
+  if (sprache === "de") return text;
+  let m = rueck.get(sprache);
+  if (!m) {
+    const karte = new Map<string, string>();
+    const lauf = (w: unknown, de: unknown) => {
+      if (typeof w === "string" && typeof de === "string") karte.has(w) || karte.set(w, de);
+      else if (w && typeof w === "object" && de && typeof de === "object")
+        for (const [k, v] of Object.entries(w)) lauf(v, (de as Record<string, unknown>)[k]);
+    };
+    lauf(oberflaeche(sprache), deOberflaeche);
+    rueck.set(sprache, (m = karte));
+  }
+  return m.get(text) ?? text;
+}

@@ -54,7 +54,7 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     meinZugang: "My account",
   },
   benutzerMenue: {
-    administrator: "Admin",
+    administrator: "Administrator",
     mitarbeiter: "Helper",
     darstellung: "Appearance",
     system: "System",

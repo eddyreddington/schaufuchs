@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { fehlerText, formatEuro, formatKatalognummer } from "../lib";
+import { fehlerText, formatEuro, formatKatalognummer, alterLabel } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useOberflaeche } from "../sprache";
 import { KatalogReihenfolge } from "./katalog-reihenfolge";
@@ -156,7 +156,7 @@ export function Katalog() {
                       <span className="block text-sm text-grau">{e.sparte}{e.istJugend && tk.jugend}</span>
                     </td>
                     <td className="whitespace-nowrap">
-                      {e.geschlecht} {e.alter}
+                      {e.geschlecht} {alterLabel(e.alter)}
                       {e.art !== "einzeltier" && <span className="block text-sm text-grau">{t.fach.MELDEART_LABEL[e.art]}</span>}
                     </td>
                     <td>{e.ausstellerName}</td>

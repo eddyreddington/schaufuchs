@@ -1,6 +1,6 @@
 import { bewertungsText } from "@schau/domain";
 import { useState, type FormEvent } from "react";
-import { datumZeit, fehlerText, formatEuro, formatKatalognummer, heuteIso } from "../lib";
+import { datumZeit, fehlerText, formatEuro, formatKatalognummer, heuteIso, alterLabel } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useOberflaeche } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
@@ -141,7 +141,7 @@ export function Verkauf() {
                       <span className="min-w-0 flex-1">
                         <span className="text-tinte">{a.bezeichnung}</span>
                         <span className="block text-sm text-grau">
-                          {a.geschlecht} {a.alter}
+                          {a.geschlecht} {alterLabel(a.alter)}
                           {(a.punkte != null || a.sondernote) && ` · ${bewertungsText(a)}`}
                         </span>
                       </span>
@@ -269,7 +269,7 @@ function VerkaufFormular({ schauId, daten, fertig }: { schauId: number; daten: N
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-linie pb-4">
         <div className="min-w-0">
           <p className="nummer text-3xl leading-none">{formatKatalognummer(e)}</p>
-          <p className="mt-1.5 text-tinte">{e.bezeichnung}, {e.geschlecht} {e.alter}</p>
+          <p className="mt-1.5 text-tinte">{e.bezeichnung}, {e.geschlecht} {alterLabel(e.alter)}</p>
         </div>
         {e.verkaufspreisCent ? <p className="text-2xl font-semibold tabular-nums">{formatEuro(e.verkaufspreisCent)}</p> : <Marke>{tv.nichtVerkaeuflich}</Marke>}
       </div>

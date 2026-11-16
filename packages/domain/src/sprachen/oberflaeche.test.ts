@@ -19,7 +19,7 @@ function alleTexte(wurzel: unknown): [string, string][] {
 }
 
 /** Gleich lautende Texte, die in einer Sprache wirklich so heißen (Fachwörter, Abkürzungen, Eigennamen). */
-const GLEICH_ERLAUBT = /^[\s\d\W]*$|^(IBAN|BIC|PDF|CSV|XLSX|SEPA|E-Mail|OK|Status|Logo|Name|Total|Volière|Volieren|Kreis)\b/;
+const GLEICH_ERLAUBT = /^[\s\d\W]*$|^(IBAN|BIC|PDF|CSV|XLSX|SEPA|E-Mail|OK|Status|Logo|Name|Total|Volière|Volieren|Kreis|Administrator)\b/;
 
 describe("Texte der Oberfläche (Entscheidung 022)", () => {
   test("jede Sprache hat jeden Text, keiner ist leer", () => {

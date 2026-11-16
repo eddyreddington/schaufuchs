@@ -50,7 +50,7 @@ export function AusstellerFelder({
   vorschlaege?: Partial<AdressVorschlaege>;
 }) {
   const listId = useId();
-  // Online-Meldung in der Sprache des Ausstellers; in der Oberfläche des Vereins deutsch.
+  // Online-Meldung in der Sprache des Ausstellers, in der Verwaltung in der Sprache des Benutzers (Entscheidung 022).
   const t = useTexte().person;
   const v = vorschlaege ?? {};
   const plz = a.plz.trim();

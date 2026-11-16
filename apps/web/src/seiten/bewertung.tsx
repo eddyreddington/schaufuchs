@@ -1,6 +1,6 @@
 import { bewertungsText, erlaubtePunkte, serverText, SONDERNOTEN, type Sondernote } from "@schau/domain";
 import { useEffect, useState } from "react";
-import { fehlerText, formatKatalognummer } from "../lib";
+import { fehlerText, formatKatalognummer, alterLabel } from "../lib";
 import { Link } from "react-router-dom";
 import { useSchauId } from "../rahmen";
 import { useOberflaeche, useSprache } from "../sprache";
@@ -214,7 +214,7 @@ function Zeile({ e, skala, schauId, freigegeben, naechste }: { e: Eintrag; skala
       <td>
         <span className="font-semibold text-tinte">{e.bezeichnung}</span>
         <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-grau">
-          {e.geschlecht} {e.alter}
+          {e.geschlecht} {alterLabel(e.alter)}
           {e.status === "fehlt" && <Marke ton="fehler">{t.schautage.gemeinsam.fehlt}</Marke>}
         </span>
       </td>

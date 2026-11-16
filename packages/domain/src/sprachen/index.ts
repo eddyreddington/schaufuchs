@@ -76,4 +76,4 @@ export function datumIn(d: string | Date | null | undefined, sprache: Sprache): 
 
 export { franzoesischeZeichen, ohneEszett } from "./umschreiben";
 export type { Uebersetzung } from "./uebersetzung";
-export { oberflaeche, serverText, type OberflaecheTexte } from "./oberflaeche";
+export { aufDeutsch, oberflaeche, serverText, type OberflaecheTexte } from "./oberflaeche";
