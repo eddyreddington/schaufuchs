@@ -1399,7 +1399,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `vorlagen`
 
-### index.ts (57 Z.)
+### index.ts (69 Z.)
 Texte der ganzen Oberfläche – Anmeldung, Verwaltung, Helfer, Preisrichter-Tablet – in allen Sprachen (Entscheidung 022).
 Sammelt alle Exporte (`export * from …`).
 
@@ -2706,7 +2706,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `routes.tsx` (120 Z.) · router
 - `seitenmenue.tsx` (194 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · schauGruppen, allgemeineGruppen, useKlappzustand, MenueGruppen
 - `sprache-jetzt.ts` (20 Z.) – Sprache der Oberfläche für Code außerhalb von Komponenten (Fehlertexte, Datum, Rückfragen): `SpracheRahmen` setzt sie, Komponenten nehmen besser `u … · setzeAktuelleSprache, aktuelleSprache, ot
-- `sprache.tsx` (144 Z.) – Sprache der Oberfläche. · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, useOberflaeche, SprachWahl, fehlerFuerAussteller
+- `sprache.tsx` (154 Z.) – Sprache der Oberfläche. · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, useOberflaeche, SprachWahl, fehlerFuerAussteller
 - `symbole.tsx` (45 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui-basis.ts` (11 Z.) · cx, TON
@@ -2782,6 +2782,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `57-sprachen.ts` (91 Z.) – Sprachen der Seiten und Mails für Aussteller (Entscheidung 020): Schauseite, Fehlermeldungen der Online-Meldung, Sprache an der Meldung, Bestätigun …
 - `58-a-bogen.ts` (66 Z.) – A-Bogen (Meldebogen zum Ausfüllen und Unterschreiben): leer öffentlich über die Schauseite, leer und vorausgefüllt für die Ausstellungsleitung.
 - `59-girocode.ts` (146 Z.) – Überweisung mit Referenz und GiroCode (Entscheidung 021): nur mit vollständigem Vereinskonto, Referenz je Meldung im Verwendungszweck, Code über de …
-- `60-oberflaeche-sprache.ts` (29 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
+- `60-oberflaeche-sprache.ts` (30 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
