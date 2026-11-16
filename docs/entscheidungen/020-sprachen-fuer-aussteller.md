@@ -1,6 +1,7 @@
 # 020 Sprachen der Seiten für Aussteller
 
-**Stand:** gilt (16.11.2026)
+**Stand:** gilt (16.11.2026), erweitert durch [022](022-sprachen-der-oberflaeche.md): seit 022 ist auch die Oberfläche
+des Vereins übersetzt; die Regeln hier für Aussteller-Seiten und Mails gelten weiter.
 
 **Kontext:** Auf größeren und grenznahen Schauen melden Aussteller aus den Nachbarländern. Sie sollen online melden und
 ihre Bestätigung lesen können. Die Oberfläche des Vereins (69 Seiten) bleibt deutsch – eine Übersetzung müsste bei jeder

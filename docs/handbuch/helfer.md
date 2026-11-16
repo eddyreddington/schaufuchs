@@ -92,6 +92,15 @@ Danach steht dort „aktiv“ und wie viele Notfallcodes Sie noch übrig haben. 
 
 Abschalten: Klicken Sie auf „Abschalten …“, tragen Sie Ihr „Passwort“ und einen „Code aus der App oder Notfallcode“ ein und klicken Sie auf „Zwei-Faktor-Anmeldung abschalten“.
 
+### Sprache der Oberfläche
+
+SchauFUCHS gibt es auf Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niederländisch, Polnisch und Tschechisch.
+
+- Vor der Anmeldung: Auf der Anmeldeseite ganz unten die Sprache wählen. Dieser Browser merkt sich die Wahl.
+- Angemeldet: unten in der Seitenleiste auf Ihren Namen klicken und unter „Sprache“ wählen. Die Sprache gehört zu Ihrem Zugang und gilt auf jedem Gerät.
+
+Deutsch bleiben Rassen und Farbenschläge, Bewertungstexte, alle Drucke und PDFs, was der Verein selbst geschrieben hat, und dieses Handbuch.
+
 > **Wichtig:** Telefon verloren und keine Notfallcodes mehr? Dann kann nur die Ausstellungsleitung die Zwei-Faktor-Anmeldung zurücksetzen. Danach melden Sie sich wieder nur mit dem Passwort an.
 
 ## 2. Überblick: Seitenleiste, Schau, Phasen

@@ -111,6 +111,17 @@ Unten in der Seitenleiste auf Ihren Namen klicken, dann unter „Darstellung“ 
 
 Die Wahl gilt nur für dieses Gerät und diesen Browser. Gedruckt wird immer hell. Der Hallenplan bleibt auch im dunklen Modus ein helles Blatt, damit er aussieht wie gedruckt.
 
+### 1.6 Sprache der Oberfläche
+
+SchauFUCHS gibt es auf Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niederländisch, Polnisch und Tschechisch. Jede Sprache steht in der Auswahl unter ihrem eigenen Namen (z. B. „Polski“).
+
+- **Auf der Anmeldeseite** wählen Sie die Sprache unten unter „Hilfe zur Anmeldung und zur Software“. Die Wahl merkt sich dieser Browser.
+- **Angemeldet:** unten in der Seitenleiste auf Ihren Namen klicken, dann unter „Sprache“ wählen. Die Sprache wird mit Ihrem Zugang gespeichert und gilt auf jedem Gerät, an dem Sie sich anmelden.
+- Ohne eigene Wahl bleibt die Oberfläche deutsch – auch wenn der Browser auf eine andere Sprache eingestellt ist.
+- Jeder Helfer stellt seine eigene Sprache ein; die Kollegen am Nachbarrechner sehen weiter ihre.
+
+Übersetzt sind alle Seiten, Knöpfe, Hinweise und Fehlermeldungen. **Deutsch bleibt**, was Sie selbst schreiben (Schauname, Bestimmungen, Vorlagen), das Rassen- und Farbenschlagverzeichnis, Bewertungstexte und Textbausteine, alle Drucke und PDFs (Katalog, Bewertungskarten, Abrechnungen), Impressum und Datenschutzhinweise, das Protokoll, die Mails an Benutzer und dieses Handbuch. Die Seiten für Aussteller haben ihre eigene Sprachwahl (siehe „Online-Meldung in anderen Sprachen“).
+
 ---
 
 ## 2. Benutzer verwalten

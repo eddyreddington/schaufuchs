@@ -48,7 +48,7 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
 | Teilschauen (fortlaufende Katalognummern) | `teilschau.ts`, `katalog.ts` | `routers/schau/einstellungen.ts` (`teilschauenSetzen`), `services/eintraege.ts`, `pdf/katalog-tierteil.ts` | `einstellungen-teilschauen.tsx` |
 | Hallenplan-Entwürfe und Archiv | `hallenplan-entfernen.ts` (`halleOhneFestenPlan`) | `routers/hallenentwurf.ts`, `db/schema-hallenentwurf.ts` | `hallenplan-entwuerfe.tsx` |
 | SEPA-Lastschrift | `lastschrift.ts` | `routers/lastschrift.ts`, `db/schema-lastschrift.ts` | `lastschrift.tsx`, `aussteller-mandate.tsx`, `verein-lastschrift.tsx` |
-| Sprachen für Aussteller ([020](entscheidungen/020-sprachen-fuer-aussteller.md)) | `sprachen/` | `routers/oeffentlich.ts`, `routers/meldung.ts` (`eingangsText`) | `sprache.tsx`, `oeffentlich.tsx` |
+| Sprachen ([020](entscheidungen/020-sprachen-fuer-aussteller.md), [022](entscheidungen/022-sprachen-der-oberflaeche.md)) | `sprachen/`, `sprachen/oberflaeche/` (`oberflaeche()`, `serverText()`) | `routers/oeffentlich.ts`, `routers/meldung.ts` (`eingangsText`), `routers/auth/anmeldung.ts` (`spracheSetzen`) | `sprache.tsx`, `sprache-jetzt.ts`, alle Seiten über `useOberflaeche()` – [Moduldoku](module/sprachen.md) |
 
 Bedienung und Hintergründe für Anwender: `docs/handbuch/` (in der App unter `/hilfe`).
 
