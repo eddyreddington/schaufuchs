@@ -1,6 +1,8 @@
-import { describe, expect, test } from "bun:test";
-import { oberflaeche, serverText, SPRACHEN, type Sprache } from ".";
+import { beforeAll, describe, expect, test } from "bun:test";
+import { ladeAlleOberflaechen, oberflaeche, serverText, SPRACHEN, type Sprache } from ".";
 import { deOberflaeche } from "./oberflaeche/de";
+
+beforeAll(ladeAlleOberflaechen);
 
 const BEISPIEL = ["WERT_A", "WERT_B", "WERT_C", "WERT_D", "WERT_E", "WERT_F"];
 

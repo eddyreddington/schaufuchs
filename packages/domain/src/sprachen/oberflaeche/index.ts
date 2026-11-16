@@ -6,31 +6,43 @@
 import type { Sprache } from "..";
 import type { Uebersetzung } from "../uebersetzung";
 import { franzoesischeZeichen, ohneEszett, umschreiben } from "../umschreiben";
-import { csOberflaeche } from "./cs";
 import { deOberflaeche } from "./de";
-import { enOberflaeche } from "./en";
-import { frOberflaeche } from "./fr";
-import { nlOberflaeche } from "./nl";
-import { plOberflaeche } from "./pl";
 
 export type OberflaecheTexte = Uebersetzung<typeof deOberflaeche>;
 
-const ROH: Record<Sprache, () => OberflaecheTexte> = {
-  de: () => deOberflaeche,
-  "de-CH": () => umschreiben(deOberflaeche, ohneEszett),
-  en: () => enOberflaeche,
-  fr: () => umschreiben(frOberflaeche, franzoesischeZeichen),
-  nl: () => nlOberflaeche,
-  pl: () => plOberflaeche,
-  cs: () => csOberflaeche,
+/**
+ * Übersetzungen werden erst bei Bedarf geladen (eigene Teile im Web-Bundle; Deutsch ist immer da). Vor der ersten
+ * Verwendung einer Sprache `ladeOberflaeche()` abwarten – `SpracheRahmen` tut das, Tests über `ladeAlleOberflaechen()`.
+ */
+const LADEN: Record<Exclude<Sprache, "de" | "de-CH">, () => Promise<OberflaecheTexte>> = {
+  en: async () => (await import("./en")).enOberflaeche,
+  fr: async () => umschreiben((await import("./fr")).frOberflaeche, franzoesischeZeichen),
+  nl: async () => (await import("./nl")).nlOberflaeche,
+  pl: async () => (await import("./pl")).plOberflaeche,
+  cs: async () => (await import("./cs")).csOberflaeche,
 };
-const fertig = new Map<Sprache, OberflaecheTexte>();
+const fertig = new Map<Sprache, OberflaecheTexte>([["de", deOberflaeche]]);
 
-/** Texte der Oberfläche in einer Sprache (einmal aufbereitet, dann aus dem Speicher). */
+/** Ist die Sprache geladen (Deutsch und Schweiz immer)? */
+export function oberflaecheGeladen(sprache: Sprache): boolean {
+  return sprache === "de-CH" || fertig.has(sprache);
+}
+
+/** Texte einer Sprache laden (einmal; danach sofort). */
+export async function ladeOberflaeche(sprache: Sprache): Promise<void> {
+  if (oberflaecheGeladen(sprache)) return;
+  fertig.set(sprache, await LADEN[sprache as keyof typeof LADEN]());
+}
+
+/** Alle Sprachen laden (Tests, Prüfwerkzeuge). */
+export async function ladeAlleOberflaechen(): Promise<void> {
+  await Promise.all((Object.keys(LADEN) as Sprache[]).map(ladeOberflaeche));
+}
+
+/** Texte der Oberfläche in einer Sprache; noch nicht geladene Sprachen vorerst deutsch. */
 export function oberflaeche(sprache: Sprache): OberflaecheTexte {
-  let t = fertig.get(sprache);
-  if (!t) fertig.set(sprache, (t = ROH[sprache]()));
-  return t;
+  if (sprache === "de-CH" && !fertig.has("de-CH")) fertig.set("de-CH", umschreiben(deOberflaeche, ohneEszett));
+  return fertig.get(sprache) ?? deOberflaeche;
 }
 
 export { serverText } from "./server";
@@ -41,7 +53,7 @@ const rueck = new Map<Sprache, Map<string, string>>();
  * Protokoll bleibt deutsch). Nur für Texte ohne Platzhalter; Unbekanntes bleibt, wie es ist.
  */
 export function aufDeutsch(text: string, sprache: Sprache): string {
-  if (sprache === "de") return text;
+  if (sprache === "de" || !oberflaecheGeladen(sprache)) return text;
   let m = rueck.get(sprache);
   if (!m) {
     const karte = new Map<string, string>();

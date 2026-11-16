@@ -6,8 +6,8 @@
  *   Benutzers (gespeichert am Konto) → zuletzt in diesem Browser gewählte → Deutsch. Die Browsersprache allein stellt die
  *   Verwaltung nicht um – wer bisher deutsch gearbeitet hat, merkt vom Update nichts.
  */
-import { istSprache, oberflaeche, passendeSprache, SPRACHEN, SPRACHNAME, texte, type OberflaecheTexte, type Sprache, type Texte } from "@schau/domain";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { istSprache, ladeOberflaeche, oberflaeche, oberflaecheGeladen, passendeSprache, SPRACHEN, SPRACHNAME, texte, type OberflaecheTexte, type Sprache, type Texte } from "@schau/domain";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { fehlerText } from "./lib";
 import { setzeAktuelleSprache } from "./sprache-jetzt";
@@ -57,7 +57,16 @@ export function SpracheRahmen({ children }: { children: ReactNode }) {
   const utils = trpc.useUtils();
   const amKonto = status.data?.benutzer?.sprache;
   const speichern = trpc.auth.spracheSetzen.useMutation();
-  const sprache: Sprache = aussteller ? fuerAussteller : istSprache(amKonto) ? amKonto : imBrowser;
+  const gewuenscht: Sprache = aussteller ? fuerAussteller : istSprache(amKonto) ? amKonto : imBrowser;
+  // Übersetzungen kommen als eigener Teil nach: bis dahin die zuletzt gezeigte Sprache (beim ersten Laden nichts).
+  const [, neuZeichnen] = useState(0);
+  const zuletzt = useRef<Sprache | null>(null);
+  const bereit = oberflaecheGeladen(gewuenscht);
+  if (bereit) zuletzt.current = gewuenscht;
+  useEffect(() => {
+    if (!bereit) void ladeOberflaeche(gewuenscht).then(() => neuZeichnen((n) => n + 1), () => neuZeichnen((n) => n + 1));
+  }, [gewuenscht, bereit]);
+  const sprache: Sprache = zuletzt.current ?? (bereit ? gewuenscht : "de");
   setzeAktuelleSprache(sprache);
   useEffect(() => {
     document.documentElement.lang = sprache;
@@ -80,6 +89,7 @@ export function SpracheRahmen({ children }: { children: ReactNode }) {
       speichern.mutate({ sprache: s });
     }
   };
+  if (!zuletzt.current) return null; // erster Aufruf in einer Übersetzung: einen Augenblick, bis sie geladen ist
   return <Kontext.Provider value={{ sprache, setzen }}>{children}</Kontext.Provider>;
 }
 

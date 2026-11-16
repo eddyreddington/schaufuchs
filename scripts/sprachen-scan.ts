@@ -139,7 +139,8 @@ export async function verloren(): Promise<{ datei: string; text: string }[]> {
 
 /** Meldungen des Servers (`fehler("CODE", "…")`), die `serverText()` nicht übersetzt. */
 export async function serverOhneUebersetzung(nur?: string[]): Promise<Stueck[]> {
-  const { serverText } = await import("../packages/domain/src");
+  const { ladeAlleOberflaechen, serverText } = await import("../packages/domain/src");
+  await ladeAlleOberflaechen();
   const liste = nur?.length ? nur.map((f) => join(WURZEL, f)) : dateien(SERVER, true);
   const aus: Stueck[] = [];
   for (const datei of liste) {

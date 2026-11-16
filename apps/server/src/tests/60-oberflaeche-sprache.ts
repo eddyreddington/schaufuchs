@@ -3,7 +3,7 @@
  * Meldungen des Servers bleiben deutsch und werden erst in der Oberfläche übersetzt (serverText).
  */
 import { describe, expect, test } from "bun:test";
-import { serverText } from "@schau/domain";
+import { ladeOberflaeche, serverText } from "@schau/domain";
 import { adminKontext, leer, m } from "./kontext";
 
 describe("Sprache der Oberfläche", () => {
@@ -21,6 +21,7 @@ describe("Sprache der Oberfläche", () => {
   });
 
   test("Fehler des Servers kommen deutsch und lassen sich übersetzen", async () => {
+    await ladeOberflaeche("en");
     const f = (await al().schau.get({ id: 2_000_000_000 }).catch((e: unknown) => e)) as Error;
     expect(f.message).toMatch(/[a-zäöü]/);
     expect(serverText(f.message, "de")).toBe(f.message);
