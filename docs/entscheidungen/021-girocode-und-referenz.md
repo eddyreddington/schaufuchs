@@ -13,7 +13,7 @@ ordnet die Eingänge von Hand zu. Zahlungsanbieter (Karte, PayPal, Lastschrift �
 - Jede Meldung bekommt eine Referenz nach ISO 11649: „RF“, zwei Prüfziffern, Meldungsnummer siebenstellig (gleich
   lang, damit keine Referenz Anfang einer anderen ist). Sie steht **vorn im unstrukturierten Verwendungszweck**
   („RF540001234 Meldegeld Mueller, Hans“), nicht im Feld für strukturierte Referenzen. So sieht sie jeder: Banking-Apps
-  zeigen sie, Aussteller ohne GiroCode tippen sie mit ab, ein späterer Kontoauszug-Import findet sie im Text. Der Name
+  zeigen sie, Aussteller ohne GiroCode tippen sie mit ab, der Kontoauszug-Import (Entscheidung 023) findet sie im Text. Der Name
   ist frei eingegeben und steht in der Mail des Vereins: wie die Anrede nur Buchstaben, keine Links.
 - GiroCode nach EPC069-12 Version 002 (UTF-8, Fehlerkorrektur M, Ruhezone vier Module) über den **offenen** Betrag;
   ohne offenen Betrag oder bei stornierter bzw. abgelehnter Meldung kein Code. Auch kein Code ab der Einlieferung (dann

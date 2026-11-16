@@ -1,0 +1,6870 @@
+{
+  "id": "fccc7277-1668-46b1-9ba6-285a609ad027",
+  "prevId": "1c06937e-9027-4cf7-a135-a3b8ec13cf35",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.benutzer": {
+      "name": "benutzer",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "passwort_hash": {
+          "name": "passwort_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rolle": {
+          "name": "rolle",
+          "type": "rolle",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'mitarbeiter'"
+        },
+        "aktiv": {
+          "name": "aktiv",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "totp_geheim": {
+          "name": "totp_geheim",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totp_aktiv_seit": {
+          "name": "totp_aktiv_seit",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totp_letzter_schritt": {
+          "name": "totp_letzter_schritt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "totp_notfall": {
+          "name": "totp_notfall",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "geloescht_am": {
+          "name": "geloescht_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "einladung_hash": {
+          "name": "einladung_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "einladung_bis": {
+          "name": "einladung_bis",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "benutzer_email_idx": {
+          "name": "benutzer_email_idx",
+          "columns": [
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "benutzer_einladung_idx": {
+          "name": "benutzer_einladung_idx",
+          "columns": [
+            {
+              "expression": "einladung_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "benutzer_organisation_id_organisation_id_fk": {
+          "name": "benutzer_organisation_id_organisation_id_fk",
+          "tableFrom": "benutzer",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.farbenschlag": {
+      "name": "farbenschlag",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "version_id": {
+          "name": "version_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rasse_id": {
+          "name": "rasse_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "folge": {
+          "name": "folge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "farbenschlag_rasse_idx": {
+          "name": "farbenschlag_rasse_idx",
+          "columns": [
+            {
+              "expression": "rasse_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "farbenschlag_version_idx": {
+          "name": "farbenschlag_version_idx",
+          "columns": [
+            {
+              "expression": "version_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "folge",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "farbenschlag_version_id_stammdaten_version_id_fk": {
+          "name": "farbenschlag_version_id_stammdaten_version_id_fk",
+          "tableFrom": "farbenschlag",
+          "tableTo": "stammdaten_version",
+          "columnsFrom": [
+            "version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "farbenschlag_rasse_id_rasse_id_fk": {
+          "name": "farbenschlag_rasse_id_rasse_id_fk",
+          "tableFrom": "farbenschlag",
+          "tableTo": "rasse",
+          "columnsFrom": [
+            "rasse_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.organisation": {
+      "name": "organisation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anschrift": {
+          "name": "anschrift",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "telefon": {
+          "name": "telefon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "vertretung": {
+          "name": "vertretung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "register": {
+          "name": "register",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "inhalt_verantwortlich": {
+          "name": "inhalt_verantwortlich",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "datenschutzbeauftragter": {
+          "name": "datenschutzbeauftragter",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "impressum_zusatz": {
+          "name": "impressum_zusatz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "datenschutz_zusatz": {
+          "name": "datenschutz_zusatz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "datenschutz_text": {
+          "name": "datenschutz_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "vereinsnamen": {
+          "name": "vereinsnamen",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "termine_veroeffentlichen": {
+          "name": "termine_veroeffentlichen",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "abmeldung": {
+          "name": "abmeldung",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "steuer": {
+          "name": "steuer",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "glaeubiger_id": {
+          "name": "glaeubiger_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "import_zuordnungen": {
+          "name": "import_zuordnungen",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.rasse": {
+      "name": "rasse",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "version_id": {
+          "name": "version_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sparte_id": {
+          "name": "sparte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "folge": {
+          "name": "folge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "rasse_version_idx": {
+          "name": "rasse_version_idx",
+          "columns": [
+            {
+              "expression": "version_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "rasse_version_id_stammdaten_version_id_fk": {
+          "name": "rasse_version_id_stammdaten_version_id_fk",
+          "tableFrom": "rasse",
+          "tableTo": "stammdaten_version",
+          "columnsFrom": [
+            "version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "rasse_sparte_id_sparte_id_fk": {
+          "name": "rasse_sparte_id_sparte_id_fk",
+          "tableFrom": "rasse",
+          "tableTo": "sparte",
+          "columnsFrom": [
+            "sparte_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sitzung": {
+      "name": "sitzung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "benutzer_id": {
+          "name": "benutzer_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preisrichter_id": {
+          "name": "preisrichter_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "laeuft_ab": {
+          "name": "laeuft_ab",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "zuletzt": {
+          "name": "zuletzt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sitzung_benutzer_id_benutzer_id_fk": {
+          "name": "sitzung_benutzer_id_benutzer_id_fk",
+          "tableFrom": "sitzung",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "benutzer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sitzung_preisrichter_id_preisrichter_id_fk": {
+          "name": "sitzung_preisrichter_id_preisrichter_id_fk",
+          "tableFrom": "sitzung",
+          "tableTo": "preisrichter",
+          "columnsFrom": [
+            "preisrichter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sparte": {
+      "name": "sparte",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "version_id": {
+          "name": "version_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "folge": {
+          "name": "folge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sparte_version_id_stammdaten_version_id_fk": {
+          "name": "sparte_version_id_stammdaten_version_id_fk",
+          "tableFrom": "sparte",
+          "tableTo": "stammdaten_version",
+          "columnsFrom": [
+            "version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.stammdaten_version": {
+      "name": "stammdaten_version",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jahr": {
+          "name": "jahr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quelle": {
+          "name": "quelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "stammdaten_version_organisation_id_organisation_id_fk": {
+          "name": "stammdaten_version_organisation_id_organisation_id_fk",
+          "tableFrom": "stammdaten_version",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gebuehr": {
+      "name": "gebuehr",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "art": {
+          "name": "art",
+          "type": "gebuehr_art",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jugend": {
+          "name": "jugend",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "betrag_cent": {
+          "name": "betrag_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "befreit_preisrichter": {
+          "name": "befreit_preisrichter",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {
+        "gebuehr_unique": {
+          "name": "gebuehr_unique",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "art",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "jugend",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "gebuehr_schau_id_schau_id_fk": {
+          "name": "gebuehr_schau_id_schau_id_fk",
+          "tableFrom": "gebuehr",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.preisart": {
+      "name": "preisart",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kuerzel": {
+          "name": "kuerzel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "betrag_cent": {
+          "name": "betrag_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "sachpreis": {
+          "name": "sachpreis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "quelle": {
+          "name": "quelle",
+          "type": "preis_quelle",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'standgeld'"
+        },
+        "schluessel_pro_tiere": {
+          "name": "schluessel_pro_tiere",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anzahl_pro_schluessel": {
+          "name": "anzahl_pro_schluessel",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "anzahl_pro_preisrichter": {
+          "name": "anzahl_pro_preisrichter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "mindestpunkte": {
+          "name": "mindestpunkte",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rundung": {
+          "name": "rundung",
+          "type": "rundung",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'voll'"
+        },
+        "folge": {
+          "name": "folge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "zielgruppe": {
+          "name": "zielgruppe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'alle'"
+        },
+        "sparte": {
+          "name": "sparte",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "preisart_schau_id_schau_id_fk": {
+          "name": "preisart_schau_id_schau_id_fk",
+          "tableFrom": "preisart",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.schau": {
+      "name": "schau",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "test": {
+          "name": "test",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "veranstalter": {
+          "name": "veranstalter",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "ort": {
+          "name": "ort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "meldeschluss": {
+          "name": "meldeschluss",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "einlieferung": {
+          "name": "einlieferung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "bewertung_am": {
+          "name": "bewertung_am",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "oeffnungszeiten": {
+          "name": "oeffnungszeiten",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "aussetzen": {
+          "name": "aussetzen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "reklamationsfrist": {
+          "name": "reklamationsfrist",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kapazitaet": {
+          "name": "kapazitaet",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phase": {
+          "name": "phase",
+          "type": "phase",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'vorbereitung'"
+        },
+        "stammdaten_version_id": {
+          "name": "stammdaten_version_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provision_bp": {
+          "name": "provision_bp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1500
+        },
+        "katalog_start": {
+          "name": "katalog_start",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "jugend_separat": {
+          "name": "jugend_separat",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "staemme_vorn": {
+          "name": "staemme_vorn",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "kontingent_je": {
+          "name": "kontingent_je",
+          "type": "kontingent_basis",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'preisrichter'"
+        },
+        "katalog_gedruckt": {
+          "name": "katalog_gedruckt",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "ergebnisse_freigegeben": {
+          "name": "ergebnisse_freigegeben",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "abgeschlossen_am": {
+          "name": "abgeschlossen_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bestimmungen": {
+          "name": "bestimmungen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "bankverbindung": {
+          "name": "bankverbindung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "zahlung_bei_einlieferung": {
+          "name": "zahlung_bei_einlieferung",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "verein_kontoinhaber": {
+          "name": "verein_kontoinhaber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "verein_iban": {
+          "name": "verein_iban",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "verein_bic": {
+          "name": "verein_bic",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "girocode": {
+          "name": "girocode",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "kontakt_email": {
+          "name": "kontakt_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "vet_registriernummer": {
+          "name": "vet_registriernummer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "vet_amt": {
+          "name": "vet_amt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "vet_anzeige_am": {
+          "name": "vet_anzeige_am",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vet_aktenzeichen": {
+          "name": "vet_aktenzeichen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "wassergefluegel_untersuchung": {
+          "name": "wassergefluegel_untersuchung",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "untersuchung": {
+          "name": "untersuchung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "untersuchung_tage": {
+          "name": "untersuchung_tage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 6
+        },
+        "einlass_untersuchung_am": {
+          "name": "einlass_untersuchung_am",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "einlass_tierarzt": {
+          "name": "einlass_tierarzt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "nd_tage_min": {
+          "name": "nd_tage_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nd_tage_max": {
+          "name": "nd_tage_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pmv_tage_min": {
+          "name": "pmv_tage_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pmv_tage_max": {
+          "name": "pmv_tage_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ausland_zugelassen": {
+          "name": "ausland_zugelassen",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "pr_hoechstzahl": {
+          "name": "pr_hoechstzahl",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 80
+        },
+        "obmann_hoechstzahl": {
+          "name": "obmann_hoechstzahl",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 60
+        },
+        "abgesagt_am": {
+          "name": "abgesagt_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "absage_grund": {
+          "name": "absage_grund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "erklaerungen": {
+          "name": "erklaerungen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "notenskala": {
+          "name": "notenskala",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meisterschaften": {
+          "name": "meisterschaften",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "teilschauen": {
+          "name": "teilschauen",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "kaefig_regeln": {
+          "name": "kaefig_regeln",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "kaefig_folge": {
+          "name": "kaefig_folge",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "katalog_sortierung": {
+          "name": "katalog_sortierung",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kaefig_masse": {
+          "name": "kaefig_masse",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "halle": {
+          "name": "halle",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hallenplan_fest": {
+          "name": "hallenplan_fest",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aufsteller": {
+          "name": "aufsteller",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vorlage_bewertungskarte_id": {
+          "name": "vorlage_bewertungskarte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "schau_organisation_id_organisation_id_fk": {
+          "name": "schau_organisation_id_organisation_id_fk",
+          "tableFrom": "schau",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "schau_stammdaten_version_id_stammdaten_version_id_fk": {
+          "name": "schau_stammdaten_version_id_stammdaten_version_id_fk",
+          "tableFrom": "schau",
+          "tableTo": "stammdaten_version",
+          "columnsFrom": [
+            "stammdaten_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "schau_vorlage_bewertungskarte_id_druckvorlage_id_fk": {
+          "name": "schau_vorlage_bewertungskarte_id_druckvorlage_id_fk",
+          "tableFrom": "schau",
+          "tableTo": "druckvorlage",
+          "columnsFrom": [
+            "vorlage_bewertungskarte_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "schau_slug_unique": {
+          "name": "schau_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aussteller": {
+      "name": "aussteller",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vorname": {
+          "name": "vorname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nachname": {
+          "name": "nachname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "strasse": {
+          "name": "strasse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "plz": {
+          "name": "plz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "ort": {
+          "name": "ort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "telefon": {
+          "name": "telefon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "verein": {
+          "name": "verein",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "kreisverband": {
+          "name": "kreisverband",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "registriernummer": {
+          "name": "registriernummer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "geburtsdatum": {
+          "name": "geburtsdatum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ist_preisrichter": {
+          "name": "ist_preisrichter",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mitglied": {
+          "name": "mitglied",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "test_schau_id": {
+          "name": "test_schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "iban": {
+          "name": "iban",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "kontoinhaber": {
+          "name": "kontoinhaber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "gesperrt_am": {
+          "name": "gesperrt_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "loeschen_ab": {
+          "name": "loeschen_ab",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "geloescht_am": {
+          "name": "geloescht_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "aussteller_name_idx": {
+          "name": "aussteller_name_idx",
+          "columns": [
+            {
+              "expression": "nachname",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "vorname",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "aussteller_test_schau_idx": {
+          "name": "aussteller_test_schau_idx",
+          "columns": [
+            {
+              "expression": "test_schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "aussteller_organisation_id_organisation_id_fk": {
+          "name": "aussteller_organisation_id_organisation_id_fk",
+          "tableFrom": "aussteller",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aussteller_test_schau_id_schau_id_fk": {
+          "name": "aussteller_test_schau_id_schau_id_fk",
+          "tableFrom": "aussteller",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "test_schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.katalogeintrag": {
+      "name": "katalogeintrag",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "meldung_id": {
+          "name": "meldung_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "farbenschlag_id": {
+          "name": "farbenschlag_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "freitext": {
+          "name": "freitext",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "rasse_id": {
+          "name": "rasse_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "art": {
+          "name": "art",
+          "type": "meldeart",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'einzeltier'"
+        },
+        "geschlecht": {
+          "name": "geschlecht",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'1,0'"
+        },
+        "alter": {
+          "name": "alter",
+          "type": "alter",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'jung'"
+        },
+        "ist_aoc": {
+          "name": "ist_aoc",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "ist_neuzuechtung": {
+          "name": "ist_neuzuechtung",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "eigene_zucht": {
+          "name": "eigene_zucht",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "verkaufspreis_cent": {
+          "name": "verkaufspreis_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "katalog_nr": {
+          "name": "katalog_nr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "suffix": {
+          "name": "suffix",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "kaefig": {
+          "name": "kaefig",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "kaefig_wahl": {
+          "name": "kaefig_wahl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kaefig_block": {
+          "name": "kaefig_block",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bewertung_version": {
+          "name": "bewertung_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "ringnummern": {
+          "name": "ringnummern",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "status": {
+          "name": "status",
+          "type": "eintrag_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'gemeldet'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "eintrag_schau_idx": {
+          "name": "eintrag_schau_idx",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "eintrag_meldung_idx": {
+          "name": "eintrag_meldung_idx",
+          "columns": [
+            {
+              "expression": "meldung_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "eintrag_katalognr": {
+          "name": "eintrag_katalognr",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "katalog_nr",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "suffix",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "katalogeintrag_schau_id_schau_id_fk": {
+          "name": "katalogeintrag_schau_id_schau_id_fk",
+          "tableFrom": "katalogeintrag",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "katalogeintrag_meldung_id_meldung_id_fk": {
+          "name": "katalogeintrag_meldung_id_meldung_id_fk",
+          "tableFrom": "katalogeintrag",
+          "tableTo": "meldung",
+          "columnsFrom": [
+            "meldung_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "katalogeintrag_farbenschlag_id_farbenschlag_id_fk": {
+          "name": "katalogeintrag_farbenschlag_id_farbenschlag_id_fk",
+          "tableFrom": "katalogeintrag",
+          "tableTo": "farbenschlag",
+          "columnsFrom": [
+            "farbenschlag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "katalogeintrag_rasse_id_rasse_id_fk": {
+          "name": "katalogeintrag_rasse_id_rasse_id_fk",
+          "tableFrom": "katalogeintrag",
+          "tableTo": "rasse",
+          "columnsFrom": [
+            "rasse_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.meldung": {
+      "name": "meldung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aussteller_id": {
+          "name": "aussteller_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eingang": {
+          "name": "eingang",
+          "type": "eingang",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eingegangen_am": {
+          "name": "eingegangen_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "ist_jugend": {
+          "name": "ist_jugend",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "teilschau": {
+          "name": "teilschau",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ist_preisrichter": {
+          "name": "ist_preisrichter",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "zustimmung_am": {
+          "name": "zustimmung_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "online_zustimmung_am": {
+          "name": "online_zustimmung_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "erziehungsberechtigter": {
+          "name": "erziehungsberechtigter",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "status": {
+          "name": "status",
+          "type": "meldung_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'offen'"
+        },
+        "bemerkung": {
+          "name": "bemerkung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "zugangs_token": {
+          "name": "zugangs_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sprache": {
+          "name": "sprache",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'de'"
+        },
+        "vet_impfdatum": {
+          "name": "vet_impfdatum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vet_impfstoff": {
+          "name": "vet_impfstoff",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "vet_tierarzt": {
+          "name": "vet_tierarzt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "pmv_impfdatum": {
+          "name": "pmv_impfdatum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pmv_impfstoff": {
+          "name": "pmv_impfstoff",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "pmv_tierarzt": {
+          "name": "pmv_tierarzt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "wg_datum": {
+          "name": "wg_datum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wg_sentinel": {
+          "name": "wg_sentinel",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "wg_stelle": {
+          "name": "wg_stelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "kl_datum": {
+          "name": "kl_datum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kl_tierarzt": {
+          "name": "kl_tierarzt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "gz_datum": {
+          "name": "gz_datum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gz_nummer": {
+          "name": "gz_nummer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "vet_geprueft_am": {
+          "name": "vet_geprueft_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "erklaerungen_am": {
+          "name": "erklaerungen_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "namen_widerspruch_am": {
+          "name": "namen_widerspruch_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verfallen_cent": {
+          "name": "verfallen_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "verfall_grund": {
+          "name": "verfall_grund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "verfallen_am": {
+          "name": "verfallen_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "meldung_schau_aussteller": {
+          "name": "meldung_schau_aussteller",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "aussteller_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "meldung_schau_id_schau_id_fk": {
+          "name": "meldung_schau_id_schau_id_fk",
+          "tableFrom": "meldung",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "meldung_aussteller_id_aussteller_id_fk": {
+          "name": "meldung_aussteller_id_aussteller_id_fk",
+          "tableFrom": "meldung",
+          "tableTo": "aussteller",
+          "columnsFrom": [
+            "aussteller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "meldung_zugangs_token_unique": {
+          "name": "meldung_zugangs_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "zugangs_token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.zahlung": {
+      "name": "zahlung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "meldung_id": {
+          "name": "meldung_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "betrag_cent": {
+          "name": "betrag_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "datum": {
+          "name": "datum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "art": {
+          "name": "art",
+          "type": "zahlart",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ueberweisung'"
+        },
+        "erfasst_von": {
+          "name": "erfasst_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grund": {
+          "name": "grund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "storno_von": {
+          "name": "storno_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bank_buchung": {
+          "name": "bank_buchung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "clock_timestamp()"
+        }
+      },
+      "indexes": {
+        "zahlung_bank_buchung": {
+          "name": "zahlung_bank_buchung",
+          "columns": [
+            {
+              "expression": "bank_buchung",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "zahlung_meldung_id_meldung_id_fk": {
+          "name": "zahlung_meldung_id_meldung_id_fk",
+          "tableFrom": "zahlung",
+          "tableTo": "meldung",
+          "columnsFrom": [
+            "meldung_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "zahlung_erfasst_von_benutzer_id_fk": {
+          "name": "zahlung_erfasst_von_benutzer_id_fk",
+          "tableFrom": "zahlung",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erfasst_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.bewertung": {
+      "name": "bewertung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "katalogeintrag_id": {
+          "name": "katalogeintrag_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "preisrichter_id": {
+          "name": "preisrichter_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "punkte": {
+          "name": "punkte",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sondernote": {
+          "name": "sondernote",
+          "type": "sondernote",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vorzuege": {
+          "name": "vorzuege",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "wuensche": {
+          "name": "wuensche",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "maengel": {
+          "name": "maengel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "erfasst_auf": {
+          "name": "erfasst_auf",
+          "type": "erfasst_auf",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pc'"
+        },
+        "geraet_zeit": {
+          "name": "geraet_zeit",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "obmann_bestaetigt_von": {
+          "name": "obmann_bestaetigt_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "obmann_bestaetigt_am": {
+          "name": "obmann_bestaetigt_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "bewertung_katalogeintrag_id_katalogeintrag_id_fk": {
+          "name": "bewertung_katalogeintrag_id_katalogeintrag_id_fk",
+          "tableFrom": "bewertung",
+          "tableTo": "katalogeintrag",
+          "columnsFrom": [
+            "katalogeintrag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "bewertung_preisrichter_id_preisrichter_id_fk": {
+          "name": "bewertung_preisrichter_id_preisrichter_id_fk",
+          "tableFrom": "bewertung",
+          "tableTo": "preisrichter",
+          "columnsFrom": [
+            "preisrichter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bewertung_obmann_bestaetigt_von_preisrichter_id_fk": {
+          "name": "bewertung_obmann_bestaetigt_von_preisrichter_id_fk",
+          "tableFrom": "bewertung",
+          "tableTo": "preisrichter",
+          "columnsFrom": [
+            "obmann_bestaetigt_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "bewertung_katalogeintrag_id_unique": {
+          "name": "bewertung_katalogeintrag_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "katalogeintrag_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.pr_einteilung": {
+      "name": "pr_einteilung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "preisrichter_id": {
+          "name": "preisrichter_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "von_nr": {
+          "name": "von_nr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bis_nr": {
+          "name": "bis_nr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "pr_einteilung_schau_id_schau_id_fk": {
+          "name": "pr_einteilung_schau_id_schau_id_fk",
+          "tableFrom": "pr_einteilung",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "pr_einteilung_preisrichter_id_preisrichter_id_fk": {
+          "name": "pr_einteilung_preisrichter_id_preisrichter_id_fk",
+          "tableFrom": "pr_einteilung",
+          "tableTo": "preisrichter",
+          "columnsFrom": [
+            "preisrichter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.pr_zuteilung": {
+      "name": "pr_zuteilung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "preisrichter_id": {
+          "name": "preisrichter_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sparte": {
+          "name": "sparte",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "rasse": {
+          "name": "rasse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "farbenschlag": {
+          "name": "farbenschlag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        }
+      },
+      "indexes": {
+        "pr_zuteilung_eindeutig": {
+          "name": "pr_zuteilung_eindeutig",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sparte",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "rasse",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "farbenschlag",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "pr_zuteilung_schau_id_schau_id_fk": {
+          "name": "pr_zuteilung_schau_id_schau_id_fk",
+          "tableFrom": "pr_zuteilung",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "pr_zuteilung_preisrichter_id_preisrichter_id_fk": {
+          "name": "pr_zuteilung_preisrichter_id_preisrichter_id_fk",
+          "tableFrom": "pr_zuteilung",
+          "tableTo": "preisrichter",
+          "columnsFrom": [
+            "preisrichter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.preisrichter": {
+      "name": "preisrichter",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anschrift": {
+          "name": "anschrift",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "anschrift_im_katalog": {
+          "name": "anschrift_im_katalog",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "telefon": {
+          "name": "telefon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "pin_hash": {
+          "name": "pin_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ist_obmann": {
+          "name": "ist_obmann",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "sparten": {
+          "name": "sparten",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "preisrichter_schau_id_schau_id_fk": {
+          "name": "preisrichter_schau_id_schau_id_fk",
+          "tableFrom": "preisrichter",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.textbaustein": {
+      "name": "textbaustein",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kategorie": {
+          "name": "kategorie",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gruppe": {
+          "name": "gruppe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Gesamteindruck'"
+        },
+        "art": {
+          "name": "art",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'alle'"
+        },
+        "rasse": {
+          "name": "rasse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "textbaustein_organisation_id_organisation_id_fk": {
+          "name": "textbaustein_organisation_id_organisation_id_fk",
+          "tableFrom": "textbaustein",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.vereinsverzeichnis": {
+      "name": "vereinsverzeichnis",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kreisverband": {
+          "name": "kreisverband",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "landesverband": {
+          "name": "landesverband",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "quelle": {
+          "name": "quelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "schluessel": {
+          "name": "schluessel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "vereinsverzeichnis_schluessel": {
+          "name": "vereinsverzeichnis_schluessel",
+          "columns": [
+            {
+              "expression": "schluessel",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.auszahlung": {
+      "name": "auszahlung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aussteller_id": {
+          "name": "aussteller_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "betrag_cent": {
+          "name": "betrag_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "art": {
+          "name": "art",
+          "type": "zahlart",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'bar'"
+        },
+        "quittung_nr": {
+          "name": "quittung_nr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ausgezahlt_von": {
+          "name": "ausgezahlt_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bezug_quittung_nr": {
+          "name": "bezug_quittung_nr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storniert_am": {
+          "name": "storniert_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storniert_von": {
+          "name": "storniert_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storno_grund": {
+          "name": "storno_grund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "clock_timestamp()"
+        }
+      },
+      "indexes": {
+        "auszahlung_quittung_unique": {
+          "name": "auszahlung_quittung_unique",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "quittung_nr",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "auszahlung_schau_id_schau_id_fk": {
+          "name": "auszahlung_schau_id_schau_id_fk",
+          "tableFrom": "auszahlung",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "auszahlung_aussteller_id_aussteller_id_fk": {
+          "name": "auszahlung_aussteller_id_aussteller_id_fk",
+          "tableFrom": "auszahlung",
+          "tableTo": "aussteller",
+          "columnsFrom": [
+            "aussteller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "auszahlung_ausgezahlt_von_benutzer_id_fk": {
+          "name": "auszahlung_ausgezahlt_von_benutzer_id_fk",
+          "tableFrom": "auszahlung",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "ausgezahlt_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "auszahlung_storniert_von_benutzer_id_fk": {
+          "name": "auszahlung_storniert_von_benutzer_id_fk",
+          "tableFrom": "auszahlung",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "storniert_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gesundheit": {
+      "name": "gesundheit",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "katalogeintrag_id": {
+          "name": "katalogeintrag_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zeitpunkt": {
+          "name": "zeitpunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "tier_text": {
+          "name": "tier_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "befund": {
+          "name": "befund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "massnahme": {
+          "name": "massnahme",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "tierarzt": {
+          "name": "tierarzt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "verendet": {
+          "name": "verendet",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "sperre": {
+          "name": "sperre",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "aufgehoben_am": {
+          "name": "aufgehoben_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aufhebung_grund": {
+          "name": "aufhebung_grund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "erfasst_von": {
+          "name": "erfasst_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "gesundheit_schau_id_schau_id_fk": {
+          "name": "gesundheit_schau_id_schau_id_fk",
+          "tableFrom": "gesundheit",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "gesundheit_katalogeintrag_id_katalogeintrag_id_fk": {
+          "name": "gesundheit_katalogeintrag_id_katalogeintrag_id_fk",
+          "tableFrom": "gesundheit",
+          "tableTo": "katalogeintrag",
+          "columnsFrom": [
+            "katalogeintrag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "gesundheit_erfasst_von_benutzer_id_fk": {
+          "name": "gesundheit_erfasst_von_benutzer_id_fk",
+          "tableFrom": "gesundheit",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erfasst_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.preisvergabe": {
+      "name": "preisvergabe",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "katalogeintrag_id": {
+          "name": "katalogeintrag_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "preisart_id": {
+          "name": "preisart_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "preisrichter_id": {
+          "name": "preisrichter_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "betrag_cent": {
+          "name": "betrag_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stiftung_id": {
+          "name": "stiftung_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "preisvergabe_unique": {
+          "name": "preisvergabe_unique",
+          "columns": [
+            {
+              "expression": "katalogeintrag_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "preisart_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "preisvergabe_katalogeintrag_id_katalogeintrag_id_fk": {
+          "name": "preisvergabe_katalogeintrag_id_katalogeintrag_id_fk",
+          "tableFrom": "preisvergabe",
+          "tableTo": "katalogeintrag",
+          "columnsFrom": [
+            "katalogeintrag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "preisvergabe_preisart_id_preisart_id_fk": {
+          "name": "preisvergabe_preisart_id_preisart_id_fk",
+          "tableFrom": "preisvergabe",
+          "tableTo": "preisart",
+          "columnsFrom": [
+            "preisart_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "preisvergabe_preisrichter_id_preisrichter_id_fk": {
+          "name": "preisvergabe_preisrichter_id_preisrichter_id_fk",
+          "tableFrom": "preisvergabe",
+          "tableTo": "preisrichter",
+          "columnsFrom": [
+            "preisrichter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "preisvergabe_stiftung_id_stiftung_id_fk": {
+          "name": "preisvergabe_stiftung_id_stiftung_id_fk",
+          "tableFrom": "preisvergabe",
+          "tableTo": "stiftung",
+          "columnsFrom": [
+            "stiftung_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.stiftung": {
+      "name": "stiftung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stifter": {
+          "name": "stifter",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "meldung_id": {
+          "name": "meldung_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preisart_id": {
+          "name": "preisart_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anzahl": {
+          "name": "anzahl",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "betrag_cent": {
+          "name": "betrag_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "vorgabe": {
+          "name": "vorgabe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "eingegangen_am": {
+          "name": "eingegangen_am",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "online_nennen": {
+          "name": "online_nennen",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "kassenbewegung_id": {
+          "name": "kassenbewegung_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "stiftung_schau_id_schau_id_fk": {
+          "name": "stiftung_schau_id_schau_id_fk",
+          "tableFrom": "stiftung",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "stiftung_meldung_id_meldung_id_fk": {
+          "name": "stiftung_meldung_id_meldung_id_fk",
+          "tableFrom": "stiftung",
+          "tableTo": "meldung",
+          "columnsFrom": [
+            "meldung_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "stiftung_preisart_id_preisart_id_fk": {
+          "name": "stiftung_preisart_id_preisart_id_fk",
+          "tableFrom": "stiftung",
+          "tableTo": "preisart",
+          "columnsFrom": [
+            "preisart_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "stiftung_kassenbewegung_id_kassenbewegung_id_fk": {
+          "name": "stiftung_kassenbewegung_id_kassenbewegung_id_fk",
+          "tableFrom": "stiftung",
+          "tableTo": "kassenbewegung",
+          "columnsFrom": [
+            "kassenbewegung_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.verkauf": {
+      "name": "verkauf",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "katalogeintrag_id": {
+          "name": "katalogeintrag_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kaeufer_name": {
+          "name": "kaeufer_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kaeufer_anschrift": {
+          "name": "kaeufer_anschrift",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "kaeufer_registriernummer": {
+          "name": "kaeufer_registriernummer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "preis_cent": {
+          "name": "preis_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provision_cent": {
+          "name": "provision_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "beleg_nr": {
+          "name": "beleg_nr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verkauft_von": {
+          "name": "verkauft_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zahlart": {
+          "name": "zahlart",
+          "type": "zahlart",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'bar'"
+        },
+        "provision_bp": {
+          "name": "provision_bp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kaeufer_unter16": {
+          "name": "kaeufer_unter16",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "kaeufer_erziehungsberechtigter": {
+          "name": "kaeufer_erziehungsberechtigter",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "storniert_am": {
+          "name": "storniert_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storniert_von": {
+          "name": "storniert_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storno_grund": {
+          "name": "storno_grund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "clock_timestamp()"
+        }
+      },
+      "indexes": {
+        "verkauf_tier_gueltig": {
+          "name": "verkauf_tier_gueltig",
+          "columns": [
+            {
+              "expression": "katalogeintrag_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "storniert_am is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "verkauf_katalogeintrag_id_katalogeintrag_id_fk": {
+          "name": "verkauf_katalogeintrag_id_katalogeintrag_id_fk",
+          "tableFrom": "verkauf",
+          "tableTo": "katalogeintrag",
+          "columnsFrom": [
+            "katalogeintrag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "verkauf_verkauft_von_benutzer_id_fk": {
+          "name": "verkauf_verkauft_von_benutzer_id_fk",
+          "tableFrom": "verkauf",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "verkauft_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "verkauf_storniert_von_benutzer_id_fk": {
+          "name": "verkauf_storniert_von_benutzer_id_fk",
+          "tableFrom": "verkauf",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "storniert_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.verkauf_zahlungseingang": {
+      "name": "verkauf_zahlungseingang",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "verkauf_id": {
+          "name": "verkauf_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "datum": {
+          "name": "datum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "erfasst_von": {
+          "name": "erfasst_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "clock_timestamp()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "verkauf_zahlungseingang_verkauf_id_verkauf_id_fk": {
+          "name": "verkauf_zahlungseingang_verkauf_id_verkauf_id_fk",
+          "tableFrom": "verkauf_zahlungseingang",
+          "tableTo": "verkauf",
+          "columnsFrom": [
+            "verkauf_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "verkauf_zahlungseingang_erfasst_von_benutzer_id_fk": {
+          "name": "verkauf_zahlungseingang_erfasst_von_benutzer_id_fk",
+          "tableFrom": "verkauf_zahlungseingang",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erfasst_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "verkauf_zahlungseingang_verkauf_id_unique": {
+          "name": "verkauf_zahlungseingang_verkauf_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "verkauf_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aenderung": {
+      "name": "aenderung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tabelle": {
+          "name": "tabelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "datensatz_id": {
+          "name": "datensatz_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aktion": {
+          "name": "aktion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "alt": {
+          "name": "alt",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "neu": {
+          "name": "neu",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "benutzer_id": {
+          "name": "benutzer_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "preisrichter_id": {
+          "name": "preisrichter_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wer": {
+          "name": "wer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "grund": {
+          "name": "grund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "zeitpunkt": {
+          "name": "zeitpunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "vorher_id": {
+          "name": "vorher_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vorher_hash": {
+          "name": "vorher_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hash_version": {
+          "name": "hash_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "inhalt_hash": {
+          "name": "inhalt_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hash": {
+          "name": "hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "aenderung_schau_idx": {
+          "name": "aenderung_schau_idx",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "zeitpunkt",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "aenderung_schau_id_schau_id_fk": {
+          "name": "aenderung_schau_id_schau_id_fk",
+          "tableFrom": "aenderung",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "aenderung_benutzer_id_benutzer_id_fk": {
+          "name": "aenderung_benutzer_id_benutzer_id_fk",
+          "tableFrom": "aenderung",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "benutzer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aenderung_preisrichter_id_preisrichter_id_fk": {
+          "name": "aenderung_preisrichter_id_preisrichter_id_fk",
+          "tableFrom": "aenderung",
+          "tableTo": "preisrichter",
+          "columnsFrom": [
+            "preisrichter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aenderung_anonymisiert": {
+      "name": "aenderung_anonymisiert",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "zeitpunkt": {
+          "name": "zeitpunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aenderung_geloescht": {
+      "name": "aenderung_geloescht",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zeitpunkt": {
+          "name": "zeitpunkt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aenderung_kette": {
+      "name": "aenderung_kette",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "default": 1
+        },
+        "letzte_id": {
+          "name": "letzte_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "letzter_hash": {
+          "name": "letzter_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.postausgang": {
+      "name": "postausgang",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aussteller_id": {
+          "name": "aussteller_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "an": {
+          "name": "an",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "betreff": {
+          "name": "betreff",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'wartet'"
+        },
+        "fehler": {
+          "name": "fehler",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "versuche": {
+          "name": "versuche",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "gesendet_am": {
+          "name": "gesendet_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "postausgang_organisation_id_organisation_id_fk": {
+          "name": "postausgang_organisation_id_organisation_id_fk",
+          "tableFrom": "postausgang",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "postausgang_aussteller_id_aussteller_id_fk": {
+          "name": "postausgang_aussteller_id_aussteller_id_fk",
+          "tableFrom": "postausgang",
+          "tableTo": "aussteller",
+          "columnsFrom": [
+            "aussteller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.bild": {
+      "name": "bild",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rolle": {
+          "name": "rolle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'beitrag'"
+        },
+        "mime": {
+          "name": "mime",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "daten": {
+          "name": "daten",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "urheber": {
+          "name": "urheber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "lizenz": {
+          "name": "lizenz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "quelle": {
+          "name": "quelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bild_schau_idx": {
+          "name": "bild_schau_idx",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bild_schau_id_schau_id_fk": {
+          "name": "bild_schau_id_schau_id_fk",
+          "tableFrom": "bild",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.druckvorlage": {
+      "name": "druckvorlage",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "art": {
+          "name": "art",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "daten": {
+          "name": "daten",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "druckvorlage_organisation_id_organisation_id_fk": {
+          "name": "druckvorlage_organisation_id_organisation_id_fk",
+          "tableFrom": "druckvorlage",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "druckvorlage_schau_id_schau_id_fk": {
+          "name": "druckvorlage_schau_id_schau_id_fk",
+          "tableFrom": "druckvorlage",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.katalog_beitrag": {
+      "name": "katalog_beitrag",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "art": {
+          "name": "art",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "folge": {
+          "name": "folge",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "titel": {
+          "name": "titel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "unterzeile": {
+          "name": "unterzeile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "bild_id": {
+          "name": "bild_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "groesse": {
+          "name": "groesse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ganz'"
+        }
+      },
+      "indexes": {
+        "katalog_beitrag_schau_idx": {
+          "name": "katalog_beitrag_schau_idx",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "art",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "folge",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "katalog_beitrag_schau_id_schau_id_fk": {
+          "name": "katalog_beitrag_schau_id_schau_id_fk",
+          "tableFrom": "katalog_beitrag",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "katalog_beitrag_bild_id_bild_id_fk": {
+          "name": "katalog_beitrag_bild_id_bild_id_fk",
+          "tableFrom": "katalog_beitrag",
+          "tableTo": "bild",
+          "columnsFrom": [
+            "bild_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.katalog_gestaltung": {
+      "name": "katalog_gestaltung",
+      "schema": "",
+      "columns": {
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "format": {
+          "name": "format",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'A4'"
+        },
+        "untertitel": {
+          "name": "untertitel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "schirmherr": {
+          "name": "schirmherr",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "ausstellungsleitung": {
+          "name": "ausstellungsleitung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "eintritt": {
+          "name": "eintritt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "farbe": {
+          "name": "farbe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'#2f5d3a'"
+        },
+        "schrift": {
+          "name": "schrift",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'klassisch'"
+        },
+        "stil": {
+          "name": "stil",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'klassisch'"
+        },
+        "aufteilung": {
+          "name": "aufteilung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'zweispaltig'"
+        },
+        "rassebilder": {
+          "name": "rassebilder",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "sparte_neue_seite": {
+          "name": "sparte_neue_seite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "druck": {
+          "name": "druck",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "akzent": {
+          "name": "akzent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "titel_hintergrund": {
+          "name": "titel_hintergrund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'weiss'"
+        },
+        "titelbild": {
+          "name": "titelbild",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'eingepasst'"
+        },
+        "fusszeile": {
+          "name": "fusszeile",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'linie'"
+        },
+        "linien": {
+          "name": "linien",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'normal'"
+        },
+        "ausgeblendet": {
+          "name": "ausgeblendet",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "termine_kreis": {
+          "name": "termine_kreis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "termine_land": {
+          "name": "termine_land",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "katalog_gestaltung_schau_id_schau_id_fk": {
+          "name": "katalog_gestaltung_schau_id_schau_id_fk",
+          "tableFrom": "katalog_gestaltung",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.rassebild": {
+      "name": "rassebild",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rasse": {
+          "name": "rasse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mime": {
+          "name": "mime",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "daten": {
+          "name": "daten",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "breite": {
+          "name": "breite",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hoehe": {
+          "name": "hoehe",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "urheber": {
+          "name": "urheber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "lizenz": {
+          "name": "lizenz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "lizenz_url": {
+          "name": "lizenz_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "quelle": {
+          "name": "quelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "geprueft": {
+          "name": "geprueft",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "rassebild_org_rasse": {
+          "name": "rassebild_org_rasse",
+          "columns": [
+            {
+              "expression": "organisation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "rasse",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "rassebild_organisation_id_organisation_id_fk": {
+          "name": "rassebild_organisation_id_organisation_id_fk",
+          "tableFrom": "rassebild",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.schautermin": {
+      "name": "schautermin",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ort": {
+          "name": "ort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "von": {
+          "name": "von",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bis": {
+          "name": "bis",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebene": {
+          "name": "ebene",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kreisverband": {
+          "name": "kreisverband",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "landesverband": {
+          "name": "landesverband",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "quelle": {
+          "name": "quelle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "quelle_url": {
+          "name": "quelle_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "abo_id": {
+          "name": "abo_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'uebernommen'"
+        },
+        "abweichung": {
+          "name": "abweichung",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "abgerufen_am": {
+          "name": "abgerufen_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "schautermin_org_von_idx": {
+          "name": "schautermin_org_von_idx",
+          "columns": [
+            {
+              "expression": "organisation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "von",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "schautermin_abo_uid": {
+          "name": "schautermin_abo_uid",
+          "columns": [
+            {
+              "expression": "abo_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "uid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "schautermin_organisation_id_organisation_id_fk": {
+          "name": "schautermin_organisation_id_organisation_id_fk",
+          "tableFrom": "schautermin",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "schautermin_abo_id_terminabo_id_fk": {
+          "name": "schautermin_abo_id_terminabo_id_fk",
+          "tableFrom": "schautermin",
+          "tableTo": "terminabo",
+          "columnsFrom": [
+            "abo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.terminabo": {
+      "name": "terminabo",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ebene": {
+          "name": "ebene",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kreisverband": {
+          "name": "kreisverband",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "landesverband": {
+          "name": "landesverband",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "aktiv": {
+          "name": "aktiv",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "letzter_abruf": {
+          "name": "letzter_abruf",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "letzter_erfolg": {
+          "name": "letzter_erfolg",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "letzter_fehler": {
+          "name": "letzter_fehler",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "anzahl": {
+          "name": "anzahl",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "terminabo_org_idx": {
+          "name": "terminabo_org_idx",
+          "columns": [
+            {
+              "expression": "organisation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "terminabo_organisation_id_organisation_id_fk": {
+          "name": "terminabo_organisation_id_organisation_id_fk",
+          "tableFrom": "terminabo",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.beleg": {
+      "name": "beleg",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "art": {
+          "name": "art",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nummer": {
+          "name": "nummer",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pdf": {
+          "name": "pdf",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sha256": {
+          "name": "sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "beleg_unique": {
+          "name": "beleg_unique",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "art",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "nummer",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "beleg_schau_id_schau_id_fk": {
+          "name": "beleg_schau_id_schau_id_fk",
+          "tableFrom": "beleg",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.kassenabschluss": {
+      "name": "kassenabschluss",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "datum": {
+          "name": "datum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "soll_cent": {
+          "name": "soll_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ist_cent": {
+          "name": "ist_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "differenz_cent": {
+          "name": "differenz_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bemerkung": {
+          "name": "bemerkung",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "erfasst_von": {
+          "name": "erfasst_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nachtrag": {
+          "name": "nachtrag",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "clock_timestamp()"
+        }
+      },
+      "indexes": {
+        "kassenabschluss_tag": {
+          "name": "kassenabschluss_tag",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "datum",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "nachtrag",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "kassenabschluss_schau_id_schau_id_fk": {
+          "name": "kassenabschluss_schau_id_schau_id_fk",
+          "tableFrom": "kassenabschluss",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "kassenabschluss_erfasst_von_benutzer_id_fk": {
+          "name": "kassenabschluss_erfasst_von_benutzer_id_fk",
+          "tableFrom": "kassenabschluss",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erfasst_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.kassenbewegung": {
+      "name": "kassenbewegung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "art": {
+          "name": "art",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "betrag_cent": {
+          "name": "betrag_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "grund": {
+          "name": "grund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "erfasst_von": {
+          "name": "erfasst_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "clock_timestamp()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "kassenbewegung_schau_id_schau_id_fk": {
+          "name": "kassenbewegung_schau_id_schau_id_fk",
+          "tableFrom": "kassenbewegung",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "kassenbewegung_erfasst_von_benutzer_id_fk": {
+          "name": "kassenbewegung_erfasst_von_benutzer_id_fk",
+          "tableFrom": "kassenbewegung",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erfasst_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sepa_lauf": {
+      "name": "sepa_lauf",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nachricht_id": {
+          "name": "nachricht_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "daten": {
+          "name": "daten",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'offen'"
+        },
+        "erstellt_von": {
+          "name": "erstellt_von",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "abgeschlossen_am": {
+          "name": "abgeschlossen_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "sepa_lauf_nachricht": {
+          "name": "sepa_lauf_nachricht",
+          "columns": [
+            {
+              "expression": "nachricht_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "sepa_lauf_offen": {
+          "name": "sepa_lauf_offen",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "status = 'offen'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sepa_lauf_schau_id_schau_id_fk": {
+          "name": "sepa_lauf_schau_id_schau_id_fk",
+          "tableFrom": "sepa_lauf",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.bestaetigung_spende": {
+      "name": "bestaetigung_spende",
+      "schema": "",
+      "columns": {
+        "bestaetigung_id": {
+          "name": "bestaetigung_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "spende_id": {
+          "name": "spende_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "bestaetigung_spende_spende_idx": {
+          "name": "bestaetigung_spende_spende_idx",
+          "columns": [
+            {
+              "expression": "spende_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bestaetigung_spende_bestaetigung_id_zuwendungsbestaetigung_id_fk": {
+          "name": "bestaetigung_spende_bestaetigung_id_zuwendungsbestaetigung_id_fk",
+          "tableFrom": "bestaetigung_spende",
+          "tableTo": "zuwendungsbestaetigung",
+          "columnsFrom": [
+            "bestaetigung_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "bestaetigung_spende_spende_id_spende_id_fk": {
+          "name": "bestaetigung_spende_spende_id_spende_id_fk",
+          "tableFrom": "bestaetigung_spende",
+          "tableTo": "spende",
+          "columnsFrom": [
+            "spende_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "bestaetigung_spende_bestaetigung_id_spende_id_pk": {
+          "name": "bestaetigung_spende_bestaetigung_id_spende_id_pk",
+          "columns": [
+            "bestaetigung_id",
+            "spende_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.spende": {
+      "name": "spende",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "spender_id": {
+          "name": "spender_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "art": {
+          "name": "art",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "weg": {
+          "name": "weg",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "betrag_cent": {
+          "name": "betrag_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "datum": {
+          "name": "datum",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meldung_id": {
+          "name": "meldung_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zweck": {
+          "name": "zweck",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "sache": {
+          "name": "sache",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gegenleistung": {
+          "name": "gegenleistung",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "verzicht_aufwand": {
+          "name": "verzicht_aufwand",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "erfasst_von": {
+          "name": "erfasst_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "clock_timestamp()"
+        },
+        "storniert_am": {
+          "name": "storniert_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storniert_von": {
+          "name": "storniert_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storno_grund": {
+          "name": "storno_grund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        }
+      },
+      "indexes": {
+        "spende_schau_idx": {
+          "name": "spende_schau_idx",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "spende_spender_idx": {
+          "name": "spende_spender_idx",
+          "columns": [
+            {
+              "expression": "spender_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "spende_meldung_idx": {
+          "name": "spende_meldung_idx",
+          "columns": [
+            {
+              "expression": "meldung_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "spende_schau_id_schau_id_fk": {
+          "name": "spende_schau_id_schau_id_fk",
+          "tableFrom": "spende",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "spende_spender_id_spender_id_fk": {
+          "name": "spende_spender_id_spender_id_fk",
+          "tableFrom": "spende",
+          "tableTo": "spender",
+          "columnsFrom": [
+            "spender_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "spende_meldung_id_meldung_id_fk": {
+          "name": "spende_meldung_id_meldung_id_fk",
+          "tableFrom": "spende",
+          "tableTo": "meldung",
+          "columnsFrom": [
+            "meldung_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "spende_erfasst_von_benutzer_id_fk": {
+          "name": "spende_erfasst_von_benutzer_id_fk",
+          "tableFrom": "spende",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erfasst_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "spende_storniert_von_benutzer_id_fk": {
+          "name": "spende_storniert_von_benutzer_id_fk",
+          "tableFrom": "spende",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "storniert_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.spender": {
+      "name": "spender",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ist_firma": {
+          "name": "ist_firma",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "vorname": {
+          "name": "vorname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "nachname": {
+          "name": "nachname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "strasse": {
+          "name": "strasse",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "plz": {
+          "name": "plz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "ort": {
+          "name": "ort",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "aussteller_id": {
+          "name": "aussteller_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nennung_name": {
+          "name": "nennung_name",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "nennung_betrag": {
+          "name": "nennung_betrag",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "notiz": {
+          "name": "notiz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "test_schau_id": {
+          "name": "test_schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "spender_name_idx": {
+          "name": "spender_name_idx",
+          "columns": [
+            {
+              "expression": "organisation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "nachname",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "vorname",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "spender_aussteller_idx": {
+          "name": "spender_aussteller_idx",
+          "columns": [
+            {
+              "expression": "aussteller_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "spender_organisation_id_organisation_id_fk": {
+          "name": "spender_organisation_id_organisation_id_fk",
+          "tableFrom": "spender",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "spender_aussteller_id_aussteller_id_fk": {
+          "name": "spender_aussteller_id_aussteller_id_fk",
+          "tableFrom": "spender",
+          "tableTo": "aussteller",
+          "columnsFrom": [
+            "aussteller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "spender_test_schau_id_schau_id_fk": {
+          "name": "spender_test_schau_id_schau_id_fk",
+          "tableFrom": "spender",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "test_schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.zuwendungsbestaetigung": {
+      "name": "zuwendungsbestaetigung",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nummer": {
+          "name": "nummer",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "spender_id": {
+          "name": "spender_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "art": {
+          "name": "art",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "betrag_cent": {
+          "name": "betrag_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pdf": {
+          "name": "pdf",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sha256": {
+          "name": "sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "erstellt_von": {
+          "name": "erstellt_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "storniert_am": {
+          "name": "storniert_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storniert_von": {
+          "name": "storniert_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "storno_grund": {
+          "name": "storno_grund",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        }
+      },
+      "indexes": {
+        "zuwendungsbestaetigung_nummer": {
+          "name": "zuwendungsbestaetigung_nummer",
+          "columns": [
+            {
+              "expression": "organisation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "nummer",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "zuwendungsbestaetigung_organisation_id_organisation_id_fk": {
+          "name": "zuwendungsbestaetigung_organisation_id_organisation_id_fk",
+          "tableFrom": "zuwendungsbestaetigung",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "zuwendungsbestaetigung_spender_id_spender_id_fk": {
+          "name": "zuwendungsbestaetigung_spender_id_spender_id_fk",
+          "tableFrom": "zuwendungsbestaetigung",
+          "tableTo": "spender",
+          "columnsFrom": [
+            "spender_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "zuwendungsbestaetigung_erstellt_von_benutzer_id_fk": {
+          "name": "zuwendungsbestaetigung_erstellt_von_benutzer_id_fk",
+          "tableFrom": "zuwendungsbestaetigung",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erstellt_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "zuwendungsbestaetigung_storniert_von_benutzer_id_fk": {
+          "name": "zuwendungsbestaetigung_storniert_von_benutzer_id_fk",
+          "tableFrom": "zuwendungsbestaetigung",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "storniert_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.importlauf": {
+      "name": "importlauf",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "art": {
+          "name": "art",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dateiname": {
+          "name": "dateiname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "aussteller_ids": {
+          "name": "aussteller_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "meldung_ids": {
+          "name": "meldung_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "anzahl_tiere": {
+          "name": "anzahl_tiere",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "erstellt_von": {
+          "name": "erstellt_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "zurueckgenommen_am": {
+          "name": "zurueckgenommen_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zurueckgenommen_von": {
+          "name": "zurueckgenommen_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "importlauf_organisation_id_organisation_id_fk": {
+          "name": "importlauf_organisation_id_organisation_id_fk",
+          "tableFrom": "importlauf",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "importlauf_schau_id_schau_id_fk": {
+          "name": "importlauf_schau_id_schau_id_fk",
+          "tableFrom": "importlauf",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "importlauf_erstellt_von_benutzer_id_fk": {
+          "name": "importlauf_erstellt_von_benutzer_id_fk",
+          "tableFrom": "importlauf",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erstellt_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "importlauf_zurueckgenommen_von_benutzer_id_fk": {
+          "name": "importlauf_zurueckgenommen_von_benutzer_id_fk",
+          "tableFrom": "importlauf",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "zurueckgenommen_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.hallenentwurf": {
+      "name": "hallenentwurf",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "halle": {
+          "name": "halle",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "archiviert": {
+          "name": "archiviert",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "herkunft": {
+          "name": "herkunft",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "erstellt_von": {
+          "name": "erstellt_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "archiviert_am": {
+          "name": "archiviert_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "hallenentwurf_org_idx": {
+          "name": "hallenentwurf_org_idx",
+          "columns": [
+            {
+              "expression": "organisation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "archiviert",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "hallenentwurf_organisation_id_organisation_id_fk": {
+          "name": "hallenentwurf_organisation_id_organisation_id_fk",
+          "tableFrom": "hallenentwurf",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "hallenentwurf_schau_id_schau_id_fk": {
+          "name": "hallenentwurf_schau_id_schau_id_fk",
+          "tableFrom": "hallenentwurf",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "hallenentwurf_erstellt_von_benutzer_id_fk": {
+          "name": "hallenentwurf_erstellt_von_benutzer_id_fk",
+          "tableFrom": "hallenentwurf",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erstellt_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.lastschrift_lauf": {
+      "name": "lastschrift_lauf",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "schau_id": {
+          "name": "schau_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nachricht_id": {
+          "name": "nachricht_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "faellig_am": {
+          "name": "faellig_am",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "daten": {
+          "name": "daten",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'offen'"
+        },
+        "erstellt_von": {
+          "name": "erstellt_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "abgeschlossen_am": {
+          "name": "abgeschlossen_am",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "lastschrift_lauf_nachricht": {
+          "name": "lastschrift_lauf_nachricht",
+          "columns": [
+            {
+              "expression": "nachricht_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "lastschrift_lauf_offen": {
+          "name": "lastschrift_lauf_offen",
+          "columns": [
+            {
+              "expression": "schau_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "status = 'offen'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "lastschrift_lauf_schau_id_schau_id_fk": {
+          "name": "lastschrift_lauf_schau_id_schau_id_fk",
+          "tableFrom": "lastschrift_lauf",
+          "tableTo": "schau",
+          "columnsFrom": [
+            "schau_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "lastschrift_lauf_erstellt_von_benutzer_id_fk": {
+          "name": "lastschrift_lauf_erstellt_von_benutzer_id_fk",
+          "tableFrom": "lastschrift_lauf",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erstellt_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sepa_mandat": {
+      "name": "sepa_mandat",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "organisation_id": {
+          "name": "organisation_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aussteller_id": {
+          "name": "aussteller_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "referenz": {
+          "name": "referenz",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unterschrieben_am": {
+          "name": "unterschrieben_am",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wiederkehrend": {
+          "name": "wiederkehrend",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "iban": {
+          "name": "iban",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kontoinhaber": {
+          "name": "kontoinhaber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "widerrufen_am": {
+          "name": "widerrufen_am",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "letzte_nutzung_am": {
+          "name": "letzte_nutzung_am",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "erstellt_von": {
+          "name": "erstellt_von",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "sepa_mandat_referenz": {
+          "name": "sepa_mandat_referenz",
+          "columns": [
+            {
+              "expression": "organisation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "referenz",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "sepa_mandat_aussteller": {
+          "name": "sepa_mandat_aussteller",
+          "columns": [
+            {
+              "expression": "aussteller_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sepa_mandat_organisation_id_organisation_id_fk": {
+          "name": "sepa_mandat_organisation_id_organisation_id_fk",
+          "tableFrom": "sepa_mandat",
+          "tableTo": "organisation",
+          "columnsFrom": [
+            "organisation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "sepa_mandat_aussteller_id_aussteller_id_fk": {
+          "name": "sepa_mandat_aussteller_id_aussteller_id_fk",
+          "tableFrom": "sepa_mandat",
+          "tableTo": "aussteller",
+          "columnsFrom": [
+            "aussteller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sepa_mandat_erstellt_von_benutzer_id_fk": {
+          "name": "sepa_mandat_erstellt_von_benutzer_id_fk",
+          "tableFrom": "sepa_mandat",
+          "tableTo": "benutzer",
+          "columnsFrom": [
+            "erstellt_von"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.alter": {
+      "name": "alter",
+      "schema": "public",
+      "values": [
+        "jung",
+        "alt"
+      ]
+    },
+    "public.eingang": {
+      "name": "eingang",
+      "schema": "public",
+      "values": [
+        "online",
+        "papier",
+        "email"
+      ]
+    },
+    "public.eintrag_status": {
+      "name": "eintrag_status",
+      "schema": "public",
+      "values": [
+        "gemeldet",
+        "katalogisiert",
+        "eingeliefert",
+        "fehlt",
+        "ausgesetzt"
+      ]
+    },
+    "public.erfasst_auf": {
+      "name": "erfasst_auf",
+      "schema": "public",
+      "values": [
+        "tablet",
+        "pc"
+      ]
+    },
+    "public.gebuehr_art": {
+      "name": "gebuehr_art",
+      "schema": "public",
+      "values": [
+        "einzeltier",
+        "stamm",
+        "voliere",
+        "bruteier",
+        "katalog",
+        "kostenanteil"
+      ]
+    },
+    "public.kontingent_basis": {
+      "name": "kontingent_basis",
+      "schema": "public",
+      "values": [
+        "preisrichter",
+        "schau"
+      ]
+    },
+    "public.meldeart": {
+      "name": "meldeart",
+      "schema": "public",
+      "values": [
+        "einzeltier",
+        "stamm",
+        "voliere",
+        "bruteier"
+      ]
+    },
+    "public.meldung_status": {
+      "name": "meldung_status",
+      "schema": "public",
+      "values": [
+        "offen",
+        "bestaetigt",
+        "abgelehnt",
+        "storniert"
+      ]
+    },
+    "public.phase": {
+      "name": "phase",
+      "schema": "public",
+      "values": [
+        "vorbereitung",
+        "meldung",
+        "katalog",
+        "einlieferung",
+        "bewertung",
+        "preise",
+        "schau",
+        "abrechnung",
+        "abgeschlossen"
+      ]
+    },
+    "public.preis_quelle": {
+      "name": "preis_quelle",
+      "schema": "public",
+      "values": [
+        "standgeld",
+        "stiftung"
+      ]
+    },
+    "public.rolle": {
+      "name": "rolle",
+      "schema": "public",
+      "values": [
+        "admin",
+        "mitarbeiter"
+      ]
+    },
+    "public.rundung": {
+      "name": "rundung",
+      "schema": "public",
+      "values": [
+        "voll",
+        "angefangen"
+      ]
+    },
+    "public.sondernote": {
+      "name": "sondernote",
+      "schema": "public",
+      "values": [
+        "u",
+        "oB",
+        "uM",
+        "nA"
+      ]
+    },
+    "public.zahlart": {
+      "name": "zahlart",
+      "schema": "public",
+      "values": [
+        "ueberweisung",
+        "bar",
+        "sonstige",
+        "karte",
+        "lastschrift"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

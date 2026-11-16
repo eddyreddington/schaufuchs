@@ -1,6 +1,6 @@
 # Handbuch für die Ausstellungsleitung
 
-SchauFUCHS 1.7.0 · Stand 16. November 2026
+SchauFUCHS 1.8.0 · Stand 16. November 2026
 
 Dieses Handbuch richtet sich an die Ausstellungsleitung, also an alle, die in SchauFUCHS die Rolle **Administrator** haben. Es führt Sie von der Anmeldung über die Einrichtung des Vereins bis durch eine komplette Schau – vom Anlegen bis zum Abschluss. Wörter in „Anführungszeichen“ stehen genau so auf dem Bildschirm. Was sich mit Version 1.2.1 geändert hat, steht in den Versionshinweisen.
 
@@ -34,7 +34,7 @@ SchauFUCHS erreichen Sie im Browser unter:
 
 Ohne Telefon geht im zweiten Schritt auch ein **Notfallcode** (siehe 1.3).
 
-Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.7.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.7.0“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
+Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.8.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.8.0“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
 
 > **Tipp:** Melden Sie sich an fremden oder gemeinsam genutzten Rechnern immer mit „Abmelden“ ab.
 
@@ -438,9 +438,36 @@ Buchungsposten der Bank.
 - **Ausland:** Banking-Apps in Deutschland, Österreich, Belgien, den Niederlanden und Finnland lesen den Code. Ob Apps
   in Polen, Tschechien oder der Schweiz ihn lesen, ist nicht sicher; dort überweisen Aussteller mit dem Verwendungszweck
   von Hand.
-- **Zahlungseingang:** Der Code meldet nichts zurück. Den Eingang buchen Sie wie bisher nach dem Kontoauszug an der
-  Meldung (siehe 5.4, „Zahlungen erfassen und bestätigen“). Die Referenz im Verwendungszweck zeigt, zu welcher Meldung
-  das Geld gehört.
+- **Zahlungseingang:** Der Code meldet nichts zurück. Den Eingang buchen Sie mit dem Kontoauszug-Import (3.15) oder
+  wie bisher an der Meldung (siehe 5.4, „Zahlungen erfassen und bestätigen“). Die Referenz im Verwendungszweck zeigt,
+  zu welcher Meldung das Geld gehört.
+
+### 3.15 Kontoauszug-Import {#kontoauszug}
+
+Statt jede Überweisung einzeln an der Meldung zu buchen, laden Sie den Kontoauszug hoch. SchauFUCHS ordnet die
+Eingänge den Meldungen zu, Sie prüfen und buchen mit einem Klick. Die Software bekommt dabei keinen Zugang zum Konto.
+
+1. Im Onlinebanking die Umsätze des Vereinskontos exportieren: als **CSV** (bei der Sparkasse „CSV-CAMT“) oder als
+   **camt.053** (XML). Den Zeitraum seit dem letzten Import wählen; überschneiden darf er sich. Bitte immer **dasselbe
+   Format** nehmen – eine Gutschrift einmal als CSV und einmal als camt erkennt die Software nicht als dieselbe.
+   Kommt camt als ZIP-Archiv (eine Datei je Tag), die XML-Dateien vorher entpacken und einzeln hochladen.
+2. In SchauFUCHS unter „Meldephase“ → „Kontoauszug“ die Datei wählen. Angezeigt werden nur Gutschriften in Euro.
+3. Prüfen:
+   - **„Referenz“** (grün): Der Verwendungszweck enthält die Referenz der Meldung, der Betrag passt. Schon angekreuzt.
+   - **„Teilzahlung“ / „zu viel“**: Referenz passt, der Betrag nicht. Teilzahlungen sind angekreuzt, Überzahlungen nicht.
+   - **„Vorschlag“**: keine Referenz, aber der Name des Zahlers und der Betrag passen zu genau einer Meldung. Bitte
+     prüfen und ankreuzen.
+   - Ohne Zuordnung: unter „Meldung“ von Hand wählen, oder so lassen (z. B. Spenden oder fremde Eingänge).
+4. „… Zahlungen buchen“. Jede Gutschrift wird als Zahlung „Überweisung“ mit dem Buchungstag gebucht; ist eine Meldung
+   damit ganz bezahlt, ist sie bestätigt. Danach steht bei diesen Posten „gebucht“.
+
+Vorgemerkte Umsätze, Lastschriften und Kontostände liest die Software nicht. Wurde eine Meldung inzwischen anders
+bezahlt (bar oder von Hand), bucht sie den Posten nicht und meldet „inzwischen anders bezahlt – bitte neu prüfen“.
+Wer dieselbe Datei noch einmal hochlädt, bucht nichts doppelt. Eine falsch zugeordnete Gutschrift stornieren Sie an der
+Meldung („Zahlung stornieren“); sie bleibt im Import danach „gebucht“ – die richtige Meldung buchen Sie dann von Hand. Vom Auszug speichert SchauFUCHS nur einen
+Fingerabdruck der gebuchten Gutschriften, keine fremden Umsätze. Nur Administratoren sehen die Seite. Erkennt die
+Software die Datei nicht („Spalten Buchungstag und Betrag fehlen“), bitte einen anderen Export wählen (CSV oder camt)
+oder die Bank in einem Fehlerbericht nennen.
 
 ## 4. Rassen und Farbenschläge
 

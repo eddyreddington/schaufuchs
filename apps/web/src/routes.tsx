@@ -16,6 +16,7 @@ import { Kassenbuch } from "./seiten/kassenbuch";
 import { Spenden } from "./seiten/spenden";
 import { Meisterschaften } from "./seiten/meisterschaften";
 import { SpenderSeite } from "./seiten/spender";
+import { Kontoauszug } from "./seiten/kontoauszug";
 import { Lastschrift } from "./seiten/lastschrift";
 import { ImportSeite } from "./seiten/import";
 import { KatalogGestalten } from "./seiten/katalog-gestalten";
@@ -107,6 +108,7 @@ export const router = createBrowserRouter([
               { path: "kassenbuch", element: <Kassenbuch /> },
               { path: "spenden", element: <Spenden /> },
               { path: "lastschrift", element: <Lastschrift /> },
+              { path: "kontoauszug", element: <Kontoauszug /> },
               { path: "meisterschaften", element: <Meisterschaften /> },
               { path: "protokoll", element: <Protokoll /> },
               { path: "*", element: <FehlerSeite imRahmen /> },

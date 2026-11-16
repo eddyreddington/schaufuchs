@@ -98,7 +98,7 @@ app.use("/trpc/*", async (c, next) => {
 // Größe der Anfragen begrenzen: Bild-Upload (Base64) und Verzeichnis-Import bis 12 MB, alles andere 1 MB, ohne
 // gültige Anmeldung 256 KB (eine Online-Meldung mit 200 Tieren braucht etwa 60 KB).
 // Das große Limit nur für Administratoren und nur, wenn die Anfrage ausschließlich aus diesen Aufrufen besteht.
-const GROSSE_ANFRAGEN = new Set(["katalogGestaltung.bildHochladen", "rassebild.hochladen", "stammdaten.importieren", "datenimport.lesen", "datenimport.pruefen", "datenimport.uebernehmen"]);
+const GROSSE_ANFRAGEN = new Set(["katalogGestaltung.bildHochladen", "rassebild.hochladen", "stammdaten.importieren", "datenimport.lesen", "datenimport.pruefen", "datenimport.uebernehmen", "kontoauszug.pruefen", "kontoauszug.buchen"]);
 /** Gebündelte Aufrufe: höchstens 10; öffentliche Aufrufe und Anmeldungen nur einzeln (sonst umgingen sie die Bremsen). */
 const MAX_BUENDEL = 10;
 const einzeln = (p: string) => p.startsWith("oeffentlich.") || p === "auth.anmelden" || p === "auth.anmeldenCode" || p.startsWith("auth.einladung") || p === "richter.anmelden";

@@ -43,7 +43,7 @@ export const SCHAU_GRUPPEN: MenueGruppe[] = [
       { pfad: "preisrichter", label: "Preisrichter", symbol: "preisrichter" },
     ],
   },
-  { id: "meldephase", name: "Meldephase", phasen: ["meldung"], seiten: [{ pfad: "meldungen", label: "Meldungen", symbol: "meldungen" }] },
+  { id: "meldephase", name: "Meldephase", phasen: ["meldung"], seiten: [{ pfad: "meldungen", label: "Meldungen", symbol: "meldungen" }, { pfad: "kontoauszug", label: "Kontoauszug", symbol: "kontoauszug", nurAdmin: true }] },
   {
     // Erst mit den Meldungen weiß man, wie viele Käfige welcher Größe in die Halle müssen. Die Katalognummern folgen der
     // Ausstellungsfolge oder dem Plan; die Bereiche der Preisrichter (Einteilung nach Rassen) folgen den Nummern.

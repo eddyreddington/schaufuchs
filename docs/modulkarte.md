@@ -461,7 +461,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (52 Z.)
+### index.ts (53 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -527,6 +527,18 @@ Tests: `kommende-schauen.test.ts`
 - `Abweichung` (Typ) – Angaben, die die Quelle anders meldet als übernommen; `entfallen`: steht nicht mehr im Kalender.
 - `gleicheAb()` – Vergleicht die gespeicherten Termine eines Abos mit dem neu abgerufenen Kalender.
 - Typen: `TerminEbene`, `KommenderTermin`, `KommendeWahl`, `GespeicherterTermin`, `Abgleich`
+
+### kontoauszug.ts (290 Z.)
+Kontoauszug-Import (Entscheidung 023): Der Kassierer lädt den Auszug aus dem Onlinebanking hoch (camt.053 oder Bank-CSV); SchauFUCHS liest die Guts …
+Tests: `kontoauszug.test.ts`
+
+- `Buchung` (Typ) – Eine Gutschrift auf dem Vereinskonto.
+- `dekodiere()` – Bytes der Datei als Text: UTF-8, sonst Windows-1252 (ältere CSV-Exporte deutscher Banken).
+- `leseKontoauszug()` – Liest camt.053 oder Bank-CSV; nur Gutschriften in Euro.
+- `buchungsSchluessel()` – Schlüssel je Gutschrift, aus dem der Server den Fingerabdruck gegen Doppelbuchung bildet.
+- `OffeneMeldung` (Typ) – ── Zuordnung ───────────────────────────────────────────────────────────
+- `ordneZu()` – Ordnet Gutschriften Meldungen zu.
+- Typen: `Zuordnung`
 
 ### lastschrift.ts (227 Z.)
 SEPA-Lastschrift für das Standgeld (Entscheidung 018): Gläubiger-Identifikationsnummer, Mandate der Aussteller und die Datei für die Bank (pain.008 …
@@ -1040,6 +1052,12 @@ Katalog und Halle.
 
 Setzt Teile zu einem Router zusammen.
 
+### routers/kontoauszug.ts (156 Z.) → `kontoauszug`
+Kontoauszug-Import (Entscheidung 023), nur Administratoren: Datei aus dem Onlinebanking (camt.053 oder CSV) prüfen – Gutschriften mit Vorschlag zur …
+
+- `kontoauszug.pruefen` mutation · admin – Datei lesen und zuordnen – bucht nichts.
+- `kontoauszug.buchen` mutation · admin – Ausgewählte Gutschriften buchen.
+
 ### routers/lastschrift.ts (317 Z.) → `lastschrift`
 SEPA-Lastschrift für das Standgeld (Entscheidung 018), nur Administratoren: Gläubiger-ID des Vereins, Mandate der Aussteller, je Schau eine Lastsch …
 
@@ -1411,6 +1429,9 @@ Prozeduren: auth.status, katalog.gedrucktSetzen, katalog.liste, katalog.nummernV
 ### kommende-schauen.tsx (534 Z.)
 Prozeduren: termine.aboAbrufen, termine.aboLoeschen, termine.aboSpeichern, termine.abweichung, termine.druckenSetzen, termine.laden, termine.loeschen, termine.pruefen, termine.speichern, termine.veroeffentlichenSetzen, termine.wahlSetzen
 
+### kontoauszug.tsx (169 Z.) – `/schau/:schauId/kontoauszug`
+Prozeduren: kontoauszug.buchen, kontoauszug.pruefen
+
 ### lastschrift.tsx (214 Z.) – `/schau/:schauId/lastschrift`
 Prozeduren: lastschrift.buchen, lastschrift.datei, lastschrift.erstellen, lastschrift.ruecklastschrift, lastschrift.uebersicht, lastschrift.verwerfen
 
@@ -1577,7 +1598,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `schema-katalog.ts` (142 Z.) – Katalog-Gestaltung: Druckvorlagen, Gestaltung, Bilder, Rassebilder, Beiträge (Grußworte, Anzeigen). · KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, druckvorlage, katalogGestaltung, bild, rassebild, katalogBeitrag
 - `schema-lastschrift.ts` (74 Z.) – SEPA-Lastschrift (Entscheidung 018): Mandate der Aussteller und Lastschriftläufe je Schau. · sepaMandat, lastschriftLauf
 - `schema-mandant.ts` (131 Z.) – Mandant (Verein) mit Benutzern und Sitzungen; Stammdaten des Verzeichnisses (Sparten, Rassen, Farbenschläge je Version). · organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag
-- `schema-meldung.ts` (165 Z.) – Aussteller und Meldungen: Aussteller, Meldung, Zahlung des Meldegelds, Katalogeinträge (Tiere). · aussteller, meldung, zahlung, katalogeintrag
+- `schema-meldung.ts` (174 Z.) – Aussteller und Meldungen: Aussteller, Meldung, Zahlung des Meldegelds, Katalogeinträge (Tiere). · aussteller, meldung, zahlung, katalogeintrag
 - `schema-protokoll.ts` (73 Z.) – Protokoll und Post: Änderungsprotokoll mit Hash-Kette und ihren Vermerken, Postausgang. · aenderung, postausgang, aenderungKette, aenderungGeloescht, aenderungAnonymisiert
 - `schema-schau.ts` (143 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
 - `schema-spenden.ts` (115 Z.) – Spenden (Entscheidung 013): Spenderverzeichnis des Vereins, Spenden je Schau und Zuwendungsbestätigungen. · spender, spende, zuwendungsbestaetigung, bestaetigungSpende
@@ -1604,7 +1625,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `index.ts` (260 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
-- `router.ts` (48 Z.) · appRouter
+- `router.ts` (50 Z.) · appRouter
 - `seed.ts` (552 Z.) – Demo-Daten für Entwicklung, Tests und Vorführung. · DEMO, demoEntfernen, seed, bisZurBewertung, komplett
 - `testschau.ts` (517 Z.) – Testdaten für eine vorhandene, leere Schau: füllt sie wie eine echte Lokalschau bis nach der Einlieferung, damit die Ausstellungsleitung den Rest ( … · MERKMAL, DEMO_TIERE_HOECHSTENS, mitDemoSperre, fuellen, zuruecksetzen, entfernen
 - `trpc.ts` (290 Z.) · kurzerPruefText, pruefeMeta, pruefeUmfang, strukturZuGross, sqlZustand, router, publicProcedure, fehler, dbId, kalenderdatum, benutzerProcedure, adminProcedure, richterProcedure, oeffentlichSichtbarProcedure, ladeSchau, pruefeNachFreigabe
@@ -1622,10 +1643,10 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `pdf-anzeige.tsx` (43 Z.) – PDF im Browser anzeigen (pdf.js), gemeinsam für die Live-Vorschauen von Katalog und Druckvorlagen. · pdfjs, PdfSeite
 - `rahmen.tsx` (449 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
 - `rolle.ts` (9 Z.) · useIstAdmin
-- `routes.tsx` (120 Z.) · router
+- `routes.tsx` (122 Z.) · router
 - `seitenmenue.tsx` (190 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · SCHAU_GRUPPEN, allgemeineGruppen, useKlappzustand, MenueGruppen
 - `sprache.tsx` (110 Z.) – Sprache der Seiten für Aussteller (Entscheidung 020): alles unter `/s/…` – öffentliche Schauseite, Online-Meldung, Meine Meldung, Ergebnisse, Impre … · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, SprachWahl, fehlerFuerAussteller
-- `symbole.tsx` (45 Z.) · Symbol
+- `symbole.tsx` (46 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui-basis.ts` (11 Z.) · cx, TON
 - `ui-dialog.tsx` (124 Z.) – Dialog und Rückfragen als eigener Dialog (useFrage statt prompt/confirm). · Dialog, FragenAnbieter, useFrage
@@ -1700,5 +1721,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `57-sprachen.ts` (91 Z.) – Sprachen der Seiten und Mails für Aussteller (Entscheidung 020): Schauseite, Fehlermeldungen der Online-Meldung, Sprache an der Meldung, Bestätigun …
 - `58-a-bogen.ts` (66 Z.) – A-Bogen (Meldebogen zum Ausfüllen und Unterschreiben): leer öffentlich über die Schauseite, leer und vorausgefüllt für die Ausstellungsleitung.
 - `59-girocode.ts` (146 Z.) – Überweisung mit Referenz und GiroCode (Entscheidung 021): nur mit vollständigem Vereinskonto, Referenz je Meldung im Verwendungszweck, Code über de …
+- `60-kontoauszug.ts` (138 Z.) – Kontoauszug-Import (Entscheidung 023): Datei prüfen (Zuordnung über Referenz bzw. Name und Betrag), ausgewählte Gutschriften buchen, Meldung bestät …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

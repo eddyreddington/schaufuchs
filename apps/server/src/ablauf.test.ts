@@ -92,3 +92,4 @@ import "./tests/56-grundriss";
 import "./tests/57-sprachen";
 import "./tests/58-a-bogen";
 import "./tests/59-girocode";
+import "./tests/60-kontoauszug";

@@ -9,6 +9,7 @@ export * from "./stammdaten";
 export * from "./besatz";
 export * from "./sepa";
 export * from "./girocode";
+export * from "./kontoauszug";
 export * from "./datenschutz";
 export * from "./tiergesundheit";
 export * from "./veterinaeramt";

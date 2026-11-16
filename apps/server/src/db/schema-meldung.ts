@@ -111,19 +111,28 @@ export const meldung = pgTable(
   (t) => [uniqueIndex("meldung_schau_aussteller").on(t.schauId, t.ausstellerId)],
 );
 
-export const zahlung = pgTable("zahlung", {
-  id: serial("id").primaryKey(),
-  meldungId: integer("meldung_id").notNull().references(() => meldung.id, { onDelete: "cascade" }),
-  betragCent: integer("betrag_cent").notNull(),
-  datum: date("datum").notNull(),
-  art: zahlartEnum("art").notNull().default("ueberweisung"),
-  erfasstVon: integer("erfasst_von").references(() => benutzer.id),
-  /** Grund (Pflicht bei Erstattung und Storno). */
-  grund: text("grund").notNull().default(""),
-  /** Gegenbuchung zu dieser Zahlung (Storno statt Löschen – Kassendaten bleiben unverändert). */
-  stornoVon: integer("storno_von"),
-  createdAt: createdNachSperre(),
-});
+export const zahlung = pgTable(
+  "zahlung",
+  {
+    id: serial("id").primaryKey(),
+    meldungId: integer("meldung_id").notNull().references(() => meldung.id, { onDelete: "cascade" }),
+    betragCent: integer("betrag_cent").notNull(),
+    datum: date("datum").notNull(),
+    art: zahlartEnum("art").notNull().default("ueberweisung"),
+    erfasstVon: integer("erfasst_von").references(() => benutzer.id),
+    /** Grund (Pflicht bei Erstattung und Storno). */
+    grund: text("grund").notNull().default(""),
+    /** Gegenbuchung zu dieser Zahlung (Storno statt Löschen – Kassendaten bleiben unverändert). */
+    stornoVon: integer("storno_von"),
+    /**
+     * Aus dem Kontoauszug gebucht (Entscheidung 023): Fingerabdruck der Gutschrift (SHA-256 aus Datum, Betrag, IBAN,
+     * Verwendungszweck), damit ein zweimal hochgeladener Auszug nichts doppelt bucht. Kein Klartext vom Auszug.
+     */
+    bankBuchung: text("bank_buchung"),
+    createdAt: createdNachSperre(),
+  },
+  (t) => [uniqueIndex("zahlung_bank_buchung").on(t.bankBuchung)],
+);
 
 export const katalogeintrag = pgTable(
   "katalogeintrag",
