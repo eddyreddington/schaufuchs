@@ -1,4 +1,6 @@
 import { formatEuro } from "../geld";
+import { franzoesischeZeichen, ohneEszett, umschreiben } from "./umschreiben";
+import type { Uebersetzung } from "./uebersetzung";
 import { cs } from "./cs";
 import { de } from "./de";
 import { en } from "./en";
@@ -6,7 +8,7 @@ import { fr } from "./fr";
 import { nl } from "./nl";
 import { pl } from "./pl";
 
-/** Sprachen der Seiten und Mails für Aussteller (Entscheidung 020). Die Oberfläche des Vereins bleibt deutsch. */
+/** Sprachen der Oberfläche (Entscheidung 022) und der Seiten und Mails für Aussteller (Entscheidung 020). */
 export const SPRACHEN = ["de", "de-CH", "en", "fr", "nl", "pl", "cs"] as const;
 export type Sprache = (typeof SPRACHEN)[number];
 
@@ -22,38 +24,9 @@ export const SPRACHNAME: Record<Sprache, string> = {
 };
 
 /** Gebietsschema für Zahlen und Datum. */
-const LOCALE: Record<Sprache, string> = { de: "de-DE", "de-CH": "de-CH", en: "en-GB", fr: "fr-FR", nl: "nl-NL", pl: "pl-PL", cs: "cs-CZ" };
+export const LOCALE: Record<Sprache, string> = { de: "de-DE", "de-CH": "de-CH", en: "en-GB", fr: "fr-FR", nl: "nl-NL", pl: "pl-PL", cs: "cs-CZ" };
 
-/** Jede Übersetzung hat genau die Schlüssel des deutschen Textes; Platzhalter als Funktionen mit denselben Werten. */
-type Uebersetzung<T> = {
-  readonly [K in keyof T]: T[K] extends string ? string : T[K] extends (...a: infer A) => infer R ? (...a: A) => R : Uebersetzung<T[K]>;
-};
 export type Texte = Uebersetzung<typeof de>;
-
-/**
- * Wendet `f` auf jeden Text an – bei Texten mit Platzhaltern nur auf den festen Teil: eingesetzte Werte (Schauname,
- * Grund, Adresse) bleiben, wie der Verein sie geschrieben hat. Leere Werte gehen unverändert hinein (Texte prüfen sie).
- */
-function umschreiben<T>(wert: T, f: (text: string) => string): T {
-  if (typeof wert === "string") return f(wert) as T;
-  if (Array.isArray(wert)) return wert.map((x) => umschreiben(x, f)) as T;
-  if (typeof wert === "function") {
-    return ((...a: unknown[]) => {
-      const marke = (i: number) => `\u0000${i}\u0000`;
-      const ergebnis = (wert as (...a: unknown[]) => unknown)(...a.map((x, i) => (typeof x === "string" && x ? marke(i) : x)));
-      const zurueck = (t: string) => a.reduce<string>((s, x, i) => (typeof x === "string" && x ? s.split(marke(i)).join(x) : s), f(t));
-      return Array.isArray(ergebnis) ? ergebnis.map((x) => (typeof x === "string" ? zurueck(x) : x)) : typeof ergebnis === "string" ? zurueck(ergebnis) : ergebnis;
-    }) as T;
-  }
-  if (wert && typeof wert === "object") return Object.fromEntries(Object.entries(wert).map(([k, v]) => [k, umschreiben(v, f)])) as T;
-  return wert;
-}
-
-/** Schweizer Schreibung: wie Deutsch, aber „ss“ statt „ß“. */
-export const ohneEszett = (text: string) => text.replace(/ß/g, "ss").replace(/ẞ/g, "SS");
-
-/** Französische Satzzeichen: geschütztes Leerzeichen vor : ; ? ! und innerhalb von « » (kein Umbruch davor). */
-export const franzoesischeZeichen = (text: string) => text.replace(/ ([:;?!»])/g, "\u00a0$1").replace(/« /g, "«\u00a0");
 
 const TEXTE: Record<Sprache, Texte> = {
   de,
@@ -100,3 +73,7 @@ export function datumIn(d: string | Date | null | undefined, sprache: Sprache): 
   const date = typeof d === "string" && d.length === 10 ? new Date(`${d}T12:00:00`) : new Date(d);
   return new Intl.DateTimeFormat(LOCALE[sprache], { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
 }
+
+export { franzoesischeZeichen, ohneEszett } from "./umschreiben";
+export type { Uebersetzung } from "./uebersetzung";
+export { oberflaeche, serverText, type OberflaecheTexte } from "./oberflaeche";

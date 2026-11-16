@@ -71,6 +71,8 @@ export const benutzer = pgTable(
      */
     einladungHash: text("einladung_hash"),
     einladungBis: ts("einladung_bis"),
+    /** Sprache der Oberfläche (Entscheidung 022); leer = wie zuletzt im Browser gewählt, sonst Deutsch. */
+    sprache: text("sprache"),
     createdAt: created(),
   },
   (t) => [uniqueIndex("benutzer_email_idx").on(t.email), uniqueIndex("benutzer_einladung_idx").on(t.einladungHash)],

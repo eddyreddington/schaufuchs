@@ -1,0 +1,22 @@
+import type { OberflaecheTexte } from "..";
+import { allgemein } from "./allgemein";
+import { fach } from "./fach";
+import { rahmen } from "./rahmen";
+import { schau } from "./schau";
+import { meldung } from "./meldung";
+import { kasse } from "./kasse";
+import { schautage } from "./schautage";
+import { ehrenpreise } from "./ehrenpreise";
+import { preisrichter } from "./preisrichter";
+import { tablet } from "./tablet";
+import { halle } from "./halle";
+import { halleWerkzeuge } from "./halle-werkzeuge";
+import { halleBild } from "./halle-bild";
+import { katalog } from "./katalog";
+import { vorlagen } from "./vorlagen";
+import { verein } from "./verein";
+import { serverSchau } from "./server-schau";
+import { serverKatalog } from "./server-katalog";
+import { serverKasse } from "./server-kasse";
+
+export const enOberflaeche: OberflaecheTexte = { allgemein, fach, rahmen, schau, meldung, kasse, schautage, ehrenpreise, preisrichter, tablet, halle, halleWerkzeuge, halleBild, katalog, vorlagen, verein, serverSchau, serverKatalog, serverKasse };

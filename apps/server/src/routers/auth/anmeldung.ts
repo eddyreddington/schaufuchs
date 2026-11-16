@@ -1,5 +1,5 @@
-/** Anmeldung: Status, Ersteinrichtung, Anmelden (auch zweiter Schritt), Abmelden, eigenes Passwort ändern. */
-import { abmeldungLesen } from "@schau/domain";
+/** Anmeldung: Status, Ersteinrichtung, Anmelden (auch zweiter Schritt), Abmelden, eigenes Passwort und eigene Sprache. */
+import { abmeldungLesen, SPRACHEN } from "@schau/domain";
 import { and, count, eq, lt, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { beendeSitzung, cookieHeader, hashPasswort, neueSitzung, pruefePasswort, sitzungsId, sitzungWennUnveraendert } from "../../auth";
@@ -186,4 +186,9 @@ export const anmeldung = {
       return { ok: true };
     }),
 
+  /** Sprache der Oberfläche für das eigene Konto merken (Entscheidung 022); gilt auf jedem Gerät nach der Anmeldung. */
+  spracheSetzen: benutzerProcedure.input(z.object({ sprache: z.enum(SPRACHEN) })).mutation(async ({ ctx, input }) => {
+    await db.update(benutzer).set({ sprache: input.sprache }).where(eq(benutzer.id, ctx.benutzer.id));
+    return { ok: true };
+  }),
 };

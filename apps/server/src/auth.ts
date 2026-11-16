@@ -105,7 +105,7 @@ export interface Angemeldet {
    * zweiFaktorPflicht: Administrator ohne 2FA bei aktiver Pflicht – er gilt dann überall als Helfer (rolle "mitarbeiter"),
    * bis die 2FA eingerichtet ist; so greifen alle Rollenprüfungen, auch in Downloads und benutzerProcedure.
    */
-  benutzer: { id: number; organisationId: number; name: string; email: string; rolle: "admin" | "mitarbeiter"; zweiFaktor?: boolean; zweiFaktorPflicht?: boolean } | null;
+  benutzer: { id: number; organisationId: number; name: string; email: string; rolle: "admin" | "mitarbeiter"; sprache?: string | null; zweiFaktor?: boolean; zweiFaktorPflicht?: boolean } | null;
   richter: { id: number; schauId: number; name: string; istObmann: boolean } | null;
 }
 
@@ -151,6 +151,7 @@ async function ladeEine(token: string | undefined, eingabeVorMs?: number): Promi
         name: benutzer.name,
         email: benutzer.email,
         rolle: benutzer.rolle,
+        sprache: benutzer.sprache,
         aktiv: benutzer.aktiv,
         geloeschtAm: benutzer.geloeschtAm,
         totpAktivSeit: benutzer.totpAktivSeit,
