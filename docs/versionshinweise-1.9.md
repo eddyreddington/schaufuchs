@@ -1,5 +1,20 @@
 # SchauFUCHS 1.9 – Versionshinweise
 
+## 1.9.1 (17.11.2026)
+
+Gegenüber 1.9.0:
+
+- Fehlermeldungen beim Öffnen von PDFs und Dateien (z. B. „keine Berechtigung“, „Katalog noch nicht veröffentlicht“)
+  erscheinen in der gewählten Sprache – auch im neuen Browser-Tab und auf den Seiten für Aussteller.
+- Kalender-Abo: Kann der Kalender nicht abgerufen werden, steht ein verständlicher Grund da (z. B. „Der Server lehnt die
+  Verbindung ab“, „Das Zertifikat ist abgelaufen“) statt einer technischen Meldung – in allen Sprachen.
+- Unerwartete Fehler beim Erstellen der SEPA-Dateien, beim Kontoauszug-Import, beim Einspielen von Demodaten und beim
+  Kalender-Abo zeigen keine technischen Einzelheiten mehr, sondern einen allgemeinen Satz („Interner Fehler …“ bzw. „Die
+  Datei ließ sich nicht lesen.“); die Einzelheiten stehen im Protokoll des Servers. Fehler in den Angaben (IBAN,
+  Gläubiger-ID, unbekanntes Dateiformat) werden wie bisher genannt.
+
+`sudo schaufuchs update` holt 1.9.1; an den Daten ändert sich nichts.
+
 ## 1.9.0 (17.11.2026)
 
 Gegenüber 1.8.0 ist neu:
