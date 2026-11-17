@@ -50,6 +50,7 @@ export const sepa: T["sepa"] = {
   keineOffenenErstellen: "No open bank transfers. Please create the SEPA file first.",
   auswahlWeicht: "The selection differs from the SEPA file.",
   keineUeberweisungen: "No bank transfers.",
+  vereinskontoName: "Club account",
   betragPositiv: (name: string) => `Amount for ${name} must be positive.`,
   ausserhalbEwr: (name: string) => `${name}: account outside the EEA – please pay out in cash or transfer individually.`,
   ibanZeichen: (name: string) => `${name}: The IBAN is incomplete or contains invalid characters.`,

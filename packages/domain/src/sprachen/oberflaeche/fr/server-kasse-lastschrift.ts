@@ -4,6 +4,7 @@ type T = OberflaecheTexte["serverKasse"];
 
 export const lastschrift: T["lastschrift"] = {
   glaeubigerForm: "L’ICS a la forme DE98ZZZ09999999999.",
+  glaeubigerFehlt: "L’ICS manque.",
   glaeubigerDe: "Un ICS allemand comporte 18 caractères.",
   glaeubigerPruefziffer: "La clé de contrôle de l’ICS est incorrecte.",
   referenzFehlt: "La référence unique du mandat manque.",

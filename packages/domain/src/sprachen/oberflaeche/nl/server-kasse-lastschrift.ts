@@ -4,6 +4,7 @@ type T = OberflaecheTexte["serverKasse"];
 
 export const lastschrift: T["lastschrift"] = {
   glaeubigerForm: "Het incassant-ID heeft de vorm DE98ZZZ09999999999.",
+  glaeubigerFehlt: "Het incassant-ID ontbreekt.",
   glaeubigerDe: "Een Duits incassant-ID heeft 18 tekens.",
   glaeubigerPruefziffer: "Het controlegetal van het incassant-ID klopt niet.",
   referenzFehlt: "Het machtigingskenmerk ontbreekt.",

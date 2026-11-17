@@ -180,6 +180,7 @@ export interface AbrufErgebnis {
  */
 export async function aboAbrufen(aboId: number, akteur: Akteur, text?: string): Promise<AbrufErgebnis> {
   const [abo] = await db.select().from(terminabo).where(eq(terminabo.id, aboId));
+  // bleibt deutsch: interne Annahme, der Router prüft das Abo vorher
   if (!abo) throw new Error("Abo nicht gefunden.");
   let termine: IcalTermin[];
   try {

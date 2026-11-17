@@ -7,4 +7,7 @@ export const kontoauszug: OberflaecheTexte["serverKasse"]["kontoauszug"] = {
   nichtOffen: "Inscription ni en attente ni confirmée",
   schonGebucht: "déjà comptabilisé",
   andersBezahlt: "payé autrement entre-temps – veuillez vérifier à nouveau",
+  keinCamt: "Ce n’est pas un relevé de compte au format camt.053.",
+  unbekanntesFormat: "Format inconnu : les colonnes « Buchungstag » (date de comptabilisation) et « Betrag » (montant) manquent dans le fichier. Veuillez importer l’export des opérations au format CSV ou camt.053 (XML).",
+  nichtLesbar: "Le fichier n’a pas pu être lu.",
 };

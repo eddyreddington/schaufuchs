@@ -17,7 +17,7 @@ describe("Sprachen der Oberfläche (Entscheidung 022)", () => {
     expect((await verloren()).map(zeile)).toEqual([]);
   });
 
-  test("jede Meldung des Servers hat eine Übersetzung", async () => {
+  test("jede Meldung des Servers und jeder weitergereichte Fehler hat eine Übersetzung", async () => {
     expect((await serverOhneUebersetzung()).map(zeile)).toEqual([]);
   });
 });

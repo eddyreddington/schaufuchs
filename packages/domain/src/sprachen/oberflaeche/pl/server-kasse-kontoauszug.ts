@@ -7,4 +7,7 @@ export const kontoauszug: OberflaecheTexte["serverKasse"]["kontoauszug"] = {
   nichtOffen: "Zgłoszenie ani oczekujące, ani potwierdzone",
   schonGebucht: "już zaksięgowano",
   andersBezahlt: "w międzyczasie opłacono inaczej – proszę sprawdzić ponownie",
+  keinCamt: "To nie jest wyciąg bankowy w formacie camt.053.",
+  unbekanntesFormat: "Nieznany format: w pliku brakuje kolumn „Buchungstag” (data księgowania) i „Betrag” (kwota). Proszę przesłać eksport operacji jako CSV lub camt.053 (XML).",
+  nichtLesbar: "Nie udało się odczytać pliku.",
 };

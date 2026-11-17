@@ -50,6 +50,7 @@ export const sepa: T["sepa"] = {
   keineOffenenErstellen: "Žádné čekající převody. Nejprve prosím vytvořte soubor SEPA.",
   auswahlWeicht: "Výběr se liší od souboru SEPA.",
   keineUeberweisungen: "Žádné převody.",
+  vereinskontoName: "Účet spolku",
   betragPositiv: (name: string) => `Částka pro ${name} musí být kladná.`,
   ausserhalbEwr: (name: string) => `${name}: účet mimo EHP – vyplaťte prosím v hotovosti nebo převeďte jednotlivě.`,
   ibanZeichen: (name: string) => `${name}: IBAN je neúplný nebo obsahuje neplatné znaky.`,

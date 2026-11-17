@@ -50,6 +50,7 @@ export const sepa: T["sepa"] = {
   keineOffenenErstellen: "Geen openstaande overschrijvingen. Maak eerst het SEPA-bestand aan.",
   auswahlWeicht: "De selectie wijkt af van het SEPA-bestand.",
   keineUeberweisungen: "Geen overschrijvingen.",
+  vereinskontoName: "Verenigingsrekening",
   betragPositiv: (name: string) => `Het bedrag voor ${name} moet positief zijn.`,
   ausserhalbEwr: (name: string) => `${name}: rekening buiten de EER – contant uitbetalen of afzonderlijk overmaken.`,
   ibanZeichen: (name: string) => `${name}: De IBAN is onvolledig of bevat ongeldige tekens.`,

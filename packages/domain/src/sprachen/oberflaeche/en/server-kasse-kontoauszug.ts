@@ -7,4 +7,7 @@ export const kontoauszug: OberflaecheTexte["serverKasse"]["kontoauszug"] = {
   nichtOffen: "Entry neither pending nor confirmed",
   schonGebucht: "already booked",
   andersBezahlt: "paid otherwise in the meantime – please check again",
+  keinCamt: "This is not a bank statement in camt.053 format.",
+  unbekanntesFormat: "Unknown format: the columns “Buchungstag” (booking date) and “Betrag” (amount) are missing from the file. Please upload the transaction export as CSV or camt.053 (XML).",
+  nichtLesbar: "The file could not be read.",
 };

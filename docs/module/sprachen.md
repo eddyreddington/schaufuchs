@@ -15,15 +15,17 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 | Umschreibung | `sprachen/umschreiben.ts` | `umschreiben()`, `ohneEszett()`, `franzoesischeZeichen()` |
 | Web | `apps/web/src/sprache.tsx`, `sprache-jetzt.ts`, `lib.ts` | `SpracheRahmen`, `useOberflaeche()`, `useTexte()`, `useSprache()`, `SprachWahl`; `ot()`, `aktuelleSprache()`; `fehlerText()` |
 | Server | `routers/auth/anmeldung.ts` | `auth.spracheSetzen`, `auth.status` (`benutzer.sprache`) |
-| Prüfung | `packages/domain/src/sprachen/oberflaeche.test.ts`, `scripts/sprachen-scan.ts` mit Test | Vollständigkeit, Deutsch unverändert (`sprachen-vorher.json`), keine Reste, Servermeldungen |
+| Prüfung | `packages/domain/src/sprachen/oberflaeche.test.ts`, `scripts/sprachen-scan.ts` mit Test | Vollständigkeit, Deutsch unverändert (`sprachen-vorher.json`), keine Reste, Servermeldungen und weitergereichte Fehler |
 
 ## So kommt ein neuer Text dazu
 
 1. Deutsch in `oberflaeche/de/<gruppe>.ts` (bei der Seite, zu der er gehört), mit Werten als Funktion `(n: number) => …`.
 2. Dieselben Schlüssel in `en`, `fr`, `nl`, `pl`, `cs` – die Typprüfung meldet jede fehlende Stelle.
 3. In der Komponente `const t = useOberflaeche();` → `t.<gruppe>.<seite>.<text>`; außerhalb von Komponenten `ot()`.
-4. Neue Meldung des Servers (`fehler("…", "…")`): wortgleich in eine Gruppe `server*` und übersetzen; mit Werten als
-   Funktion nur mit Text-Parametern ohne Bedingung (Mehrzahl als eigener Eintrag).
+4. Neue Meldung des Servers (`fehler("…", "…")`, auch ein `new …Error("…")` in Server oder Domain, das ein Router
+   weiterreicht): wortgleich in eine Gruppe `server*` und übersetzen; mit Werten als Funktion nur mit Text-Parametern
+   ohne Bedingung (Mehrzahl als eigener Eintrag). Rein interne Fehler: `// bleibt deutsch` mit Grund darüber. Gibt eine
+   Prüffunktion der Domain einen neuen Grund zurück, den der Server einsetzt: Fall in `oberflaeche.test.ts` ergänzen.
 5. Bewusst deutscher Text im Quelltext: Kommentar `// bleibt deutsch`.
 6. `bun scripts/sprachen-scan.ts rest` (Reste), `server` (Meldungen), `verloren` (Deutsch unverändert) – oder `bun run pruefen`.
 

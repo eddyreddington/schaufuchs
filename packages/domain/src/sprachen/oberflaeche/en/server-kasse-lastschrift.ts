@@ -4,6 +4,7 @@ type T = OberflaecheTexte["serverKasse"];
 
 export const lastschrift: T["lastschrift"] = {
   glaeubigerForm: "The creditor ID has the form DE98ZZZ09999999999.",
+  glaeubigerFehlt: "The creditor ID is missing.",
   glaeubigerDe: "A German creditor ID has 18 characters.",
   glaeubigerPruefziffer: "The check digits of the creditor ID are wrong.",
   referenzFehlt: "The mandate reference is missing.",

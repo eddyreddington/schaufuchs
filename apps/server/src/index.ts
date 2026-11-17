@@ -72,6 +72,7 @@ if (config.production && !process.env.PUBLIC_URL) {
 // Gesundheitsprüfung (Docker): Server und Datenbank antworten.
 app.get("/api/gesund", async (c) => {
   try {
+    // bleibt deutsch: nur für die Gesundheitsprüfung
     await Promise.race([db.execute(sql`select 1`), new Promise((_, nein) => setTimeout(() => nein(new Error("Zeitüberschreitung")), 3000))]);
     return c.json({ ok: true, version: VERSION });
   } catch {

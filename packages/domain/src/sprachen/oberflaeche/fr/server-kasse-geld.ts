@@ -50,6 +50,7 @@ export const sepa: T["sepa"] = {
   keineOffenenErstellen: "Aucun virement en attente. Veuillez d’abord créer le fichier SEPA.",
   auswahlWeicht: "La sélection diffère du fichier SEPA.",
   keineUeberweisungen: "Aucun virement.",
+  vereinskontoName: "Compte du club",
   betragPositiv: (name: string) => `Le montant pour ${name} doit être positif.`,
   ausserhalbEwr: (name: string) => `${name} : compte hors de l’EEE – veuillez payer en espèces ou virer individuellement.`,
   ibanZeichen: (name: string) => `${name} : L’IBAN est incomplet ou contient des caractères non valables.`,

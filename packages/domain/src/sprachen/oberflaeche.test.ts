@@ -1,5 +1,7 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { ladeAlleOberflaechen, oberflaeche, serverText, SPRACHEN, type Sprache } from ".";
+import { mandatGueltig, pruefeGlaeubigerId, pruefeMandatsreferenz } from "../lastschrift";
+import { pruefeBic, pruefeIban } from "../sepa";
 import { deOberflaeche } from "./oberflaeche/de";
 
 beforeAll(ladeAlleOberflaechen);
@@ -105,5 +107,58 @@ describe("Meldungen des Servers (serverText)", () => {
     expect(serverText("Straße gesperrt.", "de")).toBe("Straße gesperrt.");
     const zwei = meldungen().filter((m) => m.de.endsWith(".") && !m.de.slice(0, -1).includes(".")).slice(0, 2);
     if (zwei.length === 2) expect(serverText(`${zwei[0]!.de} ${zwei[1]!.de}`, "en")).toBe(`${zwei[0]!.ziel("en")} ${zwei[1]!.ziel("en")}`);
+  });
+
+  test("weitergereichte Fehler der Fachlogik: zusammengesetzt ganz übersetzt, kein deutscher Rest", () => {
+    // Fehler aus lastschrift.ts / sepa.ts (Präfix + Grund aus der Prüfung) und aus dem Kontoauszug-Import.
+    const faelle = [
+      "Gläubiger-ID des Vereins: Die Gläubiger-ID fehlt.",
+      "Vereinskonto: Die IBAN ist unvollständig oder enthält ungültige Zeichen.",
+      "Vereinskonto: Die Prüfziffer der IBAN stimmt nicht – bitte auf Tippfehler prüfen.",
+      "Die Datei ließ sich nicht lesen.",
+      "Das ist kein Kontoauszug im Format camt.053.",
+      "Unbekanntes Format: In der Datei fehlen die Spalten Buchungstag und Betrag. Bitte den Umsatzexport als CSV oder camt.053 (XML) hochladen.",
+      // Demodaten (testschau.ts über routers/schau/anlegen.ts) und Anmeldung (auth.ts, TRPCError).
+      "Demodaten nicht vollständig eingespielt: Es werden gerade schon Demodaten eingespielt – bitte gleich noch einmal versuchen.",
+      "Demodaten nicht vollständig eingespielt: Die Schau steht in der Phase „Katalog & Halle“ – erwartet: Vorbereitung oder Meldephase.",
+      "Demodaten nicht vollständig eingespielt: „Probe 7“ hat schon Meldungen – Testdaten nur in eine leere Schau (nichts wird überschrieben).",
+      "Die Anmeldung ist abgelaufen. Bitte noch einmal anmelden.",
+      "Der Server ist gerade ausgelastet. Bitte gleich noch einmal versuchen.",
+    ];
+    const rest: string[] = [];
+    for (const s of SPRACHEN.filter((x) => x !== "de" && x !== "de-CH"))
+      for (const f of faelle) {
+        const ist = serverText(f, s);
+        if (/Gläubiger|Vereinskonto|IBAN ist|Datei|Unbekanntes|Demodaten|Schau steht|erwartet|Meldungen|Anmeldung|Server ist/.test(ist)) rest.push(`${s}: ${ist}`);
+      }
+    expect(rest).toEqual([]);
+  });
+
+  test("Gründe aus den Prüffunktionen (IBAN, BIC, Gläubiger-ID, Mandat): allein und so eingesetzt wie im Server übersetzt", () => {
+    // Wie der Server sie einsetzt: domain sepa.ts / lastschrift.ts („Vereinskonto: …“, „Gläubiger-ID des Vereins: …“,
+    // „<Name>: …“), routers/lastschrift.ts und schau/einstellungen.ts (allein).
+    const mandat = { unterschriebenAm: "2020-01-01", widerrufenAm: null, letzteNutzungAm: null, wiederkehrend: true };
+    const ibanVorsatz = ["", "Vereinskonto: ", "Anna Muster: "];
+    const faelle: [string | null, string[]][] = [
+      [pruefeIban("DE12"), ibanVorsatz],
+      [pruefeIban("DE8937040044053201300"), ibanVorsatz],
+      [pruefeIban("DE89370400440532013001"), ibanVorsatz],
+      [pruefeBic("ABC"), [""]],
+      ...["", "DE98", "DE98ZZZ0999999999", "DE99ZZZ09999999999"].map((id): [string | null, string[]] => [pruefeGlaeubigerId(id), ["", "Gläubiger-ID des Vereins: "]]),
+      ...["", "x".repeat(36), "Mandat Nr. 1"].map((r): [string | null, string[]] => [pruefeMandatsreferenz(r), ["", "Anna Muster: "]]),
+      [mandatGueltig({ ...mandat, widerrufenAm: "2026-01-01" }, "2026-11-01"), [""]],
+      [mandatGueltig({ ...mandat, unterschriebenAm: "2026-12-01" }, "2026-11-01"), [""]],
+      [mandatGueltig({ ...mandat, wiederkehrend: false, letzteNutzungAm: "2026-01-01" }, "2026-11-01"), [""]],
+      [mandatGueltig(mandat, "2026-11-01"), [""]],
+    ];
+    expect(faelle.every(([g]) => typeof g === "string")).toBe(true);
+    const rest: string[] = [];
+    for (const [g, vorsaetze] of faelle)
+      for (const meldung of vorsaetze.map((v) => v + g))
+        for (const s of SPRACHEN.filter((x) => x !== "de" && x !== "de-CH")) {
+          const ist = serverText(meldung, s);
+          if (ist.includes(g!) || /Vereinskonto|Gläubiger/.test(ist)) rest.push(`${s}: ${ist}`);
+        }
+    expect(rest).toEqual([]);
   });
 });

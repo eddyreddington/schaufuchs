@@ -142,7 +142,7 @@ Tests: `einteilung.test.ts`
 - `anteil()` – Prozentsatz in Basispunkten (1500 = 15 %), kaufmännisch gerundet auf Cent.
 - `betragInWorten()` – Betrag in Worten für Quittungen: 23550 → „zweihundertfünfunddreißig Euro und fünfzig Cent“.
 
-### girocode.ts (83 Z.)
+### girocode.ts (84 Z.)
 Überweisung des Meldegelds mit Referenz und GiroCode (Entscheidung 021): Jede Meldung bekommt eine Referenz nach ISO 11649 („RF“ + Prüfziffern), di …
 Tests: `girocode.test.ts`
 
@@ -797,7 +797,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schautage`
 
-### server-kasse-geld.ts (76 Z.)
+### server-kasse-geld.ts (77 Z.)
 
 - `kasse`
 - `auszahlung`
@@ -805,11 +805,11 @@ Sammelt alle Exporte (`export * from …`).
 - `sepa`
 - `verkauf`
 
-### server-kasse-kontoauszug.ts (10 Z.)
+### server-kasse-kontoauszug.ts (13 Z.)
 
 - `kontoauszug`
 
-### server-kasse-lastschrift.ts (81 Z.)
+### server-kasse-lastschrift.ts (82 Z.)
 
 - `lastschrift`
 - `spenden`
@@ -861,7 +861,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (150 Z.)
+### server-schau.ts (160 Z.)
 
 - `serverSchau`
 
@@ -988,7 +988,7 @@ Texte der Oberfläche: schau (Entscheidung 022) – Liste der Schauen, Übersich
 
 - `schautage` – Texte der Oberfläche: schautage – Einlieferung, Tierausgabe, Tiergesundheit, Bewertung am PC, Preise (Entscheidung 022).
 
-### server-kasse-geld.ts (84 Z.)
+### server-kasse-geld.ts (86 Z.)
 Meldungen des Servers zur Kasse (routers/kasse/*, services/kasse.ts) mit SEPA-Überweisung aus der Fachlogik (sepa.ts) – Teil von serverKasse (Entsc …
 
 - `kasse` – Gemeinsame Prüfungen der Kasse (services/kasse.ts, routers/kasse/gemeinsam.ts).
@@ -997,11 +997,11 @@ Meldungen des Servers zur Kasse (routers/kasse/*, services/kasse.ts) mit SEPA-Ü
 - `sepa` – SEPA-Sammelüberweisung (routers/kasse/sepa.ts) und Prüfungen beim Erzeugen der Datei (domain sepa.ts).
 - `verkauf` – Tierverkauf, Storno, Zahlungseingang (routers/kasse/verkauf.ts).
 
-### server-kasse-kontoauszug.ts (13 Z.)
+### server-kasse-kontoauszug.ts (18 Z.)
 
-- `kontoauszug` – Meldungen des Servers zum Kontoauszug-Import (routers/kontoauszug.ts, Entscheidung 023) – Teil von serverKasse (Entscheidung 022).
+- `kontoauszug` – Meldungen des Servers zum Kontoauszug-Import (routers/kontoauszug.ts und die dort weitergereichten Fehler der Domain, Entscheidung 023) – Teil von …
 
-### server-kasse-lastschrift.ts (88 Z.)
+### server-kasse-lastschrift.ts (90 Z.)
 Meldungen des Servers zu SEPA-Lastschrift (routers/lastschrift.ts, domain lastschrift.ts) und Spenden (routers/spenden.ts, services/zuwendungsbesta …
 
 - `lastschrift` – Gläubiger-ID, Mandate, Lastschriftdatei, Rücklastschrift.
@@ -1058,7 +1058,7 @@ Meldungen des Servers zu Meldungen, Zahlungen und Ausstellern (Teil von serverSc
 
 - `serverSchauZusatz` – Weitere Meldungen: Prüfung der Protokollkette (services/protokoll-suche.ts), Katalog-Vorschau (datei-katalog.ts), Mailserver (services/post.ts) – T …
 
-### server-schau.ts (150 Z.)
+### server-schau.ts (161 Z.)
 Meldungen des Servers (Entscheidung 022): Schau anlegen, Einstellungen, Gebühren, Anmeldung, Bremsen, Termine, Verein.
 
 - `serverSchau`
@@ -1178,7 +1178,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schautage`
 
-### server-kasse-geld.ts (76 Z.)
+### server-kasse-geld.ts (77 Z.)
 
 - `kasse`
 - `auszahlung`
@@ -1186,11 +1186,11 @@ Sammelt alle Exporte (`export * from …`).
 - `sepa`
 - `verkauf`
 
-### server-kasse-kontoauszug.ts (10 Z.)
+### server-kasse-kontoauszug.ts (13 Z.)
 
 - `kontoauszug`
 
-### server-kasse-lastschrift.ts (81 Z.)
+### server-kasse-lastschrift.ts (82 Z.)
 
 - `lastschrift`
 - `spenden`
@@ -1242,7 +1242,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (143 Z.)
+### server-schau.ts (153 Z.)
 
 - `serverSchau`
 
@@ -1359,7 +1359,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schautage`
 
-### server-kasse-geld.ts (76 Z.)
+### server-kasse-geld.ts (77 Z.)
 
 - `kasse`
 - `auszahlung`
@@ -1367,11 +1367,11 @@ Sammelt alle Exporte (`export * from …`).
 - `sepa`
 - `verkauf`
 
-### server-kasse-kontoauszug.ts (10 Z.)
+### server-kasse-kontoauszug.ts (13 Z.)
 
 - `kontoauszug`
 
-### server-kasse-lastschrift.ts (81 Z.)
+### server-kasse-lastschrift.ts (82 Z.)
 
 - `lastschrift`
 - `spenden`
@@ -1423,7 +1423,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (143 Z.)
+### server-schau.ts (153 Z.)
 
 - `serverSchau`
 
@@ -1544,7 +1544,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schautage`
 
-### server-kasse-geld.ts (76 Z.)
+### server-kasse-geld.ts (77 Z.)
 
 - `kasse`
 - `auszahlung`
@@ -1552,11 +1552,11 @@ Sammelt alle Exporte (`export * from …`).
 - `sepa`
 - `verkauf`
 
-### server-kasse-kontoauszug.ts (10 Z.)
+### server-kasse-kontoauszug.ts (13 Z.)
 
 - `kontoauszug`
 
-### server-kasse-lastschrift.ts (81 Z.)
+### server-kasse-lastschrift.ts (82 Z.)
 
 - `lastschrift`
 - `spenden`
@@ -1608,7 +1608,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (143 Z.)
+### server-schau.ts (153 Z.)
 
 - `serverSchau`
 
@@ -1726,7 +1726,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schautage`
 
-### server-kasse-geld.ts (76 Z.)
+### server-kasse-geld.ts (77 Z.)
 
 - `kasse`
 - `auszahlung`
@@ -1734,11 +1734,11 @@ Sammelt alle Exporte (`export * from …`).
 - `sepa`
 - `verkauf`
 
-### server-kasse-kontoauszug.ts (10 Z.)
+### server-kasse-kontoauszug.ts (13 Z.)
 
 - `kontoauszug`
 
-### server-kasse-lastschrift.ts (81 Z.)
+### server-kasse-lastschrift.ts (82 Z.)
 
 - `lastschrift`
 - `spenden`
@@ -1790,7 +1790,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (149 Z.)
+### server-schau.ts (159 Z.)
 
 - `serverSchau`
 
@@ -2671,8 +2671,8 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `rassebild.ts` (86 Z.) – Rassebilder für den Katalog: prüfen und speichern (Oberfläche und Einspielen aus dem Netz). · RASSEBILD_MAX_BYTES, jpegAnzeige, oeffneBild, pruefeRassebild, speichereRassebild
 - `serienbrief.ts` (34 Z.) – Empfänger eines Serienbriefs: Vereinsmitglieder, alle Aussteller des Vereins oder die Aussteller mit bestätigter Meldung zu einer Schau. · SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger
 - `spenden-quittung.ts` (34 Z.) – Spendenquittung einer Spende erzeugen (für das Belegarchiv, services/kassenbuch.ts): Briefkopf und Farbe aus der Briefvorlage des Vereins, Hinweis … · spendenquittung
-- `spenden.ts` (168 Z.) – Spenden (Entscheidung 013): Spender zum Aussteller finden oder anlegen, Spenden einer Schau mit Eingangstag und Bestätigungsstand laden, Bestätigun … · ladeSteuer, spenderFuerAussteller, meldungsspendeAnlegen, eingangMitMeldegeld, ladeSpenden, sperreBestaetigungen, naechsteBestaetigungsnummer, spenderFuerKatalog, spendenFuerAuskunft
-- `termine.ts` (253 Z.) – Kommende Schauen: Termine für die Katalogseite, abonnierte Kalender (iCal) abrufen und abgleichen, eigene Schauen als Kalender. · KALENDER_MAX_BYTES, ladeKommende, eigeneSchauenFuerKalender, istInterneAdresse, sichereAufloesung, pruefeKalenderAdresse, holeKalender, aboAbrufen, alleAbosAbrufen, starteTerminabruf
+- `spenden.ts` (169 Z.) – Spenden (Entscheidung 013): Spender zum Aussteller finden oder anlegen, Spenden einer Schau mit Eingangstag und Bestätigungsstand laden, Bestätigun … · ladeSteuer, spenderFuerAussteller, meldungsspendeAnlegen, eingangMitMeldegeld, ladeSpenden, sperreBestaetigungen, naechsteBestaetigungsnummer, spenderFuerKatalog, spendenFuerAuskunft
+- `termine.ts` (254 Z.) – Kommende Schauen: Termine für die Katalogseite, abonnierte Kalender (iCal) abrufen und abgleichen, eigene Schauen als Kalender. · KALENDER_MAX_BYTES, ladeKommende, eigeneSchauenFuerKalender, istInterneAdresse, sichereAufloesung, pruefeKalenderAdresse, holeKalender, aboAbrufen, alleAbosAbrufen, starteTerminabruf
 - `testschau.ts` (164 Z.) – Testschauen (Üben, Vorführen) sind von echten Schauen getrennt: Aussteller, die in einer Testschau angelegt oder gemeldet werden, gehören nur ihr ( … · sperreTestschauGeteilt, ausstellerDerSchau, echteAussteller, testSchauIdFuer, pruefeAusstellerZurSchau, sperreTestschauExklusiv, testschauVorschau, KOPIE_AKTION, testKopienVon, kennzeichneAlsTestschau
 - `textbausteine-gefieder.ts` (199 Z.) · BAUSTEINE_GEFIEDER
 - `textbausteine-gestalt.ts` (124 Z.) · BAUSTEINE_GESTALT
@@ -2686,7 +2686,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `vereinsverzeichnis.ts` (90 Z.) · verzeichnisVorschlaegeZwischengespeichert, verzeichnisVergessen, vereineEinspielen
 - `verkaufsliste.ts` (55 Z.) · ladeVerkaufsliste
 - `zuwendungsbestaetigung.ts` (95 Z.) – Zuwendungsbestätigungen ausstellen und stornieren (Entscheidung 013). · bestaetigeSpende, sammelbestaetige, storniereBestaetigung
-- `zweifaktor.ts` (136 Z.) · base32, ausBase32, neuesGeheimnis, zeitschritt, totp, pruefeTotp, otpauthAdresse, lesbar, hashNotfallcode, neueNotfallcodes, starteZweiterSchritt, ladeZweiterSchritt, zweiterSchrittFehlgeschlagen, beendeZweiterSchritt
+- `zweifaktor.ts` (137 Z.) · base32, ausBase32, neuesGeheimnis, zeitschritt, totp, pruefeTotp, otpauthAdresse, lesbar, hashNotfallcode, neueNotfallcodes, starteZweiterSchritt, ladeZweiterSchritt, zweiterSchrittFehlgeschlagen, beendeZweiterSchritt
 - `zwischenspeicher.ts` (38 Z.) · oeffentlichGeaendert, rassebilderGeaendert, termineGeaendert, oeffentlicherStand
 
 ### PDFs `apps/server/src/pdf`
@@ -2718,7 +2718,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 - `client.ts` (11 Z.) · sql, db
 - `geheim-bestand.ts` (64 Z.) – Stellt Altbestand im Klartext auf verschlüsselte Spalten um (läuft bei jedem Start nach den Migrationen; findet es nichts mehr, tut es nichts). · pruefeDatenschluessel, verschluesseleBestand
-- `geheim.ts` (106 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, entschluessele, geheimText, geheimJsonLesen, geheimJson
+- `geheim.ts` (112 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, entschluessele, geheimText, geheimJsonLesen, geheimJson
 - `schema-aufzaehlungen.ts` (18 Z.) – Aufzählungstypen der Datenbank (pgEnum) – Phasen, Meldearten, Status, Zahlarten u. a. Über schema.ts exportiert. · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum
 - `schema-bewertung.ts` (106 Z.) – Preisrichter und Bewertung: Vereinsverzeichnis, Preisrichter, Einteilung, Bewertung, Textbausteine. · vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein
 - `schema-hallenentwurf.ts` (30 Z.) – Entwürfe des Hallenplans (Entscheidung 017): Je Schau mehrere Varianten speichern und laden; ist entschieden, gehen die übrigen ins Archiv des Vere … · hallenentwurf
@@ -2751,12 +2751,12 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datei-oeffentlich.ts` (141 Z.) – Öffentliche Dateien ohne Anmeldung, jeweils mit Bremse je Adresse: GET /o/:id/schauen.ics – eigene Schauen des Vereins als Kalender (iCal) GET /s/: … · katalogVerzeichnis, oeffentlicheDateien
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
 - `datei-unterlagen.ts` (120 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, B-Bogen und A-Bogen, Abrechnung und Q … · unterlagenDateien
-- `index.ts` (260 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
+- `index.ts` (261 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
 - `router.ts` (50 Z.) · appRouter
 - `seed.ts` (552 Z.) – Demo-Daten für Entwicklung, Tests und Vorführung. · DEMO, demoEntfernen, seed, bisZurBewertung, komplett
-- `testschau.ts` (517 Z.) – Testdaten für eine vorhandene, leere Schau: füllt sie wie eine echte Lokalschau bis nach der Einlieferung, damit die Ausstellungsleitung den Rest ( … · MERKMAL, DEMO_TIERE_HOECHSTENS, mitDemoSperre, fuellen, zuruecksetzen, entfernen
+- `testschau.ts` (519 Z.) – Testdaten für eine vorhandene, leere Schau: füllt sie wie eine echte Lokalschau bis nach der Einlieferung, damit die Ausstellungsleitung den Rest ( … · MERKMAL, DEMO_TIERE_HOECHSTENS, mitDemoSperre, fuellen, zuruecksetzen, entfernen
 - `trpc.ts` (290 Z.) · kurzerPruefText, pruefeMeta, pruefeUmfang, strukturZuGross, sqlZustand, router, publicProcedure, fehler, dbId, kalenderdatum, benutzerProcedure, adminProcedure, richterProcedure, oeffentlichSichtbarProcedure, ladeSchau, pruefeNachFreigabe
 - `vereinsverzeichnis-import.ts` (27 Z.) – Vereinsverzeichnis einspielen (Namen der Rassegeflügelzuchtvereine aus öffentlichen Verbandsseiten): bun src/vereinsverzeichnis-import.ts --datei < …
 

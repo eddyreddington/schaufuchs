@@ -11,7 +11,7 @@
  * Die Aussteller sind erfunden und haben keine E-Mail-Adresse (es geht keine Post hinaus). Erkennungsmerkmal: die
  * Registriernummer beginnt mit „276 16 999“ (Kreis 999 gibt es nicht) – daran findet --entfernen sie wieder.
  */
-import { gefordertCent, halleOhneFestenPlan, heuteBerlin, standardBesatz, tagBerlin } from "@schau/domain";
+import { gefordertCent, halleOhneFestenPlan, heuteBerlin, PHASEN_LABEL, standardBesatz, tagBerlin } from "@schau/domain";
 import { and, asc, eq, inArray, like, notExists, sql as sqlText } from "drizzle-orm";
 import { db, sql } from "./db/client";
 import { aussteller, benutzer, farbenschlag, gebuehr, katalogBeitrag, katalogGestaltung, meldung, preisrichter, rasse, schau, sparte, spende, spender, verkauf, katalogeintrag, zuwendungsbestaetigung } from "./db/schema";
@@ -123,7 +123,7 @@ export async function fuellen(slug: string, ziel?: number, opts: { wer?: Einspie
   const [schon] = await db.select({ id: meldung.id }).from(meldung).where(eq(meldung.schauId, s.id)).limit(1);
   if (schon) throw new Error(`„${s.name}“ hat schon Meldungen – Testdaten nur in eine leere Schau (nichts wird überschrieben).`);
   if (!s.stammdatenVersionId) throw new Error("Der Schau fehlt das Rassenverzeichnis.");
-  if (s.phase !== "vorbereitung" && s.phase !== "meldung") throw new Error(`Die Schau steht in der Phase „${s.phase}“ – erwartet: Vorbereitung oder Meldung.`);
+  if (s.phase !== "vorbereitung" && s.phase !== "meldung") throw new Error(`Die Schau steht in der Phase „${PHASEN_LABEL[s.phase]}“ – erwartet: Vorbereitung oder Meldephase.`);
   const log = (t: string) => (opts.leise ? undefined : console.log(`· ${t}`));
   // Erfundene Aussteller nur in einer Testschau: dort gehören sie nur ihr und tauchen nie in echten Schauen auf.
   if (!s.test) {
@@ -498,9 +498,11 @@ if (import.meta.main) {
   const i = process.argv.indexOf("--schau");
   const slug = i > 0 ? process.argv[i + 1] : undefined;
   try {
+    // bleibt deutsch: nur auf der Kommandozeile
     if (!slug) throw new Error("Aufruf: bun src/testschau.ts --schau <kurzname> [--tiere <anzahl>] [--zuruecksetzen] [--entfernen]");
     const t = process.argv.indexOf("--tiere");
     const ziel = t > 0 ? Number(process.argv[t + 1]) : undefined;
+    // bleibt deutsch: nur auf der Kommandozeile
     if (ziel !== undefined && !(Number.isInteger(ziel) && ziel >= 20 && ziel <= 2000)) throw new Error("--tiere: eine Zahl von 20 bis 2000.");
     await mitDemoSperre(async () => {
       if (process.argv.includes("--entfernen")) await entfernen(slug);

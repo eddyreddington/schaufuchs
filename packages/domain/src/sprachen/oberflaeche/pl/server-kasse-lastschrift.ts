@@ -4,6 +4,7 @@ type T = OberflaecheTexte["serverKasse"];
 
 export const lastschrift: T["lastschrift"] = {
   glaeubigerForm: "Identyfikator wierzyciela ma postać DE98ZZZ09999999999.",
+  glaeubigerFehlt: "Brak identyfikatora wierzyciela.",
   glaeubigerDe: "Niemiecki identyfikator wierzyciela ma 18 znaków.",
   glaeubigerPruefziffer: "Cyfry kontrolne identyfikatora wierzyciela się nie zgadzają.",
   referenzFehlt: "Brak numeru referencyjnego upoważnienia.",

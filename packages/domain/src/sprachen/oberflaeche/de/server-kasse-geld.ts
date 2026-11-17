@@ -55,6 +55,8 @@ export const sepa = {
   keineOffenenErstellen: "Keine offenen Überweisungen. Bitte zuerst die SEPA-Datei erstellen.",
   auswahlWeicht: "Die Auswahl weicht von der SEPA-Datei ab.",
   keineUeberweisungen: "Keine Überweisungen.",
+  /** Eingesetzt vor Fehlern der IBAN des Vereins („Vereinskonto: Die IBAN …“, domain sepa.ts und lastschrift.ts). */
+  vereinskontoName: "Vereinskonto",
   betragPositiv: (name: string) => `Betrag für ${name} muss positiv sein.`,
   ausserhalbEwr: (name: string) => `${name}: Konto außerhalb des EWR – bitte bar auszahlen oder einzeln überweisen.`,
   /** Prüfung der IBAN eines Postens (pruefeIban), mit dem Namen davor. */

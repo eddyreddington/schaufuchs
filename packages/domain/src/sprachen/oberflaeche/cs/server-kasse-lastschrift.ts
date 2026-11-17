@@ -4,6 +4,7 @@ type T = OberflaecheTexte["serverKasse"];
 
 export const lastschrift: T["lastschrift"] = {
   glaeubigerForm: "Identifikátor věřitele má tvar DE98ZZZ09999999999.",
+  glaeubigerFehlt: "Chybí identifikátor věřitele.",
   glaeubigerDe: "Německý identifikátor věřitele má 18 znaků.",
   glaeubigerPruefziffer: "Kontrolní číslice identifikátoru věřitele nesouhlasí.",
   referenzFehlt: "Chybí reference mandátu.",

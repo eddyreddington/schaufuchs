@@ -50,6 +50,7 @@ export const sepa: T["sepa"] = {
   keineOffenenErstellen: "Brak oczekujących przelewów. Prosimy najpierw utworzyć plik SEPA.",
   auswahlWeicht: "Wybór różni się od pliku SEPA.",
   keineUeberweisungen: "Brak przelewów.",
+  vereinskontoName: "Konto klubu",
   betragPositiv: (name: string) => `Kwota dla ${name} musi być dodatnia.`,
   ausserhalbEwr: (name: string) => `${name}: konto poza EOG – prosimy wypłacić gotówką lub zrobić osobny przelew.`,
   ibanZeichen: (name: string) => `${name}: IBAN jest niekompletny lub zawiera nieprawidłowe znaki.`,

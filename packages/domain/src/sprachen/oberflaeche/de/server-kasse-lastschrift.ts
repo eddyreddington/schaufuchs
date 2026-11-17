@@ -6,6 +6,8 @@
 /** Gläubiger-ID, Mandate, Lastschriftdatei, Rücklastschrift. */
 export const lastschrift = {
   glaeubigerForm: "Die Gläubiger-ID hat die Form DE98ZZZ09999999999.",
+  /** Auch als Grund hinter „Gläubiger-ID des Vereins: “ (domain lastschrift.ts). */
+  glaeubigerFehlt: "Die Gläubiger-ID fehlt.",
   glaeubigerDe: "Eine deutsche Gläubiger-ID hat 18 Zeichen.",
   glaeubigerPruefziffer: "Die Prüfziffer der Gläubiger-ID stimmt nicht.",
   referenzFehlt: "Die Mandatsreferenz fehlt.",

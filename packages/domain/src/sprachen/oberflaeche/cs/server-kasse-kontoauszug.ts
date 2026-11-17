@@ -7,4 +7,7 @@ export const kontoauszug: OberflaecheTexte["serverKasse"]["kontoauszug"] = {
   nichtOffen: "Přihláška není nevyřízená ani potvrzená",
   schonGebucht: "již zaúčtováno",
   andersBezahlt: "mezitím zaplaceno jinak – zkontrolujte prosím znovu",
+  keinCamt: "Toto není výpis z účtu ve formátu camt.053.",
+  unbekanntesFormat: "Neznámý formát: v souboru chybí sloupce „Buchungstag“ (datum zaúčtování) a „Betrag“ (částka). Nahrajte prosím export pohybů jako CSV nebo camt.053 (XML).",
+  nichtLesbar: "Soubor se nepodařilo přečíst.",
 };

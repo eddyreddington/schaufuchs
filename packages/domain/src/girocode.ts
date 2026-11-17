@@ -21,6 +21,7 @@ function alsZiffern(text: string): string {
 
 /** Referenz einer Meldung, ohne Leerzeichen, z. B. „RF910001234“. */
 export function rfReferenz(meldungId: number): string {
+  // bleibt deutsch: interne Annahme (Meldungsnummern sind gültig)
   if (!Number.isInteger(meldungId) || meldungId < 1) throw new Error("Ungültige Meldungsnummer für die Referenz.");
   const rumpf = String(meldungId).padStart(STELLEN, "0");
   const pruef = 98 - rest97(alsZiffern(`${rumpf}RF00`));

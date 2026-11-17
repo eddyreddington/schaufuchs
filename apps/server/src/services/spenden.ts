@@ -28,6 +28,7 @@ export async function spenderFuerAussteller(tx: Tx, organisationId: number, auss
     return vorhanden.id;
   }
   const [a] = await tx.select().from(aussteller).where(eq(aussteller.id, ausstellerId));
+  // bleibt deutsch: interner Fehler, tRPC zeigt nur „Interner Fehler“
   if (!a) throw new Error("Aussteller fehlt.");
   const [neu] = await tx
     .insert(spender)

@@ -34,10 +34,14 @@ Anwender haben die Sprachwahl auf der Anmeldeseite gesucht.
   `// bleibt deutsch` solche Stellen.
 
 **Prüfung:** `oberflaeche.test.ts` (Domain: Vollständigkeit, keine Kopie des Deutschen, Platzhalter, Schweiz/Französisch,
-`serverText` erkennt jede Meldung eindeutig) und `scripts/sprachen-scan.test.ts` (kein deutscher Rest im Quelltext der
-Oberfläche, jede Meldung des Servers übersetzbar, und **Deutsch unverändert**: jedes Textstück des Standes vor der Umstellung,
-`scripts/sprachen-vorher.json`, steht wortgleich in den deutschen Texten oder im Quelltext). Wer deutschen Wortlaut später
-bewusst ändert, entfernt das alte Stück aus `sprachen-vorher.json`. Werkzeug: `bun scripts/sprachen-scan.ts rest|server|verloren`.
+`serverText` erkennt jede Meldung eindeutig, Gründe der Prüffunktionen wie `pruefeIban` mit echten Fehleingaben so
+eingesetzt wie im Server) und `scripts/sprachen-scan.test.ts` (kein deutscher Rest im Quelltext der
+Oberfläche, jede Meldung des Servers übersetzbar – auch jedes `new …Error("…")` und `new TRPCError({ message })` in
+Server und Domain, weil Router solche Fehler als Meldung weiterreichen; nur interne mit `// bleibt deutsch`, ausgenommen
+die reinen Kommandozeilen-Programme direkt in `apps/server/src` –, und **Deutsch unverändert**: jedes Textstück
+des Standes vor der Umstellung, `scripts/sprachen-vorher.json`, steht wortgleich in den deutschen Texten oder im
+Quelltext). Wer deutschen Wortlaut später bewusst ändert, entfernt das alte Stück aus `sprachen-vorher.json`. Werkzeug:
+`bun scripts/sprachen-scan.ts rest|server|verloren`.
 
 **Folgen:** Jeder neue Text der Oberfläche kommt in alle Sprachen (die Typprüfung verlangt es), jede neue Meldung des Servers
 in eine Gruppe `server*` (der Test findet sie). Das kostet bei jeder Änderung etwas mehr; dafür kann ein Verein Helfer und

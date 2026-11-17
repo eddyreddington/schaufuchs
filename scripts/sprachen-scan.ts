@@ -3,7 +3,7 @@
  *   bun scripts/sprachen-scan.ts rest [Datei …]   deutsche Texte, die noch im Quelltext von apps/web stehen
  *   bun scripts/sprachen-scan.ts vorher STAND    alle Textstücke von apps/web im Git-Stand STAND nach scripts/sprachen-vorher.json
  *   bun scripts/sprachen-scan.ts verloren        alte Textstücke, die weder im Quelltext noch in den deutschen Texten stehen
- *   bun scripts/sprachen-scan.ts server [Datei …] Meldungen des Servers ohne Übersetzung
+ *   bun scripts/sprachen-scan.ts server [Datei …] Meldungen des Servers (auch weitergereichte Fehler) ohne Übersetzung
  * Bewusst deutscher Text im Quelltext: Kommentar `// bleibt deutsch` in derselben oder der Zeile davor.
  */
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -13,6 +13,7 @@ import ts from "typescript";
 const WURZEL = join(import.meta.dir, "..");
 const WEB = join(WURZEL, "apps/web/src");
 const SERVER = join(WURZEL, "apps/server/src");
+const DOMAIN = join(WURZEL, "packages/domain/src");
 export const VORHER_DATEI = join(import.meta.dir, "sprachen-vorher.json");
 
 export type Stueck = { datei: string; zeile: number; text: string; art: "jsx" | "attribut" | "text" };
@@ -137,24 +138,50 @@ export async function verloren(): Promise<{ datei: string; text: string }[]> {
   return fehlt;
 }
 
-/** Meldungen des Servers (`fehler("CODE", "…")`), die `serverText()` nicht übersetzt. */
+/** Reine Programme für die Kommandozeile (direkt in apps/server/src): ihre Fehler erreichen nie die Oberfläche. */
+const NUR_KOMMANDOZEILE = /^apps\/server\/src\/(seed|vereinsverzeichnis-import|rassebilder-import)\.ts$/;
+
+/** Texte eines Meldungs-Arguments: Zeichenkette, Vorlage (Werte als „X“), beide Zweige einer Bedingung, `message` eines Objekts. */
+function meldungsTexte(a: ts.Expression): string[] {
+  if (ts.isParenthesizedExpression(a)) return meldungsTexte(a.expression);
+  if (ts.isConditionalExpression(a)) return [...meldungsTexte(a.whenTrue), ...meldungsTexte(a.whenFalse)];
+  if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) return [a.text];
+  if (ts.isTemplateExpression(a)) return [a.head.text + a.templateSpans.map((s) => `X${s.literal.text}`).join("")];
+  // new TRPCError({ code, message: "…" })
+  if (ts.isObjectLiteralExpression(a))
+    return a.properties.flatMap((p) => (ts.isPropertyAssignment(p) && p.name.getText() === "message" ? meldungsTexte(p.initializer) : []));
+  return [];
+}
+
+/**
+ * Meldungen des Servers ohne Übersetzung durch `serverText()`: `fehler("CODE", "…")`, jedes `new …Error("…")` bzw.
+ * `new …Fehler("…")` (auch `new TRPCError({ message })`) in Server und Domain – Router reichen solche Fehler als Meldung
+ * weiter (z. B. Kontoauszug, Import, Termine). Bewusst deutsch (nur intern, z. B. Schlüssel fehlt): Kommentar
+ * `// bleibt deutsch`; für `fehler(…)` gilt das nicht. Gründe aus Prüffunktionen der Domain (`pruefeIban` u. a.), die der
+ * Server einsetzt, prüft packages/domain/src/sprachen/oberflaeche.test.ts mit echten Fehleingaben.
+ */
 export async function serverOhneUebersetzung(nur?: string[]): Promise<Stueck[]> {
   const { ladeAlleOberflaechen, serverText } = await import("../packages/domain/src");
   await ladeAlleOberflaechen();
-  const liste = nur?.length ? nur.map((f) => join(WURZEL, f)) : dateien(SERVER, true);
+  const liste = nur?.length
+    ? nur.map((f) => join(WURZEL, f))
+    : [...dateien(SERVER, true), ...dateien(DOMAIN, true).filter((f) => !f.includes("/sprachen/"))].filter((f) => !NUR_KOMMANDOZEILE.test(relative(WURZEL, f)));
   const aus: Stueck[] = [];
   for (const datei of liste) {
     const inhalt = readFileSync(datei, "utf8");
     const quelle = ts.createSourceFile(datei, inhalt, ts.ScriptTarget.Latest, true);
     const besuche = (k: ts.Node): void => {
-      if (ts.isCallExpression(k) && k.expression.getText(quelle) === "fehler" && k.arguments.length >= 2) {
-        const a = k.arguments[1]!;
-        let beispiel: string | null = null;
-        if (ts.isStringLiteral(a) || ts.isNoSubstitutionTemplateLiteral(a)) beispiel = a.text;
-        else if (ts.isTemplateExpression(a)) beispiel = a.head.text + a.templateSpans.map((s) => `X${s.literal.text}`).join("");
-        if (beispiel !== null && serverText(beispiel, "en") === beispiel && /[a-zäöü]/.test(beispiel))
-          aus.push({ datei: relative(WURZEL, datei), zeile: quelle.getLineAndCharacterOfPosition(k.getStart(quelle)).line + 1, text: beispiel, art: "text" });
-      }
+      // `fehler(…)` erreicht immer die Oberfläche, `new …Error` nur, wenn weitergereicht (sonst `// bleibt deutsch`).
+      const meldung =
+        ts.isCallExpression(k) && k.expression.getText(quelle) === "fehler" && k.arguments.length >= 2
+          ? k.arguments[1]
+          : ts.isNewExpression(k) && /(Error|Fehler)$/.test(k.expression.getText(quelle)) && !bleibtDeutsch(quelle, k)
+            ? k.arguments?.[0]
+            : undefined;
+      if (meldung)
+        for (const beispiel of meldungsTexte(meldung))
+          if (serverText(beispiel, "en") === beispiel && /[a-zäöü]/.test(beispiel))
+            aus.push({ datei: relative(WURZEL, datei), zeile: quelle.getLineAndCharacterOfPosition(k.getStart(quelle)).line + 1, text: beispiel, art: "text" });
       ts.forEachChild(k, besuche);
     };
     besuche(quelle);

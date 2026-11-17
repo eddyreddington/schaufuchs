@@ -31,6 +31,7 @@ export function ausBase32(text: string): Buffer {
   const aus: number[] = [];
   for (const z of text.replace(/[\s=-]/g, "").toUpperCase()) {
     const i = ALPHABET.indexOf(z);
+    // bleibt deutsch: interner Fehler, tRPC zeigt nur „Interner Fehler“
     if (i < 0) throw new Error("Ungültiges Zeichen im Schlüssel");
     wert = (wert << 5) | i;
     bits += 5;

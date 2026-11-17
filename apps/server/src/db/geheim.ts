@@ -30,11 +30,13 @@ export function datenschluessel(): Buffer {
   const roh = (process.env.DATENSCHLUESSEL ?? "").trim();
   if (roh) {
     const b = Buffer.from(roh, "base64");
+    // bleibt deutsch: Betreiberfehler beim Start, nie in der Oberfläche
     if (b.length !== 32) throw new Error("DATENSCHLUESSEL muss 32 Byte lang sein (Base64, z. B. aus: openssl rand -base64 32).");
     schluessel = b;
     return b;
   }
   if (!entwicklung()) {
+    // bleibt deutsch: Betreiberfehler beim Start, nie in der Oberfläche
     throw new Error("DATENSCHLUESSEL fehlt in der .env – ohne ihn lassen sich IBAN und Zwei-Faktor-Geheimnisse weder lesen noch speichern.");
   }
   schluessel = createHash("sha256").update("schauverwaltung-entwicklung-nicht-fuer-echte-daten").digest();
@@ -60,17 +62,20 @@ export function entschluessele(wert: string, feld: string): string {
   if (!wert) return wert;
   if (!wert.startsWith(PRAEFIX)) {
     if (klartextErlaubt ?? entwicklung()) return wert;
+    // bleibt deutsch: interner Fehler, tRPC zeigt nur „Interner Fehler“
     throw new Error(`Feld ${feld} steht unverschlüsselt in der Datenbank – nicht über die Anwendung geschrieben. Bitte prüfen (Manipulation?).`);
   }
   const schl = datenschluessel();
   const b = Buffer.from(wert.slice(PRAEFIX.length), "base64");
   try {
+    // bleibt deutsch: nur für den catch darunter
     if (b.length < 28) throw new Error("zu kurz");
     const d = createDecipheriv("aes-256-gcm", schl, b.subarray(0, 12), { authTagLength: 16 });
     d.setAAD(Buffer.from(feld));
     d.setAuthTag(b.subarray(12, 28));
     return Buffer.concat([d.update(b.subarray(28)), d.final()]).toString("utf8");
   } catch {
+    // bleibt deutsch: interner Fehler, tRPC zeigt nur „Interner Fehler“
     throw new Error(`Verschlüsseltes Feld ${feld} lässt sich nicht lesen – passt der DATENSCHLUESSEL zu dieser Datenbank?`);
   }
 }
@@ -92,6 +97,7 @@ export function geheimText(spalte: string, feld: string) {
 export function geheimJsonLesen<T>(v: unknown, feld: string): T {
   const o = typeof v === "string" ? JSON.parse(v) : v;
   if (o && typeof o === "object" && typeof (o as { enc?: unknown }).enc === "string") return JSON.parse(entschluessele((o as { enc: string }).enc, feld)) as T;
+  // bleibt deutsch: interner Fehler, tRPC zeigt nur „Interner Fehler“
   if (o != null && !(klartextErlaubt ?? entwicklung())) throw new Error(`Feld ${feld} steht unverschlüsselt in der Datenbank – nicht über die Anwendung geschrieben. Bitte prüfen (Manipulation?).`);
   return o as T;
 }
