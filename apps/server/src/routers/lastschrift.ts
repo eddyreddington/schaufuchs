@@ -4,7 +4,7 @@
  * Mandat. Gebucht wird genau der Inhalt der Datei (als Zahlung „Lastschrift“), Rücklastschriften einzeln. Bar und
  * Überweisung bleiben daneben möglich; wer schon bezahlt hat, steht nicht in der Datei.
  */
-import { bankarbeitstag, datumIn, erzeugeSepaLastschrift, euroIn, istSprache, texte, fruehesteFaelligkeit, gefordertCent, heuteBerlin, imEwr, mandatGueltig, normalisiereGlaeubigerId, normalisiereIban, pruefeGlaeubigerId, pruefeIban, pruefeMandatsreferenz, verdeckeIban, vorgeschlageneFaelligkeit, datumKurz } from "@schau/domain";
+import { bankarbeitstag, datumIn, EingabeFehler, erzeugeSepaLastschrift, euroIn, istSprache, texte, fruehesteFaelligkeit, gefordertCent, heuteBerlin, imEwr, mandatGueltig, normalisiereGlaeubigerId, normalisiereIban, pruefeGlaeubigerId, pruefeIban, pruefeMandatsreferenz, verdeckeIban, vorgeschlageneFaelligkeit, datumKurz } from "@schau/domain";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Tx } from "../db/client";
@@ -209,7 +209,8 @@ export const lastschriftRouter = router({
       try {
         xmlAus(s, { nachrichtId, faelligAm: input.faelligAm, daten }); // prüft Gläubiger-ID, IBANs und Beträge vorher
       } catch (e) {
-        throw fehler("BAD_REQUEST", e instanceof Error ? e.message : String(e));
+        if (e instanceof EingabeFehler) throw fehler("BAD_REQUEST", e.message);
+        throw e;
       }
       await tx.insert(lastschriftLauf).values({ schauId: s.id, nachrichtId, faelligAm: input.faelligAm, daten, erstelltVon: ctx.benutzer.id });
       await protokolliere(tx, { schauId: s.id, tabelle: "zahlung", datensatzId: null, aktion: "Lastschriftdatei erstellt", neu: { nachrichtId, faelligAm: input.faelligAm, anzahl: liste.length, summeCent: daten.summeCent }, akteur: ctx });

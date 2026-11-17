@@ -10,7 +10,7 @@ import { db } from "../db/client";
 import { katalogGestaltung, organisation, schautermin, terminabo } from "../db/schema";
 import { Bremse } from "../services/bremse";
 import { protokolliere } from "../services/protokoll";
-import { aboAbrufen, ladeKommende, pruefeKalenderAdresse } from "../services/termine";
+import { aboAbrufen, KalenderFehler, ladeKommende, pruefeKalenderAdresse } from "../services/termine";
 import { termineGeaendert } from "../services/zwischenspeicher";
 import { adminProcedure, benutzerProcedure, dbId, fehler, kalenderdatum, ladeSchau, oeffentlichSichtbarProcedure, router } from "../trpc";
 import { ladeGestaltung } from "./katalog-gestaltung";
@@ -69,7 +69,8 @@ const pruefeAdresse = async (url: string) => {
   try {
     return (await pruefeKalenderAdresse(url)).toString();
   } catch (e) {
-    throw fehler("BAD_REQUEST", e instanceof Error ? e.message : "Die Adresse ist ungültig.");
+    if (e instanceof KalenderFehler) throw fehler("BAD_REQUEST", e.message);
+    throw e;
   }
 };
 

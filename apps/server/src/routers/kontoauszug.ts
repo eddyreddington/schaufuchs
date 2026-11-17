@@ -5,7 +5,7 @@
  * Lesen und Zuordnen: packages/domain/src/kontoauszug.ts.
  */
 import { createHash } from "node:crypto";
-import { buchungsSchluessel, gefordertCent, leseKontoauszug, ordneZu, type Buchung } from "@schau/domain";
+import { buchungsSchluessel, EingabeFehler, gefordertCent, leseKontoauszug, ordneZu, type Buchung } from "@schau/domain";
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/client";
@@ -30,7 +30,10 @@ function lesen(base64: string): Buchung[] {
   try {
     buchungen = leseKontoauszug(new Uint8Array(daten));
   } catch (e) {
-    throw fehler("BAD_REQUEST", e instanceof Error ? e.message : "Die Datei ließ sich nicht lesen.");
+    if (e instanceof EingabeFehler) throw fehler("BAD_REQUEST", e.message);
+    // Sonst ein unerwarteter Fehler beim Lesen einer fremden Datei: nicht im Wortlaut zeigen, nur protokollieren.
+    console.error("[kontoauszug] Datei nicht lesbar:", e);
+    throw fehler("BAD_REQUEST", "Die Datei ließ sich nicht lesen.");
   }
   if (buchungen.length > MAX_POSTEN) throw fehler("BAD_REQUEST", `Zu viele Gutschriften (höchstens ${MAX_POSTEN}). Bitte einen kürzeren Zeitraum exportieren.`);
   return buchungen;

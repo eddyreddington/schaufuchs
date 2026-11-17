@@ -1,5 +1,16 @@
 import { describe, expect, test } from "bun:test";
+import { EingabeFehler } from "./eingabefehler";
 import { erzeugeSepaUeberweisung, formatIban, pruefeBic, pruefeIban, sepaText, verdeckeIban } from "./sepa";
+
+/** Wirft `f` einen EingabeFehler (den der Server wörtlich zeigen darf)? */
+const eingabeFehler = (f: () => unknown) => {
+  try {
+    f();
+  } catch (e) {
+    return e instanceof EingabeFehler;
+  }
+  return "kein Fehler";
+};
 
 describe("SEPA", () => {
   test("IBAN-Prüfung", () => {
@@ -53,6 +64,15 @@ describe("SEPA", () => {
     expect(() => erzeugeSepaUeberweisung({ ...basis, posten: [{ endToEndId: "1", name: "CH", iban: "CH9300762011623852957", betragCent: 100, verwendungszweck: "" }] })).toThrow("EWR");
     expect(() => erzeugeSepaUeberweisung({ ...basis, posten: [{ endToEndId: "1", name: "A", iban: "DE00123", betragCent: 100, verwendungszweck: "" }] })).toThrow("A:");
     expect(() => erzeugeSepaUeberweisung({ ...basis, posten: [{ endToEndId: "1", name: "A", iban: "DE89370400440532013000", betragCent: 0, verwendungszweck: "" }] })).toThrow("positiv");
+    // Alles davon darf der Server wörtlich zeigen (EingabeFehler), nicht nur als „Interner Fehler“.
+    expect(eingabeFehler(() => erzeugeSepaUeberweisung({ ...basis, posten: [] }))).toBe(true);
+    const gut = { endToEndId: "1", name: "A", iban: "DE89370400440532013000", betragCent: 100, verwendungszweck: "" };
+    expect(eingabeFehler(() => erzeugeSepaUeberweisung({ ...basis, auftraggeber: { ...basis.auftraggeber, iban: "DE00" }, posten: [gut] }))).toBe(true);
+    // Ein Programmfehler (hier: Posten fehlen ganz) ist kein EingabeFehler – den zeigt der Server nicht im Wortlaut.
+    expect(eingabeFehler(() => erzeugeSepaUeberweisung(basis as never))).toBe(false);
+    expect(eingabeFehler(() => erzeugeSepaUeberweisung({ ...basis, posten: [{ endToEndId: "1", name: "CH", iban: "CH9300762011623852957", betragCent: 100, verwendungszweck: "" }] }))).toBe(true);
+    expect(eingabeFehler(() => erzeugeSepaUeberweisung({ ...basis, posten: [{ endToEndId: "1", name: "A", iban: "DE00123", betragCent: 100, verwendungszweck: "" }] }))).toBe(true);
+    expect(eingabeFehler(() => erzeugeSepaUeberweisung({ ...basis, posten: [{ endToEndId: "1", name: "A", iban: "DE89370400440532013000", betragCent: 0, verwendungszweck: "" }] }))).toBe(true);
   });
 });
 

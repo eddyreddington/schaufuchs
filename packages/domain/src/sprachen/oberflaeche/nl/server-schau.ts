@@ -1,5 +1,6 @@
 import type { OberflaecheTexte } from "..";
 import { fach } from "./fach";
+import { serverSchauDatei } from "./server-schau-datei";
 import { serverSchauImport } from "./server-schau-import";
 import { serverSchauMeldung } from "./server-schau-meldung";
 import { serverSchauPruefung } from "./server-schau-pruefung";
@@ -142,6 +143,13 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     serverFehler: (status: string) => `De server antwoordt met fout ${status}.`,
     keinKalender: "Op dit adres staat geen agenda in iCal-formaat (.ics).",
     abrufFehlgeschlagen: (text: string) => `Ophalen mislukt (${text}).`,
+    verbindungAbgelehnt: (host: string) => `De server ${host} weigert de verbinding.`,
+    verbindungUnterbrochen: (host: string) => `De verbinding met ${host} is onderbroken.`,
+    unerreichbar: (host: string) => `De server ${host} is niet bereikbaar.`,
+    zertifikatAbgelaufen: (host: string) => `Het certificaat van ${host} is verlopen.`,
+    zertifikatUngueltig: (host: string) => `Het certificaat van ${host} is ongeldig – de verbinding is niet veilig.`,
+    netzwerkfehler: (host: string) => `Ophalen van ${host} mislukt (netwerkfout).`,
+    abrufIntern: "Ophalen mislukt. Het serverlogboek vermeldt de reden.",
   },
   verein: {
     vereinFehlt: "Vereniging niet gevonden.",
@@ -150,4 +158,5 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
   pruefung: serverSchauPruefung,
   zusatz: serverSchauZusatz,
   import: serverSchauImport,
+  datei: serverSchauDatei,
 };

@@ -1,8 +1,9 @@
 /**
  * Meldungen des Servers (Entscheidung 022): Schau anlegen, Einstellungen, Gebühren, Anmeldung, Bremsen, Termine, Verein.
- * Wortgleich wie im Server; `serverText()` erkennt sie und übersetzt. Teile: Meldungen, Prüfliste und Phase, Import.
+ * Wortgleich wie im Server; `serverText()` erkennt sie und übersetzt. Teile: Meldungen, Prüfliste und Phase, Import, Datei-Adressen.
  */
 import { fach } from "./fach";
+import { serverSchauDatei } from "./server-schau-datei";
 import { serverSchauImport } from "./server-schau-import";
 import { serverSchauMeldung } from "./server-schau-meldung";
 import { serverSchauPruefung } from "./server-schau-pruefung";
@@ -150,6 +151,14 @@ export const serverSchau = {
     serverFehler: (status: string) => `Der Server antwortet mit Fehler ${status}.`,
     keinKalender: "Unter der Adresse liegt kein Kalender im iCal-Format (.ics).",
     abrufFehlgeschlagen: (text: string) => `Abruf fehlgeschlagen (${text}).`,
+    /** Netzfehler beim Abruf (services/termine.ts netzFehler) und unerwartete Fehler. */
+    verbindungAbgelehnt: (host: string) => `Der Server ${host} lehnt die Verbindung ab.`,
+    verbindungUnterbrochen: (host: string) => `Die Verbindung zu ${host} wurde unterbrochen.`,
+    unerreichbar: (host: string) => `Der Server ${host} ist nicht erreichbar.`,
+    zertifikatAbgelaufen: (host: string) => `Das Zertifikat von ${host} ist abgelaufen.`,
+    zertifikatUngueltig: (host: string) => `Das Zertifikat von ${host} ist ungültig – die Verbindung ist nicht sicher.`,
+    netzwerkfehler: (host: string) => `Abruf von ${host} fehlgeschlagen (Netzwerkfehler).`,
+    abrufIntern: "Der Abruf ist fehlgeschlagen. Den Grund nennt das Protokoll des Servers.",
   },
   verein: {
     vereinFehlt: "Verein nicht gefunden.",
@@ -158,4 +167,5 @@ export const serverSchau = {
   pruefung: serverSchauPruefung,
   zusatz: serverSchauZusatz,
   import: serverSchauImport,
+  datei: serverSchauDatei,
 };

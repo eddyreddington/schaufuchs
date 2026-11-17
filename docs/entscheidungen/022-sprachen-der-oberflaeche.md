@@ -18,6 +18,14 @@ Anwender haben die Sprachwahl auf der Anmeldeseite gesucht.
   Meldung wortgleich (mit Platzhaltern als Funktion); `serverText()` erkennt die deutsche Meldung in der Oberfläche und
   setzt die Übersetzung mit denselben Werten ein, Satz für Satz bei zusammengesetzten Meldungen. Unbekanntes bleibt
   deutsch. `fehlerText()` übersetzt so jeden Fehler, auch die Kurztexte der Eingabeprüfung.
+- **Fehlertexte der Datei-Adressen** (`/datei/…`, `/s/…`, `/o/…`, Klartext im neuen Browser-Tab) übersetzt der Server
+  selbst mit denselben Texten (`datei-sprache.ts`): Sprache aus `?sprache=` im Link (Aussteller-Seiten geben ihre Wahl
+  mit), unter `/datei/` sonst die am Konto (nur lesend), sonst Deutsch; öffentliche Adressen nur nach dem Link, weil
+  ihre Antworten in Zwischenspeichern landen können. Texte in `serverSchau.datei`.
+- **Nur Gründe im Wortlaut:** Router reichen Fehler aus der Fachlogik nur als `EingabeFehler` (Domain) bzw.
+  `KalenderFehler` (Kalender-Abo, Netzfehler als verständlicher Satz) an die Oberfläche weiter; jeder andere Fehler ist
+  intern und erscheint als allgemeiner Satz („Interner Fehler …“, beim Kontoauszug „Die Datei ließ sich nicht lesen.“,
+  beim Kalender-Abo „Der Abruf ist fehlgeschlagen …“), der Wortlaut steht nur im Protokoll des Servers.
 - **Sprache:** angemeldet die Sprache am Konto (`benutzer.sprache`, Migration `0065_benutzer_sprache`, `auth.spracheSetzen`),
   gewählt im Benutzermenü; ohne Anmeldung die zuletzt in diesem Browser gewählte, sonst Deutsch. Eine Wahl auf der
   Anmeldeseite geht nach dem Anmelden ans Konto. Das Preisrichter-Tablet folgt nur der Wahl am Gerät (ein dort

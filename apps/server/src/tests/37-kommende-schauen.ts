@@ -175,4 +175,30 @@ describe("Kommende Schauen", () => {
     }
     // Drei Katalog-PDFs: bei voller Rechnerlast über 5 s (Standardgrenze) – wie die anderen PDF-Abläufe mehr Zeit.
   }, 30_000);
+
+  test("Kalender-Abo: Netzfehler verständlich und übersetzbar statt technisch", async () => {
+    const { holeKalender, netzFehler, KalenderFehler } = await import("../services/termine");
+    const { ladeAlleOberflaechen, serverText } = await import("@schau/domain");
+    await ladeAlleOberflaechen();
+    const fall = (code: string) => netzFehler(Object.assign(new Error(`roh ${code}`), { code }), "kalender.example");
+    const texte = ["ECONNREFUSED", "ENOTFOUND", "EAI_AGAIN", "ECONNRESET", "ETIMEDOUT", "EHOSTUNREACH", "CERT_HAS_EXPIRED", "DEPTH_ZERO_SELF_SIGNED_CERT", "ERR_TLS_CERT_ALTNAME_INVALID", "EIRGENDWAS"].map(fall);
+    for (const f of texte) {
+      expect(f).toBeInstanceOf(KalenderFehler);
+      expect(f.message).not.toContain("roh");
+      expect(serverText(f.message, "en")).not.toBe(f.message);
+    }
+    expect(texte[0]!.message).toBe("Der Server kalender.example lehnt die Verbindung ab.");
+    expect(texte[6]!.message).toContain("Zertifikat");
+    // Echter Abruf auf einen geschlossenen Port (nur mit TERMINABO_LOKAL, wie beim Ausprobieren auf dem eigenen Rechner).
+    const vorher = process.env.TERMINABO_LOKAL;
+    process.env.TERMINABO_LOKAL = "1";
+    try {
+      const e = await holeKalender("http://127.0.0.1:9/x.ics").catch((x: unknown) => x);
+      expect(e).toBeInstanceOf(KalenderFehler);
+      expect((e as Error).message).toBe("Der Server 127.0.0.1 lehnt die Verbindung ab.");
+    } finally {
+      if (vorher === undefined) delete process.env.TERMINABO_LOKAL;
+      else process.env.TERMINABO_LOKAL = vorher;
+    }
+  });
 });

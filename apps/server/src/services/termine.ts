@@ -66,6 +66,29 @@ export async function eigeneSchauenFuerKalender(organisationId: number) {
 
 // ── Abruf ───────────────────────────────────────────────────────────────
 
+/** Fehler beim Prüfen oder Abrufen eines Kalenders, dessen Text die Oberfläche zeigen darf (übersetzt über serverText). */
+export class KalenderFehler extends Error {
+  override name = "KalenderFehler";
+}
+
+/** Zertifikatsfehler von Node/OpenSSL (abgelaufen, selbst signiert, falscher Name, unbekannte Stelle). */
+const ZERTIFIKAT = /^(CERT_|DEPTH_ZERO_SELF_SIGNED_CERT|SELF_SIGNED_CERT_IN_CHAIN|UNABLE_TO_|ERR_TLS_CERT_ALTNAME_INVALID|ERR_SSL_)/;
+
+/** Netzfehler beim Abruf als verständlicher Satz statt „connect ECONNREFUSED 1.2.3.4:443“. */
+export function netzFehler(e: unknown, host: string): KalenderFehler {
+  if (e instanceof KalenderFehler) return e;
+  const code = String((e as { code?: unknown })?.code ?? "");
+  if (code === "ECONNREFUSED") return new KalenderFehler(`Der Server ${host} lehnt die Verbindung ab.`);
+  if (code === "ENOTFOUND" || code === "EAI_AGAIN") return new KalenderFehler(`Der Server ${host} ist nicht erreichbar (Name unbekannt).`);
+  if (code === "ETIMEDOUT") return new KalenderFehler("Der Server hat nicht rechtzeitig geantwortet.");
+  if (code === "ECONNRESET" || code === "EPIPE") return new KalenderFehler(`Die Verbindung zu ${host} wurde unterbrochen.`);
+  if (code === "EHOSTUNREACH" || code === "ENETUNREACH") return new KalenderFehler(`Der Server ${host} ist nicht erreichbar.`);
+  if (code === "CERT_HAS_EXPIRED") return new KalenderFehler(`Das Zertifikat von ${host} ist abgelaufen.`);
+  if (ZERTIFIKAT.test(code)) return new KalenderFehler(`Das Zertifikat von ${host} ist ungültig – die Verbindung ist nicht sicher.`);
+  console.error(`[termine] Abruf von ${host} fehlgeschlagen:`, e);
+  return new KalenderFehler(`Abruf von ${host} fehlgeschlagen (Netzwerkfehler).`);
+}
+
 /** Adressen im eigenen Netz (Router, Datenbank, Cloud-Metadaten) darf der Server nicht für Fremde abrufen. */
 export function istInterneAdresse(ip: string): boolean {
   if (isIP(ip) === 4) {
@@ -88,7 +111,7 @@ export function istInterneAdresse(ip: string): boolean {
 export function sichereAufloesung(host: string, opts: { all?: boolean; family?: number }, cb: (e: Error | null, adresse?: string | LookupAddress[], familie?: number) => void) {
   dnsLookup(host, { all: true, family: opts?.family ?? 0 }, (e, adressen) => {
     if (e) return cb(e);
-    if (!lokalErlaubt() && (!adressen.length || adressen.some((a) => istInterneAdresse(a.address)))) return cb(new Error("Adressen im eigenen Netz können nicht abonniert werden."));
+    if (!lokalErlaubt() && (!adressen.length || adressen.some((a) => istInterneAdresse(a.address)))) return cb(new KalenderFehler("Adressen im eigenen Netz können nicht abonniert werden."));
     if (opts?.all) return cb(null, adressen);
     cb(null, adressen[0]!.address, adressen[0]!.family);
   });
@@ -109,7 +132,7 @@ function abrufEinmal(url: URL): Promise<{ status: number; ziel: string | null; t
         }
         if (Number(antwort.headers["content-length"] ?? 0) > KALENDER_MAX_BYTES) {
           antwort.destroy();
-          return fehler(new Error("Die Kalenderdatei ist größer als 1 MB."));
+          return fehler(new KalenderFehler("Die Kalenderdatei ist größer als 1 MB."));
         }
         const teile: Buffer[] = [];
         let groesse = 0;
@@ -117,15 +140,15 @@ function abrufEinmal(url: URL): Promise<{ status: number; ziel: string | null; t
           groesse += b.length;
           if (groesse > KALENDER_MAX_BYTES) {
             antwort.destroy();
-            fehler(new Error("Die Kalenderdatei ist größer als 1 MB."));
+            fehler(new KalenderFehler("Die Kalenderdatei ist größer als 1 MB."));
           } else teile.push(b);
         });
         antwort.on("end", () => fertig({ status, ziel: null, text: Buffer.concat(teile).toString("utf8") }));
-        antwort.on("error", fehler);
+        antwort.on("error", (e) => fehler(netzFehler(e, url.hostname)));
       },
     );
-    anfrage.on("timeout", () => anfrage.destroy(new Error("Der Server hat nicht rechtzeitig geantwortet.")));
-    anfrage.on("error", fehler);
+    anfrage.on("timeout", () => anfrage.destroy(new KalenderFehler("Der Server hat nicht rechtzeitig geantwortet.")));
+    anfrage.on("error", (e) => fehler(netzFehler(e, url.hostname)));
   });
 }
 
@@ -137,15 +160,15 @@ export async function pruefeKalenderAdresse(adresse: string): Promise<URL> {
   try {
     url = new URL(adresse.trim().replace(/^webcals?:\/\//i, "https://"));
   } catch {
-    throw new Error("Die Adresse ist ungültig.");
+    throw new KalenderFehler("Die Adresse ist ungültig.");
   }
-  if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Nur Adressen mit https:// (oder webcal://).");
-  if (url.username || url.password) throw new Error("Adressen mit Benutzername oder Passwort sind nicht erlaubt.");
+  if (url.protocol !== "https:" && url.protocol !== "http:") throw new KalenderFehler("Nur Adressen mit https:// (oder webcal://).");
+  if (url.username || url.password) throw new KalenderFehler("Adressen mit Benutzername oder Passwort sind nicht erlaubt.");
   if (lokalErlaubt()) return url;
   const host = url.hostname.replace(/^\[|\]$/g, "");
   const adressen = isIP(host) ? [host] : (await lookup(host, { all: true, verbatim: true }).catch(() => [])).map((a) => a.address);
-  if (!adressen.length) throw new Error(`Der Server ${host} ist nicht erreichbar (Name unbekannt).`);
-  if (adressen.some(istInterneAdresse)) throw new Error("Adressen im eigenen Netz können nicht abonniert werden.");
+  if (!adressen.length) throw new KalenderFehler(`Der Server ${host} ist nicht erreichbar (Name unbekannt).`);
+  if (adressen.some(istInterneAdresse)) throw new KalenderFehler("Adressen im eigenen Netz können nicht abonniert werden.");
   return url;
 }
 
@@ -155,12 +178,12 @@ export async function holeKalender(adresse: string): Promise<string> {
   for (let i = 0; ; i++) {
     const r = await abrufEinmal(url);
     if (r.status >= 300 && r.status < 400) {
-      if (!r.ziel || i >= MAX_WEITERLEITUNGEN) throw new Error("Zu viele Weiterleitungen.");
+      if (!r.ziel || i >= MAX_WEITERLEITUNGEN) throw new KalenderFehler("Zu viele Weiterleitungen.");
       url = await pruefeKalenderAdresse(new URL(r.ziel, url).toString());
       continue;
     }
-    if (r.status < 200 || r.status >= 300) throw new Error(`Der Server antwortet mit Fehler ${r.status}.`);
-    if (!r.text.includes("BEGIN:VCALENDAR")) throw new Error("Unter der Adresse liegt kein Kalender im iCal-Format (.ics).");
+    if (r.status < 200 || r.status >= 300) throw new KalenderFehler(`Der Server antwortet mit Fehler ${r.status}.`);
+    if (!r.text.includes("BEGIN:VCALENDAR")) throw new KalenderFehler("Unter der Adresse liegt kein Kalender im iCal-Format (.ics).");
     return r.text;
   }
 }
@@ -186,12 +209,9 @@ export async function aboAbrufen(aboId: number, akteur: Akteur, text?: string): 
   try {
     termine = leseIcal(text ?? (await holeKalender(abo.url)));
   } catch (e) {
-    const meldung =
-      e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")
-        ? "Der Server hat nicht rechtzeitig geantwortet."
-        : e instanceof Error
-          ? e.message
-          : `Abruf fehlgeschlagen (${kurzerFehler(e)}).`;
+    // Nur eigene, verständliche Gründe zeigen; ein unerwarteter Fehler steht im Server-Protokoll.
+    if (!(e instanceof KalenderFehler)) console.error(`[termine] Abo ${aboId}: Abruf fehlgeschlagen:`, e);
+    const meldung = e instanceof KalenderFehler ? e.message : "Der Abruf ist fehlgeschlagen. Den Grund nennt das Protokoll des Servers.";
     await db.update(terminabo).set({ letzterAbruf: new Date(), letzterFehler: meldung.slice(0, 300) }).where(eq(terminabo.id, aboId));
     return { ok: false, fehler: meldung, anzahl: 0, neu: 0, geaendert: 0, entfernt: 0 };
   }

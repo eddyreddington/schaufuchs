@@ -116,6 +116,10 @@ Tests: `druckvorlage.test.ts`
 - `kartenVorlageLesen()` – Gespeicherten Wert (jsonb, ggf. alt oder unvollständig) in eine gültige Vorlage bringen; Unbekanntes gilt als Vorgabe.
 - Typen: `KartenBaustein`, `VordruckFeldId`, `KartenVorlage`
 
+### eingabefehler.ts (8 Z.)
+
+- `EingabeFehler` (Klasse) – Fehler in den Angaben (hochgeladene Datei, Konto, Mandat), dessen Text der Server wörtlich als Meldung zeigen darf.
+
 ### einteilung.ts (99 Z.)
 Preisrichter-Einteilung nach Rassen: Vor der Nummernvergabe teilt die Ausstellungsleitung die Preisrichter nach Sparte, Rasse und – wo eine Rasse g …
 Tests: `einteilung.test.ts`
@@ -461,7 +465,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (53 Z.)
+### index.ts (54 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -528,7 +532,7 @@ Tests: `kommende-schauen.test.ts`
 - `gleicheAb()` – Vergleicht die gespeicherten Termine eines Abos mit dem neu abgerufenen Kalender.
 - Typen: `TerminEbene`, `KommenderTermin`, `KommendeWahl`, `GespeicherterTermin`, `Abgleich`
 
-### kontoauszug.ts (290 Z.)
+### kontoauszug.ts (291 Z.)
 Kontoauszug-Import (Entscheidung 023): Der Kassierer lädt den Auszug aus dem Onlinebanking hoch (camt.053 oder Bank-CSV); SchauFUCHS liest die Guts …
 Tests: `kontoauszug.test.ts`
 
@@ -540,7 +544,7 @@ Tests: `kontoauszug.test.ts`
 - `ordneZu()` – Ordnet Gutschriften Meldungen zu.
 - Typen: `Zuordnung`
 
-### lastschrift.ts (227 Z.)
+### lastschrift.ts (228 Z.)
 SEPA-Lastschrift für das Standgeld (Entscheidung 018): Gläubiger-Identifikationsnummer, Mandate der Aussteller und die Datei für die Bank (pain.008 …
 Tests: `lastschrift.test.ts`
 
@@ -647,10 +651,11 @@ Tests: `ruecksprung.test.ts`
 - `seitenbereiche()` – Seitenbereiche aus den Anfangsseiten der Teile: ein Teil reicht bis vor den nächsten, außer der nächste beginnt auf derselben Seite weiter unten (` …
 - Typen: `KatalogSchrift`, `KatalogStil`, `KatalogTitelhintergrund`, `KatalogTitelbild`, `KatalogFusszeile`, `KatalogLinien`, `KatalogAufteilung`, `KatalogTeil`, `KatalogGliederungsTeil`
 
-### sepa.ts (138 Z.)
+### sepa.ts (139 Z.)
+SEPA-Überweisungen (pain.001.001.09, wie von deutschen Banken nach DK-Datenformat angenommen).
 Tests: `sepa.test.ts`
 
-- `normalisiereIban()` – SEPA-Überweisungen (pain.001.001.09, wie von deutschen Banken nach DK-Datenformat angenommen).
+- `normalisiereIban()`
 - `formatIban()`
 - `verdeckeIban()` – Gekürzte IBAN für Helfer ohne Bankdaten-Recht: Land und die letzten vier Stellen, z. B. „DE… 3000“.
 - `pruefeIban()` – Prüft eine IBAN (Aufbau, Länge für häufige Länder, Prüfziffer).
@@ -845,6 +850,10 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKatalog`
 
+### server-schau-datei.ts (19 Z.)
+
+- `serverSchauDatei`
+
 ### server-schau-import.ts (68 Z.)
 
 - `serverSchauImport`
@@ -861,7 +870,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (160 Z.)
+### server-schau.ts (169 Z.)
 
 - `serverSchau`
 
@@ -1041,6 +1050,10 @@ Texte der Oberfläche: serverKatalog (Entscheidung 022) – Meldungen des Server
 
 - `serverKatalog`
 
+### server-schau-datei.ts (21 Z.)
+
+- `serverSchauDatei` – Fehlertexte der Datei-Adressen (apps/server/src/datei-*.ts, `c.text("…", 4xx)`), übersetzt vom Server in datei-sprache.ts (Entscheidung 022) – Teil …
+
 ### server-schau-import.ts (71 Z.)
 
 - `serverSchauImport` – Import von Ausstellern und Meldungen aus Tabellen (routers/import.ts, services/import.ts, import/xlsx.ts und die Zeilenprüfung der Fachlogik) – Tei …
@@ -1058,7 +1071,7 @@ Meldungen des Servers zu Meldungen, Zahlungen und Ausstellern (Teil von serverSc
 
 - `serverSchauZusatz` – Weitere Meldungen: Prüfung der Protokollkette (services/protokoll-suche.ts), Katalog-Vorschau (datei-katalog.ts), Mailserver (services/post.ts) – T …
 
-### server-schau.ts (161 Z.)
+### server-schau.ts (171 Z.)
 Meldungen des Servers (Entscheidung 022): Schau anlegen, Einstellungen, Gebühren, Anmeldung, Bremsen, Termine, Verein.
 
 - `serverSchau`
@@ -1226,6 +1239,10 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKatalog`
 
+### server-schau-datei.ts (19 Z.)
+
+- `serverSchauDatei`
+
 ### server-schau-import.ts (68 Z.)
 
 - `serverSchauImport`
@@ -1242,7 +1259,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (153 Z.)
+### server-schau.ts (162 Z.)
 
 - `serverSchau`
 
@@ -1407,6 +1424,10 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKatalog`
 
+### server-schau-datei.ts (19 Z.)
+
+- `serverSchauDatei`
+
 ### server-schau-import.ts (69 Z.)
 
 - `serverSchauImport`
@@ -1423,7 +1444,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (153 Z.)
+### server-schau.ts (162 Z.)
 
 - `serverSchau`
 
@@ -1592,6 +1613,10 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKatalog`
 
+### server-schau-datei.ts (19 Z.)
+
+- `serverSchauDatei`
+
 ### server-schau-import.ts (69 Z.)
 
 - `serverSchauImport`
@@ -1608,7 +1633,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (153 Z.)
+### server-schau.ts (162 Z.)
 
 - `serverSchau`
 
@@ -1774,6 +1799,10 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKatalog`
 
+### server-schau-datei.ts (19 Z.)
+
+- `serverSchauDatei`
+
 ### server-schau-import.ts (68 Z.)
 
 - `serverSchauImport`
@@ -1790,7 +1819,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (159 Z.)
+### server-schau.ts (168 Z.)
 
 - `serverSchau`
 
@@ -2087,7 +2116,7 @@ Kassenbuch der Barkasse: Tage mit Bewegungen, Einlage und Entnahme, Tagesabschlu
 - `kasse.tagesabschluss` mutation · angemeldet – Tagesabschluss mit gezähltem Bestand für einen Kassentag (Standard: heute; nach Mitternacht der Vortag).
 - `kasse.belege` query · angemeldet – Archivierte Belege mit Prüfsumme (SHA-256).
 
-### routers/kasse/sepa.ts (155 Z.) → `kasse`
+### routers/kasse/sepa.ts (156 Z.) → `kasse`
 SEPA-Sammelüberweisung an die Aussteller: offene Datei anzeigen, erstellen, verwerfen und als ausgezahlt buchen.
 
 - `kasse.ueberweisungsdatei` query · angemeldet – Die offene SEPA-Datei (erstellt, noch nicht gebucht) oder null.
@@ -2181,13 +2210,13 @@ Katalog und Halle.
 
 Setzt Teile zu einem Router zusammen.
 
-### routers/kontoauszug.ts (156 Z.) → `kontoauszug`
+### routers/kontoauszug.ts (159 Z.) → `kontoauszug`
 Kontoauszug-Import (Entscheidung 023), nur Administratoren: Datei aus dem Onlinebanking (camt.053 oder CSV) prüfen – Gutschriften mit Vorschlag zur …
 
 - `kontoauszug.pruefen` mutation · admin – Datei lesen und zuordnen – bucht nichts.
 - `kontoauszug.buchen` mutation · admin – Ausgewählte Gutschriften buchen.
 
-### routers/lastschrift.ts (317 Z.) → `lastschrift`
+### routers/lastschrift.ts (318 Z.) → `lastschrift`
 SEPA-Lastschrift für das Standgeld (Entscheidung 018), nur Administratoren: Gläubiger-ID des Vereins, Mandate der Aussteller, je Schau eine Lastsch …
 
 - `lastschrift.einstellungen` query · admin
@@ -2266,7 +2295,7 @@ Rassebilder: ansehen (alle Benutzer) und pflegen (Ausstellungsleitung).
 - `rassebild.angabenSetzen` mutation · admin – Urheber, Lizenz, Quelle und „geprüft“ ändern.
 - `rassebild.loeschen` mutation · admin
 
-### routers/schau/anlegen.ts (283 Z.) → `schau`
+### routers/schau/anlegen.ts (288 Z.) → `schau`
 Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
 
 - `schau.anlegen` mutation · admin – Neue Schau anlegen – leer mit Startwerten oder aus einer früheren Schau des Vereins als Vorlage.
@@ -2342,7 +2371,7 @@ Spenden (Entscheidung 013): steuerliche Angaben des Vereins, Spenderverzeichnis,
 - `stammdaten.suche` query · angemeldet
 - `stammdaten.baum` query · angemeldet
 
-### routers/termine.ts (260 Z.) → `termine`
+### routers/termine.ts (261 Z.) → `termine`
 Kommende Schauen: Termine anderer Schauen pflegen (von Hand oder aus abonnierten Kalendern) und für den Katalog Kreis und Landesverband wählen.
 
 - `termine.laden` query · angemeldet – Alles für die Pflegeseite: Termine, Abos, Wahl im Katalog dieser Schau und die Vorschau der Katalogseite.
@@ -2573,7 +2602,7 @@ Prozeduren: meldung.adressVorschlaege, meldung.ausstellerSuche, meldung.bestaeti
 ### meldungen.tsx (129 Z.) – `/schau/:schauId/meldungen`
 Prozeduren: meldung.liste, schau.get
 
-### oeffentlich.tsx (565 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
+### oeffentlich.tsx (568 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
 Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.meineMeldung, oeffentlich.melden, oeffentlich.onlineVeroeffentlichung, oeffentlich.rechtstexte, oeffentlich.schau
 
 ### preise.tsx (471 Z.) – `/schau/:schauId/preise`
@@ -2672,7 +2701,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `serienbrief.ts` (34 Z.) – Empfänger eines Serienbriefs: Vereinsmitglieder, alle Aussteller des Vereins oder die Aussteller mit bestätigter Meldung zu einer Schau. · SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger
 - `spenden-quittung.ts` (34 Z.) – Spendenquittung einer Spende erzeugen (für das Belegarchiv, services/kassenbuch.ts): Briefkopf und Farbe aus der Briefvorlage des Vereins, Hinweis … · spendenquittung
 - `spenden.ts` (169 Z.) – Spenden (Entscheidung 013): Spender zum Aussteller finden oder anlegen, Spenden einer Schau mit Eingangstag und Bestätigungsstand laden, Bestätigun … · ladeSteuer, spenderFuerAussteller, meldungsspendeAnlegen, eingangMitMeldegeld, ladeSpenden, sperreBestaetigungen, naechsteBestaetigungsnummer, spenderFuerKatalog, spendenFuerAuskunft
-- `termine.ts` (254 Z.) – Kommende Schauen: Termine für die Katalogseite, abonnierte Kalender (iCal) abrufen und abgleichen, eigene Schauen als Kalender. · KALENDER_MAX_BYTES, ladeKommende, eigeneSchauenFuerKalender, istInterneAdresse, sichereAufloesung, pruefeKalenderAdresse, holeKalender, aboAbrufen, alleAbosAbrufen, starteTerminabruf
+- `termine.ts` (274 Z.) – Kommende Schauen: Termine für die Katalogseite, abonnierte Kalender (iCal) abrufen und abgleichen, eigene Schauen als Kalender. · KALENDER_MAX_BYTES, ladeKommende, eigeneSchauenFuerKalender, KalenderFehler, netzFehler, istInterneAdresse, sichereAufloesung, pruefeKalenderAdresse, holeKalender, aboAbrufen, alleAbosAbrufen, starteTerminabruf
 - `testschau.ts` (164 Z.) – Testschauen (Üben, Vorführen) sind von echten Schauen getrennt: Aussteller, die in einer Testschau angelegt oder gemeldet werden, gehören nur ihr ( … · sperreTestschauGeteilt, ausstellerDerSchau, echteAussteller, testSchauIdFuer, pruefeAusstellerZurSchau, sperreTestschauExklusiv, testschauVorschau, KOPIE_AKTION, testKopienVon, kennzeichneAlsTestschau
 - `textbausteine-gefieder.ts` (199 Z.) · BAUSTEINE_GEFIEDER
 - `textbausteine-gestalt.ts` (124 Z.) · BAUSTEINE_GESTALT
@@ -2739,19 +2768,20 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 ### Server sonst `apps/server/src`
 
-- `auth.ts` (190 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
+- `auth.ts` (203 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, spracheDerSitzung, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
 - `besucher-adresse.ts` (31 Z.) – Adresse des Besuchers für die Bremsen (tRPC-Kontext und öffentliche Dateien), auch hinter einem eigenen Proxy (TRUST_PROXY). · clientIp
 - `config.ts` (30 Z.) · config
 - `csv.ts` (15 Z.) – CSV für Excel: Semikolon, BOM, Schutz vor Formel-Injektion. · csv
 - `datei-druckvorlage.ts` (125 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien, briefDateien
-- `datei-exporte.ts` (317 Z.) – Datei-Adressen der Listen und Exporte (angemeldete Benutzer der eigenen Schau): Kassenbuch (CSV), Protokoll mit Hash-Kette (CSV, JSON), Verkaufslis … · exportDateien
+- `datei-exporte.ts` (318 Z.) – Datei-Adressen der Listen und Exporte (angemeldete Benutzer der eigenen Schau): Kassenbuch (CSV), Protokoll mit Hash-Kette (CSV, JSON), Verkaufslis … · exportDateien
 - `datei-hilfen.ts` (49 Z.) – Gemeinsame Bausteine der Datei-Adressen (/datei/...): Zahlen und Daten aus der Adresse prüfen, Schau des angemeldeten Benutzers laden, Datei-Antwor … · zahlAus, datumAus, schauMitBenutzer, schauFuer, datei, pdf, archivPdf
 - `datei-katalog.ts` (131 Z.) – Datei-Adressen für Bilder und Katalog (angemeldete Benutzer der eigenen Schau): GET /datei/:schauId/bild/:bildId – Vorschau hochgeladener Katalogbi … · katalogNacheinander, katalogDateien
 - `datei-meisterschaften.ts` (47 Z.) – Datei-Adressen der Meisterschaften (angemeldete Benutzer der eigenen Schau): GET /datei/:schauId/meisterschaften.pdf – Ergebnisse zum Aushängen, Na … · meisterschaftDateien
 - `datei-oeffentlich.ts` (141 Z.) – Öffentliche Dateien ohne Anmeldung, jeweils mit Bremse je Adresse: GET /o/:id/schauen.ics – eigene Schauen des Vereins als Kalender (iCal) GET /s/: … · katalogVerzeichnis, oeffentlicheDateien
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
+- `datei-sprache.ts` (37 Z.) – Fehlertexte der Datei-Adressen (/datei/…, /s/…, /o/…) in der Sprache der Oberfläche (Entscheidung 022). · DATEI_PFADE, dateiFehlerUebersetzen
 - `datei-unterlagen.ts` (120 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, B-Bogen und A-Bogen, Abrechnung und Q … · unterlagenDateien
-- `index.ts` (261 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
+- `index.ts` (265 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
 - `router.ts` (50 Z.) · appRouter
@@ -2828,7 +2858,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `34-katalog-gestaltung.ts` (304 Z.) – Druckkatalog: Schrift und Gestaltung wählbar, A4 als Vorgabe, Stiche je Sparte (einmal eingebettet), Öffnungszeiten untereinander.
 - `35-pruefung-nachbesserung.ts` (574 Z.) – Nachbesserungen aus der Gesamtprüfung vom 13.11.2026 (interne Prüfung): Sperren nach Festschreiben und Abschluss, Geld-Lücken, Protokoll, rechtssic …
 - `36-nach-plan-nummerieren.ts` (178 Z.) – Nach dem Umstellen im Hallenplan neu nummerieren: vor dem Festschreiben der Katalognummern die Katalognummern (und Käfigplätze) in der Reihenfolge …
-- `37-kommende-schauen.ts` (178 Z.) – Kommende Schauen: Termine pflegen, Kalender abonnieren ohne stilles Überschreiben, Katalogseite mit Kreiswahl, eigener Kalender.
+- `37-kommende-schauen.ts` (204 Z.) – Kommende Schauen: Termine pflegen, Kalender abonnieren ohne stilles Überschreiben, Katalogseite mit Kreiswahl, eigener Kalender.
 - `38-hallenplan-entfernen.ts` (86 Z.) – Leere Plätze im festen Hallenplan entfernen: über das Speichern der Halle (wie jede Änderung im Editor), nur leere Platten und Plätze im festen Pla …
 - `39-hallenplan-druck.ts` (100 Z.) – Hallenplan drucken: genau ein Blatt A4 (quer, wenn die Zeichnung breiter als hoch ist), auch bei einer großen Halle mit vielen Käfigen, festgeschri …
 - `40-hallenplan-neu-setzen.ts` (131 Z.) – Plan neu setzen (Rückmeldung 14.11.2026: „wenn ich quer auf längs gehe und neu anordne macht er quatsch“): Plan fest, Reihe und Platten verschoben, …
@@ -2852,6 +2882,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `58-a-bogen.ts` (66 Z.) – A-Bogen (Meldebogen zum Ausfüllen und Unterschreiben): leer öffentlich über die Schauseite, leer und vorausgefüllt für die Ausstellungsleitung.
 - `59-girocode.ts` (146 Z.) – Überweisung mit Referenz und GiroCode (Entscheidung 021): nur mit vollständigem Vereinskonto, Referenz je Meldung im Verwendungszweck, Code über de …
 - `60-kontoauszug.ts` (138 Z.) – Kontoauszug-Import (Entscheidung 023): Datei prüfen (Zuordnung über Referenz bzw. Name und Betrag), ausgewählte Gutschriften buchen, Meldung bestät …
-- `61-oberflaeche-sprache.ts` (30 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
+- `61-oberflaeche-sprache.ts` (62 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

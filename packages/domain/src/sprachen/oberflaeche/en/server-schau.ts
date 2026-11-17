@@ -1,5 +1,6 @@
 import type { OberflaecheTexte } from "..";
 import { fach } from "./fach";
+import { serverSchauDatei } from "./server-schau-datei";
 import { serverSchauImport } from "./server-schau-import";
 import { serverSchauMeldung } from "./server-schau-meldung";
 import { serverSchauPruefung } from "./server-schau-pruefung";
@@ -142,6 +143,13 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     serverFehler: (status: string) => `The server responds with error ${status}.`,
     keinKalender: "There is no calendar in iCal format (.ics) at this address.",
     abrufFehlgeschlagen: (text: string) => `Retrieval failed (${text}).`,
+    verbindungAbgelehnt: (host: string) => `The server ${host} refuses the connection.`,
+    verbindungUnterbrochen: (host: string) => `The connection to ${host} was interrupted.`,
+    unerreichbar: (host: string) => `The server ${host} cannot be reached.`,
+    zertifikatAbgelaufen: (host: string) => `The certificate of ${host} has expired.`,
+    zertifikatUngueltig: (host: string) => `The certificate of ${host} is invalid – the connection is not secure.`,
+    netzwerkfehler: (host: string) => `Retrieval from ${host} failed (network error).`,
+    abrufIntern: "Retrieval failed. The server log states the reason.",
   },
   verein: {
     vereinFehlt: "Club not found.",
@@ -150,4 +158,5 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
   pruefung: serverSchauPruefung,
   zusatz: serverSchauZusatz,
   import: serverSchauImport,
+  datei: serverSchauDatei,
 };

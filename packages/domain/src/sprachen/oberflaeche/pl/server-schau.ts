@@ -1,5 +1,6 @@
 import type { OberflaecheTexte } from "..";
 import { fach } from "./fach";
+import { serverSchauDatei } from "./server-schau-datei";
 import { serverSchauImport } from "./server-schau-import";
 import { serverSchauMeldung } from "./server-schau-meldung";
 import { serverSchauPruefung } from "./server-schau-pruefung";
@@ -148,6 +149,13 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     serverFehler: (status: string) => `Serwer odpowiada błędem ${status}.`,
     keinKalender: "Pod tym adresem nie ma kalendarza w formacie iCal (.ics).",
     abrufFehlgeschlagen: (text: string) => `Pobieranie nie powiodło się (${text}).`,
+    verbindungAbgelehnt: (host: string) => `Serwer ${host} odrzuca połączenie.`,
+    verbindungUnterbrochen: (host: string) => `Połączenie z ${host} zostało przerwane.`,
+    unerreichbar: (host: string) => `Serwer ${host} jest nieosiągalny.`,
+    zertifikatAbgelaufen: (host: string) => `Certyfikat serwera ${host} wygasł.`,
+    zertifikatUngueltig: (host: string) => `Certyfikat serwera ${host} jest nieprawidłowy – połączenie nie jest bezpieczne.`,
+    netzwerkfehler: (host: string) => `Pobieranie z ${host} nie powiodło się (błąd sieci).`,
+    abrufIntern: "Pobieranie nie powiodło się. Przyczynę podaje dziennik serwera.",
   },
   verein: {
     vereinFehlt: "Nie znaleziono klubu.",
@@ -156,4 +164,5 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
   pruefung: serverSchauPruefung,
   zusatz: serverSchauZusatz,
   import: serverSchauImport,
+  datei: serverSchauDatei,
 };

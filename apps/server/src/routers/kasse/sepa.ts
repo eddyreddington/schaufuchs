@@ -1,5 +1,5 @@
 /** SEPA-Sammelüberweisung an die Aussteller: offene Datei anzeigen, erstellen, verwerfen und als ausgezahlt buchen. */
-import { verdeckeIban } from "@schau/domain";
+import { EingabeFehler, verdeckeIban } from "@schau/domain";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
@@ -55,7 +55,8 @@ export const sepaUeberweisung = {
         try {
           sepaXml(s, lauf); // prüft IBANs und Beträge, bevor die Datei festgehalten wird
         } catch (err) {
-          throw fehler("BAD_REQUEST", err instanceof Error ? err.message : String(err));
+          if (err instanceof EingabeFehler) throw fehler("BAD_REQUEST", err.message);
+          throw err;
         }
         await tx.insert(sepaLauf).values({ schauId: s.id, nachrichtId: lauf.nachrichtId, daten: lauf, erstelltVon: ctx.benutzer.name });
         // Im Protokoll nur Kennung, Anzahl, Summe und Beträge je Aussteller – keine IBANs, Namen oder Kontoinhaber.

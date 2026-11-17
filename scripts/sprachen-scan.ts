@@ -154,7 +154,8 @@ function meldungsTexte(a: ts.Expression): string[] {
 }
 
 /**
- * Meldungen des Servers ohne Übersetzung durch `serverText()`: `fehler("CODE", "…")`, jedes `new …Error("…")` bzw.
+ * Meldungen des Servers ohne Übersetzung durch `serverText()`: `fehler("CODE", "…")`, Fehlertexte der Datei-Adressen
+ * (`c.text("…", 403)`), jedes `new …Error("…")` bzw.
  * `new …Fehler("…")` (auch `new TRPCError({ message })`) in Server und Domain – Router reichen solche Fehler als Meldung
  * weiter (z. B. Kontoauszug, Import, Termine). Bewusst deutsch (nur intern, z. B. Schlüssel fehlt): Kommentar
  * `// bleibt deutsch`; für `fehler(…)` gilt das nicht. Gründe aus Prüffunktionen der Domain (`pruefeIban` u. a.), die der
@@ -172,12 +173,15 @@ export async function serverOhneUebersetzung(nur?: string[]): Promise<Stueck[]> 
     const quelle = ts.createSourceFile(datei, inhalt, ts.ScriptTarget.Latest, true);
     const besuche = (k: ts.Node): void => {
       // `fehler(…)` erreicht immer die Oberfläche, `new …Error` nur, wenn weitergereicht (sonst `// bleibt deutsch`).
+      // `c.text("…", 4xx/5xx)`: Fehlertext einer Datei-Adresse, übersetzt von datei-sprache.ts.
       const meldung =
         ts.isCallExpression(k) && k.expression.getText(quelle) === "fehler" && k.arguments.length >= 2
           ? k.arguments[1]
-          : ts.isNewExpression(k) && /(Error|Fehler)$/.test(k.expression.getText(quelle)) && !bleibtDeutsch(quelle, k)
-            ? k.arguments?.[0]
-            : undefined;
+          : ts.isCallExpression(k) && k.expression.getText(quelle) === "c.text" && k.arguments.length >= 2 && ts.isNumericLiteral(k.arguments[1]!) && Number(k.arguments[1].text) >= 400
+            ? k.arguments[0]
+            : ts.isNewExpression(k) && /(Error|Fehler)$/.test(k.expression.getText(quelle)) && !bleibtDeutsch(quelle, k)
+              ? k.arguments?.[0]
+              : undefined;
       if (meldung)
         for (const beispiel of meldungsTexte(meldung))
           if (serverText(beispiel, "en") === beispiel && /[a-zäöü]/.test(beispiel))

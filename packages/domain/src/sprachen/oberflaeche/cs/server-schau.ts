@@ -1,5 +1,6 @@
 import type { OberflaecheTexte } from "..";
 import { fach } from "./fach";
+import { serverSchauDatei } from "./server-schau-datei";
 import { serverSchauImport } from "./server-schau-import";
 import { serverSchauMeldung } from "./server-schau-meldung";
 import { serverSchauPruefung } from "./server-schau-pruefung";
@@ -149,6 +150,13 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     serverFehler: (status: string) => `Server odpovídá chybou ${status}.`,
     keinKalender: "Na této adrese není kalendář ve formátu iCal (.ics).",
     abrufFehlgeschlagen: (text: string) => `Načtení se nezdařilo (${text}).`,
+    verbindungAbgelehnt: (host: string) => `Server ${host} odmítá spojení.`,
+    verbindungUnterbrochen: (host: string) => `Spojení s ${host} bylo přerušeno.`,
+    unerreichbar: (host: string) => `Server ${host} není dostupný.`,
+    zertifikatAbgelaufen: (host: string) => `Platnost certifikátu serveru ${host} vypršela.`,
+    zertifikatUngueltig: (host: string) => `Certifikát serveru ${host} je neplatný – spojení není bezpečné.`,
+    netzwerkfehler: (host: string) => `Načtení z ${host} se nezdařilo (chyba sítě).`,
+    abrufIntern: "Načtení se nezdařilo. Důvod uvádí protokol serveru.",
   },
   verein: {
     vereinFehlt: "Spolek nenalezen.",
@@ -157,4 +165,5 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
   pruefung: serverSchauPruefung,
   zusatz: serverSchauZusatz,
   import: serverSchauImport,
+  datei: serverSchauDatei,
 };

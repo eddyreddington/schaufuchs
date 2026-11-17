@@ -1,5 +1,16 @@
 import { describe, expect, test } from "bun:test";
+import { EingabeFehler } from "./eingabefehler";
 import { bankarbeitstag, erzeugeSepaLastschrift, fruehesteFaelligkeit, mandatGueltig, mandatLoeschbar, vorgeschlageneFaelligkeit, pruefeGlaeubigerId, pruefeMandatsreferenz } from "./lastschrift";
+
+/** Wirft `f` einen EingabeFehler (den der Server wörtlich zeigen darf)? */
+const eingabeFehler = (f: () => unknown) => {
+  try {
+    f();
+  } catch (e) {
+    return e instanceof EingabeFehler;
+  }
+  return "kein Fehler";
+};
 
 describe("SEPA-Lastschrift", () => {
   test("Gläubiger-ID: Aufbau und Prüfziffer (Geschäftsbereich zählt nicht mit)", () => {
@@ -92,5 +103,16 @@ describe("SEPA-Lastschrift", () => {
     expect(() => erzeugeSepaLastschrift({ ...auftrag, posten: [{ ...auftrag.posten[0]!, iban: "DE00123" }] })).toThrow("Müller");
     expect(() => erzeugeSepaLastschrift({ ...auftrag, posten: [{ ...auftrag.posten[0]!, betragCent: 0 }] })).toThrow("positiv");
     expect(() => erzeugeSepaLastschrift({ ...auftrag, posten: [{ ...auftrag.posten[0]!, mandatsreferenz: "a b" }] })).toThrow("Mandatsreferenz");
+    // Alles davon darf der Server wörtlich zeigen (EingabeFehler), nicht nur als „Interner Fehler“.
+    for (const f of [
+      () => erzeugeSepaLastschrift({ ...auftrag, posten: [] }),
+      () => erzeugeSepaLastschrift({ ...auftrag, glaeubiger: { ...auftrag.glaeubiger, glaeubigerId: "DE97ZZZ09999999999" } }),
+      () => erzeugeSepaLastschrift({ ...auftrag, glaeubiger: { ...auftrag.glaeubiger, iban: "DE00" } }),
+      () => erzeugeSepaLastschrift({ ...auftrag, posten: [{ ...auftrag.posten[0]!, iban: "DE00123" }] }),
+      () => erzeugeSepaLastschrift({ ...auftrag, posten: [{ ...auftrag.posten[0]!, iban: "CH9300762011623852957" }] }),
+      () => erzeugeSepaLastschrift({ ...auftrag, posten: [{ ...auftrag.posten[0]!, betragCent: 0 }] }),
+      () => erzeugeSepaLastschrift({ ...auftrag, posten: [{ ...auftrag.posten[0]!, mandatsreferenz: "a b" }] }),
+    ])
+      expect(eingabeFehler(f)).toBe(true);
   });
 });

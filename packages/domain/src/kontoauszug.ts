@@ -3,6 +3,7 @@
  * Bank-CSV); SchauFUCHS liest die Gutschriften und ordnet sie über die Referenz im Verwendungszweck (Entscheidung 021)
  * den Meldungen zu. Kein Kontozugang, keine Zugangsdaten – nur die Datei. Hier nur Lesen und Zuordnen, rein und getestet.
  */
+import { EingabeFehler } from "./eingabefehler";
 import { istRfReferenz, rfReferenz } from "./girocode";
 import { csvLesen } from "./import";
 
@@ -71,7 +72,7 @@ function betragAus(xml: string): { cent: number; euro: boolean } | null {
 function leseCamt(roh: string): Buchung[] {
   // Namensraum-Präfixe (<c:Ntry>) entfernen; camt kennt keine gleichnamigen Tags aus verschiedenen Räumen.
   const xml = roh.replace(/<(\/?)[A-Za-z][\w.-]*:/g, "<$1");
-  if (!/<BkToCstmrStmt[\s>]/.test(xml)) throw new Error("Das ist kein Kontoauszug im Format camt.053.");
+  if (!/<BkToCstmrStmt[\s>]/.test(xml)) throw new EingabeFehler("Das ist kein Kontoauszug im Format camt.053.");
   const ergebnis: Buchung[] = [];
   for (const eintrag of bloecke(xml, "Ntry")) {
     if (erster(eintrag, "CdtDbtInd") !== "CRDT") continue;
@@ -168,7 +169,7 @@ function leseCsv(text: string): Buchung[] {
     const k = z.map((f) => f.trim().toLowerCase());
     return k.some((f) => ([...SPALTEN.betrag, ...SPALTEN.haben] as string[]).includes(f)) && k.some((f) => (SPALTEN.datum as readonly string[]).includes(f));
   });
-  if (kopfIndex < 0) throw new Error("Unbekanntes Format: In der Datei fehlen die Spalten Buchungstag und Betrag. Bitte den Umsatzexport als CSV oder camt.053 (XML) hochladen.");
+  if (kopfIndex < 0) throw new EingabeFehler("Unbekanntes Format: In der Datei fehlen die Spalten Buchungstag und Betrag. Bitte den Umsatzexport als CSV oder camt.053 (XML) hochladen.");
   const kopf = zeilen[kopfIndex]!.map((f) => f.trim().toLowerCase());
   const spalte = (namen: readonly string[]) => {
     for (const n of namen) {

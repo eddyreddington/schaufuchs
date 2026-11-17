@@ -11,7 +11,7 @@
  * Die Aussteller sind erfunden und haben keine E-Mail-Adresse (es geht keine Post hinaus). Erkennungsmerkmal: die
  * Registriernummer beginnt mit „276 16 999“ (Kreis 999 gibt es nicht) – daran findet --entfernen sie wieder.
  */
-import { gefordertCent, halleOhneFestenPlan, heuteBerlin, PHASEN_LABEL, standardBesatz, tagBerlin } from "@schau/domain";
+import { EingabeFehler, gefordertCent, halleOhneFestenPlan, heuteBerlin, PHASEN_LABEL, standardBesatz, tagBerlin } from "@schau/domain";
 import { and, asc, eq, inArray, like, notExists, sql as sqlText } from "drizzle-orm";
 import { db, sql } from "./db/client";
 import { aussteller, benutzer, farbenschlag, gebuehr, katalogBeitrag, katalogGestaltung, meldung, preisrichter, rasse, schau, sparte, spende, spender, verkauf, katalogeintrag, zuwendungsbestaetigung } from "./db/schema";
@@ -85,7 +85,7 @@ export async function mitDemoSperre<T>(fn: () => Promise<T>): Promise<T> {
   const c = await sql.reserve();
   try {
     const [r] = (await c`select pg_try_advisory_lock(${DEMO_SPERRE}::int) as ok`) as unknown as { ok: boolean }[];
-    if (!r?.ok) throw new Error("Es werden gerade schon Demodaten eingespielt – bitte gleich noch einmal versuchen.");
+    if (!r?.ok) throw new EingabeFehler("Es werden gerade schon Demodaten eingespielt – bitte gleich noch einmal versuchen.");
     try {
       return await fn();
     } finally {
@@ -101,10 +101,10 @@ export type Einspieler = { id: number; organisationId: number; name: string; ema
 
 async function ladeZiel(slug: string, wer?: Einspieler) {
   const [s] = await db.select().from(schau).where(eq(schau.slug, slug));
-  if (!s) throw new Error(`Keine Schau mit dem Kurznamen „${slug}“.`);
-  if (wer && wer.organisationId !== s.organisationId) throw new Error("Schau nicht gefunden.");
+  if (!s) throw new EingabeFehler(`Keine Schau mit dem Kurznamen „${slug}“.`);
+  if (wer && wer.organisationId !== s.organisationId) throw new EingabeFehler("Schau nicht gefunden.");
   const [admin] = wer ? [wer] : await db.select().from(benutzer).where(and(eq(benutzer.organisationId, s.organisationId), eq(benutzer.rolle, "admin"))).orderBy(asc(benutzer.id));
-  if (!admin) throw new Error("Der Verein hat keinen Administrator.");
+  if (!admin) throw new EingabeFehler("Der Verein hat keinen Administrator.");
   const { appRouter } = await import("./router");
   const ctx = { richter: null, cookieTokens: { benutzer: undefined, richter: undefined }, ip: "testdaten", setCookie: () => {} };
   // Im Protokoll erkennbar: Benutzer des Administrators, Name mit Zusatz.
@@ -121,9 +121,9 @@ export async function fuellen(slug: string, ziel?: number, opts: { wer?: Einspie
   jahrKurz = Number(heute().slice(2, 4));
   const { s, api, akteur } = await ladeZiel(slug, opts.wer);
   const [schon] = await db.select({ id: meldung.id }).from(meldung).where(eq(meldung.schauId, s.id)).limit(1);
-  if (schon) throw new Error(`„${s.name}“ hat schon Meldungen – Testdaten nur in eine leere Schau (nichts wird überschrieben).`);
-  if (!s.stammdatenVersionId) throw new Error("Der Schau fehlt das Rassenverzeichnis.");
-  if (s.phase !== "vorbereitung" && s.phase !== "meldung") throw new Error(`Die Schau steht in der Phase „${PHASEN_LABEL[s.phase]}“ – erwartet: Vorbereitung oder Meldephase.`);
+  if (schon) throw new EingabeFehler(`„${s.name}“ hat schon Meldungen – Testdaten nur in eine leere Schau (nichts wird überschrieben).`);
+  if (!s.stammdatenVersionId) throw new EingabeFehler("Der Schau fehlt das Rassenverzeichnis.");
+  if (s.phase !== "vorbereitung" && s.phase !== "meldung") throw new EingabeFehler(`Die Schau steht in der Phase „${PHASEN_LABEL[s.phase]}“ – erwartet: Vorbereitung oder Meldephase.`);
   const log = (t: string) => (opts.leise ? undefined : console.log(`· ${t}`));
   // Erfundene Aussteller nur in einer Testschau: dort gehören sie nur ihr und tauchen nie in echten Schauen auf.
   if (!s.test) {
@@ -142,7 +142,7 @@ export async function fuellen(slug: string, ziel?: number, opts: { wer?: Einspie
   const jeRasse = new Map<string, typeof farben>();
   for (const f of farben) if ((jeRasse.get(f.rasse)?.length ?? 0) < 3) jeRasse.set(f.rasse, [...(jeRasse.get(f.rasse) ?? []), f]);
   const verfuegbar = Object.fromEntries(Object.entries(RASSEN).map(([g, l]) => [g, l.filter((r) => jeRasse.has(r))])) as Record<Gruppe, string[]>;
-  if (!verfuegbar.huehner.length || !verfuegbar.tauben.length) throw new Error("Im Verzeichnis fehlen die üblichen Rassen.");
+  if (!verfuegbar.huehner.length || !verfuegbar.tauben.length) throw new EingabeFehler("Im Verzeichnis fehlen die üblichen Rassen.");
 
   // Preisrichter (ohne PIN – die vergibt die Ausstellungsleitung unter „Preisrichter“).
   const vorhandenePr = await db.select({ id: preisrichter.id }).from(preisrichter).where(eq(preisrichter.schauId, s.id));
@@ -422,7 +422,7 @@ function ring(alter: "jung" | "alt", g: Gruppe) {
  */
 export async function zuruecksetzen(slug: string, opts: { leise?: boolean } = {}) {
   const [s] = await db.select().from(schau).where(eq(schau.slug, slug));
-  if (!s) throw new Error(`Keine Schau mit dem Kurznamen „${slug}“.`);
+  if (!s) throw new EingabeFehler(`Keine Schau mit dem Kurznamen „${slug}“.`);
   // In einer Testschau ist alles Testdaten (auch von Hand geübte Meldungen) – sonst nur die Erfundenen.
   if (!s.test) await pruefeNurTestdaten(s.id, s.name);
   await db.transaction(async (tx) => {
@@ -474,13 +474,13 @@ async function pruefeNurTestdaten(schauId: number, name: string) {
     .from(meldung)
     .innerJoin(aussteller, eq(aussteller.id, meldung.ausstellerId))
     .where(and(eq(meldung.schauId, schauId), sqlText`${aussteller.registriernummer} not like ${MERKMAL + "%"}`));
-  if (fremde.length) throw new Error(`„${name}“ hat ${fremde.length} Meldungen echter Aussteller – nichts geändert.`);
+  if (fremde.length) throw new EingabeFehler(`„${name}“ hat ${fremde.length} Meldungen echter Aussteller – nichts geändert.`);
 }
 
 /** Löscht die Schau samt allem und die Test-Aussteller (Merkmal) ohne Meldungen in anderen Schauen. */
 export async function entfernen(slug: string) {
   const [s] = await db.select().from(schau).where(eq(schau.slug, slug));
-  if (!s) throw new Error(`Keine Schau mit dem Kurznamen „${slug}“.`);
+  if (!s) throw new EingabeFehler(`Keine Schau mit dem Kurznamen „${slug}“.`);
   await pruefeNurTestdaten(s.id, s.name);
   await db.transaction(async (tx) => {
     // Protokoll und Kassendaten sind gegen Löschen geschützt (db/schutz.sql) – nur hier, in dieser Transaktion, frei.

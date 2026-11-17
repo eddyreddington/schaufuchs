@@ -3,7 +3,7 @@
  * Hash-Kette (CSV, JSON), Verkaufsliste, Abrechnung und Ergebnisse (CSV), Hallenplan und Aufbauliste, Tierliste für
  * das Veterinäramt und die SEPA-Sammelüberweisung (nur Ausstellungsleitung).
  */
-import { bewertungsText, formatKatalognummer } from "@schau/domain";
+import { bewertungsText, EingabeFehler, formatKatalognummer } from "@schau/domain";
 import { asc, eq, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "./db/client";
@@ -311,7 +311,8 @@ export function exportDateien(app: Hono<any>) {
         "Cache-Control": "no-store",
       });
     } catch (err) {
-      return c.text(String(err instanceof Error ? err.message : err), 400);
+      if (err instanceof EingabeFehler) return c.text(err.message, 400);
+      throw err;
     }
   });
 }

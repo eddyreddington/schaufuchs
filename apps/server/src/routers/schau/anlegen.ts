@@ -1,9 +1,10 @@
 /**
  * Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
  */
-import { type Aufsteller, halleOhneFestenPlan } from "@schau/domain";
+import { type Aufsteller, EingabeFehler, halleOhneFestenPlan } from "@schau/domain";
+import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import { db } from "../../db/client";
 import { aussteller, bild, gebuehr, katalogBeitrag, katalogeintrag, katalogGestaltung, postausgang, preisart, preisrichter, schau, stammdatenVersion, verkauf } from "../../db/schema";
 import { sperreKasse } from "../../services/kasse";
@@ -40,7 +41,11 @@ async function demodatenEinspielen(wer: Einspieler, schauId: number, neu: boolea
       return { ok: true as const, ...r };
     });
   } catch (e) {
-    return { ok: false, fehler: `Demodaten nicht vollständig eingespielt: ${e instanceof Error ? e.message : String(e)}` };
+    // Gründe aus dem Einspielen (EingabeFehler) und Meldungen der Programmwege zeigen; alles andere bleibt intern.
+    const zeigbar = e instanceof EingabeFehler || (e instanceof TRPCError && e.code !== "INTERNAL_SERVER_ERROR" && !(e.cause instanceof ZodError));
+    if (!zeigbar) console.error("[demodaten] Einspielen abgebrochen:", e);
+    const grund = zeigbar ? e.message : "Interner Fehler. Bitte erneut versuchen; besteht er weiter, die Ausstellungsleitung informieren.";
+    return { ok: false, fehler: `Demodaten nicht vollständig eingespielt: ${grund}` };
   }
 }
 

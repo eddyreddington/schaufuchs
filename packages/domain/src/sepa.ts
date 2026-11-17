@@ -1,4 +1,5 @@
 /** SEPA-Überweisungen (pain.001.001.09, wie von deutschen Banken nach DK-Datenformat angenommen). */
+import { EingabeFehler } from "./eingabefehler";
 
 export function normalisiereIban(text: string): string {
   return text.replace(/\s+/g, "").toUpperCase();
@@ -80,14 +81,14 @@ export interface SepaAuftrag {
 
 /** Erzeugt die XML-Datei für eine Sammelüberweisung. Wirft bei ungültigen Angaben. */
 export function erzeugeSepaUeberweisung(a: SepaAuftrag): string {
-  if (a.posten.length === 0) throw new Error("Keine Überweisungen.");
+  if (a.posten.length === 0) throw new EingabeFehler("Keine Überweisungen.");
   const ibanFehler = pruefeIban(a.auftraggeber.iban);
-  if (ibanFehler) throw new Error(`Vereinskonto: ${ibanFehler}`);
+  if (ibanFehler) throw new EingabeFehler(`Vereinskonto: ${ibanFehler}`);
   for (const p of a.posten) {
-    if (p.betragCent <= 0) throw new Error(`Betrag für ${p.name} muss positiv sein.`);
+    if (p.betragCent <= 0) throw new EingabeFehler(`Betrag für ${p.name} muss positiv sein.`);
     const f = pruefeIban(p.iban);
-    if (f) throw new Error(`${p.name}: ${f}`);
-    if (!imEwr(p.iban)) throw new Error(`${p.name}: Konto außerhalb des EWR – bitte bar auszahlen oder einzeln überweisen.`);
+    if (f) throw new EingabeFehler(`${p.name}: ${f}`);
+    if (!imEwr(p.iban)) throw new EingabeFehler(`${p.name}: Konto außerhalb des EWR – bitte bar auszahlen oder einzeln überweisen.`);
   }
   const summe = a.posten.reduce((s, p) => s + p.betragCent, 0);
   const anzahl = String(a.posten.length);

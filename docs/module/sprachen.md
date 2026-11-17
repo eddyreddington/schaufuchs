@@ -15,6 +15,8 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 | Umschreibung | `sprachen/umschreiben.ts` | `umschreiben()`, `ohneEszett()`, `franzoesischeZeichen()` |
 | Web | `apps/web/src/sprache.tsx`, `sprache-jetzt.ts`, `lib.ts` | `SpracheRahmen`, `useOberflaeche()`, `useTexte()`, `useSprache()`, `SprachWahl`; `ot()`, `aktuelleSprache()`; `fehlerText()` |
 | Server | `routers/auth/anmeldung.ts` | `auth.spracheSetzen`, `auth.status` (`benutzer.sprache`) |
+| Datei-Adressen | `apps/server/src/datei-sprache.ts` | `dateiFehlerUebersetzen` (Fehlertexte nach `?sprache=` bzw. Konto), `DATEI_PFADE` |
+| Weitergereichte Fehler | `packages/domain/src/eingabefehler.ts`, `services/termine.ts` | `EingabeFehler`, `KalenderFehler`, `netzFehler()` |
 | Prüfung | `packages/domain/src/sprachen/oberflaeche.test.ts`, `scripts/sprachen-scan.ts` mit Test | Vollständigkeit, Deutsch unverändert (`sprachen-vorher.json`), keine Reste, Servermeldungen und weitergereichte Fehler |
 
 ## So kommt ein neuer Text dazu
@@ -24,7 +26,9 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 3. In der Komponente `const t = useOberflaeche();` → `t.<gruppe>.<seite>.<text>`; außerhalb von Komponenten `ot()`.
 4. Neue Meldung des Servers (`fehler("…", "…")`, auch ein `new …Error("…")` in Server oder Domain, das ein Router
    weiterreicht): wortgleich in eine Gruppe `server*` und übersetzen; mit Werten als Funktion nur mit Text-Parametern
-   ohne Bedingung (Mehrzahl als eigener Eintrag). Rein interne Fehler: `// bleibt deutsch` mit Grund darüber. Gibt eine
+   ohne Bedingung (Mehrzahl als eigener Eintrag). Fehlertext einer Datei-Adresse (`c.text("…", 4xx)`): in
+   `serverSchau.datei`. Fehler, die ein Router wörtlich weiterreicht: als `EingabeFehler` werfen (Domain).
+   Rein interne Fehler: `// bleibt deutsch` mit Grund darüber. Gibt eine
    Prüffunktion der Domain einen neuen Grund zurück, den der Server einsetzt: Fall in `oberflaeche.test.ts` ergänzen.
 5. Bewusst deutscher Text im Quelltext: Kommentar `// bleibt deutsch`.
 6. `bun scripts/sprachen-scan.ts rest` (Reste), `server` (Meldungen), `verloren` (Deutsch unverändert) – oder `bun run pruefen`.

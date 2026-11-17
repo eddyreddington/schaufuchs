@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { EingabeFehler } from "./eingabefehler";
 import { rfReferenz } from "./girocode";
 import { buchungsSchluessel, dekodiere, leseKontoauszug, ordneZu, type Buchung } from "./kontoauszug";
 
@@ -125,6 +126,8 @@ describe("Kontoauszug lesen", () => {
   test("unbekanntes Format: verständlicher Fehler", () => {
     expect(() => leseKontoauszug(bytes("Hallo Welt\n1;2;3"))).toThrow("Spalten");
     expect(() => leseKontoauszug(bytes("<html><body>kein Auszug</body></html>"))).toThrow("camt");
+    // Der Server darf beides wörtlich zeigen (EingabeFehler).
+    for (const inhalt of ["Hallo Welt\n1;2;3", "<html><body>kein Auszug</body></html>"]) expect(() => leseKontoauszug(bytes(inhalt))).toThrow(EingabeFehler);
   });
 });
 

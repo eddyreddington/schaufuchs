@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { abmeldungLesen, letzteEingabe, untaetigAbgelaufen } from "@schau/domain";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import { config } from "./config";
 import { db } from "./db/client";
 import { benutzer, organisation, preisrichter, schau, sitzung } from "./db/schema";
@@ -91,6 +91,19 @@ export async function sitzungWennUnveraendert(stand: KontoStand): Promise<string
 }
 
 /** Kennung einer Sitzung in der Datenbank (SHA-256 des Cookie-Werts). */
+/**
+ * Nur die Sprache am Konto einer gültigen Sitzung – lesend, ohne Nebenwirkung (zählt nicht als Eingabe, beendet nichts).
+ * Für Fehlertexte der Datei-Adressen (datei-sprache.ts); ob die Sitzung wirklich noch angemeldet ist, prüft die Route selbst.
+ */
+export async function spracheDerSitzung(token: string): Promise<string | null> {
+  const [z] = await db
+    .select({ sprache: benutzer.sprache })
+    .from(sitzung)
+    .innerJoin(benutzer, eq(benutzer.id, sitzung.benutzerId))
+    .where(and(eq(sitzung.id, sha256(token)), gt(sitzung.laeuftAb, new Date()), eq(benutzer.aktiv, true), isNull(benutzer.geloeschtAm)));
+  return z?.sprache ?? null;
+}
+
 export function sitzungsId(token: string): string {
   return sha256(token);
 }

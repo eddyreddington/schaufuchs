@@ -29,6 +29,7 @@ import { strukturZuGross, type Context } from "./trpc";
 import { clientIp } from "./besucher-adresse";
 import { datei, pdf, zahlAus } from "./datei-hilfen";
 import { katalogDateien } from "./datei-katalog";
+import { DATEI_PFADE, dateiFehlerUebersetzen } from "./datei-sprache";
 import { unterlagenDateien } from "./datei-unterlagen";
 import { exportDateien } from "./datei-exporte";
 import { katalogVerzeichnis, oeffentlicheDateien } from "./datei-oeffentlich";
@@ -195,6 +196,9 @@ app.use(
 
 // ── Dateien (PDF, CSV) – gleiche Anmeldung wie die Oberfläche ───────────
 
+// Fehlertexte dieser Adressen in der Sprache des Kontos bzw. des Links (Entscheidung 022).
+for (const pfad of DATEI_PFADE) app.use(pfad, dateiFehlerUebersetzen);
+
 katalogDateien(app);
 
 druckvorlageDateien(app);
@@ -242,7 +246,7 @@ if (existsSync(webDist)) {
 
 app.onError((err, c) => {
   console.error("[server]", c.req.method, c.req.path, kurzerFehler(err));
-  return c.text("Interner Fehler", 500);
+  return c.text("Interner Fehler. Bitte erneut versuchen; besteht er weiter, die Ausstellungsleitung informieren.", 500);
 });
 
 console.log(`${config.appName} läuft auf http://localhost:${config.port}`);

@@ -3,6 +3,7 @@
  * Datei für die Bank (pain.008.001.08, SEPA-Basislastschrift CORE). Rein und getestet; Mandate und Läufe speichert der
  * Server. Bar und Überweisung bleiben daneben überall möglich.
  */
+import { EingabeFehler } from "./eingabefehler";
 import { imEwr, normalisiereIban, pruefeIban, sepaText } from "./sepa";
 
 const xml = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
@@ -156,18 +157,18 @@ export interface LastschriftAuftrag {
 
 /** Erzeugt die XML-Datei für eine Sammellastschrift (pain.008.001.08, CORE). Wirft bei ungültigen Angaben. */
 export function erzeugeSepaLastschrift(a: LastschriftAuftrag): string {
-  if (a.posten.length === 0) throw new Error("Keine Lastschriften.");
+  if (a.posten.length === 0) throw new EingabeFehler("Keine Lastschriften.");
   const ciFehler = pruefeGlaeubigerId(a.glaeubiger.glaeubigerId);
-  if (ciFehler) throw new Error(`Gläubiger-ID des Vereins: ${ciFehler}`);
+  if (ciFehler) throw new EingabeFehler(`Gläubiger-ID des Vereins: ${ciFehler}`);
   const ibanFehler = pruefeIban(a.glaeubiger.iban);
-  if (ibanFehler) throw new Error(`Vereinskonto: ${ibanFehler}`);
+  if (ibanFehler) throw new EingabeFehler(`Vereinskonto: ${ibanFehler}`);
   for (const p of a.posten) {
-    if (p.betragCent <= 0) throw new Error(`Betrag für ${p.name} muss positiv sein.`);
+    if (p.betragCent <= 0) throw new EingabeFehler(`Betrag für ${p.name} muss positiv sein.`);
     const f = pruefeIban(p.iban);
-    if (f) throw new Error(`${p.name}: ${f}`);
-    if (!imEwr(p.iban)) throw new Error(`${p.name}: Konto außerhalb von EU/EWR – dafür bräuchte die Lastschrift BIC und Anschrift.`);
+    if (f) throw new EingabeFehler(`${p.name}: ${f}`);
+    if (!imEwr(p.iban)) throw new EingabeFehler(`${p.name}: Konto außerhalb von EU/EWR – dafür bräuchte die Lastschrift BIC und Anschrift.`);
     const r = pruefeMandatsreferenz(p.mandatsreferenz);
-    if (r) throw new Error(`${p.name}: ${r}`);
+    if (r) throw new EingabeFehler(`${p.name}: ${r}`);
   }
   const summe = (l: LastschriftPosten[]) => l.reduce((s, p) => s + p.betragCent, 0);
   const id = sepaText(a.nachrichtId, 35);

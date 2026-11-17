@@ -20,6 +20,9 @@ function betragText(b: Betrag, t: Texte, sprache: Sprache) {
 const FUSS_LINK = "inline-flex min-h-9 items-center text-grau no-underline hover:text-tinte hover:underline";
 
 /** ohneFuss: Seite zu einer unbekannten Adresse – keine Verweise auf „Zur Schau“, Impressum usw. unter dieser Adresse. */
+/** Datei-Link mit der gewählten Sprache: Fehlertexte (z. B. „Katalog noch nicht veröffentlicht“) kommen dann in ihr. */
+const mitSprache = (pfad: string, sprache: Sprache) => (sprache === "de" ? pfad : `${pfad}?sprache=${encodeURIComponent(sprache)}`);
+
 function OeffentlicherRahmen({ titel, unter, children, ohneFuss, test }: { titel: string; unter?: ReactNode; children: ReactNode; ohneFuss?: boolean; /** Testschau: Hinweis auf jeder Seite. */ test?: boolean }) {
   const { slug } = useParams();
   const t = useTexte().rahmen;
@@ -145,7 +148,7 @@ export function OeffentlicheSchau() {
       {d.ergebnisse ? (
         <div className="flex flex-wrap gap-2">
           <Link to="ergebnisse" className={knopfKlasse("primaer")}>{t.ergebnisseAnsehen}</Link>
-          <KnopfLink href={`/s/${slug}/katalog.pdf`}>{t.katalogPdf}</KnopfLink>
+          <KnopfLink href={mitSprache(`/s/${slug}/katalog.pdf`, sprache)}>{t.katalogPdf}</KnopfLink>
         </div>
       ) : (
         // Nummern fest, Ergebnisse noch nicht freigegeben: Das PDF gibt es öffentlich erst mit den Ergebnissen.
@@ -176,7 +179,7 @@ export function OeffentlicheSchau() {
         <>
         {/* Wer lieber auf Papier meldet: leerer A-Bogen (deutsch, wie alle Drucke). */}
         <p className="-mb-2 text-sm">
-          <a href={`/s/${slug}/a-bogen.pdf`} target="_blank" rel="noreferrer">{t.aBogen}</a>
+          <a href={mitSprache(`/s/${slug}/a-bogen.pdf`, sprache)} target="_blank" rel="noreferrer">{t.aBogen}</a>
         </p>
         <Meldeformular slug={slug} bestimmungen={d.bestimmungen} erklaerungen={d.erklaerungen} datenschutz={d.datenschutzKurz} kaefigRegeln={d.kaefigRegeln} kaefigMasse={d.kaefigMasse} teilschauen={d.teilschauen} vorschlaege={{ vereine: d.vereine, kreisverbaende: d.kreisverbaende }} fertig={(r) => { setGemeldet(r); window.scrollTo(0, 0); }} />
         </>
@@ -524,7 +527,7 @@ export function Ergebnisse() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <Suchfeld aria-label={t.suchen} placeholder={t.suchePlatzhalter} value={q} onChange={(x) => setQ(x.target.value)} className="max-w-sm" />
             <span aria-live="polite" className="text-sm text-grau">{t.tiere(gruppen.reduce((n, [, x]) => n + x.length, 0))}</span>
-            <KnopfLink href={`/s/${slug}/katalog.pdf`} className="sm:ml-auto">{tx.schau.katalogPdf}</KnopfLink>
+            <KnopfLink href={mitSprache(`/s/${slug}/katalog.pdf`, sprache)} className="sm:ml-auto">{tx.schau.katalogPdf}</KnopfLink>
           </div>
           {gruppen.length === 0 && <p className="py-6 text-center text-grau">{t.keineTreffer}</p>}
           {gruppen.map(([titel, tiere]) => (
