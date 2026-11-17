@@ -463,6 +463,13 @@
       "when": 1794869700988,
       "tag": "0065_benutzer_sprache",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1794923243917,
+      "tag": "0066_sicherung",
+      "breakpoints": true
     }
   ]
 }

@@ -70,9 +70,18 @@ platz_pruefen() {
   fi
 }
 
-# Änderungsstand der Datenbank (Summe aller Schreibvorgänge, ohne Sitzungen) – gleich = nichts Neues.
+# Änderungsstand der Datenbank (Summe aller Schreibvorgänge, ohne Sitzungen und ohne die eigene Meldung in „sicherung“)
+# – gleich = nichts Neues.
 stand() {
-  psql -h db -U schau -d schau -tAc "select coalesce(sum(n_tup_ins + n_tup_upd + n_tup_del), 0) from pg_stat_user_tables where relname <> 'sitzung'" 2>/dev/null || echo "?"
+  psql -h db -U schau -d schau -tAc "select coalesce(sum(n_tup_ins + n_tup_upd + n_tup_del), 0) from pg_stat_user_tables where relname not in ('sitzung', 'sicherung')" 2>/dev/null || echo "?"
+}
+
+# Zeitpunkt der Sicherung für die Gesundheitsprüfung (/api/gesund, Entscheidung 024). Die App sieht ./backups nicht,
+# darum steht er in der Datenbank. Vor einem Update kann die Tabelle noch fehlen – dann nur ein Hinweis, die Sicherung
+# selbst ist gelungen.
+melden() {
+  psql -h db -U schau -d schau -qtAc "insert into sicherung (id, am) values (1, now()) on conflict (id) do update set am = excluded.am" > /dev/null 2>&1 \
+    || echo "Hinweis: Zeitpunkt der Sicherung nicht an /api/gesund gemeldet (vor dem Update auf 1.10.0 normal)." >&2
 }
 
 # Klartext (im Arbeitsspeicher) verschlüsselt nach $2 schreiben – oder auf Testinstallationen kopieren.
@@ -94,6 +103,7 @@ sichern() {
     mv "$datei.tmp" "$datei"
     besitzer "$datei"
     echo "Sicherung: $datei ($(du -h "$datei" | cut -f1))"
+    melden
   else
     rm -f "$klar" "$datei.tmp"
     echo "Sicherung fehlgeschlagen" >&2

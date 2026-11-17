@@ -94,3 +94,4 @@ import "./tests/58-a-bogen";
 import "./tests/59-girocode";
 import "./tests/60-kontoauszug";
 import "./tests/61-oberflaeche-sprache";
+import "./tests/62-gesundheitspruefung";

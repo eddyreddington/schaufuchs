@@ -146,6 +146,14 @@ Tests: `einteilung.test.ts`
 - `anteil()` – Prozentsatz in Basispunkten (1500 = 15 %), kaufmännisch gerundet auf Cent.
 - `betragInWorten()` – Betrag in Worten für Quittungen: 23550 → „zweihundertfünfunddreißig Euro und fünfzig Cent“.
 
+### gesundheitspruefung.ts (45 Z.)
+Angaben der Gesundheitsprüfung `GET /api/gesund` für Überwachung und Update-Läufe (Entscheidung 024).
+Tests: `gesundheitspruefung.test.ts`
+
+- `SchauZeitraum` (Typ) – Was von einer Schau für die Schautage zählt.
+- `schautageLaufen()` – Laufen gerade Schautage?
+- `offeneMigrationen()` – Noch nicht eingespielte Migrationen: alle aus dem Verzeichnis (`when` in drizzle/meta/_journal.json), die jünger sind als die zuletzt eingespielte …
+
 ### girocode.ts (84 Z.)
 Überweisung des Meldegelds mit Referenz und GiroCode (Entscheidung 021): Jede Meldung bekommt eine Referenz nach ISO 11649 („RF“ + Prüfziffern), di …
 Tests: `girocode.test.ts`
@@ -465,7 +473,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (54 Z.)
+### index.ts (55 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -509,7 +517,7 @@ Käfige: Welche Käfiggröße braucht ein gemeldetes Tier, und welche Käfignumm
 - `ringjahrPasst()` – Plausibilität des Ringjahrs: Ein Jungtier trägt einen Ring des laufenden Jahrgangs.
 - Typen: `Katalognummer`, `SortierKriterium`, `SortierSchritt`, `KatalogSortierung`, `FolgeOptionen`, `Nachmeldungsnummer`
 
-### kommende-schauen.ts (389 Z.)
+### kommende-schauen.ts (391 Z.)
 Kommende Schauen: Termine anderer Schauen für die Katalogseite „Kommende Schauen“, Austausch per iCal (RFC 5545).
 Tests: `kommende-schauen.test.ts`
 
@@ -2687,6 +2695,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `einteilung.ts` (90 Z.) · sperreEinteilung, einteilTier, einteilSchluessel, ladeRegeln, bereicheDerSchau, rassenEinteilungAnwenden, einteilungNachStatus
 - `eintraege.ts` (257 Z.) · ladeEintraege, NICHT_VEROEFFENTLICHT, verdeckeNamen, ausstellerAnzeige, bezeichnung, alsFolge, meldebetrag, meldebetraege, skalaVon
 - `fehlertext.ts` (5 Z.) · kurzerFehler
+- `gesundheitspruefung.ts` (66 Z.) – Angaben der Gesundheitsprüfung `GET /api/gesund` neben `ok` und `version` (Entscheidung 024): wann die letzte Sicherung lief, ob Migrationen offen … · GESUND_UNBEKANNT, gesundAngaben
 - `import.ts` (384 Z.) – Import aus Altprogrammen (Entscheidung 015): Tabelle prüfen (Zeilen, Aussteller wiedererkennen, Rassen abgleichen), übernehmen (über dieselben Wege … · rassenSchluessel, importPruefen, importUebernehmen, importZuruecknehmen, importLaeufe
 - `kasse.ts` (138 Z.) · sperreKasse, SEPA_ERSTELLT, SEPA_VERWORFEN, SEPA_GEBUCHT, offenerLauf, schliesseLauf, LASTSCHRIFT_OFFEN, offeneLastschrift, offeneLastschriftenDesVereins, inOffenerLastschrift, offeneStornoZahlungen, offeneUeberweisungsverkaeufe, pruefeNichtAbgeschlossen, pruefeNichtAbgerechnet
 - `kassenbuch.ts` (238 Z.) · tagDe, ladeKassenbuch, sollBestand, archiviereBeleg, ladeBeleg, zweitschrift, belegListe, archiviereKaufbeleg, archiviereKassenbeleg, archiviereQuittung, archiviereSpendenquittung
@@ -2749,6 +2758,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `geheim-bestand.ts` (64 Z.) – Stellt Altbestand im Klartext auf verschlüsselte Spalten um (läuft bei jedem Start nach den Migrationen; findet es nichts mehr, tut es nichts). · pruefeDatenschluessel, verschluesseleBestand
 - `geheim.ts` (112 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, entschluessele, geheimText, geheimJsonLesen, geheimJson
 - `schema-aufzaehlungen.ts` (18 Z.) – Aufzählungstypen der Datenbank (pgEnum) – Phasen, Meldearten, Status, Zahlarten u. a. Über schema.ts exportiert. · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum
+- `schema-betrieb.ts` (12 Z.) – Betrieb: Angaben für die Gesundheitsprüfung (Entscheidung 024). · sicherung
 - `schema-bewertung.ts` (106 Z.) – Preisrichter und Bewertung: Vereinsverzeichnis, Preisrichter, Einteilung, Bewertung, Textbausteine. · vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein
 - `schema-hallenentwurf.ts` (30 Z.) – Entwürfe des Hallenplans (Entscheidung 017): Je Schau mehrere Varianten speichern und laden; ist entschieden, gehen die übrigen ins Archiv des Vere … · hallenentwurf
 - `schema-import.ts` (26 Z.) – Import aus Altprogrammen (Entscheidung 015): je Importlauf, was er angelegt hat – damit „Zurücknehmen“ genau das wieder entfernt, solange nichts we … · importlauf
@@ -2762,7 +2772,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `schema-spenden.ts` (115 Z.) – Spenden (Entscheidung 013): Spenderverzeichnis des Vereins, Spenden je Schau und Zuwendungsbestätigungen. · spender, spende, zuwendungsbestaetigung, bestaetigungSpende
 - `schema-termine.ts` (68 Z.) – Kommende Schauen: abonnierte Kalender und Termine anderer Schauen für den Katalog. · TERMIN_STATUS, terminabo, schautermin
 - `schema-verkauf.ts` (138 Z.) – Preise, Verkauf, Geld: Stiftungen, Preisvergabe, Verkauf mit Zahlungseingang, Tiergesundheit, Auszahlungen. · stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung
-- `schema.ts` (21 Z.) – Datenbankschema (Drizzle) – Einstieg für drizzle.config.ts und alle Importe im Server.
+- `schema.ts` (23 Z.) – Datenbankschema (Drizzle) – Einstieg für drizzle.config.ts und alle Importe im Server.
 - `schutz.ts` (15 Z.) – Spielt die Schutz-Trigger (schutz.sql) ein: nach Migrationen, nach db:push und in den Tests. · schutzEinspielen
 - `spalten.ts` (12 Z.) – Spaltenarten, die mehrere Schemadateien nutzen (die Teildateien schema-*.ts). · ts, created, createdNachSperre, bytea
 
@@ -2781,7 +2791,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
 - `datei-sprache.ts` (37 Z.) – Fehlertexte der Datei-Adressen (/datei/…, /s/…, /o/…) in der Sprache der Oberfläche (Entscheidung 022). · DATEI_PFADE, dateiFehlerUebersetzen
 - `datei-unterlagen.ts` (120 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, B-Bogen und A-Bogen, Abrechnung und Q … · unterlagenDateien
-- `index.ts` (265 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
+- `index.ts` (274 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
 - `router.ts` (50 Z.) · appRouter
@@ -2883,5 +2893,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `59-girocode.ts` (146 Z.) – Überweisung mit Referenz und GiroCode (Entscheidung 021): nur mit vollständigem Vereinskonto, Referenz je Meldung im Verwendungszweck, Code über de …
 - `60-kontoauszug.ts` (138 Z.) – Kontoauszug-Import (Entscheidung 023): Datei prüfen (Zuordnung über Referenz bzw. Name und Betrag), ausgewählte Gutschriften buchen, Meldung bestät …
 - `61-oberflaeche-sprache.ts` (62 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
+- `62-gesundheitspruefung.ts` (116 Z.) – Gesundheitsprüfung `/api/gesund` (Entscheidung 024): neben `ok` und `version` die letzte Sicherung, offene Migrationen und laufende Schautage.
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

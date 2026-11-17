@@ -8,11 +8,15 @@ describe("Tage der eigenen Schau", () => {
     expect(schauTage("2026-12-11", "Sa. 12.12.2026 9–18 Uhr; So. 13.12.2026 9–15 Uhr")).toEqual({ von: "2026-12-12", bis: "2026-12-13" });
     expect(schauTage("2026-12-11", "Samstag, 12.12., 9–18 Uhr\nSonntag, 13.12., 9–15 Uhr")).toEqual({ von: "2026-12-12", bis: "2026-12-13" });
     expect(schauTage("2026-12-31", "Fr. 1.1. 10–16 Uhr; Sa. 2.1. 9–15 Uhr")).toEqual({ von: "2027-01-01", bis: "2027-01-02" });
+    // Eröffnung am Vorabend der Bewertung bleibt im selben Jahr.
+    expect(schauTage("2026-12-12", "Fr 11.12. 18–21 Uhr\nSa 12.12. 9–17 Uhr\nSo 13.12. 9–15 Uhr")).toEqual({ von: "2026-12-11", bis: "2026-12-13" });
   });
   test("aus Wochentagen nach dem Bewertungstag", () => {
     // 11.12.2026 ist ein Freitag.
     expect(schauTage("2026-12-11", "Sa. 9–18 Uhr; So. 9–15 Uhr")).toEqual({ von: "2026-12-12", bis: "2026-12-13" });
-    expect(schauTage("2026-12-11", "Freitag 15–18 Uhr\nSamstag 9–18 Uhr\nSonntag 9–15 Uhr")).toEqual({ von: "2026-12-12", bis: "2026-12-18" });
+    // Geöffnet ab dem Bewertungstag selbst (Freitag), nicht erst eine Woche später.
+    expect(schauTage("2026-12-11", "Freitag 15–18 Uhr\nSamstag 9–18 Uhr\nSonntag 9–15 Uhr")).toEqual({ von: "2026-12-11", bis: "2026-12-13" });
+    expect(schauTage("2026-12-12", "Sa 13–18 Uhr\nSo 9–15 Uhr")).toEqual({ von: "2026-12-12", bis: "2026-12-13" });
   });
   test("ohne Angaben der Bewertungstag, ohne Bewertungstag nichts", () => {
     expect(schauTage("2026-12-11", "")).toEqual({ von: "2026-12-11", bis: "2026-12-11" });

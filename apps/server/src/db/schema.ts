@@ -19,3 +19,5 @@ export * from "./schema-spenden";
 export * from "./schema-import";
 export * from "./schema-hallenentwurf";
 export * from "./schema-lastschrift";
+// Betrieb: Zeitpunkt der letzten Sicherung für die Gesundheitsprüfung.
+export * from "./schema-betrieb";

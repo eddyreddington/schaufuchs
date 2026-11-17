@@ -24,4 +24,7 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [018](018-sepa-lastschrift.md) | SEPA-Lastschrift für das Meldegeld |
 | [019](019-freier-grundriss.md) | Freier, rechtwinkliger Grundriss der Halle |
 | [020](020-sprachen-fuer-aussteller.md) | Sprachen der Seiten und Mails für Aussteller |
+| [021](021-girocode-und-referenz.md) | Überweisung mit Referenz und GiroCode |
 | [022](022-sprachen-der-oberflaeche.md) | Sprachen der ganzen Oberfläche: Verwaltung, Helfer, Tablet, Servermeldungen |
+| [023](023-kontoauszug-import.md) | Kontoauszug-Import: Datei statt Kontozugang, Zuordnung über die Referenz |
+| [024](024-gesundheitspruefung.md) | Gesundheitsprüfung mit Sicherung, Migrationen und Schautagen |

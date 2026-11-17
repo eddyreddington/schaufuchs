@@ -30,6 +30,7 @@ export * from "./stellvorschlaege";
 export * from "./schriften";
 export * from "./termine";
 export * from "./kommende-schauen";
+export * from "./gesundheitspruefung";
 export * from "./lizenz";
 export * from "./version";
 export * from "./hallenplan-3d";

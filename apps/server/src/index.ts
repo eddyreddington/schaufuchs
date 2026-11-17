@@ -20,6 +20,7 @@ import { auskunftPdf } from "./pdf/auskunft";
 import { appRouter } from "./router";
 import { ladeAuskunft, ladeVereinsangaben, starteBereinigung } from "./services/datenschutz";
 import { kurzerFehler } from "./services/fehlertext";
+import { GESUND_UNBEKANNT, gesundAngaben } from "./services/gesundheitspruefung";
 import { starteMailversand } from "./services/post";
 import { starteTerminabruf } from "./services/termine";
 import { briefDateien, druckvorlageDateien } from "./datei-druckvorlage";
@@ -70,15 +71,23 @@ if (config.production && !process.env.PUBLIC_URL) {
   console.warn("[betrieb] PUBLIC_URL ist nicht gesetzt – Links in Mails (Einladung, Meldung) zeigen auf http://localhost:5173. Bitte PUBLIC_URL in der .env setzen.");
 }
 
-// Gesundheitsprüfung (Docker): Server und Datenbank antworten.
+// Gesundheitsprüfung (Docker, Überwachung): Server und Datenbank antworten; dazu Sicherung, Migrationen und Schautage
+// (Entscheidung 024). Fehlen nur diese Angaben, bleibt die Prüfung bestanden – sie sind Zusatz, kein Lebenszeichen.
+// Fristen: 3 s für die Datenbank, 1 s für die Zusatzangaben – zusammen unter den 5 s der Docker-Prüfung (Dockerfile).
+const mitFrist = <T>(p: Promise<T>, ms: number) =>
+  // bleibt deutsch: nur für die Gesundheitsprüfung
+  Promise.race([p, new Promise<never>((_, nein) => setTimeout(() => nein(new Error("Zeitüberschreitung")), ms))]);
 app.get("/api/gesund", async (c) => {
   try {
-    // bleibt deutsch: nur für die Gesundheitsprüfung
-    await Promise.race([db.execute(sql`select 1`), new Promise((_, nein) => setTimeout(() => nein(new Error("Zeitüberschreitung")), 3000))]);
-    return c.json({ ok: true, version: VERSION });
+    await mitFrist(db.execute(sql`select 1`), 3000);
   } catch {
     return c.json({ ok: false, fehler: "Datenbank antwortet nicht" }, 503);
   }
+  const angaben = await mitFrist(gesundAngaben(), 1000).catch((e: unknown) => {
+    console.error("[gesund] Zusatzangaben fehlen:", e instanceof Error ? e.message : e);
+    return GESUND_UNBEKANNT;
+  });
+  return c.json({ ok: true, version: VERSION, ...angaben });
 });
 
 // Schutz vor Anfragen fremder Seiten (CSRF): Änderungen nur als JSON und nicht von einer fremden Seite aus.

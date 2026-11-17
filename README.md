@@ -96,6 +96,12 @@ Updates, Sicherung außer Haus, Wiederherstellung, Neustart, Meldungen und Notf�
 | Absicherung prüfen (SSH, Firewall, Updates) | `sudo schaufuchs pruefen` (ab 1.2.1) |
 | Alle Befehle | `sudo schaufuchs hilfe` |
 
+**Überwachung:** `https://…/api/gesund` antwortet mit `ok` und `version`, dazu `letzteSicherung` und
+`sicherungAlterStunden` (Stunden seit der letzten Sicherung), `migrationenOffen` und `schautage` (läuft gerade eine
+Schau?) – z. B. für Uptime Kuma: warnen, wenn `sicherungAlterStunden` fehlt (`null`) oder über 26 liegt (bei geändertem
+`BACKUP_INTERVALL_MINUTEN`: 24 Stunden plus Intervall); Updates nicht bei `schautage: true`. Einzelheiten:
+[Entscheidung 024](docs/entscheidungen/024-gesundheitspruefung.md).
+
 ### Konfiguration
 
 Alles steht in `/opt/schaufuchs/.env`; der Installer legt die Datei an. Ändern mit `sudo schaufuchs einstellungen`.

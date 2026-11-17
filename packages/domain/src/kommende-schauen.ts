@@ -71,8 +71,9 @@ const TAG_NR: Record<string, number> = { so: 0, mo: 1, di: 2, mi: 3, do: 4, fr: 
 
 /**
  * Öffnungstage einer Schau. Die Schau hat kein eigenes Feld dafür, nur den Bewertungstag und die Öffnungszeiten als Text:
- * stehen dort Daten („Sa. 12.12.2026 9–18 Uhr“, auch „12.12.“), zählen diese; sonst die genannten Wochentage nach dem
- * Bewertungstag (innerhalb einer Woche). Ohne beides der Bewertungstag selbst. null ohne Bewertungstag und ohne Datum.
+ * stehen dort Daten („Sa. 12.12.2026 9–18 Uhr“, auch „12.12.“), zählen diese; sonst die genannten Wochentage ab dem
+ * Bewertungstag (er selbst eingeschlossen, innerhalb einer Woche). Ohne beides der Bewertungstag selbst. null ohne
+ * Bewertungstag und ohne Datum.
  */
 export function schauTage(bewertungAm: string | null, oeffnungszeiten: string): { von: string; bis: string } | null {
   const tage: string[] = [];
@@ -85,15 +86,16 @@ export function schauTage(bewertungAm: string | null, oeffnungszeiten: string): 
       let jahr = jahrText ? Number(jahrText.length === 2 ? `20${jahrText}` : jahrText) : jahrVorgabe;
       if (jahr == null) continue;
       let d = `${jahr}-${m[2]!.padStart(2, "0")}-${m[1]!.padStart(2, "0")}`;
-      // Ohne Jahr über den Jahreswechsel: „2.1.“ nach einer Bewertung im Dezember gehört ins nächste Jahr.
-      if (!jahrText && bewertungAm && istDatum(d) && d < bewertungAm) d = `${++jahr}-${m[2]!.padStart(2, "0")}-${m[1]!.padStart(2, "0")}`;
+      // Ohne Jahr über den Jahreswechsel: „2.1.“ nach einer Bewertung im Dezember gehört ins nächste Jahr – ein Tag
+      // kurz vor der Bewertung („Fr 11.12.“ vor einer Bewertung am 12.12.) aber nicht.
+      if (!jahrText && bewertungAm && istDatum(d) && d < plusTage(bewertungAm, -180)) d = `${++jahr}-${m[2]!.padStart(2, "0")}-${m[1]!.padStart(2, "0")}`;
       if (istDatum(d)) tage.push(d);
       continue;
     }
     const w = zeile.match(/^(Mo|Di|Mi|Do|Fr|Sa|So)/i);
     if (w && bewertungAm) {
       const ziel = TAG_NR[w[1]!.toLowerCase()]!;
-      for (let i = 1; i <= 7; i++) {
+      for (let i = 0; i < 7; i++) {
         const d = plusTage(bewertungAm, i);
         if (wochentag(d) === ziel) {
           tage.push(d);
