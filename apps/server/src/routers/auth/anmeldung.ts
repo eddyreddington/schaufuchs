@@ -7,7 +7,7 @@ import { config } from "../../config";
 import { db } from "../../db/client";
 import { benutzer, organisation, schau, sitzung } from "../../db/schema";
 import { protokolliere } from "../../services/protokoll";
-import { legeTextbausteineAn } from "../../services/textbausteine";
+import { BEREITS_EINGERICHTET, ersteinrichtungAngaben, richteEinMitPasswort } from "../../services/ersteinrichtung";
 import { beendeZweiterSchritt, hashNotfallcode, ladeZweiterSchritt, pruefeTotp, starteZweiterSchritt, zweiterSchrittFehlgeschlagen } from "../../services/zweifaktor";
 import { benutzerProcedure, fehler, publicProcedure } from "../../trpc";
 import { passwort, MAX_AGE, bremse, bremseJeAdresse, wartezeitJeKonto, codeBremse, passwortBremse, dummyHash, gleich } from "./gemeinsam";
@@ -43,31 +43,14 @@ export const anmeldung = {
 
   /** Ersteinrichtung: legt Verein und ersten Administrator an. Nur solange es keine Benutzer gibt. */
   einrichten: publicProcedure
-    .input(z.object({ organisation: z.string().max(500).min(2), name: z.string().max(200).min(2), email: z.string().max(200).email(), passwort, code: z.string().max(200).default("") }))
+    .input(ersteinrichtungAngaben.extend({ passwort, code: z.string().max(200).default("") }))
     .mutation(async ({ ctx, input }) => {
       const erfolg = bremse.versuch([`ip:${ctx.ip}`]);
       if (config.einrichtungsCode && !gleich(input.code, config.einrichtungsCode)) throw fehler("FORBIDDEN", "Der Einrichtungscode stimmt nicht.");
       erfolg();
-      const id = await db.transaction(async (tx) => {
-        // Sperre: zwei gleichzeitige Einrichtungen legen sonst beide einen Verein an.
-        await tx.execute(sql`select pg_advisory_xact_lock(${0x45494e52}::int)`);
-        const [r] = await tx.select({ n: count() }).from(benutzer);
-        if ((r?.n ?? 0) > 0) throw fehler("FORBIDDEN", "Die Einrichtung ist bereits erfolgt.");
-        const [o] = await tx.insert(organisation).values({ name: input.organisation }).returning();
-        const [b] = await tx
-          .insert(benutzer)
-          .values({
-            organisationId: o!.id,
-            name: input.name,
-            email: input.email.toLowerCase(),
-            passwortHash: await hashPasswort(input.passwort),
-            rolle: "admin",
-          })
-          .returning();
-        await legeTextbausteineAn(tx, o!.id);
-        return b!.id;
-      });
-      ctx.setCookie(cookieHeader(await neueSitzung({ benutzerId: id }), MAX_AGE));
+      const b = await richteEinMitPasswort(input);
+      if (!b) throw fehler("FORBIDDEN", BEREITS_EINGERICHTET);
+      ctx.setCookie(cookieHeader(await neueSitzung({ benutzerId: b.id }), MAX_AGE));
       return { ok: true };
     }),
 

@@ -77,7 +77,10 @@ erreichbaren Schau. Wer SchauFUCHS anders betreibt, passt die Schritte selbst an
 7. **Notfallblatt sichern:** `~/schaufuchs-notfallblatt.txt` (Schlüssel zum Wiederherstellen) in den Passwortmanager
    oder ausdrucken, dann auf dem Rechner löschen.
 8. **Verein einrichten:** Adresse im Browser öffnen, mit dem Einrichtungscode den ersten Ausstellungsleiter anlegen,
-   Zwei-Faktor-Anmeldung einrichten, Impressum und Datenschutzhinweise ausfüllen.
+   Zwei-Faktor-Anmeldung einrichten, Impressum und Datenschutzhinweise ausfüllen. Oder auf dem Server
+   `sudo schaufuchs einrichten --verein … --name … --email …`: Der erste Ausstellungsleiter bekommt einen Link „Passwort
+   setzen“ per Mail (braucht Schritt 9; sonst mit `--link-zeigen` im Terminal; ab 1.12.0,
+   [Entscheidung 026](docs/entscheidungen/026-einrichten-per-befehl.md)).
 9. **Optional Mailversand:** `sudo schaufuchs einstellungen` und `SMTP_URL` eintragen (siehe unten).
 
 Auf dem Laptop (Mac, Windows) geht es mit der Adresse `localhost` – siehe „Zum Ausprobieren: auf dem Laptop“ in der Anleitung.

@@ -139,7 +139,7 @@ export async function verloren(): Promise<{ datei: string; text: string }[]> {
 }
 
 /** Reine Programme für die Kommandozeile (direkt in apps/server/src): ihre Fehler erreichen nie die Oberfläche. */
-const NUR_KOMMANDOZEILE = /^apps\/server\/src\/(seed|vereinsverzeichnis-import|rassebilder-import)\.ts$/;
+const NUR_KOMMANDOZEILE = /^apps\/server\/src\/(seed|vereinsverzeichnis-import|rassebilder-import|einrichten)\.ts$/;
 
 /** Texte eines Meldungs-Arguments: Zeichenkette, Vorlage (Werte als „X“), beide Zweige einer Bedingung, `message` eines Objekts. */
 function meldungsTexte(a: ts.Expression): string[] {

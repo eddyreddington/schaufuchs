@@ -2005,7 +2005,7 @@ Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `fristen.test.ts`,
 
 Aufruf im Web als `trpc.<bereich>.<prozedur>`. Rolle: öffentlich (ohne Anmeldung), angemeldet (jede Rolle), admin (Ausstellungsleitung, mit Zwei-Faktor), richter (Tablet). Feinere Rechte prüft die Prozedur selbst.
 
-### routers/auth/anmeldung.ts (194 Z.) → `auth`
+### routers/auth/anmeldung.ts (177 Z.) → `auth`
 Anmeldung: Status, Ersteinrichtung, Anmelden (auch zweiter Schritt), Abmelden, eigenes Passwort und eigene Sprache.
 
 - `auth.status` query · öffentlich
@@ -2037,7 +2037,7 @@ Einladungslink: prüfen und annehmen (Passwort selbst festlegen).
 - `auth.einladungPruefen` mutation · öffentlich – Einladungslink öffnen: wer ist eingeladen?
 - `auth.einladungAnnehmen` mutation · öffentlich – Passwort über den Einladungslink festlegen.
 
-### routers/auth/gemeinsam.ts (251 Z.)
+### routers/auth/gemeinsam.ts (261 Z.)
 Gemeinsame Bausteine der Anmeldung und Benutzerverwaltung: Bremsen (ein Zählerstand für alle Prozeduren), Prüfungen, Einladung, Willkommens- und Hi …
 
 Keine Prozeduren (Hilfen für die Router).
@@ -2704,6 +2704,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datenschutz.ts` (592 Z.) · ladeVereinsangaben, ladeAuskunft, ladeAuskunftPerson, loescheAussteller, bereinige, starteBereinigung
 - `einteilung.ts` (90 Z.) · sperreEinteilung, einteilTier, einteilSchluessel, ladeRegeln, bereicheDerSchau, rassenEinteilungAnwenden, einteilungNachStatus
 - `eintraege.ts` (257 Z.) · ladeEintraege, NICHT_VEROEFFENTLICHT, verdeckeNamen, ausstellerAnzeige, bezeichnung, alsFolge, meldebetrag, meldebetraege, skalaVon
+- `ersteinrichtung.ts` (111 Z.) – Ersteinrichtung: Verein und erster Administrator. · ersteinrichtungAngaben, BEREITS_EINGERICHTET, richteEinMitPasswort, richteEinPerBefehl
 - `fehlertext.ts` (5 Z.) · kurzerFehler
 - `gesundheitspruefung.ts` (66 Z.) – Angaben der Gesundheitsprüfung `GET /api/gesund` neben `ok` und `version` (Entscheidung 024): wann die letzte Sicherung lief, ob Migrationen offen … · GESUND_UNBEKANNT, gesundAngaben
 - `import.ts` (384 Z.) – Import aus Altprogrammen (Entscheidung 015): Tabelle prüfen (Zeilen, Aussteller wiedererkennen, Rassen abgleichen), übernehmen (über dieselben Wege … · rassenSchluessel, importPruefen, importUebernehmen, importZuruecknehmen, importLaeufe
@@ -2711,7 +2712,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `kassenbuch.ts` (241 Z.) · tagDe, ladeKassenbuch, sollBestand, archiviereBeleg, ladeBeleg, zweitschrift, belegListe, archiviereKaufbeleg, archiviereKassenbeleg, archiviereQuittung, archiviereSpendenquittung
 - `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
 - `meldung.ts` (509 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, speichereMeldung, bindungen, hatAuszahlung
-- `post.ts` (143 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, naechsterVersuch, sendeMail, versende, starteMailversand
+- `post.ts` (155 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, sendeMail, sendeMailJetzt, versende, starteMailversand
 - `preise.ts` (174 Z.) · vergebePreis, entfernePreis
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
 - `protokoll.ts` (37 Z.) · protokolliere
@@ -2801,6 +2802,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
 - `datei-sprache.ts` (37 Z.) – Fehlertexte der Datei-Adressen (/datei/…, /s/…, /o/…) in der Sprache der Oberfläche (Entscheidung 022). · DATEI_PFADE, dateiFehlerUebersetzen
 - `datei-unterlagen.ts` (120 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, B-Bogen und A-Bogen, Abrechnung und Q … · unterlagenDateien
+- `einrichten.ts` (68 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026), im Container aufgerufen von `schaufuchs einrichten`: bun src/einrichten.ts --verein "GZV …
 - `index.ts` (278 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
 - `lesemodus.ts` (48 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an, z. B. während einer Wartung oder wenn der Betreiber eine Instal … · IM_LESEMODUS_ERLAUBT, trpcGesperrt, lesemodusSperre
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
@@ -2907,5 +2909,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `61-oberflaeche-sprache.ts` (62 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
 - `62-gesundheitspruefung.ts` (116 Z.) – Gesundheitsprüfung `/api/gesund` (Entscheidung 024): neben `ok` und `version` die letzte Sicherung, offene Migrationen und laufende Schautage.
 - `63-lesemodus.ts` (137 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an – außer Anmelden, Abmelden, Zwei-Faktor einrichten, eigenes Pass …
+- `64-einrichten-befehl.ts` (249 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026): `schaufuchs einrichten` ruft im Container `bun src/einrichten.ts` auf.
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

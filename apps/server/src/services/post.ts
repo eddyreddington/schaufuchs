@@ -61,7 +61,7 @@ export function mailStatus() {
 
 /** Wiederholung fehlgeschlagener Mails: nach 5, 10, 20 … Minuten, höchstens alle 6 Stunden, bis die Mail 2 Tage alt ist. */
 export const POST_WIEDERHOLEN_MS = 2 * 86_400_000;
-const MAX_VERSUCHE = 20;
+export const MAX_VERSUCHE = 20;
 
 /** Zeitpunkt, ab dem der nächste Versuch fällig ist (nach `versuche` bisherigen Versuchen). */
 export function naechsterVersuch(createdAt: Date, versuche: number): Date | null {
@@ -83,6 +83,18 @@ export async function sendeMail(organisationId: number, an: string, betreff: str
     return;
   }
   void versende(m.id);
+}
+
+/**
+ * Wie sendeMail, wartet aber auf den Mailserver und meldet das Ergebnis – für die Kommandozeile, deren Prozess danach
+ * endet. Misslingt der Versand, bleibt die Mail im Postausgang und der laufende Server versucht es weiter.
+ */
+export async function sendeMailJetzt(organisationId: number, an: string, betreff: string, text: string): Promise<{ gesendet: boolean; fehler: string }> {
+  const [m] = await db.insert(postausgang).values({ organisationId, an, betreff, text }).returning({ id: postausgang.id });
+  if (!transport) return { gesendet: false, fehler: smtpFehler || "Mailversand ist nicht eingerichtet (SMTP_URL)." };
+  await versende(m!.id);
+  const [r] = await db.select({ status: postausgang.status, fehler: postausgang.fehler }).from(postausgang).where(eq(postausgang.id, m!.id));
+  return { gesendet: r?.status === "gesendet", fehler: r?.fehler ?? "" };
 }
 
 export async function versende(id: number) {

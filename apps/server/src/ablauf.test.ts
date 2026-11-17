@@ -96,3 +96,4 @@ import "./tests/60-kontoauszug";
 import "./tests/61-oberflaeche-sprache";
 import "./tests/62-gesundheitspruefung";
 import "./tests/63-lesemodus";
+import "./tests/64-einrichten-befehl";

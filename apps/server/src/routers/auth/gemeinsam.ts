@@ -5,9 +5,9 @@ import { z } from "zod";
 import { hashPasswort, sha256, zufallsToken } from "../../auth";
 import { config } from "../../config";
 import { db } from "../../db/client";
-import { benutzer, organisation } from "../../db/schema";
+import { benutzer, organisation, postausgang } from "../../db/schema";
 import { Bremse, Wartezeit } from "../../services/bremse";
-import { sendeMail } from "../../services/post";
+import { MAX_VERSUCHE, sendeMail } from "../../services/post";
 import { fehler } from "../../trpc";
 
 export const passwort = z.string().min(10, "Das Passwort braucht mindestens 10 Zeichen.").max(200);
@@ -48,14 +48,16 @@ export function gleich(a: string, b: string) {
   return x.length === y.length && timingSafeEqual(x, y);
 }
 
-/** Text der Willkommensmail für neue Benutzer – bewusst ohne Passwort. */
+/**
+ * Text der Willkommensmail für neue Benutzer – bewusst ohne Passwort. Ohne `von` (Ersteinrichtung über die
+ * Kommandozeile) gibt es niemanden im Verein, an den sich die Person wenden kann: dann der Betreiber der Installation.
+ */
 export function willkommensText(a: {
   name: string;
   email: string;
   rolle: "admin" | "mitarbeiter";
   verein: string;
-  von: string;
-  vonEmail: string;
+  von?: { name: string; email: string };
   einladung?: { link: string; bis: Date };
 }) {
   const passwort = a.einladung
@@ -69,7 +71,7 @@ export function willkommensText(a: {
         ...(a.rolle === "admin" ? ["", `Als Administrator richten Sie danach die Zwei-Faktor-Anmeldung ein (${eigenerZugang("admin")}) – erst dann stehen die Verwaltungsfunktionen zur Verfügung.`] : []),
       ]
     : [
-        `Ihr Passwort erhalten Sie von ${a.von} persönlich – aus Sicherheitsgründen steht es nicht in dieser Mail.`,
+        `Ihr Passwort erhalten Sie von ${a.von?.name ?? "der Ausstellungsleitung"} persönlich – aus Sicherheitsgründen steht es nicht in dieser Mail.`,
         `Bitte ändern Sie es nach der ersten Anmeldung ${eigenerZugang(a.rolle)}.`,
       ];
   return [
@@ -83,10 +85,12 @@ export function willkommensText(a: {
     "",
     ...passwort,
     "",
-    `Haben Sie diesen Zugang nicht erwartet, melden Sie sich bitte bei ${a.von} (${a.vonEmail}).`,
+    a.von
+      ? `Haben Sie diesen Zugang nicht erwartet, melden Sie sich bitte bei ${a.von.name} (${a.von.email}).`
+      : "Haben Sie diesen Zugang nicht erwartet, melden Sie sich bitte bei der Person, die SchauFUCHS für Ihren Verein betreibt.",
     "",
     "Viele Grüße",
-    a.verein || a.von,
+    a.verein || a.von?.name || config.appName,
   ].join("\n");
 }
 
@@ -171,6 +175,12 @@ export async function neueEinladung(tx: Ausfuehrer, an: { id: number; email: str
     .where(and(eq(benutzer.id, an.id), eq(benutzer.email, an.email), eq(benutzer.passwortHash, OHNE_PASSWORT), eq(benutzer.aktiv, true), isNull(benutzer.geloeschtAm)))
     .returning({ id: benutzer.id });
   if (!ok.length) return null;
+  // Noch nicht verschickte Mails mit einem älteren Link (z. B. Mailserver gestört): nicht mehr versenden und den Link
+  // unkenntlich machen – er gilt ab jetzt nicht mehr, und die Mail führte nur auf eine Fehlerseite.
+  await tx
+    .update(postausgang)
+    .set({ text: sql`regexp_replace(${postausgang.text}, ${"(/einladung#)[A-Za-z0-9_-]+"}, ${"\\1(durch einen neueren Link ersetzt)"}, 'g')`, status: "fehler", versuche: MAX_VERSUCHE, fehler: "Nicht versendet: durch einen neueren Link ersetzt." })
+    .where(and(eq(postausgang.an, an.email), ne(postausgang.status, "gesendet"), sql`${postausgang.text} like '%/einladung#%'`));
   // Hinter "#": der Teil geht nie an den Server und landet so in keinem Protokoll eines Webservers.
   return { link: `${config.publicUrl}/einladung#${token}`, bis };
 }
@@ -200,7 +210,7 @@ export async function willkommenVorbereiten(
   return {
     an: an.email,
     betreff: `Ihr Zugang zu SchauFUCHS${o?.name ? ` – ${o.name}` : ""}`,
-    text: willkommensText({ name: an.name, email: an.email, rolle: an.rolle, verein: o?.name ?? "", von: akteur.name, vonEmail: akteur.email, einladung }),
+    text: willkommensText({ name: an.name, email: an.email, rolle: an.rolle, verein: o?.name ?? "", von: { name: akteur.name, email: akteur.email }, einladung }),
     einladung: !!einladung,
   };
 }

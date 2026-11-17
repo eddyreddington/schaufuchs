@@ -202,6 +202,12 @@ case "$befehl" in
     sh scripts/wiederherstellen.sh --schluessel "$schluessel" "$datei"
     ;;
 
+  einrichten)
+    # Verein und ersten Administrator anlegen, Link „Passwort setzen“ per Mail (Entscheidung 026). Ab Version 1.12.0.
+    docker compose exec -T app test -f apps/server/src/einrichten.ts || fehler "Das braucht SchauFUCHS ab 1.12.0 – zuerst: $AUFRUF update"
+    docker compose exec -T -w /app/apps/server app bun src/einrichten.ts "$@"
+    ;;
+
   einstellungen)
     "${EDITOR:-nano}" .env
     docker compose up -d
@@ -226,6 +232,9 @@ case "$befehl" in
 SchauFUCHS verwalten (Linux: immer mit sudo):
 
   schaufuchs status              Läuft alles? Version, letzte Sicherung, freier Platz
+  schaufuchs einrichten --verein V --name N --email E [--link-zeigen]
+                                 Verein und ersten Administrator anlegen; Link „Passwort setzen“ per Mail
+                                 (mit --link-zeigen hier im Terminal) – statt der Einrichtung im Browser
   schaufuchs update [VERSION]    Auf die neueste (oder angegebene) Version aktualisieren – sichert vorher
   schaufuchs zuruecknehmen       Letztes Update zurücknehmen (braucht den Sicherungsschlüssel)
   schaufuchs sichern             Jetzt eine Sicherung anlegen

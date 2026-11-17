@@ -308,6 +308,18 @@ rm ~/schaufuchs-notfallblatt.txt
 4. Unter „Verein und Datenschutz“ Impressum und Datenschutzhinweise ausfüllen, unter „Benutzer“ weitere
    Ausstellungsleiter und Helfer einladen. Alles Weitere erklärt das Handbuch unter „Hilfe“.
 
+**Oder auf dem Server einrichten** (ab SchauFUCHS 1.12.0), etwa wenn jemand anderes Ausstellungsleiter wird als der,
+der installiert. Dafür ist kein Einrichtungscode nötig:
+
+```bash
+sudo schaufuchs einrichten --verein "GZV Musterstadt" --name "Erika Muster" --email erika@example.org
+```
+
+Der Ausstellungsleiter bekommt eine Mail mit dem Link „Passwort setzen“. Der Link gilt 7 Tage und nur einmal. Danach
+geht es weiter mit Punkt 3. Das braucht den Mailversand aus Schritt 9. Ohne Mailversand den Befehl mit `--link-zeigen`
+aufrufen: Dann steht der Link im Terminal, zum Weitergeben nur an diese Person. Kam die Mail nicht an oder ist der Link
+abgelaufen, den Befehl noch einmal aufrufen. Der neue Link ersetzt den alten.
+
 **Rassen und Farbenschläge:** SchauFUCHS bringt nur eine kleine Beispielliste mit. Die Liste für Ihre Schau spielen Sie
 unter „Rassen und Farbenschläge“ als CSV-Datei ein (Aufbau im Handbuch).
 
@@ -328,6 +340,7 @@ Anmelden aus dem Vereinsnetz mit `ssh verwalter@192.0.2.20`. Alle `schaufuchs`-B
 | Was | Befehl |
 |---|---|
 | Läuft alles? | `sudo schaufuchs status` |
+| Verein und ersten Ausstellungsleiter anlegen (statt im Browser) | `sudo schaufuchs einrichten --verein … --name … --email …` |
 | Absicherung prüfen | `sudo schaufuchs pruefen` (ab 1.2.1) |
 | Neue Version einspielen | `sudo schaufuchs update` – sichert vorher automatisch |
 | Update ging schief | `sudo schaufuchs zuruecknehmen` |
