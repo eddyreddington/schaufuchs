@@ -2,6 +2,7 @@ import { anmeldeZiel, ruecksprungZiel, VERSION, type OberflaecheTexte, type Phas
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AbmeldeHinweis, useAutoAbmeldung } from "./abmeldung";
+import { LesemodusLeiste } from "./komponenten/lesemodus";
 import { fehlerText } from "./lib";
 import { useFarbmodus, type Farbmodus } from "./modus";
 import { allgemeineGruppen, leistenLink, MenueGruppen, schauGruppen, useKlappzustand } from "./seitenmenue";
@@ -161,6 +162,7 @@ export function AppRahmen() {
           {/* Mehrere Formulare mit Ungespeichertem (z. B. Einstellungen und Gebühren): der Hinweistext nur einmal. */}
           <div ref={setSpeicherPlatz} className="flex shrink-0 items-center gap-3 empty:hidden [&>*+*_.speicher-text]:!hidden" />
         </div>
+        <LesemodusLeiste />
         {/* Den Rand setzt der Rahmen für alle Seiten; die Seiten selbst begrenzen ihre Breite nicht (siehe SEITENRAND in ui.tsx). */}
         <main id="inhalt" tabIndex={-1} className={`outline-none ${SEITENRAND}`}>
           <SpeicherPlatz.Provider value={speicherPlatz}>

@@ -9,6 +9,7 @@ export const pruefung: OberflaecheTexte["serverKatalog"]["pruefung"] = {
     zuTief: "Het verzoek is te diep genest.",
     listeZuLang: (n: string) => `Maximaal ${n} items per lijst.`,
     gleichzeitig: "Iemand heeft tegelijkertijd hetzelfde gewijzigd. Probeer het opnieuw.",
+    nurLesen: "Alleen lezen: wijzigingen zijn op dit moment niet mogelijk.",
     bitteAnmelden: "Meld u aan.",
     zweiFaktorPflicht: "Voor beheerders is tweestapsaanmelding verplicht. Stel deze eerst in onder „Gebruikers”.",
     nurAdmin: "Alleen voor beheerders.",

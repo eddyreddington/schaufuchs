@@ -8,6 +8,7 @@ export const de = {
   sprache: "Sprache",
   rahmen: {
     testschau: "Testschau – keine echte Ausstellung. Bitte keine echten Tiere melden.",
+    nurLesen: "Meldungen können zurzeit nicht abgegeben oder geändert werden.",
     rechtliches: "Rechtliches",
     zurSchau: "Zur Schau",
     impressum: "Impressum",
@@ -242,6 +243,7 @@ export const de = {
     zuVieleTiere: "So viele Tiere bitte direkt bei der Ausstellungsleitung melden.",
     halleVoll: "So viele Tiere passen nicht mehr in die Halle. Bitte weniger melden oder die Ausstellungsleitung fragen.",
     schonGemeldet: "Diese Person hat für diese Schau schon gemeldet. Änderungen bitte über die Ausstellungsleitung.",
+    nurLesen: "Meldungen können zurzeit nicht abgegeben oder geändert werden.",
     keinAusland: "Diese Schau nimmt keine Tiere aus dem Ausland an (Registriernummer mit ausländischem Ländercode). Bitte bei der Ausstellungsleitung nachfragen.",
     teilschau: "Diese Teilschau gibt es in der Schau nicht.",
   },

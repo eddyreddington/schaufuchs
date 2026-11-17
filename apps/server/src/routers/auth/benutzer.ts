@@ -1,4 +1,5 @@
 /** Benutzerverwaltung durch die Ausstellungsleitung: Liste, Angaben, Anlegen, Sperren, Löschen, Rolle, Passwort, Sperre aufheben. */
+import { NUR_LESEN_MELDUNG } from "@schau/domain";
 import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { hashPasswort, sitzungsId, zufallsToken } from "../../auth";
@@ -126,6 +127,8 @@ export const benutzerVerwaltung = {
   benutzerAktiv: adminProcedure
     .input(z.object({ id: dbId, aktiv: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
+      // Lesemodus (Entscheidung 025): Sperren geht (Konto bei Verdacht stilllegen), Entsperren nicht.
+      if (input.aktiv && config.nurLesen) throw fehler("FORBIDDEN", NUR_LESEN_MELDUNG);
       if (input.id === ctx.benutzer.id) throw fehler("BAD_REQUEST", "Sie können sich nicht selbst sperren.");
       await verwalte(ctx, input.id, async (tx, b) => {
         if (!input.aktiv) await adminBleibt(tx, ctx.benutzer.organisationId, b.id);

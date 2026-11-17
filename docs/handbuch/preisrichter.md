@@ -192,6 +192,10 @@ Wenn Sie schon einmal angemeldet waren, öffnet sich die Seite auch ohne Netz mi
 | hellrot, „Ohne Verbindung, 3 warten“ | Kein Netz. Die Bewertungen sind sicher im Tablet und werden später gesendet. |
 | „· 1 nicht übernommen“ | Eine Bewertung wurde abgelehnt. Bitte ansehen (siehe unten). |
 
+### Gelbe Leiste „Nur Lesen“
+
+Steht oben „Nur Lesen – Bewertungen bleiben auf dem Gerät und werden später gesendet.“, nimmt SchauFUCHS gerade keine Änderungen an (z. B. Wartung). Bewerten Sie einfach weiter: Die Bewertungen warten im Tablet und werden übertragen, sobald der Lesemodus endet.
+
 ### „nicht übernommen“
 
 Manchmal nimmt SchauFUCHS eine Bewertung nicht an, zum Beispiel weil das Tier inzwischen als fehlend gemeldet wurde oder die Bewertung schon geschlossen ist. Dann erscheint oben ein roter Kasten „… Bewertung nicht übernommen.“ Darin steht je Tier die Katalognummer, Ihre Bewertung und der Grund in Fettschrift.

@@ -7,7 +7,7 @@
  *   Browsersprache allein stellt die Verwaltung nicht um – wer bisher deutsch gearbeitet hat, merkt vom Update nichts.
  * - Preisrichter-Tablet unter `/richter/…`: nur die Wahl an diesem Gerät, sonst Deutsch.
  */
-import { istSprache, ladeOberflaeche, oberflaeche, oberflaecheGeladen, passendeSprache, SPRACHEN, SPRACHNAME, texte, type OberflaecheTexte, type Sprache, type Texte } from "@schau/domain";
+import { istSprache, ladeOberflaeche, NUR_LESEN_MELDUNG, oberflaeche, oberflaecheGeladen, passendeSprache, SPRACHEN, SPRACHNAME, texte, type OberflaecheTexte, type Sprache, type Texte } from "@schau/domain";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { fehlerText } from "./lib";
@@ -181,6 +181,8 @@ export function SprachWahl({ className, hell, mitLabel }: { className?: string; 
  * die der Server schon in der Sprache des Formulars schickt, unverändert.
  */
 export function fehlerFuerAussteller(err: unknown, sprache: Sprache): string {
+  // Lesemodus (Entscheidung 025): ein fester Satz in der Sprache des Formulars, auch auf Deutsch ohne „Nur Lesen:“.
+  if ((err as { message?: string } | null)?.message === NUR_LESEN_MELDUNG) return texte(sprache).fehler.nurLesen;
   // Deutsch und Schweiz: die Einzeltexte des Servers (z. B. welche Eingabe nicht stimmt); der Server schreibt seine
   // eigenen Meldungen für die Schweiz schon mit „ss“.
   if (sprache === "de" || sprache === "de-CH") return fehlerText(err);

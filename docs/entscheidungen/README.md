@@ -28,3 +28,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [022](022-sprachen-der-oberflaeche.md) | Sprachen der ganzen Oberfläche: Verwaltung, Helfer, Tablet, Servermeldungen |
 | [023](023-kontoauszug-import.md) | Kontoauszug-Import: Datei statt Kontozugang, Zuordnung über die Referenz |
 | [024](024-gesundheitspruefung.md) | Gesundheitsprüfung mit Sicherung, Migrationen und Schautagen |
+| [025](025-lesemodus.md) | Lesemodus per `NUR_LESEN`: keine Änderungen, Lesen und Anmelden gehen weiter |

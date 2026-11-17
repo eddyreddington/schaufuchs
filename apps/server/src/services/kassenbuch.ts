@@ -1,4 +1,5 @@
 import { tagBerlin } from "@schau/domain";
+import { config } from "../config";
 import { createHash } from "node:crypto";
 import { and, asc, eq } from "drizzle-orm";
 import { db, type Tx } from "../db/client";
@@ -112,6 +113,8 @@ export type Belegart = (typeof beleg.$inferInsert)["art"];
 /** Legt einen Beleg unveränderbar ab (einmal je Art und Nummer). Rückgabe: der archivierte Beleg. */
 export async function archiviereBeleg(schauId: number, art: Belegart, nummer: number, pdf: Buffer) {
   const sha256 = createHash("sha256").update(pdf).digest("hex");
+  // Lesemodus (Entscheidung 025): den Beleg zeigen, aber nicht ablegen – das Archiv bleibt unberührt.
+  if (config.nurLesen) return { id: 0, schauId, art, nummer, pdf, sha256, createdAt: new Date() };
   await db.insert(beleg).values({ schauId, art, nummer, pdf, sha256 }).onConflictDoNothing();
   return ladeBeleg(schauId, art, nummer);
 }

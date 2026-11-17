@@ -8,6 +8,7 @@ import { useOberflaeche, useSprache } from "../sprache";
 import { ot } from "../sprache-jetzt";
 import { direkt } from "../trpc";
 import { Knopf, knopfKlasse, Laden, Leer, useFrage, useMeldung } from "../ui";
+import { LesemodusTablet } from "../komponenten/lesemodus";
 import { HttpsHinweis } from "./richter-anmeldung";
 import {
   abgelehntSchluesselVon,
@@ -430,6 +431,7 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
         <button type="button" onClick={abmelden} className={knopfKlasse("zweit", false, "min-h-11 text-sm")}>{tt.abmelden}</button>
       </header>
       <HttpsHinweis />
+      <LesemodusTablet />
       <AbmeldeHinweis rest={restAbmeldung} />
       {serverFehler && (
         <div className="bg-kamm-hell px-4 py-2 text-kamm" role="alert">

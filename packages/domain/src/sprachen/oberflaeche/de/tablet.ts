@@ -9,6 +9,7 @@ export const tablet = {
   keineNote: "keine Note",
   endgueltigLoeschen: "Endgültig löschen",
   nachtragen: "Bitte der Ausstellungsleitung zum Nachtragen geben.",
+  nurLesen: "Nur Lesen – Bewertungen bleiben auf dem Gerät und werden später gesendet.",
   anmeldung: {
     https: "Ohne HTTPS lässt sich die Seite ohne Netz nicht neu öffnen. Bitte die Adresse mit https:// verwenden.",
     titel: (schau: string) => `Preisrichter-Anmeldung – ${schau}`,

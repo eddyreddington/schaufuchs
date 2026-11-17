@@ -4,6 +4,7 @@ export const fr: Texte = {
   sprache: "Langue",
   rahmen: {
     testschau: "Exposition de test – pas une vraie exposition. Merci de ne pas inscrire de vrais animaux.",
+    nurLesen: "Les inscriptions ne peuvent pas être envoyées ni modifiées pour le moment.",
     rechtliches: "Informations légales",
     zurSchau: "Retour à l’exposition",
     impressum: "Mentions légales",
@@ -232,6 +233,7 @@ export const fr: Texte = {
     zuVieleTiere: "Pour autant d’animaux, veuillez vous inscrire directement auprès de la direction de l’exposition.",
     halleVoll: "La salle n’a plus assez de place pour autant d’animaux. Veuillez en inscrire moins ou vous adresser à la direction de l’exposition.",
     schonGemeldet: "Cette personne est déjà inscrite à cette exposition. Pour toute modification, adressez-vous à la direction de l’exposition.",
+    nurLesen: "Les inscriptions ne peuvent pas être envoyées ni modifiées pour le moment.",
     keinAusland: "Cette exposition n’accepte pas d’animaux de l’étranger (numéro d’enregistrement avec un code de pays étranger). Veuillez vous renseigner auprès de la direction de l’exposition.",
     teilschau: "Cette partie n’existe pas dans l’exposition.",
   },

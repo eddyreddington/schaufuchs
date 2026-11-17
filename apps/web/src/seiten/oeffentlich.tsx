@@ -3,6 +3,7 @@ import { useMemo, useRef, useState, type FormEvent, type ReactNode } from "react
 import { Link, useParams } from "react-router-dom";
 import { AusstellerFelder, leererAussteller } from "../komponenten/aussteller";
 import { Ueberweisung, type UeberweisungDaten } from "../komponenten/girocode";
+import { useLesemodusAussteller } from "../komponenten/lesemodus";
 import { alsEingabe, neuePosition, PositionenEditor, pruefePositionen, type Position } from "../komponenten/positionen";
 import { formatKatalognummer, parseEuro } from "../lib";
 import { fehlerFuerAussteller, SprachWahl, useSprache, useTexte } from "../sprache";
@@ -26,6 +27,7 @@ const mitSprache = (pfad: string, sprache: Sprache) => (sprache === "de" ? pfad 
 function OeffentlicherRahmen({ titel, unter, children, ohneFuss, test }: { titel: string; unter?: ReactNode; children: ReactNode; ohneFuss?: boolean; /** Testschau: Hinweis auf jeder Seite. */ test?: boolean }) {
   const { slug } = useParams();
   const t = useTexte().rahmen;
+  const nurLesen = useLesemodusAussteller();
   useSeitentitel(titel);
   return (
     <div className="flex min-h-screen flex-col">
@@ -39,6 +41,7 @@ function OeffentlicherRahmen({ titel, unter, children, ohneFuss, test }: { titel
         </div>
       </header>
       <main id="inhalt" className={`${LESEBREITE} flex flex-1 flex-col gap-6 py-8`}>
+        {nurLesen && <Hinweis ton="warnung">{nurLesen}</Hinweis>}
         {test && <Hinweis ton="warnung">{t.testschau}</Hinweis>}
         {children}
       </main>
@@ -234,6 +237,8 @@ function Meldeformular({
   useUngespeichertWarnung(() => !!(a.vorname || a.nachname || a.email || positionen.some((p) => p.farbenschlag != null || p.freitext)));
   const suche = (q: string) => trpc.oeffentlich.farbenschlagSuche.useQuery({ slug, q }, { enabled: q.trim().length >= 2 });
   const melden = trpc.oeffentlich.melden.useMutation({ onSuccess: (r) => fertig(r) });
+  // Lesemodus (Entscheidung 025): Melden geht nicht – der Hinweis steht oben im Rahmen.
+  const nurLesen = useLesemodusAussteller();
   // Fehlerliste und Serverfehler sind fertiger Text: nach einem Sprachwechsel weg, beim nächsten Absenden neu.
   const [fehlerSprache, setFehlerSprache] = useState(sprache);
   if (fehlerSprache !== sprache) {
@@ -362,7 +367,7 @@ function Meldeformular({
         </div>
       )}
       {melden.error && <Hinweis ton="fehler">{fehlerFuerAussteller(melden.error, sprache)}</Hinweis>}
-      <Knopf type="submit" variante="primaer" gross laedt={melden.isPending} className="self-start">
+      <Knopf type="submit" variante="primaer" gross laedt={melden.isPending} disabled={!!nurLesen} className="self-start">
         {t.melden}
       </Knopf>
     </form>

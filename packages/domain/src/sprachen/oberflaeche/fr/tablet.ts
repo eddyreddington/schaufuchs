@@ -11,6 +11,7 @@ export const tablet: OberflaecheTexte["tablet"] = {
   keineNote: "aucune note",
   endgueltigLoeschen: "Supprimer définitivement",
   nachtragen: "Veuillez les transmettre à la direction de l’exposition pour saisie.",
+  nurLesen: "Lecture seule – les jugements restent sur l’appareil et seront envoyés plus tard.",
   anmeldung: {
     https: "Sans HTTPS, la page ne peut pas être rouverte hors connexion. Veuillez utiliser l’adresse avec https://.",
     titel: (schau: string) => `Connexion des juges – ${schau}`,

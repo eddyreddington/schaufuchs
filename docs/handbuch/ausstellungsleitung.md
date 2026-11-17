@@ -122,6 +122,17 @@ SchauFUCHS gibt es auf Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niede
 
 Übersetzt sind alle Seiten, Knöpfe, Hinweise und Fehlermeldungen. **Deutsch bleibt**, was Sie selbst schreiben (Schauname, Bestimmungen, Vorlagen), das Rassen- und Farbenschlagverzeichnis, Bewertungstexte und Textbausteine, alle Drucke und PDFs (Katalog, Bewertungskarten, Abrechnungen), Impressum und Datenschutzhinweise, das Protokoll, die Mails an Benutzer und dieses Handbuch. Die Seiten für Aussteller haben ihre eigene Sprachwahl (siehe „Online-Meldung in anderen Sprachen“).
 
+### 1.7 Nur Lesen (Lesemodus) {#lesemodus}
+
+Steht über jeder Seite die gelbe Leiste „Nur Lesen – Änderungen sind gerade nicht möglich.“, hat der Betreiber Ihrer Installation SchauFUCHS in den Lesemodus geschaltet, zum Beispiel für eine Wartung. Dahinter kann ein Hinweis des Betreibers stehen („Wartung bis 18 Uhr“).
+
+- **Was geht:** alles ansehen, suchen, drucken und herunterladen (Katalog, Listen, Abrechnungen, Belege, PDF-Vorschauen), an- und abmelden, die Zwei-Faktor-Anmeldung einrichten, das eigene Passwort ändern und die Sprache wählen. Administratoren können einen Benutzer auf allen Geräten abmelden oder sperren (bei Verdacht auf fremden Zugriff) – entsperren erst danach.
+- **Was nicht geht:** speichern, anlegen, löschen, buchen, Bestätigungen verschicken, Einladungen annehmen. Ein Versuch endet mit der Meldung „Nur Lesen: Änderungen sind gerade nicht möglich.“; nichts wird halb gespeichert. Ein Beleg, der beim Herunterladen erst entsteht, wird gezeigt, aber nicht im Belegarchiv abgelegt.
+- **Aussteller** sehen auf den öffentlichen Seiten „Meldungen können zurzeit nicht abgegeben oder geändert werden.“ Den Widerruf der Online-Veröffentlichung nimmt SchauFUCHS trotzdem an, eine neue Einwilligung erst danach.
+- **Preisrichter-Tablets** bewerten weiter; die Bewertungen bleiben im Gerät und gehen nach dem Lesemodus von selbst heraus.
+
+Den Lesemodus schaltet der Betreiber ein und aus (Einstellung `NUR_LESEN`), nicht die Ausstellungsleitung. Fragen dazu also an ihn.
+
 ---
 
 ## 2. Benutzer verwalten

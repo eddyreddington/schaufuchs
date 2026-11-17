@@ -1,8 +1,9 @@
 import { verzeichnisVorschlaegeZwischengespeichert } from "../services/vereinsverzeichnis";
-import { adressVorschlaege, bewertungsText, datenschutzAbschnitte, datenschutzKurz, datumIn, fehlendeVereinsangaben, heuteBerlin, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, mitVerzeichnis, onlineAbgelaufen, SPRACHEN, teilschauenLesen, texte, type Sprache } from "@schau/domain";
+import { adressVorschlaege, bewertungsText, datenschutzAbschnitte, datenschutzKurz, datumIn, fehlendeVereinsangaben, heuteBerlin, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, mitVerzeichnis, NUR_LESEN_MELDUNG, onlineAbgelaufen, SPRACHEN, teilschauenLesen, texte, type Sprache } from "@schau/domain";
 import { heuteDe } from "../services/tiergesundheit";
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
+import { config } from "../config";
 import { db } from "../db/client";
 import { aussteller, gebuehr, meldung, schau } from "../db/schema";
 import { ladeVereinsangaben } from "../services/datenschutz";
@@ -250,6 +251,8 @@ export const oeffentlichRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
+      // Lesemodus (Entscheidung 025): nur der Widerruf geht (Art. 7 Abs. 3 DSGVO), das Erteilen nicht.
+      if (input.erlaubt && config.nurLesen) throw fehler("FORBIDDEN", NUR_LESEN_MELDUNG);
       const s = await ladeOeffentlich(input.slug);
       const [m] = await db.select().from(meldung).where(and(eq(meldung.zugangsToken, input.token), eq(meldung.schauId, s.id)));
       if (!m) throw fehler("NOT_FOUND", "Meldung nicht gefunden. Bitte den Link aus der E-Mail verwenden.");

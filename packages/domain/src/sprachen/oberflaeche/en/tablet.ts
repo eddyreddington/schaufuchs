@@ -11,6 +11,7 @@ export const tablet: OberflaecheTexte["tablet"] = {
   keineNote: "no grade",
   endgueltigLoeschen: "Delete permanently",
   nachtragen: "Please hand them to the show management to enter.",
+  nurLesen: "Read only – judgements stay on this device and will be sent later.",
   anmeldung: {
     https: "Without HTTPS the page cannot be reopened offline. Please use the address with https://.",
     titel: (schau: string) => `Judge sign-in – ${schau}`,

@@ -1,6 +1,7 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import superjson from "superjson";
+import { NUR_LESEN_MELDUNG } from "@schau/domain";
 import { z, ZodError } from "zod";
 
 // Fehlertexte der Eingabeprüfung auf Deutsch: eigene Texte in den Schemas gehen vor, dann kurze Texte für die häufigen
@@ -42,6 +43,7 @@ export function kurzerPruefText(iss: z.core.$ZodRawIssue): string | undefined {
 import type { Angemeldet } from "./auth";
 import { db } from "./db/client";
 import { schau } from "./db/schema";
+import { trpcGesperrt } from "./lesemodus";
 
 export interface Context extends Angemeldet {
   /** Antwort-Header, z. B. für Set-Cookie beim Anmelden. */
@@ -210,7 +212,9 @@ export function sqlZustand(e: unknown): string {
   return "";
 }
 
-const basis = t.procedure.use(async ({ getRawInput, path, next }) => {
+const basis = t.procedure.use(async ({ getRawInput, path, type, next }) => {
+  // Lesemodus (Entscheidung 025): vor jeder anderen Prüfung, damit nichts angefasst wird.
+  if (trpcGesperrt(type, path)) throw fehler("FORBIDDEN", NUR_LESEN_MELDUNG);
   pruefeUmfang(await getRawInput(), MAX_LISTE_JE_AUFRUF[path] ?? MAX_LISTE);
   const r = await next();
   // Zwei gleichzeitige Änderungen derselben Tiere (Deadlock, Serialisierung): kein „Interner Fehler“, sondern ein Hinweis.

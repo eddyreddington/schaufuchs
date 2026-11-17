@@ -9,6 +9,7 @@ export const pruefung: OberflaecheTexte["serverKatalog"]["pruefung"] = {
     zuTief: "La requête est trop imbriquée.",
     listeZuLang: (n: string) => `Au maximum ${n} éléments par liste.`,
     gleichzeitig: "Quelqu’un a modifié les mêmes données en même temps. Veuillez réessayer.",
+    nurLesen: "Lecture seule : les modifications ne sont pas possibles pour le moment.",
     bitteAnmelden: "Veuillez vous connecter.",
     zweiFaktorPflicht: "La connexion à deux facteurs est obligatoire pour les administrateurs. Veuillez d’abord la configurer sous « Utilisateurs ».",
     nurAdmin: "Réservé aux administrateurs.",

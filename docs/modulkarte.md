@@ -473,7 +473,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (55 Z.)
+### index.ts (56 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -569,6 +569,11 @@ Tests: `lastschrift.test.ts`
 - `vorgeschlageneFaelligkeit()` – Vorschlag für die Fälligkeit: 14 Tage nach heute (Vorabankündigung), dann der nächste Bankarbeitstag.
 - `erzeugeSepaLastschrift()` – Erzeugt die XML-Datei für eine Sammellastschrift (pain.008.001.08, CORE).
 - Typen: `MandatStand`, `LastschriftPosten`, `LastschriftAuftrag`
+
+### lesemodus.ts (5 Z.)
+Tests: `lesemodus.test.ts`
+
+- `NUR_LESEN_MELDUNG` – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an.
 
 ### lizenz.ts (47 Z.)
 Lizenzangaben von Bildern im Katalog (Rassebilder, Fotos des Vereins).
@@ -689,26 +694,26 @@ Tests: `spenden.test.ts`
 - `sammelbestaetigung()` – Sammelbestätigung eines Kalenderjahres: alle Geldzuwendungen des Spenders aus diesem Jahr, die bestätigt werden dürfen (Sachzuwendungen nie – sie b …
 - Typen: `SpendeArt`, `SpendeWeg`, `SachHerkunft`, `Sachangaben`, `SpendeFuerBestaetigung`, `SpenderAnschrift`
 
-### cs.ts (282 Z.)
+### cs.ts (284 Z.)
 
 - `cs`
 
-### de.ts (288 Z.)
+### de.ts (290 Z.)
 
 - `de` – Texte der Seiten für Aussteller (öffentliche Schauseite, Online-Meldung, Meine Meldung, Ergebnisse) und der Mails an Aussteller – Deutsch ist die G …
 
-### en.ts (276 Z.)
+### en.ts (278 Z.)
 
 - `en`
 
-### fr.ts (276 Z.)
+### fr.ts (278 Z.)
 
 - `fr`
 
 ### index.ts (79 Z.)
 Sammelt alle Exporte (`export * from …`).
 
-### nl.ts (276 Z.)
+### nl.ts (278 Z.)
 
 - `nl`
 
@@ -794,7 +799,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichter`
 
-### rahmen.ts (139 Z.)
+### rahmen.ts (141 Z.)
 
 - `rahmen`
 
@@ -846,7 +851,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `katalog`
 
-### server-katalog-pruefung.ts (106 Z.)
+### server-katalog-pruefung.ts (107 Z.)
 
 - `pruefung`
 
@@ -882,7 +887,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchau`
 
-### tablet.ts (118 Z.)
+### tablet.ts (119 Z.)
 
 - `tablet`
 
@@ -988,7 +993,7 @@ Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mi
 
 - `preisrichter`
 
-### rahmen.ts (152 Z.)
+### rahmen.ts (154 Z.)
 
 - `rahmen` – Texte der Oberfläche: rahmen (Entscheidung 022) – App-Rahmen mit Seitenmenü und Benutzermenü, Anmeldung, Einladung, Hilfe-Rahmen, Fehlerseite und d …
 
@@ -1045,7 +1050,7 @@ Texte der Oberfläche: serverKasse (Entscheidung 022) – Meldungen des Servers 
 
 - `katalog` – Meldungen des Servers zu Katalog und Einlieferung (Entscheidung 022): routers/katalog/einlieferung.ts, nummern.ts, gesundheit.ts, die Nachweise (pr …
 
-### server-katalog-pruefung.ts (110 Z.)
+### server-katalog-pruefung.ts (111 Z.)
 
 - `pruefung` – Meldungen des Servers (Entscheidung 022): Zugang und Umfang der Anfrage (apps/server/src/trpc.ts), Kurztexte der Eingabeprüfung (kurzerPruefText, S …
 
@@ -1084,7 +1089,7 @@ Meldungen des Servers (Entscheidung 022): Schau anlegen, Einstellungen, Gebühre
 
 - `serverSchau`
 
-### tablet.ts (119 Z.)
+### tablet.ts (120 Z.)
 
 - `tablet` – Texte der Oberfläche: tablet – Preisrichter-Tablet (Entscheidung 022).
 
@@ -1183,7 +1188,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichter`
 
-### rahmen.ts (136 Z.)
+### rahmen.ts (138 Z.)
 
 - `rahmen`
 
@@ -1235,7 +1240,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `katalog`
 
-### server-katalog-pruefung.ts (106 Z.)
+### server-katalog-pruefung.ts (107 Z.)
 
 - `pruefung`
 
@@ -1271,7 +1276,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchau`
 
-### tablet.ts (120 Z.)
+### tablet.ts (121 Z.)
 
 - `tablet`
 
@@ -1368,7 +1373,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichter`
 
-### rahmen.ts (136 Z.)
+### rahmen.ts (138 Z.)
 
 - `rahmen`
 
@@ -1420,7 +1425,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `katalog`
 
-### server-katalog-pruefung.ts (106 Z.)
+### server-katalog-pruefung.ts (107 Z.)
 
 - `pruefung`
 
@@ -1456,7 +1461,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchau`
 
-### tablet.ts (120 Z.)
+### tablet.ts (121 Z.)
 
 - `tablet`
 
@@ -1557,7 +1562,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichter`
 
-### rahmen.ts (136 Z.)
+### rahmen.ts (138 Z.)
 
 - `rahmen`
 
@@ -1609,7 +1614,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `katalog`
 
-### server-katalog-pruefung.ts (106 Z.)
+### server-katalog-pruefung.ts (107 Z.)
 
 - `pruefung`
 
@@ -1645,7 +1650,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchau`
 
-### tablet.ts (120 Z.)
+### tablet.ts (121 Z.)
 
 - `tablet`
 
@@ -1743,7 +1748,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichter`
 
-### rahmen.ts (143 Z.)
+### rahmen.ts (145 Z.)
 
 - `rahmen`
 
@@ -1795,7 +1800,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `katalog`
 
-### server-katalog-pruefung.ts (106 Z.)
+### server-katalog-pruefung.ts (107 Z.)
 
 - `pruefung`
 
@@ -1831,7 +1836,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchau`
 
-### tablet.ts (118 Z.)
+### tablet.ts (119 Z.)
 
 - `tablet`
 
@@ -1853,7 +1858,7 @@ Meldungen des Servers (Fehler, Prüfungen, Hinweise) in der Sprache der Oberflä
 
 - `serverText()` – Meldung des Servers in der Sprache der Oberfläche.
 
-### pl.ts (284 Z.)
+### pl.ts (286 Z.)
 
 - `pl`
 
@@ -2011,7 +2016,7 @@ Anmeldung: Status, Ersteinrichtung, Anmelden (auch zweiter Schritt), Abmelden, e
 - `auth.passwortAendern` mutation · angemeldet
 - `auth.spracheSetzen` mutation · angemeldet – Sprache der Oberfläche für das eigene Konto merken (Entscheidung 022); gilt auf jedem Gerät nach der Anmeldung.
 
-### routers/auth/benutzer.ts (251 Z.) → `auth`
+### routers/auth/benutzer.ts (254 Z.) → `auth`
 Benutzerverwaltung durch die Ausstellungsleitung: Liste, Angaben, Anlegen, Sperren, Löschen, Rolle, Passwort, Sperre aufheben.
 
 - `auth.benutzerListe` query · admin
@@ -2050,6 +2055,11 @@ Zwei-Faktor-Anmeldung: Status, Einrichten, Bestätigen, Abschalten, Zurücksetze
 Anmeldung und Benutzer.
 
 Setzt Teile zu einem Router zusammen.
+
+### routers/betrieb.ts (11 Z.) → `betrieb`
+Betrieb: Zustand der Installation für die Oberfläche (Lesemodus, Entscheidung 025).
+
+- `betrieb.lesemodus` query · öffentlich – Läuft der Lesemodus?
 
 ### routers/bewertung.ts (384 Z.) → `bewertung`, `richter`
 
@@ -2262,7 +2272,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `meldung.bestaetigungSenden` mutation · angemeldet
 - `meldung.zuletzt` query · angemeldet
 
-### routers/oeffentlich.ts (445 Z.) → `oeffentlich`
+### routers/oeffentlich.ts (448 Z.) → `oeffentlich`
 
 - `oeffentlich.schau` query · öffentlich
 - `oeffentlich.rechtstexte` query · öffentlich – Impressum (§ 5 DDG) und Datenschutzhinweise (Art. 13 DSGVO) des ausrichtenden Vereins.
@@ -2610,7 +2620,7 @@ Prozeduren: meldung.adressVorschlaege, meldung.ausstellerSuche, meldung.bestaeti
 ### meldungen.tsx (129 Z.) – `/schau/:schauId/meldungen`
 Prozeduren: meldung.liste, schau.get
 
-### oeffentlich.tsx (568 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
+### oeffentlich.tsx (573 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
 Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.meineMeldung, oeffentlich.melden, oeffentlich.onlineVeroeffentlichung, oeffentlich.rechtstexte, oeffentlich.schau
 
 ### preise.tsx (471 Z.) – `/schau/:schauId/preise`
@@ -2638,7 +2648,7 @@ Preisrichter-Tablet: Bewertungskarte eines Tieres (Note, Texte mit Bausteinen, P
 ### richter-obmann.tsx (43 Z.)
 Preisrichter-Tablet: Ansicht für den Obmann zum Bestätigen von Noten.
 
-### richter-tablet.tsx (550 Z.)
+### richter-tablet.tsx (552 Z.)
 Preisrichter-Tablet nach der Anmeldung: Tierliste, Ausgang und Abgleich mit dem Server, abgelehnte Bewertungen.
 
 ### richter.tsx (55 Z.) – `/richter/:slug`
@@ -2698,7 +2708,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `gesundheitspruefung.ts` (66 Z.) – Angaben der Gesundheitsprüfung `GET /api/gesund` neben `ok` und `version` (Entscheidung 024): wann die letzte Sicherung lief, ob Migrationen offen … · GESUND_UNBEKANNT, gesundAngaben
 - `import.ts` (384 Z.) – Import aus Altprogrammen (Entscheidung 015): Tabelle prüfen (Zeilen, Aussteller wiedererkennen, Rassen abgleichen), übernehmen (über dieselben Wege … · rassenSchluessel, importPruefen, importUebernehmen, importZuruecknehmen, importLaeufe
 - `kasse.ts` (138 Z.) · sperreKasse, SEPA_ERSTELLT, SEPA_VERWORFEN, SEPA_GEBUCHT, offenerLauf, schliesseLauf, LASTSCHRIFT_OFFEN, offeneLastschrift, offeneLastschriftenDesVereins, inOffenerLastschrift, offeneStornoZahlungen, offeneUeberweisungsverkaeufe, pruefeNichtAbgeschlossen, pruefeNichtAbgerechnet
-- `kassenbuch.ts` (238 Z.) · tagDe, ladeKassenbuch, sollBestand, archiviereBeleg, ladeBeleg, zweitschrift, belegListe, archiviereKaufbeleg, archiviereKassenbeleg, archiviereQuittung, archiviereSpendenquittung
+- `kassenbuch.ts` (241 Z.) · tagDe, ladeKassenbuch, sollBestand, archiviereBeleg, ladeBeleg, zweitschrift, belegListe, archiviereKaufbeleg, archiviereKassenbeleg, archiviereQuittung, archiviereSpendenquittung
 - `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
 - `meldung.ts` (509 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, speichereMeldung, bindungen, hatAuszahlung
 - `post.ts` (143 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, naechsterVersuch, sendeMail, versende, starteMailversand
@@ -2780,7 +2790,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 - `auth.ts` (203 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, spracheDerSitzung, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
 - `besucher-adresse.ts` (31 Z.) – Adresse des Besuchers für die Bremsen (tRPC-Kontext und öffentliche Dateien), auch hinter einem eigenen Proxy (TRUST_PROXY). · clientIp
-- `config.ts` (30 Z.) · config
+- `config.ts` (34 Z.) · config
 - `csv.ts` (15 Z.) – CSV für Excel: Semikolon, BOM, Schutz vor Formel-Injektion. · csv
 - `datei-druckvorlage.ts` (125 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien, briefDateien
 - `datei-exporte.ts` (318 Z.) – Datei-Adressen der Listen und Exporte (angemeldete Benutzer der eigenen Schau): Kassenbuch (CSV), Protokoll mit Hash-Kette (CSV, JSON), Verkaufslis … · exportDateien
@@ -2791,31 +2801,33 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
 - `datei-sprache.ts` (37 Z.) – Fehlertexte der Datei-Adressen (/datei/…, /s/…, /o/…) in der Sprache der Oberfläche (Entscheidung 022). · DATEI_PFADE, dateiFehlerUebersetzen
 - `datei-unterlagen.ts` (120 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, B-Bogen und A-Bogen, Abrechnung und Q … · unterlagenDateien
-- `index.ts` (274 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
+- `index.ts` (278 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
+- `lesemodus.ts` (48 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an, z. B. während einer Wartung oder wenn der Betreiber eine Instal … · IM_LESEMODUS_ERLAUBT, trpcGesperrt, lesemodusSperre
 - `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
-- `router.ts` (50 Z.) · appRouter
+- `router.ts` (52 Z.) · appRouter
 - `seed.ts` (552 Z.) – Demo-Daten für Entwicklung, Tests und Vorführung. · DEMO, demoEntfernen, seed, bisZurBewertung, komplett
 - `testschau.ts` (519 Z.) – Testdaten für eine vorhandene, leere Schau: füllt sie wie eine echte Lokalschau bis nach der Einlieferung, damit die Ausstellungsleitung den Rest ( … · MERKMAL, DEMO_TIERE_HOECHSTENS, mitDemoSperre, fuellen, zuruecksetzen, entfernen
-- `trpc.ts` (290 Z.) · kurzerPruefText, pruefeMeta, pruefeUmfang, strukturZuGross, sqlZustand, router, publicProcedure, fehler, dbId, kalenderdatum, benutzerProcedure, adminProcedure, richterProcedure, oeffentlichSichtbarProcedure, ladeSchau, pruefeNachFreigabe
+- `trpc.ts` (294 Z.) · kurzerPruefText, pruefeMeta, pruefeUmfang, strukturZuGross, sqlZustand, router, publicProcedure, fehler, dbId, kalenderdatum, benutzerProcedure, adminProcedure, richterProcedure, oeffentlichSichtbarProcedure, ladeSchau, pruefeNachFreigabe
 - `vereinsverzeichnis-import.ts` (27 Z.) – Vereinsverzeichnis einspielen (Namen der Rassegeflügelzuchtvereine aus öffentlichen Verbandsseiten): bun src/vereinsverzeichnis-import.ts --datei < …
 
 ### Web-Bausteine `apps/web/src`
 
 - `aussteller.tsx` (138 Z.) · leererAussteller, AusstellerFelder
 - `girocode.tsx` (42 Z.) – Überweisung des Meldegelds für Aussteller (Entscheidung 021): Bankverbindung, Verwendungszweck mit Referenz und der GiroCode zum Scannen mit der Ba … · Ueberweisung
+- `lesemodus.tsx` (48 Z.) – Hinweis im Lesemodus (Entscheidung 025): Der Server nimmt gerade keine Änderungen an. · LesemodusLeiste, LesemodusTablet, useLesemodusAussteller
 - `positionen.tsx` (480 Z.) · neuePosition, alsEingabe, pruefePositionen, ausEintrag, FarbenschlagWahl, PositionenEditor
 - `abmeldung.tsx` (80 Z.) · eingabeVorMs, useAutoAbmeldung, AbmeldeHinweis
 - `lib.ts` (51 Z.) · fehlerText, datum, datumZeit, heuteIso, centZuText, alterLabel
 - `main.tsx` (22 Z.)
 - `modus.ts` (46 Z.) · setzeFarbmodus, useFarbmodus
 - `pdf-anzeige.tsx` (43 Z.) – PDF im Browser anzeigen (pdf.js), gemeinsam für die Live-Vorschauen von Katalog und Druckvorlagen. · pdfjs, PdfSeite
-- `rahmen.tsx` (462 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
+- `rahmen.tsx` (464 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
 - `rolle.ts` (9 Z.) · useIstAdmin
 - `routes.tsx` (122 Z.) · router
 - `seitenmenue.tsx` (202 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · schauGruppen, allgemeineGruppen, useKlappzustand, MenueGruppen
 - `sprache-jetzt.ts` (20 Z.) – Sprache der Oberfläche für Code außerhalb von Komponenten (Fehlertexte, Datum, Rückfragen): `SpracheRahmen` setzt sie, Komponenten nehmen besser `u … · setzeAktuelleSprache, aktuelleSprache, ot
-- `sprache.tsx` (197 Z.) – Sprache der Oberfläche. · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, useOberflaeche, SprachWahl, fehlerFuerAussteller
+- `sprache.tsx` (199 Z.) – Sprache der Oberfläche. · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, useOberflaeche, SprachWahl, fehlerFuerAussteller
 - `symbole.tsx` (46 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui-basis.ts` (11 Z.) · cx, TON
@@ -2894,5 +2906,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `60-kontoauszug.ts` (138 Z.) – Kontoauszug-Import (Entscheidung 023): Datei prüfen (Zuordnung über Referenz bzw. Name und Betrag), ausgewählte Gutschriften buchen, Meldung bestät …
 - `61-oberflaeche-sprache.ts` (62 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
 - `62-gesundheitspruefung.ts` (116 Z.) – Gesundheitsprüfung `/api/gesund` (Entscheidung 024): neben `ok` und `version` die letzte Sicherung, offene Migrationen und laufende Schautage.
+- `63-lesemodus.ts` (137 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an – außer Anmelden, Abmelden, Zwei-Faktor einrichten, eigenes Pass …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

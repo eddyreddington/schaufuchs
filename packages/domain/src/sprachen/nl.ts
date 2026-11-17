@@ -4,6 +4,7 @@ export const nl: Texte = {
   sprache: "Taal",
   rahmen: {
     testschau: "Testshow – geen echte tentoonstelling. Schrijf geen echte dieren in.",
+    nurLesen: "Inschrijvingen kunnen op dit moment niet worden ingediend of gewijzigd.",
     rechtliches: "Juridisch",
     zurSchau: "Naar de show",
     impressum: "Colofon",
@@ -232,6 +233,7 @@ export const nl: Texte = {
     zuVieleTiere: "Schrijf zoveel dieren rechtstreeks in bij de showleiding.",
     halleVoll: "Zoveel dieren passen niet meer in de hal. Schrijf minder in of vraag het de showleiding.",
     schonGemeldet: "Voor deze persoon bestaat al een inschrijving voor deze show. Wijzigingen graag via de showleiding.",
+    nurLesen: "Inschrijvingen kunnen op dit moment niet worden ingediend of gewijzigd.",
     keinAusland: "Deze show neemt geen dieren uit het buitenland aan (registratienummer met buitenlandse landcode). Vraag het de showleiding.",
     teilschau: "Dit onderdeel bestaat niet in de show.",
   },

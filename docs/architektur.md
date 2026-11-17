@@ -49,6 +49,7 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
 | Hallenplan-Entwürfe und Archiv | `hallenplan-entfernen.ts` (`halleOhneFestenPlan`) | `routers/hallenentwurf.ts`, `db/schema-hallenentwurf.ts` | `hallenplan-entwuerfe.tsx` |
 | SEPA-Lastschrift | `lastschrift.ts` | `routers/lastschrift.ts`, `db/schema-lastschrift.ts` | `lastschrift.tsx`, `aussteller-mandate.tsx`, `verein-lastschrift.tsx` |
 | Betrieb: Gesundheitsprüfung `/api/gesund` ([024](entscheidungen/024-gesundheitspruefung.md)) | `gesundheitspruefung.ts` (`schautageLaufen`, `offeneMigrationen`) | `index.ts`, `services/gesundheitspruefung.ts`, `db/schema-betrieb.ts`; Zeitpunkt der Sicherung aus `scripts/backup.sh` | – |
+| Betrieb: Lesemodus `NUR_LESEN` ([025](entscheidungen/025-lesemodus.md)) | `lesemodus.ts` (`NUR_LESEN_MELDUNG`) | `lesemodus.ts` (Ausnahmen, Sperre außerhalb von tRPC), `trpc.ts` (`basis`), `routers/betrieb.ts` (`betrieb.lesemodus`) | `komponenten/lesemodus.tsx` in `rahmen.tsx`, `richter-tablet.tsx`, `oeffentlich.tsx` |
 | Sprachen ([020](entscheidungen/020-sprachen-fuer-aussteller.md), [022](entscheidungen/022-sprachen-der-oberflaeche.md)) | `sprachen/`, `sprachen/oberflaeche/` (`oberflaeche()`, `serverText()`) | `routers/oeffentlich.ts`, `routers/meldung.ts` (`eingangsText`), `routers/auth/anmeldung.ts` (`spracheSetzen`) | `sprache.tsx`, `sprache-jetzt.ts`, alle Seiten über `useOberflaeche()` – [Moduldoku](module/sprachen.md) |
 
 Bedienung und Hintergründe für Anwender: `docs/handbuch/` (in der App unter `/hilfe`).

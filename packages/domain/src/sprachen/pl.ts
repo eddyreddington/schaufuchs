@@ -12,6 +12,7 @@ export const pl: Texte = {
   sprache: "Język",
   rahmen: {
     testschau: "Wystawa testowa – nie jest to prawdziwa wystawa. Prosimy nie zgłaszać prawdziwych zwierząt.",
+    nurLesen: "Zgłoszeń nie można obecnie składać ani zmieniać.",
     rechtliches: "Informacje prawne",
     zurSchau: "Powrót do wystawy",
     impressum: "Nota prawna",
@@ -240,6 +241,7 @@ export const pl: Texte = {
     zuVieleTiere: "Tak wiele zwierząt proszę zgłosić bezpośrednio u kierownictwa wystawy.",
     halleVoll: "Tyle zwierząt nie zmieści się już w hali. Prosimy zgłosić mniej lub zapytać kierownictwo wystawy.",
     schonGemeldet: "Ta osoba już zgłosiła się na tę wystawę. Zmiany prosimy zgłaszać kierownictwu wystawy.",
+    nurLesen: "Zgłoszeń nie można obecnie składać ani zmieniać.",
     keinAusland: "Ta wystawa nie przyjmuje zwierząt z zagranicy (numer rejestracyjny z zagranicznym kodem kraju). Prosimy zapytać kierownictwo wystawy.",
     teilschau: "Ta część nie istnieje na wystawie.",
   },

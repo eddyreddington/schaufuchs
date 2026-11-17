@@ -9,6 +9,7 @@ export const tablet: OberflaecheTexte["tablet"] = {
   keineNote: "bez známky",
   endgueltigLoeschen: "Trvale smazat",
   nachtragen: "Předejte je prosím vedení výstavy k doplnění.",
+  nurLesen: "Pouze pro čtení – hodnocení zůstanou v zařízení a odešlou se později.",
   anmeldung: {
     https: "Bez HTTPS nelze stránku bez sítě znovu otevřít. Použijte prosím adresu s https://.",
     titel: (schau: string) => `Přihlášení posuzovatelů – ${schau}`,

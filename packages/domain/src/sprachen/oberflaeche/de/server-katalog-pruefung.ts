@@ -11,6 +11,7 @@ export const pruefung = {
     zuTief: "Die Anfrage ist zu tief verschachtelt.",
     listeZuLang: (n: string) => `Höchstens ${n} Einträge je Liste.`,
     gleichzeitig: "Gleichzeitig hat jemand dasselbe geändert. Bitte noch einmal versuchen.",
+    nurLesen: "Nur Lesen: Änderungen sind gerade nicht möglich.",
     bitteAnmelden: "Bitte anmelden.",
     zweiFaktorPflicht: "Für Administratoren ist die Zwei-Faktor-Anmeldung Pflicht. Bitte zuerst unter „Benutzer“ einrichten.",
     nurAdmin: "Nur für Administratoren.",

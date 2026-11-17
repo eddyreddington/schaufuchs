@@ -14,6 +14,8 @@ export const rahmen = {
     menueSchliessen: "Menü schließen",
     menueOeffnen: "Menü öffnen",
     testschau: "Testschau",
+    nurLesen: "Nur Lesen – Änderungen sind gerade nicht möglich.",
+    nurLesenHilfe: "Hilfe zum Lesemodus",
     abgesagt: "Abgesagt",
     /** Phase einer Schau in der Schauwahl, bei einer Testschau mit Zusatz. */
     phaseTest: (phase: string, test: boolean) => (test ? `${phase}, Testschau` : phase),

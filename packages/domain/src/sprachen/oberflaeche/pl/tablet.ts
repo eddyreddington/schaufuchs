@@ -9,6 +9,7 @@ export const tablet: OberflaecheTexte["tablet"] = {
   keineNote: "brak oceny",
   endgueltigLoeschen: "Usuń trwale",
   nachtragen: "Prosimy przekazać je kierownictwu wystawy do wprowadzenia.",
+  nurLesen: "Tylko odczyt – oceny pozostają na urządzeniu i zostaną wysłane później.",
   anmeldung: {
     https: "Bez HTTPS strony nie da się ponownie otworzyć bez sieci. Prosimy użyć adresu z https://.",
     titel: (schau: string) => `Logowanie sędziów – ${schau}`,

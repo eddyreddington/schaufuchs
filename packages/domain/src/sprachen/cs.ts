@@ -10,6 +10,7 @@ export const cs: Texte = {
   sprache: "Jazyk",
   rahmen: {
     testschau: "Testovací výstava – nejde o skutečnou výstavu. Nepřihlašujte prosím skutečná zvířata.",
+    nurLesen: "Přihlášky teď nelze podávat ani měnit.",
     rechtliches: "Právní informace",
     zurSchau: "Zpět na výstavu",
     impressum: "Provozovatel webu",
@@ -238,6 +239,7 @@ export const cs: Texte = {
     zuVieleTiere: "Takový počet zvířat přihlaste prosím přímo u vedení výstavy.",
     halleVoll: "Tolik zvířat se do haly už nevejde. Přihlaste prosím méně nebo se zeptejte vedení výstavy.",
     schonGemeldet: "Tato osoba se na výstavu již přihlásila. Změny prosím řešte s vedením výstavy.",
+    nurLesen: "Přihlášky teď nelze podávat ani měnit.",
     keinAusland: "Tato výstava nepřijímá zvířata ze zahraničí (registrační číslo se zahraničním kódem země). Zeptejte se prosím vedení výstavy.",
     teilschau: "Tato část na výstavě neexistuje.",
   },

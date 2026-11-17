@@ -14,6 +14,8 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     menueSchliessen: "Zavřít menu",
     menueOeffnen: "Otevřít menu",
     testschau: "Testovací výstava",
+    nurLesen: "Pouze pro čtení – změny teď nejsou možné.",
+    nurLesenHilfe: "Nápověda k režimu pouze pro čtení",
     abgesagt: "Zrušena",
     phaseTest: (phase: string, test: boolean) => (test ? `${phase}, testovací výstava` : phase),
     alleSchauen: "Všechny výstavy",

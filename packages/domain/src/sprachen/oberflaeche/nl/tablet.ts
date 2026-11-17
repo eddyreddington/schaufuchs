@@ -11,6 +11,7 @@ export const tablet: OberflaecheTexte["tablet"] = {
   keineNote: "geen predicaat",
   endgueltigLoeschen: "Definitief verwijderen",
   nachtragen: "Geef ze aan de showleiding om ze in te voeren.",
+  nurLesen: "Alleen lezen – keuringen blijven op het apparaat en worden later verzonden.",
   anmeldung: {
     https: "Zonder HTTPS kan de pagina zonder netwerk niet opnieuw worden geopend. Gebruik het adres met https://.",
     titel: (schau: string) => `Aanmelden keurmeester – ${schau}`,

@@ -11,6 +11,8 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     menueSchliessen: "Close menu",
     menueOeffnen: "Open menu",
     testschau: "Test show",
+    nurLesen: "Read only – changes are not possible at the moment.",
+    nurLesenHilfe: "Help on read-only mode",
     abgesagt: "Cancelled",
     phaseTest: (phase: string, test: boolean) => (test ? `${phase}, test show` : phase),
     alleSchauen: "All shows",

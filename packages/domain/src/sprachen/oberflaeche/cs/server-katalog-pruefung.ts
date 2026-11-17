@@ -9,6 +9,7 @@ export const pruefung: OberflaecheTexte["serverKatalog"]["pruefung"] = {
     zuTief: "Požadavek je příliš hluboce vnořený.",
     listeZuLang: (n: string) => `Nejvyšší počet položek v seznamu: ${n}.`,
     gleichzeitig: "Někdo ve stejnou chvíli změnil totéž. Zkuste to prosím znovu.",
+    nurLesen: "Pouze pro čtení: změny teď nejsou možné.",
     bitteAnmelden: "Přihlaste se prosím.",
     zweiFaktorPflicht: "Pro administrátory je dvoufázové přihlášení povinné. Nejprve ho prosím nastavte v části „Uživatelé“.",
     nurAdmin: "Jen pro administrátory.",

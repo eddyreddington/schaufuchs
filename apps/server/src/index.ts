@@ -31,6 +31,7 @@ import { clientIp } from "./besucher-adresse";
 import { datei, pdf, zahlAus } from "./datei-hilfen";
 import { katalogDateien } from "./datei-katalog";
 import { DATEI_PFADE, dateiFehlerUebersetzen } from "./datei-sprache";
+import { lesemodusSperre } from "./lesemodus";
 import { unterlagenDateien } from "./datei-unterlagen";
 import { exportDateien } from "./datei-exporte";
 import { katalogVerzeichnis, oeffentlicheDateien } from "./datei-oeffentlich";
@@ -87,8 +88,11 @@ app.get("/api/gesund", async (c) => {
     console.error("[gesund] Zusatzangaben fehlen:", e instanceof Error ? e.message : e);
     return GESUND_UNBEKANNT;
   });
-  return c.json({ ok: true, version: VERSION, ...angaben });
+  return c.json({ ok: true, version: VERSION, nurLesen: config.nurLesen, ...angaben });
 });
+
+// Lesemodus (Entscheidung 025): schreibende Anfragen außerhalb von /trpc sperren (tRPC sperrt in trpc.ts).
+app.use("*", lesemodusSperre);
 
 // Schutz vor Anfragen fremder Seiten (CSRF): Änderungen nur als JSON und nicht von einer fremden Seite aus.
 // Die eigene Oberfläche schickt immer application/json; Formulare fremder Seiten können das nicht.

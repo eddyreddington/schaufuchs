@@ -9,6 +9,7 @@ export const pruefung: OberflaecheTexte["serverKatalog"]["pruefung"] = {
     zuTief: "Żądanie jest zbyt głęboko zagnieżdżone.",
     listeZuLang: (n: string) => `Maks. liczba pozycji na liście: ${n}.`,
     gleichzeitig: "Ktoś w tym samym czasie zmienił te same dane. Prosimy spróbować ponownie.",
+    nurLesen: "Tylko odczyt: zmiany nie są obecnie możliwe.",
     bitteAnmelden: "Prosimy się zalogować.",
     zweiFaktorPflicht: "Dla administratorów logowanie dwuskładnikowe jest obowiązkowe. Należy je najpierw skonfigurować w „Użytkownicy”.",
     nurAdmin: "Tylko dla administratorów.",

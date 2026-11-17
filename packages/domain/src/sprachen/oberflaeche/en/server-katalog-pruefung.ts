@@ -9,6 +9,7 @@ export const pruefung: OberflaecheTexte["serverKatalog"]["pruefung"] = {
     zuTief: "The request is nested too deeply.",
     listeZuLang: (n: string) => `At most ${n} items per list.`,
     gleichzeitig: "Someone changed the same data at the same time. Please try again.",
+    nurLesen: "Read only: changes are not possible at the moment.",
     bitteAnmelden: "Please sign in.",
     zweiFaktorPflicht: "Two-factor sign-in is required for administrators. Please set it up first under “Users”.",
     nurAdmin: "Administrators only.",

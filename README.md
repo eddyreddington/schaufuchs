@@ -114,6 +114,7 @@ Alles steht in `/opt/schaufuchs/.env`; der Installer legt die Datei an. Ändern 
 | `BACKUP_INTERVALL_MINUTEN`, `BACKUP_TAGE` | Wie oft gesichert wird (Vorgabe 120 Minuten) und wie lange Sicherungen bleiben (Vorgabe 30 Tage) |
 | `APP_NAME` | Name in der Oberfläche (Vorgabe „SchauFUCHS“) |
 | `APP_SPEICHER` | Arbeitsspeicher-Grenze der Anwendung (Vorgabe `2g`) |
+| `NUR_LESEN`, `NUR_LESEN_HINWEIS` | Lesemodus: `1` nimmt keine Änderungen an, Ansehen und Drucken gehen weiter (z. B. Wartung); der Hinweis erscheint in der Verwaltung – [Entscheidung 025](docs/entscheidungen/025-lesemodus.md) |
 | `DATENSCHLUESSEL`, `POSTGRES_PASSWORD`, `BACKUP_EMPFAENGER` | Vom Installer erzeugt – **nie ändern**. Ohne den Datenschlüssel sind IBAN und Zwei-Faktor-Geheimnisse nicht mehr lesbar. |
 
 Alles Fachliche – Verein, Benutzer, Schauen, Gebühren, Preise, Druckvorlagen, Briefe, Spenden – stellt die

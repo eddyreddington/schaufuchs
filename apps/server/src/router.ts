@@ -1,4 +1,5 @@
 import { authRouter } from "./routers/auth";
+import { betriebRouter } from "./routers/betrieb";
 import { druckvorlageRouter } from "./routers/druckvorlage";
 import { spendenRouter } from "./routers/spenden";
 import { meisterschaftRouter } from "./routers/meisterschaft";
@@ -23,6 +24,7 @@ import { router } from "./trpc";
 
 export const appRouter = router({
   auth: authRouter,
+  betrieb: betriebRouter,
   stammdaten: stammdatenRouter,
   schau: schauRouter,
   meldung: meldungRouter,

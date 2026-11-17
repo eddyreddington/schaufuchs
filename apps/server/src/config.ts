@@ -27,4 +27,8 @@ export const config = {
   zweiFaktorPflichtAdmin: process.env.ZWEI_FAKTOR_PFLICHT !== "0",
   /** Nur hinter einem eigenen Reverse-Proxy auf "1" setzen – dann gilt X-Forwarded-For. */
   trustProxy: process.env.TRUST_PROXY === "1",
+  /** Lesemodus (Entscheidung 025): NUR_LESEN=1 – keine Änderungen, nur Lesen und Anmelden. */
+  nurLesen: process.env.NUR_LESEN === "1",
+  /** Hinweis des Betreibers dazu (z. B. „Wartung bis 18 Uhr“), nur für angemeldete Benutzer sichtbar, nicht übersetzt. */
+  nurLesenHinweis: (process.env.NUR_LESEN_HINWEIS ?? "").trim().slice(0, 300),
 };

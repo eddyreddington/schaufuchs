@@ -4,6 +4,7 @@ export const en: Texte = {
   sprache: "Language",
   rahmen: {
     testschau: "Test show – not a real exhibition. Please do not enter real animals.",
+    nurLesen: "Entries cannot be submitted or changed at the moment.",
     rechtliches: "Legal",
     zurSchau: "Back to the show",
     impressum: "Legal notice",
@@ -232,6 +233,7 @@ export const en: Texte = {
     zuVieleTiere: "For this many animals, please contact the show management directly.",
     halleVoll: "There is not enough space left in the hall for this many animals. Please enter fewer or ask the show management.",
     schonGemeldet: "This person has already entered this show. Please ask the show management for changes.",
+    nurLesen: "Entries cannot be submitted or changed at the moment.",
     keinAusland: "This show does not accept animals from abroad (registration number with a foreign country code). Please ask the show management.",
     teilschau: "This section does not exist in the show.",
   },
