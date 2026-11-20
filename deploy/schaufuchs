@@ -123,6 +123,26 @@ absicherung_pruefen() {
   if [ "$hinweise" = 0 ]; then fett "Keine Hinweise."; else fett "$hinweise Hinweis(e). Anleitung: docs/installation.md, Abschnitt „Server absichern“."; fi
 }
 
+# Programme älterer Versionen entfernen – die laufende ($1) und die vorige ($2, für zuruecknehmen) bleiben. Sonst wächst
+# die Platte mit jedem Update um rund 850 MB. Nur für Programme aus einem Register (Name mit /).
+alte_versionen_entfernen() {
+  bild=$(wert SCHAUFUCHS_IMAGE)
+  case "$bild" in */*) ;; *) return 0 ;; esac
+  docker images --format '{{.Repository}}:{{.Tag}}' | while read -r name; do
+    case "$name" in
+      "$bild:$1" | "$bild:$2" | "$bild-backup:$1" | "$bild-backup:$2" | *":<none>") ;;
+      "$bild:"* | "$bild-backup:"*) docker image rm "$name" > /dev/null || true ;;
+    esac
+  done
+}
+
+# Freier Platz in GB dort, wo Docker seine Daten ablegt, und bei den Sicherungen (der kleinere Wert).
+frei_gb() {
+  for ort in "$(docker info -f '{{.DockerRootDir}}' 2> /dev/null)" "$ZIEL/backups"; do
+    [ -d "$ort" ] && df -Pk "$ort" | awk 'NR==2 { print int($4 / 1048576) }'
+  done | sort -n | head -n 1
+}
+
 neueste_version() {
   curl -fsSL "https://api.github.com/repos/$KONTO/schaufuchs/releases/latest" 2> /dev/null | sed -n 's/.*"tag_name": *"v\{0,1\}\([^"]*\)".*/\1/p' | head -n 1
 }
@@ -143,6 +163,15 @@ case "$befehl" in
     neu="${1:-$(neueste_version)}"
     [ -n "$neu" ] || fehler "Neueste Version nicht gefunden. Bitte angeben, z. B.: schaufuchs update 1.3.0"
     if [ "$neu" = "$alt" ]; then echo "SchauFUCHS $alt ist aktuell."; exit 0; fi
+    frei=$(frei_gb)
+    if [ -n "$frei" ] && [ "$frei" -lt 3 ]; then
+      # Ältere Installationen haben noch alle früheren Versionen liegen: erst die wegräumen, dann neu messen.
+      alte_versionen_entfernen "$alt" "$(wert SCHAUFUCHS_VORHER)"
+      frei=$(frei_gb)
+    fi
+    if [ -n "$frei" ] && [ "$frei" -lt 3 ]; then
+      fehler "Nur noch $frei GB frei, für das Update sind mindestens 3 GB nötig – nichts verändert. Bitte Platz schaffen (z. B. alte Sicherungen außer Haus kopieren und löschen)."
+    fi
     fett "Update von $alt auf $neu"
     echo "1. Sicherung des jetzigen Stands …"
     docker compose run --rm --no-deps backup einmal vor-update
@@ -164,6 +193,7 @@ case "$befehl" in
     docker compose up -d
     if gesund 90; then
       fett "SchauFUCHS $neu läuft."
+      alte_versionen_entfernen "$neu" "$alt"
     else
       echo "SchauFUCHS $neu startet nicht. Zurück auf $alt mit:  $AUFRUF zuruecknehmen" >&2
       exit 1

@@ -56,6 +56,17 @@ if [ -n "$version" ] && ! docker image inspect gefluegelschau-app:vorher > /dev/
   echo "Kein Programmstand vor dem letzten Update gefunden (gefluegelschau-app:vorher). Ohne --vorherige-version aufrufen." >&2
   exit 1
 fi
+if [ -n "$version" ]; then
+  # Programmstand: Version und Migrationen (wie in docker-start.sh).
+  stand_von() { docker run --rm --pull never --network none --entrypoint cat "$1" packages/domain/src/version.ts apps/server/drizzle/meta/_journal.json 2>/dev/null || true; }
+  s_vorher=$(stand_von gefluegelschau-app:vorher)
+  if [ -n "$s_vorher" ] && [ "$s_vorher" = "$(stand_von gefluegelschau-app:latest)" ]; then
+    # Derselbe Stand migrierte die zurückgespielte Sicherung sofort wieder – das Zurücknehmen liefe ins Leere.
+    v_vorher=$(printf '%s\n' "$s_vorher" | sed -n 's/.*VERSION = "\([^"]*\)".*/\1/p')
+    echo "gefluegelschau-app:vorher ist derselbe Programmstand ($v_vorher) wie das laufende Programm. Ohne --vorherige-version aufrufen." >&2
+    exit 1
+  fi
+fi
 
 docker compose up -d db > /dev/null
 # 1. Prüfen, bevor irgendetwas gelöscht wird: ganz durchlesen (--list allein bemerkte eine abgeschnittene Datei nicht).

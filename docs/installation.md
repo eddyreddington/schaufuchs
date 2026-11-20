@@ -355,7 +355,8 @@ Anmelden aus dem Vereinsnetz mit `ssh verwalter@192.0.2.20`. Alle `schaufuchs`-B
 - **SchauFUCHS:** `sudo schaufuchs update` holt die neueste Version, sichert vorher und startet neu (einige Minuten
   Unterbrechung). Nicht am Schautag und nicht während der Bewertung. Läuft die neue Version nicht, bringt
   `sudo schaufuchs zuruecknehmen` die alte Version mit der Sicherung von vor dem Update zurück – Eingaben seit dem Update
-  gehen dabei verloren.
+  gehen dabei verloren. Das Update braucht mindestens 3 GB freien Platz und bricht sonst ab, bevor es etwas ändert.
+  Danach behält es nur die neue und die vorige Version, ältere löscht es (ab 1.12.1).
 - **Betriebssystem:** Sicherheitsupdates kommen automatisch (Schritt 5.3). Einmal im Monat, nicht am Schautag, auch die
   übrigen Updates einspielen; dazu gehört Docker, das dabei SchauFUCHS kurz neu startet:
 
