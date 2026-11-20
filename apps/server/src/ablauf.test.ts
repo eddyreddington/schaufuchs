@@ -97,3 +97,4 @@ import "./tests/61-oberflaeche-sprache";
 import "./tests/62-gesundheitspruefung";
 import "./tests/63-lesemodus";
 import "./tests/64-einrichten-befehl";
+import "./tests/65-a-bogen-mitglieder";

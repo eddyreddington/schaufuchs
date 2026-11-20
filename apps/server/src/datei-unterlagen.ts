@@ -1,13 +1,14 @@
 /**
  * Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen,
- * B-Bogen und A-Bogen, Abrechnung und Quittungen, Kaufbelege, Kassenbericht und archivierte Belege.
+ * B-Bogen und A-Bogen (auch für die Vereinsmitglieder), Abrechnung und Quittungen, Kaufbelege, Kassenbericht und archivierte Belege.
  */
 import { and, eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { db } from "./db/client";
 import { auszahlung, katalogeintrag, meldung, verkauf } from "./db/schema";
 import { abrechnungPdf, ausstellerUnterlagenPdf, bewertungskartenPdf, kassenberichtPdf, kaufbelegPdf, preisrichterListePdf } from "./pdf/dokumente";
-import { aBogenPdf } from "./pdf/a-bogen";
+import { aBogenFuerAusstellerPdf, aBogenPdf } from "./pdf/a-bogen";
+import { serienbriefEmpfaenger } from "./services/serienbrief";
 import { archiviereKassenbeleg, archiviereKaufbeleg, archiviereQuittung, archiviereSpendenquittung, ladeBeleg, type Belegart } from "./services/kassenbuch";
 import { archivPdf, datumAus, pdf, schauFuer, zahlAus } from "./datei-hilfen";
 
@@ -49,6 +50,22 @@ export function unterlagenDateien(app: Hono<any>) {
     const datei = await aBogenPdf(s, id ?? undefined);
     if (!datei) return c.text("Meldung nicht gefunden.", 404);
     return pdf(c, datei, id ? `a-bogen-${s.slug}-${id}.pdf` : `a-bogen-${s.slug}.pdf`);
+  });
+
+  // A-Bögen für die Vereinsmitglieder (Vereinsverwaltung): je Mitglied einer, vorausgefüllt (siehe
+  // aBogenFuerAusstellerPdf); mit ?aussteller= nur für diesen. Nur Ausstellungsleitung – es sind Anschriften aller
+  // Mitglieder. Nicht zu Testschauen: deren Bögen gehen nicht an echte Mitglieder.
+  app.get("/datei/:schauId/a-bogen-mitglieder.pdf", async (c) => {
+    const s = await schauFuer(c, { nurAdmin: true });
+    if (!s) return c.text("Nicht angemeldet oder keine Berechtigung.", 403);
+    if (s.test) return c.text("Schau nicht gefunden.", 404);
+    const einzel = c.req.query("aussteller");
+    const id = einzel ? zahlAus(einzel) : undefined;
+    if (einzel && id == null) return c.text("Aussteller nicht gefunden.", 404);
+    const ids = id != null ? [id] : (await serienbriefEmpfaenger(s.organisationId, "mitglieder")).map((a) => a.id);
+    const datei = await aBogenFuerAusstellerPdf(s, ids);
+    if (!datei) return c.text("Aussteller nicht gefunden.", 404);
+    return pdf(c, datei, id != null ? `a-bogen-${s.slug}-aussteller-${id}.pdf` : `a-bogen-${s.slug}-mitglieder.pdf`);
   });
 
   app.get("/datei/:schauId/abrechnung.pdf", async (c) => {

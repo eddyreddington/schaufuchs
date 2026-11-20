@@ -71,6 +71,13 @@ export const aussteller: OberflaecheTexte["meldung"]["aussteller"] = {
   grund: "Reden",
   grundHinweis: "Zonder namen, bijv. „Verzoek tot verwijdering per e-mail van 06.11.2026”",
   endgueltig: "Definitief verwijderen",
+  aBoegenDrucken: "A-formulieren afdrukken",
+  aBogen: "A-formulier",
+  aBoegenTitel: "A-formulieren voor de leden van de vereniging",
+  aBogenFuer: (name: string) => `A-formulier voor ${name}`,
+  aBoegenAnzahl: (n: number, ohne: number) => `Leden van de vereniging: ${n}${ohne ? ` (zonder adres: ${ohne})` : ""}`,
+  aBogenKeineSchau: "Nog geen show aangemaakt.",
+  aBogenOeffnen: "Pdf openen",
 };
 
 export const mandate: OberflaecheTexte["meldung"]["mandate"] = {

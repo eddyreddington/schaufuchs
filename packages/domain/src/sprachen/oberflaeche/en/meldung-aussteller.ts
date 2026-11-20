@@ -71,6 +71,13 @@ export const aussteller: OberflaecheTexte["meldung"]["aussteller"] = {
   grund: "Reason",
   grundHinweis: "Without names, e.g. “Deletion request by e-mail of 06.11.2026”",
   endgueltig: "Delete permanently",
+  aBoegenDrucken: "Print forms A",
+  aBogen: "Form A",
+  aBoegenTitel: "Forms A for club members",
+  aBogenFuer: (name: string) => `Form A for ${name}`,
+  aBoegenAnzahl: (n: number, ohne: number) => `Club members: ${n}${ohne ? ` (without address: ${ohne})` : ""}`,
+  aBogenKeineSchau: "No show created yet.",
+  aBogenOeffnen: "Open PDF",
 };
 
 export const mandate: OberflaecheTexte["meldung"]["mandate"] = {

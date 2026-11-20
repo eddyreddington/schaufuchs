@@ -73,6 +73,13 @@ export const aussteller: OberflaecheTexte["meldung"]["aussteller"] = {
   grund: "Powód",
   grundHinweis: "Bez nazwisk, np. „Prośba o usunięcie e-mailem z 06.11.2026”",
   endgueltig: "Usuń trwale",
+  aBoegenDrucken: "Drukuj formularze A",
+  aBogen: "Formularz A",
+  aBoegenTitel: "Formularze A dla członków klubu",
+  aBogenFuer: (name: string) => `Formularz A: ${name}`,
+  aBoegenAnzahl: (n: number, ohne: number) => `Członkowie klubu: ${n}${ohne ? ` (bez adresu: ${ohne})` : ""}`,
+  aBogenKeineSchau: "Nie utworzono jeszcze żadnej wystawy.",
+  aBogenOeffnen: "Otwórz PDF",
 };
 
 export const mandate: OberflaecheTexte["meldung"]["mandate"] = {

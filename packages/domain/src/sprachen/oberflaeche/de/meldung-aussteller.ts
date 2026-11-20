@@ -69,6 +69,13 @@ export const aussteller = {
   grund: "Grund",
   grundHinweis: "Ohne Namen, z. B. „Löschwunsch per E-Mail vom 06.11.2026“",
   endgueltig: "Endgültig löschen",
+  aBoegenDrucken: "A-Bögen drucken",
+  aBogen: "A-Bogen",
+  aBoegenTitel: "A-Bögen für die Vereinsmitglieder",
+  aBogenFuer: (name: string) => `A-Bogen für ${name}`,
+  aBoegenAnzahl: (n: number, ohne: number) => `Vereinsmitglieder: ${n}${ohne ? ` (ohne Anschrift: ${ohne})` : ""}`,
+  aBogenKeineSchau: "Noch keine Schau angelegt.",
+  aBogenOeffnen: "PDF öffnen",
 };
 
 export const mandate = {

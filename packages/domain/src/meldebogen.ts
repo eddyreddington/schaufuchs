@@ -4,6 +4,7 @@
  * Gegenstück ist der B-Bogen (Meldebestätigung mit Katalognummern). Hier nur die reinen Regeln für die Tierzeilen;
  * gezeichnet wird in apps/server/src/pdf/a-bogen.ts.
  */
+import { istJugendlich } from "./gebuehren";
 import type { Alter, Meldeart } from "./types";
 
 /** Kürzel der Meldeart in der schmalen Spalte „Art“ (Erklärung steht unter der Tabelle). */
@@ -65,4 +66,13 @@ export function aBogenZeilen(tiere: ABogenTier[]): ABogenZeile[] {
     }));
   const leer = Array.from({ length: gemeldet.length ? A_BOGEN_NACHTRAG : A_BOGEN_LEERZEILEN }, () => ({ ...LEER }));
   return [...gemeldet, ...leer].map((z, i) => ({ nr: String(i + 1), ...z }));
+}
+
+/**
+ * A-Bogen für ein Vereinsmitglied ohne Meldung (Vereinsverwaltung): das gespeicherte Geburtsdatum nur, wenn es zählt –
+ * bei Jugendlichen am Stichtag (Bewertungstag). Bei Erwachsenen bleibt das Feld leer: der Bogen geht per Post, und das
+ * Datum braucht es nur für den Jugendtarif.
+ */
+export function geburtsdatumFuerABogen(geburtsdatum: string | null, stichtag: string): string | null {
+  return geburtsdatum && istJugendlich(geburtsdatum, stichtag) ? geburtsdatum : null;
 }

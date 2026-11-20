@@ -1,3 +1,4 @@
+import { ABogenDialog } from "./aussteller-a-bogen";
 import { SepaMandate } from "./aussteller-mandate";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { datum, fehlerText } from "../lib";
@@ -38,6 +39,8 @@ export function AusstellerSeite() {
   const [bearbeiten, setBearbeiten] = useState<{ id?: number } | null>(null);
   const [loeschen, setLoeschen] = useState<{ id: number; name: string } | null>(null);
   const [schreibweisen, setSchreibweisen] = useState(false);
+  // A-Bögen: null = zu, { fuer: null } = alle Mitglieder, sonst nur dieser Aussteller.
+  const [aBogen, setABogen] = useState<{ fuer: { id: number; name: string } | null } | null>(null);
   const eigene = angaben.data?.eigene ?? [];
 
   const testGewaehlt = testSchauen.some((s) => s.id === schauId);
@@ -54,6 +57,7 @@ export function AusstellerSeite() {
             <Knopf disabled={!angaben.data} onClick={() => setSchreibweisen(true)}>
               {ta.schreibweisenFestlegen}
             </Knopf>
+            <Knopf onClick={() => setABogen({ fuer: null })}>{ta.aBoegenDrucken}</Knopf>
             {/* Hier angelegt ist immer ein echter Aussteller; Test-Aussteller entstehen über Meldungen in der Testschau. */}
             {!testGewaehlt && (
               <Knopf variante="primaer" onClick={() => setBearbeiten({})}>
@@ -144,7 +148,14 @@ export function AusstellerSeite() {
             </thead>
             <tbody>
               {liste.data.map((x) => (
-                <AusstellerZeile key={x.id} x={x} bearbeiten={() => setBearbeiten({ id: x.id })} loeschen={() => setLoeschen({ id: x.id, name: `${x.vorname} ${x.nachname}` })} />
+                <AusstellerZeile
+                  key={x.id}
+                  x={x}
+                  bearbeiten={() => setBearbeiten({ id: x.id })}
+                  // Test-Aussteller bekommen keinen Bogen (die gibt es nur zu echten Schauen).
+                  aBogen={testGewaehlt ? undefined : () => setABogen({ fuer: { id: x.id, name: `${x.vorname} ${x.nachname}` } })}
+                  loeschen={() => setLoeschen({ id: x.id, name: `${x.vorname} ${x.nachname}` })}
+                />
               ))}
             </tbody>
           </table>
@@ -153,6 +164,7 @@ export function AusstellerSeite() {
 
       {bearbeiten && <BearbeitenDialog id={bearbeiten.id} eigene={eigene} schliessen={() => setBearbeiten(null)} />}
       <LoeschenDialog ziel={loeschen} schliessen={() => setLoeschen(null)} />
+      <ABogenDialog offen={!!aBogen} fuer={aBogen?.fuer ?? null} schliessen={() => setABogen(null)} />
       {schreibweisen && angaben.data && <SchreibweisenDialog daten={angaben.data} schliessen={() => setSchreibweisen(false)} />}
     </div>
   );
@@ -163,7 +175,7 @@ const zeilenAktionBasis = "inline-flex min-h-8 items-center rounded-md px-2 text
 const zeilenAktion = `${zeilenAktionBasis} hover:bg-papier hover:text-tinte`;
 const zeilenAktionGefahr = `${zeilenAktionBasis} hover:bg-kamm-hell hover:text-kamm`;
 
-function AusstellerZeile({ x, bearbeiten, loeschen }: { x: Zeile; bearbeiten: () => void; loeschen: () => void }) {
+function AusstellerZeile({ x, bearbeiten, aBogen, loeschen }: { x: Zeile; bearbeiten: () => void; aBogen?: () => void; loeschen: () => void }) {
   const t = useOberflaeche();
   const ta = t.meldung.aussteller;
   const aktiv = !x.geloeschtAm && !x.gesperrtAm;
@@ -201,9 +213,16 @@ function AusstellerZeile({ x, bearbeiten, loeschen }: { x: Zeile; bearbeiten: ()
       <td>
         <div className="flex flex-wrap justify-end gap-0.5 lg:flex-nowrap">
           {aktiv && (
-            <button type="button" className={zeilenAktion} onClick={bearbeiten}>
-              {t.allgemein.bearbeiten}
-            </button>
+            <>
+              <button type="button" className={zeilenAktion} onClick={bearbeiten}>
+                {t.allgemein.bearbeiten}
+              </button>
+              {aBogen && (
+                <button type="button" className={zeilenAktion} onClick={aBogen}>
+                  {ta.aBogen}
+                </button>
+              )}
+            </>
           )}
           {!x.geloeschtAm && (
             <>

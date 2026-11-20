@@ -1,17 +1,19 @@
 /**
  * A-Bogen (Meldebogen) zum Ausdrucken: der Aussteller füllt ihn aus, unterschreibt und schickt ihn an die
  * Meldestelle; mit der Unterschrift erkennt er AAB und Sonderbestimmungen an („Meldebogen ist unterschrieben“).
- * Leer für alle (Schauseite, Meldungen) oder vorausgefüllt aus einer Meldung (zum Unterschreiben nachreichen).
+ * Leer für alle (Schauseite, Meldungen), vorausgefüllt aus einer Meldung (zum Unterschreiben nachreichen) oder für die
+ * Vereinsmitglieder mit Name und Anschrift (Vereinsverwaltung, ohne Tiere).
  * Gegenstück: B-Bogen in pdf/dokumente.ts. Die Zeilenregeln stehen in packages/domain/src/meldebogen.ts.
  * Wie alle Drucke deutsch (Entscheidung 020).
  */
-import { aBogenZeilen, datenschutzKurz, formatEuro, GEBUEHR_LABEL, JUGEND_ALTERSGRENZE, oeffnungszeitenZeilen, teilschauenLesen, teilschauVon } from "@schau/domain";
+import { aBogenZeilen, datenschutzKurz, geburtsdatumFuerABogen, formatEuro, GEBUEHR_LABEL, JUGEND_ALTERSGRENZE, oeffnungszeitenZeilen, teilschauenLesen, teilschauVon } from "@schau/domain";
 import { config } from "../config";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "../db/client";
 import { aussteller, gebuehr, meldung } from "../db/schema";
 import { ladeVereinsangaben } from "../services/datenschutz";
 import { ladeEintraege, meldebetrag } from "../services/eintraege";
+import { echteAussteller } from "../services/testschau";
 import { bankAngabe, ueberweisung } from "../services/ueberweisung";
 import { briefkopf, datumDe, type Doc, erzeugePdf, fusszeilen, GRAU, HAARLINIE, kicker, MM, mitVermerk, SANS, SANS_FETT, SERIF, tabelle, textImFeld, TINTE, unterschrift } from "./basis";
 import { giroCodeBlock } from "./girocode";
@@ -47,21 +49,77 @@ function platz(doc: Doc, y: number, hoehe: number): number {
   return doc.page.margins.top;
 }
 
+/** Angaben zum Vorausfüllen: aus einer Meldung (mit Tieren und Überweisung) oder nur aus dem Aussteller (ohne Tiere). */
+interface Vorlage {
+  a: typeof aussteller.$inferSelect;
+  m?: typeof meldung.$inferSelect;
+  tiere: Awaited<ReturnType<typeof ladeEintraege>>;
+  ue: Awaited<ReturnType<typeof ueberweisung>> | null;
+}
+
+/** Was jeder Bogen einer Schau braucht – einmal geladen, auch für viele Bögen. */
+async function ladeGrund(s: Schau) {
+  const [d, v, gebuehren] = await Promise.all([ladeDesign(s), ladeVereinsangaben(s.organisationId), db.select().from(gebuehr).where(eq(gebuehr.schauId, s.id))]);
+  return { d, v, gebuehren };
+}
+type Grund = Awaited<ReturnType<typeof ladeGrund>>;
+
+/** PDF mit Vermerk auf jeder Seite, wenn es eine Testschau ist (wie Schauseite und Katalog). */
+function aBogenDatei(s: Schau, zeichnen: (doc: Doc) => void) {
+  return mitVermerk(s.test ? "Testschau – keine echte Ausstellung" : null, () => erzeugePdf(`A-Bogen ${s.name}`, zeichnen, { margins: A4_RAENDER }));
+}
+
+/** Leer für alle oder vorausgefüllt aus einer Meldung der Schau (null, wenn es die Meldung dort nicht gibt). */
 export async function aBogenPdf(s: Schau, meldungId?: number) {
-  const [d, v, gebuehren, vorlage] = await Promise.all([
-    ladeDesign(s),
-    ladeVereinsangaben(s.organisationId),
-    db.select().from(gebuehr).where(eq(gebuehr.schauId, s.id)),
-    meldungId == null
-      ? Promise.resolve(null)
-      : db
-          .select({ m: meldung, a: aussteller })
-          .from(meldung)
-          .innerJoin(aussteller, eq(aussteller.id, meldung.ausstellerId))
-          .where(and(eq(meldung.id, meldungId), eq(meldung.schauId, s.id)))
-          .then(async ([x]) => (x ? { ...x, tiere: await ladeEintraege(s.id, { nurMeldungId: x.m.id }), betrag: await meldebetrag(db, x.m.id) } : null)),
-  ]);
-  if (meldungId != null && !vorlage) return null;
+  const grund = await ladeGrund(s);
+  let vorlage: Vorlage | null = null;
+  if (meldungId != null) {
+    const [x] = await db
+      .select({ m: meldung, a: aussteller })
+      .from(meldung)
+      .innerJoin(aussteller, eq(aussteller.id, meldung.ausstellerId))
+      .where(and(eq(meldung.id, meldungId), eq(meldung.schauId, s.id)));
+    if (!x) return null;
+    // Vorausgefüllt mit offenem Meldegeld: Verwendungszweck mit Referenz und GiroCode (Entscheidung 021).
+    const betrag = await meldebetrag(db, x.m.id);
+    vorlage = { ...x, tiere: await ladeEintraege(s.id, { nurMeldungId: x.m.id }), ue: await ueberweisung(s, x.m, x.a, betrag) };
+  }
+  return aBogenDatei(s, (doc) => {
+    zeichneABogen(doc, s, grund, vorlage);
+    fusszeilen(doc, `A-Bogen · ${fusstext(s)}`);
+  });
+}
+
+/**
+ * Je Aussteller ein A-Bogen zur Schau, vorausgefüllt mit Name, Anschrift, Kontakt, Verein und Registriernummer
+ * (Vereinsverwaltung: Bögen für die Mitglieder). Das Geburtsdatum nur bei Jugendlichen, „Preisrichter“ nie angekreuzt
+ * – beides erklärt das Mitglied selbst. Nur echte Aussteller des eigenen Vereins, nie gesperrte oder gelöschte;
+ * Reihenfolge wie übergeben. Jeder Bogen beginnt auf einer neuen Seite und zählt seine Seiten selbst. null, wenn keiner
+ * übrig bleibt.
+ */
+export async function aBogenFuerAusstellerPdf(s: Schau, ausstellerIds: number[]) {
+  if (!ausstellerIds.length) return null;
+  const zeilen = await db
+    .select()
+    .from(aussteller)
+    .where(and(eq(aussteller.organisationId, s.organisationId), inArray(aussteller.id, ausstellerIds), echteAussteller(), isNull(aussteller.gesperrtAm), isNull(aussteller.geloeschtAm)));
+  const nachId = new Map(zeilen.map((a) => [a.id, a]));
+  const liste = ausstellerIds.map((id) => nachId.get(id)).filter((a) => a != null);
+  if (!liste.length) return null;
+  const grund = await ladeGrund(s);
+  const stichtag = s.bewertungAm ?? new Date().toISOString().slice(0, 10);
+  return aBogenDatei(s, (doc) => {
+    const anfaenge: number[] = [];
+    liste.forEach((a, i) => {
+      if (i > 0) doc.addPage();
+      anfaenge.push(doc.bufferedPageRange().count - 1);
+      zeichneABogen(doc, s, grund, { a: { ...a, geburtsdatum: geburtsdatumFuerABogen(a.geburtsdatum, stichtag), istPreisrichter: false }, tiere: [], ue: null });
+    });
+    fusszeilen(doc, `A-Bogen · ${fusstext(s)}`, anfaenge);
+  });
+}
+
+function zeichneABogen(doc: Doc, s: Schau, { d, v, gebuehren }: Grund, vorlage: Vorlage | null) {
   const a = vorlage?.a;
   const zeilen = aBogenZeilen(
     (vorlage?.tiere ?? []).map((e) => ({
@@ -81,195 +139,186 @@ export async function aBogenPdf(s: Schau, meldungId?: number) {
   const teilschauen = teilschauenLesen(s.teilschauen);
   const erklaerungen = s.erklaerungen.split("\n").map((z) => z.trim()).filter(Boolean);
   const mitBetrag = gebuehren.filter((g) => g.betragCent > 0);
-  // Vorausgefüllt mit offenem Meldegeld: Verwendungszweck mit Referenz und GiroCode (Entscheidung 021).
-  const ue = vorlage ? await ueberweisung(s, vorlage.m, vorlage.a, vorlage.betrag) : null;
+  const ue = vorlage?.ue ?? null;
   const bank = bankAngabe(s);
 
-  // Testschau: Vermerk auf jeder Seite wie auf Schauseite und Katalog.
-  return mitVermerk(s.test ? "Testschau – keine echte Ausstellung" : null, () => erzeugePdf(
-    `A-Bogen ${s.name}`,
-    (doc) => {
-      const x = doc.page.margins.left;
-      const w = breite(doc);
-      const halb = (w - 6 * MM) / 2;
-      briefkopf(doc, d, {
-        verein: verein(s),
-        zeile: kopfzeile(s),
-        art: "Meldebogen · A-Bogen",
-        titel: s.name,
-        unter: "Bitte gut lesbar ausfüllen, unterschreiben und bis zum Meldeschluss an die Meldestelle schicken.",
-        angaben: [
-          ["Meldeschluss", s.meldeschluss ? datumDe(s.meldeschluss) : "–"],
-          ["Bewertung", s.bewertungAm ? datumDe(s.bewertungAm) : "–"],
-          ...(vorlage ? ([["Meldung", `Nr. ${vorlage.m.id}`]] as [string, string][]) : []),
-        ],
-      });
+  const x = doc.page.margins.left;
+  const w = breite(doc);
+  const halb = (w - 6 * MM) / 2;
+  briefkopf(doc, d, {
+    verein: verein(s),
+    zeile: kopfzeile(s),
+    art: "Meldebogen · A-Bogen",
+    titel: s.name,
+    unter: "Bitte gut lesbar ausfüllen, unterschreiben und bis zum Meldeschluss an die Meldestelle schicken.",
+    angaben: [
+      ["Meldeschluss", s.meldeschluss ? datumDe(s.meldeschluss) : "–"],
+      ["Bewertung", s.bewertungAm ? datumDe(s.bewertungAm) : "–"],
+      ...(vorlage?.m ? ([["Meldung", `Nr. ${vorlage.m.id}`]] as [string, string][]) : []),
+    ],
+  });
 
-      // Meldestelle und Gebühren nebeneinander.
-      let y = doc.y;
-      kicker(doc, "Meldung an", x, y, d.farbe, halb);
-      const an = [v.name || verein(s), ...v.anschrift.split("\n").map((z) => z.trim()).filter(Boolean), s.kontaktEmail || v.email].filter(Boolean).join("\n");
-      doc.font(SANS).fontSize(8.5).fillColor(TINTE).text(an, x, y + 10, { width: halb, lineGap: 1 });
-      const yAn = doc.y;
-      kicker(doc, "Gebühren", x + halb + 6 * MM, y, d.farbe, halb);
-      let yG = y + 10;
-      for (const g of mitBetrag) {
-        doc.font(SANS).fontSize(8.5).fillColor(TINTE).text(`${GEBUEHR_LABEL[g.art]}${g.jugend ? " (Jugend)" : ""}`, x + halb + 6 * MM, yG, { width: halb - 22 * MM, lineBreak: false });
-        doc.text(formatEuro(g.betragCent), x + halb + 6 * MM, yG, { width: halb, align: "right", lineBreak: false });
-        yG += 11;
-      }
-      const zahlung = s.zahlungBeiEinlieferung ? "Zahlung bei der Einlieferung der Tiere." : bank ? `Mit der Meldung überweisen an: ${bank}` : "";
-      const yZahlung = ue
-        ? giroCodeBlock(doc, ue, bank, x + halb + 6 * MM, yG + 3, halb)
-        : zahlung
-          ? (doc.font(SANS).fontSize(7.5).fillColor(GRAU).text(zahlung, x + halb + 6 * MM, yG + 2, { width: halb }), doc.y)
-          : yG;
-      y = Math.max(yAn, yZahlung) + 6 * MM;
+  // Meldestelle und Gebühren nebeneinander.
+  let y = doc.y;
+  kicker(doc, "Meldung an", x, y, d.farbe, halb);
+  const an = [v.name || verein(s), ...v.anschrift.split("\n").map((z) => z.trim()).filter(Boolean), s.kontaktEmail || v.email].filter(Boolean).join("\n");
+  doc.font(SANS).fontSize(8.5).fillColor(TINTE).text(an, x, y + 10, { width: halb, lineGap: 1 });
+  const yAn = doc.y;
+  kicker(doc, "Gebühren", x + halb + 6 * MM, y, d.farbe, halb);
+  let yG = y + 10;
+  for (const g of mitBetrag) {
+    doc.font(SANS).fontSize(8.5).fillColor(TINTE).text(`${GEBUEHR_LABEL[g.art]}${g.jugend ? " (Jugend)" : ""}`, x + halb + 6 * MM, yG, { width: halb - 22 * MM, lineBreak: false });
+    doc.text(formatEuro(g.betragCent), x + halb + 6 * MM, yG, { width: halb, align: "right", lineBreak: false });
+    yG += 11;
+  }
+  const zahlung = s.zahlungBeiEinlieferung ? "Zahlung bei der Einlieferung der Tiere." : bank ? `Mit der Meldung überweisen an: ${bank}` : "";
+  const yZahlung = ue
+    ? giroCodeBlock(doc, ue, bank, x + halb + 6 * MM, yG + 3, halb)
+    : zahlung
+      ? (doc.font(SANS).fontSize(7.5).fillColor(GRAU).text(zahlung, x + halb + 6 * MM, yG + 2, { width: halb }), doc.y)
+      : yG;
+  y = Math.max(yAn, yZahlung) + 6 * MM;
 
-      // Aussteller.
-      kicker(doc, "Aussteller", x, y, d.farbe, w);
-      y += 10;
-      const reihe = (paare: [string, string, number][]) => {
-        let xi = x;
-        for (const [l, wert, anteil] of paare) {
-          const bw = anteil * w - (anteil < 1 ? 3 * MM : 0);
-          feld(doc, l, xi, y, bw, wert);
-          xi += anteil * w;
-        }
-        y += 25;
-      };
-      reihe([["Vorname *", a?.vorname ?? "", 0.5], ["Nachname *", a?.nachname ?? "", 0.5]]);
-      reihe([["Straße und Hausnummer *", a?.strasse ?? "", 1]]);
-      reihe([["PLZ *", a?.plz ?? "", 0.25], ["Ort *", a?.ort ?? "", 0.75]]);
-      reihe([["Telefon", a?.telefon ?? "", 0.5], ["E-Mail", a?.email ?? "", 0.5]]);
-      reihe([["Ortsverein *", a?.verein ?? "", 0.5], ["Kreisverband", a?.kreisverband ?? "", 0.5]]);
-      reihe([["Registriernummer nach Viehverkehrsverordnung *", a?.registriernummer ?? "", 1]]);
-      reihe([
-        ["Bei Jugend: Geburtsdatum *", a?.geburtsdatum ? datumDe(a.geburtsdatum) : "", 0.3],
-        ["Bei Jugend: Name eines Erziehungsberechtigten, der einverstanden ist *", vorlage?.m.erziehungsberechtigter ?? "", 0.7],
-      ]);
-      // Bankdaten nie vorausgefüllt: die IBAN steht verschlüsselt und gehört nicht auf ein Blatt, das per Post geht.
-      reihe([["IBAN für Preisgeld und Verkaufserlös (freiwillig, sonst bar)", "", 0.6], ["Kontoinhaber, falls abweichend", "", 0.4]]);
-      const yK = ankreuzen(doc, `Ich melde als Jugendlicher (unter ${JUGEND_ALTERSGRENZE} Jahre am Bewertungstag).`, x, y, halb, !!vorlage?.m.istJugend);
-      ankreuzen(doc, "Ich bin amtierender Preisrichter.", x + halb + 6 * MM, y, halb, !!vorlage?.m.istPreisrichter);
-      y = yK;
-      if (teilschauen.length > 1) {
-        doc.font(SANS_FETT).fontSize(8).fillColor(TINTE).text("Teilschau (eine ankreuzen):", x, y + 1, { width: w });
-        y = doc.y + 3;
-        // Zwei Spalten; jede Zeile so hoch wie ihr längster Name (bis zu 12 Teilschauen mit langen Namen).
-        const gewaehlt = vorlage ? teilschauVon(teilschauen, vorlage.m.teilschau)?.id : undefined;
-        for (let i = 0; i < teilschauen.length; i += 2) {
-          y = platz(doc, y, 12);
-          const yL = ankreuzen(doc, teilschauen[i]!.name, x, y, halb, gewaehlt === teilschauen[i]!.id);
-          const yR = teilschauen[i + 1] ? ankreuzen(doc, teilschauen[i + 1]!.name, x + halb + 6 * MM, y, halb, gewaehlt === teilschauen[i + 1]!.id) : yL;
-          y = Math.max(yL, yR);
-        }
-        y += 2;
-      }
+  // Aussteller.
+  kicker(doc, "Aussteller", x, y, d.farbe, w);
+  y += 10;
+  const reihe = (paare: [string, string, number][]) => {
+    let xi = x;
+    for (const [l, wert, anteil] of paare) {
+      const bw = anteil * w - (anteil < 1 ? 3 * MM : 0);
+      feld(doc, l, xi, y, bw, wert);
+      xi += anteil * w;
+    }
+    y += 25;
+  };
+  reihe([["Vorname *", a?.vorname ?? "", 0.5], ["Nachname *", a?.nachname ?? "", 0.5]]);
+  reihe([["Straße und Hausnummer *", a?.strasse ?? "", 1]]);
+  reihe([["PLZ *", a?.plz ?? "", 0.25], ["Ort *", a?.ort ?? "", 0.75]]);
+  reihe([["Telefon", a?.telefon ?? "", 0.5], ["E-Mail", a?.email ?? "", 0.5]]);
+  reihe([["Ortsverein *", a?.verein ?? "", 0.5], ["Kreisverband", a?.kreisverband ?? "", 0.5]]);
+  reihe([["Registriernummer nach Viehverkehrsverordnung *", a?.registriernummer ?? "", 1]]);
+  reihe([
+    ["Bei Jugend: Geburtsdatum *", a?.geburtsdatum ? datumDe(a.geburtsdatum) : "", 0.3],
+    ["Bei Jugend: Name eines Erziehungsberechtigten, der einverstanden ist *", vorlage?.m?.erziehungsberechtigter ?? "", 0.7],
+  ]);
+  // Bankdaten nie vorausgefüllt: die IBAN steht verschlüsselt und gehört nicht auf ein Blatt, das per Post geht.
+  reihe([["IBAN für Preisgeld und Verkaufserlös (freiwillig, sonst bar)", "", 0.6], ["Kontoinhaber, falls abweichend", "", 0.4]]);
+  const yK = ankreuzen(doc, `Ich melde als Jugendlicher (unter ${JUGEND_ALTERSGRENZE} Jahre am Bewertungstag).`, x, y, halb, !!vorlage?.m?.istJugend);
+  ankreuzen(doc, "Ich bin amtierender Preisrichter.", x + halb + 6 * MM, y, halb, !!vorlage?.m?.istPreisrichter);
+  y = yK;
+  if (teilschauen.length > 1) {
+    doc.font(SANS_FETT).fontSize(8).fillColor(TINTE).text("Teilschau (eine ankreuzen):", x, y + 1, { width: w });
+    y = doc.y + 3;
+    // Zwei Spalten; jede Zeile so hoch wie ihr längster Name (bis zu 12 Teilschauen mit langen Namen).
+    const gewaehlt = vorlage?.m ? teilschauVon(teilschauen, vorlage.m.teilschau)?.id : undefined;
+    for (let i = 0; i < teilschauen.length; i += 2) {
+      y = platz(doc, y, 12);
+      const yL = ankreuzen(doc, teilschauen[i]!.name, x, y, halb, gewaehlt === teilschauen[i]!.id);
+      const yR = teilschauen[i + 1] ? ankreuzen(doc, teilschauen[i + 1]!.name, x + halb + 6 * MM, y, halb, gewaehlt === teilschauen[i + 1]!.id) : yL;
+      y = Math.max(yL, yR);
+    }
+    y += 2;
+  }
 
-      // Tiere.
-      y = platz(doc, y + 4 * MM, 60 * MM);
-      kicker(doc, "Tiere", x, y, d.farbe, w);
-      doc.font(SANS).fontSize(7.5).fillColor(GRAU).text("Je Farbenschlag in dieser Reihenfolge: 1,0 jung, 1,0 alt, 0,1 jung, 0,1 alt. Bei Zwergrassen „Zwerg“ mit angeben.", x, y + 9, { width: w });
-      doc.y = doc.y + 4;
-      const sp = [7, 40, 34, 11, 13, 9, 26, 15, 10].map((b) => b * MM);
-      const faktor = w / sp.reduce((n, b) => n + b, 0);
-      tabelle(
-        doc,
-        [
-          { titel: "Nr.", breite: sp[0]! * faktor, align: "right" },
-          { titel: "Rasse", breite: sp[1]! * faktor },
-          { titel: "Farbenschlag", breite: sp[2]! * faktor },
-          { titel: "Art", breite: sp[3]! * faktor, align: "center" },
-          { titel: "1,0/0,1", breite: sp[4]! * faktor, align: "center" },
-          { titel: "j/a", breite: sp[5]! * faktor, align: "center" },
-          { titel: "Ring-Nr.", breite: sp[6]! * faktor },
-          { titel: "Vkpr. €", breite: sp[7]! * faktor, align: "right" },
-          { titel: "E. Z.", breite: sp[8]! * faktor, align: "center" },
-        ],
-        zeilen.map((z) => [z.nr, z.rasse, z.farbenschlag, z.art, z.geschlecht, z.alter, z.ring, z.preisCent ? (z.preisCent / 100).toFixed(2).replace(".", ",") : "", z.eigeneZucht ? "x" : ""]),
-        { zeilenhoehe: 6.5 * MM, schrift: 8.5 },
-      );
-      doc.font(SANS).fontSize(7).fillColor(GRAU).text("Art: E = Einzeltier, S = Stamm, V = Voliere, B = Bruteier (Satz) · j/a = jung/alt · Vkpr. = Verkaufspreis (leer = unverkäuflich) · E. Z. = eigene Zucht ankreuzen · AOC oder Neuzüchtung in Klammern hinter die Rasse schreiben.", x, doc.y + 1, { width: w });
-      y = doc.y + 5 * MM;
+  // Tiere.
+  y = platz(doc, y + 4 * MM, 60 * MM);
+  kicker(doc, "Tiere", x, y, d.farbe, w);
+  doc.font(SANS).fontSize(7.5).fillColor(GRAU).text("Je Farbenschlag in dieser Reihenfolge: 1,0 jung, 1,0 alt, 0,1 jung, 0,1 alt. Bei Zwergrassen „Zwerg“ mit angeben.", x, y + 9, { width: w });
+  doc.y = doc.y + 4;
+  const sp = [7, 40, 34, 11, 13, 9, 26, 15, 10].map((b) => b * MM);
+  const faktor = w / sp.reduce((n, b) => n + b, 0);
+  tabelle(
+    doc,
+    [
+      { titel: "Nr.", breite: sp[0]! * faktor, align: "right" },
+      { titel: "Rasse", breite: sp[1]! * faktor },
+      { titel: "Farbenschlag", breite: sp[2]! * faktor },
+      { titel: "Art", breite: sp[3]! * faktor, align: "center" },
+      { titel: "1,0/0,1", breite: sp[4]! * faktor, align: "center" },
+      { titel: "j/a", breite: sp[5]! * faktor, align: "center" },
+      { titel: "Ring-Nr.", breite: sp[6]! * faktor },
+      { titel: "Vkpr. €", breite: sp[7]! * faktor, align: "right" },
+      { titel: "E. Z.", breite: sp[8]! * faktor, align: "center" },
+    ],
+    zeilen.map((z) => [z.nr, z.rasse, z.farbenschlag, z.art, z.geschlecht, z.alter, z.ring, z.preisCent ? (z.preisCent / 100).toFixed(2).replace(".", ",") : "", z.eigeneZucht ? "x" : ""]),
+    { zeilenhoehe: 6.5 * MM, schrift: 8.5 },
+  );
+  doc.font(SANS).fontSize(7).fillColor(GRAU).text("Art: E = Einzeltier, S = Stamm, V = Voliere, B = Bruteier (Satz) · j/a = jung/alt · Vkpr. = Verkaufspreis (leer = unverkäuflich) · E. Z. = eigene Zucht ankreuzen · AOC oder Neuzüchtung in Klammern hinter die Rasse schreiben.", x, doc.y + 1, { width: w });
+  y = doc.y + 5 * MM;
 
-      // Stiftung und Spende.
-      y = platz(doc, y, 32 * MM);
-      kicker(doc, "Ehrenpreisstiftung und Spende (freiwillig)", x, y, d.farbe, w);
-      y += 10;
-      feld(doc, "Ehrenpreisstiftung, Betrag in €", x, y, 0.3 * w - 3 * MM);
-      feld(doc, "Wofür? (z. B. bestes Tier einer Rasse)", x + 0.3 * w, y, 0.7 * w);
-      y += 25;
-      feld(doc, "Spende für die Ausstellung, Betrag in €", x, y, 0.3 * w - 3 * MM);
-      ankreuzen(doc, "Meinen Namen im gedruckten Katalog als Spender nennen.", x + 0.3 * w, y + 8, 0.7 * w);
-      y += 27;
-      feld(doc, "Bemerkung an die Ausstellungsleitung", x, y, w, vorlage?.m.bemerkung ?? "");
-      y += 27;
+  // Stiftung und Spende.
+  y = platz(doc, y, 32 * MM);
+  kicker(doc, "Ehrenpreisstiftung und Spende (freiwillig)", x, y, d.farbe, w);
+  y += 10;
+  feld(doc, "Ehrenpreisstiftung, Betrag in €", x, y, 0.3 * w - 3 * MM);
+  feld(doc, "Wofür? (z. B. bestes Tier einer Rasse)", x + 0.3 * w, y, 0.7 * w);
+  y += 25;
+  feld(doc, "Spende für die Ausstellung, Betrag in €", x, y, 0.3 * w - 3 * MM);
+  ankreuzen(doc, "Meinen Namen im gedruckten Katalog als Spender nennen.", x + 0.3 * w, y + 8, 0.7 * w);
+  y += 27;
+  feld(doc, "Bemerkung an die Ausstellungsleitung", x, y, w, vorlage?.m?.bemerkung ?? "");
+  y += 27;
 
-      // Erklärungen zur Herkunft (Text des Vereins).
-      if (erklaerungen.length) {
-        doc.font(SANS).fontSize(8.5);
-        const hoehe = erklaerungen.reduce((n, t) => n + doc.heightOfString(t, { width: w - 5.5 * MM }) + 4, 14);
-        y = platz(doc, y, hoehe);
-        kicker(doc, "Erklärungen zur Herkunft der Tiere (Pflicht)", x, y, d.farbe, w);
-        y += 10;
-        for (const t of erklaerungen) y = ankreuzen(doc, t, x, y, w);
-        y += 2 * MM;
-      }
+  // Erklärungen zur Herkunft (Text des Vereins).
+  if (erklaerungen.length) {
+    doc.font(SANS).fontSize(8.5);
+    const hoehe = erklaerungen.reduce((n, t) => n + doc.heightOfString(t, { width: w - 5.5 * MM }) + 4, 14);
+    y = platz(doc, y, hoehe);
+    kicker(doc, "Erklärungen zur Herkunft der Tiere (Pflicht)", x, y, d.farbe, w);
+    y += 10;
+    for (const t of erklaerungen) y = ankreuzen(doc, t, x, y, w);
+    y += 2 * MM;
+  }
 
-      // Datenschutz (erste Ebene nach Art. 13 DSGVO) und freiwillige Online-Veröffentlichung.
-      const kurz = [...datenschutzKurz(v), `Vollständige Datenschutzhinweise: ${config.publicUrl}/s/${s.slug}/datenschutz`];
-      const online =
-        "Freiwillig: Mein Name, Wohnort und Verein dürfen auch im Internet erscheinen (Ergebnisliste und Katalog zum Herunterladen). Ohne Kreuz steht dort „nicht veröffentlicht“; widerrufen kann ich jederzeit.";
-      doc.font(SANS).fontSize(7);
-      // Kurzfassung und Einwilligung zusammen messen: das Ankreuzfeld reißt nicht vom Text weg.
-      const hDs = kurz.reduce((n, t) => n + doc.heightOfString(t, { width: w }) + 2, 30) + doc.font(SANS).fontSize(8.5).heightOfString(online, { width: w - 5.5 * MM }) + 6;
-      y = platz(doc, y, hDs);
-      kicker(doc, "Datenschutz", x, y, d.farbe, w);
-      doc.font(SANS).fontSize(7).fillColor(GRAU).text(kurz.join("\n"), x, y + 10, { width: w, paragraphGap: 2 });
-      y = doc.y + 3;
-      y = ankreuzen(doc, online, x, y, w);
+  // Datenschutz (erste Ebene nach Art. 13 DSGVO) und freiwillige Online-Veröffentlichung.
+  const kurz = [...datenschutzKurz(v), `Vollständige Datenschutzhinweise: ${config.publicUrl}/s/${s.slug}/datenschutz`];
+  const online =
+    "Freiwillig: Mein Name, Wohnort und Verein dürfen auch im Internet erscheinen (Ergebnisliste und Katalog zum Herunterladen). Ohne Kreuz steht dort „nicht veröffentlicht“; widerrufen kann ich jederzeit.";
+  doc.font(SANS).fontSize(7);
+  // Kurzfassung und Einwilligung zusammen messen: das Ankreuzfeld reißt nicht vom Text weg.
+  const hDs = kurz.reduce((n, t) => n + doc.heightOfString(t, { width: w }) + 2, 30) + doc.font(SANS).fontSize(8.5).heightOfString(online, { width: w - 5.5 * MM }) + 6;
+  y = platz(doc, y, hDs);
+  kicker(doc, "Datenschutz", x, y, d.farbe, w);
+  doc.font(SANS).fontSize(7).fillColor(GRAU).text(kurz.join("\n"), x, y + 10, { width: w, paragraphGap: 2 });
+  y = doc.y + 3;
+  y = ankreuzen(doc, online, x, y, w);
 
-      // Anerkennung und Unterschrift.
-      y = platz(doc, y + 3 * MM, 48 * MM);
-      kicker(doc, "Anerkennung und Unterschrift", x, y, d.farbe, w);
-      doc
-        .font(SANS)
-        .fontSize(8.5)
-        .fillColor(TINTE)
-        .text(
-          "Mit meiner Unterschrift erkenne ich die Allgemeinen Ausstellungsbestimmungen (AAB) des BDRG und die Sonderbestimmungen dieser Schau an. Danach stehen Name, Wohnort und Verein mit meinen Tieren und Bewertungen im gedruckten Katalog. Ich bestätige die angekreuzten Erklärungen.",
-          x,
-          y + 10,
-          { width: w, lineGap: 1 },
-        );
-      y = doc.y + 14 * MM;
-      const drittel = (w - 8 * MM) / 3;
-      unterschrift(doc, x, y, drittel, "Ort, Datum");
-      unterschrift(doc, x + drittel + 4 * MM, y, drittel, "Unterschrift Aussteller");
-      unterschrift(doc, x + 2 * (drittel + 4 * MM), y, drittel, "bei Jugend: Erziehungsberechtigte(r)");
+  // Anerkennung und Unterschrift.
+  y = platz(doc, y + 3 * MM, 48 * MM);
+  kicker(doc, "Anerkennung und Unterschrift", x, y, d.farbe, w);
+  doc
+    .font(SANS)
+    .fontSize(8.5)
+    .fillColor(TINTE)
+    .text(
+      "Mit meiner Unterschrift erkenne ich die Allgemeinen Ausstellungsbestimmungen (AAB) des BDRG und die Sonderbestimmungen dieser Schau an. Danach stehen Name, Wohnort und Verein mit meinen Tieren und Bewertungen im gedruckten Katalog. Ich bestätige die angekreuzten Erklärungen.",
+      x,
+      y + 10,
+      { width: w, lineGap: 1 },
+    );
+  y = doc.y + 14 * MM;
+  const drittel = (w - 8 * MM) / 3;
+  unterschrift(doc, x, y, drittel, "Ort, Datum");
+  unterschrift(doc, x + drittel + 4 * MM, y, drittel, "Unterschrift Aussteller");
+  unterschrift(doc, x + 2 * (drittel + 4 * MM), y, drittel, "bei Jugend: Erziehungsberechtigte(r)");
 
-      // Termine und Sonderbestimmungen zum Nachlesen.
-      const termine: [string, string][] = [
-        ["Einlieferung", s.einlieferung],
-        ["Öffnungszeiten", oeffnungszeitenZeilen(s.oeffnungszeiten).join(", ")],
-        ["Tierausgabe", s.aussetzen],
-      ].filter(([, t]) => t?.trim()) as [string, string][];
-      if (termine.length || s.bestimmungen.trim()) {
-        // Unter der Unterschrift, wenn es dort passt – sonst auf einer eigenen Seite.
-        doc.font(SANS).fontSize(8.5);
-        const hoehe = 12 * MM + termine.length * 12 + (s.bestimmungen.trim() ? doc.heightOfString(s.bestimmungen.trim(), { width: w, lineGap: 1.5 }) + 3 * MM : 0);
-        y = platz(doc, y + 14 * MM, Math.min(hoehe, unten(doc) - doc.page.margins.top));
-        doc.font(SERIF).fontSize(15).fillColor(TINTE).text("Termine und Sonderbestimmungen", x, y, { width: w });
-        y = doc.y + 3 * MM;
-        for (const [l, t] of termine) {
-          doc.font(SANS_FETT).fontSize(8.5).fillColor(TINTE).text(`${l}: `, x, y, { continued: true }).font(SANS).text(t, { width: w });
-          y = doc.y + 2;
-        }
-        if (s.bestimmungen.trim()) doc.font(SANS).fontSize(8.5).fillColor(TINTE).text(s.bestimmungen.trim(), x, y + 3 * MM, { width: w, lineGap: 1.5 });
-      }
-      fusszeilen(doc, `A-Bogen · ${fusstext(s)}`);
-    },
-    { margins: A4_RAENDER },
-  ));
+  // Termine und Sonderbestimmungen zum Nachlesen.
+  const termine: [string, string][] = [
+    ["Einlieferung", s.einlieferung],
+    ["Öffnungszeiten", oeffnungszeitenZeilen(s.oeffnungszeiten).join(", ")],
+    ["Tierausgabe", s.aussetzen],
+  ].filter(([, t]) => t?.trim()) as [string, string][];
+  if (termine.length || s.bestimmungen.trim()) {
+    // Unter der Unterschrift, wenn es dort passt – sonst auf einer eigenen Seite.
+    doc.font(SANS).fontSize(8.5);
+    const hoehe = 12 * MM + termine.length * 12 + (s.bestimmungen.trim() ? doc.heightOfString(s.bestimmungen.trim(), { width: w, lineGap: 1.5 }) + 3 * MM : 0);
+    y = platz(doc, y + 14 * MM, Math.min(hoehe, unten(doc) - doc.page.margins.top));
+    doc.font(SERIF).fontSize(15).fillColor(TINTE).text("Termine und Sonderbestimmungen", x, y, { width: w });
+    y = doc.y + 3 * MM;
+    for (const [l, t] of termine) {
+      doc.font(SANS_FETT).fontSize(8.5).fillColor(TINTE).text(`${l}: `, x, y, { continued: true }).font(SANS).text(t, { width: w });
+      y = doc.y + 2;
+    }
+    if (s.bestimmungen.trim()) doc.font(SANS).fontSize(8.5).fillColor(TINTE).text(s.bestimmungen.trim(), x, y + 3 * MM, { width: w, lineGap: 1.5 });
+  }
 }

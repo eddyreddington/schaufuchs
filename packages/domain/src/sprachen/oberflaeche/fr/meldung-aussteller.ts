@@ -71,6 +71,13 @@ export const aussteller: OberflaecheTexte["meldung"]["aussteller"] = {
   grund: "Motif",
   grundHinweis: "Sans nom, p. ex. « Demande de suppression par e-mail du 06.11.2026 »",
   endgueltig: "Supprimer définitivement",
+  aBoegenDrucken: "Imprimer les formulaires A",
+  aBogen: "Formulaire A",
+  aBoegenTitel: "Formulaires A pour les membres du club",
+  aBogenFuer: (name: string) => `Formulaire A pour ${name}`,
+  aBoegenAnzahl: (n: number, ohne: number) => `Membres du club : ${n}${ohne ? ` (sans adresse : ${ohne})` : ""}`,
+  aBogenKeineSchau: "Aucune exposition créée pour l’instant.",
+  aBogenOeffnen: "Ouvrir le PDF",
 };
 
 export const mandate: OberflaecheTexte["meldung"]["mandate"] = {

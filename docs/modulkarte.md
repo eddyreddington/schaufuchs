@@ -594,7 +594,7 @@ Tests: `meisterschaft.test.ts`
 - `werteMeisterschaft()` – Wertet eine Meisterschaft aus.
 - Typen: `GleichstandKriterium`, `SparteRegel`, `MeisterschaftRegel`, `MeisterschaftVorlage`, `Kandidat`, `Gruppe`
 
-### meldebogen.ts (68 Z.)
+### meldebogen.ts (78 Z.)
 A-Bogen (Meldebogen): das Formular, das der Aussteller ausfüllt und unterschreibt – Anschrift, Registriernummer, Tiere in der Reihenfolge des Melde …
 Tests: `meldebogen.test.ts`
 
@@ -603,6 +603,7 @@ Tests: `meldebogen.test.ts`
 - `A_BOGEN_LEERZEILEN` – Leerer A-Bogen: so viele Schreibzeilen, dass Tabelle und Unterschrift auf zwei Seiten passen.
 - `A_BOGEN_NACHTRAG` – Vorausgefüllter A-Bogen: nach den gemeldeten Tieren noch Platz für Nachträge.
 - `aBogenZeilen()` – Zeilen der Tiertabelle: gemeldete Tiere in der gemeldeten Reihenfolge (fortlaufend nummeriert), dann leere Schreibzeilen – leerer Bogen `A_BOGEN_LE …
+- `geburtsdatumFuerABogen()` – A-Bogen für ein Vereinsmitglied ohne Meldung (Vereinsverwaltung): das gespeicherte Geburtsdatum nur, wenn es zählt – bei Jugendlichen am Stichtag ( …
 - Typen: `ABogenTier`, `ABogenZeile`
 
 ### noten.ts (70 Z.)
@@ -778,7 +779,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `katalog`
 
-### meldung-aussteller.ts (98 Z.)
+### meldung-aussteller.ts (105 Z.)
 
 - `aussteller`
 - `mandate`
@@ -969,7 +970,7 @@ Texte der Oberfläche: katalog – Katalognummern, Reihenfolge, Katalog gestalte
 
 - `katalog`
 
-### meldung-aussteller.ts (95 Z.)
+### meldung-aussteller.ts (102 Z.)
 
 - `aussteller` – Texte der Oberfläche: meldung, Teil Aussteller des Vereins (seiten/aussteller.tsx) und SEPA-Mandate (seiten/aussteller-mandate.tsx).
 - `mandate`
@@ -1167,7 +1168,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `katalog`
 
-### meldung-aussteller.ts (97 Z.)
+### meldung-aussteller.ts (104 Z.)
 
 - `aussteller`
 - `mandate`
@@ -1352,7 +1353,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `katalog`
 
-### meldung-aussteller.ts (97 Z.)
+### meldung-aussteller.ts (104 Z.)
 
 - `aussteller`
 - `mandate`
@@ -1541,7 +1542,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `katalog`
 
-### meldung-aussteller.ts (97 Z.)
+### meldung-aussteller.ts (104 Z.)
 
 - `aussteller`
 - `mandate`
@@ -1727,7 +1728,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `katalog`
 
-### meldung-aussteller.ts (99 Z.)
+### meldung-aussteller.ts (106 Z.)
 
 - `aussteller`
 - `mandate`
@@ -2426,10 +2427,13 @@ Route aus `apps/web/src/routes.tsx`, dahinter die aufgerufenen Prozeduren.
 ### abrechnung.tsx (443 Z.) – `/schau/:schauId/abrechnung`
 Prozeduren: auth.status, kasse.abrechnung, kasse.auszahlen, kasse.auszahlungStornieren, kasse.ueberweisungenBuchen, kasse.ueberweisungsdatei, kasse.ueberweisungsdateiErstellen, kasse.ueberweisungsdateiVerwerfen, meldung.erstattungenBuchen, meldung.zuErstatten, schau.get
 
+### aussteller-a-bogen.tsx (57 Z.)
+Prozeduren: druckvorlage.serienbriefAnzahl, schau.liste
+
 ### aussteller-mandate.tsx (95 Z.)
 Prozeduren: lastschrift.mandatAnlegen, lastschrift.mandatWiderrufen, lastschrift.mandate
 
-### aussteller.tsx (465 Z.) – `/aussteller`
+### aussteller.tsx (484 Z.) – `/aussteller`
 Prozeduren: schau.liste, verein.aussteller, verein.ausstellerDaten, verein.ausstellerLoeschen, verein.ausstellerSpeichern, verein.vereinsangaben, verein.vereinsnamenSetzen
 
 ### benutzer-bearbeiten.tsx (241 Z.)
@@ -2740,7 +2744,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 ### PDFs `apps/server/src/pdf`
 
-- `a-bogen.ts` (275 Z.) – A-Bogen (Meldebogen) zum Ausdrucken: der Aussteller füllt ihn aus, unterschreibt und schickt ihn an die Meldestelle; mit der Unterschrift erkennt e … · aBogenPdf
+- `a-bogen.ts` (324 Z.) – A-Bogen (Meldebogen) zum Ausdrucken: der Aussteller füllt ihn aus, unterschreibt und schickt ihn an die Meldestelle; mit der Unterschrift erkennt e … · aBogenPdf, aBogenFuerAusstellerPdf
 - `auskunft.ts` (296 Z.) · auskunftPdf
 - `basis.ts` (425 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, teilSeite, seitenzahlen, tabelle, textImFeld, angaben, hinweisKastenHoehe, hinweisKasten, unterschrift, ueberschrift, datumDe
 - `bewertungskarte.ts` (325 Z.) – Bewertungskarten nach der Druckvorlage der Schau (Format, Bausteine oder Vordruck-Felder, Versatz) – dazu die Vorschau für den Designer und der Pro … · ladeKartenVorlage, kartenKopf, bewertungskartenPdf, BEISPIEL_KARTEN, zeichneKartenPdf, probedruckPdf
@@ -2801,7 +2805,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datei-oeffentlich.ts` (141 Z.) – Öffentliche Dateien ohne Anmeldung, jeweils mit Bremse je Adresse: GET /o/:id/schauen.ics – eigene Schauen des Vereins als Kalender (iCal) GET /s/: … · katalogVerzeichnis, oeffentlicheDateien
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
 - `datei-sprache.ts` (37 Z.) – Fehlertexte der Datei-Adressen (/datei/…, /s/…, /o/…) in der Sprache der Oberfläche (Entscheidung 022). · DATEI_PFADE, dateiFehlerUebersetzen
-- `datei-unterlagen.ts` (120 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, B-Bogen und A-Bogen, Abrechnung und Q … · unterlagenDateien
+- `datei-unterlagen.ts` (137 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, B-Bogen und A-Bogen (auch für die Ver … · unterlagenDateien
 - `einrichten.ts` (68 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026), im Container aufgerufen von `schaufuchs einrichten`: bun src/einrichten.ts --verein "GZV …
 - `index.ts` (278 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
 - `lesemodus.ts` (48 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an, z. B. während einer Wartung oder wenn der Betreiber eine Instal … · IM_LESEMODUS_ERLAUBT, trpcGesperrt, lesemodusSperre
@@ -2910,5 +2914,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `62-gesundheitspruefung.ts` (116 Z.) – Gesundheitsprüfung `/api/gesund` (Entscheidung 024): neben `ok` und `version` die letzte Sicherung, offene Migrationen und laufende Schautage.
 - `63-lesemodus.ts` (137 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an – außer Anmelden, Abmelden, Zwei-Faktor einrichten, eigenes Pass …
 - `64-einrichten-befehl.ts` (249 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026): `schaufuchs einrichten` ruft im Container `bun src/einrichten.ts` auf.
+- `65-a-bogen-mitglieder.ts` (103 Z.) – A-Bögen für die Vereinsmitglieder (Vereinsverwaltung, „Aussteller“): je Mitglied ein A-Bogen zur gewählten Schau, vorausgefüllt mit Name und Anschr …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

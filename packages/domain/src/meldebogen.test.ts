@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { A_BOGEN_LEERZEILEN, A_BOGEN_NACHTRAG, aBogenZeilen, type ABogenTier } from "./meldebogen";
+import { A_BOGEN_LEERZEILEN, A_BOGEN_NACHTRAG, aBogenZeilen, type ABogenTier, geburtsdatumFuerABogen } from "./meldebogen";
 
 const tier = (position: number, teil: Partial<ABogenTier> = {}): ABogenTier => ({
   rasse: "Wyandotten",
@@ -47,5 +47,15 @@ describe("A-Bogen (Meldebogen)", () => {
 
   test("Kürzel aller Meldearten", () => {
     expect(aBogenZeilen([tier(1, { art: "voliere" }), tier(2, { art: "bruteier" })]).slice(0, 2).map((x) => x.art)).toEqual(["V", "B"]);
+  });
+});
+
+describe("Geburtsdatum auf dem A-Bogen eines Vereinsmitglieds", () => {
+  test("nur bei Jugendlichen am Stichtag – Erwachsene bekommen ein leeres Feld", () => {
+    expect(geburtsdatumFuerABogen("2010-06-01", "2026-12-12")).toBe("2010-06-01");
+    expect(geburtsdatumFuerABogen("2008-12-12", "2026-12-12")).toBeNull(); // genau 18 am Stichtag: kein Jugendtarif
+    expect(geburtsdatumFuerABogen("2008-12-13", "2026-12-12")).toBe("2008-12-13");
+    expect(geburtsdatumFuerABogen("1970-01-01", "2026-12-12")).toBeNull();
+    expect(geburtsdatumFuerABogen(null, "2026-12-12")).toBeNull();
   });
 });

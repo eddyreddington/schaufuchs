@@ -72,6 +72,13 @@ export const aussteller: OberflaecheTexte["meldung"]["aussteller"] = {
   grund: "Důvod",
   grundHinweis: "Bez jmen, např. „Žádost o výmaz e-mailem ze dne 06.11.2026“",
   endgueltig: "Trvale smazat",
+  aBoegenDrucken: "Tisk formulářů A",
+  aBogen: "Formulář A",
+  aBoegenTitel: "Formuláře A pro členy spolku",
+  aBogenFuer: (name: string) => `Formulář A: ${name}`,
+  aBoegenAnzahl: (n: number, ohne: number) => `Členové spolku: ${n}${ohne ? ` (bez adresy: ${ohne})` : ""}`,
+  aBogenKeineSchau: "Zatím není založena žádná výstava.",
+  aBogenOeffnen: "Otevřít PDF",
 };
 
 export const mandate: OberflaecheTexte["meldung"]["mandate"] = {
