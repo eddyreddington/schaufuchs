@@ -1436,9 +1436,10 @@ Formulare einer Seite Ungespeichertes, steht für jedes ein eigener Knopf
 da (z. B. „Einstellungen speichern“ und „Gebühren speichern“). Wer die
 Seite mit Ungespeichertem verlässt, wird vorher gefragt.
 <strong>Ausnahme Hallenplan:</strong> Der Editor speichert jede Änderung
-sofort; dort steht oben rechts statt eines Knopfs „Gespeichert“, „Wird
-gespeichert …“ oder in Rot „Nicht gespeichert“ (dann steht unten rechts
-der Grund, und der Plan zeigt wieder den gespeicherten Stand).</p>
+sofort; dort steht oben rechts „Gespeichert“, „Wird gespeichert …“ oder
+in Rot „Nicht gespeichert“ (dann steht unten rechts der Grund, und der
+Plan zeigt wieder den gespeicherten Stand). Der Knopf „Speichern“ im
+Seitenkopf prüft das nur nach (siehe „Verschieben und drehen“).</p>
 <h4 id="punkte-der-prüfliste">Punkte der Prüfliste</h4>
 <p>Die Prüfliste nennt jeden Punkt nur kurz. Hier steht, was
 dahintersteckt. In den Phasen „Katalog &amp; Halle“ und „Einlieferung“
@@ -3053,16 +3054,21 @@ wieder dorthin, wo die Software sie gestellt hat. Eine verschobene Reihe
 merkt sich ihre Nummer (R1, R2 …): Ändern Sie danach die Halle
 (Wandreihen, Richtung, Gang) oder kommen tiefere Käfige dazu, können
 sich die Nummern verschieben – prüfen Sie dann die verschobenen Reihen.
-Alles wird sofort gespeichert und steht im Protokoll – einen
-Speichern-Knopf gibt es im Editor nicht; oben rechts (in der Vollansicht
-unter dem Plan) steht „Gespeichert“, „Wird gespeichert …“ oder „Nicht
-gespeichert“. Die Käfigreihen rechnet die Software danach neu. Hat
-inzwischen jemand anders an der Halle gespeichert (zweiter Rechner),
-erscheint „Die Halle wurde inzwischen von jemand anderem geändert …“,
-und der Plan lädt neu – nichts wird still überschrieben; machen Sie die
-Änderung dann noch einmal. Ragt etwas über die Halle hinaus oder
-überschneidet es sich mit einer Reihe oder Fläche, steht über dem Plan
-ein Hinweis.</p>
+Alles wird sofort gespeichert und steht im Protokoll; oben rechts (in
+der Vollansicht unter dem Plan) steht „Gespeichert“, „Wird gespeichert
+…“ oder „Nicht gespeichert“. Der Knopf „Speichern“ im Seitenkopf ist
+gesperrt, solange noch etwas gespeichert wird; danach holt er den Stand
+vom Server und meldet „Alles gespeichert …“, „Die letzte Änderung wurde
+nicht gespeichert (Grund siehe Meldung).“ oder, wenn inzwischen jemand
+anders am Plan gespeichert hat, „Gespeichert. Inzwischen hat jemand
+anders den Plan geändert …“ – dann zeigt der Plan dessen Stand. Ein
+Klick ist nie nötig, schadet aber nicht. Die Käfigreihen rechnet die
+Software danach neu. Hat inzwischen jemand anders an der Halle
+gespeichert (zweiter Rechner), erscheint „Die Halle wurde inzwischen von
+jemand anderem geändert …“, und der Plan lädt neu – nichts wird still
+überschrieben; machen Sie die Änderung dann noch einmal. Ragt etwas über
+die Halle hinaus oder überschneidet es sich mit einer Reihe oder Fläche,
+steht über dem Plan ein Hinweis.</p>
 <p><strong>Leere Käfige entfernen:</strong> Im festen Plan bleiben nach
 einem Storno oder einer geänderten Käfiggröße freie Plätze stehen
 (gestrichelt, „frei“). Was leer ist, lässt sich entfernen: Wählen Sie

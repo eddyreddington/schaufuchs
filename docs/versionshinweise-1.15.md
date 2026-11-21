@@ -21,6 +21,12 @@ Gegenüber 1.14.0 ist neu:
 - „Einteilung nach Nummern“: Die Namen der Preisrichter werden nicht mehr abgeschnitten, Kopf und Felder enden bündig.
 - Auf schmalen Bildschirmen scrollen beide Tabellen waagerecht, statt die Felder zu stauchen.
 
+### Hallenplan: Knopf „Speichern“
+
+- Im Seitenkopf des Hallenplans steht jetzt „Speichern“. Der Editor speichert weiterhin jede Änderung sofort; der Knopf
+  prüft das nach: Er holt den Stand vom Server und meldet „Alles gespeichert“, eine nicht gespeicherte letzte Änderung
+  oder dass inzwischen jemand anders den Plan geändert hat. Solange noch gespeichert wird, ist er gesperrt.
+
 ### Update
 
 `sudo schaufuchs update` sichert vorher und holt 1.15.0. An der Datenbank ändert sich nichts.
