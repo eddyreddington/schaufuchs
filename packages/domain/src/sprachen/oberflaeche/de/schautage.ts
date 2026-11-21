@@ -167,6 +167,7 @@ export const schautage = {
     ergebnisseFreigeben: "Ergebnisse freigeben",
     kontingentSchau: "Kontingent (gemeinsam für die Schau)",
     kontingentRichter: "Kontingente je Preisrichter",
+    preisverteilungPdf: "Preisverteilung (PDF)",
     bereich: "Bereich",
     bewertet: "bewertet",
     tiereMitPunkten: "Tiere mit Punkten",

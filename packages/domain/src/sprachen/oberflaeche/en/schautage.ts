@@ -169,6 +169,7 @@ export const schautage: OberflaecheTexte["schautage"] = {
     ergebnisseFreigeben: "Release results",
     kontingentSchau: "Quota (shared for the show)",
     kontingentRichter: "Quotas per judge",
+    preisverteilungPdf: "Prize distribution (PDF)",
     bereich: "Area",
     bewertet: "judged",
     tiereMitPunkten: "Animals with points",

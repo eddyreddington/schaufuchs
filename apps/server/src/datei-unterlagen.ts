@@ -1,5 +1,5 @@
 /**
- * Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen,
+ * Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, Preisverteilung,
  * B-Bogen und A-Bogen (auch für die Vereinsmitglieder), Abrechnung und Quittungen, Kaufbelege, Kassenbericht und archivierte Belege.
  */
 import { and, eq } from "drizzle-orm";
@@ -8,6 +8,7 @@ import { db } from "./db/client";
 import { auszahlung, katalogeintrag, meldung, verkauf } from "./db/schema";
 import { abrechnungPdf, ausstellerUnterlagenPdf, bewertungskartenPdf, kassenberichtPdf, kaufbelegPdf, preisrichterListePdf } from "./pdf/dokumente";
 import { aBogenFuerAusstellerPdf, aBogenPdf } from "./pdf/a-bogen";
+import { preisverteilungPdf } from "./pdf/preisverteilung";
 import { serienbriefEmpfaenger } from "./services/serienbrief";
 import { archiviereKassenbeleg, archiviereKaufbeleg, archiviereQuittung, archiviereSpendenquittung, ladeBeleg, type Belegart } from "./services/kassenbuch";
 import { archivPdf, datumAus, pdf, schauFuer, zahlAus } from "./datei-hilfen";
@@ -27,6 +28,17 @@ export function unterlagenDateien(app: Hono<any>) {
     const pr = zahlAus(c.req.param("prId"));
     if (pr == null) return c.text("Preisrichter nicht gefunden.", 404);
     return pdf(c, await preisrichterListePdf(s, pr), `bewertungsliste.pdf`);
+  });
+
+  // Preisverteilung: alle Preisrichter (je einer ab neuer Seite) oder mit ?preisrichter= nur einer. Ohne Ausstellernamen.
+  app.get("/datei/:schauId/preisverteilung.pdf", async (c) => {
+    const s = await schauFuer(c);
+    if (!s) return c.text("Nicht angemeldet oder keine Berechtigung.", 403);
+    const pr = c.req.query("preisrichter");
+    if (pr && zahlAus(pr) == null) return c.text("Preisrichter nicht gefunden.", 404);
+    const datei = await preisverteilungPdf(s, pr ? zahlAus(pr)! : undefined);
+    if (!datei) return c.text("Preisrichter nicht gefunden.", 404);
+    return pdf(c, datei, `preisverteilung-${s.slug}.pdf`);
   });
 
   app.get("/datei/:schauId/aussteller.pdf", async (c) => {

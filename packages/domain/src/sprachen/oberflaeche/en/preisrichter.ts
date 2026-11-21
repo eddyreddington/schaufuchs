@@ -31,6 +31,8 @@ export const preisrichter: OberflaecheTexte["preisrichter"] = {
     pinErzeugen: "Create PIN",
     liste: "List",
     karten: "Cards",
+    preise: "Prizes",
+    preiseTitel: "Prize distribution (PDF)",
     loeschenFrage: (name) => `Delete ${name}?`,
     loeschenLabel: (name) => `Delete ${name}`,
     pinFuer: (name) => `PIN for ${name}`,

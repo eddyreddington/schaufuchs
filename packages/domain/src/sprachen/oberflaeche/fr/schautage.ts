@@ -169,6 +169,7 @@ export const schautage: OberflaecheTexte["schautage"] = {
     ergebnisseFreigeben: "Valider les résultats",
     kontingentSchau: "Contingent (commun à l’exposition)",
     kontingentRichter: "Contingents par juge",
+    preisverteilungPdf: "Répartition des prix (PDF)",
     bereich: "Domaine",
     bewertet: "jugés",
     tiereMitPunkten: "Animaux avec points",

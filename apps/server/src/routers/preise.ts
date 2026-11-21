@@ -65,6 +65,8 @@ export const preiseRouter = router({
       preisarten: arten,
       kontingentJe: s.kontingentJe,
       kontingente: kontingente(eintraege, zu, richter, arten, s.kontingentJe),
+      /** Für die Preisverteilung: bei Kontingent „je Schau“ gibt es auch ohne Preisrichter eine Zeile. */
+      anzahlPreisrichter: richter.length,
       stiftungen,
       eintraege: eintraege
         .filter((e) => e.punkte != null)

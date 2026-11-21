@@ -4,7 +4,7 @@ import { centZuText, datum, fehlerText, formatEuro, formatKatalognummer, parseEu
 import { useSchauId } from "../rahmen";
 import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
-import { Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, Laden, Marke, SEITE, Seitenkopf, TabellenRahmen, useFrage, useMeldung } from "../ui";
+import { Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, KnopfLink, Laden, Marke, SEITE, Seitenkopf, TabellenRahmen, useFrage, useMeldung } from "../ui";
 
 type Daten = Ausgabe["preise"]["uebersicht"];
 
@@ -150,7 +150,16 @@ export function Preise() {
         }
       />
 
-      <Teil titel={d.kontingentJe === "schau" ? tp.kontingentSchau : tp.kontingentRichter}>
+      <Teil
+        titel={d.kontingentJe === "schau" ? tp.kontingentSchau : tp.kontingentRichter}
+        aktionen={
+          d.anzahlPreisrichter > 0 && (
+            <KnopfLink href={`/datei/${schauId}/preisverteilung.pdf`} target="_blank" rel="noreferrer">
+              {tp.preisverteilungPdf}
+            </KnopfLink>
+          )
+        }
+      >
         <table className="tabelle">
           <thead>
             <tr>

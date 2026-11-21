@@ -151,6 +151,7 @@ export function Preisrichter() {
                         )}
                         <a href={`/datei/${schauId}/preisrichter/${r.id}/liste.pdf`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>{tx.liste}</a>
                         <a href={`/datei/${schauId}/bewertungskarten.pdf?preisrichter=${r.id}`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>{tx.karten}</a>
+                        <a href={`/datei/${schauId}/preisverteilung.pdf?preisrichter=${r.id}`} target="_blank" rel="noreferrer" title={tx.preiseTitel} className={knopfKlasse("leise", false, ZEILE)}>{tx.preise}</a>
                         {istAdmin && (
                           <>
                             <Knopf variante="leise" className={ZEILE} onClick={() => setBearbeiten(r)}>{t.allgemein.bearbeiten}</Knopf>

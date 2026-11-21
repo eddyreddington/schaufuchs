@@ -171,6 +171,7 @@ export const schautage: OberflaecheTexte["schautage"] = {
     ergebnisseFreigeben: "Schválit výsledky",
     kontingentSchau: "Kontingent (společný pro výstavu)",
     kontingentRichter: "Kontingenty podle posuzovatele",
+    preisverteilungPdf: "Rozdělení cen (PDF)",
     bereich: "Oblast",
     bewertet: "posouzeno",
     tiereMitPunkten: "Zvířata s body",

@@ -473,7 +473,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (56 Z.)
+### index.ts (57 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -630,6 +630,15 @@ Tests: `meldebogen.test.ts`
 - `pruefeNotenaenderung()` – Prüft, ob eine Bewertung geändert oder zurückgesetzt werden darf, obwohl das Tier schon Preise hat.
 - `stiftungsanteil()` – Anteil des nächsten gestifteten Preises: der noch nicht vergebene Rest der Stiftung, geteilt durch die freien Plätze (aufgerundet; der letzte Platz …
 - Typen: `Preisart`, `VergabePruefung`
+
+### preisverteilung.ts (81 Z.)
+Preisverteilung eines Preisrichters (Blatt für die Preisvergabe in der Halle): je Preisart so viele Zeilen, wie der Preisrichter vergeben darf.
+Tests: `preisverteilung.test.ts`
+
+- `VerteilungArt` (Typ) – Eine Preisart der Schau, in Druckfolge.
+- `VerteilungVergabe` (Typ) – Ein vergebener Preis an einem Tier dieses Preisrichters, in Katalogfolge.
+- `preisverteilung()`
+- Typen: `VerteilungZeile`
 
 ### ruecksprung.ts (16 Z.)
 Tests: `ruecksprung.test.ts`
@@ -796,7 +805,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (96 Z.)
+### preisrichter.ts (98 Z.)
 
 - `preisrichter`
 
@@ -812,7 +821,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schau`
 
-### schautage.ts (219 Z.)
+### schautage.ts (220 Z.)
 
 - `schautage`
 
@@ -989,7 +998,7 @@ Texte der Oberfläche: preisrichter, Teil import – Import aus Altprogrammen (E
 
 - `preisrichterTermine` – Texte der Oberfläche: preisrichter, Teil termine – Katalogseite „Kommende Schauen“ (Entscheidung 022).
 
-### preisrichter.ts (94 Z.)
+### preisrichter.ts (96 Z.)
 Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mit Einteilung, dazu die Seiten „Kommende Schauen“ (`termine`) und Impor …
 
 - `preisrichter`
@@ -1007,7 +1016,7 @@ Texte der Oberfläche: schau (Entscheidung 022) – Liste der Schauen, Übersich
 
 - `schau`
 
-### schautage.ts (215 Z.)
+### schautage.ts (216 Z.)
 
 - `schautage` – Texte der Oberfläche: schautage – Einlieferung, Tierausgabe, Tiergesundheit, Bewertung am PC, Preise (Entscheidung 022).
 
@@ -1185,7 +1194,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (93 Z.)
+### preisrichter.ts (95 Z.)
 
 - `preisrichter`
 
@@ -1201,7 +1210,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schau`
 
-### schautage.ts (217 Z.)
+### schautage.ts (218 Z.)
 
 - `schautage`
 
@@ -1370,7 +1379,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (93 Z.)
+### preisrichter.ts (95 Z.)
 
 - `preisrichter`
 
@@ -1386,7 +1395,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schau`
 
-### schautage.ts (217 Z.)
+### schautage.ts (218 Z.)
 
 - `schautage`
 
@@ -1559,7 +1568,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (93 Z.)
+### preisrichter.ts (95 Z.)
 
 - `preisrichter`
 
@@ -1575,7 +1584,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schau`
 
-### schautage.ts (217 Z.)
+### schautage.ts (218 Z.)
 
 - `schautage`
 
@@ -1745,7 +1754,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (97 Z.)
+### preisrichter.ts (99 Z.)
 
 - `preisrichter`
 
@@ -1761,7 +1770,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schau`
 
-### schautage.ts (220 Z.)
+### schautage.ts (221 Z.)
 
 - `schautage`
 
@@ -2283,7 +2292,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `oeffentlich.onlineVeroeffentlichung` mutation · öffentlich – Einwilligung in die Online-Veröffentlichung erteilen oder widerrufen (Art. 7 Abs. 3 DSGVO) – so einfach wie die Erteilung.
 - `oeffentlich.ergebnisse` query · öffentlich
 
-### routers/preise.ts (298 Z.) → `preise`
+### routers/preise.ts (300 Z.) → `preise`
 
 - `preise.uebersicht` query · angemeldet
 - `preise.vergeben` mutation · admin
@@ -2627,10 +2636,10 @@ Prozeduren: meldung.liste, schau.get
 ### oeffentlich.tsx (573 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
 Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.meineMeldung, oeffentlich.melden, oeffentlich.onlineVeroeffentlichung, oeffentlich.rechtstexte, oeffentlich.schau
 
-### preise.tsx (471 Z.) – `/schau/:schauId/preise`
+### preise.tsx (480 Z.) – `/schau/:schauId/preise`
 Prozeduren: auth.status, preise.entfernen, preise.freigeben, preise.stiftungBarErhalten, preise.stiftungLoeschen, preise.stiftungSpeichern, preise.uebersicht, preise.vergeben, schau.get
 
-### preisrichter.tsx (548 Z.) – `/schau/:schauId/preisrichter`
+### preisrichter.tsx (568 Z.) – `/schau/:schauId/preisrichter`
 Prozeduren: preisrichter.einteilungSetzen, preisrichter.einteilungVorschlagen, preisrichter.liste, preisrichter.loeschen, preisrichter.pinErzeugen, preisrichter.speichern, preisrichter.sperreAufheben, preisrichter.zuteilung, preisrichter.zuteilungSetzen, preisrichter.zuteilungVorschlagen, schau.get, stammdaten.gliederung
 
 ### protokoll.tsx (138 Z.) – `/schau/:schauId/protokoll`
@@ -2720,7 +2729,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `preise.ts` (174 Z.) · vergebePreis, entfernePreis
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
 - `protokoll.ts` (37 Z.) · protokolliere
-- `pruefung.ts` (366 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, kontingente, checkliste
+- `pruefung.ts` (368 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste
 - `rassebild.ts` (86 Z.) – Rassebilder für den Katalog: prüfen und speichern (Oberfläche und Einspielen aus dem Netz). · RASSEBILD_MAX_BYTES, jpegAnzeige, oeffneBild, pruefeRassebild, speichereRassebild
 - `serienbrief.ts` (34 Z.) – Empfänger eines Serienbriefs: Vereinsmitglieder, alle Aussteller des Vereins oder die Aussteller mit bestätigter Meldung zu einer Schau. · SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger
 - `spenden-quittung.ts` (34 Z.) – Spendenquittung einer Spende erzeugen (für das Belegarchiv, services/kassenbuch.ts): Briefkopf und Farbe aus der Briefvorlage des Vereins, Hinweis … · spendenquittung
@@ -2765,6 +2774,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `katalog-vorspann.ts` (310 Z.) – Katalog-PDF, Inhaltsteile vor dem Tierteil: Grußworte, Ausstellungsleitung und Termine, Preisrichter, Kennzahlen, Preise und Stifter, Bestimmungen, … · vorspann, ehrentafel
 - `katalog.ts` (89 Z.) – Katalog-PDF, Einstieg: lädt die Grundlage (katalog-kontext.ts) und setzt die Teile der Reihe nach – Titelseite (katalog-titel.ts), Vorspann und Ehr … · katalogPdf
 - `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
+- `preisverteilung.ts` (108 Z.) – Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und leeren Zeilen zum Eintragen in der … · preisverteilungPdf
 - `spenden.ts` (257 Z.) – Spenden: Zuwendungsbestätigung nach amtlichem Muster (Geld, Sache, Sammelbestätigung mit Anlage) und die einfache Spendenquittung für die Kasse. · zuwendungsbestaetigungPdf, spendenquittungPdf
 
 ### Datenbank `apps/server/src/db`
@@ -2805,7 +2815,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datei-oeffentlich.ts` (141 Z.) – Öffentliche Dateien ohne Anmeldung, jeweils mit Bremse je Adresse: GET /o/:id/schauen.ics – eigene Schauen des Vereins als Kalender (iCal) GET /s/: … · katalogVerzeichnis, oeffentlicheDateien
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
 - `datei-sprache.ts` (37 Z.) – Fehlertexte der Datei-Adressen (/datei/…, /s/…, /o/…) in der Sprache der Oberfläche (Entscheidung 022). · DATEI_PFADE, dateiFehlerUebersetzen
-- `datei-unterlagen.ts` (137 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, B-Bogen und A-Bogen (auch für die Ver … · unterlagenDateien
+- `datei-unterlagen.ts` (149 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, Preisverteilung, B-Bogen und A-Bogen … · unterlagenDateien
 - `einrichten.ts` (68 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026), im Container aufgerufen von `schaufuchs einrichten`: bun src/einrichten.ts --verein "GZV …
 - `index.ts` (278 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
 - `lesemodus.ts` (48 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an, z. B. während einer Wartung oder wenn der Betreiber eine Instal … · IM_LESEMODUS_ERLAUBT, trpcGesperrt, lesemodusSperre
@@ -2918,5 +2928,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `63-lesemodus.ts` (137 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an – außer Anmelden, Abmelden, Zwei-Faktor einrichten, eigenes Pass …
 - `64-einrichten-befehl.ts` (249 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026): `schaufuchs einrichten` ruft im Container `bun src/einrichten.ts` auf.
 - `65-a-bogen-mitglieder.ts` (103 Z.) – A-Bögen für die Vereinsmitglieder (Vereinsverwaltung, „Aussteller“): je Mitglied ein A-Bogen zur gewählten Schau, vorausgefüllt mit Name und Anschr …
+- `66-preisverteilung.ts` (130 Z.) – Preisverteilung je Preisrichter als PDF (/datei/:schauId/preisverteilung.pdf): je Preisart so viele Zeilen wie sein Kontingent, vergebene mit Katal …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

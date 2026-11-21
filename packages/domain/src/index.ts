@@ -4,6 +4,7 @@ export * from "./geld";
 export * from "./gebuehren";
 export * from "./katalog";
 export * from "./preise";
+export * from "./preisverteilung";
 export * from "./abrechnung";
 export * from "./stammdaten";
 export * from "./besatz";

@@ -73,6 +73,9 @@ export function offeneStiftungen(
 /** Kennung der Zeile „Gesamte Schau“, wenn das Kontingent für alle Preisrichter gemeinsam gilt. */
 export const GESAMT = 0;
 
+/** Zählt fürs Kontingent: nicht als fehlend gemeldet, und eingeliefert oder schon bewertet. */
+export const ausgestellt = (e: Eintrag) => e.status !== "fehlt" && (e.status !== "katalogisiert" || e.bewertet);
+
 /**
  * Preiskontingente aus der Zahl der ausgestellten Tiere: eingeliefert oder bewertet, nicht fehlend.
  * Ein bewertetes Tier war nachweislich da, auch wenn die Einlieferung nicht abgehakt ist.
@@ -100,7 +103,6 @@ export function kontingente(
         vergeben: zugeteilt.reduce((n, e) => n + e.preise.filter((p) => p.preisartId === a.id).length, 0),
       })),
   });
-  const ausgestellt = (e: Eintrag) => e.status !== "fehlt" && (e.status !== "katalogisiert" || e.bewertet);
   if (je === "schau") {
     const alle = eintraege.filter((e) => zuteil.has(e.id));
     return [zeile(GESAMT, "Gesamte Schau", alle.filter(ausgestellt), alle, richter.length)];

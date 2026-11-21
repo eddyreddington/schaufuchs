@@ -172,6 +172,7 @@ export const schautage: OberflaecheTexte["schautage"] = {
     ergebnisseFreigeben: "Zatwierdź wyniki",
     kontingentSchau: "Pula (wspólna dla wystawy)",
     kontingentRichter: "Pule na sędziego",
+    preisverteilungPdf: "Podział nagród (PDF)",
     bereich: "Zakres",
     bewertet: "ocenione",
     tiereMitPunkten: "Zwierzęta z punktami",

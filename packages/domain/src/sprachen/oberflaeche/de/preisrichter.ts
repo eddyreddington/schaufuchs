@@ -32,6 +32,8 @@ export const preisrichter = {
     pinErzeugen: "PIN erzeugen",
     liste: "Liste",
     karten: "Karten",
+    preise: "Preise",
+    preiseTitel: "Preisverteilung (PDF)",
     loeschenFrage: (name: string) => `${name} löschen?`,
     loeschenLabel: (name: string) => `${name} löschen`,
     pinFuer: (name: string) => `PIN für ${name}`,

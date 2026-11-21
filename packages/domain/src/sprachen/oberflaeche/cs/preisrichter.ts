@@ -34,6 +34,8 @@ export const preisrichter: OberflaecheTexte["preisrichter"] = {
     pinErzeugen: "Vytvořit PIN",
     liste: "Seznam",
     karten: "Posudkové listy",
+    preise: "Ceny",
+    preiseTitel: "Rozdělení cen (PDF)",
     loeschenFrage: (name) => `Smazat: ${name}?`,
     loeschenLabel: (name) => `Smazat: ${name}`,
     pinFuer: (name) => `PIN pro: ${name}`,

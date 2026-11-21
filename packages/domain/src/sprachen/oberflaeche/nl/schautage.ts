@@ -169,6 +169,7 @@ export const schautage: OberflaecheTexte["schautage"] = {
     ergebnisseFreigeben: "Resultaten vrijgeven",
     kontingentSchau: "Contingent (gezamenlijk voor de show)",
     kontingentRichter: "Contingenten per keurmeester",
+    preisverteilungPdf: "Prijsverdeling (PDF)",
     bereich: "Onderdeel",
     bewertet: "gekeurd",
     tiereMitPunkten: "Dieren met punten",
