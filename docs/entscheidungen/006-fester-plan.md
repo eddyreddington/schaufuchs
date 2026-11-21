@@ -10,5 +10,8 @@ rechnet bei jeder Änderung neu. *Aus* = festgeschrieben (`festschreiben()` spei
 selbst, neue Tiere kommen auf freie Plätze oder stehen unter „Platz“, geänderte Einstellungen gelten, die Käfige bleiben stehen.
 Das erste Verschieben, Drehen oder Ausrichten im Editor schreibt den Plan vorher fest. Zurück nur über „Plan neu setzen“
 (`neuSetzen()`, mit Rückfrage – Verschobenes und eingesetzte Teile fallen weg, Möbel bleiben). Die Reihenrichtung lässt sich nur bei „an“ ändern.
+„Nach Plan nummerieren“ vergibt nur Nummern, kein Tier wechselt dabei den Käfig (Rückmeldung 21.11.2026; vorher rückten Tiere
+in freie Plätze auf). Nachmeldungen, die noch nicht im festen Plan stehen, werden dabei mit ihrer jetzigen Lage festgeschrieben
+(`mitBelegung`) – ihr Platz hinge sonst an der Nummer, die sich beim Nummerieren ändert.
 
-**Wo:** `hallenplan.ts` (`planeHalle`), `hallenplan-fest.ts` (`festschreiben`, `festGeometrie`), `hallenplan-neu.ts`, Router `katalog.planFestschreiben` / `katalog.planNeuSetzen`, Test `24-plan-fest`, `40-hallenplan-neu-setzen`.
+**Wo:** `hallenplan.ts` (`planeHalle`), `hallenplan-fest.ts` (`festschreiben`, `festGeometrie`), `hallenplan-neu.ts`, Router `katalog.planFestschreiben` / `katalog.planNeuSetzen`, Test `24-plan-fest`, `36-nach-plan-nummerieren`, `40-hallenplan-neu-setzen`.

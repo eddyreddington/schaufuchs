@@ -101,7 +101,7 @@ export function planFolge(plan: Pick<Hallenplan, "reihen" | "objekte" | "voliere
 /**
  * Reihenplätze, je mit ihrem Lauf: zusammenhängende Plätze einer Käfiggröße in einer Zeile. Seit die Sparten ohne Lücke
  * hintereinander stehen (14.11.2026), kann dieselbe Größe in einer Reihe mehrmals vorkommen (Hühner, Zwerghühner, Hühner
- * Jugend) – Restplätze vor einer anderen Größe sind dann kein „Platz dazwischen“, und kein Tier rückt über die andere Größe.
+ * Jugend) – Restplätze vor einer anderen Größe sind dann kein „Platz dazwischen“.
  */
 function reihenLaeufe(plan: Pick<Hallenplan, "reihen" | "objekte">, richtung: "quer" | "laengs"): (PlanPlatz & { lauf: number })[] {
   let lauf = 0;
@@ -141,7 +141,7 @@ export function planUnordnung(plan: Pick<Hallenplan, "reihen" | "objekte"> & { f
   let freiDazwischen = 0;
   // Je Lauf (Zeile, zusammenhängend eine Käfiggröße): ein Reserveplatz am Ende ist kein „Platz dazwischen“, auch wenn
   // dieselbe Größe weiter hinten in der Reihe oder in einer anderen Reihe weitergeht. Von Hand versetzte Tiere und von Hand
-  // frei gemachte Plätze zählen nicht (dort rückt beim Auffüllen nichts).
+  // frei gemachte Plätze zählen nicht (bewusst frei gemacht, keine Lücke).
   for (const gruppe of new Set(plaetze.map((p) => p.lauf))) {
     const ps = plaetze.filter((p) => p.lauf === gruppe);
     const letzteBelegt = ps.map((p) => p.tierId != null && !vonHand.has(p.tierId)).lastIndexOf(true);
@@ -157,43 +157,6 @@ export function planUnordnung(plan: Pick<Hallenplan, "reihen" | "objekte"> & { f
     vorher = n;
   }
   return { freiDazwischen, nichtInFolge };
-}
-
-/**
- * Lückenlos auffüllen (fester Plan): in jeder Reihe (Zeile des Plans) rücken die Tiere je Käfiggröße in der Folge des
- * Plans in die Plätze dieser Größe, die freien wandern ans Ende dieser Größe (je zusammenhängendem Lauf, `reihenLaeufe`). Kein Tier kommt in einen Platz anderer Größe; Volieren und Käfigblöcke
- * bleiben. Tiere auf angebauten Platten (Nachmeldungen, nicht im festen Plan) rücken in frei gewordene feste Plätze –
- * was danach übrig bleibt, stellt der feste Plan wie gewohnt.
- */
-export function luekenlosAuffuellen(fest: FesterPlan, plan: Pick<Hallenplan, "reihen" | "objekte">, richtung: "quer" | "laengs"): { fest: FesterPlan; verschoben: number } {
-  const schluessel = (reihe: number, x: number, y: number, etage?: number) => `${reihe}|${x}|${y}|${etage ?? 0}`;
-  const imFest = new Set(fest.reihen.flatMap((r) => r.plaetze.map((p) => schluessel(r.nr, p.x, p.y, p.etage))));
-  const plaetze = reihenLaeufe(plan, richtung);
-  const { vonHand, freiGemacht } = handZuordnung(fest);
-  const neu = new Map<string, number | null>();
-  // Je Lauf (Zeile, zusammenhängend eine Käfiggröße) – kein Tier rückt in eine andere Reihe oder über eine andere Größe.
-  // Von Hand versetzte Tiere bleiben, wo sie stehen, von Hand frei gemachte Plätze bleiben frei (Rückmeldung 15.11.2026); die
-  // übrigen Tiere rücken in die übrigen Plätze.
-  for (const gruppe of new Set(plaetze.map((p) => p.lauf))) {
-    const ps = plaetze.filter((p) => p.lauf === gruppe);
-    const bleibt = (p: (typeof ps)[number]) => (p.tierId != null && vonHand.has(p.tierId)) || (p.tierId == null && freiGemacht(p));
-    const tiere = ps.flatMap((p) => (p.tierId != null && !bleibt(p) ? [p.tierId] : []));
-    ps.filter((p) => !bleibt(p) && imFest.has(schluessel(p.reihe!, p.x, p.y, p.etage))).forEach((p, i) => neu.set(schluessel(p.reihe!, p.x, p.y, p.etage), tiere[i] ?? null));
-  }
-  // Wo steht jedes Tier jetzt im Plan (auch auf einer angebauten Platte)? Gezählt wird, wer einen anderen Platz bekommt.
-  const bisher = new Map(plaetze.flatMap((p) => (p.tierId != null ? [[p.tierId, schluessel(p.reihe!, p.x, p.y, p.etage)] as const] : [])));
-  let verschoben = 0;
-  const reihen = fest.reihen.map((r) => ({
-    ...r,
-    plaetze: r.plaetze.map((p) => {
-      const k = schluessel(r.nr, p.x, p.y, p.etage);
-      if (!neu.has(k)) return p;
-      const tierId = neu.get(k)!;
-      if (tierId != null && bisher.get(tierId) !== k) verschoben++;
-      return { ...p, tierId };
-    }),
-  }));
-  return { fest: { ...fest, reihen }, verschoben };
 }
 
 /**

@@ -17,7 +17,7 @@ export const katalogHallenplan = {
    */
   hallenplan: benutzerProcedure.input(z.object({ schauId: dbId })).query(async ({ ctx, input }) => {
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
-    const { tiere, richter, sitzen, farben } = await planTiere(s);
+    const { tiere, richter, farben } = await planTiere(s);
     const halle = s.halle ?? null;
     const plan = halle ? planeHalle(halle, tiere, s.kaefigMasse, s.hallenplanFest) : null;
     return {
@@ -29,8 +29,6 @@ export const katalogHallenplan = {
       plan,
       /** Fester Plan nach dem Umstellen: freie Plätze zwischen belegten, Nummern nicht in Planfolge (für den Hinweis). */
       unordnung: plan && halle && s.hallenplanFest ? planUnordnung(plan, halle.richtung ?? "quer", s.katalogGedruckt) : null,
-      /** Schon Tiere eingeliefert: freie Plätze bleiben, wo sie sind (nur nummeriert wird noch nach dem Plan). */
-      eingeliefert: sitzen,
       anzahl: tiere.length,
       ohneNummer: tiere.filter((t) => t.nr == null).length,
       masse: s.kaefigMasse ?? {},

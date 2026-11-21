@@ -26,8 +26,6 @@ export const halleWerkzeuge = {
     ohneNummer: "ohne Nummer",
     getauscht: (a: string, b: string) => `Nr. ${a} und Nr. ${b} getauscht`,
     versetzt: (a: string) => `Nr. ${a} versetzt`,
-    aufgerueckt: (n: number) => `${n} ${n === 1 ? "Tier ist" : "Tiere sind"} lückenlos aufgerückt.`,
-    aufrueckenGesperrt: "Schon Tiere eingeliefert: nur nummeriert, nicht aufgerückt.",
     nummernFolgenSchon: "Die Katalognummern folgen schon dem Plan.",
     plaetzeFolgenSchon: "Die Käfigplätze folgen schon dem Plan.",
     nummernNeu: (n: number, ohnePlatz: number) => `${n} Katalognummern neu nach dem Plan vergeben${ohnePlatz ? ` – ${ohnePlatz} Tiere ohne Platz stehen am Ende` : ""}.`,

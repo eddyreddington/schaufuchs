@@ -22,8 +22,6 @@ export const halleWerkzeuge: OberflaecheTexte["halleWerkzeuge"] = {
     ohneNummer: "sans numéro",
     getauscht: (a: string, b: string) => `N° ${a} et n° ${b} échangés`,
     versetzt: (a: string) => `N° ${a} déplacé`,
-    aufgerueckt: (n: number) => `${n} ${n === 1 ? "animal a été avancé" : "animaux ont été avancés"} sans lacune.`,
-    aufrueckenGesperrt: "Animaux déjà enlogés : numérotés seulement, pas avancés.",
     nummernFolgenSchon: "Les numéros de catalogue suivent déjà le plan.",
     plaetzeFolgenSchon: "Les places de cage suivent déjà le plan.",
     nummernNeu: (n: number, ohnePlatz: number) => `${n} numéros de catalogue réattribués selon le plan${ohnePlatz ? ` – ${ohnePlatz} animaux sans place sont à la fin` : ""}.`,

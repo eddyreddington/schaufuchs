@@ -1,7 +1,7 @@
 /** Reihenfolge der Käfige im Plan (zum Neu-Durchnummerieren nach dem Umstellen). */
 import { describe, expect, test } from "bun:test";
 import { HALLE_STANDARD, festschreiben, planeHalle, type Halle, type PlanTier } from "./hallenplan";
-import { luekenlosAuffuellen, planFolge, planUnordnung } from "./hallenplan-folge";
+import { planFolge, planUnordnung } from "./hallenplan-folge";
 import type { KaefigTyp } from "./kaefige";
 
 const tier = (id: number, typ: KaefigTyp, sparte = "Hühner"): PlanTier => ({ id, typ, nr: String(id), rasse: "R", sparte, preisrichterId: null });
@@ -76,56 +76,41 @@ describe("Reihenfolge im Plan: Gegenprüfung", () => {
   });
 });
 
-describe("Lückenlos auffüllen nach dem Umstellen (Rückmeldung: Nummern gemischt, freie Plätze mitten in der Reihe)", () => {
+describe("Unordnung nach dem Umstellen erkennen (freie Plätze mitten in der Reihe, Nummern nicht in Planfolge)", () => {
   const halle: Halle = { ...basis, richtung: "laengs", wandreihen: false };
   const neun = viele(9, "huehner", 1);
   const fest = festschreiben(halle, planeHalle(halle, neun, {}), {}, "x");
 
-  test("Storno mitten in der Reihe: die Tiere rücken in Planfolge nach, die freien Plätze stehen am Ende", () => {
+  test("Storno mitten in der Reihe: die freien Plätze zählen als Lücke, die Tiere bleiben stehen", () => {
     const tiere = neun.filter((t) => t.id !== 2 && t.id !== 5);
-    const vorher = planeHalle(halle, tiere, {}, fest);
-    expect(planUnordnung(vorher, "laengs")).toMatchObject({ freiDazwischen: 2 });
-    const { fest: neu, verschoben } = luekenlosAuffuellen(fest, vorher, "laengs");
-    expect(verschoben).toBe(6); // 3, 4, 6, 7, 8 und 9 rücken nach, die 1 bleibt
-    const nachher = planeHalle(halle, tiere, {}, neu);
-    const r = nachher.reihen[0]!;
-    expect(r.kaefige.map((k) => [k.id, k.y])).toEqual([[1, 150], [3, 220], [4, 290], [6, 360], [7, 430], [8, 500], [9, 570]]);
-    expect((r.freiePlaetze ?? []).map((f) => f.y)).toEqual([640, 710]);
-    expect(planUnordnung(nachher, "laengs")).toMatchObject({ freiDazwischen: 0 });
+    const p = planeHalle(halle, tiere, {}, fest);
+    expect(planUnordnung(p, "laengs")).toMatchObject({ freiDazwischen: 2 });
+    expect(p.reihen[0]!.kaefige.map((k) => [k.id, k.y])).toEqual([[1, 150], [3, 290], [4, 360], [6, 500], [7, 570], [8, 640], [9, 710]]);
   });
 
-  test("nur in Plätze gleicher Größe: ein Zwerghuhn rückt nicht in einen freien Hühnerplatz", () => {
+  test("freier Platz am Ende einer Käfiggröße vor der nächsten: Reserve, keine Lücke", () => {
     const halle2: Halle = { ...halle, richtung: "laengs" };
     const tiere = [...viele(3, "huehner", 1), ...viele(4, "zwerghuehner", 10)];
     const f = festschreiben(halle2, planeHalle(halle2, tiere, {}), {}, "x");
-    const ohne2 = tiere.filter((t) => t.id !== 2);
-    const { fest: neu } = luekenlosAuffuellen(f, planeHalle(halle2, ohne2, {}, f), "laengs");
-    const r = planeHalle(halle2, ohne2, {}, neu).reihen[0]!;
-    // Huhn 3 rückt auf Platz 2; der freie Hühnerplatz bleibt am Ende der Hühnerplatte, die Zwerghühner bleiben stehen.
-    expect(r.kaefige.filter((k) => k.typ === "huehner").map((k) => [k.id, k.y])).toEqual([[1, 150], [3, 220]]);
-    expect(r.kaefige.filter((k) => k.typ === "zwerghuehner").map((k) => k.id)).toEqual([10, 11, 12, 13]);
-    expect((r.freiePlaetze ?? []).map((f) => `${f.typ}@${f.y}`)).toEqual(["huehner@290"]);
+    // Huhn 3 storniert: der letzte Hühnerplatz vor den Zwerghühnern wird frei.
+    expect(planUnordnung(planeHalle(halle2, tiere.filter((t) => t.id !== 3), {}, f), "laengs").freiDazwischen).toBe(0);
+    // Huhn 2 storniert: frei zwischen Huhn 1 und Huhn 3 – eine Lücke.
+    expect(planUnordnung(planeHalle(halle2, tiere.filter((t) => t.id !== 2), {}, f), "laengs").freiDazwischen).toBe(1);
   });
 
-  test("umgestellte Platten: aufgefüllt wird in der Folge, in der die Platten jetzt stehen", () => {
+  test("umgestellte Platte und Storno: Lücke und Nummern nicht in Planfolge zugleich", () => {
     // Platte 1 (Tiere 1–3) hinter Platte 3 gestellt, Tier 8 storniert: Folge im Plan 4,5,6,7,_,9,1,2,3.
     const versetzt: Halle = { ...halle, plattenVersatz: [{ reihe: 1, platte: 0, dx: 0, dy: 630 }] };
-    const tiere = neun.filter((t) => t.id !== 8);
-    const vorher = planeHalle(versetzt, tiere, {}, fest);
-    expect(planFolge(vorher, "laengs")).toEqual([4, 5, 6, 7, 9, 1, 2, 3]);
-    expect(planUnordnung(vorher, "laengs")).toMatchObject({ freiDazwischen: 1, nichtInFolge: 1 });
-    const { fest: neu } = luekenlosAuffuellen(fest, vorher, "laengs");
-    const nachher = planeHalle(versetzt, tiere, {}, neu);
-    expect(planFolge(nachher, "laengs")).toEqual([4, 5, 6, 7, 9, 1, 2, 3]);
-    expect(planUnordnung(nachher, "laengs").freiDazwischen).toBe(0);
+    const p = planeHalle(versetzt, neun.filter((t) => t.id !== 8), {}, fest);
+    expect(planFolge(p, "laengs")).toEqual([4, 5, 6, 7, 9, 1, 2, 3]);
+    expect(planUnordnung(p, "laengs")).toMatchObject({ freiDazwischen: 1, nichtInFolge: 1 });
   });
 
-  test("Nachmeldung auf einem frei gewordenen Platz: nichts zu verschieben, aber die Nummern folgen nicht dem Plan", () => {
+  test("Nachmeldung auf einem frei gewordenen Platz: keine Lücke, aber die Nummern folgen nicht dem Plan", () => {
     const tiere = [...neun.filter((t) => t.id !== 5), { ...tier(20, "huehner"), nr: "9a" }];
     // 9a kommt auf den freien Platz von 5 (gleiche Reihe) – lückenlos, aber zwischen 4 und 6.
     const p = planeHalle(halle, tiere, {}, fest);
     expect(p.reihen[0]!.kaefige.find((k) => k.id === 20)!.y).toBe(430);
-    expect(luekenlosAuffuellen(fest, p, "laengs").verschoben).toBe(0);
     expect(planUnordnung(p, "laengs")).toEqual({ freiDazwischen: 0, nichtInFolge: 1 });
   });
 
@@ -143,8 +128,8 @@ describe("Lückenlos auffüllen nach dem Umstellen (Rückmeldung: Nummern gemisc
   });
 });
 
-describe("Lückenlos auffüllen nur innerhalb einer Reihe", () => {
-  test("Reserveplätze am Ende einer Reihe bleiben – keine Tiere aus der nächsten Reihe (oder Sparte) rücken dorthin", () => {
+describe("Freie Plätze: Reserve am Ende oder Lücke mitten in der Reihe", () => {
+  test("Reserveplätze am Ende einer Käfiggröße zählen nicht als Lücke", () => {
     const halle: Halle = { ...basis, richtung: "laengs", wandreihen: false };
     // Eine Reihe, lückenlos: Hühner (4 Tiere: Platte zu 3, die zweite mit 2 freien Plätzen), Zwerghühner, wieder Hühner
     // (Jugend) – die freien Hühnerplätze stehen vor den Zwerghühnern, die Jugend-Hühner rücken nicht darüber nach vorn.
@@ -154,22 +139,15 @@ describe("Lückenlos auffüllen nur innerhalb einer Reihe", () => {
     const fest = festschreiben(halle, plan, {}, "x");
     const p = planeHalle(halle, tiere, {}, fest);
     expect(planUnordnung(p, "laengs")).toEqual({ freiDazwischen: 0, nichtInFolge: 0 });
-    expect(luekenlosAuffuellen(fest, p, "laengs").verschoben).toBe(0);
   });
 
-  test("Abmeldung mitten in den Hühnern: aufgefüllt wird nur bis zur nächsten Käfiggröße", () => {
+  test("Abmeldung mitten in den Hühnern: eine Lücke", () => {
     const halle: Halle = { ...basis, richtung: "laengs", wandreihen: false };
     const tiere = [...viele(4, "huehner", 1, "Hühner"), ...viele(4, "zwerghuehner", 10, "Zwerghühner"), ...viele(3, "huehner", 20, "Hühner Jugend")];
     const fest = festschreiben(halle, planeHalle(halle, tiere, {}), {}, "x");
     const ohne2 = tiere.filter((t) => t.id !== 2);
     const p = planeHalle(halle, ohne2, {}, fest);
     expect(planUnordnung(p, "laengs").freiDazwischen).toBe(1);
-    const { fest: neu, verschoben } = luekenlosAuffuellen(fest, p, "laengs");
-    // 3 und 4 rücken nach, die Jugend-Hühner bleiben hinter den Zwerghühnern.
-    expect(verschoben).toBe(2);
-    const danach = planeHalle(halle, ohne2, {}, neu);
-    expect(planFolge(danach, "laengs")).toEqual([1, 3, 4, 10, 11, 12, 13, 20, 21, 22]);
-    expect(planUnordnung(danach, "laengs").freiDazwischen).toBe(0);
   });
 });
 

@@ -25,8 +25,6 @@ export const halleWerkzeuge: OberflaecheTexte["halleWerkzeuge"] = {
     ohneNummer: "bez čísla",
     getauscht: (a: string, b: string) => `Č. ${a} a č. ${b} prohozena`,
     versetzt: (a: string) => `Č. ${a} přemístěno`,
-    aufgerueckt: (n: number) => `${n} ${tvar(n, "zvíře se posunulo", "zvířata se posunula", "zvířat se posunulo")} bez mezer.`,
-    aufrueckenGesperrt: "Zvířata už jsou přijata: pouze očíslováno, bez posunutí.",
     nummernFolgenSchon: "Katalogová čísla už odpovídají plánu.",
     plaetzeFolgenSchon: "Místa v klecích už odpovídají plánu.",
     nummernNeu: (n: number, ohnePlatz: number) =>

@@ -7,7 +7,7 @@ import { etagenNormal, etagenVon, festGeometrie, festschreiben, HALLE_STANDARD, 
 import { hallenSzene } from "./hallenplan-3d";
 import { leereEntfernen, pruefeEntfernt } from "./hallenplan-entfernen";
 import { fehlendeKaefige } from "./hallenplan-fehlend";
-import { luekenlosAuffuellen, planFolge } from "./hallenplan-folge";
+import { planFolge } from "./hallenplan-folge";
 
 const masse = { huehner: { breite: 70, tiefe: 70, hoehe: 70 }, tauben: { breite: 40, tiefe: 40, hoehe: 40 } };
 let id = 0;
@@ -103,21 +103,6 @@ describe("Etagen je Käfigart", () => {
     // Ein belegter oberer Platz lässt sich nicht entfernen.
     const belegt = p.reihen[0]!.kaefige.find((k) => k.etage === 1)!;
     expect(leereEntfernen(zwei, p, [{ art: "platz", reihe: 1, x: belegt.x, y: belegt.y, etage: 1 }]).plaetze).toBe(0);
-  });
-
-  test("Lückenlos auffüllen unterscheidet die Etagen", () => {
-    id = 0;
-    const t = tauben(10);
-    const plan = planeHalle(zwei, t, masse);
-    const fest = festschreiben(zwei, plan, masse, "2026-11-14T12:00:00.000Z");
-    // Nr. 2 (unten? nein: Spalte 1 oben) storniert: die übrigen rücken nach, der letzte Platz wird frei.
-    const ohne = t.filter((x) => x.nr !== "2");
-    const p = planeHalle(zwei, ohne, masse, fest);
-    const { fest: neu, verschoben } = luekenlosAuffuellen(fest, p, "laengs");
-    expect(verschoben).toBe(8);
-    const nachher = planeHalle(zwei, ohne, masse, neu);
-    expect(nachher.reihen[0]!.kaefige.map((k) => [k.nr, k.y, k.etage ?? 0]).slice(0, 3)).toEqual([["1", 0, 0], ["3", 0, 1], ["4", 40, 0]]);
-    expect(nachher.reihen[0]!.freiePlaetze!.map((f) => [f.y, f.etage ?? 0])).toEqual([[160, 1]]);
   });
 
   test("Käfigblock: Plätze × Etagen, je Spalte dieselbe Grundfläche; fehlende Käfige brauchen halb so viele Blöcke", () => {

@@ -204,7 +204,5 @@ export async function planTiere(s: { id: number; kaefigRegeln: KaefigRegel[] | n
     if (e.farbenschlag) farben.push([e.id, e.farbenschlag]);
     tiere.push({ id: e.id, typ, nr, ...(e.kaefig && e.kaefig !== nr ? { kaefig: e.kaefig } : {}), rasse: e.rasse ?? e.einordnungRasse ?? e.freitext, sparte: e.sparte ?? "ohne Sparte", preisrichterId: z?.preisrichterId ?? null });
   }
-  // Schon eingeliefert (Tiere sitzen in ihren Käfigen): dann rückt „Nach Plan nummerieren“ nichts mehr um.
-  const sitzen = alle.some((e) => ["eingeliefert", "fehlt", "ausgesetzt"].includes(e.status));
-  return { tiere, richter, sitzen, farben };
+  return { tiere, richter, farben };
 }

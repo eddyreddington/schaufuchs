@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test";
 import { festschreiben, HALLE_STANDARD, planeHalle, type FesterPlan, type Halle, type Hallenplan, type PlanTier } from "./hallenplan";
 import { hallenSzene } from "./hallenplan-3d";
-import { luekenlosAuffuellen, planUnordnung } from "./hallenplan-folge";
+import { planUnordnung } from "./hallenplan-folge";
 import { belegungImPlan, platzImPlan, tierVersetzen, type KaefigPlatz } from "./hallenplan-versetzen";
 import type { KaefigTyp } from "./kaefige";
 
@@ -202,35 +202,21 @@ describe("Tier versetzen mit Nachmeldungen auf angebauten Platten (Gegenprüfung
   });
 });
 
-describe("Nach Plan nummerieren nach dem Versetzen (Rückmeldung 15.11.2026: „neu nummerieren soll … nicht die umgesetzten tiere zurück setzen“)", () => {
-  test("Lückenlos auffüllen lässt versetzte Tiere auf ihrem Platz; der frei gemachte Platz bleibt frei", () => {
+describe("Nach dem Versetzen (Rückmeldung 15.11.2026: „neu nummerieren soll … nicht die umgesetzten tiere zurück setzen“)", () => {
+  test("ein von Hand frei gemachter Platz zählt nicht als Lücke (sonst stünde der Hinweis immer da)", () => {
     const { fest, plan } = aufbau();
     const ziel = freierPlatz(plan, "tauben");
     const alt = platzImPlan(plan, 10)!;
     const e = anwenden(fest, plan, 10, ziel);
-    const vorher = lagen(e.plan);
-    const { fest: f2, verschoben } = luekenlosAuffuellen(e.fest, e.plan, "laengs");
-    const p2 = planeHalle(halle, tiere, masse, f2);
-    expect(platzImPlan(p2, 10)).toEqual(ziel);
-    // Kein anderes Tier rückt in den von Hand frei gemachten Platz, nichts verschiebt sich.
-    expect(belegungImPlan(p2, alt)).toEqual({ typ: "tauben", tierId: null });
-    expect(lagen(p2)).toEqual(vorher);
-    expect(verschoben).toBe(0);
-    // Deshalb zählt dieser Platz auch nicht als „frei dazwischen“ (sonst stünde der Hinweis immer da).
-    expect(planUnordnung(p2, "laengs").freiDazwischen).toBe(0);
+    expect(platzImPlan(e.plan, 10)).toEqual(ziel);
+    expect(belegungImPlan(e.plan, alt)).toEqual({ typ: "tauben", tierId: null });
+    expect(planUnordnung(e.plan, "laengs").freiDazwischen).toBe(0);
   });
 
-  test("getauschte Tiere bleiben getauscht; eine spätere Abmeldung wird weiter aufgefüllt, ohne die versetzten Tiere", () => {
+  test("nach einem Tausch zählt eine spätere Abmeldung als echte Lücke", () => {
     const { fest, plan } = aufbau();
     const e = anwenden(fest, plan, 1, platzImPlan(plan, 5)!);
-    // Abmeldung von Huhn 2: sein Platz wird frei – dorthin rücken die übrigen Hühner (in Planfolge), 1 und 5 bleiben.
     const ohne2 = tiere.filter((t) => t.id !== 2);
-    const p = planeHalle(halle, ohne2, masse, e.fest);
-    expect(planUnordnung(p, "laengs").freiDazwischen).toBe(1);
-    const { fest: f2 } = luekenlosAuffuellen(e.fest, p, "laengs");
-    const p2 = planeHalle(halle, ohne2, masse, f2);
-    expect(platzImPlan(p2, 1)).toEqual(platzImPlan(e.plan, 1));
-    expect(platzImPlan(p2, 5)).toEqual(platzImPlan(e.plan, 5));
-    expect(planUnordnung(p2, "laengs").freiDazwischen).toBe(0);
+    expect(planUnordnung(planeHalle(halle, ohne2, masse, e.fest), "laengs").freiDazwischen).toBe(1);
   });
 });

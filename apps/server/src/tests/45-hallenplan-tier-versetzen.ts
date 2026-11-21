@@ -150,8 +150,7 @@ describe("Hallenplan: Tier versetzen", () => {
     expect(d.unordnung!.nichtInFolge).toBeGreaterThan(0);
     // Der frei gemachte Platz zählt nicht als Lücke.
     expect(d.unordnung!.freiDazwischen).toBe(0);
-    const n = await al().katalog.nummernNachPlan({ schauId: id });
-    expect(n.aufgerueckt).toBe(0);
+    await al().katalog.nummernNachPlan({ schauId: id });
     d = await laden();
     expect(platzImPlan(d.plan!, erstes)).toEqual(ziel);
     expect(belegungImPlan(d.plan!, alt)).toMatchObject({ tierId: null });

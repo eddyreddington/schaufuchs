@@ -264,11 +264,11 @@ export interface FesterPlan {
    */
   objektKaefige?: { objektId: string; tierIds: (number | null)[] }[];
   /**
-   * Von Hand versetzte oder getauschte Tiere (Tier versetzen, Rückmeldung 15.11.2026): „Lückenlos auffüllen“ vor dem
-   * Nummerieren lässt sie, wo sie stehen.
+   * Von Hand versetzte oder getauschte Tiere (Tier versetzen, Rückmeldung 15.11.2026). Für den Hinweis unter dem Plan
+   * (`planUnordnung`): hinter ihnen zählt ein freier Platz nicht als Lücke.
    */
   vonHand?: number[];
-  /** Reihenplätze, von denen ein Tier von Hand weg versetzt wurde: beim Auffüllen bleiben sie frei (keine Lücke). */
+  /** Reihenplätze, von denen ein Tier von Hand weg versetzt wurde: zählen im Hinweis unter dem Plan nicht als Lücke. */
   freiGemacht?: { reihe: number; x: number; y: number; etage?: number }[];
 }
 

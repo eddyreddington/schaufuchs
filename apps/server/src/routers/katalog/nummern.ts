@@ -1,5 +1,5 @@
 /** Katalognummern: Liste, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern. */
-import { planeHalle, vergleicheFolge, nachmeldungsNummern, luekenlosAuffuellen, planFolge, planUnordnung, vergebeKatalognummern } from "@schau/domain";
+import { mitBelegung, planeHalle, stabilerText, vergleicheFolge, nachmeldungsNummern, planFolge, vergebeKatalognummern } from "@schau/domain";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
@@ -95,7 +95,7 @@ export const katalogNummern = {
    * (siehe `planFolge`). Vor dem Festschreiben der Katalognummern bekommen alle bestätigten Tiere neue Katalognummern ab dem
    * Katalogstart (Käfig = Katalognummer; Tiere ohne Platz danach in Katalogfolge) – nur solange nichts an den Nummern hängt.
    * Danach (Katalog gedruckt) bleiben die Katalognummern; vergeben werden nur die Käfigplätze 1, 2, 3 … (Tiere ohne Platz
-   * ohne Käfignummer).
+   * ohne Käfignummer). Nur nummerieren: kein Tier wechselt dabei den Käfig, freie Plätze bleiben frei (Rückmeldung 21.11.2026).
    */
   nummernNachPlan: adminProcedure.input(z.object({ schauId: dbId })).mutation(async ({ ctx, input }) => {
     const geladen = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.schauId));
@@ -114,25 +114,15 @@ export const katalogNummern = {
       // Gleichzeitig darf niemand die Preisrichter einteilen (die Bereiche hängen an den Nummern).
       await sperreEinteilung(tx, s.id);
       const { tiere } = await planTiere(s);
-      let plan = planeHalle(s.halle, tiere, s.kaefigMasse, s.hallenplanFest);
-      if (plan.fest?.veraltet) throw fehler("BAD_REQUEST", "Der feste Plan passt nicht mehr zu Halle oder Käfigmaßen – erst „Plan neu setzen“ und den Plan wieder festschreiben.");
+      const gerechnet = planeHalle(s.halle, tiere, s.kaefigMasse, s.hallenplanFest);
+      if (gerechnet.fest?.veraltet) throw fehler("BAD_REQUEST", "Der feste Plan passt nicht mehr zu Halle oder Käfigmaßen – erst „Plan neu setzen“ und den Plan wieder festschreiben.");
+      // Nur nummerieren, kein Tier wechselt den Käfig: Tiere, die (noch) nicht im festen Plan stehen (Nachmeldungen), stehen
+      // dort, wo ihre Nummer sie hinstellt – mit neuen Nummern woanders. Deshalb die jetzige Belegung vorher festschreiben.
+      const verankert = mitBelegung(s.hallenplanFest, gerechnet);
+      const festNeu = stabilerText(verankert) !== stabilerText(s.hallenplanFest);
+      if (festNeu) await tx.update(schau).set({ hallenplanFest: verankert }).where(eq(schau.id, s.id));
+      const plan = festNeu ? planeHalle(s.halle, tiere, s.kaefigMasse, verankert) : gerechnet;
       const richtung = s.halle.richtung ?? "quer";
-      // Erst lückenlos auffüllen: je Käfiggröße rücken die Tiere in Planfolge in frei gewordene Plätze, die freien wandern ans
-      // Ende. Nur solange noch kein Tier eingeliefert ist – danach sitzen sie in ihren Käfigen, dann wird nur nummeriert.
-      let aufgerueckt = 0;
-      let aufrueckenGesperrt = false;
-      if (planUnordnung(plan, richtung).freiDazwischen > 0) {
-        const sitzen = (await ladeEintraege(s.id, { ex: tx })).some((e) => (e.meldungStatus === "offen" || e.meldungStatus === "bestaetigt") && ["eingeliefert", "fehlt", "ausgesetzt"].includes(e.status));
-        if (sitzen) aufrueckenGesperrt = true;
-        else {
-          const { fest: neuFest, verschoben } = luekenlosAuffuellen(s.hallenplanFest, plan, richtung);
-          if (verschoben) {
-            await tx.update(schau).set({ hallenplanFest: neuFest }).where(eq(schau.id, s.id));
-            plan = planeHalle(s.halle, tiere, s.kaefigMasse, neuFest);
-            aufgerueckt = verschoben;
-          }
-        }
-      }
       const folge = planFolge(plan, richtung);
       const opts = { start: s.katalogStart, jugendSeparat: s.jugendSeparat, staemmeVorn: s.staemmeVorn, kaefigFolge: s.kaefigFolge, sortierung: s.katalogSortierung };
       const regeln = s.kaefigRegeln ?? [];
@@ -184,7 +174,7 @@ export const katalogNummern = {
         datensatzId: null,
         aktion: s.katalogGedruckt ? "Käfigplätze nach Hallenplan vergeben" : "Katalognummern nach Hallenplan vergeben",
         // Je geänderter Eintrag: [Id, vorher, nachher] – Grundlage für Rückfragen zu Karten und Käfigen.
-        neu: { anzahl: aenderungen.length, ohnePlatz: ohnePlatz.length, aufgerueckt, ...(aufrueckenGesperrt ? { aufrueckenGesperrt } : {}), aenderungen, ...(einteilungVonHand ? { einteilungVonHand } : {}) },
+        neu: { anzahl: aenderungen.length, ohnePlatz: ohnePlatz.length, ...(festNeu ? { belegungFestgeschrieben: true } : {}), aenderungen, ...(einteilungVonHand ? { einteilungVonHand } : {}) },
         akteur: ctx,
       });
       return {
@@ -193,8 +183,6 @@ export const katalogNummern = {
         ohnePlatz: ohnePlatz.length,
         ohnePreisrichter: einteilung?.ohne ?? null,
         einteilungVonHand,
-        aufgerueckt,
-        aufrueckenGesperrt,
       };
     });
   }),

@@ -141,9 +141,6 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     onSuccess: async (e) => {
       // Nummern hängen an vielen Stellen (Katalog, Preisrichter, Meldungen): alles neu laden.
       await utils.invalidate();
-      if (e.aufgerueckt) meldung(tb.aufgerueckt(e.aufgerueckt));
-      if (e.aufrueckenGesperrt)
-        meldung(tb.aufrueckenGesperrt, "warnung");
       if (!e.geaendert) meldung(e.modus === "nummern" ? tb.nummernFolgenSchon : tb.plaetzeFolgenSchon);
       else
         meldung(e.modus === "nummern" ? tb.nummernNeu(e.geaendert, e.ohnePlatz ?? 0) : tb.plaetzeNeu(e.geaendert));

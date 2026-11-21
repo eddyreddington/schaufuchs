@@ -259,7 +259,7 @@ Hallenplan – fester Plan: was beim Festschreiben gilt (`festGeometrie`), Fests
 - `festschreiben()` – Den gerechneten Plan festschreiben (aus `planeHalle` ohne festen Plan).
 - `planeFest()` – Fester Plan: die Plätze bleiben, wo sie sind.
 
-### hallenplan-folge.ts (209 Z.)
+### hallenplan-folge.ts (172 Z.)
 Reihenfolge der Käfige, wie sie im Plan stehen – Grundlage für „Nach Plan nummerieren“ nach dem Umstellen.
 Tests: `hallenplan-folge.test.ts`
 
@@ -267,7 +267,6 @@ Tests: `hallenplan-folge.test.ts`
 - `planPlaetze()` – Alle Plätze in Reihen und Käfigblöcken (belegt und frei) in der Folge des Plans: Reihe für Reihe (quer zu den Reihen aufsteigend), in jeder Reihe v …
 - `planFolge()` – Tier-Ids in der Reihenfolge des Plans (nur Tiere mit Platz).
 - `planUnordnung()` – Wie unordentlich der (feste) Plan nach dem Umstellen ist: freie Plätze mitten zwischen belegten derselben Käfiggröße (dahinter steht noch ein Tier …
-- `luekenlosAuffuellen()` – Lückenlos auffüllen (fester Plan): in jeder Reihe (Zeile des Plans) rücken die Tiere je Käfiggröße in der Folge des Plans in die Plätze dieser Größ …
 - `blockFolge()` – Folge der eingesetzten Käfigblöcke im Plan (Indizes in `objekte`) – dieselbe, in der „Nach Plan nummerieren“ zählt.
 
 ### hallenplan-gruppe.ts (394 Z.)
@@ -394,7 +393,7 @@ Tests: `hallenplan-umriss.test.ts`
 - `eingangAnWand()` – Eingang an die Wand, die `mitte` am nächsten liegt: `laenge` cm entlang der Wand (ab `von`, sonst mittig um `mitte`), `tiefe` cm in die Halle hinei …
 - Typen: `Punkt`, `UmrissKante`
 
-### hallenplan-versetzen.ts (171 Z.)
+### hallenplan-versetzen.ts (172 Z.)
 Tiere im festen Hallenplan von Hand versetzen (Rückmeldung 15.11.2026: „ich will auch käfige frei zuordnen können im halleneditor und ggf tiere ver …
 Tests: `hallenplan-versetzen.test.ts`
 
@@ -404,6 +403,7 @@ Tests: `hallenplan-versetzen.test.ts`
 - `belegungImPlan()` – Belegung eines Platzes, wie der Plan sie zeigt.
 - `gleicherPlatz()` – Gleiche Plätze?
 - `tierVersetzen()` – Tier `tierId` auf Platz `ziel` versetzen (`plan`: der Plan aus `fest`, wie er gerade gerechnet ist).
+- `mitBelegung()` – Fester Plan mit der Belegung, wie der Plan sie zeigt: je Reihenplatz das Tier dort (ein nicht mehr gemeldetes Tier bleibt eingetragen – kommt es zu …
 - Typen: `VersetzenErgebnis`
 
 ### hallenplan-vorgaben.ts (140 Z.)
@@ -747,7 +747,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (239 Z.)
+### halle-werkzeuge.ts (237 Z.)
 
 - `halleWerkzeuge`
 
@@ -936,7 +936,7 @@ Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt
 
 - `halleBild` – Texte der Oberfläche: halleBild (Entscheidung 022) – Zeichnung des Hallenplans, Entwürfe, Grundriss, 3D-Ansicht.
 
-### halle-werkzeuge.ts (245 Z.)
+### halle-werkzeuge.ts (243 Z.)
 
 - `halleWerkzeuge` – Texte der Oberfläche: halleWerkzeuge (Entscheidung 022) – Werkzeugleiste, Befehle und Aktionen des Hallenplan-Editors, kleine Teile (Tiere ohne Pla …
 
@@ -1137,7 +1137,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `halleBild`
 
-### halle-werkzeuge.ts (235 Z.)
+### halle-werkzeuge.ts (233 Z.)
 
 - `halleWerkzeuge`
 
@@ -1322,7 +1322,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (235 Z.)
+### halle-werkzeuge.ts (233 Z.)
 
 - `halleWerkzeuge`
 
@@ -1511,7 +1511,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (235 Z.)
+### halle-werkzeuge.ts (233 Z.)
 
 - `halleWerkzeuge`
 
@@ -1696,7 +1696,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (240 Z.)
+### halle-werkzeuge.ts (238 Z.)
 
 - `halleWerkzeuge`
 
@@ -2177,7 +2177,7 @@ Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferu
 - `halle.statusSetzen` mutation · angemeldet
 - `halle.vetSetzen` mutation · angemeldet – Nachweise bei der Einlieferung: ND-Impfung (Hühner, Puten), PMV-Impfung (Tauben), Untersuchung Wassergeflügel.
 
-### routers/katalog/gemeinsam.ts (210 Z.)
+### routers/katalog/gemeinsam.ts (208 Z.)
 Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan.
 
 Keine Prozeduren (Hilfen für die Router).
@@ -2189,7 +2189,7 @@ Gesundheitsjournal in der Halle: Liste, Eintrag erfassen, Sperre aufheben.
 - `halle.gesundheitErfassen` mutation · angemeldet
 - `halle.gesundheitFreigeben` mutation · admin – Sperre aufheben (z. B. Tierarzt gibt Entwarnung) – nur die Ausstellungsleitung; der Eintrag bleibt im Journal.
 
-### routers/katalog/hallenplan.ts (340 Z.) → `katalog`
+### routers/katalog/hallenplan.ts (338 Z.) → `katalog`
 Hallenplan: Plan und Stellvorschläge, festschreiben, neu setzen, Tier versetzen, Käfiginfo, Halle speichern, Wandreihe.
 
 - `katalog.hallenplan` query · angemeldet – Hallenplan: alle gemeldeten Tiere (offen und bestätigt) mit Käfig in Katalogfolge (Käfignummern) auf die Reihen der Halle verteilt; dazu die Preisr …
@@ -2214,7 +2214,7 @@ Käfige und Grundplatten: Käfigbedarf, Aufsteller und Sockelbild, Grundplatten,
 - `katalog.kaefigRegelSetzen` mutation · admin – Abweichende Käfiggröße für eine Rasse festlegen (typ null = wieder automatisch).
 - `katalog.kaefigMassSetzen` mutation · admin – Maße der eigenen Käfige je Käfigart (cm); null = wieder Richtwert.
 
-### routers/katalog/nummern.ts (226 Z.) → `katalog`
+### routers/katalog/nummern.ts (214 Z.) → `katalog`
 Katalognummern: Liste, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern.
 
 - `katalog.liste` query · angemeldet
@@ -2530,7 +2530,7 @@ Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben 
 ### hallenplan-aktionen.ts (216 Z.)
 Werkzeuge des Hallenplan-Editors für die Auswahl und für neue Teile: am Raster ausrichten, drehen, an den Platz zurück, Leeres entfernen, Teile und …
 
-### hallenplan-befehle.ts (297 Z.)
+### hallenplan-befehle.ts (294 Z.)
 Befehle des Hallenplan-Editors, die über den Entwurf hinausgehen: Rückgängig/Wiederholen, Tier versetzen, nach Plan nummerieren, Einstellungen der …
 Prozeduren: katalog.nummernNachPlan, katalog.tierVersetzen, katalog.wandreiheStellen
 
@@ -2583,7 +2583,7 @@ Bausteine der Werkzeugleiste im Hallenplan-Editor: Symbole, Werkzeugknöpfe mit 
 ### hallenplan-werkzeugleiste.tsx (211 Z.)
 Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen, Zoom, Menü „Plan“).
 
-### hallenplan.tsx (548 Z.) – `/schau/:schauId/hallenplan`
+### hallenplan.tsx (549 Z.) – `/schau/:schauId/hallenplan`
 Seite „Hallenplan“: neue Halle anlegen und der Editor (`Plan`) mit Speichern, Rückgängig, Auswahl und Tastatur.
 Prozeduren: katalog.halleSetzen, katalog.hallenplan
 
@@ -2908,7 +2908,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `33-vereinsverzeichnis.ts` (57 Z.) – Vereinsverzeichnis: einspielen (nur Namen, nichts überschrieben, Prüfung auf Kontaktdaten, Protokoll) und Vorschläge in Verwaltung und öffentlicher …
 - `34-katalog-gestaltung.ts` (304 Z.) – Druckkatalog: Schrift und Gestaltung wählbar, A4 als Vorgabe, Stiche je Sparte (einmal eingebettet), Öffnungszeiten untereinander.
 - `35-pruefung-nachbesserung.ts` (574 Z.) – Nachbesserungen aus der Gesamtprüfung vom 13.11.2026 (interne Prüfung): Sperren nach Festschreiben und Abschluss, Geld-Lücken, Protokoll, rechtssic …
-- `36-nach-plan-nummerieren.ts` (178 Z.) – Nach dem Umstellen im Hallenplan neu nummerieren: vor dem Festschreiben der Katalognummern die Katalognummern (und Käfigplätze) in der Reihenfolge …
+- `36-nach-plan-nummerieren.ts` (214 Z.) – Nach dem Umstellen im Hallenplan neu nummerieren: vor dem Festschreiben der Katalognummern die Katalognummern (und Käfigplätze) in der Reihenfolge …
 - `37-kommende-schauen.ts` (204 Z.) – Kommende Schauen: Termine pflegen, Kalender abonnieren ohne stilles Überschreiben, Katalogseite mit Kreiswahl, eigener Kalender.
 - `38-hallenplan-entfernen.ts` (86 Z.) – Leere Plätze im festen Hallenplan entfernen: über das Speichern der Halle (wie jede Änderung im Editor), nur leere Platten und Plätze im festen Pla …
 - `39-hallenplan-druck.ts` (100 Z.) – Hallenplan drucken: genau ein Blatt A4 (quer, wenn die Zeichnung breiter als hoch ist), auch bei einer großen Halle mit vielen Käfigen, festgeschri …
@@ -2917,7 +2917,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `42-hallenplan-moebel-etagen.ts` (105 Z.) – Hallenplan: Tische, Bänke und Garnituren als eingesetzte Teile (mit Maßen gespeichert, bleiben beim Neu-Setzen) und Etagen je Käfigart (Kapazität d …
 - `43-katalog-sortierung.ts` (106 Z.) – Reihenfolge der Katalognummern wählbar: speichern (nur Ausstellungsleitung, Vorgabe als null, Protokoll), Vergabe nach der gewählten Folge, Sperre …
 - `44-pruefliste-hallenplan.ts` (60 Z.) – Prüfliste ab der Phase „Katalog & Halle“: Hinweise zum Hallenplan (Tiere ohne Platz, Käfigfront zur Wand oder zu einer Reihe, Nummern nicht in Plan …
-- `45-hallenplan-tier-versetzen.ts` (163 Z.) – Tiere im Halleneditor versetzen (Rückmeldung 15.11.2026: „ich will auch käfige frei zuordnen können im halleneditor und ggf tiere versetzen“): nur …
+- `45-hallenplan-tier-versetzen.ts` (162 Z.) – Tiere im Halleneditor versetzen (Rückmeldung 15.11.2026: „ich will auch käfige frei zuordnen können im halleneditor und ggf tiere versetzen“): nur …
 - `46-automatische-abmeldung.ts` (64 Z.) – Automatische Abmeldung nach Untätigkeit (Rückmeldung 15.11.2026): Frist je Rolle unter „Verein und Datenschutz“, nur die angebotenen Minuten, Proto …
 - `47-druckvorlagen.ts` (112 Z.) – Druckvorlagen für Bewertungskarten: Vorlagen des Vereins speichern, je Schau wählen, für eine Schau abwandeln, löschen (Schau druckt dann wieder mi …
 - `48-briefvorlage.ts` (116 Z.) – Briefvorlage des Vereins: speichern (Protokoll), eigene Texte im B-Bogen, Serienbrief an Mitglieder, alle Aussteller oder die einer Schau – ohne ge …

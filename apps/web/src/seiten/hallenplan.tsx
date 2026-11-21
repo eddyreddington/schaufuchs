@@ -530,7 +530,8 @@ function Plan({
                 .join(", ")}
               .
             </span>
-            {(d.unordnung.nichtInFolge > 0 || !d.eingeliefert) && (
+            {/* Nummerieren ändert nur Nummern (keine Käfige): hilft nur, wenn die Nummern nicht in Planfolge stehen. */}
+            {d.unordnung.nichtInFolge > 0 && (
               <Knopf className="shrink-0" laedt={nachPlan.isPending} onClick={nachPlanFragen}>
                 {d.katalogGedruckt ? th.jetztKaefigplaetze : th.jetztNummerieren}
               </Knopf>

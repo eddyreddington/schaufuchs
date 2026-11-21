@@ -90,7 +90,7 @@ describe("Nach Plan nummerieren", () => {
     expect((await helfer().katalog.hallenplan({ schauId: id })).abgeschlossen).toBe(true);
   });
 
-  test("lückenlos auffüllen: frei gewordene Plätze wandern ans Ende, die Nummern laufen durch; nach der Einlieferung nur nummerieren", async () => {
+  test("nur nummerieren: frei gewordene Plätze bleiben frei, niemand rückt auf, die Nummern folgen dem Plan", async () => {
     const { id } = await al().schau.anlegen({ name: "Auffüllen nach Plan", ort: "Halle" });
     const s = await al().schau.get({ id });
     const [wy] = await al().stammdaten.suche({ versionId: s.stammdatenVersionId!, q: "Wyandotten" });
@@ -121,29 +121,65 @@ describe("Nach Plan nummerieren", () => {
     expect(vorher.unordnung).toMatchObject({ freiDazwischen: 2 });
     expect(vorher.plan!.reihen[0]!.kaefige).toHaveLength(7);
 
+    const festVorher = (await m.db.select({ f: m.schema.schau.hallenplanFest }).from(m.schema.schau).where(m.eq(m.schema.schau.id, id)))[0]!.f;
+
     const a = await al().katalog.nummernNachPlan({ schauId: id });
-    expect(a).toMatchObject({ modus: "nummern", aufgerueckt: 5, aufrueckenGesperrt: false });
+    expect(a).toMatchObject({ modus: "nummern" });
+    expect("aufgerueckt" in a).toBe(false);
+    // Die festgeschriebene Aufstellung bleibt, wie sie ist: kein Tier wechselt den Käfig.
+    const festNachher = (await m.db.select({ f: m.schema.schau.hallenplanFest }).from(m.schema.schau).where(m.eq(m.schema.schau.id, id)))[0]!.f;
+    expect(festNachher).toEqual(festVorher);
     const nach = await helfer().katalog.hallenplan({ schauId: id });
-    expect(nach.unordnung).toEqual({ freiDazwischen: 0, nichtInFolge: 0 });
-    // Lückenlos ab dem Reihenanfang, Nummern 1–7 in der Folge, freie Plätze am Ende.
+    expect(nach.unordnung).toEqual({ freiDazwischen: 2, nichtInFolge: 0 });
+    // Plätze 3 und 4 bleiben frei; die übrigen Tiere tragen die Nummern 1–7 in der Folge des Plans.
     const r = nach.plan!.reihen[0]!;
     expect(r.kaefige.map((k) => k.nr)).toEqual(["1", "2", "3", "4", "5", "6", "7"]);
-    expect(r.kaefige.map((k) => k.y)).toEqual([150, 220, 290, 360, 430, 500, 570]);
-    expect((r.freiePlaetze ?? []).map((f) => f.y)).toEqual([640, 710]);
+    expect(r.kaefige.map((k) => k.y)).toEqual([150, 220, 430, 500, 570, 640, 710]);
+    expect((r.freiePlaetze ?? []).map((f) => f.y)).toEqual([290, 360]);
     const prot = (await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, id))).filter((x) => x.aktion === "Katalognummern nach Hallenplan vergeben");
-    expect(JSON.stringify(prot.at(-1)!.neu)).toContain(`"aufgerueckt":5`);
-
-    // Ein Tier ist schon eingeliefert (sitzt im Käfig): dann wird nicht umgesetzt, nur nummeriert – mit Hinweis.
-    // Eindeutig das Tier mit Nr. 1 (ohne Sortierung lieferte die Datenbank manchmal ein Tier der gleich stornierten Meldung).
-    const einer = (await m.db.select().from(m.schema.katalogeintrag).where(m.eq(m.schema.katalogeintrag.schauId, id))).find((x) => x.katalogNr === 1);
-    await m.db.update(m.schema.katalogeintrag).set({ status: "eingeliefert" }).where(m.eq(m.schema.katalogeintrag.id, einer!.id));
-    await al().meldung.statusSetzen({ id: await meldungAn(500), status: "storniert", grund: "Absage (Test)" });
-    expect((await helfer().katalog.hallenplan({ schauId: id })).unordnung!.freiDazwischen).toBe(1);
-    expect((await helfer().katalog.hallenplan({ schauId: id })).eingeliefert).toBe(true);
-    const b = await al().katalog.nummernNachPlan({ schauId: id });
-    expect(b).toMatchObject({ aufgerueckt: 0, aufrueckenGesperrt: true });
-    expect((await helfer().katalog.hallenplan({ schauId: id })).unordnung!.freiDazwischen).toBe(1);
+    expect(JSON.stringify(prot.at(-1)!.neu)).not.toContain("aufgerueckt");
   });
+  test("Nachmeldung bleibt beim Nummerieren auf ihrem Platz (Gegenprüfung: ihr Platz hing an der Nummer)", async () => {
+    const { platzImPlan } = await import("@schau/domain");
+    const { id } = await al().schau.anlegen({ name: "Nachmeldung nach Plan", ort: "Halle" });
+    const s = await al().schau.get({ id });
+    const [wy] = await al().stammdaten.suche({ versionId: s.stammdatenVersionId!, q: "Wyandotten" });
+    const melden = async (nachname: string) => {
+      const r = await al().meldung.speichern({
+        schauId: id,
+        aussteller: { vorname: "Nach", nachname, strasse: "", plz: "", ort: "", telefon: "", email: "", verein: "", kreisverband: "", registriernummer: "", geburtsdatum: null, istPreisrichter: false, iban: "", kontoinhaber: "" },
+        eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true,
+        positionen: [{ farbenschlagId: wy!.id, freitext: "", art: "einzeltier" as const, geschlecht: "1,0", alter: "jung" as const, istAoc: false, istNeuzuechtung: false, eigeneZucht: true, verkaufspreisCent: null }],
+      });
+      await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
+      return r.meldungId;
+    };
+    const meldungen: number[] = [];
+    for (let i = 1; i <= 9; i++) meldungen.push(await melden(`Nm${i}`));
+    await al().katalog.nummernVergeben({ schauId: id });
+    await al().katalog.halleSetzen({ schauId: id, halle: { breite: 800, laenge: 1500, gang: 150, richtung: "laengs", wandreihen: false, quergang: false, wandBuendig: false, hauptgang: { breite: 0, lage: "keiner" }, platte: { laenge: 210, tiefe: 70 }, jePlatte: {}, objekte: [], reihenVersatz: [], plattenVersatz: [], spartenStart: [], flaechen: [] } });
+    await al().katalog.planFestschreiben({ schauId: id });
+    // Zwei Stornos mitten in der Reihe, dann eine Nachmeldung und „Katalognummern vergeben“ (vor dem Druck: alle neu).
+    for (const mid of [meldungen[5]!, meldungen[6]!]) await al().meldung.statusSetzen({ id: mid, status: "storniert", grund: "Absage (Test)" });
+    // Die Nachmeldung liegt in der Katalogfolge zwischen Nm8 und Nm9 (Ausstellername) – so hängt ihr Platz an der Nummer.
+    await melden("Nm8b");
+    await al().katalog.nummernVergeben({ schauId: id });
+    const plan = async () => (await helfer().katalog.hallenplan({ schauId: id })).plan!;
+    const vorher = await plan();
+    const ids = vorher.reihen.flatMap((r) => r.kaefige.map((k) => k.id));
+    expect(ids).toHaveLength(8);
+    const lageVorher = new Map(ids.map((t) => [t, JSON.stringify(platzImPlan(vorher, t))]));
+    // Vorher: die Nummern folgen nicht dem Plan (sonst gäbe es nichts zu nummerieren).
+    expect((await helfer().katalog.hallenplan({ schauId: id })).unordnung!.nichtInFolge).toBeGreaterThan(0);
+
+    await al().katalog.nummernNachPlan({ schauId: id });
+    const nachher = await plan();
+    // Kein Tier wechselt den Käfig – auch nicht die Nachmeldung, die nicht im festgeschriebenen Plan stand.
+    expect(ids.map((t) => JSON.stringify(platzImPlan(nachher, t)))).toEqual(ids.map((t) => lageVorher.get(t)!));
+    // Und die Nummern folgen danach dem Plan.
+    expect((await helfer().katalog.hallenplan({ schauId: id })).unordnung!.nichtInFolge).toBe(0);
+  });
+
   test("eingesetzte Käfigblöcke: nach dem Nummerieren folgen die Nummern dem Plan, der Hinweis verschwindet, ein zweites Mal ändert nichts", async () => {
     const { id } = await al().schau.anlegen({ name: "Blöcke nach Plan", ort: "Halle" });
     const s = await al().schau.get({ id });

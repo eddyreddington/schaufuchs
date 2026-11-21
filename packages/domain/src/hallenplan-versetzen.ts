@@ -97,7 +97,7 @@ export function tierVersetzen(fest: FesterPlan, plan: Pick<Hallenplan, "reihen" 
   for (const b of neu.objektKaefige ?? []) b.tierIds = b.tierIds.map((id) => (id != null && raus.has(id) ? null : id));
   if (ziel) setze(neu, ziel, tierId);
   if (getauscht != null && vonFest) setze(neu, vonFest, getauscht);
-  // Merken, was von Hand gesetzt ist: „Lückenlos auffüllen“ vor dem Nummerieren setzt es nicht zurück (Rückmeldung 15.11.2026).
+  // Merken, was von Hand gesetzt ist (Rückmeldung 15.11.2026): der frei gemachte Platz zählt im Hinweis nicht als Lücke.
   neu.vonHand = [...new Set([...(neu.vonHand ?? []), tierId, ...(getauscht != null ? [getauscht] : [])])];
   const gleich = (a: KaefigPlatz) => (f: { reihe: number; x: number; y: number; etage?: number }) => a.art === "reihe" && f.reihe === a.reihe && amPlatz(a)(f);
   let frei = (neu.freiGemacht ?? []).filter((f) => !(ziel && gleich(ziel)(f)));
@@ -136,9 +136,10 @@ function setze(fest: FesterPlan, p: KaefigPlatz, tierId: number) {
  * Fester Plan mit der Belegung, wie der Plan sie zeigt: je Reihenplatz das Tier dort (ein nicht mehr gemeldetes Tier
  * bleibt eingetragen – kommt es zurück, bekommt es seinen Platz wieder), je Käfigblock die Tiere je Platz. Für
  * Nachmeldungen angebaute Platten kommen mit ihren Plätzen dazu (hinter die Platten der Reihe, in derselben Folge wie im
- * Plan – so bleiben die Nummern der Platten und ihr Versatz gleich). Tiefe Kopie.
+ * Plan – so bleiben die Nummern der Platten und ihr Versatz gleich). Tiefe Kopie. Auch vor „Nach Plan nummerieren“: Tiere,
+ * die nicht im festen Plan stehen (Nachmeldungen), stehen sonst nach ihrer Nummer – und die ändert sich dabei.
  */
-function mitBelegung(fest: FesterPlan, plan: Pick<Hallenplan, "reihen" | "objekte">): FesterPlan {
+export function mitBelegung(fest: FesterPlan, plan: Pick<Hallenplan, "reihen" | "objekte">): FesterPlan {
   const imPlan = new Set([...plan.reihen.flatMap((r) => r.kaefige.map((k) => k.id)), ...plan.objekte.flatMap((o) => (o.kaefige ?? []).map((k) => k.id))]);
   return {
     ...fest,
