@@ -92,6 +92,7 @@ export const halle: OberflaecheTexte["halle"] = {
     automatikAn: "Planowanie automatyczne: włączone",
     vollansicht: "Pełny ekran",
     planDrucken: "Drukuj plan",
+    gespeichertPruefen: { gespeichert: "Wszystko zapisane – plan hali zapisuje każdą zmianę od razu.", fehler: "Ostatnia zmiana nie została zapisana (powód w komunikacie).", anderswo: "Zapisano. W międzyczasie ktoś inny zmienił plan – wyświetlana jest jego wersja." },
     aufbauliste: "Lista montażowa",
     plan: "Plan",
     massFehlt: (kaefige) => ` Brak wymiaru w „Klatki”: ${kaefige}.`,

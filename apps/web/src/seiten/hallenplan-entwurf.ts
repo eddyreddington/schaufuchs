@@ -124,6 +124,7 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
     }
     auswahlAufheben();
     offen.current++;
+    setOffenZahl(offen.current);
     kette.current = kette.current
       .then(() => neuSetzen.mutateAsync({ schauId, grund, ...(ziel ? { halle: vollstaendig(ziel), basis } : {}) }))
       .then((e) => {
@@ -144,6 +145,8 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
           setEntwurf(entwurfRef.current);
         }
         neuUnterwegs.current = false;
+        // Erst jetzt „Gespeichert“ oben rechts: der neu gesetzte Plan ist geladen.
+        setOffenZahl(offen.current);
       });
     return kette.current.then(() => gespeichert);
   };

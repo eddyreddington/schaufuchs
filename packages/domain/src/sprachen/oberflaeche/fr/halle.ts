@@ -90,6 +90,7 @@ export const halle: OberflaecheTexte["halle"] = {
     automatikAn: "Planification automatique : activée",
     vollansicht: "Plein écran",
     planDrucken: "Imprimer le plan",
+    gespeichertPruefen: { gespeichert: "Tout est enregistré – le plan de la salle enregistre chaque modification immédiatement.", fehler: "La dernière modification n’a pas été enregistrée (voir le message pour la raison).", anderswo: "Enregistré. Entre-temps, quelqu’un d’autre a modifié le plan – sa version est affichée." },
     aufbauliste: "Liste de montage",
     plan: "Plan",
     massFehlt: (kaefige) => ` Dimension manquante sous « Cages » : ${kaefige}.`,

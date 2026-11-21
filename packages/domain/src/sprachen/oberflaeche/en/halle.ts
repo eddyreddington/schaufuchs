@@ -90,6 +90,7 @@ export const halle: OberflaecheTexte["halle"] = {
     automatikAn: "Plan automatically: on",
     vollansicht: "Full screen",
     planDrucken: "Print plan",
+    gespeichertPruefen: { gespeichert: "Everything is saved – the hall plan saves every change immediately.", fehler: "The last change was not saved (see the message for the reason).", anderswo: "Saved. Someone else has changed the plan in the meantime – their version is shown." },
     aufbauliste: "Set-up list",
     plan: "Plan",
     massFehlt: (kaefige) => ` Size missing under “Cages”: ${kaefige}.`,

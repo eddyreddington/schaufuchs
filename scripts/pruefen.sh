@@ -48,8 +48,8 @@ bun test scripts/sprachen-scan.test.ts
 schritt "Updates (Platz prüfen, aufräumen, zurücknehmen)"
 bun test scripts/update-platz.test.ts
 
-schritt "Oberfläche (Reiter aus dem Anker)"
-(cd apps/web && bun test src/reiter-anker.test.ts)
+schritt "Oberfläche (Reiter aus dem Anker, Speichern im Hallenplan)"
+(cd apps/web && bun test src)
 
 schritt "Server-Tests"
 # 30 s je Test: Demodaten und Katalog-PDFs brauchen auf dem CI-Runner (begrenzte CPU) mehr als die 5 s Vorgabe.

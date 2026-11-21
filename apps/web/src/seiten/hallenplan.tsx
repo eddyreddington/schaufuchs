@@ -4,6 +4,7 @@
  * reine Rechnungen in hallenplan-geometrie.ts (Moduldoku: docs/module/halle.md).
  */
 import { type Halle, type HallenFlaeche, halleSchluessel, type KaefigTyp, LOCALE, richterFolge, serverText } from "@schau/domain";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { fehlerText } from "../lib";
 import { useSchauId } from "../rahmen";
@@ -17,7 +18,8 @@ import { PlanBild } from "./hallenplan-bild";
 import { Eigenschaften, HalleEigenschaften, MitEinheit } from "./hallenplan-eigenschaften";
 import { HallenEntwuerfe } from "./hallenplan-entwuerfe";
 import { useHallenEntwurf } from "./hallenplan-entwurf";
-import { type Daten, meter, type Versetzen, type Ziel, zuCm, zweisprachig } from "./hallenplan-geometrie";
+import { speicherBericht } from "./hallenplan-speichern";
+import { type Daten, meter, type Versetzen, vollstaendig, type Ziel, zuCm, zweisprachig } from "./hallenplan-geometrie";
 import { AutomatikSchalter, KaefigInfo, SpartenReihen } from "./hallenplan-teile";
 import { Aufbauliste, PlanLegende, PlatzUebersicht } from "./hallenplan-uebersicht";
 import { HallenSkizze, StellVorschlaege } from "./hallenplan-vorschlaege";
@@ -120,6 +122,10 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
   /** Schalter „Mehrfachauswahl“ (Tablet): Antippen nimmt Teile in die Auswahl auf oder heraus. */
   const [mehrfach, setMehrfach] = useState(false);
   const [voll, setVoll] = useState(false);
+  /** „Speichern“ prüft gerade den Stand auf dem Server. */
+  const [pruefe, setPruefe] = useState(false);
+  const utils = trpc.useUtils();
+  const queryClient = useQueryClient();
   /** Zoom der Zeichnung im Editor: 1 = ganze Halle in der Breite. */
   const [zoom, setZoom] = useState(1);
   const [infoId, setInfoId] = useState<number | null>(null);
@@ -251,6 +257,28 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
   const zuletzt = speicherwege.reduce<(typeof speicherwege)[number] | null>((a, m) => (m.submittedAt > (a?.submittedAt ?? 0) ? m : a), null);
   const speichertGerade = offenZahl > 0 || speicherwege.some((m) => m.isPending);
   const speicherStand: SpeicherStand | null = !bearbeiten ? null : speichertGerade ? "speichert" : zuletzt?.isError ? "fehler" : "gespeichert";
+  // Stand der letzten Speicherung beim jüngsten Zeichnen – `speichernPruefen` liest ihn erst nach dem Warten.
+  const zuletztRef = useRef(zuletzt);
+  zuletztRef.current = zuletzt;
+  /** „Speichern“: gespeichert ist schon – der Knopf holt den Stand vom Server und bestätigt, dass er dem Editor entspricht. */
+  const speichernPruefen = async () => {
+    setPruefe(true);
+    try {
+      // Erst alles abwarten, was der Editor noch schickt, samt Übernahme des gespeicherten Stands (Ende der Kette).
+      await e.kette.current.catch(() => undefined);
+      // networkMode "always": offline kommt eine Fehlermeldung, statt dass der Knopf bis zum nächsten Netz wartet.
+      const server = await utils.katalog.hallenplan.fetch({ schauId }, { staleTime: 0, networkMode: "always" });
+      // Inzwischen wieder etwas unterwegs (eigene Änderung, Plan neu setzen, Entwurf laden …): kein Vergleich möglich,
+      // oben steht ohnehin „Wird gespeichert …“.
+      if (e.offen.current > 0 || e.neuUnterwegs.current || queryClient.isMutating() > 0) return;
+      const bericht = speicherBericht({ letzteFehlgeschlagen: !!zuletztRef.current?.isError, server: server.halle ? halleSchluessel(vollstaendig(server.halle)) : "", entwurf: halleSchluessel(e.entwurfRef.current) });
+      meldung(th.gespeichertPruefen[bericht], bericht === "gespeichert" ? undefined : "warnung");
+    } catch (x) {
+      meldung(fehlerText(x), "fehler");
+    } finally {
+      setPruefe(false);
+    }
+  };
   return (
     <>
       <SpeicherStatus stand={speicherStand} />
@@ -270,6 +298,11 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
             <KnopfLink href={`/datei/${schauId}/aufbauliste.pdf`} target="_blank" rel="noreferrer">
               {th.aufbauliste}
             </KnopfLink>
+            {bearbeiten && (
+              <Knopf variante="primaer" laedt={speichertGerade || pruefe} onClick={() => void speichernPruefen()}>
+                {t.allgemein.speichern}
+              </Knopf>
+            )}
           </span>
         }
       />
