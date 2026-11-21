@@ -87,7 +87,7 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     titel: "Hall plan drafts",
     gespeichert: "Current plan saved as a draft.",
     ladenFrage: (name) => `Load “${name}”?`,
-    ladenText: "The current plan will be replaced and rebuilt. To keep it, save it as a draft first.",
+    ladenText: "The current plan will be replaced by the draft. To keep it, save it as a draft first.",
     laden: "Load",
     geladen: (name) => `“${name}” loaded.`,
     wirdGeladen: (name) => `“${name}” will be loaded and becomes the plan.`,

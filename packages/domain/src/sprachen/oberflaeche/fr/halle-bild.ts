@@ -87,7 +87,7 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     titel: "Brouillons du plan de salle",
     gespeichert: "Plan actuel enregistré comme brouillon.",
     ladenFrage: (name) => `Charger « ${name} » ?`,
-    ladenText: "Le plan actuel sera remplacé et recalculé. Pour le conserver, enregistrez-le d’abord comme brouillon.",
+    ladenText: "Le plan actuel sera remplacé par le brouillon. Pour le conserver, enregistrez-le d’abord comme brouillon.",
     laden: "Charger",
     geladen: (name) => `« ${name} » chargé.`,
     wirdGeladen: (name) => `« ${name} » sera chargé et deviendra le plan retenu.`,

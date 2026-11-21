@@ -1,0 +1,1 @@
+ALTER TABLE "hallenentwurf" ADD COLUMN "fest" jsonb;

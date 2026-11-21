@@ -91,7 +91,7 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     titel: "Projekty planu hali",
     gespeichert: "Bieżący plan zapisano jako projekt.",
     ladenFrage: (name) => `Wczytać „${name}”?`,
-    ladenText: "Bieżący plan zostanie zastąpiony i ustawiony od nowa. Aby go zachować, należy najpierw zapisać go jako projekt.",
+    ladenText: "Bieżący plan zostanie zastąpiony projektem. Aby go zachować, należy najpierw zapisać go jako projekt.",
     laden: "Wczytaj",
     geladen: (name) => `Wczytano „${name}”.`,
     wirdGeladen: (name) => `„${name}” zostanie wczytany i będzie obowiązywać.`,

@@ -2105,12 +2105,12 @@ Druckvorlagen (vorerst Bewertungskarte): Vorlagen des Vereins anlegen, ändern, 
 - `druckvorlage.briefSpeichern` mutation · admin
 - `druckvorlage.serienbriefAnzahl` query · admin – Wie viele Empfänger ein Serienbrief mit dieser Auswahl hätte (vor dem Erzeugen anzeigen).
 
-### routers/hallenentwurf.ts (119 Z.) → `hallenentwurf`
+### routers/hallenentwurf.ts (164 Z.) → `hallenentwurf`
 Entwürfe des Hallenplans (Entscheidung 017): den aktuellen Plan einer Schau als Entwurf speichern, einen Entwurf (oder einen archivierten aus einer …
 
 - `hallenentwurf.liste` query · angemeldet – Entwürfe dieser Schau und das Archiv des Vereins (neueste zuerst).
 - `hallenentwurf.speichern` mutation · admin – Den aktuellen Plan der Schau als Entwurf speichern.
-- `hallenentwurf.laden` mutation · admin – Entwurf dieser Schau oder aus dem Archiv laden: ersetzt die Halle der Schau („Plan neu setzen“, ein fester Plan entfällt).
+- `hallenentwurf.laden` mutation · admin – Entwurf dieser Schau (auch archiviert) oder aus dem Archiv einer früheren Schau laden – siehe `entwurfEinsetzen`.
 - `hallenentwurf.umbenennen` mutation · admin
 - `hallenentwurf.loeschen` mutation · admin
 - `hallenentwurf.entscheiden` mutation · admin – Entscheidung: Mit `id` wird dieser Entwurf geladen und gilt; ohne gilt der aktuelle Plan.
@@ -2177,7 +2177,7 @@ Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferu
 - `halle.statusSetzen` mutation · angemeldet
 - `halle.vetSetzen` mutation · angemeldet – Nachweise bei der Einlieferung: ND-Impfung (Hühner, Puten), PMV-Impfung (Tauben), Untersuchung Wassergeflügel.
 
-### routers/katalog/gemeinsam.ts (208 Z.)
+### routers/katalog/gemeinsam.ts (210 Z.)
 Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan.
 
 Keine Prozeduren (Hilfen für die Router).
@@ -2795,7 +2795,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `schema-aufzaehlungen.ts` (18 Z.) – Aufzählungstypen der Datenbank (pgEnum) – Phasen, Meldearten, Status, Zahlarten u. a. Über schema.ts exportiert. · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum
 - `schema-betrieb.ts` (12 Z.) – Betrieb: Angaben für die Gesundheitsprüfung (Entscheidung 024). · sicherung
 - `schema-bewertung.ts` (106 Z.) – Preisrichter und Bewertung: Vereinsverzeichnis, Preisrichter, Einteilung, Bewertung, Textbausteine. · vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein
-- `schema-hallenentwurf.ts` (30 Z.) – Entwürfe des Hallenplans (Entscheidung 017): Je Schau mehrere Varianten speichern und laden; ist entschieden, gehen die übrigen ins Archiv des Vere … · hallenentwurf
+- `schema-hallenentwurf.ts` (35 Z.) – Entwürfe des Hallenplans (Entscheidung 017): Je Schau mehrere Varianten speichern und laden; ist entschieden, gehen die übrigen ins Archiv des Vere … · hallenentwurf
 - `schema-import.ts` (26 Z.) – Import aus Altprogrammen (Entscheidung 015): je Importlauf, was er angelegt hat – damit „Zurücknehmen“ genau das wieder entfernt, solange nichts we … · importlauf
 - `schema-kasse.ts` (79 Z.) – Kassenbuch und Belegarchiv: Kassenbewegungen, Tagesabschlüsse, Belege; SEPA-Überweisungsläufe. · KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, sepaLauf
 - `schema-katalog.ts` (142 Z.) – Katalog-Gestaltung: Druckvorlagen, Gestaltung, Bilder, Rassebilder, Beiträge (Grußworte, Anzeigen). · KATALOG_FORMATE, BEITRAG_ARTEN, ANZEIGE_GROESSEN, druckvorlage, katalogGestaltung, bild, rassebild, katalogBeitrag
@@ -2926,7 +2926,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `51-import.ts` (116 Z.) – Import aus Altprogrammen (Entscheidung 015): Datei lesen (CSV in Windows-1252, altes .xls abgelehnt), prüfen (Aussteller wiedererkennen, Rassen zuo …
 - `52-import-befunde.ts` (153 Z.) – Import aus Altprogrammen, Befunde der Gegenprüfung (Entscheidung 015): große Dateien, einzelne fehlerhafte Zeilen, gleicher Name mit anderer Regist …
 - `53-teilschauen.ts` (103 Z.) – Teilschauen (Entscheidung 016): anlegen, umbenennen, nicht entfernen solange Meldungen daran hängen; Meldung intern und online einer Teilschau zuor …
-- `54-hallenentwuerfe.ts` (65 Z.) – Entwürfe des Hallenplans (Entscheidung 017): speichern, laden, umbenennen, löschen; entscheiden legt die übrigen ins Archiv; aus dem Archiv in eine …
+- `54-hallenentwuerfe.ts` (126 Z.) – Entwürfe des Hallenplans (Entscheidung 017): speichern, laden, umbenennen, löschen; entscheiden legt die übrigen ins Archiv; aus dem Archiv in eine …
 - `55-lastschrift.ts` (219 Z.) – SEPA-Lastschrift (Entscheidung 018): Gläubiger-ID, Mandate, Lastschriftdatei nur für offenes Meldegeld mit gültigem Mandat, Vorabankündigung, Sperr …
 - `56-grundriss.ts` (62 Z.) – Freier Grundriss der Halle (Entscheidung 019): speichern, prüfen (gültig, passt zu Breite/Länge, nichts außerhalb), ein Rechteck als Grundriss gilt …
 - `57-sprachen.ts` (91 Z.) – Sprachen der Seiten und Mails für Aussteller (Entscheidung 020): Schauseite, Fehlermeldungen der Online-Meldung, Sprache an der Meldung, Bestätigun …

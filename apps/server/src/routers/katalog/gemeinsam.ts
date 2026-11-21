@@ -169,7 +169,9 @@ export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<type
       tabelle: "schau",
       datensatzId: s.id,
       aktion: "Hallenplan neu gesetzt",
-      alt: { ...(aktuell?.fest ? { fest: aktuell.fest.am } : {}), ...Object.fromEntries(geaendert.map((k) => [k, vorher[k] ?? null])) },
+      // Der bisherige feste Plan vollständig (Lage jedes Käfigs und Tiers): so lässt sich der Stand vor dem Neu-Setzen aus
+      // dem Protokoll wiederherstellen (Rückmeldung 21.11.2026, damals ging er verloren).
+      alt: { ...(aktuell?.fest ? { fest: aktuell.fest.am, festPlan: aktuell.fest } : {}), ...Object.fromEntries(geaendert.map((k) => [k, vorher[k] ?? null])) },
       neu: { ...Object.fromEntries(geaendert.map((k) => [k, nachher[k] ?? null])), eingesetzt, ohne },
       ...(e.grund ? { grund: e.grund } : {}),
       akteur,

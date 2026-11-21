@@ -87,7 +87,7 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     titel: "Ontwerpen van het halplan",
     gespeichert: "Huidig plan als ontwerp opgeslagen.",
     ladenFrage: (name) => `„${name}” laden?`,
-    ladenText: "Het huidige plan wordt vervangen en opnieuw opgebouwd. Wilt u het bewaren, sla het dan eerst op als ontwerp.",
+    ladenText: "Het huidige plan wordt vervangen door het ontwerp. Wilt u het bewaren, sla het dan eerst op als ontwerp.",
     laden: "Laden",
     geladen: (name) => `„${name}” geladen.`,
     wirdGeladen: (name) => `„${name}” wordt geladen en geldt.`,

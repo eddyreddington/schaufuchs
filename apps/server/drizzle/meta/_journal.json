@@ -470,6 +470,13 @@
       "when": 1794923243917,
       "tag": "0066_sicherung",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1795303337783,
+      "tag": "0067_hallenentwurf_fest",
+      "breakpoints": true
     }
   ]
 }

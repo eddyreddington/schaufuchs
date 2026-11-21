@@ -2,7 +2,7 @@
  * Entwürfe des Hallenplans (Entscheidung 017): Je Schau mehrere Varianten speichern und laden; ist entschieden, gehen
  * die übrigen ins Archiv des Vereins und lassen sich in späteren Schauen laden. Über schema.ts exportiert.
  */
-import type { Halle } from "@schau/domain";
+import type { FesterPlan, Halle } from "@schau/domain";
 import { boolean, index, integer, jsonb, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { benutzer, organisation, schau } from "./schema";
 import { created, ts } from "./spalten";
@@ -18,6 +18,11 @@ export const hallenentwurf = pgTable(
     schauId: integer("schau_id").references(() => schau.id, { onDelete: "set null" }),
     name: text("name").notNull(),
     halle: jsonb("halle").$type<Halle>().notNull(),
+    /**
+     * Festgeschriebener Plan beim Speichern (Lage jedes Käfigs und Tiers); null: der Plan lief automatisch. Laden in
+     * derselben Schau stellt damit genau diesen Stand wieder her (Rückmeldung 21.11.2026).
+     */
+    fest: jsonb("fest").$type<FesterPlan>(),
     /** Im Archiv des Vereins (nach der Entscheidung für einen anderen Plan). */
     archiviert: boolean("archiviert").notNull().default(false),
     /** Name der Schau zum Zeitpunkt des Speicherns – für die Anzeige im Archiv. */

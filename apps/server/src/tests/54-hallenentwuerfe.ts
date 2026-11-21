@@ -30,6 +30,7 @@ describe("Hallenplan-Entwürfe", () => {
     expect(l.entwuerfe.find((e) => e.id === b)!.masse).toEqual({ breite: 1400, laenge: 2000 });
     const prot = await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, schauId));
     expect(prot.some((p) => p.aktion === "Hallenplan als Entwurf gespeichert")).toBe(true);
+    // Ohne festen Plan (automatisch geplant, oder Entwurf von vor dem 22.11.2026): neu gesetzt wie bisher.
     expect(prot.some((p) => p.aktion === "Hallenplan neu gesetzt" && p.grund === "Entwurf „Variante A – 10 m“ geladen")).toBe(true);
 
     await al().hallenentwurf.umbenennen({ id: a, name: "Variante A" });
@@ -54,6 +55,10 @@ describe("Hallenplan-Entwürfe", () => {
     const c = l.archiv.find((e) => e.name.startsWith("Variante C"))!;
     await al().hallenentwurf.laden({ schauId: neu, id: c.id });
     expect(await breite(neu)).toBe(1800);
+    // Aus einer anderen Schau: neu gesetzt (die festen Plätze gehörten zu deren Tieren), kein fester Plan.
+    const protNeu = await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, neu));
+    expect(protNeu.some((p) => p.aktion === "Hallenplan neu gesetzt")).toBe(true);
+    expect((await m.db.select().from(m.schema.schau).where(m.eq(m.schema.schau.id, neu)))[0]!.hallenplanFest).toBeNull();
     // Entwurf einer anderen Schau (nicht im Archiv) lässt sich hier nicht laden.
     await al().katalog.halleSetzen({ schauId, halle });
     const { id: x } = await al().hallenentwurf.speichern({ schauId, name: "Nur für die Entwurfschau" });
@@ -61,5 +66,61 @@ describe("Hallenplan-Entwürfe", () => {
     await expect(al().hallenentwurf.laden({ schauId: neu, id: 999_999 })).rejects.toThrow("nicht gefunden");
     await al().hallenentwurf.loeschen({ id: x });
     expect((await al().hallenentwurf.liste({ schauId })).entwuerfe).toHaveLength(0);
+  });
+
+  test("Entwurf derselben Schau mit festem Plan: Laden aus dem Archiv und Entscheiden stellen ihn genau her (Rückmeldung 21.11.2026)", async () => {
+    const { id } = await al().schau.anlegen({ name: "Entwurf fest", ort: "Musterdorf" });
+    const s = await al().schau.get({ id });
+    const [wy] = await al().stammdaten.suche({ versionId: s.stammdatenVersionId!, q: "Wyandotten" });
+    const r = await al().meldung.speichern({
+      schauId: id,
+      aussteller: { vorname: "Ent", nachname: "Wurf", strasse: "", plz: "", ort: "", telefon: "", email: "", verein: "", kreisverband: "", registriernummer: "", geburtsdatum: null, istPreisrichter: false, iban: "", kontoinhaber: "" },
+      eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true,
+      positionen: Array.from({ length: 6 }, () => ({ farbenschlagId: wy!.id, freitext: "", art: "einzeltier" as const, geschlecht: "1,0", alter: "jung" as const, istAoc: false, istNeuzuechtung: false, eigeneZucht: true, verkaufspreisCent: null })),
+    });
+    await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
+    await al().katalog.nummernVergeben({ schauId: id });
+    const h = { ...halle, wandreihen: false, quergang: false, plattenVersatz: [] };
+    await al().katalog.halleSetzen({ schauId: id, halle: h });
+    await al().katalog.planFestschreiben({ schauId: id });
+    // Reihe 1 von Hand verschoben (Versatz in der Halle), Plan festgeschrieben.
+    const zeile = async () => (await m.db.select({ halle: m.schema.schau.halle, fest: m.schema.schau.hallenplanFest }).from(m.schema.schau).where(m.eq(m.schema.schau.id, id)))[0]!;
+    const { halle: hJetzt } = await zeile();
+    await al().katalog.halleSetzen({ schauId: id, halle: { ...(hJetzt as typeof h), reihenVersatz: [{ nr: 1, dx: 0, dy: 100 }] } as never });
+    const stand = async () => {
+      const z = await zeile();
+      const plan = (await al().katalog.hallenplan({ schauId: id })).plan!;
+      return JSON.stringify({ halle: z.halle, fest: z.fest, lagen: plan.reihen.map((x) => x.kaefige.map((k) => [k.id, k.x, k.y])) });
+    };
+    const a = await stand();
+    expect(JSON.parse(a).fest).not.toBeNull();
+
+    const { id: ea } = await al().hallenentwurf.speichern({ schauId: id, name: "Fester Stand" });
+    // „Aktueller Plan“ gilt, der Entwurf geht ins Archiv – dann den Plan neu setzen (Versatz und fester Plan weg) …
+    await al().hallenentwurf.entscheiden({ schauId: id });
+    await al().katalog.planNeuSetzen({ schauId: id, grund: "Test" });
+    expect(await stand()).not.toEqual(a);
+    // Das Neu-Setzen hat den überschriebenen festen Plan vollständig im Protokoll (wiederherstellbar).
+    const prot = await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, id));
+    const neuGesetzt = prot.filter((p) => p.aktion === "Hallenplan neu gesetzt").at(-1)!;
+    expect((neuGesetzt.alt as { festPlan?: unknown }).festPlan).toEqual(JSON.parse(a).fest);
+    // … und den archivierten Entwurf derselben Schau wieder laden: alles wie vorher.
+    await al().hallenentwurf.laden({ schauId: id, id: ea });
+    expect(await stand()).toEqual(a);
+    const geladen = (await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, id))).filter((p) => p.aktion === "Hallenplan aus Entwurf geladen").at(-1)!;
+    expect((geladen.neu as { entwurfId?: number }).entwurfId).toBe(ea);
+
+    // Entscheiden für einen Entwurf (nicht archiviert) stellt ihn ebenso genau her.
+    const { id: eb } = await al().hallenentwurf.speichern({ schauId: id, name: "Noch einmal" });
+    await al().katalog.planNeuSetzen({ schauId: id, grund: "Test" });
+    await al().hallenentwurf.entscheiden({ schauId: id, id: eb });
+    expect(await stand()).toEqual(a);
+    // Entscheiden: geladen, der Entwurf gilt (weg aus den Entwürfen), protokolliert.
+    expect((await al().hallenentwurf.liste({ schauId: id })).entwuerfe).toHaveLength(0);
+
+    // Abgeschlossene Schau: nicht mehr laden.
+    const { id: ec } = await al().hallenentwurf.speichern({ schauId: id, name: "Zu spät" });
+    await m.db.update(m.schema.schau).set({ phase: "abgeschlossen" }).where(m.eq(m.schema.schau.id, id));
+    await expect(al().hallenentwurf.laden({ schauId: id, id: ec })).rejects.toThrow("abgeschlossen");
   });
 });

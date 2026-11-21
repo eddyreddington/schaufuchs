@@ -89,7 +89,7 @@ export const halleBild = {
     titel: "Entwürfe des Hallenplans",
     gespeichert: "Aktueller Plan als Entwurf gespeichert.",
     ladenFrage: (name: string) => `„${name}“ laden?`,
-    ladenText: "Der aktuelle Plan wird ersetzt und neu gesetzt. Wer ihn behalten will, speichert ihn vorher als Entwurf.",
+    ladenText: "Der aktuelle Plan wird durch den Entwurf ersetzt. Wer ihn behalten will, speichert ihn vorher als Entwurf.",
     laden: "Laden",
     geladen: (name: string) => `„${name}“ geladen.`,
     wirdGeladen: (name: string) => `„${name}“ wird geladen und gilt.`,

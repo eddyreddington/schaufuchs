@@ -90,7 +90,7 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     titel: "Návrhy plánu haly",
     gespeichert: "Aktuální plán uložen jako návrh.",
     ladenFrage: (name) => `Načíst „${name}“?`,
-    ladenText: "Aktuální plán bude nahrazen a znovu rozmístěn. Chcete-li ho zachovat, uložte ho nejprve jako návrh.",
+    ladenText: "Aktuální plán bude nahrazen návrhem. Chcete-li ho zachovat, uložte ho nejprve jako návrh.",
     laden: "Načíst",
     geladen: (name) => `„${name}“ načten.`,
     wirdGeladen: (name) => `„${name}“ bude načten a začne platit.`,
