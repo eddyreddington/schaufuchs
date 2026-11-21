@@ -279,6 +279,18 @@ function Plan({
       grundriss={kannPlanen && !d.abgeschlossen ? grundrissSetzen : undefined}
       automatik={kannPlanen && !d.abgeschlossen ? automatikUmschalten : undefined}
       setzen={bearbeiten ? fehlendeSetzen : undefined}
+      nummerFolgeSetzen={
+        kannPlanen && !d.abgeschlossen
+          ? (f) =>
+              void aendern(
+                (h) => {
+                  const { nummerFolge: _, ...rest } = h;
+                  return f ? { ...rest, nummerFolge: f } : rest;
+                },
+                zweisprachig((x) => x.halle.nummerFolge.geaendert),
+              )
+          : undefined
+      }
       vorschlaege={() => {
         setHalleDialog(false);
         setVorschlaegeOffen(true);

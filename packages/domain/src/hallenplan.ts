@@ -194,7 +194,7 @@ export function planeHalle(eingabe: Halle, tiere: PlanTier[], masse: KaefigMasse
     const m = /^(\d+)/.exec((t.kaefig ?? t.nr ?? "").trim());
     return m ? Number(m[1]) : Infinity;
   };
-  for (const i of blockFolge(reihen, objekte, quer ? "quer" : "laengs")) {
+  for (const i of blockFolge(reihen, objekte, quer ? "quer" : "laengs", eingabe.nummerFolge)) {
     const o = objekte[i]!;
     if (o.art !== "kaefigblock" || !o.plaetze) continue;
     const fix = festeBlockTiere.get(o.id) ?? [];

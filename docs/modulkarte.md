@@ -259,7 +259,7 @@ Hallenplan – fester Plan: was beim Festschreiben gilt (`festGeometrie`), Fests
 - `festschreiben()` – Den gerechneten Plan festschreiben (aus `planeHalle` ohne festen Plan).
 - `planeFest()` – Fester Plan: die Plätze bleiben, wo sie sind.
 
-### hallenplan-folge.ts (172 Z.)
+### hallenplan-folge.ts (219 Z.)
 Reihenfolge der Käfige, wie sie im Plan stehen – Grundlage für „Nach Plan nummerieren“ nach dem Umstellen.
 Tests: `hallenplan-folge.test.ts`
 
@@ -347,9 +347,11 @@ Hallenplan – Stellen im Reihensystem: Reihen und ihre Abschnitte, Grundplatten
 - `planeAusgeglichen()` – Automatische Aufstellung mit ruhigem Bild (Rückmeldung 14.11.2026): Die Tiere stehen streng in Katalogfolge Reihe für Reihe, lückenlos – auch über …
 - `planeImReihensystem()` – Stellen im Reihensystem.
 
-### hallenplan-typen.ts (331 Z.)
+### hallenplan-typen.ts (354 Z.)
 Hallenplan – Datentypen: Halle mit Flächen und eingesetzten Teilen, Rechteck und Blickrichtung, gerechneter Plan (Reihen, Platten, Käfige, freie Pl …
 
+- `NummerFolge` (Typ) – Einstellung „Nach Plan nummerieren“ (Rückmeldung 22.11.2026).
+- `nummerFolgeAktiv()` – Ist eine Einstellung gesetzt, die von der gewohnten Folge abweicht?
 - `EntfernterPlatz` (Typ) – Entfernte leere Grundplatte (Lage der Platte) bzw. entfernter freier Platz im festen Plan.
 - `Blick` (Typ) – Richtung, in die eine Käfigfront zeigt (Hallenkoordinaten: x+ zu größerem x, z+ zu größerem y).
 - `Strecke` (Typ) – Strecke von (x1, y1) nach (x2, y2) in Hallenkoordinaten.
@@ -751,7 +753,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (187 Z.)
+### halle.ts (204 Z.)
 
 - `halle`
 
@@ -940,7 +942,7 @@ Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt
 
 - `halleWerkzeuge` – Texte der Oberfläche: halleWerkzeuge (Entscheidung 022) – Werkzeugleiste, Befehle und Aktionen des Hallenplan-Editors, kleine Teile (Tiere ohne Pla …
 
-### halle.ts (186 Z.)
+### halle.ts (203 Z.)
 
 - `halle` – Texte der Oberfläche: halle – Seiten „Käfige“ und „Hallenplan“ mit den Eigenschaften im Editor (Entscheidung 022).
 
@@ -1141,7 +1143,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `halleWerkzeuge`
 
-### halle.ts (186 Z.)
+### halle.ts (203 Z.)
 
 - `halle`
 
@@ -1326,7 +1328,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (186 Z.)
+### halle.ts (203 Z.)
 
 - `halle`
 
@@ -1515,7 +1517,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (186 Z.)
+### halle.ts (203 Z.)
 
 - `halle`
 
@@ -1700,7 +1702,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (188 Z.)
+### halle.ts (205 Z.)
 
 - `halle`
 
@@ -2009,7 +2011,7 @@ Tests: `zuwendungsbestaetigung.test.ts`
 - `betragFelder()` – Betrag in Ziffern und Buchstaben (BMF Nr. 5).
 - `sachSaetze()` – Text der Sachzuwendung: Bezeichnung und die zutreffenden Sätze zur Herkunft und zu den Unterlagen.
 
-Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `oberflaeche.test.ts`, `preisbindung.test.ts`, `sprachen.test.ts`, `stiftung.test.ts`
+Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-nummerfolge.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `oberflaeche.test.ts`, `preisbindung.test.ts`, `sprachen.test.ts`, `stiftung.test.ts`
 
 ## tRPC-Prozeduren `apps/server/src/routers`
 
@@ -2177,7 +2179,7 @@ Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferu
 - `halle.statusSetzen` mutation · angemeldet
 - `halle.vetSetzen` mutation · angemeldet – Nachweise bei der Einlieferung: ND-Impfung (Hühner, Puten), PMV-Impfung (Tauben), Untersuchung Wassergeflügel.
 
-### routers/katalog/gemeinsam.ts (210 Z.)
+### routers/katalog/gemeinsam.ts (225 Z.)
 Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan.
 
 Keine Prozeduren (Hilfen für die Router).
@@ -2540,7 +2542,7 @@ Bedienung der Hallenplan-Zeichnung: Teile greifen, ziehen und loslassen (mit Pr�
 ### hallenplan-bild.tsx (481 Z.)
 Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
 
-### hallenplan-eigenschaften.tsx (559 Z.)
+### hallenplan-eigenschaften.tsx (564 Z.)
 Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle (`HalleEigenschaften`) mit ihren Eingabefe …
 
 ### hallenplan-entwuerfe.tsx (166 Z.)
@@ -2560,6 +2562,8 @@ Grundriss der Halle bearbeiten (Entscheidung 019): Wände ziehen (rechtwinklig, 
 
 ### hallenplan-laden.ts (20 Z.)
 Was die Seite „Hallenplan“ beim Laden zeigt (Seite hallenplan.tsx).
+
+### hallenplan-nummerfolge.tsx (73 Z.)
 
 ### hallenplan-speichern.test.ts (11 Z.)
 
@@ -2583,7 +2587,7 @@ Bausteine der Werkzeugleiste im Hallenplan-Editor: Symbole, Werkzeugknöpfe mit 
 ### hallenplan-werkzeugleiste.tsx (211 Z.)
 Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen, Zoom, Menü „Plan“).
 
-### hallenplan.tsx (549 Z.) – `/schau/:schauId/hallenplan`
+### hallenplan.tsx (561 Z.) – `/schau/:schauId/hallenplan`
 Seite „Hallenplan“: neue Halle anlegen und der Editor (`Plan`) mit Speichern, Rückgängig, Auswahl und Tastatur.
 Prozeduren: katalog.halleSetzen, katalog.hallenplan
 
@@ -2908,7 +2912,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `33-vereinsverzeichnis.ts` (57 Z.) – Vereinsverzeichnis: einspielen (nur Namen, nichts überschrieben, Prüfung auf Kontaktdaten, Protokoll) und Vorschläge in Verwaltung und öffentlicher …
 - `34-katalog-gestaltung.ts` (304 Z.) – Druckkatalog: Schrift und Gestaltung wählbar, A4 als Vorgabe, Stiche je Sparte (einmal eingebettet), Öffnungszeiten untereinander.
 - `35-pruefung-nachbesserung.ts` (574 Z.) – Nachbesserungen aus der Gesamtprüfung vom 13.11.2026 (interne Prüfung): Sperren nach Festschreiben und Abschluss, Geld-Lücken, Protokoll, rechtssic …
-- `36-nach-plan-nummerieren.ts` (214 Z.) – Nach dem Umstellen im Hallenplan neu nummerieren: vor dem Festschreiben der Katalognummern die Katalognummern (und Käfigplätze) in der Reihenfolge …
+- `36-nach-plan-nummerieren.ts` (248 Z.) – Nach dem Umstellen im Hallenplan neu nummerieren: vor dem Festschreiben der Katalognummern die Katalognummern (und Käfigplätze) in der Reihenfolge …
 - `37-kommende-schauen.ts` (204 Z.) – Kommende Schauen: Termine pflegen, Kalender abonnieren ohne stilles Überschreiben, Katalogseite mit Kreiswahl, eigener Kalender.
 - `38-hallenplan-entfernen.ts` (86 Z.) – Leere Plätze im festen Hallenplan entfernen: über das Speichern der Halle (wie jede Änderung im Editor), nur leere Platten und Plätze im festen Pla …
 - `39-hallenplan-druck.ts` (100 Z.) – Hallenplan drucken: genau ein Blatt A4 (quer, wenn die Zeichnung breiter als hoch ist), auch bei einer großen Halle mit vielen Käfigen, festgeschri …

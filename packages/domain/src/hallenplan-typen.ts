@@ -89,7 +89,30 @@ export interface Halle {
    * `leereEntfernen`.
    */
   entfernt?: EntfernterPlatz[];
+  /** Wie „Nach Plan nummerieren“ zählt (fehlt: Reihe für Reihe ab der ersten, jede Seite vom Anfang). */
+  nummerFolge?: NummerFolge;
 }
+
+/**
+ * Einstellung „Nach Plan nummerieren“ (Rückmeldung 22.11.2026). Reihen sind hier die Zeilen quer zur Reihenrichtung, jede
+ * Seite einer Doppelreihe für sich (R1, R2 …); Anfang und Ende wie die Software stellt.
+ */
+export interface NummerFolge {
+  /** R-Nummer der Reihe, bei der die 1 steht (fehlt oder gibt es nicht: die erste); die übrigen folgen ringsum. */
+  startReihe?: number;
+  /** Reihen in absteigender Folge (R4, R3 …) statt aufsteigend. */
+  absteigend?: boolean;
+  /** Die erste Reihe vom Ende zum Anfang zählen (ohne Schlangenlinie: alle). */
+  vomEnde?: boolean;
+  /** Schlangenlinie: jede folgende Reihe in Gegenrichtung. */
+  schlange?: boolean;
+  /** Doppelreihen abwechselnd über beide Seiten (links, rechts, links …) statt Seite für Seite. */
+  doppelAbwechselnd?: boolean;
+}
+
+/** Ist eine Einstellung gesetzt, die von der gewohnten Folge abweicht? */
+export const nummerFolgeAktiv = (f: NummerFolge | null | undefined): f is NummerFolge =>
+  !!f && (f.startReihe != null || !!f.absteigend || !!f.vomEnde || !!f.schlange || !!f.doppelAbwechselnd);
 
 /** Entfernte leere Grundplatte (Lage der Platte) bzw. entfernter freier Platz im festen Plan. */
 export interface EntfernterPlatz {

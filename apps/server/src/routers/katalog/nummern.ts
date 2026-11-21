@@ -123,7 +123,7 @@ export const katalogNummern = {
       if (festNeu) await tx.update(schau).set({ hallenplanFest: verankert }).where(eq(schau.id, s.id));
       const plan = festNeu ? planeHalle(s.halle, tiere, s.kaefigMasse, verankert) : gerechnet;
       const richtung = s.halle.richtung ?? "quer";
-      const folge = planFolge(plan, richtung);
+      const folge = planFolge(plan, richtung, s.halle.nummerFolge);
       const opts = { start: s.katalogStart, jugendSeparat: s.jugendSeparat, staemmeVorn: s.staemmeVorn, kaefigFolge: s.kaefigFolge, sortierung: s.katalogSortierung };
       const regeln = s.kaefigRegeln ?? [];
       // Nummern: nur bestätigte Tiere (wie „Katalognummern vergeben“). Käfigplätze: jedes Tier, das im Plan einen Käfig

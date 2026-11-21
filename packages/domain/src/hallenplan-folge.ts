@@ -6,7 +6,7 @@
  * eigenen Anfang, auch gedreht. Volieren (Volierenbereich und eingesetzte Volieren) kommen ans Ende, in der Folge, in der
  * sie aufgebaut werden. Reine Rechnung ohne Datenbank.
  */
-import { etageFeld, type FesterPlan, type Hallenplan, type PlanKaefig, type Rechteck } from "./hallenplan";
+import { etageFeld, type FesterPlan, type Hallenplan, nummerFolgeAktiv, type NummerFolge, type PlanKaefig, type Rechteck } from "./hallenplan";
 import type { KaefigTyp } from "./kaefige";
 
 /** Ein Platz im Plan in der Folge des Plans: belegt (tierId) oder frei; Reihenplätze mit ihrer Lage im Reihensystem. */
@@ -33,8 +33,9 @@ type Einheit = { ps: Eintrag[]; a: number; b: { von: number; bis: number }; quer
  * Alle Plätze in Reihen und Käfigblöcken (belegt und frei) in der Folge des Plans: Reihe für Reihe (quer zu den Reihen
  * aufsteigend), in jeder Reihe vom Anfang zum Ende. Einheiten sind Grundplatten (eine gedrehte Reihe als Ganzes),
  * einzeln verschobene oder gedrehte Platten und Käfigblöcke; jede zählt von ihrem eigenen Anfang. Volieren nicht.
+ * `folge`: Einstellung der Halle (Startreihe, Richtung, Schlangenlinie, Doppelreihen) – ohne bleibt es bei dieser Folge.
  */
-export function planPlaetze(plan: { reihen: Hallenplan["reihen"]; objekte: Pick<Hallenplan["objekte"][number], "kaefige" | "rechteck">[] }, richtung: "quer" | "laengs"): PlanPlatz[] {
+export function planPlaetze(plan: { reihen: Hallenplan["reihen"]; objekte: Pick<Hallenplan["objekte"][number], "kaefige" | "rechteck">[] }, richtung: "quer" | "laengs", folge?: NummerFolge | null): PlanPlatz[] {
   // A: entlang der Reihen, B: quer dazu (in Hallenkoordinaten; „quer“ = Reihen parallel zur kurzen Seite x).
   const aVon = (q: Rechteck) => (richtung === "quer" ? q.x : q.y);
   const aLang = (q: Rechteck) => (richtung === "quer" ? q.b : q.h);
@@ -88,12 +89,57 @@ export function planPlaetze(plan: { reihen: Hallenplan["reihen"]; objekte: Pick<
     else zeilen.push({ b: { ...e.b }, es: [e] });
   }
   zeilen.sort((x, y) => x.b.von - y.b.von);
-  return zeilen.flatMap((z, zeile) => z.es.sort((x, y) => x.a - y.a || x.b.von - y.b.von).flatMap((e) => e.ps.map(({ rechteck: _, ...p }) => ({ ...p, zeile }))));
+  const vorwaerts = zeilen.map((z) => z.es.sort((x, y) => x.a - y.a || x.b.von - y.b.von).flatMap((e) => e.ps));
+  const ohneRechteck = (ps: Eintrag[], zeile: number) => ps.map(({ rechteck: _, ...p }) => ({ ...p, zeile }));
+  if (!nummerFolgeAktiv(folge)) return vorwaerts.flatMap((ps, zeile) => ohneRechteck(ps, zeile));
+  // Doppelreihen erkennen an den Reihen selbst (beide Seiten „doppel“, Rücken an Rücken) – nicht an der Lage der Platten,
+  // sonst fiele ein Paar mit einer etwas verschobenen Platte still auseinander. Die Reihe einer Zeile: die meisten Plätze.
+  const reiheVon = vorwaerts.map((ps) => {
+    const n = new Map<number, number>();
+    for (const p of ps) if (p.reihe != null) n.set(p.reihe, (n.get(p.reihe) ?? 0) + 1);
+    return [...n].sort((x, y) => y[1] - x[1] || x[0] - y[0])[0]?.[0] ?? null;
+  });
+  const reihe = new Map(plan.reihen.map((r) => [r.nr, r]));
+  const paar = (i: number, j: number) => {
+    const x = reihe.get(reiheVon[i] ?? -1), y = reihe.get(reiheVon[j] ?? -1);
+    return !!x && !!y && x.art === "doppel" && y.art === "doppel" && (Math.abs(x.x + x.tiefe - y.x) <= 1 || Math.abs(y.x + y.tiefe - x.x) <= 1);
+  };
+  return gezaehlt(vorwaerts, folge, aVon, paar).flatMap((ps, zeile) => ohneRechteck(ps, zeile));
+}
+
+/**
+ * Zählung nach der Einstellung: Zeilen (bei Doppelreihen abwechselnd paarweise) in auf- oder absteigender Folge ab der
+ * Startreihe (ringsum), jede vorwärts oder rückwärts (Schlangenlinie: im Wechsel). Rückwärts bleibt die Folge der Etagen
+ * je Spalte (unten zuerst). Gibt je Gruppe die Plätze in Zählfolge zurück. `zeilen`: je Zeile die Plätze vorwärts (quer
+ * zu den Reihen aufsteigend); `paar(i, i+1)`: die beiden Zeilen sind die Seiten einer Doppelreihe.
+ */
+function gezaehlt(zeilen: Eintrag[][], f: NummerFolge, aVon: (q: Rechteck) => number, paar: (i: number, j: number) => boolean): Eintrag[][] {
+  // Gruppen: jede Zeile für sich, bei „abwechselnd“ die beiden Seiten einer Doppelreihe zusammen.
+  let gruppen: number[][] = [];
+  for (let i = 0; i < zeilen.length; i++) {
+    if (f.doppelAbwechselnd && i + 1 < zeilen.length && paar(i, i + 1)) gruppen.push([i, ++i]);
+    else gruppen.push([i]);
+  }
+  if (f.absteigend) gruppen = gruppen.reverse().map((g) => [...g].reverse());
+  const hatStart = (i: number) => zeilen[i]!.some((p) => p.reihe === f.startReihe);
+  const start = f.startReihe == null ? -1 : gruppen.findIndex((g) => g.some(hatStart));
+  if (start > 0) gruppen = [...gruppen.slice(start), ...gruppen.slice(0, start)];
+  // Liegt die Startreihe auf der zweiten Seite ihres Paars, beginnt die Zählung dort (die 1 steht, wo man sie hinsetzt).
+  if (start >= 0 && gruppen[0]!.length > 1 && !hatStart(gruppen[0]![0]!)) gruppen[0] = [...gruppen[0]!].reverse();
+  return gruppen.map((g, k) => {
+    const vor = !f.vomEnde !== (!!f.schlange && k % 2 === 1);
+    // Lage entlang der Reihe auf ganze cm: beide Seiten derselben Spalte gelten als gleichauf (keine Rundungsfehler).
+    const ps = g.flatMap((i, seite) => zeilen[i]!.map((p, idx) => ({ p, seite, idx, a: Math.round(aVon(p.rechteck)) })));
+    // Entlang der Reihe vor- oder rückwärts; bei zwei Seiten im Wechsel, je Spalte die Seite in Gruppenfolge; in einer
+    // Spalte (Etagen) bleibt die gewohnte Folge.
+    ps.sort((x, y) => (vor ? x.a - y.a : y.a - x.a) || x.seite - y.seite || x.idx - y.idx);
+    return g.length > 1 || !vor ? ps.map((x) => x.p) : zeilen[g[0]!]!;
+  });
 }
 
 /** Tier-Ids in der Reihenfolge des Plans (nur Tiere mit Platz). richtung: wie die Halle („quer“: Reihen entlang x). */
-export function planFolge(plan: Pick<Hallenplan, "reihen" | "objekte" | "volieren">, richtung: "quer" | "laengs"): number[] {
-  const inReihen = planPlaetze(plan, richtung).flatMap((p) => (p.tierId != null ? [p.tierId] : []));
+export function planFolge(plan: Pick<Hallenplan, "reihen" | "objekte" | "volieren">, richtung: "quer" | "laengs", folge?: NummerFolge | null): number[] {
+  const inReihen = planPlaetze(plan, richtung, folge).flatMap((p) => (p.tierId != null ? [p.tierId] : []));
   // Volieren: in der Folge des Aufbaus (Volierenbereich, dann eingesetzte Volieren in der Folge des Einsetzens).
   return [...inReihen, ...plan.volieren.map((v) => v.id), ...plan.objekte.flatMap((o) => (o.tier ? [o.tier.id] : []))];
 }
@@ -133,9 +179,10 @@ function nummer(n: string | null | undefined): [number, string] | null {
 /**
  * Wie unordentlich der (feste) Plan nach dem Umstellen ist: freie Plätze mitten zwischen belegten derselben Käfiggröße
  * (dahinter steht noch ein Tier dieser Größe) und wie oft die Nummern in Planfolge fallen (Katalognummer, mit
- * `nachKaefig` die Käfignummer). Grundlage für den Hinweis „Jetzt nach Plan nummerieren“.
+ * `nachKaefig` die Käfignummer; `folge`: Einstellung der Halle, wie nummeriert wird). Grundlage für den Hinweis „Jetzt
+ * nach Plan nummerieren“. Die Lücken sind räumlich und hängen nicht an der Einstellung.
  */
-export function planUnordnung(plan: Pick<Hallenplan, "reihen" | "objekte"> & { fest?: Hallenplan["fest"] }, richtung: "quer" | "laengs", nachKaefig = false): { freiDazwischen: number; nichtInFolge: number } {
+export function planUnordnung(plan: Pick<Hallenplan, "reihen" | "objekte"> & { fest?: Hallenplan["fest"] }, richtung: "quer" | "laengs", nachKaefig = false, folge?: NummerFolge | null): { freiDazwischen: number; nichtInFolge: number } {
   const plaetze = reihenLaeufe(plan, richtung);
   const { vonHand, freiGemacht } = handZuordnung(plan.fest);
   let freiDazwischen = 0;
@@ -149,7 +196,7 @@ export function planUnordnung(plan: Pick<Hallenplan, "reihen" | "objekte"> & { f
   }
   let nichtInFolge = 0;
   let vorher: [number, string] | null = null;
-  for (const p of planPlaetze(plan, richtung)) {
+  for (const p of planPlaetze(plan, richtung, folge)) {
     if (p.tierId == null) continue;
     const n = nummer(nachKaefig ? (p.kaefig ?? p.nr) : p.nr);
     if (!n) continue;
@@ -163,10 +210,10 @@ export function planUnordnung(plan: Pick<Hallenplan, "reihen" | "objekte"> & { f
  * Folge der eingesetzten Käfigblöcke im Plan (Indizes in `objekte`) – dieselbe, in der „Nach Plan nummerieren“ zählt. In
  * dieser Folge nehmen die Blöcke die Tiere ohne Platz auf; so bleiben die Nummern nach dem Nummerieren in Planfolge.
  */
-export function blockFolge(reihen: Hallenplan["reihen"], objekte: Pick<Hallenplan["objekte"][number], "art" | "typ" | "rechteck">[], richtung: "quer" | "laengs"): number[] {
+export function blockFolge(reihen: Hallenplan["reihen"], objekte: Pick<Hallenplan["objekte"][number], "art" | "typ" | "rechteck">[], richtung: "quer" | "laengs", folge?: NummerFolge | null): number[] {
   const merker = objekte.map((o, i) => ({
     rechteck: o.rechteck,
     kaefige: o.art === "kaefigblock" ? [{ id: -1 - i, typ: o.typ ?? ("huehner" as KaefigTyp), nr: null, rechteck: o.rechteck } as PlanKaefig] : [],
   }));
-  return planPlaetze({ reihen, objekte: merker }, richtung).flatMap((p) => (p.tierId != null && p.tierId < 0 ? [-1 - p.tierId] : []));
+  return planPlaetze({ reihen, objekte: merker }, richtung, folge).flatMap((p) => (p.tierId != null && p.tierId < 0 ? [-1 - p.tierId] : []));
 }

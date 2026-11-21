@@ -180,6 +180,40 @@ describe("Nach Plan nummerieren", () => {
     expect((await helfer().katalog.hallenplan({ schauId: id })).unordnung!.nichtInFolge).toBe(0);
   });
 
+  test("Einstellung der Halle: Schlangenlinie ab Reihe 2 – die Nummern laufen so, der Hinweis rechnet mit (Rückmeldung 22.11.2026)", async () => {
+    const { id } = await al().schau.anlegen({ name: "Nummerfolge", ort: "Halle" });
+    const s = await al().schau.get({ id });
+    const [wy] = await al().stammdaten.suche({ versionId: s.stammdatenVersionId!, q: "Wyandotten" });
+    const r = await al().meldung.speichern({
+      schauId: id,
+      aussteller: { vorname: "Schl", nachname: "Ange", strasse: "", plz: "", ort: "", telefon: "", email: "", verein: "", kreisverband: "", registriernummer: "", geburtsdatum: null, istPreisrichter: false, iban: "", kontoinhaber: "" },
+      eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true,
+      positionen: Array.from({ length: 12 }, () => ({ farbenschlagId: wy!.id, freitext: "", art: "einzeltier" as const, geschlecht: "1,0", alter: "jung" as const, istAoc: false, istNeuzuechtung: false, eigeneZucht: true, verkaufspreisCent: null })),
+    });
+    await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
+    await al().katalog.nummernVergeben({ schauId: id });
+    const halle = { breite: 1000, laenge: 800, gang: 150, richtung: "laengs" as const, wandreihen: false, quergang: false, wandBuendig: false, hauptgang: { breite: 0, lage: "keiner" as const }, platte: { laenge: 210, tiefe: 70 }, jePlatte: {}, objekte: [], reihenVersatz: [], plattenVersatz: [], spartenStart: [], flaechen: [] };
+    await al().katalog.halleSetzen({ schauId: id, halle });
+    await al().katalog.planFestschreiben({ schauId: id });
+    const plan = async () => (await helfer().katalog.hallenplan({ schauId: id })).plan!;
+    expect((await plan()).reihen.map((x) => x.kaefige.length).slice(0, 2)).toEqual([6, 6]);
+    // Einstellung speichern wie im Editor (mit Basis): Beginn bei R2, Schlangenlinie.
+    const { halleSchluessel } = await import("@schau/domain");
+    const aktuell = (await m.db.select().from(m.schema.schau).where(m.eq(m.schema.schau.id, id)))[0]!.halle!;
+    await al().katalog.halleSetzen({ schauId: id, basis: halleSchluessel(aktuell), halle: { ...(aktuell as typeof halle), nummerFolge: { startReihe: 2, schlange: true } } as never });
+    expect((await helfer().katalog.hallenplan({ schauId: id })).unordnung!.nichtInFolge).toBeGreaterThan(0);
+    await al().katalog.nummernNachPlan({ schauId: id });
+    const p = await plan();
+    // R2 zuerst vom Anfang (1–6), dann R1 zurück (7–12, vom Ende her).
+    expect(p.reihen[1]!.kaefige.sort((a, b) => a.y - b.y).map((k) => k.nr)).toEqual(["1", "2", "3", "4", "5", "6"]);
+    expect(p.reihen[0]!.kaefige.sort((a, b) => a.y - b.y).map((k) => k.nr)).toEqual(["12", "11", "10", "9", "8", "7"]);
+    expect((await helfer().katalog.hallenplan({ schauId: id })).unordnung!.nichtInFolge).toBe(0);
+    // Alles aus (nur „false“): der Server lässt das Feld weg – die Halle ist wie ohne Einstellung.
+    const jetzt = (await m.db.select().from(m.schema.schau).where(m.eq(m.schema.schau.id, id)))[0]!.halle!;
+    await al().katalog.halleSetzen({ schauId: id, basis: halleSchluessel(jetzt), halle: { ...(jetzt as typeof halle), nummerFolge: { schlange: false, absteigend: false } } as never });
+    expect("nummerFolge" in (await m.db.select().from(m.schema.schau).where(m.eq(m.schema.schau.id, id)))[0]!.halle!).toBe(false);
+  });
+
   test("eingesetzte Käfigblöcke: nach dem Nummerieren folgen die Nummern dem Plan, der Hinweis verschwindet, ein zweites Mal ändert nichts", async () => {
     const { id } = await al().schau.anlegen({ name: "Blöcke nach Plan", ort: "Halle" });
     const s = await al().schau.get({ id });

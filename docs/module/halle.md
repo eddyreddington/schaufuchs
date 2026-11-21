@@ -13,7 +13,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 | Fehlende Käfige | `hallenplan-fehlend.ts` | `fehlendeKaefige()`, `fehlendeEinsetzen()` (nur in nutzbare Reihenstücke, nie in Gänge) |
 | Editor-Logik | `hallenplan-gruppe.ts`, `hallenplan-entfernen.ts` | `verschiebeTeile()`, `pruefeVerschiebung()`, `pruefeLage()`, `rasterAusrichten()`, `leereEntfernen()`, `pruefeEntfernt()` |
 | Front, Wand | `hallenplan-wandfront.ts`, `hallenplan-wand.ts` | `wandAusrichtung()` (Rückwand an die Wand), `mitWandreihe()` |
-| Folge | `hallenplan-folge.ts` | `planFolge()` („Nach Plan nummerieren“, nur Nummern, kein Tier wechselt den Käfig), `planUnordnung()` |
+| Folge | `hallenplan-folge.ts` | `planFolge()` („Nach Plan nummerieren“, nur Nummern, kein Tier wechselt den Käfig; Einstellung `Halle.nummerFolge`, Oberfläche `hallenplan-nummerfolge.tsx`), `planUnordnung()` |
 | Druck, 3D | `hallenplan-druck.ts`, `hallenplan-3d.ts`, `hallenplan-3d-waende.ts`, `hallenplan-3d-rundgang.ts`, `stellvorschlaege.ts`, `kaefige.ts` | `zeichnungDerHalle()`, `richterFarbe()`, `hallenSzene()`, `waendeImGrundriss()`, `rundgang()` (Wegpunkte des Rundgangs), `stellVorschlaege()`, `kaefigTyp()`, `kaefigMass()` |
 | Server | `apps/server/src/routers/katalog/kaefige.ts`, `hallenplan.ts`, `gemeinsam.ts` (`planNeuSetzenIn`), `einlieferung.ts` | `katalog.hallenplan`, `halleSetzen`, `planFestschreiben`, `planNeuSetzen`, `stellVorschlaege` (`hallenplan.ts`); `plattenSetzen`, `kaefigMassSetzen` (`kaefige.ts`); `halle.kaefigSetzen` (einzelnes Tier, `einlieferung.ts`) |
 | PDF | `apps/server/src/pdf/hallenplan.ts` | `hallenplanPdf()`, `aufbaulistePdf()` |

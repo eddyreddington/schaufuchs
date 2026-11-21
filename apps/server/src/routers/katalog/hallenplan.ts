@@ -28,7 +28,7 @@ export const katalogHallenplan = {
       vorgabe: HALLE_STANDARD,
       plan,
       /** Fester Plan nach dem Umstellen: freie Plätze zwischen belegten, Nummern nicht in Planfolge (für den Hinweis). */
-      unordnung: plan && halle && s.hallenplanFest ? planUnordnung(plan, halle.richtung ?? "quer", s.katalogGedruckt) : null,
+      unordnung: plan && halle && s.hallenplanFest ? planUnordnung(plan, halle.richtung ?? "quer", s.katalogGedruckt, halle.nummerFolge) : null,
       anzahl: tiere.length,
       ohneNummer: tiere.filter((t) => t.nr == null).length,
       masse: s.kaefigMasse ?? {},

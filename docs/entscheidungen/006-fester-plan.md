@@ -12,6 +12,8 @@ Das erste Verschieben, Drehen oder Ausrichten im Editor schreibt den Plan vorher
 (`neuSetzen()`, mit Rückfrage – Verschobenes und eingesetzte Teile fallen weg, Möbel bleiben). Die Reihenrichtung lässt sich nur bei „an“ ändern.
 „Nach Plan nummerieren“ vergibt nur Nummern, kein Tier wechselt dabei den Käfig (Rückmeldung 21.11.2026; vorher rückten Tiere
 in freie Plätze auf). Nachmeldungen, die noch nicht im festen Plan stehen, werden dabei mit ihrer jetzigen Lage festgeschrieben
-(`mitBelegung`) – ihr Platz hinge sonst an der Nummer, die sich beim Nummerieren ändert.
+(`mitBelegung`) – ihr Platz hinge sonst an der Nummer, die sich beim Nummerieren ändert. Wie gezählt wird (Startreihe,
+auf-/absteigend, erste Reihe vom Anfang oder Ende, Schlangenlinie, Doppelreihen abwechselnd) steht in der Halle
+(`Halle.nummerFolge`, Rückmeldung 22.11.2026); sie ändert die Geometrie nicht, ein fester Plan bleibt gültig.
 
 **Wo:** `hallenplan.ts` (`planeHalle`), `hallenplan-fest.ts` (`festschreiben`, `festGeometrie`), `hallenplan-neu.ts`, Router `katalog.planFestschreiben` / `katalog.planNeuSetzen`, Test `24-plan-fest`, `36-nach-plan-nummerieren`, `40-hallenplan-neu-setzen`.

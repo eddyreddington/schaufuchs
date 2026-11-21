@@ -114,6 +114,21 @@ export const HALLE_EINGABE = z.object({
     .array(z.object({ sparte: z.string().trim().min(1).max(200), reihe: z.number().int().min(1).max(500) }))
     .max(100)
     .default([]),
+  /** Wie „Nach Plan nummerieren“ zählt (ohne Vorgabe: der Schlüssel der Halle bleibt wie vorher). */
+  nummerFolge: z
+    .object({
+      startReihe: z.number().int().min(1).max(500).optional(),
+      absteigend: z.boolean().optional(),
+      vomEnde: z.boolean().optional(),
+      schlange: z.boolean().optional(),
+      doppelAbwechselnd: z.boolean().optional(),
+    })
+    // Nur gesetzte Werte; ohne Einstellung fällt das Feld weg (der Schlüssel der Halle bleibt wie ohne Einstellung).
+    .transform((f) => {
+      const aus = Object.fromEntries(Object.entries(f).filter(([, v]) => v !== undefined && v !== false));
+      return Object.keys(aus).length ? aus : undefined;
+    })
+    .optional(),
   /** Im festen Plan entfernte leere Grundplatten und Plätze (ohne Vorgabe: der Schlüssel der Halle bleibt wie vorher). */
   entfernt: z
     .array(z.object({ reihe: z.number().int().min(1).max(500), art: z.enum(["platte", "platz"]), x: z.number().min(-50000).max(50000), y: z.number().min(-50000).max(50000), etage: z.number().int().min(1).max(ETAGEN_MAX - 1).optional() }))

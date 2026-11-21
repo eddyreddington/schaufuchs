@@ -274,7 +274,7 @@ export async function checkliste(schauId: number): Promise<Punkt[]> {
       const front = frontFehler(halleNormal(s.halle), plan);
       if (front.length) add("hinweis", "Käfigfront zur Wand oder zu einer Reihe", "hallenplan", undefined, `${front.slice(0, 3).join(", ")}${front.length > 3 ? " …" : ""}`);
       if (s.hallenplanFest) {
-        if (planUnordnung(plan, s.halle.richtung ?? "quer", s.katalogGedruckt).nichtInFolge > 0) add("hinweis", `${s.katalogGedruckt ? "Käfignummern" : "Nummern"} nicht in Planfolge`, "hallenplan");
+        if (planUnordnung(plan, s.halle.richtung ?? "quer", s.katalogGedruckt, s.halle.nummerFolge).nichtInFolge > 0) add("hinweis", `${s.katalogGedruckt ? "Käfignummern" : "Nummern"} nicht in Planfolge`, "hallenplan");
       } else if (s.katalogGedruckt) add("hinweis", "Hallenplan nicht festgeschrieben", "hallenplan");
     } catch (e) {
       // Die Prüfliste soll nie am Plan scheitern; der Hallenplan zeigt den Fehler selbst.
