@@ -321,38 +321,49 @@ function Einteilung({ schauId, richter, nummeriert, ohneZuteilung }: { schauId: 
             {tx.imKatalog(nummeriert)}{ohneZuteilung > 0 && <span className="font-semibold text-kamm">{tx.davonOhne(ohneZuteilung)}</span>}
           </p>
           {fehlend.length > 0 && <Hinweis ton="warnung">{te.keinRichterFuer(fehlend.map((f) => serverText(f, sprache)).join(", "))}</Hinweis>}
-          <table className="tabelle max-w-2xl">
-            <thead>
-              <tr>
-                <th>{t.allgemein.preisrichter}</th>
-                <th className="text-right">{tx.vonNr}</th>
-                <th className="text-right">{tx.bisNr}</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {zeilen.map((z, i) => (
-                <tr key={i}>
-                  <td>
-                    <Auswahl
-                      aria-label={t.allgemein.preisrichter}
-                      value={z.preisrichterId}
-                      onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, preisrichterId: Number(e.target.value) } : x)))}
-                    >
-                      {richter.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name}
-                        </option>
-                      ))}
-                    </Auswahl>
-                  </td>
-                  <td><Eingabe aria-label={tx.von} type="number" className="w-24 text-right tabular-nums" value={z.von} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, von: e.target.value } : x)))} /></td>
-                  <td><Eingabe aria-label={tx.bis} type="number" className="w-24 text-right tabular-nums" value={z.bis} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, bis: e.target.value } : x)))} /></td>
-                  <td className="text-right"><Knopf variante="leise" className={`${ZEILE} text-grau hover:bg-kamm-hell hover:text-kamm`} aria-label={tx.zeileEntfernen} onClick={() => setZeilen(zeilen.filter((_, j) => j !== i))}>✕</Knopf></td>
+          {/* Feste Spalten wie bei der Einteilung nach Rassen: Auswahl und Nummernfelder füllen ihre Spalte, Kopf und Feld
+              enden bündig, kein Name wird abgeschnitten. */}
+          <div className="max-w-2xl overflow-x-auto">
+            <table className="tabelle min-w-[36rem] table-fixed [&_td]:align-middle">
+              <colgroup>
+                <col />
+                <col className="w-32" />
+                <col className="w-32" />
+                <col className="w-14" />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>{t.allgemein.preisrichter}</th>
+                  <th className="text-right">{tx.vonNr}</th>
+                  <th className="text-right">{tx.bisNr}</th>
+                  <th />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {zeilen.map((z, i) => (
+                  <tr key={i}>
+                    <td>
+                      <Auswahl
+                        aria-label={t.allgemein.preisrichter}
+                        className="w-full"
+                        value={z.preisrichterId}
+                        onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, preisrichterId: Number(e.target.value) } : x)))}
+                      >
+                        {richter.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.name}
+                          </option>
+                        ))}
+                      </Auswahl>
+                    </td>
+                    <td><Eingabe aria-label={tx.von} type="number" className="w-full text-right tabular-nums" value={z.von} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, von: e.target.value } : x)))} /></td>
+                    <td><Eingabe aria-label={tx.bis} type="number" className="w-full text-right tabular-nums" value={z.bis} onChange={(e) => setZeilen(zeilen.map((x, j) => (j === i ? { ...x, bis: e.target.value } : x)))} /></td>
+                    <td className="text-right"><Knopf variante="leise" className={`${ZEILE} text-grau hover:bg-kamm-hell hover:text-kamm`} aria-label={tx.zeileEntfernen} onClick={() => setZeilen(zeilen.filter((_, j) => j !== i))}>✕</Knopf></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <div className="flex flex-wrap gap-2">
             <Knopf onClick={() => setZeilen([...zeilen, { preisrichterId: richter[0]!.id, von: "", bis: "" }])}>{tx.bereichHinzufuegen}</Knopf>
           </div>
@@ -453,7 +464,7 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
     setFehlend(r.data.fehlend);
   };
   const auswahl = (sparte: string, wert: Wahl, aendern: (v: Wahl) => void, leer: string, label: string) => (
-    <Auswahl kompakt aria-label={label} value={wert} onChange={(e) => aendern(e.target.value === "" ? "" : Number(e.target.value))}>
+    <Auswahl kompakt aria-label={label} className="w-full" value={wert} onChange={(e) => aendern(e.target.value === "" ? "" : Number(e.target.value))}>
       <option value="">{leer}</option>
       {richter
         .filter((r) => !r.sparten.length || r.sparten.includes(sparte) || r.id === wert)
@@ -491,14 +502,22 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
               </span>
             )}
           </p>
-          <div className="flex flex-col gap-4">
+          {/* Je Sparte eine Tabelle, alle mit denselben festen Spalten: sonst stehen „Tiere“ und „Preisrichter“ in jeder
+              Sparte woanders. Auf schmalen Bildschirmen wird gemeinsam waagerecht gescrollt. */}
+          <div className="flex max-w-3xl flex-col gap-4 overflow-x-auto">
             {sparten.map((sp) => (
-              <table key={sp} className="tabelle max-w-3xl">
+              <table key={sp} className="tabelle min-w-[40rem] table-fixed [&_td]:align-middle [&_td:first-child]:break-words [&_th:first-child]:break-words">
+                <colgroup>
+                  <col />
+                  <col className="w-24" />
+                  <col className="w-64" />
+                  <col className="w-40" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>{sp || tx.ohneSparte}</th>
                     <th className="text-right">{t.allgemein.tiere}</th>
-                    <th className="w-64">{t.allgemein.preisrichter}</th>
+                    <th>{t.allgemein.preisrichter}</th>
                     <th />
                   </tr>
                 </thead>
