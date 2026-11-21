@@ -91,6 +91,7 @@ export const halle: OberflaecheTexte["halle"] = {
     automatikAn: "Automatické plánování: zapnuto",
     vollansicht: "Celá obrazovka",
     planDrucken: "Tisknout plán",
+    zuletztGeladen: "Zobrazena je naposledy načtená verze plánu.",
     gespeichertPruefen: { gespeichert: "Vše uloženo – plán haly ukládá každou změnu okamžitě.", fehler: "Poslední změna nebyla uložena (důvod viz hlášení).", anderswo: "Uloženo. Mezitím plán změnil někdo jiný – zobrazuje se jeho verze." },
     aufbauliste: "Seznam pro stavbu",
     plan: "Plán",

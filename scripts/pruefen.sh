@@ -48,7 +48,7 @@ bun test scripts/sprachen-scan.test.ts
 schritt "Updates (Platz prüfen, aufräumen, zurücknehmen)"
 bun test scripts/update-platz.test.ts
 
-schritt "Oberfläche (Reiter aus dem Anker, Speichern im Hallenplan)"
+schritt "Oberfläche (Reiter aus dem Anker, Hallenplan laden und speichern)"
 (cd apps/web && bun test src)
 
 schritt "Server-Tests"

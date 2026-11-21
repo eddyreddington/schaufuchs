@@ -751,7 +751,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (186 Z.)
+### halle.ts (187 Z.)
 
 - `halle`
 
@@ -940,7 +940,7 @@ Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt
 
 - `halleWerkzeuge` – Texte der Oberfläche: halleWerkzeuge (Entscheidung 022) – Werkzeugleiste, Befehle und Aktionen des Hallenplan-Editors, kleine Teile (Tiere ohne Pla …
 
-### halle.ts (185 Z.)
+### halle.ts (186 Z.)
 
 - `halle` – Texte der Oberfläche: halle – Seiten „Käfige“ und „Hallenplan“ mit den Eigenschaften im Editor (Entscheidung 022).
 
@@ -1141,7 +1141,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `halleWerkzeuge`
 
-### halle.ts (185 Z.)
+### halle.ts (186 Z.)
 
 - `halle`
 
@@ -1326,7 +1326,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (185 Z.)
+### halle.ts (186 Z.)
 
 - `halle`
 
@@ -1515,7 +1515,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (185 Z.)
+### halle.ts (186 Z.)
 
 - `halle`
 
@@ -1700,7 +1700,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (187 Z.)
+### halle.ts (188 Z.)
 
 - `halle`
 
@@ -2546,15 +2546,20 @@ Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die
 ### hallenplan-entwuerfe.tsx (166 Z.)
 Prozeduren: hallenentwurf.entscheiden, hallenentwurf.laden, hallenentwurf.liste, hallenentwurf.loeschen, hallenentwurf.speichern, hallenentwurf.umbenennen
 
-### hallenplan-entwurf.ts (154 Z.)
+### hallenplan-entwurf.ts (163 Z.)
 Entwurf des Hallenplan-Editors und alles, was ihn speichert: jede Änderung wirkt sofort im Entwurf und geht der Reihe nach an den Server (`kette`), …
-Prozeduren: katalog.halleSetzen, katalog.planFestschreiben, katalog.planNeuSetzen
+Prozeduren: katalog.halleSetzen, katalog.hallenplan, katalog.planFestschreiben, katalog.planNeuSetzen
 
 ### hallenplan-geometrie.ts (572 Z.)
 Reine Rechnungen des Hallenplan-Editors (ohne React): Auswahl und Teile, Lage und Versatz von Reihen, Platten und Objekten, Hindernisse (`planKoerp …
 
 ### hallenplan-grundriss.tsx (206 Z.)
 Grundriss der Halle bearbeiten (Entscheidung 019): Wände ziehen (rechtwinklig, 10-cm-Raster), eine Wand per Doppelklick teilen, „Rechteck“ setzt zu …
+
+### hallenplan-laden.test.ts (21 Z.)
+
+### hallenplan-laden.ts (20 Z.)
+Was die Seite „Hallenplan“ beim Laden zeigt (Seite hallenplan.tsx).
 
 ### hallenplan-speichern.test.ts (11 Z.)
 
@@ -2578,7 +2583,7 @@ Bausteine der Werkzeugleiste im Hallenplan-Editor: Symbole, Werkzeugknöpfe mit 
 ### hallenplan-werkzeugleiste.tsx (211 Z.)
 Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen, Zoom, Menü „Plan“).
 
-### hallenplan.tsx (511 Z.) – `/schau/:schauId/hallenplan`
+### hallenplan.tsx (548 Z.) – `/schau/:schauId/hallenplan`
 Seite „Hallenplan“: neue Halle anlegen und der Editor (`Plan`) mit Speichern, Rückgängig, Auswahl und Tastatur.
 Prozeduren: katalog.halleSetzen, katalog.hallenplan
 

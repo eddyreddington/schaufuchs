@@ -10,6 +10,7 @@ import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { useMeldung } from "../ui";
 import { type Aendern, type Plan, type Schritt, vollstaendig, vonHandBewegt, zahlWort } from "./hallenplan-geometrie";
+import { serverStandUebernehmen } from "./hallenplan-laden";
 
 /** Zustand und Speicherwege des Entwurfs (Rückgabe von `useHallenEntwurf`). */
 export type HallenEntwurf = ReturnType<typeof useHallenEntwurf>;
@@ -32,6 +33,11 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
   /** „Plan neu setzen“ ist unterwegs: der Server speichert eine andere Halle als den Entwurf (siehe `neuSetzenMit`). */
   const neuUnterwegs = useRef(false);
   const kette = useRef<Promise<unknown>>(Promise.resolve());
+  /** Plan neu vom Server holen; false, wenn das scheitert (Netz oder Server kurz weg – die Seite zeigt dann einen Hinweis). */
+  const nachladen = () => utils.katalog.hallenplan.fetch({ schauId }, { staleTime: 0 }).then(
+    () => true,
+    () => false,
+  );
   useEffect(() => {
     // Neuer Stand vom Server (auch von anderen): übernehmen, wenn nichts mehr auf dem Weg ist.
     if (offen.current === 0) {
@@ -70,10 +76,12 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
     // stellte die Software die Käfige gleich wieder um). Die Nummern der Platten sind dabei dieselben.
     const vorher_fest = opt.festschreiben && !plan.fest && !festUnterwegs.current;
     if (vorher_fest) festUnterwegs.current = true;
+    let gespeichert = true;
     kette.current = kette.current
       .then(() => (vorher_fest ? festMachen() : undefined))
       .then(() => setzen.mutateAsync({ schauId, halle: neu, basis, ...(opt.grund ? { grund: opt.grund } : {}) }))
       .catch(() => {
+        gespeichert = false;
         // Meldung kommt über onError. Nicht gespeichert: dieser Schritt fällt aus dem Verlauf (die übrigen bleiben); ging ein
         // Rückgängig oder Wiederholen schief, passt der Verlauf nicht mehr.
         verlaufSetzen(schritt ? { zurueck: verlauf.current.zurueck.filter((x) => x !== schritt), vor: verlauf.current.vor } : { zurueck: [], vor: [] });
@@ -82,10 +90,11 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
         offen.current--;
         setOffenZahl(offen.current);
         if (offen.current > 0) return;
-        await utils.katalog.hallenplan.invalidate();
-        // Gespeicherten Stand übernehmen – nach einem Fehler springt der Entwurf so auf den Server zurück.
+        const geladen = await nachladen();
+        // Gespeicherten Stand übernehmen – nach einem Fehler springt der Entwurf so auf den Server zurück. Gespeichert, aber
+        // nicht nachgeladen: der Entwurf ist schon der gespeicherte Stand und bleibt (mit Rückgängig).
         const server = utils.katalog.hallenplan.getData({ schauId })?.halle;
-        if (server && offen.current === 0) {
+        if (server && serverStandUebernehmen({ gespeichert, geladen, offen: offen.current, hatServer: true })) {
           entwurfRef.current = vollstaendig(server);
           setEntwurf(entwurfRef.current);
         }
@@ -138,9 +147,9 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
       .catch(() => {})
       .finally(async () => {
         offen.current--;
-        await utils.katalog.hallenplan.invalidate();
+        const geladen = await nachladen();
         const server = utils.katalog.hallenplan.getData({ schauId })?.halle;
-        if (server && offen.current === 0) {
+        if (server && serverStandUebernehmen({ gespeichert, geladen, offen: offen.current, hatServer: true })) {
           entwurfRef.current = vollstaendig(server);
           setEntwurf(entwurfRef.current);
         }

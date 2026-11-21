@@ -89,6 +89,7 @@ export const halle = {
     automatikAn: "Automatisch planen: an",
     vollansicht: "Vollansicht",
     planDrucken: "Plan drucken",
+    zuletztGeladen: "Angezeigt ist der zuletzt geladene Stand des Plans.",
     gespeichertPruefen: { gespeichert: "Alles gespeichert – der Hallenplan speichert jede Änderung sofort.", fehler: "Die letzte Änderung wurde nicht gespeichert (Grund siehe Meldung).", anderswo: "Gespeichert. Inzwischen hat jemand anders den Plan geändert – sein Stand wird angezeigt." },
     aufbauliste: "Aufbauliste",
     plan: "Plan",

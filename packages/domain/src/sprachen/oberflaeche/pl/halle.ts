@@ -92,6 +92,7 @@ export const halle: OberflaecheTexte["halle"] = {
     automatikAn: "Planowanie automatyczne: włączone",
     vollansicht: "Pełny ekran",
     planDrucken: "Drukuj plan",
+    zuletztGeladen: "Wyświetlana jest ostatnio wczytana wersja planu.",
     gespeichertPruefen: { gespeichert: "Wszystko zapisane – plan hali zapisuje każdą zmianę od razu.", fehler: "Ostatnia zmiana nie została zapisana (powód w komunikacie).", anderswo: "Zapisano. W międzyczasie ktoś inny zmienił plan – wyświetlana jest jego wersja." },
     aufbauliste: "Lista montażowa",
     plan: "Plan",

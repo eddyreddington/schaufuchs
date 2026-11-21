@@ -90,6 +90,7 @@ export const halle: OberflaecheTexte["halle"] = {
     automatikAn: "Automatisch plannen: aan",
     vollansicht: "Volledig scherm",
     planDrucken: "Plan afdrukken",
+    zuletztGeladen: "Dit is de laatst geladen versie van het plan.",
     gespeichertPruefen: { gespeichert: "Alles is opgeslagen – de plattegrond van de hal slaat elke wijziging meteen op.", fehler: "De laatste wijziging is niet opgeslagen (zie de melding voor de reden).", anderswo: "Opgeslagen. Iemand anders heeft het plan intussen gewijzigd – die versie wordt getoond." },
     aufbauliste: "Opbouwlijst",
     plan: "Plan",

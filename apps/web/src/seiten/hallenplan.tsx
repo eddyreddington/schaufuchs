@@ -18,6 +18,7 @@ import { PlanBild } from "./hallenplan-bild";
 import { Eigenschaften, HalleEigenschaften, MitEinheit } from "./hallenplan-eigenschaften";
 import { HallenEntwuerfe } from "./hallenplan-entwuerfe";
 import { useHallenEntwurf } from "./hallenplan-entwurf";
+import { hallenplanAnsicht } from "./hallenplan-laden";
 import { speicherBericht } from "./hallenplan-speichern";
 import { type Daten, meter, type Versetzen, vollstaendig, type Ziel, zuCm, zweisprachig } from "./hallenplan-geometrie";
 import { AutomatikSchalter, KaefigInfo, SpartenReihen } from "./hallenplan-teile";
@@ -31,23 +32,42 @@ export function Hallenplan() {
   const schauId = useSchauId();
   const istAdmin = useIstAdmin();
   const q = trpc.katalog.hallenplan.useQuery({ schauId });
-  if (q.error) return <FehlerAnzeige fehler={q.error} nochmal={() => q.refetch()} />;
+  const ansicht = hallenplanAnsicht({ hatDaten: !!q.data, hatFehler: !!q.error });
+  if (ansicht.zeige === "fehler") return <FehlerAnzeige fehler={q.error} nochmal={() => q.refetch()} />;
   if (!q.data) return <Laden />;
   const d = q.data;
+  // Nachladen gescheitert: der zuletzt geladene Plan bleibt im Editor, ein Hinweis sagt es (siehe NachladeHinweis).
+  const nachladen = ansicht.nachladeFehler ? { fehler: q.error, nochmal: () => void q.refetch() } : null;
   // Ein Halleneditor für alles: Einstellungen der Halle, Eingänge und Flächen, Stellvorschläge und freies Planen. Mit Plan
   // setzt der Editor den Seitenkopf selbst (Stand des Plans, Vollansicht).
   return (
     <div className={`druck-quer ${SEITE}`}>
       {d.plan && d.halle ? (
-        <Plan d={d} halle={d.halle} plan={d.plan} schauId={schauId} istAdmin={istAdmin} />
+        <Plan d={d} halle={d.halle} plan={d.plan} schauId={schauId} istAdmin={istAdmin} nachladen={nachladen} />
       ) : (
         <>
           <Seitenkopf titel={th.titel} hilfe="hallenplan" />
+          {nachladen && <NachladeHinweis {...nachladen} />}
           {!d.halle && !istAdmin && <Leer titel={th.keineHalle} />}
           {!d.halle && istAdmin && <NeueHalle schauId={schauId} vorgabe={d.vorgabe} />}
         </>
       )}
     </div>
+  );
+}
+
+/** Das Nachladen des Plans ist gescheitert: Grund, „Erneut versuchen“ – der Editor zeigt weiter den zuletzt geladenen Stand. */
+function NachladeHinweis({ fehler, nochmal }: { fehler: unknown; nochmal: () => void }) {
+  const t = useOberflaeche();
+  return (
+    <Hinweis ton="fehler" className="nicht-drucken flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+      <span className="min-w-0 flex-1">
+        <span className="font-semibold">{t.rahmen.seite.ladeFehler}</span> {fehlerText(fehler)} {t.halle.hallenplan.zuletztGeladen}
+      </span>
+      <Knopf className="shrink-0" onClick={nochmal}>
+        {t.rahmen.seite.erneutVersuchen}
+      </Knopf>
+    </Hinweis>
   );
 }
 
@@ -100,7 +120,22 @@ function NeueHalle({ schauId, vorgabe }: { schauId: number; vorgabe: Halle }) {
   );
 }
 
-function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; plan: NonNullable<Daten["plan"]>; schauId: number; istAdmin: boolean }) {
+function Plan({
+  d,
+  halle,
+  plan,
+  schauId,
+  istAdmin,
+  nachladen,
+}: {
+  d: Daten;
+  halle: Halle;
+  plan: NonNullable<Daten["plan"]>;
+  schauId: number;
+  istAdmin: boolean;
+  /** Nachladen gescheitert (Hinweis unter dem Seitenkopf, in der Vollansicht oben). */
+  nachladen: { fehler: unknown; nochmal: () => void } | null;
+}) {
   const t = useOberflaeche();
   const th = t.halle.hallenplan;
   const sprache = useSprache();
@@ -307,6 +342,7 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
         }
       />
 
+      {nachladen && !voll && <NachladeHinweis {...nachladen} />}
       <section aria-label={th.plan} className="flex min-w-0 flex-col gap-3">
         {plan.warnungen.length > 0 && (
           <Hinweis ton="warnung" className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
@@ -338,6 +374,7 @@ function Plan({ d, halle, plan, schauId, istAdmin }: { d: Daten; halle: Halle; p
             bearbeiten ? (voll ? "gap-0 p-0" : "rounded-xl border border-linie bg-weiss shadow-[0_1px_2px_rgb(16_20_28/0.04)]") : ""
           }`}
         >
+          {voll && nachladen && <NachladeHinweis {...nachladen} />}
           {voll && !bearbeiten && (
             <div className="flex items-center gap-3">
               <h2 className="text-lg font-semibold">{th.titel}</h2>
