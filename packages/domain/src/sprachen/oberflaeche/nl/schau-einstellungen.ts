@@ -18,6 +18,7 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
       kaefige: "Kooien en hal",
       druck: "Afdrukken",
       protokoll: "Logboek",
+      verwalten: "Beheren",
     },
     nurAdmin: "Alleen beheerders kunnen de instellingen wijzigen.",
     abschnitteLabel: "Onderdelen",

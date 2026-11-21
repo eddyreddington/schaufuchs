@@ -3,7 +3,7 @@ export const schauEinstellungen = {
   /** seiten/einstellungen.tsx */
   seite: {
     titel: "Einstellungen",
-    /** Abschnittsliste links (und Überschriften der Abschnitte) */
+    /** Reiter der Seite (und Überschriften der Abschnitte) */
     abschnitte: {
       schau: "Schau",
       termine: "Termine",
@@ -19,6 +19,7 @@ export const schauEinstellungen = {
       kaefige: "Käfige und Halle",
       druck: "Druck",
       protokoll: "Protokoll",
+      verwalten: "Verwalten",
     },
     nurAdmin: "Nur Administratoren können die Einstellungen ändern.",
     abschnitteLabel: "Abschnitte",

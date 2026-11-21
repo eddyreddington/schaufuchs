@@ -718,7 +718,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `nl`
 
-### allgemein.ts (35 Z.)
+### allgemein.ts (36 Z.)
 
 - `allgemein`
 
@@ -804,7 +804,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (183 Z.)
+### schau-einstellungen.ts (184 Z.)
 
 - `schauEinstellungen`
 
@@ -897,7 +897,7 @@ Sammelt alle Exporte (`export * from …`).
 - `mnozne()` – České množné číslo: 1 → jeden, 2–4 → několik, jinak → mnoho.
 - `benutzer`
 
-### verein.ts (200 Z.)
+### verein.ts (211 Z.)
 
 - `verein`
 
@@ -905,7 +905,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `vorlagen`
 
-### allgemein.ts (34 Z.)
+### allgemein.ts (35 Z.)
 
 - `allgemein` – Wörter, die in vielen Bereichen vorkommen (nur lesen; Bereiche führen eigene Texte in ihrer Gruppe).
 
@@ -998,7 +998,7 @@ Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mi
 
 - `rahmen` – Texte der Oberfläche: rahmen (Entscheidung 022) – App-Rahmen mit Seitenmenü und Benutzermenü, Anmeldung, Einladung, Hilfe-Rahmen, Fehlerseite und d …
 
-### schau-einstellungen.ts (190 Z.)
+### schau-einstellungen.ts (191 Z.)
 
 - `schauEinstellungen` – Texte der Oberfläche: schau.einstellungen (Entscheidung 022) – Seite „Einstellungen“ der Schau und ihre Abschnitte.
 
@@ -1098,7 +1098,7 @@ Meldungen des Servers (Entscheidung 022): Schau anlegen, Einstellungen, Gebühre
 
 - `benutzer` – Texte der Oberfläche: verein.benutzer – Benutzerliste, Seite eines Benutzers, eigener Zugang (Entscheidung 022).
 
-### verein.ts (209 Z.)
+### verein.ts (220 Z.)
 Texte der Oberfläche: verein – Verein und Datenschutz, automatische Abmeldung, Benutzer, Protokoll (Entscheidung 022).
 
 - `verein`
@@ -1108,7 +1108,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `vorlagen`
 
-### allgemein.ts (35 Z.)
+### allgemein.ts (36 Z.)
 
 - `allgemein`
 
@@ -1193,7 +1193,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (183 Z.)
+### schau-einstellungen.ts (184 Z.)
 
 - `schauEinstellungen`
 
@@ -1285,7 +1285,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `benutzer`
 
-### verein.ts (199 Z.)
+### verein.ts (210 Z.)
 
 - `verein`
 
@@ -1293,7 +1293,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `vorlagen`
 
-### allgemein.ts (35 Z.)
+### allgemein.ts (36 Z.)
 
 - `allgemein`
 
@@ -1378,7 +1378,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (183 Z.)
+### schau-einstellungen.ts (184 Z.)
 
 - `schauEinstellungen`
 
@@ -1470,7 +1470,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `benutzer`
 
-### verein.ts (200 Z.)
+### verein.ts (211 Z.)
 
 - `verein`
 
@@ -1482,7 +1482,7 @@ Sammelt alle Exporte (`export * from …`).
 Texte der ganzen Oberfläche – Anmeldung, Verwaltung, Helfer, Preisrichter-Tablet – in allen Sprachen (Entscheidung 022).
 Sammelt alle Exporte (`export * from …`).
 
-### allgemein.ts (35 Z.)
+### allgemein.ts (36 Z.)
 
 - `allgemein`
 
@@ -1567,7 +1567,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (183 Z.)
+### schau-einstellungen.ts (184 Z.)
 
 - `schauEinstellungen`
 
@@ -1659,7 +1659,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `benutzer`
 
-### verein.ts (200 Z.)
+### verein.ts (211 Z.)
 
 - `verein`
 
@@ -1667,7 +1667,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `vorlagen`
 
-### allgemein.ts (35 Z.)
+### allgemein.ts (36 Z.)
 
 - `allgemein`
 
@@ -1753,7 +1753,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (183 Z.)
+### schau-einstellungen.ts (184 Z.)
 
 - `schauEinstellungen`
 
@@ -1846,7 +1846,7 @@ Sammelt alle Exporte (`export * from …`).
 - `mnoga()` – Polska liczba mnoga: 1 → jeden, 2–4 (bez 12–14) → kilka, reszta → wiele.
 - `benutzer`
 
-### verein.ts (200 Z.)
+### verein.ts (211 Z.)
 
 - `verein`
 
@@ -2447,13 +2447,13 @@ Prozeduren: auth.passwortAendern, auth.zweiFaktorAbschalten, auth.zweiFaktorBest
 ### benutzer-teile.tsx (57 Z.)
 Benutzer: gemeinsame Teile der Seiten (Rollennamen, Statusmarken, Rücklink, Neuladen nach Änderungen).
 
-### benutzer.tsx (237 Z.) – `/benutzer`, `/benutzer/neu`, `/benutzer/:benutzerId`
+### benutzer.tsx (260 Z.) – `/benutzer`, `/benutzer/neu`, `/benutzer/:benutzerId`
 Prozeduren: auth.benutzerAnlegen, auth.benutzerGet, auth.benutzerListe, auth.status
 
 ### bewertung.tsx (335 Z.) – `/schau/:schauId/bewertung`
 Prozeduren: auth.status, bewertung.liste, bewertung.obmannBestaetigen, bewertung.setzen, bewertung.zuruecksetzen
 
-### briefvorlage.tsx (242 Z.) – `/verein/briefvorlage`
+### briefvorlage.tsx (268 Z.) – `/verein/briefvorlage`
 Prozeduren: druckvorlage.brief, druckvorlage.briefSpeichern, druckvorlage.serienbriefAnzahl, schau.liste
 
 ### druckvorlage-vorschau.tsx (159 Z.)
@@ -2479,7 +2479,7 @@ Prozeduren: schau.notenskalaSetzen
 ### einstellungen-preise.tsx (263 Z.)
 Prozeduren: schau.gebuehrenSetzen, schau.preisartLoeschen, schau.preisartSpeichern
 
-### einstellungen-stammangaben.tsx (306 Z.)
+### einstellungen-stammangaben.tsx (328 Z.)
 Prozeduren: schau.aktualisieren, stammdaten.versionen
 
 ### einstellungen-teilschauen.tsx (73 Z.)
@@ -2491,7 +2491,7 @@ Prozeduren: schau.absagen, schau.alsTestschau, schau.demodatenNeu, schau.loesche
 ### einstellungen-vetamt.tsx (89 Z.)
 Prozeduren: schau.veterinaeraemter
 
-### einstellungen.tsx (114 Z.) – `/schau/:schauId/einstellungen`
+### einstellungen.tsx (133 Z.) – `/schau/:schauId/einstellungen`
 Prozeduren: auth.status, schau.get, schau.protokoll
 
 ### fehler.tsx (46 Z.)
@@ -2574,7 +2574,7 @@ Prozeduren: auth.status
 ### import.tsx (432 Z.) – `/import`
 Prozeduren: datenimport.laeufe, datenimport.lesen, datenimport.pruefen, datenimport.uebernehmen, datenimport.zuruecknehmen, schau.liste
 
-### kaefige.tsx (499 Z.) – `/schau/:schauId/kaefige`
+### kaefige.tsx (532 Z.) – `/schau/:schauId/kaefige`
 Prozeduren: katalog.aufstellerSetzen, katalog.kaefigMassSetzen, katalog.kaefigRegelSetzen, katalog.kaefigbedarf, katalog.plattenSetzen, katalog.sockelBildEntfernen, katalog.sockelBildSetzen
 
 ### kassenbuch.tsx (337 Z.) – `/schau/:schauId/kassenbuch`
@@ -2630,7 +2630,7 @@ Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.m
 ### preise.tsx (471 Z.) – `/schau/:schauId/preise`
 Prozeduren: auth.status, preise.entfernen, preise.freigeben, preise.stiftungBarErhalten, preise.stiftungLoeschen, preise.stiftungSpeichern, preise.uebersicht, preise.vergeben, schau.get
 
-### preisrichter.tsx (520 Z.) – `/schau/:schauId/preisrichter`
+### preisrichter.tsx (548 Z.) – `/schau/:schauId/preisrichter`
 Prozeduren: preisrichter.einteilungSetzen, preisrichter.einteilungVorschlagen, preisrichter.liste, preisrichter.loeschen, preisrichter.pinErzeugen, preisrichter.speichern, preisrichter.sperreAufheben, preisrichter.zuteilung, preisrichter.zuteilungSetzen, preisrichter.zuteilungVorschlagen, schau.get, stammdaten.gliederung
 
 ### protokoll.tsx (138 Z.) – `/schau/:schauId/protokoll`
@@ -2689,7 +2689,7 @@ Prozeduren: lastschrift.einstellungen, lastschrift.glaeubigerIdSetzen
 ### verein-steuer.tsx (78 Z.)
 Prozeduren: spenden.steuer, spenden.steuerSpeichern
 
-### verein.tsx (561 Z.) – `/verein`
+### verein.tsx (576 Z.) – `/verein`
 Prozeduren: bewertung.textbausteinGrundbestand, bewertung.textbausteinLoeschen, bewertung.textbausteinSpeichern, bewertung.textbausteine, schau.postErneutSenden, schau.postausgang, stammdaten.gliederung, stammdaten.versionen, verein.auskunftPerson, verein.bereinigen, verein.get, verein.speichern
 
 ### verkauf.tsx (339 Z.) – `/schau/:schauId/verkauf`
@@ -2828,7 +2828,9 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `main.tsx` (22 Z.)
 - `modus.ts` (46 Z.) · setzeFarbmodus, useFarbmodus
 - `pdf-anzeige.tsx` (43 Z.) – PDF im Browser anzeigen (pdf.js), gemeinsam für die Live-Vorschauen von Katalog und Druckvorlagen. · pdfjs, PdfSeite
-- `rahmen.tsx` (464 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
+- `rahmen.tsx` (473 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
+- `reiter-anker.test.ts` (23 Z.)
+- `reiter-anker.ts` (14 Z.) · reiterAusAnker
 - `rolle.ts` (9 Z.) · useIstAdmin
 - `routes.tsx` (122 Z.) · router
 - `seitenmenue.tsx` (202 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · schauGruppen, allgemeineGruppen, useKlappzustand, MenueGruppen
@@ -2841,10 +2843,11 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `ui-felder.tsx` (71 Z.) – Formularfelder: Feld mit Beschriftung, Eingabe, Textfeld, Auswahl, Haken. · feldKlasse, Feld, Eingabe, Textfeld, Auswahl, Haken
 - `ui-knoepfe.tsx` (45 Z.) – Knöpfe: Knopf, Link im Aussehen eines Knopfs und ihre Klassen. · knopfKlasse, Knopf, KnopfLink
 - `ui-meldungen.tsx` (43 Z.) – Rückmeldungen als Toast unten rechts (useMeldung). · MeldungenAnbieter, useMeldung
+- `ui-reiter.tsx` (130 Z.) · useReiter, ReiterLeiste, ReiterTafel, reiterKnopf, reiterTafel
 - `ui-seite.tsx` (235 Z.) – Bausteine einer Seite: Hinweise, Marken, Seitenkopf, Abschnitte, Tabellenrahmen, Suche, Kennzahlen, Lade- und Leerzustand. · Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, Kennzahlen, Leer, Laden, FehlerAnzeige
 - `ui-speichern.tsx` (79 Z.) – Speichern in der Kopfleiste: Speicherleiste bei ungespeicherten Änderungen, Speicherstatus bei sofortigem Speichern. · SpeicherPlatz, Speicherleiste, SpeicherStatus
 - `ui-ungespeichert.tsx` (65 Z.) – Warnung vor dem Verlassen mit ungespeicherten Eingaben (Formulare anmelden, ein Wächter im Wurzel-Layout). · useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter
-- `ui.tsx` (33 Z.) – Einstieg für alle UI-Bausteine – Seiten importieren von hier.
+- `ui.tsx` (34 Z.) – Einstieg für alle UI-Bausteine – Seiten importieren von hier.
 
 ## Server-Tests `apps/server/src/tests`
 

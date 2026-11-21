@@ -18,6 +18,7 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
       kaefige: "Cages et salle",
       druck: "Impression",
       protokoll: "Journal",
+      verwalten: "Gérer",
     },
     nurAdmin: "Seuls les administrateurs peuvent modifier les paramètres.",
     abschnitteLabel: "Sections",

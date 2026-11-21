@@ -13,7 +13,7 @@ import {
   type BausteinArt,
   type BausteinKategorie,
 } from "@schau/domain";
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { datum, datumZeit, fehlerText } from "../lib";
 import { useOberflaeche, useSprache } from "../sprache";
@@ -22,13 +22,27 @@ import { AutoAbmeldung } from "./verein-abmeldung";
 import { Druckvorlagen } from "./verein-druckvorlagen";
 import { SteuerAngaben } from "./verein-steuer";
 import { GlaeubigerId } from "./verein-lastschrift";
-import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, HilfeLink, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, SEITE, Seitenkopf, Speicherleiste, Suchfeld, Textfeld, useMeldung } from "../ui";
+import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, HilfeLink, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, ReiterLeiste, ReiterTafel, SEITE, Seitenkopf, Speicherleiste, Suchfeld, Textfeld, useMeldung, useReiter } from "../ui";
 
 type Angaben = Ausgabe["verein"]["get"]["angaben"];
 
+/** Je Bereich ein Reiter statt einer langen Seite; der Reiter steht im Anker der Adresse (/verein#steuer). */
+const REITER = ["angaben", "steuer", "lastschrift", "abmeldung", "druckvorlagen", "postausgang", "textbausteine", "auskunft", "speicherfristen"] as const;
+type Reiter = (typeof REITER)[number];
+/** Anker von Abschnitten innerhalb eines Reiters (ältere Links). */
+const ANKER: Partial<Record<string, Reiter>> = { impressum: "angaben", datenschutz: "angaben", "automatische-abmeldung": "abmeldung" };
+
 export function Verein() {
-  const t = useOberflaeche().verein.seite;
+  const o = useOberflaeche();
+  const t = o.verein.seite;
   const v = trpc.verein.get.useQuery();
+  const [aktiv, waehlen] = useReiter(REITER, ANKER);
+  /** Alle Bereiche bleiben geladen (Ungespeichertes geht beim Wechsel nicht verloren), nur einer ist sichtbar. */
+  const tafel = (r: Reiter, inhalt: ReactNode) => (
+    <ReiterTafel id={r} aktiv={aktiv === r} waehlen={waehlen}>
+      {inhalt}
+    </ReiterTafel>
+  );
   return (
     <div className={SEITE}>
       <Seitenkopf
@@ -40,15 +54,16 @@ export function Verein() {
           </Link>
         }
       />
-      {v.error ? <FehlerAnzeige fehler={v.error} nochmal={() => v.refetch()} /> : !v.data ? <Laden /> : <Angabenformular key={JSON.stringify(v.data.angaben)} daten={v.data} />}
-      <SteuerAngaben />
-      <GlaeubigerId />
-      <AutoAbmeldung />
-      <Druckvorlagen />
-      <Postausgang />
-      <Textbausteine />
-      <PersonenAuskunft />
-      <Speicherfristen />
+      <ReiterLeiste reiter={REITER.map((r) => ({ id: r, label: t.reiter[r] }))} aktiv={aktiv} waehlen={waehlen} label={o.allgemein.bereiche} />
+      {tafel("angaben", v.error ? <FehlerAnzeige fehler={v.error} nochmal={() => v.refetch()} /> : !v.data ? <Laden /> : <Angabenformular key={JSON.stringify(v.data.angaben)} daten={v.data} />)}
+      {tafel("steuer", <SteuerAngaben />)}
+      {tafel("lastschrift", <GlaeubigerId />)}
+      {tafel("abmeldung", <AutoAbmeldung />)}
+      {tafel("druckvorlagen", <Druckvorlagen />)}
+      {tafel("postausgang", <Postausgang />)}
+      {tafel("textbausteine", <Textbausteine />)}
+      {tafel("auskunft", <PersonenAuskunft />)}
+      {tafel("speicherfristen", <Speicherfristen />)}
     </div>
   );
 }

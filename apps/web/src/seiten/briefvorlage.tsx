@@ -4,8 +4,13 @@ import { Link } from "react-router-dom";
 import { fehlerText } from "../lib";
 import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
-import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, Haken, Hinweis, Knopf, Laden, Segmente, SEITE, Seitenkopf, Speicherleiste, Textfeld, useAenderungenWarnen, useMeldung } from "../ui";
+import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, Haken, Hinweis, Knopf, Laden, ReiterLeiste, reiterKnopf, Segmente, SEITE, Seitenkopf, Speicherleiste, Textfeld, useAenderungenWarnen, useMeldung, useReiter } from "../ui";
 import { BriefVorschau, pdfOeffnen } from "./druckvorlage-vorschau";
+
+/** Teile des Briefs als Reiter (im Anker der Adresse, z. B. …/briefvorlage#serienbrief). */
+const TEILE = ["briefbogen", "fusszeile", "meldebestaetigung", "serienbrief"] as const;
+/** Alle Teile teilen sich eine Tafel (nur der gewählte wird gezeichnet, der Stand liegt im Formular). */
+const BRIEF_TAFEL = "tafel-brief";
 
 /**
  * Briefvorlage des Vereins (/verein/briefvorlage): Briefbogen nach DIN 5008, Fußzeile, Texte der Meldebestätigung und
@@ -47,6 +52,7 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
     speichern.mutate({ daten: v });
   };
   const setze: Setze = (k, w) => setV((alt) => ({ ...alt, [k]: w }));
+  const [aktiv, waehlen] = useReiter(TEILE);
   const geaendert = JSON.stringify(v) !== JSON.stringify(start);
   useEffect(() => onGeaendert(geaendert), [geaendert, onGeaendert]);
   const falsch = unbekanntePlatzhalter([v.meldebestaetigung.einleitung, v.meldebestaetigung.hinweise, v.meldebestaetigung.gruss, v.serienbrief.betreff, v.serienbrief.text, v.serienbrief.gruss].join("\n"));
@@ -65,28 +71,48 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
       />
       <div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <form onSubmit={senden} className="flex min-w-0 flex-col gap-4">
+          {/* Je Teil des Briefs ein Reiter; der Stand des ganzen Formulars bleibt beim Wechsel erhalten. */}
+          <ReiterLeiste
+            reiter={[
+              { id: "briefbogen", label: t.briefbogen },
+              { id: "fusszeile", label: t.fusszeile },
+              { id: "meldebestaetigung", label: t.meldebestaetigung },
+              { id: "serienbrief", label: t.serienbrief },
+            ]}
+            aktiv={aktiv}
+            waehlen={waehlen}
+            label={ta.allgemein.bereiche}
+            tafelFuer={() => BRIEF_TAFEL}
+          />
           <Formular>
-            <Briefbogen v={v} setze={setze} />
-            <FormAbschnitt titel={t.fusszeile} unter={t.fusszeileUnter} spalten={3}>
-              {[t.spalteLinks, t.spalteMitte, t.spalteRechts].map((spalte, i) => (
-                <Feld key={i} label={spalte}>
-                  {(fid) => <Textfeld id={fid} rows={4} maxLength={300} value={v.fuss[i]} onChange={(e) => setze("fuss", v.fuss.map((x, j) => (j === i ? e.target.value : x)) as BriefVorlage["fuss"])} />}
-                </Feld>
-              ))}
-            </FormAbschnitt>
-            <Texte titel={t.meldebestaetigung} unter={t.meldebestaetigungUnter} werte={v.meldebestaetigung} vorgabe={vorgabe.meldebestaetigung} setzen={(w) => setze("meldebestaetigung", w)} felder={[["einleitung", t.einleitung, 3, 1000], ["hinweise", t.hinweise, 4, 2000], ["gruss", t.gruss, 2, 300]]} />
-            <Texte titel={t.serienbrief} unter={t.serienbriefUnter} werte={v.serienbrief} vorgabe={vorgabe.serienbrief} setzen={(w) => setze("serienbrief", w)} felder={[["betreff", t.betreff, 1, 200], ["text", t.text, 8, 8000], ["gruss", t.gruss, 2, 300]]} />
-            <div className="flex flex-col gap-1 px-5 py-4 text-sm text-grau">
-              <p className="font-semibold text-tinte">{t.platzhalter}</p>
-              <p>
-                {(Object.keys(BRIEF_PLATZHALTER) as (keyof typeof BRIEF_PLATZHALTER)[]).map((p, i) => (
-                  <span key={p} title={t.platzhalterInfo[p]}>
-                    {i > 0 && " · "}
-                    <code>{`{${p}}`}</code>
-                  </span>
-                ))}
-              </p>
+            <div role="tabpanel" id={BRIEF_TAFEL} aria-labelledby={reiterKnopf(aktiv)} className="divide-y divide-linie">
+              {aktiv === "briefbogen" && <Briefbogen v={v} setze={setze} />}
+              {aktiv === "fusszeile" && (
+                <FormAbschnitt titel={t.fusszeile} unter={t.fusszeileUnter} spalten={3}>
+                  {[t.spalteLinks, t.spalteMitte, t.spalteRechts].map((spalte, i) => (
+                    <Feld key={i} label={spalte}>
+                      {(fid) => <Textfeld id={fid} rows={4} maxLength={300} value={v.fuss[i]} onChange={(e) => setze("fuss", v.fuss.map((x, j) => (j === i ? e.target.value : x)) as BriefVorlage["fuss"])} />}
+                    </Feld>
+                  ))}
+                </FormAbschnitt>
+              )}
+              {aktiv === "meldebestaetigung" && <Texte titel={t.meldebestaetigung} unter={t.meldebestaetigungUnter} werte={v.meldebestaetigung} vorgabe={vorgabe.meldebestaetigung} setzen={(w) => setze("meldebestaetigung", w)} felder={[["einleitung", t.einleitung, 3, 1000], ["hinweise", t.hinweise, 4, 2000], ["gruss", t.gruss, 2, 300]]} />}
+              {aktiv === "serienbrief" && <Texte titel={t.serienbrief} unter={t.serienbriefUnter} werte={v.serienbrief} vorgabe={vorgabe.serienbrief} setzen={(w) => setze("serienbrief", w)} felder={[["betreff", t.betreff, 1, 200], ["text", t.text, 8, 8000], ["gruss", t.gruss, 2, 300]]} />}
             </div>
+            {/* Platzhalter gelten für die Texte von Meldebestätigung und Serienbrief. */}
+            {(aktiv === "meldebestaetigung" || aktiv === "serienbrief") && (
+              <div className="flex flex-col gap-1 px-5 py-4 text-sm text-grau">
+                <p className="font-semibold text-tinte">{t.platzhalter}</p>
+                <p>
+                  {(Object.keys(BRIEF_PLATZHALTER) as (keyof typeof BRIEF_PLATZHALTER)[]).map((p, i) => (
+                    <span key={p} title={t.platzhalterInfo[p]}>
+                      {i > 0 && " · "}
+                      <code>{`{${p}}`}</code>
+                    </span>
+                  ))}
+                </p>
+              </div>
+            )}
             {falsch.length > 0 && (
               <div className="px-5 pb-4">
                 <Hinweis ton="warnung">{t.unbekannt(falsch.map((f) => `{${f}}`).join(", "))}</Hinweis>
@@ -196,7 +222,7 @@ function Serienbrief({ texte, ungespeichert }: { texte: BriefVorlage["serienbrie
     }
   };
   return (
-    <Abschnitt id="serienbrief" titel={tb.serienbriefErstellen}>
+    <Abschnitt id="serienbrief-erstellen" titel={tb.serienbriefErstellen}>
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-end gap-3">
           <Segmente

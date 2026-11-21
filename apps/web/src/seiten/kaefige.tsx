@@ -1,11 +1,11 @@
 import { AUFSTELLER_STANDARD, verkleidungVon, type Aufsteller, ETAGEN_MAX, KAEFIG_TYP_LABEL, KAEFIG_TYPEN, kaefigeJePlatte, kaefigMass, platteFuer, kaefigName, type KaefigMasse, type KaefigTyp, type OberflaecheTexte, serverText } from "@schau/domain";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { fehlerText } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
 import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
-import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, Laden, Leer, Seitenkopf, Speicherleiste, useMeldung } from "../ui";
+import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, Laden, Leer, ReiterLeiste, ReiterTafel, Seitenkopf, Speicherleiste, useMeldung, useReiter } from "../ui";
 
 /**
  * Käfigbedarf für den Aufbau der Halle: je Käfiggröße, wie viele Tiere gemeldet und bestätigt sind und welche
@@ -25,6 +25,9 @@ function kaefigNameLangIn(t: OberflaecheTexte, typ: KaefigTyp, masse?: KaefigMas
   return name === t.fach.KAEFIG_TYP_LABEL[typ] || typ === "stamm" || typ === "voliere" ? name : `${name} – ${t.fach.KAEFIG_FUER[typ]}`;
 }
 
+/** Reiter der Seite (im Anker der Adresse, z. B. …/kaefige#grundplatten). */
+const REITER = ["bedarf", "grundplatten", "aufsteller", "rassen"] as const;
+
 export function Kaefige() {
   const t = useOberflaeche();
   const tk = t.halle.kaefige;
@@ -38,9 +41,16 @@ export function Kaefige() {
     onSuccess: () => utils.katalog.kaefigbedarf.invalidate(),
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
+  const [aktiv, waehlen] = useReiter(REITER);
   if (bedarf.error) return <FehlerAnzeige fehler={bedarf.error} nochmal={() => bedarf.refetch()} />;
   if (!bedarf.data) return <Laden />;
   const d = bedarf.data;
+  /** Alle Bereiche bleiben geladen, nur einer ist sichtbar (gedruckt werden alle). */
+  const tafel = (r: (typeof REITER)[number], inhalt: ReactNode) => (
+    <ReiterTafel id={r} aktiv={aktiv === r} waehlen={waehlen}>
+      {inhalt}
+    </ReiterTafel>
+  );
   const summe = (k: "gemeldet" | "bestaetigt") => d.typen.reduce((n, x) => n + x[k], 0);
   return (
     <div className="flex flex-col gap-6">
@@ -51,117 +61,140 @@ export function Kaefige() {
         hilfe="käfige-käfigbedarf"
         aktionen={<Knopf onClick={() => window.print()}>{tk.drucken}</Knopf>}
       />
-      <Abschnitt titel={tk.masseUndBedarf}>
-        <div className="overflow-x-auto">
-          <table className="tabelle">
-            <thead>
-              <tr>
-                <th scope="col">{tk.spalteMass}</th>
-                <th scope="col">{tk.spalteFuer}</th>
-                <th scope="col">{tk.spalteRichtwert}</th>
-                <th scope="col" className="text-right">{tk.gemeldet}</th>
-                <th scope="col" className="text-right">{tk.bestaetigt}</th>
-                <th scope="col">{tk.spalteNummern}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.typen.map((x) => (
-                <tr key={x.typ} className={x.gemeldet ? "" : "text-grau"}>
-                  <td>
-                    <MassZelle schauId={schauId} typ={x.typ as KaefigTyp} masse={d.masse} label={kaefigNameIn(t, x.typ as KaefigTyp, d.masse)} darf={istAdmin} />
-                  </td>
-                  <td className="text-sm">{t.fach.KAEFIG_FUER[x.typ as KaefigTyp]}</td>
-                  <td className="text-sm text-grau">{t.fach.KAEFIG_RICHTWERT[x.typ as KaefigTyp]}</td>
-                  <td className="text-right">{x.gemeldet}</td>
-                  <td className="text-right">{x.bestaetigt}</td>
-                  <td>{x.nummern || "–"}</td>
-                </tr>
-              ))}
-              <tr className="font-bold">
-                <td>{tk.zusammen}</td>
-                <td />
-                <td />
-                <td className="text-right">{summe("gemeldet")}</td>
-                <td className="text-right">{summe("bestaetigt")}</td>
-                <td />
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        {(d.ohneKaefig > 0 || d.einzelwahl > 0) && (
-          <p className="mt-3 text-sm text-grau">
-            {[d.ohneKaefig > 0 ? tk.ohneKaefig(d.ohneKaefig) : "", d.einzelwahl > 0 ? (d.einzelwahl === 1 ? tk.einzelwahlEins : tk.einzelwahl(d.einzelwahl)) : ""].filter(Boolean).join(" ")}
-          </p>
-        )}
-      </Abschnitt>
-      <Grundplatten key={`${d.platte.laenge}-${d.platte.tiefe}-${JSON.stringify(d.jePlatte)}-${JSON.stringify(d.plattenMass)}-${JSON.stringify(d.etagen)}`} schauId={schauId} d={d} darf={istAdmin} />
-      <AufstellerFeld key={JSON.stringify(d.aufsteller)} schauId={schauId} aufsteller={d.aufsteller} darf={istAdmin} />
-      <Abschnitt titel={tk.groesseJeRasse}>
-        {!istAdmin && <Hinweis className="mb-3">{tk.nurLeitung}</Hinweis>}
-        {d.nachBloecken && d.nummernVergeben && (
-          <Hinweis ton="warnung" className="mb-3">
-            {d.festgeschrieben
-              ? tk.nummernFest
-              : tk.neuNummerieren}
-          </Hinweis>
-        )}
-        {d.rassen.length === 0 ? (
-          <Leer titel={tk.keineEinzeltiere} />
-        ) : (
+      <ReiterLeiste
+        reiter={[
+          { id: "bedarf", label: tk.masseUndBedarf },
+          { id: "grundplatten", label: tk.grundplatten },
+          { id: "aufsteller", label: tk.aufsteller },
+          { id: "rassen", label: tk.groesseJeRasse },
+        ]}
+        aktiv={aktiv}
+        waehlen={waehlen}
+        label={t.allgemein.bereiche}
+      />
+      {tafel(
+        "bedarf",
+        <Abschnitt titel={tk.masseUndBedarf}>
           <div className="overflow-x-auto">
             <table className="tabelle">
               <thead>
                 <tr>
-                  <th scope="col">{tk.rasse}</th>
-                  <th scope="col">{tk.sparte}</th>
-                  <th scope="col" className="text-right">{t.allgemein.tiere}</th>
-                  <th scope="col">{tk.kaefiggroesse}</th>
-                  <th scope="col">{tk.vorschlag}</th>
+                  <th scope="col">{tk.spalteMass}</th>
+                  <th scope="col">{tk.spalteFuer}</th>
+                  <th scope="col">{tk.spalteRichtwert}</th>
+                  <th scope="col" className="text-right">{tk.gemeldet}</th>
+                  <th scope="col" className="text-right">{tk.bestaetigt}</th>
+                  <th scope="col">{tk.spalteNummern}</th>
                 </tr>
               </thead>
               <tbody>
-                {d.rassen.map((r) => (
-                  <tr key={r.rasse}>
-                    <td className="font-bold">{r.rasse}</td>
-                    <td>{r.sparte}</td>
-                    <td className="text-right">{r.anzahl}</td>
+                {d.typen.map((x) => (
+                  <tr key={x.typ} className={x.gemeldet ? "" : "text-grau"}>
                     <td>
-                      <Auswahl
-                        aria-label={tk.groesseFuer(r.rasse)}
-                        disabled={!istAdmin || regel.isPending}
-                        value={r.typ === r.auto ? "" : r.typ}
-                        onChange={(e) => regel.mutate({ schauId, rasse: r.rasse, typ: (e.target.value || null) as KaefigTyp | null })}
-                        className="max-w-64"
-                      >
-                        <option value="">{tk.automatisch(kaefigNameLangIn(t, r.auto, d.masse))}</option>
-                        {KAEFIG_TYPEN.filter((x) => x !== "stamm" && x !== "voliere" && x !== r.auto).map((x) => (
-                          <option key={x} value={x}>{kaefigNameLangIn(t, x, d.masse)}</option>
-                        ))}
-                      </Auswahl>
+                      <MassZelle schauId={schauId} typ={x.typ as KaefigTyp} masse={d.masse} label={kaefigNameIn(t, x.typ as KaefigTyp, d.masse)} darf={istAdmin} />
                     </td>
-                    <td className="text-sm">
-                      {r.vorschlag && r.vorschlag.typ !== r.typ ? (
-                        <span className="flex flex-wrap items-center gap-2">
-                          <span title={serverText(r.vorschlag.grund, sprache)}>
-                            {kaefigNameIn(t, r.vorschlag.typ, d.masse)} <span className="text-grau">({serverText(r.vorschlag.grund, sprache)})</span>
-                          </span>
-                          {istAdmin && (
-                            <Knopf variante="leise" className="min-h-8 px-2" laedt={regel.isPending} onClick={() => regel.mutate({ schauId, rasse: r.rasse, typ: r.vorschlag!.typ })}>
-                              {tk.uebernehmen}
-                            </Knopf>
-                          )}
-                        </span>
-                      ) : (
-                        <span className="text-grau">–</span>
-                      )}
-                    </td>
+                    <td className="text-sm">{t.fach.KAEFIG_FUER[x.typ as KaefigTyp]}</td>
+                    <td className="text-sm text-grau">{t.fach.KAEFIG_RICHTWERT[x.typ as KaefigTyp]}</td>
+                    <td className="text-right">{x.gemeldet}</td>
+                    <td className="text-right">{x.bestaetigt}</td>
+                    <td>{x.nummern || "–"}</td>
                   </tr>
                 ))}
+                <tr className="font-bold">
+                  <td>{tk.zusammen}</td>
+                  <td />
+                  <td />
+                  <td className="text-right">{summe("gemeldet")}</td>
+                  <td className="text-right">{summe("bestaetigt")}</td>
+                  <td />
+                </tr>
               </tbody>
             </table>
           </div>
-        )}
-      </Abschnitt>
+          {(d.ohneKaefig > 0 || d.einzelwahl > 0) && (
+            <p className="mt-3 text-sm text-grau">
+              {[d.ohneKaefig > 0 ? tk.ohneKaefig(d.ohneKaefig) : "", d.einzelwahl > 0 ? (d.einzelwahl === 1 ? tk.einzelwahlEins : tk.einzelwahl(d.einzelwahl)) : ""].filter(Boolean).join(" ")}
+            </p>
+          )}
+        </Abschnitt>,
+      )}
+      {tafel(
+        "grundplatten",
+        <Grundplatten key={`${d.platte.laenge}-${d.platte.tiefe}-${JSON.stringify(d.jePlatte)}-${JSON.stringify(d.plattenMass)}-${JSON.stringify(d.etagen)}`} schauId={schauId} d={d} darf={istAdmin} />,
+      )}
+      {tafel(
+        "aufsteller",
+        <AufstellerFeld key={JSON.stringify(d.aufsteller)} schauId={schauId} aufsteller={d.aufsteller} darf={istAdmin} />,
+      )}
+      {tafel(
+        "rassen",
+        <Abschnitt titel={tk.groesseJeRasse}>
+          {!istAdmin && <Hinweis className="mb-3">{tk.nurLeitung}</Hinweis>}
+          {d.nachBloecken && d.nummernVergeben && (
+            <Hinweis ton="warnung" className="mb-3">
+              {d.festgeschrieben
+                ? tk.nummernFest
+                : tk.neuNummerieren}
+            </Hinweis>
+          )}
+          {d.rassen.length === 0 ? (
+            <Leer titel={tk.keineEinzeltiere} />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="tabelle">
+                <thead>
+                  <tr>
+                    <th scope="col">{tk.rasse}</th>
+                    <th scope="col">{tk.sparte}</th>
+                    <th scope="col" className="text-right">{t.allgemein.tiere}</th>
+                    <th scope="col">{tk.kaefiggroesse}</th>
+                    <th scope="col">{tk.vorschlag}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {d.rassen.map((r) => (
+                    <tr key={r.rasse}>
+                      <td className="font-bold">{r.rasse}</td>
+                      <td>{r.sparte}</td>
+                      <td className="text-right">{r.anzahl}</td>
+                      <td>
+                        <Auswahl
+                          aria-label={tk.groesseFuer(r.rasse)}
+                          disabled={!istAdmin || regel.isPending}
+                          value={r.typ === r.auto ? "" : r.typ}
+                          onChange={(e) => regel.mutate({ schauId, rasse: r.rasse, typ: (e.target.value || null) as KaefigTyp | null })}
+                          className="max-w-64"
+                        >
+                          <option value="">{tk.automatisch(kaefigNameLangIn(t, r.auto, d.masse))}</option>
+                          {KAEFIG_TYPEN.filter((x) => x !== "stamm" && x !== "voliere" && x !== r.auto).map((x) => (
+                            <option key={x} value={x}>{kaefigNameLangIn(t, x, d.masse)}</option>
+                          ))}
+                        </Auswahl>
+                      </td>
+                      <td className="text-sm">
+                        {r.vorschlag && r.vorschlag.typ !== r.typ ? (
+                          <span className="flex flex-wrap items-center gap-2">
+                            <span title={serverText(r.vorschlag.grund, sprache)}>
+                              {kaefigNameIn(t, r.vorschlag.typ, d.masse)} <span className="text-grau">({serverText(r.vorschlag.grund, sprache)})</span>
+                            </span>
+                            {istAdmin && (
+                              <Knopf variante="leise" className="min-h-8 px-2" laedt={regel.isPending} onClick={() => regel.mutate({ schauId, rasse: r.rasse, typ: r.vorschlag!.typ })}>
+                                {tk.uebernehmen}
+                              </Knopf>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-grau">–</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Abschnitt>,
+      )}
     </div>
   );
 }

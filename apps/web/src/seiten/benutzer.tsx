@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { datum, datumZeit, fehlerText } from "../lib";
 import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
-import { Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, Haken, Hinweis, Knopf, KnopfLink, Laden, Marke, SCHMAL, Seitenkopf, TabellenRahmen, useMeldung, useSeitentitel } from "../ui";
+import { Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formular, Haken, Hinweis, Knopf, KnopfLink, Laden, Marke, ReiterLeiste, ReiterTafel, SCHMAL, Seitenkopf, TabellenRahmen, useMeldung, useReiter, useSeitentitel } from "../ui";
 import { Angaben, PasswortNeu, Zugang, ZweiFaktorFremd } from "./benutzer-bearbeiten";
 import { PasswortAendern, ZweiFaktor } from "./benutzer-eigener-zugang";
 import { Initialen, Seite, StatusMarken, Zurueck } from "./benutzer-teile";
@@ -115,6 +115,9 @@ export function BenutzerNeu() {
   );
 }
 
+/** Reiter der Seite eines Benutzers (im Anker der Adresse, z. B. …/benutzer/3#zwei-faktor). */
+const BENUTZER_REITER = ["angaben", "zugang", "passwort", "zwei-faktor"] as const;
+
 /** /benutzer/:id – eigene Seite je Benutzer. */
 export function BenutzerSeite() {
   const t = useOberflaeche().verein.benutzer;
@@ -124,6 +127,8 @@ export function BenutzerSeite() {
   const istAdmin = ich?.rolle === "admin";
   const b = trpc.auth.benutzerGet.useQuery({ id }, { enabled: istAdmin && id > 0 });
   useSeitentitel(b.data?.name ?? t.liste.titel);
+  const allgemein = useOberflaeche().allgemein;
+  const [aktiv, waehlen] = useReiter(BENUTZER_REITER);
   if (!status.data) return <Laden />;
   if (!istAdmin) return <Navigate to="/benutzer" replace />;
   if (b.error) return <Seite><Zurueck /><FehlerAnzeige fehler={b.error} nochmal={() => b.refetch()} /></Seite>;
@@ -146,12 +151,30 @@ export function BenutzerSeite() {
           hilfeText={t.seite.hilfe}
         />
       </div>
-      <div className="grid items-start gap-6 xl:grid-cols-2">
-        <Angaben b={b.data} selbst={selbst} />
-        <Zugang b={b.data} selbst={selbst} />
-        {selbst ? <PasswortAendern /> : <PasswortNeu b={b.data} />}
-        {selbst ? <ZweiFaktor /> : <ZweiFaktorFremd b={b.data} />}
-      </div>
+      <ReiterLeiste
+        reiter={[
+          { id: "angaben", label: t.angaben.titel },
+          { id: "zugang", label: t.zugang },
+          { id: "passwort", label: t.passwort },
+          { id: "zwei-faktor", label: t.zweiFaktor },
+        ]}
+        aktiv={aktiv}
+        waehlen={waehlen}
+        label={allgemein.bereiche}
+      />
+      {/* Alle bleiben geladen (Ungespeichertes geht beim Wechsel nicht verloren), nur einer ist sichtbar. */}
+      {(
+        [
+          ["angaben", <Angaben b={b.data} selbst={selbst} />],
+          ["zugang", <Zugang b={b.data} selbst={selbst} />],
+          ["passwort", selbst ? <PasswortAendern /> : <PasswortNeu b={b.data} />],
+          ["zwei-faktor", selbst ? <ZweiFaktor /> : <ZweiFaktorFremd b={b.data} />],
+        ] as const
+      ).map(([r, inhalt]) => (
+        <ReiterTafel key={r} id={r} aktiv={aktiv === r} waehlen={waehlen}>
+          {inhalt}
+        </ReiterTafel>
+      ))}
     </Seite>
   );
 }

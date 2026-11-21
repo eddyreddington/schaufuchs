@@ -9,6 +9,17 @@ export const verein = {
   seite: {
     titel: "Verein und Datenschutz",
     ausstellerAuskunft: "Aussteller: Auskunft und Löschung",
+    reiter: {
+      angaben: "Impressum und Datenschutz",
+      steuer: "Steuer",
+      lastschrift: "Lastschrift",
+      abmeldung: "Automatische Abmeldung",
+      druckvorlagen: "Druckvorlagen",
+      postausgang: "Postausgang",
+      textbausteine: "Textbausteine",
+      auskunft: "Auskunft",
+      speicherfristen: "Speicherfristen",
+    },
   },
   angaben: {
     gespeichert: "Angaben gespeichert.",

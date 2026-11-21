@@ -21,6 +21,7 @@ export const allgemein = {
   tiere: "Tiere",
   aussteller: "Aussteller",
   preisrichter: "Preisrichter",
+  bereiche: "Bereiche",
   suchen: "Suchen …",
   alle: "Alle",
   keine: "Keine",

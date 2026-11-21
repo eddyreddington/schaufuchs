@@ -22,6 +22,7 @@ export const allgemein: OberflaecheTexte["allgemein"] = {
   tiere: "Zvířata",
   aussteller: "Vystavovatel",
   preisrichter: "Posuzovatel",
+  bereiche: "Oddíly",
   suchen: "Hledat…",
   alle: "Vše",
   keine: "Žádné",

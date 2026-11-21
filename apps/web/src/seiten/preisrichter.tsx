@@ -5,12 +5,15 @@ import { useOberflaeche, useSprache } from "../sprache";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
 import { trpc, type Ausgabe } from "../trpc";
-import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, SEITE, Seitenkopf, Speicherleiste, TabellenRahmen, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
+import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, ReiterLeiste, ReiterTafel, SEITE, Seitenkopf, Speicherleiste, TabellenRahmen, useFrage, useMeldung, useReiter, useUngespeichertWarnung } from "../ui";
 
 type Richter = Ausgabe["preisrichter"]["liste"]["richter"][number];
 
 /** Ruhige Textknöpfe für Aktionen in Tabellenzeilen. */
 const ZEILE = "min-h-8 px-2 text-sm";
+
+/** Reiter der Seite (im Anker der Adresse, z. B. …/preisrichter#einteilung-nummern). */
+const REITER = ["liste", "einteilung-rassen", "einteilung-nummern"] as const;
 
 export function Preisrichter() {
   const t = useOberflaeche();
@@ -33,6 +36,10 @@ export function Preisrichter() {
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const loeschen = trpc.preisrichter.loeschen.useMutation({ onSuccess: () => utils.preisrichter.liste.invalidate(), onError: (e) => meldung(fehlerText(e), "fehler") });
+  // Reiter: die Liste, und für die Ausstellungsleitung die beiden Einteilungen (erst, wenn es Preisrichter gibt).
+  const mitEinteilung = istAdmin && !!daten.data?.richter.length;
+  const reiter = mitEinteilung ? REITER : (["liste"] as const);
+  const [aktiv, waehlen] = useReiter(reiter);
 
   if (daten.error) return <FehlerAnzeige fehler={daten.error} nochmal={() => daten.refetch()} />;
   if (daten.isLoading || !daten.data) return <Laden />;
@@ -49,113 +56,134 @@ export function Preisrichter() {
         hilfe="preisrichter-anlegen"
         aktionen={istAdmin && <Knopf variante="primaer" onClick={() => setBearbeiten({})}>{tx.hinzufuegen}</Knopf>}
       />
-      {richter.length === 0 ? (
-        <Leer titel={tx.leer} />
-      ) : (
-        <TabellenRahmen
-          fuss={
-            <>
-              <span>{tx.anzahl(richter.length)}{ohneZuteilung > 0 && <span className="font-semibold text-kamm">{tx.ohneZuteilung(ohneZuteilung)}</span>}</span>
-              {tabletLink && (
-                <span className="min-w-0 break-all">
-                  {tx.tablet}{" "}
-                  <a href={tabletLink} target="_blank" rel="noreferrer">
-                    {tabletLink}
-                  </a>
-                </span>
-              )}
-            </>
-          }
-        >
-          <table className="tabelle">
-            <thead>
-              <tr>
-                <th>{t.allgemein.name}</th>
-                <th>{tx.bereich}</th>
-                <th className="text-right">{t.allgemein.tiere}</th>
-                <th className="text-right">{tx.bewertet}</th>
-                <th>{tx.tabletSpalte}</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {richter.map((r) => (
-                <tr key={r.id}>
-                  <td>
-                    <span className="flex flex-wrap items-center gap-2">
-                      {istAdmin ? (
-                        <button type="button" className="text-left font-semibold text-tinte hover:text-band hover:underline" onClick={() => setBearbeiten(r)}>
-                          {r.name}
-                        </button>
-                      ) : (
-                        <span className="font-semibold text-tinte">{r.name}</span>
-                      )}
-                      {r.istObmann && <Marke ton="info">{tx.obmann}</Marke>}
-                    </span>
-                    <span className="block text-sm text-grau">{[r.sparten.length ? tx.bewertetSparten(r.sparten.join(", ")) : tx.alleSparten, r.telefon, r.email].filter(Boolean).join(" · ")}</span>
-                  </td>
-                  <td className="nummer whitespace-nowrap">{r.einteilung.map((e) => `${e.vonNr}–${e.bisNr}`).join(", ") || <span className="font-sans font-normal text-grau">–</span>}</td>
-                  <td className="text-right tabular-nums">{r.tiere}</td>
-                  <td className="text-right tabular-nums">{r.bewertet}</td>
-                  <td>
-                    <span className="flex flex-wrap gap-1">
-                      {r.hatPin ? <Marke ton="ok">{tx.pinGesetzt}</Marke> : <Marke ton="warnung">{tx.keinePin}</Marke>}
-                      {r.pinWartet && <Marke ton="warnung">{tx.wartezeit}</Marke>}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="flex flex-wrap justify-end gap-0.5">
-                      {/* Auch ohne Wartezeit: die Sperre je Adresse oder Gerät sieht man dem Preisrichter nicht an. */}
-                      {istAdmin && r.hatPin && <Knopf variante="leise" className={ZEILE} onClick={() => entsperren.mutate({ schauId, id: r.id })}>{tx.sperreAufheben}</Knopf>}
-                      {istAdmin && (
-                        <Knopf
-                          variante="leise"
-                          className={ZEILE}
-                          onClick={async () => {
-                            // Eine neue PIN meldet alle Tablets dieses Preisrichters ab – wartende Bewertungen bleiben im Gerät.
-                            if (
-                              r.hatPin &&
-                              !(await bestaetige({
-                                titel: tx.neuePinFrage(r.name),
-                                text: tx.neuePinText(r.name),
-                                knopf: tx.neuePinErzeugen,
-                              }))
-                            )
-                              return;
-                            pinErzeugen.mutate({ schauId, id: r.id }, { onSuccess: (x) => setPin({ name: r.name, pin: x.pin }) });
-                          }}
-                        >
-                          {r.hatPin ? tx.neuePin : tx.pinErzeugen}
-                        </Knopf>
-                      )}
-                      <a href={`/datei/${schauId}/preisrichter/${r.id}/liste.pdf`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>{tx.liste}</a>
-                      <a href={`/datei/${schauId}/bewertungskarten.pdf?preisrichter=${r.id}`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>{tx.karten}</a>
-                      {istAdmin && (
-                        <>
-                          <Knopf variante="leise" className={ZEILE} onClick={() => setBearbeiten(r)}>{t.allgemein.bearbeiten}</Knopf>
+      {reiter.length > 1 && (
+        <ReiterLeiste
+          reiter={[
+            { id: "liste", label: t.allgemein.preisrichter },
+            { id: "einteilung-rassen", label: t.preisrichter.einteilung.rassen.titel },
+            { id: "einteilung-nummern", label: t.preisrichter.einteilung.nummern.titel },
+          ]}
+          aktiv={aktiv}
+          waehlen={waehlen}
+          label={t.allgemein.bereiche}
+        />
+      )}
+      {/* Ohne Einteilung (Helfer, noch keine Preisrichter) gibt es keine Leiste und also keine Tafel. */}
+      <ReiterTafel id="liste" aktiv={aktiv === "liste"} waehlen={waehlen} ohneLeiste={reiter.length === 1}>
+        {richter.length === 0 ? (
+          <Leer titel={tx.leer} />
+        ) : (
+          <TabellenRahmen
+            fuss={
+              <>
+                <span>{tx.anzahl(richter.length)}{ohneZuteilung > 0 && <span className="font-semibold text-kamm">{tx.ohneZuteilung(ohneZuteilung)}</span>}</span>
+                {tabletLink && (
+                  <span className="min-w-0 break-all">
+                    {tx.tablet}{" "}
+                    <a href={tabletLink} target="_blank" rel="noreferrer">
+                      {tabletLink}
+                    </a>
+                  </span>
+                )}
+              </>
+            }
+          >
+            <table className="tabelle">
+              <thead>
+                <tr>
+                  <th>{t.allgemein.name}</th>
+                  <th>{tx.bereich}</th>
+                  <th className="text-right">{t.allgemein.tiere}</th>
+                  <th className="text-right">{tx.bewertet}</th>
+                  <th>{tx.tabletSpalte}</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {richter.map((r) => (
+                  <tr key={r.id}>
+                    <td>
+                      <span className="flex flex-wrap items-center gap-2">
+                        {istAdmin ? (
+                          <button type="button" className="text-left font-semibold text-tinte hover:text-band hover:underline" onClick={() => setBearbeiten(r)}>
+                            {r.name}
+                          </button>
+                        ) : (
+                          <span className="font-semibold text-tinte">{r.name}</span>
+                        )}
+                        {r.istObmann && <Marke ton="info">{tx.obmann}</Marke>}
+                      </span>
+                      <span className="block text-sm text-grau">{[r.sparten.length ? tx.bewertetSparten(r.sparten.join(", ")) : tx.alleSparten, r.telefon, r.email].filter(Boolean).join(" · ")}</span>
+                    </td>
+                    <td className="nummer whitespace-nowrap">{r.einteilung.map((e) => `${e.vonNr}–${e.bisNr}`).join(", ") || <span className="font-sans font-normal text-grau">–</span>}</td>
+                    <td className="text-right tabular-nums">{r.tiere}</td>
+                    <td className="text-right tabular-nums">{r.bewertet}</td>
+                    <td>
+                      <span className="flex flex-wrap gap-1">
+                        {r.hatPin ? <Marke ton="ok">{tx.pinGesetzt}</Marke> : <Marke ton="warnung">{tx.keinePin}</Marke>}
+                        {r.pinWartet && <Marke ton="warnung">{tx.wartezeit}</Marke>}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="flex flex-wrap justify-end gap-0.5">
+                        {/* Auch ohne Wartezeit: die Sperre je Adresse oder Gerät sieht man dem Preisrichter nicht an. */}
+                        {istAdmin && r.hatPin && <Knopf variante="leise" className={ZEILE} onClick={() => entsperren.mutate({ schauId, id: r.id })}>{tx.sperreAufheben}</Knopf>}
+                        {istAdmin && (
                           <Knopf
                             variante="leise"
-                            className={`${ZEILE} text-grau hover:bg-kamm-hell hover:text-kamm`}
-                            onClick={async () => (await bestaetige({ titel: tx.loeschenFrage(r.name), knopf: t.allgemein.loeschen, gefahr: true })) && loeschen.mutate({ schauId, id: r.id })}
-                            aria-label={tx.loeschenLabel(r.name)}
+                            className={ZEILE}
+                            onClick={async () => {
+                              // Eine neue PIN meldet alle Tablets dieses Preisrichters ab – wartende Bewertungen bleiben im Gerät.
+                              if (
+                                r.hatPin &&
+                                !(await bestaetige({
+                                  titel: tx.neuePinFrage(r.name),
+                                  text: tx.neuePinText(r.name),
+                                  knopf: tx.neuePinErzeugen,
+                                }))
+                              )
+                                return;
+                              pinErzeugen.mutate({ schauId, id: r.id }, { onSuccess: (x) => setPin({ name: r.name, pin: x.pin }) });
+                            }}
                           >
-                            ✕
+                            {r.hatPin ? tx.neuePin : tx.pinErzeugen}
                           </Knopf>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </TabellenRahmen>
-      )}
+                        )}
+                        <a href={`/datei/${schauId}/preisrichter/${r.id}/liste.pdf`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>{tx.liste}</a>
+                        <a href={`/datei/${schauId}/bewertungskarten.pdf?preisrichter=${r.id}`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>{tx.karten}</a>
+                        {istAdmin && (
+                          <>
+                            <Knopf variante="leise" className={ZEILE} onClick={() => setBearbeiten(r)}>{t.allgemein.bearbeiten}</Knopf>
+                            <Knopf
+                              variante="leise"
+                              className={`${ZEILE} text-grau hover:bg-kamm-hell hover:text-kamm`}
+                              onClick={async () => (await bestaetige({ titel: tx.loeschenFrage(r.name), knopf: t.allgemein.loeschen, gefahr: true })) && loeschen.mutate({ schauId, id: r.id })}
+                              aria-label={tx.loeschenLabel(r.name)}
+                            >
+                              ✕
+                            </Knopf>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TabellenRahmen>
+        )}
 
-      {richter.length > 0 && istAdmin && <EinteilungNachRassen schauId={schauId} richter={richter} />}
-      {richter.length > 0 && istAdmin && (
-        // Neu aufbauen, wenn sich die gespeicherten Bereiche ändern (z. B. durch die Einteilung nach Rassen).
-        <Einteilung key={JSON.stringify(richter.map((r) => [r.id, r.einteilung.map((e) => [e.vonNr, e.bisNr])]))} schauId={schauId} richter={richter} nummeriert={nummeriert} ohneZuteilung={ohneZuteilung} />
+      </ReiterTafel>
+      {mitEinteilung && (
+        <>
+          <ReiterTafel id="einteilung-rassen" aktiv={aktiv === "einteilung-rassen"} waehlen={waehlen}>
+            <EinteilungNachRassen schauId={schauId} richter={richter} />
+          </ReiterTafel>
+          <ReiterTafel id="einteilung-nummern" aktiv={aktiv === "einteilung-nummern"} waehlen={waehlen}>
+            {/* Neu aufbauen, wenn sich die gespeicherten Bereiche ändern (z. B. durch die Einteilung nach Rassen). */}
+            <Einteilung key={JSON.stringify(richter.map((r) => [r.id, r.einteilung.map((e) => [e.vonNr, e.bisNr])]))} schauId={schauId} richter={richter} nummeriert={nummeriert} ohneZuteilung={ohneZuteilung} />
+          </ReiterTafel>
+        </>
       )}
 
       <Dialog offen={bearbeiten != null} onSchliessen={() => setBearbeiten(null)} titel={bearbeiten?.id ? tx.bearbeitenTitel : tx.hinzufuegen}>

@@ -1,64 +1,83 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { datumZeit } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
-import { Abschnitt, FehlerAnzeige, Hinweis, knopfKlasse, Laden, Seitenkopf } from "../ui";
+import { Abschnitt, FehlerAnzeige, Hinweis, knopfKlasse, Laden, ReiterLeiste, ReiterTafel, reiterTafel, Seitenkopf, useReiter } from "../ui";
 import { DruckAbschnitt } from "./einstellungen-druck";
 import { MeisterschaftenAbschnitt } from "./einstellungen-meisterschaften";
 import { Notenskala } from "./einstellungen-notenskala";
 import { Gebuehren, Preisarten } from "./einstellungen-preise";
-import { Stammangaben } from "./einstellungen-stammangaben";
+import { STAMM_ABSCHNITTE, Stammangaben, type StammAbschnitt } from "./einstellungen-stammangaben";
 import { TeilschauenAbschnitt } from "./einstellungen-teilschauen";
 import { AlsTestschau, Demodaten, SchauAbsagen, SchauLoeschen } from "./einstellungen-verwalten";
 
 /*
- * Seite „Einstellungen“ der Schau: Abschnittsliste links, Abschnitte rechts. Die großen Abschnitte stehen in
- * einstellungen-stammangaben, -preise, -notenskala, -teilschauen, -meisterschaften, -druck, -verwalten.
+ * Seite „Einstellungen“ der Schau: je Punkt ein Reiter statt einer langen Seite. Der Reiter steht im Anker der Adresse
+ * (…/einstellungen#druck). Die großen Teile stehen in einstellungen-stammangaben, -preise, -notenskala, -teilschauen,
+ * -meisterschaften, -druck, -verwalten.
  */
 
-/** Sprungziele der Abschnittsliste links (ids der Abschnitte; Beschriftung: t.schau.einstellungen.seite.abschnitte). */
-const ABSCHNITTE = ["schau", "termine", "zahlung", "katalog", "teilschauen", "bestimmungen", "veterinaeramt", "gebuehren", "preise", "notenskala", "meisterschaften", "kaefige", "druck", "protokoll"] as const;
+/** Reiter in dieser Reihenfolge (Beschriftung: t.schau.einstellungen.seite.abschnitte). */
+const REITER = ["schau", "termine", "zahlung", "katalog", "teilschauen", "bestimmungen", "veterinaeramt", "gebuehren", "preise", "notenskala", "meisterschaften", "kaefige", "druck", "protokoll", "verwalten"] as const;
+type Reiter = (typeof REITER)[number];
+const STAMM_TAFEL = "tafel-stammangaben";
 
 export function Einstellungen() {
   const id = useSchauId();
   const te = useOberflaeche().schau.einstellungen.seite;
   const schau = trpc.schau.get.useQuery({ id });
   const status = trpc.auth.status.useQuery();
-  if (schau.error) return <FehlerAnzeige fehler={schau.error} nochmal={() => schau.refetch()} />;
-  if (schau.isLoading || !schau.data) return <Laden />;
   const istAdmin = status.data?.benutzer?.rolle === "admin";
+  const s = schau.data;
+  // „Verwalten“ (Testschau oder Demodaten, Absagen, Löschen) nur für Administratoren – für sie steht dort immer etwas.
+  const verwalten = !!s && istAdmin;
+  const reiter = REITER.filter((r) => r !== "verwalten" || verwalten);
+  const [aktiv, waehlen] = useReiter(reiter);
+  if (schau.error) return <FehlerAnzeige fehler={schau.error} nochmal={() => schau.refetch()} />;
+  if (schau.isLoading || !s) return <Laden />;
+  const stamm = (STAMM_ABSCHNITTE as readonly string[]).includes(aktiv) ? (aktiv as StammAbschnitt) : null;
+  /** Tafel eines Reiters: alle bleiben geladen (Ungespeichertes geht beim Wechsel nicht verloren), nur einer ist sichtbar. */
+  const tafel = (r: Reiter, inhalt: ReactNode) => (
+    <ReiterTafel key={r} id={r} aktiv={aktiv === r} waehlen={waehlen}>
+      {inhalt}
+    </ReiterTafel>
+  );
+  /** Die sechs Reiter der Stammangaben teilen sich eine Tafel (ein Formular). */
+  const tafelFuer = (r: Reiter) => ((STAMM_ABSCHNITTE as readonly string[]).includes(r) ? STAMM_TAFEL : reiterTafel(r));
   return (
     <div className="flex flex-col gap-6">
       <Seitenkopf titel={te.titel} hilfe="einstellungen" />
       {!istAdmin && <Hinweis>{te.nurAdmin}</Hinweis>}
-      <div className="grid items-start gap-6 xl:grid-cols-[11rem_minmax(0,1fr)]">
-        <nav aria-label={te.abschnitteLabel} className="sticky top-16 hidden flex-col gap-0.5 text-sm xl:flex">
-          {ABSCHNITTE.map((anker) => (
-            <a key={anker} href={`#${anker}`} className="rounded-md px-2.5 py-1.5 text-grau no-underline hover:bg-papier hover:text-tinte">
-              {te.abschnitte[anker]}
-            </a>
-          ))}
-        </nav>
-        <div className="flex min-w-0 flex-col gap-6">
-          {/* Für Helfer nur zum Lesen: alle Felder und Knöpfe gesperrt. */}
-          <fieldset disabled={!istAdmin} className="flex min-w-0 flex-col gap-6">
-            <Stammangaben schau={schau.data} />
-            <Gebuehren schau={schau.data} />
-            <Preisarten schau={schau.data} />
-            <Notenskala schau={schau.data} />
-          </fieldset>
-          <TeilschauenAbschnitt schauId={schau.data.id} start={schau.data.teilschauen} darfAendern={istAdmin} />
-          <MeisterschaftenAbschnitt schauId={schau.data.id} darfAendern={istAdmin} />
-          <KaefigeUndHalle schauId={schau.data.id} />
-          <DruckAbschnitt schauId={schau.data.id} darfAendern={istAdmin} />
-          <ProtokollAbschnitt schauId={schau.data.id} />
-          {istAdmin && !schau.data.test && <AlsTestschau schau={schau.data} />}
-          {istAdmin && schau.data.test && <Demodaten schau={schau.data} />}
-          {istAdmin && !schau.data.abgesagtAm && ["vorbereitung", "meldung", "katalog"].includes(schau.data.phase) && <SchauAbsagen schau={schau.data} />}
-          {istAdmin && (schau.data.phase === "vorbereitung" || schau.data.test) && <SchauLoeschen schau={schau.data} />}
-        </div>
-      </div>
+      <ReiterLeiste reiter={reiter.map((r) => ({ id: r, label: te.abschnitte[r] }))} aktiv={aktiv} waehlen={waehlen} label={te.abschnitteLabel} tafelFuer={tafelFuer} />
+      {/* Für Helfer nur zum Lesen: alle Felder und Knöpfe gesperrt. */}
+      {/* contents: Das fieldset ist kein eigener Kasten – die Tafeln darin stehen im selben Abstand wie die übrigen. */}
+      <fieldset disabled={!istAdmin} className="contents">
+        {/* Ein Formular für sechs Reiter: immer geladen, damit der Stand beim Wechsel bleibt (die Speicherleiste steht in
+            der Kopfleiste und bleibt so auch auf anderen Reitern sichtbar). */}
+        <ReiterTafel id={stamm ?? "schau"} aktiv={!!stamm} waehlen={waehlen} tafelId={STAMM_TAFEL}>
+          <Stammangaben schau={s} abschnitt={stamm} />
+        </ReiterTafel>
+        {tafel("gebuehren", <Gebuehren schau={s} />)}
+        {tafel("preise", <Preisarten schau={s} />)}
+        {tafel("notenskala", <Notenskala schau={s} />)}
+      </fieldset>
+      {tafel("teilschauen", <TeilschauenAbschnitt schauId={s.id} start={s.teilschauen} darfAendern={istAdmin} />)}
+      {tafel("meisterschaften", <MeisterschaftenAbschnitt schauId={s.id} darfAendern={istAdmin} />)}
+      {tafel("kaefige", <KaefigeUndHalle schauId={s.id} />)}
+      {tafel("druck", <DruckAbschnitt schauId={s.id} darfAendern={istAdmin} />)}
+      {tafel("protokoll", <ProtokollAbschnitt schauId={s.id} />)}
+      {verwalten &&
+        tafel(
+          "verwalten",
+          <>
+            {!s.test && <AlsTestschau schau={s} />}
+            {s.test && <Demodaten schau={s} />}
+            {!s.abgesagtAm && ["vorbereitung", "meldung", "katalog"].includes(s.phase) && <SchauAbsagen schau={s} />}
+            {(s.phase === "vorbereitung" || s.test) && <SchauLoeschen schau={s} />}
+          </>,
+        )}
     </div>
   );
 }

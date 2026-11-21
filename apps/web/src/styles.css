@@ -314,6 +314,7 @@
   .druck-quer {
     page: quer;
   }
+  /* Reiter (ui-reiter.tsx): gedruckt wird die ganze Seite mit allen Bereichen, ohne die Leiste – siehe @layer base unten. */
   .nicht-drucken {
     display: none !important;
   }
@@ -369,3 +370,18 @@
 .handbuch figcaption { font-size: 0.85rem; color: var(--color-grau); margin-top: 0.35rem; }
 .handbuch hr { border: 0; border-top: 1px dashed var(--color-linie); margin: 2rem 0; }
 .handbuch a { color: var(--color-band); }
+
+/* Drucken mit Reitern (ui-reiter.tsx): alle Bereiche, ohne die Leiste. In @layer base, denn dort steht im Tailwind-
+   Preflight [hidden] { display: none !important } – bei !important gewönne eine Regel außerhalb der Ebene nicht. */
+@layer base {
+  @media print {
+    [role="tablist"] {
+      display: none !important;
+    }
+    [role="tabpanel"][hidden] {
+      display: flex !important;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+  }
+}

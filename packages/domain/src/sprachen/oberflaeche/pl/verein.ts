@@ -5,6 +5,17 @@ export const verein: OberflaecheTexte["verein"] = {
   seite: {
     titel: "Klub i ochrona danych",
     ausstellerAuskunft: "Wystawcy: informacja i usunięcie danych",
+    reiter: {
+      angaben: "Stopka i ochrona danych",
+      steuer: "Podatki",
+      lastschrift: "Polecenie zapłaty",
+      abmeldung: "Automatyczne wylogowanie",
+      druckvorlagen: "Szablony wydruku",
+      postausgang: "Skrzynka nadawcza",
+      textbausteine: "Bloki tekstu",
+      auskunft: "Dostęp do danych",
+      speicherfristen: "Okresy przechowywania",
+    },
   },
   angaben: {
     gespeichert: "Dane zapisane.",

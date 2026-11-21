@@ -5,6 +5,17 @@ export const verein: OberflaecheTexte["verein"] = {
   seite: {
     titel: "Spolek a ochrana údajů",
     ausstellerAuskunft: "Vystavovatelé: informace a výmaz",
+    reiter: {
+      angaben: "Tiráž a ochrana údajů",
+      steuer: "Daně",
+      lastschrift: "Inkaso",
+      abmeldung: "Automatické odhlášení",
+      druckvorlagen: "Tiskové šablony",
+      postausgang: "Pošta k odeslání",
+      textbausteine: "Textové bloky",
+      auskunft: "Výpis údajů",
+      speicherfristen: "Lhůty uchovávání",
+    },
   },
   angaben: {
     gespeichert: "Údaje uloženy.",

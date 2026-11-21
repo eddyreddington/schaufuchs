@@ -149,7 +149,7 @@ Die Bereiche und was Sie als Helfer dort tun:
 | „Tierverkauf“ | Tiere gegen Bargeld verkaufen |
 | „Abrechnung“ | Aussteller bar abrechnen |
 | „Kassenbuch“ | Wechselgeld buchen, Tagesabschluss |
-| „Protokoll“ (in den Einstellungen, Abschnitt „Protokoll“) | nachlesen, wer wann was geändert hat |
+| „Protokoll“ (in den Einstellungen, Reiter „Protokoll“) | nachlesen, wer wann was geändert hat |
 
 > **Tipp:** Auf der „Übersicht“ führt ein Knopf direkt zur Arbeit der aktuellen Phase, z. B. „Zu den Meldungen“ oder „Zum Tierverkauf“.
 

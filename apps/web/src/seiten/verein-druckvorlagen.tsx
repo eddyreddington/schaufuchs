@@ -42,7 +42,7 @@ export function Druckvorlagen() {
           </Link>
           <span className="block text-sm text-grau">{t.briefvorlageUnter}</span>
         </div>
-        <Link to="/verein/briefvorlage#serienbrief" className={knopfKlasse("leise")}>
+        <Link to="/verein/briefvorlage#serienbrief-erstellen" className={knopfKlasse("leise")}>
           {t.serienbrief}
         </Link>
       </div>

@@ -49,19 +49,28 @@ export function AppRahmen() {
   const menueKnopf = useRef<HTMLButtonElement>(null);
   const schublade = useRef<HTMLDivElement>(null);
   useEffect(() => setMenueOffen(false), [ort.pathname]);
-  // Sprungmarke in der Adresse (z. B. …/katalog#reihenfolge): hinscrollen, sobald der Abschnitt geladen ist.
+  // Sprungmarke in der Adresse (z. B. …/katalog#reihenfolge): hinscrollen, sobald der Abschnitt geladen ist. Liegt der
+  // Abschnitt in einem Reiter (ui-reiter.tsx), zur Reiterleiste – der Reiter ist dann schon gewählt und bleibt sichtbar.
   useEffect(() => {
-    if (!ort.hash) return;
-    const ziel = decodeURIComponent(ort.hash.slice(1));
+    // Reiterwechsel (ui-reiter.tsx) setzt nur den Anker – die Seite bleibt, wo sie ist.
+    if (!ort.hash || (ort.state as { reiter?: boolean } | null)?.reiter) return;
+    let ziel: string;
+    try {
+      ziel = decodeURIComponent(ort.hash.slice(1));
+    } catch {
+      return;
+    }
     let versuche = 0;
     const t = setInterval(() => {
       const el = document.getElementById(ziel);
       if (el || ++versuche > 30) clearInterval(t);
+      // bleibt deutsch: CSS-Selektoren
+      const hin = el?.closest('[role="tabpanel"]') ? document.querySelector('[role="tablist"]') : el;
       // Unter der stehenden Kopfleiste (h-12) mit etwas Luft.
-      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 64 });
+      if (hin) window.scrollTo({ top: hin.getBoundingClientRect().top + window.scrollY - 64 });
     }, 100);
     return () => clearInterval(t);
-  }, [ort.pathname, ort.hash]);
+  }, [ort.pathname, ort.hash, ort.state]);
   // Schmales Menü: Fokus hinein, Esc schließt, Tab bleibt im Menü, danach Fokus zurück auf den Knopf.
   useEffect(() => {
     if (!menueOffen) return;

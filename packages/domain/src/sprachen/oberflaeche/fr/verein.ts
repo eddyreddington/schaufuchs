@@ -5,6 +5,17 @@ export const verein: OberflaecheTexte["verein"] = {
   seite: {
     titel: "Club et protection des données",
     ausstellerAuskunft: "Exposants : information et suppression",
+    reiter: {
+      angaben: "Mentions légales et confidentialité",
+      steuer: "Fiscalité",
+      lastschrift: "Prélèvement",
+      abmeldung: "Déconnexion automatique",
+      druckvorlagen: "Modèles d’impression",
+      postausgang: "Boîte d’envoi",
+      textbausteine: "Textes types",
+      auskunft: "Droit d’accès",
+      speicherfristen: "Durées de conservation",
+    },
   },
   angaben: {
     gespeichert: "Informations enregistrées.",

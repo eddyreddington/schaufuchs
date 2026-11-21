@@ -172,7 +172,7 @@ export function Formular({ children, className }: { children: ReactNode; classNa
 
 /**
  * Abschnitt eines Formulars: links Titel und höchstens eine kurze Zeile, rechts die Felder (Raster mit zwei Spalten;
- * `className="md:col-span-2"` für breite Felder). id für Sprungziele aus der Abschnittsliste.
+ * `className="md:col-span-2"` für breite Felder). id für Sprungziele (Anker in der Adresse).
  */
 export function FormAbschnitt({ id, titel, unter, aktionen, children, spalten = 2 }: { id?: string; titel: string; unter?: ReactNode; aktionen?: ReactNode; children: ReactNode; spalten?: 1 | 2 | 3 }) {
   return (

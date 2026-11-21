@@ -67,7 +67,7 @@ Für Administratoren ist die Zwei-Faktor-Anmeldung (kurz 2FA) Pflicht. Zusätzli
 
 1. Installieren Sie auf Ihrem Telefon eine Authenticator-App, zum Beispiel Google Authenticator, Microsoft Authenticator oder 2FAS.
 2. Öffnen Sie Ihre eigene Seite. Solange die Einrichtung fehlt, öffnet sie sich von selbst („Mein Zugang“); später erreichen Sie sie über „Benutzer“ → Ihr eigener Name.
-3. Im Abschnitt „Zwei-Faktor-Anmeldung“ geben Sie unter „Passwort zur Bestätigung“ Ihr Passwort ein und klicken auf „Einrichten“.
+3. Im Reiter „Zwei-Faktor-Anmeldung“ geben Sie unter „Passwort zur Bestätigung“ Ihr Passwort ein und klicken auf „Einrichten“.
 4. Es erscheint ein QR-Code. Scannen Sie ihn mit der Authenticator-App. Hat das Telefon keine Kamera, wählen Sie in der App „Schlüssel eingeben“ und tippen den darunter angezeigten Schlüssel ab.
 5. Geben Sie im Feld „2. Den angezeigten 6-stelligen Code eingeben“ den Code aus der App ein und klicken Sie auf „Bestätigen“.
 6. Die Software zeigt jetzt **10 Notfallcodes** an (Form `XXXX-XXXX`). **Drucken Sie sie sofort aus** oder schreiben Sie sie ab. Sie werden nicht noch einmal angezeigt.
@@ -91,7 +91,7 @@ Jeder Notfallcode gilt **genau einmal**. Sie geben ihn bei der Anmeldung statt d
 **Telefon verloren oder gewechselt:**
 
 1. Mit einem Notfallcode kommen Sie auch ohne Telefon hinein.
-2. Ein **anderer Administrator** setzt Ihre Zwei-Faktor-Anmeldung zurück: „Benutzer“ → Ihr Name → Abschnitt „Zwei-Faktor-Anmeldung“ → „Zwei-Faktor-Anmeldung zurücksetzen“ und die Rückfrage bestätigen.
+2. Ein **anderer Administrator** setzt Ihre Zwei-Faktor-Anmeldung zurück: „Benutzer“ → Ihr Name → Reiter „Zwei-Faktor-Anmeldung“ → „Zwei-Faktor-Anmeldung zurücksetzen“ und die Rückfrage bestätigen.
 3. Danach melden Sie sich nur mit Passwort an und richten die Zwei-Faktor-Anmeldung sofort neu ein (siehe 1.2). Bis dahin gelten Sie wieder als Helfer.
 
 Die betroffene Person erhält eine Hinweismail „Ihre Zwei-Faktor-Anmeldung wurde zurückgesetzt“.
@@ -100,7 +100,7 @@ Die betroffene Person erhält eine Hinweismail „Ihre Zwei-Faktor-Anmeldung wur
 
 ### 1.4 Eigenes Passwort ändern
 
-Auf Ihrer eigenen Seite im Abschnitt „Eigenes Passwort ändern“: „Bisheriges Passwort“, „Neues Passwort“ (mindestens 10 Zeichen), dann „Passwort ändern“.
+Auf Ihrer eigenen Seite im Reiter „Passwort“ („Eigenes Passwort ändern“): „Bisheriges Passwort“, „Neues Passwort“ (mindestens 10 Zeichen), dann „Passwort ändern“.
 
 ### 1.5 Darstellung: hell oder dunkel
 
@@ -244,7 +244,7 @@ Das Muster nennt unter anderem: das Widerspruchsrecht gegen die Nennung im Katal
 
 ### 3.3 Postausgang
 
-Der Abschnitt „Postausgang“ zeigt die letzten 100 Mails von SchauFUCHS – Eingangsbestätigungen an Aussteller ebenso wie Einladungen und Hinweismails an Benutzer –, die nicht versendeten zuerst. Der Stand ist „Wartet“, „Gesendet“ oder „Nicht versendet“.
+Der Reiter „Postausgang“ zeigt die letzten 100 Mails von SchauFUCHS – Eingangsbestätigungen an Aussteller ebenso wie Einladungen und Hinweismails an Benutzer –, die nicht versendeten zuerst. Der Stand ist „Wartet“, „Gesendet“ oder „Nicht versendet“.
 
 - Der Server versucht eine nicht versendete Mail bis zu 2 Tage lang immer wieder.
 - Danach prüfen Sie mit dem Betreuer der Technik die Mailserver-Einstellungen und klicken bei der Mail auf „Erneut senden“.
@@ -303,11 +303,11 @@ Was beim Löschen geschieht: Kontaktdaten, Bankdaten, Geburtsdatum, gespeicherte
 
 **Aussteller von Testschauen** stehen in der Liste nur, wenn Sie oben „Test-Aussteller der Testschau „…““ wählen. Sie gehören nur zu ihrer Testschau (siehe 5.2). Bearbeiten, Auskunft und Löschen gehen wie bei echten Ausstellern – wichtig, falls sich eine echte Person über die öffentliche Seite in eine Testschau gemeldet hat.
 
-**Käufer und Preisrichter** haben keinen Aussteller-Datensatz. Für sie gibt es unter „Verein und Datenschutz“ den Abschnitt „Auskunft für Käufer und Preisrichter“: Namen eingeben, „Suchen“ (durchsucht die Verkaufslisten und die Preisrichter aller Schauen des Vereins), bei Treffern „Als JSON speichern“. Anschrift und Kontakt eines Preisrichters ändern oder leeren Sie auf der Seite „Preisrichter“ der jeweiligen Schau. Von selbst löscht die Bereinigung Kontakt und PIN 30 Tage nach dem Abschluss der Schau, die Anschrift nach 3 Jahren.
+**Käufer und Preisrichter** haben keinen Aussteller-Datensatz. Für sie gibt es unter „Verein und Datenschutz“ den Reiter „Auskunft“ (Auskunft für Käufer und Preisrichter): Namen eingeben, „Suchen“ (durchsucht die Verkaufslisten und die Preisrichter aller Schauen des Vereins), bei Treffern „Als JSON speichern“. Anschrift und Kontakt eines Preisrichters ändern oder leeren Sie auf der Seite „Preisrichter“ der jeweiligen Schau. Von selbst löscht die Bereinigung Kontakt und PIN 30 Tage nach dem Abschluss der Schau, die Anschrift nach 3 Jahren.
 
 ### 3.6 Speicherfristen
 
-Der Abschnitt „Speicherfristen“ nennt die Fristen, die der Server täglich von selbst anwendet:
+Der Reiter „Speicherfristen“ nennt die Fristen, die der Server täglich von selbst anwendet:
 
 | Daten | Frist |
 |---|---|
@@ -349,13 +349,13 @@ Unter „Druckvorlagen“ legen Sie fest, wie die Bewertungskarten gedruckt werd
 - **„Ganze Karte drucken“:** SchauFUCHS druckt die ganze Karte. Die Bausteine (Kopf mit Katalognummer, Rasse und Farbenschlag, Klasse, Ringnummer, Vorzüge/Wünsche/Mängel, Ankreuzfeld, Note/Punkte/Preis, Unterschriften, Legende, eigener Text) schalten Sie ein und aus und ordnen sie mit ↑ und ↓. „Größe“ vergrößert oder verkleinert Schrift und Abstände; „Farbig“ aus druckt nur Schwarz, z. B. für Nadeldrucker mit Durchschlag.
 - **„Vordruck bedrucken“:** Für gekaufte Karten (Verbandsvordruck, Endloskarten) druckt SchauFUCHS nur die Daten. Jedes Feld hat seine Lage in Millimetern ab der oberen linken Ecke der Karte, dazu Breite, Höhe und Schriftgröße. Legen Sie eine Karte auf den Probedruck, um die Stellen abzumessen.
 
-**Vorlage für eine Schau:** In den Einstellungen der Schau wählen Sie im Abschnitt „Druck“ die Vorlage für die Bewertungskarten. „Für diese Schau anpassen“ legt eine Kopie nur für diese Schau an und öffnet sie im Designer; die Vorlage des Vereins bleibt dabei unverändert. Wird eine gewählte Vorlage gelöscht, druckt die Schau wieder mit der Vorgabe.
+**Vorlage für eine Schau:** In den Einstellungen der Schau wählen Sie im Reiter „Druck“ die Vorlage für die Bewertungskarten. „Für diese Schau anpassen“ legt eine Kopie nur für diese Schau an und öffnet sie im Designer; die Vorlage des Vereins bleibt dabei unverändert. Wird eine gewählte Vorlage gelöscht, druckt die Schau wieder mit der Vorgabe.
 
 **Endlospapier am Drucker:** Das PDF hat genau die Größe eines Bogens. Unter Windows legen Sie dafür einmal ein eigenes Papierformat an (Druckserver-Eigenschaften, Formular mit Breite × Länge) und wählen es beim Drucken. Im Drucker stellen Sie die Bogenlänge ein und schalten „Perforation überspringen“ aus. Drucken Sie mit „Tatsächliche Größe“ bzw. 100 %, ohne Anpassen an die Seite.
 
 ### 3.9 Briefvorlage
 
-Die Briefvorlage bestimmt, wie Briefe des Vereins aussehen: Meldebestätigung (B-Bogen), Abrechnung je Aussteller, Quittungen und Serienbriefe. Sie öffnen sie unter „Druckvorlagen“ → „Briefvorlage“ oder in den Einstellungen einer Schau im Abschnitt „Druck“. Rechts steht ein Beispielbrief, der sich bei jeder Änderung neu aufbaut. Gespeichert wird erst mit „Speichern“; jede Änderung steht im Protokoll. Die Vorlage gilt für alle Schauen des Vereins.
+Die Briefvorlage bestimmt, wie Briefe des Vereins aussehen: Meldebestätigung (B-Bogen), Abrechnung je Aussteller, Quittungen und Serienbriefe. Sie öffnen sie unter „Druckvorlagen“ → „Briefvorlage“ oder in den Einstellungen einer Schau im Reiter „Druck“. Briefbogen, Fußzeile, Meldebestätigung und Serienbrief stehen in eigenen Reitern; gespeichert wird alles zusammen. Rechts steht ein Beispielbrief, der sich bei jeder Änderung neu aufbaut. Gespeichert wird erst mit „Speichern“; jede Änderung steht im Protokoll. Die Vorlage gilt für alle Schauen des Vereins.
 
 - **Briefbogen:** „Form B“ (großer Briefkopf, üblich) oder „Form A“ (kleiner Briefkopf) nach DIN 5008. Die Anschrift sitzt so, dass sie im Fenster eines DL- oder C6/5-Umschlags zu sehen ist. Der „Briefkopf“ hat bis zu drei Zeilen (bei Form A passen zwei), die erste fett; leer stehen dort Vereinsname und Schau. „Absender über der Anschrift“ ist die kleine Zeile im Fenster. „Logo der Schau“, „Farbig“ (aus: nur Schwarz und Grau) und „Falz- und Lochmarken“ schalten Sie ein und aus.
 - **Fußzeile:** drei Spalten, z. B. Anschrift, Bankverbindung und Vorstand. Sind alle leer, steht unten wie bisher der Vereinsname in einer Zeile.
@@ -368,7 +368,7 @@ Die Briefvorlage bestimmt, wie Briefe des Vereins aussehen: Meldebestätigung (B
 
 ### 3.10 Steuerliche Angaben
 
-Ohne diese Angaben stellt SchauFUCHS keine Zuwendungsbestätigungen aus. Sie stehen unter „Verein und Datenschutz“ im Abschnitt „Steuerliche Angaben“; jede Änderung steht im Protokoll.
+Ohne diese Angaben stellt SchauFUCHS keine Zuwendungsbestätigungen aus. Sie stehen unter „Verein und Datenschutz“ im Reiter „Steuer“; jede Änderung steht im Protokoll.
 
 - „Der Verein ist als gemeinnützig anerkannt“ ankreuzen.
 - **Bescheid:** „Freistellungsbescheid“ (bzw. Anlage zum Körperschaftsteuerbescheid) oder „Feststellung nach § 60a AO“, dazu Finanzamt, Steuernummer und Datum des Bescheids, beim Freistellungsbescheid auch den letzten Veranlagungszeitraum (z. B. „2022“).
@@ -405,7 +405,7 @@ Unter „Import“ (linke Leiste, nur Administratoren) übernehmen Sie Meldungen
 Das Meldegeld lässt sich per SEPA-Basislastschrift einziehen – zusätzlich zu bar und Überweisung, die überall möglich
 bleiben. Eingezogen wird nur bei Ausstellern mit unterschriebenem Mandat und nur, was dann noch offen ist.
 
-- **Gläubiger-ID:** Unter „Verein und Datenschutz“, Abschnitt „SEPA-Lastschrift“, die Gläubiger-Identifikationsnummer
+- **Gläubiger-ID:** Unter „Verein und Datenschutz“, Reiter „Lastschrift“, die Gläubiger-Identifikationsnummer
   des Vereins eintragen (bei der Deutschen Bundesbank beantragt). Das Konto, auf das eingezogen wird, ist das
   Vereinskonto aus den Einstellungen der Schau.
 - **Mandat:** Der Aussteller unterschreibt ein SEPA-Lastschriftmandat (Vordruck der Bank des Vereins). Unter „Aussteller“
@@ -608,13 +608,15 @@ In einer Schau zeigt die Seitenleiste oben die Schau mit Ort und Phase; ein Klic
 | Schautage | Einlieferung, Bewertung, Preise, Meisterschaften, Tierverkauf |
 | Kasse und Abrechnung | Kassenbuch, Spenden, Abrechnung |
 
-Käfige und Hallenplan stehen hinter den Meldungen: Erst mit den Meldungen steht fest, wie viele Käfige welcher Größe in die Halle müssen. Die Halle selbst (Maße, Eingänge) können Sie schon vorher anlegen. Das Protokoll öffnen Sie in den Einstellungen im Abschnitt „Protokoll“ (siehe 5.17).
+Käfige und Hallenplan stehen hinter den Meldungen: Erst mit den Meldungen steht fest, wie viele Käfige welcher Größe in die Halle müssen. Die Halle selbst (Maße, Eingänge) können Sie schon vorher anlegen. Das Protokoll öffnen Sie in den Einstellungen im Reiter „Protokoll“ (siehe 5.17).
 
 Kassenbuch, Spenden und Abrechnung stehen in einer eigenen Gruppe: Sie laufen über die ganze Schau, nicht erst am Ende.
 
 Darunter stehen „Alle Schauen“, die Gruppe „Verein“ (Aussteller, Spender, Import, Verein und Datenschutz), die Gruppe „Einrichtung“ (Rassen und Farbenschläge, Benutzer) und „Hilfe“.
 
 **Gruppen einklappen:** Ein Klick auf die Überschrift einer Gruppe klappt sie zu oder auf; SchauFUCHS merkt sich das in diesem Browser. Ohne eigene Wahl ist in einer Schau die Gruppe der aktuellen Phase offen (in der Meldephase „Meldephase“, an den Schautagen „Schautage“), „Verein“ und „Einrichtung“ sind zu. Öffnen Sie eine Seite in einer zugeklappten Gruppe (etwa über die Übersicht), klappt die Gruppe auf.
+
+**Reiter:** Seiten mit mehreren Bereichen (Einstellungen der Schau, Verein und Datenschutz, Preisrichter, Käfige, Briefvorlage, die Seite eines Benutzers) zeigen jeden Bereich in einem eigenen Reiter unter dem Seitenkopf. Der gewählte Reiter steht in der Adresse (z. B. `…/einstellungen#druck`): Ein Lesezeichen oder Link öffnet ihn wieder. Ungespeichertes geht beim Wechsel des Reiters nicht verloren, und „Speichern“ bleibt oben rechts stehen. Hat ein verborgener Reiter ein Pflichtfeld offen oder einen Fehler beim Speichern, wechselt die Seite dorthin. „Drucken“ auf der Seite „Käfige“ druckt alle Bereiche.
 
 **Speichern oben rechts:** Gespeichert wird immer oben rechts. Sobald Sie auf einer Seite etwas ändern (Einstellungen, Gebühren, Notenskala, Grundplatten, Aufsteller, Preisrichter-Einteilung, Katalog, Meldung, Verein, steuerliche Angaben, Druck- und Briefvorlagen, Spender, Benutzer), erscheinen oben rechts in der Kopfleiste „Verwerfen“ und der Speichern-Knopf des Formulars. Nur in Fenstern (z. B. „Preisrichter bearbeiten“) und für eine einzelne Tabellenzeile (z. B. Bewertung am PC) steht „Speichern“ direkt dabei. Die Kopfleiste bleibt beim Scrollen stehen; Sie müssen also nicht nach unten. Haben mehrere Formulare einer Seite Ungespeichertes, steht für jedes ein eigener Knopf da (z. B. „Einstellungen speichern“ und „Gebühren speichern“). Wer die Seite mit Ungespeichertem verlässt, wird vorher gefragt. **Ausnahme Hallenplan:** Der Editor speichert jede Änderung sofort; dort steht oben rechts statt eines Knopfs „Gespeichert“, „Wird gespeichert …“ oder in Rot „Nicht gespeichert“ (dann steht unten rechts der Grund, und der Plan zeigt wieder den gespeicherten Stand).
 
@@ -685,9 +687,9 @@ Die Software öffnet direkt die Einstellungen. Die neue Schau steht in der Phase
 
 ### 5.3 Einstellungen
 
-Die Seite „Einstellungen“ hat vier Abschnitte, die Sie einzeln speichern. Weiter unten steht der Abschnitt „Protokoll“ mit den letzten Einträgen; „Protokoll öffnen“ führt zum ganzen Protokoll (siehe 5.17).
+Die Seite „Einstellungen“ zeigt jeden Punkt in einem eigenen Reiter: „Schau“, „Termine“, „Meldegeld und Konto“, „Katalog und Preise“, „Teilschauen“, „Bestimmungen“, „Veterinäramt“, „Standgeld und Gebühren“, „Preise“, „Notenskala“, „Meisterschaften“, „Käfige und Halle“, „Druck“, „Protokoll“ und für Administratoren „Verwalten“ („Als Testschau kennzeichnen“ bzw. bei einer Testschau die Demodaten, „Schau absagen“, „Schau löschen“). Die sechs Reiter von „Schau“ bis „Veterinäramt“ sind ein Formular: Änderungen darin speichern Sie zusammen, auch wenn Sie dazwischen den Reiter wechseln. Gebühren, Preise und Notenskala speichern Sie je für sich. Der Reiter „Protokoll“ zeigt die letzten Einträge; „Protokoll öffnen“ führt zum ganzen Protokoll (siehe 5.17).
 
-#### Abschnitt „Schau“ (Stammangaben)
+#### Reiter „Schau“ bis „Veterinäramt“ (Stammangaben)
 
 ![Einstellungen der Schau.](bilder/einstellungen.jpg)
 
@@ -724,9 +726,9 @@ Die Seite „Einstellungen“ hat vier Abschnitte, die Sie einzeln speichern. We
 
 Klicken Sie auf „Einstellungen speichern“.
 
-**Schau löschen:** Eine Schau, die nur zum Ausprobieren angelegt wurde, löschen Sie ganz unten in den Einstellungen mit „Schau löschen …“. Das geht nur, solange sie in der Phase „Vorbereitung“ steht und noch keine Meldungen, Stiftungen oder Kassenbuchungen hat. Zur Sicherheit tippen Sie den Namen der Schau ein und geben einen Grund an; das Löschen steht danach im Protokoll des Vereins. Einstellungen, Preisrichter und Katalogseiten der Schau sind dann weg. Eine **Testschau** dagegen lässt sich in jeder Phase löschen, mit allen Meldungen, ihren Test-Ausstellern, Bewertungen, Kasse und Belegen; echte Aussteller sind davon nie betroffen.
+**Schau löschen:** Eine Schau, die nur zum Ausprobieren angelegt wurde, löschen Sie in den Einstellungen im Reiter „Verwalten“ mit „Schau löschen …“. Das geht nur, solange sie in der Phase „Vorbereitung“ steht und noch keine Meldungen, Stiftungen oder Kassenbuchungen hat. Zur Sicherheit tippen Sie den Namen der Schau ein und geben einen Grund an; das Löschen steht danach im Protokoll des Vereins. Einstellungen, Preisrichter und Katalogseiten der Schau sind dann weg. Eine **Testschau** dagegen lässt sich in jeder Phase löschen, mit allen Meldungen, ihren Test-Ausstellern, Bewertungen, Kasse und Belegen; echte Aussteller sind davon nie betroffen.
 
-**Schau absagen:** Muss eine Schau ausfallen, etwa wegen eines Ausstellungsverbots bei einer Tierseuche, sagen Sie sie im Abschnitt „Schau absagen“ mit „Schau absagen …“ ab. Das geht in den Phasen „Vorbereitung“, „Meldephase“ und „Katalog & Halle“, also bis vor der Einlieferung. Sind schon Tiere in der Halle, stimmen Sie das Vorgehen mit dem Veterinäramt ab und schließen über die normale Abrechnung ab. Im Fenster tragen Sie den Grund ein (er steht in der E-Mail an die Aussteller) und bestätigen mit „Schau absagen“. Das lässt sich nicht rückgängig machen. Dann geschieht Folgendes:
+**Schau absagen:** Muss eine Schau ausfallen, etwa wegen eines Ausstellungsverbots bei einer Tierseuche, sagen Sie sie in den Einstellungen im Reiter „Verwalten“ mit „Schau absagen …“ ab. Das geht in den Phasen „Vorbereitung“, „Meldephase“ und „Katalog & Halle“, also bis vor der Einlieferung. Sind schon Tiere in der Halle, stimmen Sie das Vorgehen mit dem Veterinäramt ab und schließen über die normale Abrechnung ab. Im Fenster tragen Sie den Grund ein (er steht in der E-Mail an die Aussteller) und bestätigen mit „Schau absagen“. Das lässt sich nicht rückgängig machen. Dann geschieht Folgendes:
 
 - Alle offenen und bestätigten Meldungen werden storniert. Vor dem Festschreiben verlieren die Tiere ihre Nummern, danach bleiben die gedruckten Nummern reserviert.
 - Jeder Aussteller mit E-Mail-Adresse bekommt die Nachricht „Abgesagt: …“ mit dem Grund und dem Hinweis, dass gezahltes Meldegeld erstattet wird.
@@ -735,7 +737,7 @@ Klicken Sie auf „Einstellungen speichern“.
 
 Zum Abschluss braucht eine abgesagte Schau nur noch die Kasse: Erstattungen gebucht oder als Verfall gebucht, Kassentage abgeschlossen. Prüfliste und Freigabe gelten dann nicht.
 
-#### Abschnitt „Standgeld und Gebühren“
+#### Reiter „Standgeld und Gebühren“
 
 ![Standgeld und Gebühren.](bilder/gebuehren.jpg)
 
@@ -753,7 +755,7 @@ So rechnet die Software das Meldegeld je Meldung: Standgeld je Tier nach Meldear
 
 > **Wichtig:** Sobald die erste Auszahlung gebucht ist, lassen sich die Gebühren nicht mehr ändern („Es gibt schon Auszahlungen (Quittung …) – Gebühren und Preise lassen sich nicht mehr ändern.“). Ebenso, solange eine SEPA-Datei oder eine Lastschriftdatei offen ist. Für Preisarten gelten eigene Grenzen (siehe unten).
 
-#### Abschnitt „Preise“ (Preisarten)
+#### Reiter „Preise“ (Preisarten)
 
 ![Die Preisarten mit Schlüssel, Kontingent und Mindestpunkten.](bilder/preisarten.jpg)
 
@@ -782,7 +784,7 @@ Hier legen Sie fest, welche Preise es gibt. „Preisart hinzufügen“ bzw. „B
 
 > **Wichtig:** Ist eine Preisart schon vergeben, lassen sich **Betrag und Herkunft** nicht mehr ändern („„…“ ist schon …× vergeben – Betrag und Quelle lassen sich nicht mehr ändern. Bitte eine neue Preisart anlegen.“). Mindestpunkte nur so, dass alle bereits vergebenen Preise sie erfüllen. Auch die Bindung („Gilt für“, „Nur Sparte“) ist dann fest („… die Bindung (Jugend/Senioren, Sparte) lässt sich nicht mehr ändern. Bitte eine neue Preisart anlegen.“). Name, Kürzel, Sachpreis und Schlüssel bleiben änderbar. Löschen geht erst, wenn kein Preis dieser Art mehr vergeben ist.
 
-#### Abschnitt „Notenskala“
+#### Reiter „Notenskala“
 
 Voreingestellt ist die übliche BDRG-Skala:
 
@@ -800,7 +802,7 @@ Sie können Kürzel, Note und Punkte anpassen und mit „Notenskala speichern“
 
 Die Ehrentafel und der Fettdruck der Noten im Katalog richten sich nach der Skala: Sie umfassen die beiden obersten Stufen (bei der Standardskala „vorzüglich“ und „hervorragend“, also ab 96 Punkten).
 
-#### Abschnitt „Teilschauen“ {#teilschauen}
+#### Reiter „Teilschauen“ {#teilschauen}
 
 Besteht die Ausstellung aus mehreren Teilschauen – zum Beispiel Landesschau, Kreisschau und Jugendschau in einer Halle –,
 tragen Sie sie hier in der Reihenfolge ein, in der sie im Katalog stehen sollen („Teilschau hinzufügen“, mit ↑ und ↓
@@ -960,7 +962,7 @@ Auf der Seite „Katalognummern“ legt der Abschnitt „Reihenfolge der Nummern
 | Alter | „jung vor alt“ oder „alt vor jung“. |
 
 - Mit den Haken schalten Sie Meldeart, Verein, Aussteller, Ausstellernummer, Geschlecht und Alter an oder ab, mit ↑ und ↓ verschieben Sie sie untereinander (unterhalb von Farbenschlag). Beispiel: Steht „Geschlecht“ über „Aussteller“, kommen im Farbenschlag erst alle 1,0 (je Aussteller), dann alle 0,1. Steht „Alter“ über „Geschlecht“, kommen erst alle Jungtiere, dann die alten. Volieren und Stämme als eigene Abteilung vor allen Einzeltieren stellen Sie in den Einstellungen ein (siehe unten).
-- Vorweg gilt die Gliederung aus den Einstellungen (Abschnitt „Katalog und Preise“): „Jugend als eigener Block“ (Jugend am Ende), Käfigblöcke und „Volieren und Stämme vor den Einzeltieren“. Die Zeile „Vorweg: …“ nennt sie, der Link führt dorthin. In den Einstellungen steht unter „Reihenfolge der Nummern“ die aktuelle Folge mit einem Link hierher.
+- Vorweg gilt die Gliederung aus den Einstellungen (Reiter „Katalog und Preise“): „Jugend als eigener Block“ (Jugend am Ende), Käfigblöcke und „Volieren und Stämme vor den Einzeltieren“. Die Zeile „Vorweg: …“ nennt sie, der Link führt dorthin. In den Einstellungen steht unter „Reihenfolge der Nummern“ die aktuelle Folge mit einem Link hierher.
 - „Vorgabe“ stellt die bisherige Folge wieder her. Gespeichert wird mit „Reihenfolge speichern“ oben rechts; die Änderung steht im Protokoll („Reihenfolge der Katalognummern“).
 - Die Nummern ändern sich erst beim nächsten „Katalognummern vergeben“. Nach dem Festschreiben ist die Reihenfolge gesperrt („Festgeschrieben“). Nachmeldungen bekommen ihre Unternummer nach der gespeicherten Folge, vorhandene Nummern bleiben.
 - Laufen die Nummern nach dem Hallenplan („Nach Plan nummerieren“), bestimmt der Plan die Folge. Der Plan selbst stellt nicht nummerierte Tiere in der hier gewählten Folge auf.
@@ -997,13 +999,13 @@ Sind Einteilung und Drucke fertig, klicken Sie „Nummern festschreiben“ und b
 
 Unter „Käfige“ stellen Sie Ihre Käfige ein (Maße, Grundplatten, Käfiggröße je Rasse) und sehen, wie viele Käfige welchen Maßes Sie aufbauen müssen – ein Tier je Käfig, Stämme und Volieren je ein eigener, Bruteier ohne Käfig. „gemeldet“ zählt offene und bestätigte Meldungen (schon während der Meldephase nützlich), „bestätigt“ nur bestätigte; abgelehnte, stornierte und als fehlend gemeldete Tiere zählen nicht. Sobald die Katalognummern vergeben sind, steht je Größe dabei, welche Käfignummern dazugehören (die Käfignummer ist die Katalognummer), z. B. „70 × 70 × 70 cm: 17–32, 38–78“. Mit „Drucken“ bekommen die Aufbauhelfer die Liste auf Papier.
 
-**Maße Ihrer Käfige:** Überall steht das Maß des Käfigs (Breite × Tiefe × Höhe), nicht ein Name. Bis Sie Ihre eigenen Maße eintragen, gilt der Richtwert als Würfel (z. B. 70 × 70 × 70 cm); Stammkäfige und Volieren heißen so, bis Sie ein Maß angeben. Klicken Sie neben dem Maß auf „Maße ändern“, tragen Sie Breite, Tiefe und Höhe in cm ein und speichern Sie; „Richtwert“ stellt zurück. In den Einstellungen der Schau führt der Abschnitt „Käfige und Halle“ hierher.
+**Maße Ihrer Käfige:** Überall steht das Maß des Käfigs (Breite × Tiefe × Höhe), nicht ein Name. Bis Sie Ihre eigenen Maße eintragen, gilt der Richtwert als Würfel (z. B. 70 × 70 × 70 cm); Stammkäfige und Volieren heißen so, bis Sie ein Maß angeben. Klicken Sie neben dem Maß auf „Maße ändern“, tragen Sie Breite, Tiefe und Höhe in cm ein und speichern Sie; „Richtwert“ stellt zurück. In den Einstellungen der Schau führt der Reiter „Käfige und Halle“ hierher.
 
 **Grundplatten:** Die Käfige stehen auf Grundplatten von rund 2 m Länge, so tief wie die Käfige, je Platte nur eine Käfigart: zwei 100er auf 200 × 100 cm, drei 70er auf 210 × 70 cm (etwas länger, damit alle drei Platz haben), vier 50er auf 200 × 50 cm, fünf 40er auf 200 × 40 cm. Allgemein stehen so viele Käfige auf einer Platte, wie auf höchstens 2,15 m passen. In der Tabelle stellen Sie je Käfigart ein eigenes Plattenmaß (Länge × Tiefe in cm, beide angeben) und die Zahl der Käfige je Platte ein; leer heißt automatisch, der Platzhalter zeigt den Wert. Unter **Etagen** tragen Sie ein, wie viele Käfige einer Art übereinander stehen (1 bis 4, leer heißt eine): Bei zwei Etagen trägt eine Platte mit fünf 40er-Käfigen zehn Tiere. Der Plan stellt dann Spalte für Spalte, unten zuerst (unten Nr. 1, darüber Nr. 2, daneben unten Nr. 3 …), und zeigt jeden Käfig als eigenes Feld: die Grundfläche quer geteilt, das untere vorn am Gang. Auch Nachmeldungen, freie Plätze, Käfigblöcke, „Nach Plan nummerieren“ und die 3D-Ansicht kennen die Etagen. Daneben steht, wie viele Platten Sie für die gemeldeten Tiere brauchen. „Grundplatten speichern“ übernimmt die Werte; der Hallenplan stellt die Platten danach auf, und die Änderung steht im Protokoll. Die Maße gelten für Meldung, Einlieferung und Einstellungen und werden in jede neue Schau übernommen – die Käfige gehören ja dem Verein.
 
 **Anderer Käfig für ein einzelnes Tier:** Bei der Einlieferung können Sie und die Helfer für jedes Tier einen anderen Käfig wählen, z. B. wenn für ein Zwerghuhn nur noch ein Großkäfig frei ist. Das zählt im Käfigbedarf (unter der Tabelle steht, wie viele Tiere so umgesetzt sind) und im Protokoll; die Größe der Rasse bleibt unverändert, und die Katalognummer auch – sie kommt an den gewählten Käfig. Nachmeldungen werden nach dem Käfigblock eingeordnet, den die Tiere bei der Nummernvergabe hatten; eine später geänderte Größe je Rasse verschiebt also nichts.
 
-Schon beim Melden zeigt jede Meldezeile (am PC und im Online-Formular) unter „Art“ die Käfiggröße, und bei der Einlieferung steht sie neben jedem Tier. Den Käfig vergibt die Software nach Sparte: Puten und Gänse kommen in den Großkäfig, Tauben in den Taubenkäfig, Zwerghühner und Wachteln in den Zwerghuhnkäfig, alle übrigen Einzeltiere (Hühner, Enten, Perlhühner, Ziergeflügel) in den Hühnerkäfig. Braucht eine Rasse eine andere Größe, stellen Sie das unten unter „Käfiggröße je Rasse“ um; „automatisch (…)“ stellt es zurück. Das gilt für Einzeltiere dieser Rasse, Stämme und Volieren bleiben in ihrem eigenen Käfig.
+Schon beim Melden zeigt jede Meldezeile (am PC und im Online-Formular) unter „Art“ die Käfiggröße, und bei der Einlieferung steht sie neben jedem Tier. Den Käfig vergibt die Software nach Sparte: Puten und Gänse kommen in den Großkäfig, Tauben in den Taubenkäfig, Zwerghühner und Wachteln in den Zwerghuhnkäfig, alle übrigen Einzeltiere (Hühner, Enten, Perlhühner, Ziergeflügel) in den Hühnerkäfig. Braucht eine Rasse eine andere Größe, stellen Sie das im Reiter „Käfiggröße je Rasse“ um; „automatisch (…)“ stellt es zurück. Das gilt für Einzeltiere dieser Rasse, Stämme und Volieren bleiben in ihrem eigenen Käfig.
 
 **Richtwerte und Vorschläge:** Neben jedem Käfig steht unter „für“, wofür er gedacht ist, und daneben der Richtwert (Innenmaß als Kantenlänge für ein Tier): Puten, Gänse, Fasane 100 cm; Hühner, Enten 70 cm; Zwerghühner, Zwergenten 50 cm; Tauben 35–40 cm (große Rassen 50–60 cm). Sie stammen aus den BMEL-Leitlinien zur Ausrichtung von Tierbörsen (2006), die Veterinärämter als Richtwert für Geflügelausstellungen übernehmen; bundesweit verbindlich sind sie nicht, maßgeblich ist das Merkblatt Ihres Veterinäramts. Wo die Richtwerte eine andere Größe nahelegen, steht in der Rassentabelle ein Vorschlag mit „übernehmen“: Fasane in den Großkäfig, Römer und Montauban in den Hühnerkäfig, Strasser in den Zwerghuhnkäfig. Für große Hühnerrassen wie Brahma oder Cochin nennen die Richtwerte keinen größeren Käfig als den Hühnerkäfig.
 
@@ -1240,7 +1242,7 @@ Jede Änderung an Terminen und Kalendern steht im Protokoll. Ändern dürfen nur
 
 ### 5.7 Preisrichter anlegen
 
-![Preisrichter, Einteilung, PINs und der Link für die Tablets.](bilder/preisrichter.jpg)
+![Reiter „Preisrichter“: Liste mit Einteilung, PINs und dem Link für die Tablets.](bilder/preisrichter.jpg)
 
 1. „Preisrichter“ → „Preisrichter hinzufügen“.
 2. „Name“, „Anschrift“, „Telefon“, „E-Mail“ eintragen.
@@ -1259,7 +1261,7 @@ Jede Änderung an Terminen und Kalendern steht im Protokoll. Ändern dürfen nur
 
 Die Seite „Preisrichter“ steht in der Seitenleiste bei der Vorbereitung (Preisrichter anlegen). Eingeteilt wird nach dem Meldeschluss: Teilen Sie die Preisrichter **nach Rassen** ein, dann vergeben Sie die Nummern. Die Nummernbereiche je Preisrichter rechnet die Software beim Vergeben selbst – auch beim Neu-Vergeben und bei Nachmeldungen.
 
-1. Im Abschnitt „Einteilung nach Rassen“ stehen alle gemeldeten Rassen (offene und bestätigte Meldungen) nach Sparten in Ausstellungsfolge, mit der Zahl der Tiere.
+1. Im Reiter „Einteilung nach Rassen“ stehen alle gemeldeten Rassen (offene und bestätigte Meldungen) nach Sparten in Ausstellungsfolge, mit der Zahl der Tiere.
 2. Je Rasse einen Preisrichter wählen. Zur Auswahl stehen nur Preisrichter, die diese Sparte bewerten. Eine große Rasse teilen Sie mit „Farbenschläge“: Je Farbenschlag lässt sich ein anderer Preisrichter wählen, „wie die Rasse“ übernimmt den der Rasse.
 3. Oder „Gleichmäßig verteilen“: Die Software schlägt eine Einteilung vor. Sie trennt möglichst keine Rasse, beachtet die Sparten der Preisrichter, lässt eine Sparte möglichst bei einem und teilt eine Rasse nur, wenn es nicht anders geht (dann je Farbenschlag). Ein Obmann bekommt weniger Tiere: Verteilt wird im Verhältnis der Höchstzahlen aus den Einstellungen (Vorgabe 60 je Obmann zu 80 je Preisrichter). Bewertet niemand eine Sparte, steht „Kein Preisrichter für: …“ da; diese Tiere bleiben ohne Preisrichter. Ergänzen Sie dann bei einem Preisrichter die Sparte (siehe 5.7) oder legen Sie einen weiteren an. Derselbe Hinweis erscheint bei der Einteilung nach Nummern.
 4. Über der Tabelle steht, wie viele Tiere jeder Preisrichter hätte und wie viele noch ohne Preisrichter sind. Hat ein Preisrichter mehr Tiere als die Höchstzahl aus den Einstellungen (Stamm zählt 2, Voliere und Bruteier 3), nennt die Prüfliste ihn als gelben Hinweis.
@@ -1269,7 +1271,7 @@ Eine Nachmeldung mit Unternummer (24a) geht an den Preisrichter der Nummer 24 �
 
 #### Einteilung nach Nummern
 
-Darunter zeigt „Einteilung nach Nummern“ die Bereiche je Preisrichter, sobald Katalognummern vergeben sind. Hier lässt sich auch von Hand nach Nummern einteilen (ohne Einteilung nach Rassen, etwa in älteren Schauen): „Gleichmäßig verteilen“, Zeilen anpassen („von Nr.“, „bis Nr.“, „Bereich hinzufügen“, „✕“), oben rechts „Nummern-Einteilung speichern“. Ändern Sie die Bereiche hier, obwohl nach Rassen eingeteilt ist, fragt die Software nach: Die Einteilung nach Rassen gilt danach nicht mehr, und die Bereiche folgen neuen Nummern nicht mehr von selbst.
+Der Reiter „Einteilung nach Nummern“ zeigt die Bereiche je Preisrichter, sobald Katalognummern vergeben sind. Hier lässt sich auch von Hand nach Nummern einteilen (ohne Einteilung nach Rassen, etwa in älteren Schauen): „Gleichmäßig verteilen“, Zeilen anpassen („von Nr.“, „bis Nr.“, „Bereich hinzufügen“, „✕“), oben rechts „Nummern-Einteilung speichern“. Ändern Sie die Bereiche hier, obwohl nach Rassen eingeteilt ist, fragt die Software nach: Die Einteilung nach Rassen gilt danach nicht mehr, und die Bereiche folgen neuen Nummern nicht mehr von selbst.
 
 Bereiche dürfen sich nicht überschneiden. Gerät ein Bereich an einen Preisrichter, der eine der Sparten darin nicht bewertet, lehnt die Software das Speichern ab und nennt Preisrichter, Sparte und Nummern. Oben steht, wie viele Tiere „ohne Preisrichter“ sind – das muss vor der Bewertung 0 sein. Die Tabelle der Preisrichter zeigt je Person „Bereich“, „Tiere“ und „bewertet“.
 
@@ -1580,7 +1582,7 @@ Weitere Arten: „Einlage“ und – nur Ausstellungsleitung, mit Zweck – „E
 
 ![Das Protokoll aller Änderungen.](bilder/protokoll.jpg)
 
-**Protokoll:** Sie öffnen es in den Einstellungen der Schau: Der Abschnitt „Protokoll“ (hinter „Käfige und Halle“, auch in der Abschnittsliste links) zeigt die letzten Einträge, „Protokoll öffnen“ das ganze Protokoll. Jede Änderung an Meldungen, Bewertungen, Preisen, Verkäufen und Geld steht dort mit Zeit, Person und – wo verlangt – Grund. Bei Bewertungen stehen auch die Texte der Bewertungskarte (Vorzüge, Wünsche, Mängel) darin, bei gestifteten Preisen der Stifter, und die automatische Bestätigung einer bezahlten Meldung ebenfalls. Einträge lassen sich nicht ändern oder löschen; eine Hash-Kette macht nachträgliche Eingriffe sichtbar. Die Datenbank lässt auch nicht zu, dass Protokoll oder Kassendaten im Ganzen geleert werden (außer beim Löschen einer Schau). Die Inhalte des Protokolls bleiben 10 Jahre ab Jahresende erhalten (siehe 3.6).
+**Protokoll:** Sie öffnen es in den Einstellungen der Schau: Der Reiter „Protokoll“ zeigt die letzten Einträge, „Protokoll öffnen“ das ganze Protokoll. Jede Änderung an Meldungen, Bewertungen, Preisen, Verkäufen und Geld steht dort mit Zeit, Person und – wo verlangt – Grund. Bei Bewertungen stehen auch die Texte der Bewertungskarte (Vorzüge, Wünsche, Mängel) darin, bei gestifteten Preisen der Stifter, und die automatische Bestätigung einer bezahlten Meldung ebenfalls. Einträge lassen sich nicht ändern oder löschen; eine Hash-Kette macht nachträgliche Eingriffe sichtbar. Die Datenbank lässt auch nicht zu, dass Protokoll oder Kassendaten im Ganzen geleert werden (außer beim Löschen einer Schau). Die Inhalte des Protokolls bleiben 10 Jahre ab Jahresende erhalten (siehe 3.6).
 
 - Suchfeld: z. B. Katalognummer oder Name.
 - „Ältere laden“ (unter der Tabelle) blättert zurück.
@@ -1676,7 +1678,7 @@ Eine Barspende steht sofort als Einnahme im Kassenbuch (Beleg S-…), und es gib
 
 ### 5.21 Meisterschaften
 
-Meisterschaften (Vereins-, Kreis- oder Landesmeister, Zuchtpreis, Leistungspreis) richten Sie in den Einstellungen der Schau im Abschnitt „Meisterschaften“ ein. Die Ergebnisse stehen unter „Meisterschaften“ (Gruppe „Schautage“). Sie rechnen sich aus Katalog und Bewertung jedes Mal neu – nach einer Korrektur der Bewertung stimmen sie sofort.
+Meisterschaften (Vereins-, Kreis- oder Landesmeister, Zuchtpreis, Leistungspreis) richten Sie in den Einstellungen der Schau im Reiter „Meisterschaften“ ein. Die Ergebnisse stehen unter „Meisterschaften“ (Gruppe „Schautage“). Sie rechnen sich aus Katalog und Bewertung jedes Mal neu – nach einer Korrektur der Bewertung stimmen sie sofort.
 
 **Einrichten:** Eine Vorlage wählen und „Meisterschaft hinzufügen“, dann anpassen und oben rechts „Meisterschaften speichern“. Die Vorlagen folgen den Bestimmungen von AAB und BDRG; gleichen Sie die Werte vor jeder Schau mit den aktuellen Bestimmungen Ihres Verbands ab.
 
@@ -1712,7 +1714,7 @@ Einstellbar sind unter anderem:
 - [ ] Katalognummern festgeschrieben; „Druck (Impressum)“ beim Katalog eingetragen.
 - [ ] Stiftungen eingetragen, jede mit gestifteter Preisart; bar übergebene Stiftungen mit „Bar erhalten“ gebucht.
 - [ ] Gedruckt: Bewertungskarten (falls auf Papier bewertet wird), Bewertungslisten je Preisrichter, B-Bögen und Ringkarten, Aussteller- und Tierliste für das Veterinäramt.
-- [ ] Textbausteine geprüft (Abschnitt „Textbausteine für die Bewertung“).
+- [ ] Textbausteine geprüft („Verein und Datenschutz“ → Reiter „Textbausteine“).
 - [ ] Anzeige beim Veterinäramt erledigt und eingetragen („Angezeigt am“).
 - [ ] **Betreuer der Technik informiert:** Er nimmt die öffentliche Internetadresse der Halle vorsorglich von den automatischen Sperren aus (der Befehl steht in der Betriebsdokumentation, Abschnitt „Schutz am Rand“ → „Schautag“) und entfernt die Ausnahme nach der Schau wieder. Hintergrund: In der Halle teilen sich alle Geräte eine Adresse.
 

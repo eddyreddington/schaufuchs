@@ -5,6 +5,17 @@ export const verein: OberflaecheTexte["verein"] = {
   seite: {
     titel: "Vereniging en privacy",
     ausstellerAuskunft: "Inzenders: inzage en verwijdering",
+    reiter: {
+      angaben: "Colofon en privacy",
+      steuer: "Belasting",
+      lastschrift: "Incasso",
+      abmeldung: "Automatisch afmelden",
+      druckvorlagen: "Afdruksjablonen",
+      postausgang: "Postvak uit",
+      textbausteine: "Tekstblokken",
+      auskunft: "Inzage",
+      speicherfristen: "Bewaartermijnen",
+    },
   },
   angaben: {
     gespeichert: "Gegevens opgeslagen.",

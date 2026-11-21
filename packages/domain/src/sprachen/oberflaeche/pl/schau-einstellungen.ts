@@ -18,6 +18,7 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
       kaefige: "Klatki i hala",
       druck: "Druk",
       protokoll: "Dziennik",
+      verwalten: "Zarządzanie",
     },
     nurAdmin: "Tylko administratorzy mogą zmieniać ustawienia.",
     abschnitteLabel: "Sekcje",

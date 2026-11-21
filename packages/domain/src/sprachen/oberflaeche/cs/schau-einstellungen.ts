@@ -18,6 +18,7 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
       kaefige: "Klece a hala",
       druck: "Tisk",
       protokoll: "Protokol",
+      verwalten: "Správa",
     },
     nurAdmin: "Nastavení mohou měnit jen administrátoři.",
     abschnitteLabel: "Oddíly",

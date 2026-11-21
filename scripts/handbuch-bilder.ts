@@ -223,7 +223,7 @@ try {
     await s.tippen(`document.querySelector("input[type=email]")`, "max@demo.test");
   });
   await bild("benutzer-seite", A, adminA, `/benutzer/${helferId}`);
-  await bild("zwei-faktor", A, adminA, `/benutzer/${adminId}`, async () => {
+  await bild("zwei-faktor", A, adminA, `/benutzer/${adminId}#zwei-faktor`, async () => {
     await s.tippen(`[...document.querySelectorAll("input[type=password]")].at(-1)`, DEMO.passwort);
     await s.klick("Einrichten");
     await s.ruhig(1000);
