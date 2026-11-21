@@ -1,7 +1,7 @@
 {
   "name": "@schau/web",
   "private": true,
-  "version": "1.15.0",
+  "version": "1.15.1",
   "license": "EUPL-1.2",
   "type": "module",
   "scripts": {

@@ -1,5 +1,17 @@
 # SchauFUCHS 1.15 – Versionshinweise
 
+## 1.15.1 (21.11.2026)
+
+Gegenüber 1.15.0:
+
+- Hallenplan: Scheitert das Nachladen des Plans (Netz oder Server kurz weg, auch beim Knopf „Speichern“), bleibt der
+  Editor mit dem zuletzt geladenen Stand und dem Verlauf für Rückgängig stehen. Darüber steht „Die Daten konnten nicht
+  geladen werden“ mit „Erneut versuchen“. Bisher ersetzte eine Fehlerseite den ganzen Editor.
+- Hallenplan: Wurde eine Änderung gespeichert, aber der Plan danach nicht nachgeladen, bleibt sie im Editor stehen
+  (mit Rückgängig), statt auf den Stand davor zu springen. Kam sie gar nicht an, zeigt der Editor wieder den letzten
+  gespeicherten Stand.
+- `sudo schaufuchs update` sichert vorher und holt 1.15.1. An der Datenbank ändert sich nichts.
+
 ## 1.15.0 (21.11.2026)
 
 Gegenüber 1.14.0 ist neu:
