@@ -1,5 +1,13 @@
 # SchauFUCHS 1.21 – Versionshinweise
 
+## 1.21.2 (22.11.2026)
+
+- **3D-Rundgang ohne Käfige und Decke:** Der Rundgang sucht seinen Weg nur über freie Fläche, mit Abstand zu Käfigen,
+  Volieren, Möbeln, Sperrflächen und Wänden, und bleibt immer in Augenhöhe – er hebt nicht mehr über die Reihen (das
+  wirkte mit hoher Decke wie ein Sprung an die Decke). Gänge ohne freien Weg lässt er aus, Sackgassen geht er zurück;
+  der Blick dreht an Ecken langsam.
+- **Gehen im Gang:** Pfeiltasten und Steuerkreuz gleiten an Käfigen und Wänden entlang statt hindurch.
+
 ## 1.21.1 (22.11.2026)
 
 - **Katalog in einer Schrift:** Jeder Katalog steht jetzt in genau einer Schriftfamilie – der unter „Katalog gestalten“
