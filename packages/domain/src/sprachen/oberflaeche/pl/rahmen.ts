@@ -111,6 +111,7 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     wirdGespeichert: "Zapisywanie…",
     gespeichert: "Zapisano",
     nichtGespeichert: "Nie zapisano",
+    keineVerbindung: "Brak połączenia – ponowne wysyłanie",
   },
   alter: { jung: "młode", alt: "stare" },
   fehler: {

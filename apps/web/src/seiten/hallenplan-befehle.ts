@@ -27,7 +27,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
   const t = useOberflaeche();
   const tb = t.halleWerkzeuge.befehle;
   const sprache = useSprache();
-  const { entwurfRef, aendern, kette, offen, festUnterwegs, neuUnterwegs, verlauf, verlaufSetzen, festMachen, festschreiben, neuSetzen, neuSetzenMit } = e;
+  const { entwurfRef, aendern, kette, offen, festUnterwegs, neuUnterwegs, verlauf, verlaufSetzen, festMachen, neuSetzen, neuSetzenMit } = e;
   /**
    * Einen Schritt des Verlaufs anwenden. Ändert er im festen Plan die Einstellungen der Halle (Maße, Gänge, Reihen,
    * Grundplatten), gilt dasselbe wie beim Ändern von Hand: Rückfrage „Plan neu setzen?“ und danach neu setzen.
@@ -239,7 +239,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     const fest = utils.katalog.hallenplan.getData({ schauId })?.plan?.fest ?? plan.fest;
     if (!fest) {
       festUnterwegs.current = true;
-      kette.current = kette.current.then(() => festschreiben.mutateAsync({ schauId, nurWennLose: true })).catch(() => {});
+      kette.current = kette.current.then(() => festMachen({ ohnePlattenStand: true })).catch(() => {});
       return;
     }
     if (

@@ -116,6 +116,7 @@ export const rahmen = {
     wirdGespeichert: "Wird gespeichert …",
     gespeichert: "Gespeichert",
     nichtGespeichert: "Nicht gespeichert",
+    keineVerbindung: "Keine Verbindung – wird erneut gesendet",
   },
   /** lib.ts: Alter eines Tiers (klein, im Satz). */
   alter: { jung: "jung", alt: "alt" },

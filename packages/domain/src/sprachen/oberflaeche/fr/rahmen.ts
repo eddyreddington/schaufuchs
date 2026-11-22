@@ -104,6 +104,7 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     wirdGespeichert: "Enregistrement…",
     gespeichert: "Enregistré",
     nichtGespeichert: "Non enregistré",
+    keineVerbindung: "Pas de connexion – nouvel envoi en cours",
   },
   alter: { jung: "jeune", alt: "adulte" },
   fehler: {

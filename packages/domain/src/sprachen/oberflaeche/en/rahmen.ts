@@ -104,6 +104,7 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     wirdGespeichert: "Saving…",
     gespeichert: "Saved",
     nichtGespeichert: "Not saved",
+    keineVerbindung: "No connection – resending",
   },
   alter: { jung: "young", alt: "old" },
   fehler: {

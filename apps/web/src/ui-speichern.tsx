@@ -55,8 +55,9 @@ export function Speicherleiste({ sichtbar, onVerwerfen, onSpeichern, laedt, text
   );
 }
 
-export type SpeicherStand = "speichert" | "gespeichert" | "fehler";
-const SPEICHER_FARBE: Record<SpeicherStand, string> = { speichert: "text-grau", gespeichert: "text-stall", fehler: "text-kamm" };
+/** `verbindung`: keine Antwort vom Server, die Speicherung wird von selbst erneut gesendet (Hallenplan). */
+export type SpeicherStand = "speichert" | "gespeichert" | "fehler" | "verbindung";
+const SPEICHER_FARBE: Record<SpeicherStand, string> = { speichert: "text-grau", gespeichert: "text-stall", fehler: "text-kamm", verbindung: "text-stroh-dunkel" };
 
 /**
  * Seiten, die jede Änderung sofort speichern (Hallenplan): oben rechts in der Kopfleiste steht statt „Speichern“, ob
@@ -66,11 +67,11 @@ export function SpeicherStatus({ stand, eingebettet }: { stand: SpeicherStand | 
   const platz = useContext(SpeicherPlatz);
   const t = useOberflaeche().rahmen.speichern;
   if (!stand) return null;
-  const text = { speichert: t.wirdGespeichert, gespeichert: t.gespeichert, fehler: t.nichtGespeichert }[stand];
+  const text = { speichert: t.wirdGespeichert, gespeichert: t.gespeichert, fehler: t.nichtGespeichert, verbindung: t.keineVerbindung }[stand];
   const farbe = SPEICHER_FARBE[stand];
   const inhalt = (
     <span role="status" aria-live="polite" className={cx("flex items-center gap-2 text-[0.93rem] font-semibold", farbe)}>
-      <span aria-hidden className={cx("size-2 rounded-full bg-current", stand === "speichert" && "animate-pulse")} />
+      <span aria-hidden className={cx("size-2 rounded-full bg-current", (stand === "speichert" || stand === "verbindung") && "animate-pulse")} />
       {text}
     </span>
   );

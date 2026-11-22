@@ -107,6 +107,7 @@ export const rahmen: OberflaecheTexte["rahmen"] = {
     wirdGespeichert: "Ukládá se…",
     gespeichert: "Uloženo",
     nichtGespeichert: "Neuloženo",
+    keineVerbindung: "Bez připojení – odesílá se znovu",
   },
   alter: { jung: "mladé", alt: "staré" },
   fehler: {

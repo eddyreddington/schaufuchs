@@ -19,7 +19,7 @@ import { Eigenschaften, HalleEigenschaften, MitEinheit } from "./hallenplan-eige
 import { HallenEntwuerfe } from "./hallenplan-entwuerfe";
 import { useHallenEntwurf } from "./hallenplan-entwurf";
 import { hallenplanAnsicht } from "./hallenplan-laden";
-import { speicherBericht } from "./hallenplan-speichern";
+import { speicherAnzeige, speicherBericht } from "./hallenplan-speichern";
 import { type Daten, meter, type Versetzen, vollstaendig, type Ziel, zuCm, zweisprachig } from "./hallenplan-geometrie";
 import { AutomatikSchalter, KaefigInfo, SpartenReihen } from "./hallenplan-teile";
 import { Aufbauliste, PlanLegende, PlatzUebersicht } from "./hallenplan-uebersicht";
@@ -186,7 +186,7 @@ function Plan({
     return () => window.removeEventListener("keydown", esc);
   }, [voll, infoId, hatAuswahl, zeichnen, vorschlaegeOffen, versetzen]);
   const e = useHallenEntwurf({ schauId, halle, plan, auswahlAufheben: () => setAuswahl([]) });
-  const { entwurf, offen, offenZahl, kette, verlauf, aendern, setzen, festschreiben, neuSetzen } = e;
+  const { entwurf, offen, offenZahl, kette, verlauf, aendern, neuSetzen } = e;
   /**
    * 3D-Ansicht in einem neuen Tab, mit dem gespeicherten Stand: Ist noch etwas auf dem Weg, geht der Tab gleich auf (sonst
    * blockt ihn der Browser) und lädt die 3D-Seite erst, wenn alles gespeichert ist.
@@ -300,10 +300,11 @@ function Plan({
   const festAm = plan.fest ? new Date(plan.fest.am).toLocaleString(LOCALE[sprache], { dateStyle: "short", timeStyle: "short" }) : null;
   // Der Editor speichert jede Änderung sofort – statt „Speichern“ steht oben rechts, ob alles gespeichert ist.
   // Alle Wege, auf denen der Editor speichert; maßgeblich für „Nicht gespeichert“ ist der zuletzt abgeschickte.
-  const speicherwege = [setzen, festschreiben, nachPlan, neuSetzen, versetzenMut, wandreihe];
+  // `e.speicherung` steht für halleSetzen und das Festschreiben (beide mit Wiederholen ohne Verbindung).
+  const speicherwege = [e.speicherung, nachPlan, neuSetzen, versetzenMut, wandreihe];
   const zuletzt = speicherwege.reduce<(typeof speicherwege)[number] | null>((a, m) => (m.submittedAt > (a?.submittedAt ?? 0) ? m : a), null);
   const speichertGerade = offenZahl > 0 || speicherwege.some((m) => m.isPending);
-  const speicherStand: SpeicherStand | null = !bearbeiten ? null : speichertGerade ? "speichert" : zuletzt?.isError ? "fehler" : "gespeichert";
+  const speicherStand: SpeicherStand | null = speicherAnzeige({ bearbeiten, verbindung: e.speicherung.verbindung, speichertGerade, letzteFehlgeschlagen: !!zuletzt?.isError });
   // Stand der letzten Speicherung beim jüngsten Zeichnen – `speichernPruefen` liest ihn erst nach dem Warten.
   const zuletztRef = useRef(zuletzt);
   zuletztRef.current = zuletzt;

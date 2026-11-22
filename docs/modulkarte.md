@@ -816,7 +816,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichter`
 
-### rahmen.ts (141 Z.)
+### rahmen.ts (142 Z.)
 
 - `rahmen`
 
@@ -1010,7 +1010,7 @@ Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mi
 
 - `preisrichter`
 
-### rahmen.ts (154 Z.)
+### rahmen.ts (155 Z.)
 
 - `rahmen` – Texte der Oberfläche: rahmen (Entscheidung 022) – App-Rahmen mit Seitenmenü und Benutzermenü, Anmeldung, Einladung, Hilfe-Rahmen, Fehlerseite und d …
 
@@ -1205,7 +1205,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichter`
 
-### rahmen.ts (138 Z.)
+### rahmen.ts (139 Z.)
 
 - `rahmen`
 
@@ -1390,7 +1390,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichter`
 
-### rahmen.ts (138 Z.)
+### rahmen.ts (139 Z.)
 
 - `rahmen`
 
@@ -1579,7 +1579,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichter`
 
-### rahmen.ts (138 Z.)
+### rahmen.ts (139 Z.)
 
 - `rahmen`
 
@@ -1765,7 +1765,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichter`
 
-### rahmen.ts (145 Z.)
+### rahmen.ts (146 Z.)
 
 - `rahmen`
 
@@ -2553,7 +2553,7 @@ Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die
 ### hallenplan-entwuerfe.tsx (166 Z.)
 Prozeduren: hallenentwurf.entscheiden, hallenentwurf.laden, hallenentwurf.liste, hallenentwurf.loeschen, hallenentwurf.speichern, hallenentwurf.umbenennen
 
-### hallenplan-entwurf.ts (163 Z.)
+### hallenplan-entwurf.ts (232 Z.)
 Entwurf des Hallenplan-Editors und alles, was ihn speichert: jede Änderung wirkt sofort im Entwurf und geht der Reihe nach an den Server (`kette`), …
 Prozeduren: katalog.halleSetzen, katalog.hallenplan, katalog.planFestschreiben, katalog.planNeuSetzen
 
@@ -2570,10 +2570,10 @@ Was die Seite „Hallenplan“ beim Laden zeigt (Seite hallenplan.tsx).
 
 ### hallenplan-nummerfolge.tsx (73 Z.)
 
-### hallenplan-speichern.test.ts (11 Z.)
+### hallenplan-speichern.test.ts (23 Z.)
 
-### hallenplan-speichern.ts (12 Z.)
-Knopf „Speichern“ im Hallenplan (Seite hallenplan.tsx): was er nach der Prüfung meldet.
+### hallenplan-speichern.ts (24 Z.)
+Knopf „Speichern“ und Speicheranzeige im Hallenplan (Seite hallenplan.tsx).
 
 ### hallenplan-teile.tsx (265 Z.)
 Kleine Teile des Hallenplans: Muster und Legende, Tiere ohne Platz, Sparten in den Reihen, Angaben zu einem Käfig, Schalter „Automatisch planen“.
@@ -2592,7 +2592,12 @@ Bausteine der Werkzeugleiste im Hallenplan-Editor: Symbole, Werkzeugknöpfe mit 
 ### hallenplan-werkzeugleiste.tsx (212 Z.)
 Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen, Zoom, Menü „Plan“).
 
-### hallenplan.tsx (561 Z.) – `/schau/:schauId/hallenplan`
+### hallenplan-wiederholen.test.ts (191 Z.)
+
+### hallenplan-wiederholen.ts (76 Z.)
+Automatisches Wiederholen beim Speichern im Hallenplan-Editor (hallenplan-entwurf.ts): rein, mit eingesetztem Senden und Warten.
+
+### hallenplan.tsx (562 Z.) – `/schau/:schauId/hallenplan`
 Seite „Hallenplan“: neue Halle anlegen und der Editor (`Plan`) mit Speichern, Rückgängig, Auswahl und Tastatur.
 Prozeduren: katalog.halleSetzen, katalog.hallenplan
 
@@ -2874,7 +2879,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `ui-meldungen.tsx` (43 Z.) – Rückmeldungen als Toast unten rechts (useMeldung). · MeldungenAnbieter, useMeldung
 - `ui-reiter.tsx` (130 Z.) · useReiter, ReiterLeiste, ReiterTafel, reiterKnopf, reiterTafel
 - `ui-seite.tsx` (235 Z.) – Bausteine einer Seite: Hinweise, Marken, Seitenkopf, Abschnitte, Tabellenrahmen, Suche, Kennzahlen, Lade- und Leerzustand. · Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, Kennzahlen, Leer, Laden, FehlerAnzeige
-- `ui-speichern.tsx` (79 Z.) – Speichern in der Kopfleiste: Speicherleiste bei ungespeicherten Änderungen, Speicherstatus bei sofortigem Speichern. · SpeicherPlatz, Speicherleiste, SpeicherStatus
+- `ui-speichern.tsx` (80 Z.) – Speichern in der Kopfleiste: Speicherleiste bei ungespeicherten Änderungen, Speicherstatus bei sofortigem Speichern. · SpeicherPlatz, Speicherleiste, SpeicherStatus
 - `ui-ungespeichert.tsx` (65 Z.) – Warnung vor dem Verlassen mit ungespeicherten Eingaben (Formulare anmelden, ein Wächter im Wurzel-Layout). · useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter
 - `ui.tsx` (34 Z.) – Einstieg für alle UI-Bausteine – Seiten importieren von hier.
 
