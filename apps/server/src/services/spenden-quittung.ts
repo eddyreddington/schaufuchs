@@ -2,7 +2,7 @@
  * Spendenquittung einer Spende erzeugen (für das Belegarchiv, services/kassenbuch.ts): Briefkopf und Farbe aus der
  * Briefvorlage des Vereins, Hinweis auf die Zuwendungsbestätigung nur, wenn der Verein sie ausstellen darf.
  */
-import { bescheidSperre, SPENDE_WEG_LABEL } from "@schau/domain";
+import { bescheidSperre, druckFormateLesen, SPENDE_WEG_LABEL } from "@schau/domain";
 import { eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { schau } from "../db/schema";
@@ -30,5 +30,5 @@ export async function spendenquittung(schauId: number, spendeId: number, storno:
     zweck: z.spende.zweck,
     sache: z.spende.sache,
     bestaetigungMoeglich: !z.spende.gegenleistung && bescheidSperre(steuer, heuteDe()) == null,
-  });
+  }, druckFormateLesen(s.druckFormate).kassenbeleg);
 }

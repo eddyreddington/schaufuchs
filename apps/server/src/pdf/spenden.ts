@@ -8,6 +8,7 @@ import {
   ANLAGE_SPALTEN,
   ANLAGE_TITEL,
   AUSSTELLER_TITEL,
+  type BelegFormat,
   bescheidSatz,
   betragFelder,
   betragInWorten,
@@ -29,6 +30,7 @@ import {
   verwendungSatz,
   ZUWENDENDER_TITEL,
 } from "@schau/domain";
+import { belegSeite, schnittlinie } from "./beleg-blatt";
 import { angaben, briefkopf, type Design, type Doc, erzeugePdf, GRAU, HAARLINIE, logoBild, MM, SANS, SANS_FETT, SANS_KURSIV, SERIF, TINTE, unterschrift } from "./basis";
 
 export interface BestaetigungsSpende {
@@ -210,10 +212,11 @@ export interface QuittungDaten {
 }
 
 /**
- * Spendenquittung (A5 quer): Empfang der Spende für Spender und Kasse. Ausdrücklich keine Zuwendungsbestätigung –
+ * Spendenquittung (A5 quer, Formatvorgabe A4: oben auf A4 mit Schnittlinie, Entscheidung 029): Empfang der Spende für Spender und Kasse. Ausdrücklich keine Zuwendungsbestätigung –
  * die stellt der Verein nach amtlichem Muster gesondert aus.
  */
-export function spendenquittungPdf(d: Design, q: QuittungDaten) {
+export function spendenquittungPdf(d: Design, q: QuittungDaten, format: BelegFormat = "A5") {
+  const seite = belegSeite(format, 12 * MM);
   const titel = q.storno ? `Storno zu Spende S-${q.nummer}` : q.art === "sache" ? "Empfangsbestätigung Sachspende" : "Spendenquittung";
   return erzeugePdf(
     titel,
@@ -251,7 +254,8 @@ export function spendenquittungPdf(d: Design, q: QuittungDaten) {
       const uy = doc.page.height - doc.page.margins.bottom - 8 * MM;
       unterschrift(doc, x, uy, sb, "Unterschrift Kasse");
       unterschrift(doc, x + sb + 5 * MM, uy, sb, q.storno ? "Unterschrift Zeuge" : "Unterschrift Spender");
+      schnittlinie(doc, seite.schnittBei);
     },
-    { size: "A5", layout: "landscape", margin: 12 * MM },
+    { size: seite.size, margins: seite.margins },
   );
 }

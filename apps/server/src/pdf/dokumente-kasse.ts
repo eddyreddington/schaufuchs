@@ -1,5 +1,5 @@
 /** Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. */
-import { betragInWorten, formatEuro, ZAHLART_LABEL } from "@schau/domain";
+import { betragInWorten, druckFormateLesen, formatEuro, ZAHLART_LABEL } from "@schau/domain";
 import { and, eq } from "drizzle-orm";
 import { config } from "../config";
 import { db } from "../db/client";
@@ -27,6 +27,7 @@ import {
   TINTE,
   unterschrift,
 } from "./basis";
+import { belegSeite, schnittlinie } from "./beleg-blatt";
 import { belegKopf, briefDesign, ladeBriefVorlage } from "./brief";
 import { A4_RAENDER, breite, fusstext, klasse, kopfzeile, ladeDesign, nr, type Schau, tier, verein } from "./dokumente-gemeinsam";
 
@@ -41,14 +42,15 @@ const ZAHLART_KAUF: Record<string, string> = {
 // ── Kaufbeleg ────────────────────────────────────────────────────────────
 
 /**
- * Kaufbeleg A5 quer: links der Beleg für den Käufer, rechts ein Ausgabeschein zum Abtrennen.
- * Das Tier wird nur gegen den Ausgabeschein herausgegeben.
+ * Kaufbeleg A5 quer (Formatvorgabe A4: oben auf A4 mit Schnittlinie, Entscheidung 029): links der Beleg für den
+ * Käufer, rechts ein Ausgabeschein zum Abtrennen. Das Tier wird nur gegen den Ausgabeschein herausgegeben.
  */
 export async function kaufbelegPdf(s: Schau, verkaufId: number) {
   const [[v], d] = await Promise.all([db.select().from(verkauf).where(eq(verkauf.id, verkaufId)), ladeDesign(s)]);
   const e = v ? (await ladeEintraege(s.id)).find((x) => x.id === v.katalogeintragId) : undefined;
   // Registriernummern von Herkunfts- und Bestimmungsbetrieb gehören auf den Beleg (Tierseuchenrecht).
   const [verkaeufer] = e ? await db.select({ registriernummer: aussteller.registriernummer }).from(aussteller).where(eq(aussteller.id, e.ausstellerId)) : [];
+  const seite = belegSeite(druckFormateLesen(s.druckFormate).kaufbeleg, 0);
   return erzeugePdf(
     v ? `Kaufbeleg ${v.belegNr}` : "Kaufbeleg",
     (doc) => {
@@ -57,7 +59,8 @@ export async function kaufbelegPdf(s: Schau, verkaufId: number) {
         return;
       }
       const W = doc.page.width;
-      const H = doc.page.height;
+      // Höhe des Belegs (auf A4 nur die obere Hälfte bis zur Schnittlinie).
+      const H = seite.hoehe;
       const m = 9 * MM;
       const abschnitt = 58 * MM; // rechter Ausgabeschein
       const lb = W - abschnitt - 2 * m;
@@ -168,8 +171,9 @@ export async function kaufbelegPdf(s: Schau, verkaufId: number) {
           { width: ab },
         );
       unterschrift(doc, ax, H - m - 4 * MM, ab, "Tier ausgegeben – Datum, Unterschrift");
+      schnittlinie(doc, seite.schnittBei);
     },
-    { size: "A5", layout: "landscape", margin: 0 },
+    { size: seite.size, margins: seite.margins },
   );
 }
 
@@ -275,7 +279,7 @@ export async function kassenberichtPdf(s: Schau, datum?: string) {
 
 /**
  * Einzahlungsquittung für bares Meldegeld (auch Erstattung/Storno) bzw. Eigenbeleg für Wechselgeld, Einlage und
- * Entnahme (A5 quer). Wird beim Buchen archiviert; null, wenn die Buchung nicht zur Schau gehört.
+ * Entnahme (A5 quer, Formatvorgabe A4: oben auf A4). Wird beim Buchen archiviert; null, wenn die Buchung nicht zur Schau gehört.
  */
 export async function kassenbelegPdf(s: Schau, art: "einzahlung" | "eigenbeleg", nummer: number) {
   const [dVerein, brief] = await Promise.all([ladeDesign(s), ladeBriefVorlage(s.organisationId)]);
@@ -320,6 +324,7 @@ export async function kassenbelegPdf(s: Schau, art: "einzahlung" | "eigenbeleg",
     ];
     text = k.art === "entnahme" ? "Der Betrag wurde der Barkasse entnommen." : "Der Betrag wurde in die Barkasse eingelegt.";
   }
+  const seite = belegSeite(druckFormateLesen(s.druckFormate).kassenbeleg, 12 * MM);
   return erzeugePdf(
     titel,
     (doc) => {
@@ -336,9 +341,12 @@ export async function kassenbelegPdf(s: Schau, art: "einzahlung" | "eigenbeleg",
       y += 24 * MM;
       doc.font(SANS).fontSize(9.5).fillColor(TINTE).text(text, x, y, { width: w });
       const sb = (w - 5 * MM) / 2;
-      unterschrift(doc, x, doc.page.height - doc.page.margins.bottom - 4 * MM, sb, "Unterschrift Kasse");
-      unterschrift(doc, x + sb + 5 * MM, doc.page.height - doc.page.margins.bottom - 4 * MM, sb, art === "einzahlung" ? "Unterschrift Aussteller" : "Unterschrift Zeuge");
+      // Über dem unteren Rand (wie bei der Spendenquittung): sonst begann pdfkit für jede Beschriftung eine neue Seite.
+      const uy = doc.page.height - doc.page.margins.bottom - 8 * MM;
+      unterschrift(doc, x, uy, sb, "Unterschrift Kasse");
+      unterschrift(doc, x + sb + 5 * MM, uy, sb, art === "einzahlung" ? "Unterschrift Aussteller" : "Unterschrift Zeuge");
+      schnittlinie(doc, seite.schnittBei);
     },
-    { size: "A5", layout: "landscape", margin: 12 * MM },
+    { size: seite.size, margins: seite.margins },
   );
 }

@@ -12,6 +12,7 @@ import { ladeBriefVorlage } from "../pdf/brief";
 import { protokolliere } from "../services/protokoll";
 import { SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger } from "../services/serienbrief";
 import { adminProcedure, dbId, fehler, ladeSchau, router } from "../trpc";
+import { druckFormateProzeduren } from "./druck-formate";
 
 const name = z.string().trim().min(1, "Name fehlt.").max(80);
 
@@ -26,6 +27,9 @@ async function ladeVorlage(organisationId: number, id: number) {
 }
 
 export const druckvorlageRouter = router({
+  // Formatvorgaben der übrigen Drucke (Entscheidung 029): druckvorlage.formate, druckvorlage.formateSetzen.
+  ...druckFormateProzeduren,
+
   /** Alle Kartenvorlagen des Vereins: die allgemeinen und die für einzelne Schauen abgewandelten. */
   liste: adminProcedure.query(async ({ ctx }) => {
     const zeilen = await db

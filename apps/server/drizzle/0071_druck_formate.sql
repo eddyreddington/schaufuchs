@@ -1,0 +1,1 @@
+ALTER TABLE "schau" ADD COLUMN "druck_formate" jsonb DEFAULT '{}'::jsonb NOT NULL;

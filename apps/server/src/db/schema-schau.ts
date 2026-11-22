@@ -1,5 +1,5 @@
 /** Schau mit ihren Regeln: Schau, Gebühren, Preisarten. Über schema.ts exportiert. */
-import { UNTERSUCHUNG_ARTEN, type Aufsteller, type FesterPlan, type Halle, type KaefigMasse, type KaefigRegel, type KaefigTyp, type MeisterschaftRegel, type NotenStufe, type SortierSchritt, type Teilschau } from "@schau/domain";
+import { UNTERSUCHUNG_ARTEN, type Aufsteller, type DruckFormate, type FesterPlan, type Halle, type KaefigMasse, type KaefigRegel, type KaefigTyp, type MeisterschaftRegel, type NotenStufe, type SortierSchritt, type Teilschau } from "@schau/domain";
 import { boolean, date, integer, jsonb, pgTable, serial, text, uniqueIndex, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { gebuehrArtEnum, kontingentBasisEnum, phaseEnum, preisQuelleEnum, rundungEnum } from "./schema-aufzaehlungen";
 import { druckvorlage } from "./schema-katalog";
@@ -110,6 +110,11 @@ export const schau = pgTable("schau", {
   aufsteller: jsonb("aufsteller").$type<Aufsteller | null>(),
   /** Druckvorlage der Bewertungskarten; null = Vorgabe (A6, vier je A4). */
   vorlageBewertungskarteId: integer("vorlage_bewertungskarte_id").references((): AnyPgColumn => druckvorlage.id, { onDelete: "set null" }),
+  /**
+   * Formatvorgaben weiterer Drucke (Entscheidung 029): Bewertungsliste, Hallenplan, Kaufbeleg, Kassenbelege. Immer über
+   * druckFormateLesen() lesen; leer oder fehlend = Vorgabe (wie bisher).
+   */
+  druckFormate: jsonb("druck_formate").$type<Partial<DruckFormate>>().notNull().default({}),
   createdAt: created(),
 });
 

@@ -110,3 +110,4 @@ import "./tests/74-zusatzpreise-je-pr";
 import "./tests/75-halle-aussehen";
 import "./tests/76-verpflichtung-zusage";
 import "./tests/78-tueren";
+import "./tests/80-druck-formate";

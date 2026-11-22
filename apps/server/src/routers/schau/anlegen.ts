@@ -1,12 +1,12 @@
 /**
  * Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
  */
-import { type Aufsteller, EingabeFehler, halleOhneFestenPlan } from "@schau/domain";
+import { type Aufsteller, druckFormateLesen, EingabeFehler, halleOhneFestenPlan } from "@schau/domain";
 import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { z, ZodError } from "zod";
 import { db } from "../../db/client";
-import { aussteller, bild, gebuehr, katalogBeitrag, katalogeintrag, katalogGestaltung, postausgang, preisart, preisrichter, schau, stammdatenVersion, verkauf } from "../../db/schema";
+import { aussteller, bild, druckvorlage, gebuehr, katalogBeitrag, katalogeintrag, katalogGestaltung, postausgang, preisart, preisrichter, schau, stammdatenVersion, verkauf } from "../../db/schema";
 import { sperreKasse } from "../../services/kasse";
 import { protokolliere } from "../../services/protokoll";
 import { kennzeichneAlsTestschau, sperreTestschauExklusiv, testschauVorschau } from "../../services/testschau";
@@ -53,7 +53,8 @@ export const schauAnlegen = {
   /**
    * Neue Schau anlegen – leer mit Startwerten oder aus einer früheren Schau des Vereins als Vorlage. Mit Vorlage kommt alles
    * mit außer Meldungen und Geld: Einstellungen (ohne Termine und Bearbeitungsstand), Gebühren, Preisarten, Preisrichter
-   * (ohne PIN, Zusage wieder offen), Katalog-Gestaltung, Beiträge, Bilder, Käfigregeln, Käfigmaße und Halle. Nicht übernommen: Meldungen, Tiere,
+   * (ohne PIN, Zusage wieder offen), Katalog-Gestaltung, Beiträge, Bilder, Käfigregeln, Käfigmaße, Halle, Druckformate und
+   * Kartenvorlage. Nicht übernommen: Meldungen, Tiere,
    * Stiftungen, Kasse, Belege, Auszahlungen, Gesundheitsjournal und die Preisrichter-Einteilung nach Katalognummern.
    */
   anlegen: adminProcedure
@@ -124,6 +125,8 @@ export const schauAnlegen = {
               aufsteller: vorlage.aufsteller,
               // Ohne verschobene Grundplatten und entfernte leere Plätze: die gehören zum festen Plan dieser Schau.
               halle: vorlage.halle ? halleOhneFestenPlan(vorlage.halle) : null,
+              // Formatvorgaben der Drucke (Entscheidung 029); die Kartenvorlage folgt unten.
+              druckFormate: druckFormateLesen(vorlage.druckFormate),
             }
           : { kaefigMasse: letzte?.kaefigMasse ?? {}, aufsteller: ohneSockelbild(letzte?.aufsteller ?? null), halle: letzte?.halle ? halleOhneFestenPlan(letzte.halle) : null };
         const [s] = await tx
@@ -146,6 +149,7 @@ export const schauAnlegen = {
             const neu = neueBildId.get(alt) ?? null;
             await tx.update(schau).set({ aufsteller: { ...vorlage.aufsteller!, verkleidung: { ...vorlage.aufsteller!.verkleidung!, bildId: neu } } }).where(eq(schau.id, s!.id));
           }
+          await uebernimmKartenvorlage(tx, vorlage, s!);
           // Testschau aus einer echten Vorlage: keine echten Preisrichter (Name, Kontakt) in Übungsdaten – die
           // Demodaten bringen erfundene mit.
           if (input.test && !vorlage.test) await tx.delete(preisrichter).where(eq(preisrichter.schauId, s!.id));
@@ -290,6 +294,25 @@ async function kopiereAusVorlage(tx: Tx, von: number, nach: number) {
   if (beitraege.length)
     await tx.insert(katalogBeitrag).values(beitraege.map(({ id: _, ...k }) => ({ ...k, schauId: nach, bildId: k.bildId != null ? (neueBildId.get(k.bildId) ?? null) : null })));
   return neueBildId;
+}
+
+/**
+ * Druckvorlage der Bewertungskarten aus der Vorlage: eine Vereinsvorlage gilt weiter; die für die alte Schau abgewandelte
+ * Fassung gehört zu ihr – die neue Schau bekommt davon eine eigene Kopie (wie „Für diese Schau anpassen“).
+ */
+async function uebernimmKartenvorlage(tx: Tx, vorlage: typeof schau.$inferSelect, neu: typeof schau.$inferSelect) {
+  if (vorlage.vorlageBewertungskarteId == null) return;
+  const [k] = await tx.select().from(druckvorlage).where(and(eq(druckvorlage.id, vorlage.vorlageBewertungskarteId), eq(druckvorlage.organisationId, vorlage.organisationId)));
+  if (!k) return;
+  let id = k.id;
+  if (k.schauId != null) {
+    const [kopie] = await tx
+      .insert(druckvorlage)
+      .values({ organisationId: k.organisationId, schauId: neu.id, art: k.art, name: `${neu.name}: ${k.name}`.slice(0, 80), daten: k.daten })
+      .returning({ id: druckvorlage.id });
+    id = kopie!.id;
+  }
+  await tx.update(schau).set({ vorlageBewertungskarteId: id }).where(eq(schau.id, neu.id));
 }
 
 /** Aufsteller der letzten Schau für eine neue ohne Vorlage: die Bilder kommen nicht mit, also auch kein Sockelbild. */

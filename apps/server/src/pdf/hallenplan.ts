@@ -1,9 +1,10 @@
 /**
- * Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist),
+ * Hallenplan als PDF: genau ein Blatt DIN A4 oder A3 (Formatvorgabe der Schau, Entscheidung 029) – der Plan füllt es
+ * (Querformat, wenn die Zeichnung breiter als hoch ist),
  * darüber ein knapper Kopf (Schau, Halle, Stand), darunter eine kleine Legende. Große Hallen werden verkleinert, nie
  * abgeschnitten. Die Aufbauliste ist ein eigenes PDF.
  */
-import { istRechteckUmriss, tuerOeffnung, umrissVersetzt, umrissVon, reihenSchilder, frontDerReihe, kaefigKanten, type Blick, type Strecke, objektFront, blockPlatz, druckMassstab, etagenStreifen, etagenVon, istMoebel, kaefigName, moebelStuecke, nummernBereiche, planeHalle, richterFarbe, richterFolge, richterSchraffur, zeichnungDerHalle, type Hallenplan, type KaefigTyp, type PlanKaefig, type Rechteck } from "@schau/domain";
+import { druckFormateLesen, hallenplanBlatt, istRechteckUmriss, tuerOeffnung, umrissVersetzt, umrissVon, reihenSchilder, frontDerReihe, kaefigKanten, type Blick, type Strecke, objektFront, blockPlatz, druckMassstab, etagenStreifen, etagenVon, istMoebel, kaefigName, moebelStuecke, nummernBereiche, planeHalle, richterFarbe, richterFolge, richterSchraffur, zeichnungDerHalle, type Hallenplan, type KaefigTyp, type PlanKaefig, type Rechteck } from "@schau/domain";
 import type { schau } from "../db/schema";
 import { planTiere } from "../routers/katalog";
 import { erzeugePdf, GRAU, MM, SANS, SANS_FETT, SERIF_FETT, tabelle, TINTE, type Doc } from "./basis";
@@ -42,11 +43,12 @@ async function ladePlan(s: Schau) {
 const hatTiere = (plan: Hallenplan, id: number) =>
   plan.reihen.some((r) => r.kaefige.some((k) => k.preisrichterId === id)) || plan.volieren.some((k) => k.preisrichterId === id) || plan.objekte.some((o) => o.tier?.preisrichterId === id || o.kaefige?.some((k) => k.preisrichterId === id));
 
-/** Hallenplan auf einem Blatt A4. */
+/** Hallenplan auf einem Blatt A4 oder A3. */
 export async function hallenplanPdf(s: Schau): Promise<Buffer> {
   const daten = await ladePlan(s);
   const z = zeichnungDerHalle(daten?.halle ?? { breite: 1, laenge: 1 });
   const quer = z.W >= z.H;
+  const seite = hallenplanBlatt(druckFormateLesen(s.druckFormate).hallenplan, quer);
   return erzeugePdf(
     `Hallenplan ${s.name}`,
     (doc) => {
@@ -85,7 +87,7 @@ export async function hallenplanPdf(s: Schau): Promise<Buffer> {
       }, { W: z.W * m, H: z.H * m, ox, oy, m });
       legende(doc, daten, x0, b, unten, false);
     },
-    { layout: quer ? "landscape" : "portrait", margin: 10 * MM },
+    { size: [seite.breite * MM, seite.hoehe * MM], margin: 10 * MM },
   );
 }
 

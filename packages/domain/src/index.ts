@@ -49,6 +49,7 @@ export * from "./hallenplan-versetzen";
 export * from "./ruecksprung";
 export * from "./abmeldung";
 export * from "./druckvorlage";
+export * from "./druck-formate";
 export * from "./briefvorlage";
 export * from "./spenden";
 export * from "./zuwendungsbestaetigung";

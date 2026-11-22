@@ -90,6 +90,26 @@ Tests: `datum.test.ts`
 - `datumKurz()` – TT.MM.JJJJ aus JJJJ-MM-TT (für Meldungen und Belege).
 - `heuteBerlin()` – Heutiger Kalendertag in deutscher Zeit.
 
+### druck-formate.ts (150 Z.)
+Formatvorgaben der Drucke je Schau (Entscheidung 029): welche Drucksachen es gibt, auf welchem Papier sie kommen, welche sich umstellen lassen und …
+Tests: `druck-formate.test.ts`
+
+- `PAPIER_MM` – Papierformate in Millimetern (hochkant).
+- `Blatt` (Typ) – Seitengröße in mm.
+- `blatt()` – Ein Papierformat hochkant oder quer.
+- `DRUCK_FORMAT_WAHL` – Formate, die sich je Schau wählen lassen; das erste ist die Vorgabe (so druckte SchauFUCHS bisher).
+- `DRUCK_FORMAT_ARTEN`
+- `DRUCK_FORMATE_VORGABE`
+- `druckFormateLesen()` – Gespeicherten Wert begrenzen: Unbekanntes fällt weg, ein ungültiger Wert gilt als Vorgabe – je Drucksache für sich.
+- `druckFormateAbweichung()` – Was von der Vorgabe abweicht (leer = alles wie bisher) – für Protokoll und Anzeige.
+- `BelegBlatt` (Typ) – Beleg (Kaufbeleg, Kassenbeleg, Spendenquittung): der Beleg ist immer A5 quer, das Papier A5 quer oder A4 hoch.
+- `belegBlatt()`
+- `bewertungslisteBlatt()` – Bewertungsliste: Seite und wie viele Listen nebeneinander.
+- `hallenplanBlatt()` – Hallenplan: ein Blatt, quer, wenn die Zeichnung breiter als hoch ist.
+- `DruckEinstellung` (Typ) – Wo das Format einer Drucksache eingestellt wird.
+- `DRUCKSACHEN` – Alle Drucksachen einer Schau in der Folge des Ablaufs (Meldung → Bewertung → Kasse → Halle).
+- Typen: `Papier`, `DruckFormatArt`, `DruckFormate`, `BelegFormat`, `Drucksache`, `DrucksacheId`
+
 ### druckvorlage.ts (263 Z.)
 Tests: `druckvorlage.test.ts`
 
@@ -572,7 +592,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (65 Z.)
+### index.ts (66 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -2221,7 +2241,13 @@ Betrieb: Zustand der Installation für die Oberfläche (Lesemodus, Entscheidung 
 - `richter.preisEntfernen` mutation · richter
 - `richter.obmannBestaetigen` mutation · richter
 
-### routers/druckvorlage.ts (141 Z.) → `druckvorlage`
+### routers/druck-formate.ts (56 Z.) → `druckvorlage`
+Formatvorgaben der Drucke einer Schau (Entscheidung 029), Teil von `druckvorlage`: Übersicht für den Reiter „Druck“ (die gewählten Formate, dazu Ka …
+
+- `druckvorlage.formate` query · angemeldet – Formate aller Drucke der Schau: eigene Vorgaben, Katalogformat (Katalog-Gestaltung) und Kartenvorlage (011).
+- `druckvorlage.formateSetzen` mutation · admin
+
+### routers/druckvorlage.ts (145 Z.) → `druckvorlage`
 Druckvorlagen (vorerst Bewertungskarte): Vorlagen des Vereins anlegen, ändern, löschen; je Schau eine auswählen oder für die Schau abwandeln (eigen …
 
 - `druckvorlage.liste` query · admin – Alle Kartenvorlagen des Vereins: die allgemeinen und die für einzelne Schauen abgewandelten.
@@ -2454,7 +2480,7 @@ Rassebilder: ansehen (alle Benutzer) und pflegen (Ausstellungsleitung).
 - `rassebild.angabenSetzen` mutation · admin – Urheber, Lizenz, Quelle und „geprüft“ ändern.
 - `rassebild.loeschen` mutation · admin
 
-### routers/schau/anlegen.ts (298 Z.) → `schau`
+### routers/schau/anlegen.ts (321 Z.) → `schau`
 Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
 
 - `schau.anlegen` mutation · admin – Neue Schau anlegen – leer mit Startwerten oder aus einer früheren Schau des Vereins als Vorlage.
@@ -2955,15 +2981,16 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `a-bogen.ts` (324 Z.) – A-Bogen (Meldebogen) zum Ausdrucken: der Aussteller füllt ihn aus, unterschreibt und schickt ihn an die Meldestelle; mit der Unterschrift erkennt e … · aBogenPdf, aBogenFuerAusstellerPdf
 - `auskunft.ts` (296 Z.) · auskunftPdf
 - `basis.ts` (425 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, teilSeite, seitenzahlen, tabelle, textImFeld, angaben, hinweisKastenHoehe, hinweisKasten, unterschrift, ueberschrift, datumDe
+- `beleg-blatt.ts` (28 Z.) – Papier der Belege (Kaufbeleg, Einzahlungsquittung, Eigenbeleg, Spendenquittung) nach der Formatvorgabe der Schau (Entscheidung 029): A5 quer wie bi … · belegSeite, schnittlinie
 - `bewertungskarte.ts` (325 Z.) – Bewertungskarten nach der Druckvorlage der Schau (Format, Bausteine oder Vordruck-Felder, Versatz) – dazu die Vorschau für den Designer und der Pro … · ladeKartenVorlage, kartenKopf, bewertungskartenPdf, BEISPIEL_KARTEN, zeichneKartenPdf, probedruckPdf
-- `bewertungsliste.ts` (142 Z.) – Bewertungsliste je Preisrichter (zum Mitnehmen in die Käfigreihe) wie die Papiervorlage: zwei Listen nebeneinander je A4-Seite, laufend; Zwischenkö … · preisrichterListePdf
+- `bewertungsliste.ts` (143 Z.) – Bewertungsliste je Preisrichter (zum Mitnehmen in die Käfigreihe) wie die Papiervorlage: zwei Listen nebeneinander je A4-Seite, laufend (Formatvorg … · preisrichterListePdf
 - `brief.ts` (136 Z.) – Briefe nach der Briefvorlage des Vereins (DIN 5008, Form A oder B): Briefkopf, Rücksendeangabe, Anschrift, Informationsblock, Falzmarken und Fußzeile. · BRIEF_RAENDER, ladeBriefVorlage, briefDesign, briefKopf, belegKopf, briefFuss, serienbriefPdf
 - `dokumente-amt.ts` (245 Z.) – Listen für das Veterinäramt: abgegebene Tiere (Verkaufsliste) und Aussteller- und Tierliste. · verkaufslistePdf, tierlistePdf
 - `dokumente-gemeinsam.ts` (35 Z.) – Gemeinsame Hilfen der Dokumente einer Schau (dokumente.ts, dokumente-kasse.ts, dokumente-amt.ts): Design aus der Katalog-Gestaltung, Vereinsname, K … · nr, klasse, tier, A4_RAENDER, ladeDesign, verein, kopfzeile, fusstext, breite, unten
-- `dokumente-kasse.ts` (344 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
+- `dokumente-kasse.ts` (352 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
 - `dokumente.ts` (500 Z.) · bewertungskartenPdf, ausstellerUnterlagenPdf, abrechnungPdf
 - `girocode.ts` (38 Z.) – GiroCode im PDF (Entscheidung 021): QR-Code als Vektorgrafik (scharf in jedem Druck), daneben Bankverbindung und Verwendungszweck. · GIROCODE_GROESSE, qrZeichnen, giroCodeBlock
-- `hallenplan.ts` (443 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
+- `hallenplan.ts` (445 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 oder A3 (Formatvorgabe der Schau, Entscheidung 029) – der Plan füllt es (Querformat, wenn die Zeichnung … · hallenplanPdf, aufbaulistePdf
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog-anhang.ts` (147 Z.) – Katalog-PDF, Anhang: kommende Schauen, Anzeigen der Förderer und Notizseiten bis zur vollen Heftlage. · kommendeSchauenSeite, anzeigenSeiten, notizSeiten
 - `katalog-hilfen.ts` (65 Z.) – Katalog-PDF, gemeinsame Hilfen ohne PDF: Kurzvorschau-Auswahl, Anzahltexte („3 Stämme“) und der Bildnachweis (Adressen kürzen, Urheber bereinigen, … · KURZ_JE_ABTEILUNG, kurzauswahl, anzahlText, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis
@@ -2975,7 +3002,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `katalog.ts` (89 Z.) – Katalog-PDF, Einstieg: lädt die Grundlage (katalog-kontext.ts) und setzt die Teile der Reihe nach – Titelseite (katalog-titel.ts), Vorspann und Ehr … · katalogPdf
 - `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
 - `preisverteilung.ts` (114 Z.) – Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und leeren Zeilen zum Eintragen in der … · preisverteilungPdf
-- `spenden.ts` (257 Z.) – Spenden: Zuwendungsbestätigung nach amtlichem Muster (Geld, Sache, Sammelbestätigung mit Anlage) und die einfache Spendenquittung für die Kasse. · zuwendungsbestaetigungPdf, spendenquittungPdf
+- `spenden.ts` (261 Z.) – Spenden: Zuwendungsbestätigung nach amtlichem Muster (Geld, Sache, Sammelbestätigung mit Anlage) und die einfache Spendenquittung für die Kasse. · zuwendungsbestaetigungPdf, spendenquittungPdf
 - `verpflichtung.ts` (149 Z.) – Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins (Briefkopf, Anschrift im Fenster, Fußzeile wie der B-Bogen) mit der Bitte um Bew … · preisrichterVerpflichtungPdf
 
 ### Datenbank `apps/server/src/db`
@@ -2994,7 +3021,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `schema-mandant.ts` (135 Z.) – Mandant (Verein) mit Benutzern und Sitzungen; Stammdaten des Verzeichnisses (Sparten, Rassen, Farbenschläge je Version). · organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag
 - `schema-meldung.ts` (174 Z.) – Aussteller und Meldungen: Aussteller, Meldung, Zahlung des Meldegelds, Katalogeinträge (Tiere). · aussteller, meldung, zahlung, katalogeintrag
 - `schema-protokoll.ts` (73 Z.) – Protokoll und Post: Änderungsprotokoll mit Hash-Kette und ihren Vermerken, Postausgang. · aenderung, postausgang, aenderungKette, aenderungGeloescht, aenderungAnonymisiert
-- `schema-schau.ts` (147 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
+- `schema-schau.ts` (152 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
 - `schema-spenden.ts` (115 Z.) – Spenden (Entscheidung 013): Spenderverzeichnis des Vereins, Spenden je Schau und Zuwendungsbestätigungen. · spender, spende, zuwendungsbestaetigung, bestaetigungSpende
 - `schema-termine.ts` (68 Z.) – Kommende Schauen: abonnierte Kalender und Termine anderer Schauen für den Katalog. · TERMIN_STATUS, terminabo, schautermin
 - `schema-verkauf.ts` (138 Z.) – Preise, Verkauf, Geld: Stiftungen, Preisvergabe, Verkauf mit Zahlungseingang, Tiergesundheit, Auszahlungen. · stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung
@@ -3144,5 +3171,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `75-halle-aussehen.ts` (88 Z.) – Aussehen der Halle in 3D (Entscheidung 028): gespeichert mit der Halle (begrenzt, nur Abweichungen, mit Protokoll), ändert im festen Plan weder Pla …
 - `76-verpflichtung-zusage.ts` (124 Z.) – Preisrichterverpflichtung, Nachbesserung: Termin „Rückmeldung der Preisrichter bis“ in den Einstellungen der Schau (Prüfung, Protokoll, nicht aus d …
 - `78-tueren.ts` (86 Z.) – Türen in den Eingängen (3D, Entscheidung 028): Türart je Eingang gespeichert mit der Halle (nur gültig, nur Abweichung von der Vorgabe, mit Protoko …
+- `80-druck-formate.ts` (254 Z.) – Formatvorgaben der Drucke (Entscheidung 029, Rückmeldung „Bei den Druckeinstellungen fehlen die Formatvorgaben“): speichern, ablehnen, Protokoll, R …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
