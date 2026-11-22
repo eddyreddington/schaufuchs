@@ -1,10 +1,11 @@
+import { nachPlanVergeben } from "@schau/domain";
 import { useMemo, useState } from "react";
 import { fehlerText, formatEuro, formatKatalognummer, alterLabel } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useOberflaeche } from "../sprache";
 import { KatalogReihenfolge } from "./katalog-reihenfolge";
 import { trpc } from "../trpc";
-import { Abschnitt, FehlerAnzeige, Knopf, KnopfLink, Laden, Leer, Marke, SEITE, Seitenkopf, Suchfeld, TabellenRahmen, useFrage, useMeldung } from "../ui";
+import { Abschnitt, FehlerAnzeige, HilfeLink, Knopf, KnopfLink, Laden, Leer, Marke, SEITE, Seitenkopf, Suchfeld, TabellenRahmen, useFrage, useMeldung } from "../ui";
 
 export function Katalog() {
   const t = useOberflaeche();
@@ -37,6 +38,19 @@ export function Katalog() {
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
+  // Steht ein Hallenplan (fest, mit Tieren), ist „Nach Hallenplan vergeben“ der empfohlene Weg – dieselbe Prozedur und
+  // Rückfrage wie im Halleneditor („Nach Plan nummerieren“); „Ohne Hallenplan vergeben“ bleibt die zweite Möglichkeit.
+  const stand = trpc.katalog.nummernStand.useQuery({ schauId }, { enabled: istAdmin });
+  const tb = t.halleWerkzeuge.befehle;
+  const nachPlan = trpc.katalog.nummernNachPlan.useMutation({
+    onSuccess: (r) => {
+      neu();
+      meldung(!r.geaendert ? tb.nummernFolgenSchon : tb.nummernNeu(r.geaendert, r.ohnePlatz ?? 0));
+      if (r.ohnePreisrichter) meldung(tb.ohnePreisrichter(r.ohnePreisrichter), "warnung");
+      if (r.einteilungVonHand) meldung(tb.einteilungVonHand, "fehler");
+    },
+    onError: (e) => meldung(fehlerText(e), "fehler"),
+  });
   const gedruckt = trpc.katalog.gedrucktSetzen.useMutation({
     onSuccess: (_r, v) => {
       neu();
@@ -59,6 +73,8 @@ export function Katalog() {
   const s = schau.data;
 
   const ohneNrMarke = ohneNr > 0 && ohneNr < eintraege.length;
+  // Nur vor dem Festschreiben der Nummern (danach nummeriert die Seite Nachmeldungen) und nicht in der abgeschlossenen Schau.
+  const nachPlanEmpfohlen = !s.katalogGedruckt && s.phase !== "abgeschlossen" && nachPlanVergeben(stand.data);
 
   return (
     <div className={SEITE}>
@@ -95,9 +111,29 @@ export function Katalog() {
                   {tk.nummernFestschreiben}
                 </Knopf>
               )}
-              <Knopf variante="primaer" laedt={vergeben.isPending} onClick={() => vergeben.mutate({ schauId })} disabled={!s.katalogGedruckt ? false : ohneNr === 0}>
-                {s.katalogGedruckt ? tk.nachmeldungenNummerieren : tk.nummernVergeben}
-              </Knopf>
+              {nachPlanEmpfohlen ? (
+                <>
+                  {/* bleibt deutsch: Anker im Handbuch */}
+                  <HilfeLink abschnitt="hallenplan-nummerieren">{tk.hilfeNachPlan}</HilfeLink>
+                  <Knopf laedt={vergeben.isPending} disabled={nachPlan.isPending} onClick={() => vergeben.mutate({ schauId })}>
+                    {tk.ohnePlanVergeben}
+                  </Knopf>
+                  <Knopf
+                    variante="primaer"
+                    laedt={nachPlan.isPending}
+                    disabled={vergeben.isPending}
+                    onClick={async () =>
+                      (await bestaetige({ titel: tb.nummernTitel, text: tb.nummernText(s.katalogStart), knopf: tb.nummernKnopf })) && nachPlan.mutate({ schauId })
+                    }
+                  >
+                    {tk.nachPlanVergeben}
+                  </Knopf>
+                </>
+              ) : (
+                <Knopf variante="primaer" laedt={vergeben.isPending} onClick={() => vergeben.mutate({ schauId })} disabled={!s.katalogGedruckt ? false : ohneNr === 0}>
+                  {s.katalogGedruckt ? tk.nachmeldungenNummerieren : tk.nummernVergeben}
+                </Knopf>
+              )}
             </>
           )
         }

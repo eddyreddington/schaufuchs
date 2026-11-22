@@ -43,6 +43,16 @@ export function richterNachRasse(t: EinteilTier, regeln: RassenRegel[]): number 
   return stufe(passend.filter((r) => !r.jugend));
 }
 
+/**
+ * Preisrichter eines Tieres im Hallenplan: mit Katalognummer aus den Nummernbereichen (wie Tablet, Bewertung und Preise),
+ * ohne Nummer – vor dem Nummerieren, der Hallenplan kommt vor den Katalognummern – aus der Einteilung nach Rassen
+ * (`richterNachRasse`), damit der Plan schon die Farben der Preisrichter zeigt.
+ */
+export function richterImPlan(t: EinteilTier & { nr: number | null }, bereiche: { preisrichterId: number; vonNr: number; bisNr: number }[], regeln: RassenRegel[]): number | null {
+  if (t.nr != null) return bereiche.find((x) => t.nr! >= x.vonNr && t.nr! <= x.bisNr)?.preisrichterId ?? null;
+  return richterNachRasse(t, regeln);
+}
+
 /** Für die Folge der Einteilung: ein Tier mit den Stellen aus dem Verzeichnis (null = nicht im Verzeichnis). */
 export interface EinteilFolgeTier extends EinteilTier {
   sparteFolge: number | null;

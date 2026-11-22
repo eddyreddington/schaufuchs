@@ -9,6 +9,17 @@ Inhalt: [Fachlogik](#fachlogik-packagesdomainsrc) · [tRPC-Prozeduren](#trpc-pro
 
 Reine Funktionen ohne Datenbank und Oberfläche. Server und Web importieren aus `@schau/domain` (`index.ts`).
 
+### ablauf.ts (75 Z.)
+Ablauf einer Schau für die Übersicht: wohin der Knopf der Phase führt und in welcher Folge die Prüfliste „Was noch zu tun ist“ ihre Gruppen zeigt.
+Tests: `ablauf.test.ts`
+
+- `ARBEIT` – Wo in welcher Phase die Arbeit liegt (Unterseite der Schau; Text des Knopfs: t.schau.uebersicht.arbeit).
+- `HallenStand` (Typ) – Stand des Hallenplans: Halle angelegt, Plan festgeschrieben, Tiere ohne und mit Platz.
+- `nachPlanVergeben()` – Seite „Katalognummern“: Steht ein Hallenplan – Halle angelegt, Plan fest, Tiere mit Platz –, ist „Nach Hallenplan vergeben“ der empfohlene Weg (die …
+- `arbeitsZiel()` – Ziel des Knopfs in der Übersicht.
+- `PRUEFLISTE_FOLGE` – Folge der Gruppen in der Prüfliste (je Unterseite, auf der man es erledigt) – wie der Ablauf der Schau: Hallenplan vor Katalognummern, diese vor de …
+- `prueflistenGruppen()` – Punkte der Prüfliste nach Unterseite gruppiert, ohne „ok“: Gruppen in der Folge `PRUEFLISTE_FOLGE`, unbekannte Ziele dahinter (in der Folge ihres e …
+
 ### abmeldung.ts (46 Z.)
 Tests: `abmeldung.test.ts`
 
@@ -141,13 +152,14 @@ Tests: `druckvorlage.test.ts`
 
 - `EingabeFehler` (Klasse) – Fehler in den Angaben (hochgeladene Datei, Konto, Mandat), dessen Text der Server wörtlich als Meldung zeigen darf.
 
-### einteilung.ts (135 Z.)
+### einteilung.ts (145 Z.)
 Preisrichter-Einteilung nach Rassen: Vor der Nummernvergabe teilt die Ausstellungsleitung die Preisrichter nach Sparte, Rasse und – wo eine Rasse g …
 Tests: `einteilung.test.ts`
 
 - `RassenRegel` (Typ) – Eine Regel: diese Rasse (bzw. dieser Farbenschlag der Rasse) geht an diesen Preisrichter.
 - `EinteilTier` (Typ) – Was ein Tier für die Einteilung ausmacht.
 - `richterNachRasse()` – Preisrichter für ein Tier: eine Regel für seinen Farbenschlag geht vor der Regel für die ganze Rasse.
+- `richterImPlan()` – Preisrichter eines Tieres im Hallenplan: mit Katalognummer aus den Nummernbereichen (wie Tablet, Bewertung und Preise), ohne Nummer – vor dem Numme …
 - `EinteilFolgeTier` (Typ) – Für die Folge der Einteilung: ein Tier mit den Stellen aus dem Verzeichnis (null = nicht im Verzeichnis).
 - `vergleicheEinteilFolge()` – Folge der Einteilung nach Rassen: Sparte, Rasse, Farbenschlag (ohne Verzeichnis-Folge dahinter, nach dem Namen).
 - `bereicheAusRassen()` – Nummernbereiche aus der Einteilung nach Rassen.
@@ -607,7 +619,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (67 Z.)
+### index.ts (68 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -949,7 +961,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (180 Z.)
+### katalog.ts (183 Z.)
 
 - `katalog`
 
@@ -986,7 +998,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schauEinstellungen`
 
-### schau.ts (130 Z.)
+### schau.ts (131 Z.)
 
 - `schau`
 
@@ -1143,7 +1155,7 @@ Texte der Oberfläche: kasse – Tierverkauf, Abrechnung, Kassenbuch, Kontoauszu
 - `teile` – Texte der Oberfläche: katalog.teile und katalog.gliederung – Reiter „Teile und Reihenfolge“ mit Beiträgen (Entscheidung 022).
 - `gliederung` – Namen der Teile in der Gliederung (Schlüssel wie `KATALOG_GLIEDERUNG` der Domain; dort stehen die Namen für das PDF).
 
-### katalog.ts (187 Z.)
+### katalog.ts (190 Z.)
 Texte der Oberfläche: katalog – Katalognummern, Reihenfolge, Katalog gestalten mit Vorschau (Entscheidung 022).
 
 - `katalog`
@@ -1185,7 +1197,7 @@ Texte der Oberfläche: schau.einstellungen (Entscheidung 022) – Seite „Einst
 
 - `schauEinstellungen`
 
-### schau.ts (129 Z.)
+### schau.ts (131 Z.)
 Texte der Oberfläche: schau (Entscheidung 022) – Liste der Schauen, Übersicht; Einstellungen in schau-einstellungen.
 
 - `schau`
@@ -1347,7 +1359,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (178 Z.)
+### katalog.ts (181 Z.)
 
 - `katalog`
 
@@ -1384,7 +1396,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schauEinstellungen`
 
-### schau.ts (123 Z.)
+### schau.ts (124 Z.)
 
 - `schau`
 
@@ -1536,7 +1548,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (178 Z.)
+### katalog.ts (181 Z.)
 
 - `katalog`
 
@@ -1573,7 +1585,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schauEinstellungen`
 
-### schau.ts (123 Z.)
+### schau.ts (124 Z.)
 
 - `schau`
 
@@ -1729,7 +1741,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (178 Z.)
+### katalog.ts (181 Z.)
 
 - `katalog`
 
@@ -1766,7 +1778,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schauEinstellungen`
 
-### schau.ts (123 Z.)
+### schau.ts (124 Z.)
 
 - `schau`
 
@@ -1919,7 +1931,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (182 Z.)
+### katalog.ts (185 Z.)
 
 - `katalog`
 
@@ -1956,7 +1968,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `schauEinstellungen`
 
-### schau.ts (132 Z.)
+### schau.ts (133 Z.)
 
 - `schau`
 
@@ -2373,7 +2385,7 @@ Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferu
 - `halle.statusSetzen` mutation · angemeldet
 - `halle.vetSetzen` mutation · angemeldet – Nachweise bei der Einlieferung: ND-Impfung (Hühner, Puten), PMV-Impfung (Tauben), Untersuchung Wassergeflügel.
 
-### routers/katalog/gemeinsam.ts (241 Z.)
+### routers/katalog/gemeinsam.ts (258 Z.)
 Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan.
 
 Keine Prozeduren (Hilfen für die Router).
@@ -2385,7 +2397,7 @@ Gesundheitsjournal in der Halle: Liste, Eintrag erfassen, Sperre aufheben.
 - `halle.gesundheitErfassen` mutation · angemeldet
 - `halle.gesundheitFreigeben` mutation · admin – Sperre aufheben (z. B. Tierarzt gibt Entwarnung) – nur die Ausstellungsleitung; der Eintrag bleibt im Journal.
 
-### routers/katalog/hallenplan.ts (338 Z.) → `katalog`
+### routers/katalog/hallenplan.ts (341 Z.) → `katalog`
 Hallenplan: Plan und Stellvorschläge, festschreiben, neu setzen, Tier versetzen, Käfiginfo, Halle speichern, Wandreihe.
 
 - `katalog.hallenplan` query · angemeldet – Hallenplan: alle gemeldeten Tiere (offen und bestätigt) mit Käfig in Katalogfolge (Käfignummern) auf die Reihen der Halle verteilt; dazu die Preisr …
@@ -2410,10 +2422,11 @@ Käfige und Grundplatten: Käfigbedarf, Aufsteller und Sockelbild, Grundplatten,
 - `katalog.kaefigRegelSetzen` mutation · admin – Abweichende Käfiggröße für eine Rasse festlegen (typ null = wieder automatisch).
 - `katalog.kaefigMassSetzen` mutation · admin – Maße der eigenen Käfige je Käfigart (cm); null = wieder Richtwert.
 
-### routers/katalog/nummern.ts (214 Z.) → `katalog`
-Katalognummern: Liste, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern.
+### routers/katalog/nummern.ts (220 Z.) → `katalog`
+Katalognummern: Liste, Stand des Hallenplans, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern.
 
 - `katalog.liste` query · angemeldet
+- `katalog.nummernStand` query · angemeldet – Stand des Hallenplans für die Seite „Katalognummern“: Steht ein fester Plan mit Tieren, ist „Nach Hallenplan vergeben“ (`nummernNachPlan`) der empf …
 - `katalog.nummernVergeben` mutation · admin – Vor dem Festschreiben: alle Nummern lückenlos neu.
 - `katalog.nummernNachPlan` mutation · admin – Nach dem Umstellen im Hallenplan: Nummern in der Reihenfolge, in der die Käfige jetzt im (festgeschriebenen) Plan stehen (siehe `planFolge`).
 - `katalog.gedrucktSetzen` mutation · admin
@@ -2558,7 +2571,7 @@ Protokoll der Schau (Suche, Prüfung der Hash-Kette) und Postausgang des Vereins
 - `schau.postausgang` query · admin – Postausgang des Vereins: nicht versandte Mails zuerst, damit ein gestörter Mailserver auffällt.
 - `schau.postErneutSenden` mutation · admin – Nicht versandte Mail erneut senden (z. B. nach Korrektur der Mailserver-Einstellungen).
 
-### routers/schau/uebersicht.ts (81 Z.) → `schau`
+### routers/schau/uebersicht.ts (94 Z.) → `schau`
 Schauen lesen: Verzeichnis der Veterinärämter, Liste der Schauen, eine Schau mit Gebühren und Preisarten, Übersicht.
 
 - `schau.veterinaeraemter` query · angemeldet – Verzeichnis der zuständigen Veterinärämter (öffentliche Behördenangaben mit Quelle, siehe daten/veterinaeraemter.json) für die Vorschläge im Feld „ …
@@ -2869,8 +2882,8 @@ Prozeduren: schau.katalogSortierungSetzen
 
 ### katalog-vorschau.tsx (145 Z.)
 
-### katalog.tsx (176 Z.) – `/schau/:schauId/katalog`
-Prozeduren: auth.status, katalog.gedrucktSetzen, katalog.liste, katalog.nummernVergeben, schau.get
+### katalog.tsx (212 Z.) – `/schau/:schauId/katalog`
+Prozeduren: auth.status, katalog.gedrucktSetzen, katalog.liste, katalog.nummernNachPlan, katalog.nummernStand, katalog.nummernVergeben, schau.get
 
 ### kommende-schauen.tsx (563 Z.)
 Prozeduren: termine.aboAbrufen, termine.aboLoeschen, termine.aboSpeichern, termine.abweichung, termine.druckenSetzen, termine.laden, termine.loeschen, termine.pruefen, termine.speichern, termine.veroeffentlichenSetzen, termine.wahlSetzen
@@ -2951,7 +2964,7 @@ Prozeduren: stammdaten.gliederung, stammdaten.gruppenSetzen
 ### stammdaten.tsx (316 Z.) – `/stammdaten`
 Prozeduren: auth.status, stammdaten.baum, stammdaten.ergaenzen, stammdaten.gliederung, stammdaten.importieren, stammdaten.loeschen, stammdaten.versionen
 
-### uebersicht.tsx (297 Z.) – `/schau/:schauId`
+### uebersicht.tsx (280 Z.) – `/schau/:schauId`
 Prozeduren: auth.status, schau.phaseSetzen, schau.uebersicht
 
 ### verein-abmeldung.tsx (56 Z.)
@@ -3182,7 +3195,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `41-hallenplan-3d.ts` (93 Z.) – Hallenplan räumlich: Aufsteller je Schau einstellen, Daten für die 3D-Ansicht ohne Ausstellernamen.
 - `42-hallenplan-moebel-etagen.ts` (105 Z.) – Hallenplan: Tische, Bänke und Garnituren als eingesetzte Teile (mit Maßen gespeichert, bleiben beim Neu-Setzen) und Etagen je Käfigart (Kapazität d …
 - `43-katalog-sortierung.ts` (106 Z.) – Reihenfolge der Katalognummern wählbar: speichern (nur Ausstellungsleitung, Vorgabe als null, Protokoll), Vergabe nach der gewählten Folge, Sperre …
-- `44-pruefliste-hallenplan.ts` (60 Z.) – Prüfliste ab der Phase „Katalog & Halle“: Hinweise zum Hallenplan (Tiere ohne Platz, Käfigfront zur Wand oder zu einer Reihe, Nummern nicht in Plan …
+- `44-pruefliste-hallenplan.ts` (60 Z.) – Prüfliste ab der Phase „Halle & Katalog“: Hinweise zum Hallenplan (Tiere ohne Platz, Käfigfront zur Wand oder zu einer Reihe, Nummern nicht in Plan …
 - `45-hallenplan-tier-versetzen.ts` (162 Z.) – Tiere im Halleneditor versetzen (Rückmeldung 15.11.2026: „ich will auch käfige frei zuordnen können im halleneditor und ggf tiere versetzen“): nur …
 - `46-automatische-abmeldung.ts` (64 Z.) – Automatische Abmeldung nach Untätigkeit (Rückmeldung 15.11.2026): Frist je Rolle unter „Verein und Datenschutz“, nur die angebotenen Minuten, Proto …
 - `47-druckvorlagen.ts` (112 Z.) – Druckvorlagen für Bewertungskarten: Vorlagen des Vereins speichern, je Schau wählen, für eine Schau abwandeln, löschen (Schau druckt dann wieder mi …
@@ -3216,6 +3229,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `75-halle-aussehen.ts` (88 Z.) – Aussehen der Halle in 3D (Entscheidung 028): gespeichert mit der Halle (begrenzt, nur Abweichungen, mit Protokoll), ändert im festen Plan weder Pla …
 - `76-verpflichtung-zusage.ts` (124 Z.) – Preisrichterverpflichtung, Nachbesserung: Termin „Rückmeldung der Preisrichter bis“ in den Einstellungen der Schau (Prüfung, Protokoll, nicht aus d …
 - `78-tueren.ts` (86 Z.) – Türen in den Eingängen (3D, Entscheidung 028): Türart je Eingang gespeichert mit der Halle (nur gültig, nur Abweichung von der Vorgabe, mit Protoko …
+- `79-ablauf-halle.ts` (99 Z.) – Ablauf nach dem Meldeschluss (Rückmeldung eines Vereins): Einteilung nach Rassen → Käfige → Hallenplan → Katalognummern (nach dem Plan) → Katalog.
 - `80-druck-formate.ts` (310 Z.) – Formatvorgaben der Drucke (Entscheidung 029, Rückmeldung „Bei den Druckeinstellungen fehlen die Formatvorgaben“): speichern, ablehnen, Protokoll, R …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

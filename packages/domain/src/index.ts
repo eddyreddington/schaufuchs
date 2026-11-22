@@ -28,6 +28,7 @@ export * from "./hallenentwurf";
 export * from "./hallenplan-fehlend";
 export * from "./hallenplan-neu";
 export * from "./einteilung";
+export * from "./ablauf";
 export * from "./preisrichter-zulassung";
 export * from "./preisrichter-druck";
 export * from "./stellvorschlaege";

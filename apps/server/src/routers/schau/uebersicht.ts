@@ -1,5 +1,5 @@
 /** Schauen lesen: Verzeichnis der Veterinärämter, Liste der Schauen, eine Schau mit Gebühren und Preisarten, Übersicht. */
-import { STANDARD_NOTENSKALA } from "@schau/domain";
+import { arbeitsZiel, type HallenStand, STANDARD_NOTENSKALA } from "@schau/domain";
 import { asc, count, desc, eq, sum } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
@@ -58,6 +58,17 @@ export const schauLesen = {
         .where(eq(meldung.schauId, s.id)),
       checkliste(s.id),
     ]);
+    // Wohin der Knopf der Phase führt: in „Halle & Katalog“ erst der Hallenplan, dann die Katalognummern (arbeitsZiel).
+    let stand: HallenStand | null = null;
+    if (s.phase === "katalog") {
+      try {
+        const { hallenStand } = await import("../katalog");
+        stand = await hallenStand(s);
+      } catch (e) {
+        // Die Übersicht soll nie am Plan scheitern; der Hallenplan zeigt den Fehler selbst.
+        console.error("[uebersicht] Hallenplan nicht berechnet:", e);
+      }
+    }
     const aktiv = eintraege.filter((e) => e.meldungStatus === "bestaetigt");
     const n = (st: string) => meldungen.find((m) => m.status === st)?.n ?? 0;
     return {
@@ -76,6 +87,8 @@ export const schauLesen = {
         bezahltCent: Number(bezahlt?.s ?? 0),
       },
       checkliste: punkte,
+      /** Unterseite, auf der in dieser Phase als Nächstes etwas zu tun ist. */
+      arbeit: arbeitsZiel(s.phase, stand),
     };
   }),
 };

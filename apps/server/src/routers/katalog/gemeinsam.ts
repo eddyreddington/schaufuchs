@@ -1,10 +1,11 @@
 /** Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan. */
-import { aussehenBereinigt, flaecheBereinigt, nummerFolgeBereinigt, TUER_ARTEN, FIRST_HOEHE_MAX, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt } from "@schau/domain";
+import { aussehenBereinigt, flaecheBereinigt, nummerFolgeBereinigt, TUER_ARTEN, FIRST_HOEHE_MAX, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt, planeHalle, richterImPlan } from "@schau/domain";
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
 import { preisrichter, prEinteilung, schau } from "../../db/schema";
 import { alsFolge, ladeEintraege } from "../../services/eintraege";
+import { einteilTier, ladeRegeln } from "../../services/einteilung";
 import { protokolliere } from "../../services/protokoll";
 import { fehler, ladeSchau } from "../../trpc";
 
@@ -211,14 +212,19 @@ export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<type
   });
 }
 
-/** Tiere für den Hallenplan: alle gemeldeten (offen und bestätigt) in Katalogfolge, mit Käfigart und Preisrichter. */
-export async function planTiere(s: { id: number; kaefigRegeln: KaefigRegel[] | null; katalogStart: number; jugendSeparat: boolean; staemmeVorn: boolean; kaefigFolge: KaefigTyp[] | null; katalogSortierung?: SortierSchritt[] | null }) {
-  const [alle, einteilung, richter] = await Promise.all([
+/**
+ * Tiere für den Hallenplan: alle gemeldeten (offen und bestätigt) in Katalogfolge, mit Käfigart und Preisrichter – mit
+ * Nummer aus den Nummernbereichen, ohne Nummer aus der Einteilung nach Rassen (`richterImPlan`; der Hallenplan kommt vor
+ * den Katalognummern, die Farben stehen so schon vorher).
+ */
+export async function planTiere(s: { id: number; kaefigRegeln: KaefigRegel[] | null; katalogStart: number; jugendSeparat: boolean; staemmeVorn: boolean; kaefigFolge: KaefigTyp[] | null; katalogSortierung?: SortierSchritt[] | null; einteilungJugendSeparat?: boolean }) {
+  const [alle, einteilung, richter, rassenRegeln] = await Promise.all([
     // Alle gemeldeten Tiere (offen und bestätigt) – der Plan dient dem Aufbau vor der Einlieferung. Ein als fehlend
     // gemeldetes Tier behält seinen Käfig (der steht schon); nur abgelehnte und stornierte Meldungen fallen heraus.
     ladeEintraege(s.id).then((l) => l.filter((e) => e.meldungStatus === "offen" || e.meldungStatus === "bestaetigt")),
     db.select().from(prEinteilung).where(eq(prEinteilung.schauId, s.id)),
     db.select({ id: preisrichter.id, name: preisrichter.name }).from(preisrichter).where(eq(preisrichter.schauId, s.id)).orderBy(asc(preisrichter.name)),
+    ladeRegeln(db, s.id),
   ]);
   const regeln = s.kaefigRegeln ?? [];
   const opts = { start: s.katalogStart, jugendSeparat: s.jugendSeparat, staemmeVorn: s.staemmeVorn, kaefigFolge: s.kaefigFolge, sortierung: s.katalogSortierung };
@@ -232,10 +238,21 @@ export async function planTiere(s: { id: number; kaefigRegeln: KaefigRegel[] | n
     // Physisch zählt auch die Käfigwahl bei der Einlieferung.
     const typ = kaefigTyp({ art: e.art, sparte: e.sparte, rasse: e.rasse ?? e.einordnungRasse, wahl: e.kaefigWahl }, regeln);
     if (!typ) continue;
-    const z = e.katalogNr == null ? undefined : einteilung.find((x) => e.katalogNr! >= x.vonNr && e.katalogNr! <= x.bisNr);
+    const preisrichterId = richterImPlan({ ...einteilTier(e, !!s.einteilungJugendSeparat), nr: e.katalogNr }, einteilung, rassenRegeln);
     const nr = e.katalogNr == null ? null : formatKatalognummer(e);
     if (e.farbenschlag) farben.push([e.id, e.farbenschlag]);
-    tiere.push({ id: e.id, typ, nr, ...(e.kaefig && e.kaefig !== nr ? { kaefig: e.kaefig } : {}), rasse: e.rasse ?? e.einordnungRasse ?? e.freitext, sparte: e.sparte ?? "ohne Sparte", preisrichterId: z?.preisrichterId ?? null });
+    tiere.push({ id: e.id, typ, nr, ...(e.kaefig && e.kaefig !== nr ? { kaefig: e.kaefig } : {}), rasse: e.rasse ?? e.einordnungRasse ?? e.freitext, sparte: e.sparte ?? "ohne Sparte", preisrichterId });
   }
   return { tiere, richter, farben };
+}
+
+/**
+ * Stand des Hallenplans für den Ablauf (Übersicht, Seite „Katalognummern“): Halle angelegt, Plan fest, Tiere mit und ohne
+ * Platz – gerechnet wie die Seite „Hallenplan“ (dieselben Tiere, derselbe Plan).
+ */
+export async function hallenStand(s: Parameters<typeof planTiere>[0] & { halle: Halle | null; hallenplanFest: Parameters<typeof planeHalle>[3]; kaefigMasse: Parameters<typeof planeHalle>[2] }) {
+  if (!s.halle) return { halle: false, planFest: false, ohnePlatz: 0, mitPlatz: 0 };
+  const { tiere } = await planTiere(s);
+  const plan = planeHalle(s.halle, tiere, s.kaefigMasse, s.hallenplanFest);
+  return { halle: true, planFest: !!s.hallenplanFest, ohnePlatz: plan.nichtPlatziert.length, mitPlatz: tiere.length - plan.nichtPlatziert.length };
 }

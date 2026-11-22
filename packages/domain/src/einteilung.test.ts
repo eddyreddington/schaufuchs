@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { bereicheAusRassen, regelnAusZuteilung, richterNachRasse, type RassenRegel } from "./einteilung";
+import { bereicheAusRassen, regelnAusZuteilung, richterImPlan, richterNachRasse, type RassenRegel } from "./einteilung";
 
 let lfd = 0;
 const tier = (nr: number, rasse: string, farbenschlag: string, sparte = "Hühner", suffix = "", zaehlt = true) => ({ id: ++lfd, nr, suffix, sparte, rasse, farbenschlag, zaehlt });
@@ -54,5 +54,28 @@ describe("Preisrichter-Einteilung nach Rassen", () => {
       { preisrichterId: 1, sparte: "Hühner", rasse: "Wyandotten", farbenschlag: "" },
       { preisrichterId: 3, sparte: "Hühner", rasse: "Wyandotten", farbenschlag: "schwarz" },
     ]);
+  });
+});
+
+describe("Preisrichter im Hallenplan (vor und nach den Katalognummern)", () => {
+  const regeln: RassenRegel[] = [
+    { preisrichterId: 1, sparte: "Hühner", rasse: "Wyandotten", farbenschlag: "" },
+    { preisrichterId: 2, sparte: "Hühner", rasse: "Wyandotten", farbenschlag: "weiß" },
+    { preisrichterId: 3, sparte: "Hühner", rasse: "Wyandotten", farbenschlag: "", jugend: true },
+  ];
+  const bereiche = [{ preisrichterId: 2, vonNr: 1, bisNr: 10 }];
+  const t = (nr: number | null, farbenschlag: string, istJugend = false) => ({ nr, sparte: "Hühner", rasse: "Wyandotten", farbenschlag, istJugend });
+
+  test("ohne Nummer aus der Einteilung nach Rassen (Farbenschlag vor Rasse, Jugend separat)", () => {
+    expect(richterImPlan(t(null, "schwarz"), bereiche, regeln)).toBe(1);
+    expect(richterImPlan(t(null, "weiß"), bereiche, regeln)).toBe(2);
+    expect(richterImPlan(t(null, "schwarz", true), bereiche, regeln)).toBe(3);
+    expect(richterImPlan({ ...t(null, "schwarz"), rasse: "Sussex" }, bereiche, regeln)).toBeNull();
+  });
+
+  test("mit Nummer nur aus den Nummernbereichen, wie bisher (auch wenn die Rasse woanders hinzeigt)", () => {
+    expect(richterImPlan(t(5, "schwarz"), bereiche, regeln)).toBe(2);
+    expect(richterImPlan(t(11, "schwarz"), bereiche, regeln)).toBeNull();
+    expect(richterImPlan(t(5, "schwarz", true), [], regeln)).toBeNull();
   });
 });

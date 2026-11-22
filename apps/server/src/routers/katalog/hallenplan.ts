@@ -1,10 +1,11 @@
 /** Hallenplan: Plan und Stellvorschläge, festschreiben, neu setzen, Tier versetzen, Käfiginfo, Halle speichern, Wandreihe. */
-import { halleNormal, AUFSTELLER_STANDARD, bewertungsText, neuSetzen, halleZumNeuSetzen, type Halle, mitWandreihe, reihenVersatzNachUmbau, festschreiben, plattenStand, pruefeEntfernt, pruefeTeileEntfernt, formatKatalognummer, halleSchluessel, stabilerText, HALLE_STANDARD, kaefigName, kaefigTyp, planeHalle, planUnordnung, stellVorschlaege, belegungImPlan, gleicherPlatz, platzImPlan, tierVersetzen, type KaefigPlatz } from "@schau/domain";
+import { halleNormal, AUFSTELLER_STANDARD, bewertungsText, neuSetzen, halleZumNeuSetzen, type Halle, mitWandreihe, reihenVersatzNachUmbau, festschreiben, plattenStand, pruefeEntfernt, pruefeTeileEntfernt, formatKatalognummer, halleSchluessel, stabilerText, HALLE_STANDARD, kaefigName, kaefigTyp, planeHalle, planUnordnung, stellVorschlaege, belegungImPlan, gleicherPlatz, platzImPlan, richterImPlan, tierVersetzen, type KaefigPlatz } from "@schau/domain";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
 import { katalogeintrag, preisrichter, prEinteilung, schau } from "../../db/schema";
 import { ladeEintraege, skalaVon } from "../../services/eintraege";
+import { einteilTier, ladeRegeln } from "../../services/einteilung";
 import { pruefeNichtAbgeschlossen } from "../../services/kasse";
 import { protokolliere } from "../../services/protokoll";
 import { adminProcedure, benutzerProcedure, fehler, ladeSchau, dbId } from "../../trpc";
@@ -206,12 +207,14 @@ export const katalogHallenplan = {
       .where(and(eq(katalogeintrag.id, input.id), eq(katalogeintrag.schauId, s.id)));
     if (!k) throw fehler("NOT_FOUND", "Käfig nicht gefunden.");
     const e = (await ladeEintraege(s.id, { nurMeldungId: k.meldungId })).find((x) => x.id === input.id)!;
-    const [einteilung, richter] = await Promise.all([
+    const [einteilung, richter, regeln] = await Promise.all([
       db.select().from(prEinteilung).where(eq(prEinteilung.schauId, s.id)),
       db.select({ id: preisrichter.id, name: preisrichter.name }).from(preisrichter).where(eq(preisrichter.schauId, s.id)),
+      ladeRegeln(db, s.id),
     ]);
     const name = (id: number | null | undefined) => richter.find((r) => r.id === id)?.name ?? null;
-    const zugeteilt = e.katalogNr == null ? undefined : einteilung.find((x) => e.katalogNr! >= x.vonNr && e.katalogNr! <= x.bisNr);
+    // Wie im Plan: mit Nummer aus den Bereichen, ohne Nummer aus der Einteilung nach Rassen.
+    const zugeteilt = richterImPlan({ ...einteilTier(e, s.einteilungJugendSeparat), nr: e.katalogNr }, einteilung, regeln);
     const typ = kaefigTyp({ art: e.art, sparte: e.sparte, rasse: e.rasse ?? e.einordnungRasse, wahl: e.kaefigWahl }, s.kaefigRegeln ?? []);
     return {
       id: e.id,
@@ -229,7 +232,7 @@ export const katalogHallenplan = {
       kaefigGewaehlt: !!e.kaefigWahl,
       zuechter: { name: e.ausstellerName, ort: e.ort ?? "", verein: e.verein ?? "", gesperrt: !!e.ausstellerGesperrt },
       meldungId: e.meldungId,
-      preisrichter: name(zugeteilt?.preisrichterId),
+      preisrichter: name(zugeteilt),
       bewertung: e.bewertet ? bewertungsText({ punkte: e.punkte, sondernote: e.sondernote }, skalaVon(s)) : null,
       bewertetVon: name(e.bewertetVon),
       preise: e.preise.map((p) => `${p.kuerzel} ${p.name}`),

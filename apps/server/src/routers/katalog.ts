@@ -9,7 +9,7 @@ import { katalogHallenplan } from "./katalog/hallenplan";
 import { katalogKaefige } from "./katalog/kaefige";
 import { katalogNummern } from "./katalog/nummern";
 
-export { HALLE_EINGABE, planNeuSetzenIn, planTiere } from "./katalog/gemeinsam";
+export { HALLE_EINGABE, hallenStand, planNeuSetzenIn, planTiere } from "./katalog/gemeinsam";
 
 export const katalogRouter = router({ ...katalogKaefige, ...katalogHallenplan, ...katalogNummern });
 

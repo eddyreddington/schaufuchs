@@ -1,4 +1,4 @@
-import { formatEuro, PHASEN, serverText, type Phase } from "@schau/domain";
+import { formatEuro, PHASEN, prueflistenGruppen, serverText, type Phase } from "@schau/domain";
 import { Link, useNavigate } from "react-router-dom";
 import { datum, fehlerText } from "../lib";
 import { useSchauId } from "../rahmen";
@@ -7,19 +7,6 @@ import { trpc } from "../trpc";
 import { useState } from "react";
 import { Symbol } from "../symbole";
 import { Abschnitt, Dialog, FehlerAnzeige, Feld, HilfeLink, Knopf, Laden, Seitenkopf, Textfeld, useFrage, useMeldung } from "../ui";
-
-/** Wo in welcher Phase die Arbeit liegt (Text des Knopfs: t.schau.uebersicht.arbeit). */
-const ARBEIT: Record<Phase, string> = {
-  vorbereitung: "einstellungen",
-  meldung: "meldungen",
-  katalog: "katalog",
-  einlieferung: "einlieferung",
-  bewertung: "bewertung",
-  preise: "preise",
-  schau: "verkauf",
-  abrechnung: "abrechnung",
-  abgeschlossen: "protokoll",
-};
 
 /** In diesen Phasen bewerten Preisrichter am Tablet. */
 const TABLET_PHASEN: Phase[] = ["einlieferung", "bewertung", "preise"];
@@ -132,7 +119,8 @@ export function Uebersicht() {
             {s.ergebnisseFreigegeben ? tu.freigegeben : ""}
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            <Knopf onClick={() => navigate(`/schau/${id}/${ARBEIT[s.phase]}`)}>{tu.arbeit[s.phase]}</Knopf>
+            {/* In „Halle & Katalog“ erst der Hallenplan, dann die Katalognummern (arbeitsZiel auf dem Server). */}
+            <Knopf onClick={() => navigate(`/schau/${id}/${u.data.arbeit}`)}>{u.data.arbeit === "hallenplan" ? tu.arbeitHallenplan : tu.arbeit[s.phase]}</Knopf>
             {istAdmin && vorige && (
               <Knopf disabled={phase.isPending} onClick={() => wechseln(vorige)}>
                 {tu.zurueckZu(PHASEN_LABEL[vorige])}
@@ -224,19 +212,14 @@ export function Uebersicht() {
 
 type Punkt = { art: "fehler" | "hinweis" | "ok"; text: string; zusatz?: string; ziel?: string };
 
-/** „Was noch zu tun ist“: kurz, nach Seiten gruppiert, die ganze Zeile führt dorthin. */
+/** „Was noch zu tun ist“: kurz, nach Seiten gruppiert (Folge: PRUEFLISTE_FOLGE), die ganze Zeile führt dorthin. */
 function Pruefliste({ punkte }: { punkte: Punkt[] }) {
   const tp = useOberflaeche().schau.pruefliste;
   const sprache = useSprache();
   /** Überschrift einer Gruppe der Prüfliste: die Seite, auf der man es erledigt. */
   const ZIEL_LABEL: Record<string, string> = tp.ziel;
-  const gruppen: { ziel: string; punkte: Punkt[] }[] = [];
-  for (const p of punkte.filter((x) => x.art !== "ok")) {
-    const ziel = p.ziel ?? "";
-    let g = gruppen.find((x) => x.ziel === ziel);
-    if (!g) gruppen.push((g = { ziel, punkte: [] }));
-    g.punkte.push(p);
-  }
+  // In der Folge des Ablaufs (Hallenplan vor Katalognummern), nicht in der Folge, in der der Server sie prüft.
+  const gruppen = prueflistenGruppen(punkte);
   const fehler = punkte.filter((p) => p.art === "fehler").length;
   const hinweise = punkte.filter((p) => p.art === "hinweis").length;
   const zeile = "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-tinte no-underline hover:bg-papier";

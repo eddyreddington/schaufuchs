@@ -1,4 +1,4 @@
-/** Katalognummern: Liste, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern. */
+/** Katalognummern: Liste, Stand des Hallenplans, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern. */
 import { mitBelegung, planeHalle, stabilerText, vergleicheFolge, nachmeldungsNummern, planFolge, vergebeKatalognummern } from "@schau/domain";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -10,13 +10,19 @@ import { pruefeNichtAbgeschlossen } from "../../services/kasse";
 import { bindungen } from "../../services/meldung";
 import { protokolliere } from "../../services/protokoll";
 import { adminProcedure, benutzerProcedure, fehler, ladeSchau, dbId } from "../../trpc";
-import { planTiere } from "./gemeinsam";
+import { hallenStand, planTiere } from "./gemeinsam";
 
 export const katalogNummern = {
   liste: benutzerProcedure.input(z.object({ schauId: dbId })).query(async ({ ctx, input }) => {
     await ladeSchau(ctx.benutzer.organisationId, input.schauId);
     return ladeEintraege(input.schauId, { nurBestaetigt: true });
   }),
+
+  /**
+   * Stand des Hallenplans für die Seite „Katalognummern“: Steht ein fester Plan mit Tieren, ist „Nach Hallenplan vergeben“
+   * (`nummernNachPlan`) der empfohlene Weg – der Hallenplan kommt vor den Katalognummern.
+   */
+  nummernStand: benutzerProcedure.input(z.object({ schauId: dbId })).query(async ({ ctx, input }) => hallenStand(await ladeSchau(ctx.benutzer.organisationId, input.schauId))),
 
   /**
    * Vor dem Festschreiben: alle Nummern lückenlos neu.

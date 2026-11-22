@@ -54,6 +54,8 @@ export const schau = {
       abrechnung: "Zur Abrechnung",
       abgeschlossen: "Zum Protokoll",
     },
+    /** Knopf der Phase „Halle & Katalog“, solange der Hallenplan noch nicht steht (arbeitsZiel). */
+    arbeitHallenplan: "Zum Hallenplan",
     jetztPhase: (phase: string) => `Jetzt in der Phase „${phase}“.`,
     meldephaseTrotzdem: "Trotzdem die Meldephase starten?",
     meldephaseText: (meldung: string) => `${meldung}\n\nDas Meldeformular geht dann ohne diese Angaben online.`,
@@ -106,17 +108,17 @@ export const schau = {
     /** Überschrift einer Gruppe: die Seite, auf der man es erledigt. */
     ziel: {
       einstellungen: "Einstellungen",
+      "/verein": "Verein und Datenschutz",
       meldungen: "Meldungen",
       preisrichter: "Preisrichter",
+      hallenplan: "Hallenplan",
       katalog: "Katalognummern",
       "katalog/gestalten": "Katalog",
-      hallenplan: "Hallenplan",
       einlieferung: "Einlieferung",
       bewertung: "Bewertung",
       preise: "Preise",
       abrechnung: "Abrechnung",
       kassenbuch: "Kassenbuch",
-      "/verein": "Verein und Datenschutz",
     },
     fehlerAnzahl: (n: number) => `${n} Fehler`,
     hinweisAnzahl: (n: number) => `${n} ${n === 1 ? "Hinweis" : "Hinweise"}`,
