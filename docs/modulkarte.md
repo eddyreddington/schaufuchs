@@ -754,7 +754,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (238 Z.)
+### halle-werkzeuge.ts (237 Z.)
 
 - `halleWerkzeuge`
 
@@ -943,7 +943,7 @@ Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt
 
 - `halleBild` – Texte der Oberfläche: halleBild (Entscheidung 022) – Zeichnung des Hallenplans, Entwürfe, Grundriss, 3D-Ansicht.
 
-### halle-werkzeuge.ts (244 Z.)
+### halle-werkzeuge.ts (243 Z.)
 
 - `halleWerkzeuge` – Texte der Oberfläche: halleWerkzeuge (Entscheidung 022) – Werkzeugleiste, Befehle und Aktionen des Hallenplan-Editors, kleine Teile (Tiere ohne Pla …
 
@@ -1144,7 +1144,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `halleBild`
 
-### halle-werkzeuge.ts (234 Z.)
+### halle-werkzeuge.ts (233 Z.)
 
 - `halleWerkzeuge`
 
@@ -1329,7 +1329,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (234 Z.)
+### halle-werkzeuge.ts (233 Z.)
 
 - `halleWerkzeuge`
 
@@ -1518,7 +1518,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (234 Z.)
+### halle-werkzeuge.ts (233 Z.)
 
 - `halleWerkzeuge`
 
@@ -1703,7 +1703,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (239 Z.)
+### halle-werkzeuge.ts (238 Z.)
 
 - `halleWerkzeuge`
 
@@ -2534,10 +2534,10 @@ Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volier
 ### hallenplan-3d.tsx (216 Z.)
 Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben oder im Gang in Augenhöhe, mit Tasten oder Steuerkreuz gehen und als a …
 
-### hallenplan-aktionen.ts (216 Z.)
+### hallenplan-aktionen.ts (214 Z.)
 Werkzeuge des Hallenplan-Editors für die Auswahl und für neue Teile: am Raster ausrichten, drehen, an den Platz zurück, Leeres entfernen, Teile und …
 
-### hallenplan-befehle.ts (294 Z.)
+### hallenplan-befehle.ts (289 Z.)
 Befehle des Hallenplan-Editors, die über den Entwurf hinausgehen: Rückgängig/Wiederholen, Tier versetzen, nach Plan nummerieren, Einstellungen der …
 Prozeduren: katalog.nummernNachPlan, katalog.tierVersetzen, katalog.wandreiheStellen
 
@@ -2553,7 +2553,7 @@ Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die
 ### hallenplan-entwuerfe.tsx (166 Z.)
 Prozeduren: hallenentwurf.entscheiden, hallenentwurf.laden, hallenentwurf.liste, hallenentwurf.loeschen, hallenentwurf.speichern, hallenentwurf.umbenennen
 
-### hallenplan-entwurf.ts (232 Z.)
+### hallenplan-entwurf.ts (242 Z.)
 Entwurf des Hallenplan-Editors und alles, was ihn speichert: jede Änderung wirkt sofort im Entwurf und geht der Reihe nach an den Server (`kette`), …
 Prozeduren: katalog.halleSetzen, katalog.hallenplan, katalog.planFestschreiben, katalog.planNeuSetzen
 
@@ -2592,9 +2592,9 @@ Bausteine der Werkzeugleiste im Hallenplan-Editor: Symbole, Werkzeugknöpfe mit 
 ### hallenplan-werkzeugleiste.tsx (212 Z.)
 Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen, Zoom, Menü „Plan“).
 
-### hallenplan-wiederholen.test.ts (191 Z.)
+### hallenplan-wiederholen.test.ts (329 Z.)
 
-### hallenplan-wiederholen.ts (76 Z.)
+### hallenplan-wiederholen.ts (122 Z.)
 Automatisches Wiederholen beim Speichern im Hallenplan-Editor (hallenplan-entwurf.ts): rein, mit eingesetztem Senden und Warten.
 
 ### hallenplan.tsx (562 Z.) – `/schau/:schauId/hallenplan`
@@ -2924,7 +2924,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `35-pruefung-nachbesserung.ts` (574 Z.) – Nachbesserungen aus der Gesamtprüfung vom 13.11.2026 (interne Prüfung): Sperren nach Festschreiben und Abschluss, Geld-Lücken, Protokoll, rechtssic …
 - `36-nach-plan-nummerieren.ts` (248 Z.) – Nach dem Umstellen im Hallenplan neu nummerieren: vor dem Festschreiben der Katalognummern die Katalognummern (und Käfigplätze) in der Reihenfolge …
 - `37-kommende-schauen.ts` (204 Z.) – Kommende Schauen: Termine pflegen, Kalender abonnieren ohne stilles Überschreiben, Katalogseite mit Kreiswahl, eigener Kalender.
-- `38-hallenplan-entfernen.ts` (86 Z.) – Leere Plätze im festen Hallenplan entfernen: über das Speichern der Halle (wie jede Änderung im Editor), nur leere Platten und Plätze im festen Pla …
+- `38-hallenplan-entfernen.ts` (88 Z.) – Leere Plätze im festen Hallenplan entfernen: über das Speichern der Halle (wie jede Änderung im Editor), nur leere Platten und Plätze im festen Pla …
 - `39-hallenplan-druck.ts` (100 Z.) – Hallenplan drucken: genau ein Blatt A4 (quer, wenn die Zeichnung breiter als hoch ist), auch bei einer großen Halle mit vielen Käfigen, festgeschri …
 - `40-hallenplan-neu-setzen.ts` (131 Z.) – Plan neu setzen (Rückmeldung 14.11.2026: „wenn ich quer auf längs gehe und neu anordne macht er quatsch“): Plan fest, Reihe und Platten verschoben, …
 - `41-hallenplan-3d.ts` (93 Z.) – Hallenplan räumlich: Aufsteller je Schau einstellen, Daten für die 3D-Ansicht ohne Ausstellernamen.
