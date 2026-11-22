@@ -1,12 +1,12 @@
 /**
- * Hallenplan drucken und zeichnen: gemeinsame Regeln für Bildschirm und PDF – Farben der Preisrichter in der Folge der
- * Katalognummern, Lage der Zeichnung (lange Seite waagrecht) und der Maßstab, mit dem der Plan ein Blatt füllt. Reine
+ * Hallenplan drucken und zeichnen: gemeinsame Regeln für Bildschirm und PDF – Farben der Preisrichter in der Folge des
+ * Plans, Lage der Zeichnung (lange Seite waagrecht) und der Maßstab, mit dem der Plan ein Blatt füllt. Reine
  * Rechnung ohne Datenbank.
  */
 import type { Hallenplan, Rechteck } from "./hallenplan";
 
 /**
- * Preisrichter: geprüfte Kategorien-Palette in fester Reihenfolge nach Katalognummern – Nachbarn im Katalog bekommen
+ * Preisrichter: geprüfte Kategorien-Palette in fester Reihenfolge (siehe `richterFolge`) – Nachbarn in der Halle bekommen
  * Nachbarfarben. Ab der 5. Farbe zusätzlich schraffiert (siehe `richterSchraffur`).
  */
 export const RICHTER_FARBE = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"] as const;
@@ -15,19 +15,19 @@ export const richterFarbe = (i: number): string => RICHTER_FARBE[i % RICHTER_FAR
 export const richterSchraffur = (i: number): boolean => (i % RICHTER_FARBE.length >= 4) !== (i >= RICHTER_FARBE.length);
 
 /**
- * Preisrichter in der Folge ihrer kleinsten Katalognummer im Plan (gleich: nach Namen). Der Platz in dieser Folge ist der
- * Index für `richterFarbe` – so tragen Bildschirm und Druck dieselben Farben.
+ * Preisrichter in der Folge ihres ersten Käfigs im Plan (Reihen mit ihren Käfigen, dann Volieren, dann eingesetzte Teile;
+ * ohne Käfig nach Namen). Der Platz in dieser Folge ist der Index für `richterFarbe` – so tragen Bildschirm und Druck
+ * dieselben Farben, und Nachbarn in der Halle bekommen Nachbarfarben. Nicht nach Katalognummern: Der Hallenplan kommt
+ * vor den Nummern, und beim Nummerieren wechselt so keine Farbe (der feste Plan bleibt stehen, der automatische steht vor
+ * und nach der Vergabe in Ausstellungsfolge).
  */
 export function richterFolge<R extends { id: number; name: string }>(plan: Pick<Hallenplan, "reihen" | "volieren" | "objekte">, richter: R[]): R[] {
-  const ersteNr = new Map<number, number>();
+  const erste = new Map<number, number>();
   const tiere = [...plan.reihen.flatMap((r) => r.kaefige), ...plan.volieren, ...plan.objekte.flatMap((o) => [...(o.tier ? [o.tier] : []), ...(o.kaefige ?? [])])];
-  for (const k of tiere) {
-    if (k.preisrichterId == null || !k.nr) continue;
-    const n = Number.parseInt(k.nr, 10);
-    if (Number.isNaN(n)) continue;
-    if (!ersteNr.has(k.preisrichterId) || n < ersteNr.get(k.preisrichterId)!) ersteNr.set(k.preisrichterId, n);
-  }
-  return [...richter].sort((a, b) => (ersteNr.get(a.id) ?? Infinity) - (ersteNr.get(b.id) ?? Infinity) || a.name.localeCompare(b.name, "de"));
+  tiere.forEach((k, i) => {
+    if (k.preisrichterId != null && !erste.has(k.preisrichterId)) erste.set(k.preisrichterId, i);
+  });
+  return [...richter].sort((a, b) => (erste.get(a.id) ?? Infinity) - (erste.get(b.id) ?? Infinity) || a.name.localeCompare(b.name, "de"));
 }
 
 /**

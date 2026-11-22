@@ -1,10 +1,10 @@
 /** Hallenplan drucken: Farben der Preisrichter, Lage der Zeichnung, Maßstab fürs Blatt. */
 import { describe, expect, test } from "bun:test";
-import { HALLE_STANDARD, planeHalle, type PlanTier } from "./hallenplan";
+import { festschreiben, HALLE_STANDARD, planeHalle, type PlanTier } from "./hallenplan";
 import { druckMassstab, reihenSchilder, RICHTER_FARBE, richterFarbe, richterFolge, richterSchraffur, zeichnungDerHalle } from "./hallenplan-druck";
 
 describe("Hallenplan drucken", () => {
-  test("Preisrichter in der Folge ihrer kleinsten Katalognummer, dann nach Namen", () => {
+  test("Preisrichter in der Folge ihres ersten Käfigs im Plan, ohne Käfig nach Namen", () => {
     const tier = (id: number, pr: number | null): PlanTier => ({ id, typ: "huehner", nr: String(id), rasse: "R", preisrichterId: pr });
     const plan = planeHalle({ ...HALLE_STANDARD, flaechen: [] }, [tier(1, 20), tier(2, 20), tier(3, 10), tier(4, null)], { huehner: { breite: 70, tiefe: 70, hoehe: 70 } });
     const r = richterFolge(plan, [
@@ -13,8 +13,24 @@ describe("Hallenplan drucken", () => {
       { id: 20, name: "Zacharias" },
       { id: 40, name: "Albert" },
     ]);
-    // Zacharias hat Nr. 1, Anton Nr. 3; ohne Tiere nach Namen.
+    // Zacharias steht vorn (Nr. 1), Anton dahinter (Nr. 3); ohne Tiere nach Namen.
     expect(r.map((x) => x.id)).toEqual([20, 10, 40, 30]);
+  });
+
+  test("Farben nach der ersten Lage im Plan: beim Nummerieren behält jeder Preisrichter seine Farbe", () => {
+    const masse = { huehner: { breite: 70, tiefe: 70, hoehe: 70 } };
+    const halle = { ...HALLE_STANDARD, flaechen: [] };
+    const richter = [{ id: 10, name: "Anton" }, { id: 20, name: "Zacharias" }];
+    const t = (id: number, nr: string | null, pr: number): PlanTier => ({ id, typ: "huehner", nr, rasse: "R", preisrichterId: pr });
+    const folge = (plan: Parameters<typeof richterFolge>[0]) => richterFolge(plan, richter).map((r) => r.name);
+    // Vor den Nummern (Ausstellungsfolge): Zacharias vorn, Anton hinten – nicht nach Namen.
+    const vorher = planeHalle(halle, [t(1, null, 20), t(2, null, 20), t(3, null, 10)], masse);
+    expect(folge(vorher)).toEqual(["Zacharias", "Anton"]);
+    // Automatischer Plan, in Ausstellungsfolge nummeriert: dieselben Farben.
+    expect(folge(planeHalle(halle, [t(1, "1", 20), t(2, "2", 20), t(3, "3", 10)], masse))).toEqual(["Zacharias", "Anton"]);
+    // Fester Plan, anders nummeriert (Anton bekommt die 1): die Käfige bleiben stehen, die Farben auch.
+    const fest = festschreiben(halle, vorher, masse, "2026-11-22T00:00:00.000Z");
+    expect(folge(planeHalle(halle, [t(3, "1", 10), t(1, "2", 20), t(2, "3", 20)], masse, fest))).toEqual(["Zacharias", "Anton"]);
   });
 
   test("Farben: acht, danach von vorn; schraffiert ab der fünften und in der zweiten Runde umgekehrt", () => {
