@@ -1,5 +1,12 @@
 # SchauFUCHS 1.21 – Versionshinweise
 
+## 1.21.3 (22.11.2026)
+
+- **Katalog kürzt nichts mehr:** Lange Rassen, Farbenschläge, Sparten, Preisrichter, Aussteller, Vereine und Titel
+  werden nicht mehr mit „…“ abgeschnitten. Sie werden erst kleiner gesetzt und brechen dann um; die Zeilen darunter
+  rücken nach. Das gilt für alle Schriften und Layouts, Verzeichnisse, Kolumnentitel und Fußzeile (Entscheidung 032).
+- **Behoben:** Im Rassenverzeichnis konnte ein langer Name über die Spalte „Sparte · Anzahl“ laufen.
+
 ## 1.21.2 (22.11.2026)
 
 - **3D-Rundgang ohne Käfige und Decke:** Der Rundgang sucht seinen Weg nur über freie Fläche, mit Abstand zu Käfigen,
