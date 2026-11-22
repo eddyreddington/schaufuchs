@@ -133,9 +133,6 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   },
   druck: {
     gewaehlt: "Modèle d’impression choisi.",
-    hilfe: "Aide sur les modèles d’impression",
-    nurAdmin: "Seuls les administrateurs choisissent le modèle d’impression.",
-    karten: "Cartes de jugement",
     vorgabe: "Par défaut (A6, quatre par A4)",
     nurDieseSchau: " (cette exposition uniquement)",
     anpassen: "Adapter pour cette exposition",

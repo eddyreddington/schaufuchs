@@ -133,9 +133,6 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   },
   druck: {
     gewaehlt: "Afdruksjabloon gekozen.",
-    hilfe: "Hulp bij afdruksjablonen",
-    nurAdmin: "Alleen beheerders kiezen het afdruksjabloon.",
-    karten: "Keurkaarten",
     vorgabe: "Standaard (A6, vier per A4)",
     nurDieseSchau: " (alleen deze show)",
     anpassen: "Aanpassen voor deze show",

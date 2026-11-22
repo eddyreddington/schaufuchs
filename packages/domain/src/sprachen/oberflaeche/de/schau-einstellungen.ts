@@ -140,9 +140,6 @@ export const schauEinstellungen = {
   /** seiten/einstellungen-druck.tsx */
   druck: {
     gewaehlt: "Druckvorlage gewählt.",
-    hilfe: "Hilfe zu Druckvorlagen",
-    nurAdmin: "Nur Administratoren wählen die Druckvorlage.",
-    karten: "Bewertungskarten",
     vorgabe: "Vorgabe (A6, vier je A4)",
     nurDieseSchau: " (nur diese Schau)",
     anpassen: "Für diese Schau anpassen",

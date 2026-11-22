@@ -133,9 +133,6 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   },
   druck: {
     gewaehlt: "Tisková šablona vybrána.",
-    hilfe: "Nápověda k tiskovým šablonám",
-    nurAdmin: "Tiskovou šablonu vybírají jen administrátoři.",
-    karten: "Posudkové listy",
     vorgabe: "Výchozí (A6, čtyři na A4)",
     nurDieseSchau: " (jen tato výstava)",
     anpassen: "Upravit pro tuto výstavu",

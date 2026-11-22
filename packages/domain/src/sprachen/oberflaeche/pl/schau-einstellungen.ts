@@ -133,9 +133,6 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   },
   druck: {
     gewaehlt: "Wybrano szablon wydruku.",
-    hilfe: "Pomoc: szablony wydruku",
-    nurAdmin: "Tylko administratorzy wybierają szablon wydruku.",
-    karten: "Karty oceny",
     vorgabe: "Domyślny (A6, cztery na A4)",
     nurDieseSchau: " (tylko ta wystawa)",
     anpassen: "Dostosuj dla tej wystawy",

@@ -20,3 +20,5 @@ entscheiden, ohne dass jede Schau neu eingerichtet werden muss.
 
 **Folgen:** Briefe (Meldebestätigung, Abrechnung, Quittungen, Spendenquittung, Serienbrief) bekommen eine eigene
 Briefvorlage nach demselben Muster (Art „brief“ in derselben Tabelle) – siehe 012.
+Formate der übrigen Drucke und die Übersicht im Reiter „Druck“: [029](029-druckformate.md). Eine Schau aus Vorlage
+übernimmt die Kartenvorlage (die Fassung der alten Schau als eigene, über `kartenVorlageLesen()` begrenzte Kopie).

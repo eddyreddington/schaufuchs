@@ -133,9 +133,6 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   },
   druck: {
     gewaehlt: "Print template selected.",
-    hilfe: "Help on print templates",
-    nurAdmin: "Only administrators choose the print template.",
-    karten: "Judging cards",
     vorgabe: "Default (A6, four per A4)",
     nurDieseSchau: " (this show only)",
     anpassen: "Adapt for this show",
