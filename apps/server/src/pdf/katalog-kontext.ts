@@ -13,7 +13,7 @@ import { type Eintrag, ladeEintraege, skalaVon, verdeckeNamen } from "../service
 import { ladeVereinsangaben } from "../services/datenschutz";
 import { zuteilung } from "../services/pruefung";
 import { spenderFuerKatalog } from "../services/spenden";
-import { GRAU, HAARLINIE, kontrast, lesbareFarbe, MM, registriereSchriften, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, TINTE } from "./basis";
+import { GRAU, HAARLINIE, kontrast, lesbareFarbe, MM, registriereSchriften, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, textOhnePlatzAuslassen, TINTE } from "./basis";
 import { type Stich, stichBild } from "./illustrationen";
 import { kurzauswahl } from "./katalog-hilfen";
 
@@ -105,6 +105,7 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
     autoFirstPage: false,
     info: { Title: `Katalog ${s.name}`, Author: s.veranstalter, Creator: "SchauFUCHS" },
   });
+  textOhnePlatzAuslassen(doc);
   const teile: Buffer[] = [];
   doc.on("data", (c: Buffer) => teile.push(c));
   const fertig = new Promise<Buffer>((resolve, reject) => {

@@ -90,7 +90,7 @@ Tests: `datum.test.ts`
 - `datumKurz()` – TT.MM.JJJJ aus JJJJ-MM-TT (für Meldungen und Belege).
 - `heuteBerlin()` – Heutiger Kalendertag in deutscher Zeit.
 
-### druck-formate.ts (150 Z.)
+### druck-formate.ts (179 Z.)
 Formatvorgaben der Drucke je Schau (Entscheidung 029): welche Drucksachen es gibt, auf welchem Papier sie kommen, welche sich umstellen lassen und …
 Tests: `druck-formate.test.ts`
 
@@ -104,7 +104,8 @@ Tests: `druck-formate.test.ts`
 - `druckFormateAbweichung()` – Was von der Vorgabe abweicht (leer = alles wie bisher) – für Protokoll und Anzeige.
 - `BelegBlatt` (Typ) – Beleg (Kaufbeleg, Kassenbeleg, Spendenquittung): der Beleg ist immer A5 quer, das Papier A5 quer oder A4 hoch.
 - `belegBlatt()`
-- `bewertungslisteBlatt()` – Bewertungsliste: Seite und wie viele Listen nebeneinander.
+- `ListenSpalten` (Typ) – Spalten einer Bewertungsliste in mm: Nummer, Klasse, dann Note, Punkte und Preis zum Eintragen.
+- `bewertungslisteBlatt()` – Bewertungsliste: Seite, wie viele Listen nebeneinander, Ränder (schmal, gelocht wird links), Lücke zwischen den Listen und die Spaltenbreiten in mm.
 - `hallenplanBlatt()` – Hallenplan: ein Blatt, quer, wenn die Zeichnung breiter als hoch ist.
 - `DruckEinstellung` (Typ) – Wo das Format einer Drucksache eingestellt wird.
 - `DRUCKSACHEN` – Alle Drucksachen einer Schau in der Folge des Ablaufs (Meldung → Bewertung → Kasse → Halle).
@@ -2505,7 +2506,7 @@ Rassebilder: ansehen (alle Benutzer) und pflegen (Ausstellungsleitung).
 - `rassebild.angabenSetzen` mutation · admin – Urheber, Lizenz, Quelle und „geprüft“ ändern.
 - `rassebild.loeschen` mutation · admin
 
-### routers/schau/anlegen.ts (321 Z.) → `schau`
+### routers/schau/anlegen.ts (329 Z.) → `schau`
 Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
 
 - `schau.anlegen` mutation · admin – Neue Schau anlegen – leer mit Startwerten oder aus einer früheren Schau des Vereins als Vorlage.
@@ -3005,10 +3006,10 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 - `a-bogen.ts` (324 Z.) – A-Bogen (Meldebogen) zum Ausdrucken: der Aussteller füllt ihn aus, unterschreibt und schickt ihn an die Meldestelle; mit der Unterschrift erkennt e … · aBogenPdf, aBogenFuerAusstellerPdf
 - `auskunft.ts` (296 Z.) · auskunftPdf
-- `basis.ts` (425 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, teilSeite, seitenzahlen, tabelle, textImFeld, angaben, hinweisKastenHoehe, hinweisKasten, unterschrift, ueberschrift, datumDe
+- `basis.ts` (445 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, textOhnePlatzAuslassen, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, teilSeite, seitenzahlen, tabelle, textImFeld, angaben, hinweisKastenHoehe, hinweisKasten, unterschrift, ueberschrift, datumDe
 - `beleg-blatt.ts` (28 Z.) – Papier der Belege (Kaufbeleg, Einzahlungsquittung, Eigenbeleg, Spendenquittung) nach der Formatvorgabe der Schau (Entscheidung 029): A5 quer wie bi … · belegSeite, schnittlinie
 - `bewertungskarte.ts` (325 Z.) – Bewertungskarten nach der Druckvorlage der Schau (Format, Bausteine oder Vordruck-Felder, Versatz) – dazu die Vorschau für den Designer und der Pro … · ladeKartenVorlage, kartenKopf, bewertungskartenPdf, BEISPIEL_KARTEN, zeichneKartenPdf, probedruckPdf
-- `bewertungsliste.ts` (143 Z.) – Bewertungsliste je Preisrichter (zum Mitnehmen in die Käfigreihe) wie die Papiervorlage: zwei Listen nebeneinander je A4-Seite, laufend (Formatvorg … · preisrichterListePdf
+- `bewertungsliste.ts` (142 Z.) – Bewertungsliste je Preisrichter (zum Mitnehmen in die Käfigreihe) wie die Papiervorlage: zwei Listen nebeneinander je A4-Seite, laufend (Formatvorg … · preisrichterListePdf
 - `brief.ts` (136 Z.) – Briefe nach der Briefvorlage des Vereins (DIN 5008, Form A oder B): Briefkopf, Rücksendeangabe, Anschrift, Informationsblock, Falzmarken und Fußzeile. · BRIEF_RAENDER, ladeBriefVorlage, briefDesign, briefKopf, belegKopf, briefFuss, serienbriefPdf
 - `dokumente-amt.ts` (245 Z.) – Listen für das Veterinäramt: abgegebene Tiere (Verkaufsliste) und Aussteller- und Tierliste. · verkaufslistePdf, tierlistePdf
 - `dokumente-gemeinsam.ts` (35 Z.) – Gemeinsame Hilfen der Dokumente einer Schau (dokumente.ts, dokumente-kasse.ts, dokumente-amt.ts): Design aus der Katalog-Gestaltung, Vereinsname, K … · nr, klasse, tier, A4_RAENDER, ladeDesign, verein, kopfzeile, fusstext, breite, unten
@@ -3019,7 +3020,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog-anhang.ts` (147 Z.) – Katalog-PDF, Anhang: kommende Schauen, Anzeigen der Förderer und Notizseiten bis zur vollen Heftlage. · kommendeSchauenSeite, anzeigenSeiten, notizSeiten
 - `katalog-hilfen.ts` (65 Z.) – Katalog-PDF, gemeinsame Hilfen ohne PDF: Kurzvorschau-Auswahl, Anzahltexte („3 Stämme“) und der Bildnachweis (Adressen kürzen, Urheber bereinigen, … · KURZ_JE_ABTEILUNG, kurzauswahl, anzahlText, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis
-- `katalog-kontext.ts` (241 Z.) – Katalog-PDF, Grundlage für alle Teile: lädt die Daten der Schau, legt das PDF an und stellt die gemeinsamen Satzhilfen bereit (Seiten, Inhaltsverze … · katalogKontext
+- `katalog-kontext.ts` (242 Z.) – Katalog-PDF, Grundlage für alle Teile: lädt die Daten der Schau, legt das PDF an und stellt die gemeinsamen Satzhilfen bereit (Seiten, Inhaltsverze … · katalogKontext
 - `katalog-tierteil.ts` (450 Z.) – Katalog-PDF, Tierteil: zwei oder drei Spalten bzw. Tabelle, Spartenköpfe mit Stich, Rassenköpfe mit Rassebild, Preisrichter-, Klassen- und Tierzeil … · nrVergleich, nrBereich, tierteilSetzen
 - `katalog-titel.ts` (178 Z.) – Katalog-PDF, Titelseite: Hintergrund, Titel, Logo, Titelbild bzw. Stich und Termine je Stil. · titelseite
 - `katalog-verzeichnisse.ts` (177 Z.) – Katalog-PDF, Verzeichnisse: Rassenverzeichnis, Bildnachweis, Ausstellerverzeichnis und das am Ende nachgetragene Inhaltsverzeichnis mit Impressum. · rassenverzeichnis, bildnachweisSeite, ausstellerverzeichnis, inhaltsverzeichnis
@@ -3196,6 +3197,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `75-halle-aussehen.ts` (88 Z.) – Aussehen der Halle in 3D (Entscheidung 028): gespeichert mit der Halle (begrenzt, nur Abweichungen, mit Protokoll), ändert im festen Plan weder Pla …
 - `76-verpflichtung-zusage.ts` (124 Z.) – Preisrichterverpflichtung, Nachbesserung: Termin „Rückmeldung der Preisrichter bis“ in den Einstellungen der Schau (Prüfung, Protokoll, nicht aus d …
 - `78-tueren.ts` (86 Z.) – Türen in den Eingängen (3D, Entscheidung 028): Türart je Eingang gespeichert mit der Halle (nur gültig, nur Abweichung von der Vorgabe, mit Protoko …
-- `80-druck-formate.ts` (254 Z.) – Formatvorgaben der Drucke (Entscheidung 029, Rückmeldung „Bei den Druckeinstellungen fehlen die Formatvorgaben“): speichern, ablehnen, Protokoll, R …
+- `80-druck-formate.ts` (310 Z.) – Formatvorgaben der Drucke (Entscheidung 029, Rückmeldung „Bei den Druckeinstellungen fehlen die Formatvorgaben“): speichern, ablehnen, Protokoll, R …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

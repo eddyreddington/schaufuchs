@@ -75,9 +75,38 @@ export function belegBlatt(format: BelegFormat): BelegBlatt {
   return format === "A4" ? { seite: blatt("A4"), beleg, schnittBei: beleg.hoehe } : { seite: beleg, beleg, schnittBei: null };
 }
 
-/** Bewertungsliste: Seite und wie viele Listen nebeneinander. */
-export function bewertungslisteBlatt(format: DruckFormate["bewertungsliste"]): { seite: Blatt; listenJeSeite: 1 | 2 } {
-  return format === "A5" ? { seite: blatt("A5"), listenJeSeite: 1 } : { seite: blatt("A4"), listenJeSeite: 2 };
+/** Spalten einer Bewertungsliste in mm: Nummer, Klasse, dann Note, Punkte und Preis zum Eintragen. */
+export interface ListenSpalten {
+  nr: number;
+  klasse: number;
+  note: number;
+  pkt: number;
+  preis: number;
+}
+
+/**
+ * Bewertungsliste: Seite, wie viele Listen nebeneinander, Ränder (schmal, gelocht wird links), Lücke zwischen den
+ * Listen und die Spaltenbreiten in mm. Die Klasse bekommt den Rest – in jedem Format mindestens 15 mm (Test).
+ */
+export function bewertungslisteBlatt(format: DruckFormate["bewertungsliste"]): {
+  seite: Blatt;
+  listenJeSeite: 1 | 2;
+  raender: { oben: number; unten: number; links: number; rechts: number };
+  luecke: number;
+  spalten: ListenSpalten;
+  /** Kopf: Platz für die Angaben rechts (Bewertung, Obmann, Nummern, Tiere) in mm und Schriftgröße des Namens in pt. */
+  kopfAngaben: number;
+  kopfTitel: number;
+} {
+  const seite = format === "A5" ? blatt("A5") : blatt("A4");
+  const listenJeSeite = format === "A5" ? 1 : 2;
+  const raender = { oben: 14, unten: 18, links: 15, rechts: 15 };
+  const luecke = 6;
+  const liste = (seite.breite - raender.links - raender.rechts - (listenJeSeite - 1) * luecke) / listenJeSeite;
+  const fest = { nr: 14, note: 16, pkt: 13, preis: 17 };
+  // Kopf: auf A5 schmalere Angaben, damit der Name des Preisrichters nicht in viele Zeilen zerfällt.
+  const a5 = format === "A5";
+  return { seite, listenJeSeite, raender, luecke, spalten: { ...fest, klasse: liste - fest.nr - fest.note - fest.pkt - fest.preis }, kopfAngaben: a5 ? 50 : 62, kopfTitel: a5 ? 16 : 20 };
 }
 
 /** Hallenplan: ein Blatt, quer, wenn die Zeichnung breiter als hoch ist. */

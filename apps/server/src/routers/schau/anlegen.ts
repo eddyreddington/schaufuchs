@@ -1,7 +1,7 @@
 /**
  * Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
  */
-import { type Aufsteller, druckFormateLesen, EingabeFehler, halleOhneFestenPlan } from "@schau/domain";
+import { type Aufsteller, druckFormateLesen, EingabeFehler, halleOhneFestenPlan, kartenVorlageLesen } from "@schau/domain";
 import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { z, ZodError } from "zod";
@@ -149,7 +149,7 @@ export const schauAnlegen = {
             const neu = neueBildId.get(alt) ?? null;
             await tx.update(schau).set({ aufsteller: { ...vorlage.aufsteller!, verkleidung: { ...vorlage.aufsteller!.verkleidung!, bildId: neu } } }).where(eq(schau.id, s!.id));
           }
-          await uebernimmKartenvorlage(tx, vorlage, s!);
+          await uebernimmKartenvorlage(tx, vorlage, s!, ctx);
           // Testschau aus einer echten Vorlage: keine echten Preisrichter (Name, Kontakt) in Übungsdaten – die
           // Demodaten bringen erfundene mit.
           if (input.test && !vorlage.test) await tx.delete(preisrichter).where(eq(preisrichter.schauId, s!.id));
@@ -298,19 +298,27 @@ async function kopiereAusVorlage(tx: Tx, von: number, nach: number) {
 
 /**
  * Druckvorlage der Bewertungskarten aus der Vorlage: eine Vereinsvorlage gilt weiter; die für die alte Schau abgewandelte
- * Fassung gehört zu ihr – die neue Schau bekommt davon eine eigene Kopie (wie „Für diese Schau anpassen“).
+ * Fassung gehört zu ihr – die neue Schau bekommt davon eine eigene Kopie wie bei „Für diese Schau anpassen“
+ * (druckvorlage.fuerSchauAnpassen): Inhalt über kartenVorlageLesen() begrenzt (Entscheidung 011), Name „Neue Schau: Vorlage“
+ * ohne den Namen der alten Schau davor, Übernahme im Protokoll.
  */
-async function uebernimmKartenvorlage(tx: Tx, vorlage: typeof schau.$inferSelect, neu: typeof schau.$inferSelect) {
+async function uebernimmKartenvorlage(tx: Tx, vorlage: typeof schau.$inferSelect, neu: typeof schau.$inferSelect, ctx: Parameters<typeof protokolliere>[1]["akteur"]) {
   if (vorlage.vorlageBewertungskarteId == null) return;
-  const [k] = await tx.select().from(druckvorlage).where(and(eq(druckvorlage.id, vorlage.vorlageBewertungskarteId), eq(druckvorlage.organisationId, vorlage.organisationId)));
-  if (!k) return;
+  const [k] = await tx
+    .select()
+    .from(druckvorlage)
+    .where(and(eq(druckvorlage.id, vorlage.vorlageBewertungskarteId), eq(druckvorlage.organisationId, vorlage.organisationId), eq(druckvorlage.art, "bewertungskarte")));
+  if (!k || (k.schauId != null && k.schauId !== vorlage.id)) return;
   let id = k.id;
   if (k.schauId != null) {
+    const vorn = `${vorlage.name}: `;
+    const name = k.name.startsWith(vorn) ? k.name.slice(vorn.length) : k.name;
     const [kopie] = await tx
       .insert(druckvorlage)
-      .values({ organisationId: k.organisationId, schauId: neu.id, art: k.art, name: `${neu.name}: ${k.name}`.slice(0, 80), daten: k.daten })
+      .values({ organisationId: k.organisationId, schauId: neu.id, art: "bewertungskarte", name: `${neu.name}: ${name}`.slice(0, 80), daten: kartenVorlageLesen(k.daten) })
       .returning({ id: druckvorlage.id });
     id = kopie!.id;
+    await protokolliere(tx, { schauId: neu.id, tabelle: "druckvorlage", datensatzId: id, aktion: "Druckvorlage aus der Vorlage übernommen", neu: { quelle: k.id }, akteur: ctx });
   }
   await tx.update(schau).set({ vorlageBewertungskarteId: id }).where(eq(schau.id, neu.id));
 }

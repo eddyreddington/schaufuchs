@@ -124,6 +124,24 @@ export function mitVermerk<T>(vermerk: string | null, f: () => Promise<T>): Prom
   return vermerk ? vermerkKontext.run(vermerk, f) : f();
 }
 
+/**
+ * Schutz für jedes PDF: Text mit einer Breite ≤ 1 pt (oder nicht endlich) wird nicht gesetzt. pdfkit 0.15 begrenzt die
+ * Breite nur bei Zeilenumbruch; mit `lineBreak: false` und negativer Breite läuft sein Zeilenumbruch endlos – und Bun
+ * ist einthreadig, der ganze Server hinge. Lesbar wäre so ein Text ohnehin nicht; das Log nennt ihn.
+ */
+export function textOhnePlatzAuslassen(doc: Doc) {
+  const setzen = doc.text.bind(doc) as (...a: unknown[]) => Doc;
+  (doc as { text: (...a: unknown[]) => Doc }).text = (...a: unknown[]) => {
+    const opts = a.slice(1).find((x): x is { width?: unknown } => !!x && typeof x === "object");
+    const w = opts?.width;
+    if (w != null && !(typeof w === "number" && Number.isFinite(w) && w > 1)) {
+      console.warn(`[pdf] Text ohne Platz ausgelassen (Breite ${String(w)}): ${String(a[0]).slice(0, 40)}`);
+      return doc;
+    }
+    return setzen(...a);
+  };
+}
+
 /** Erzeugt ein PDF und liefert es als Buffer. Die Hausschriften sind registriert, Grundschrift ist Plex. */
 export async function erzeugePdf(
   titel: string,
@@ -137,6 +155,7 @@ export async function erzeugePdf(
     bufferPages: true,
     info: { Title: titel, Creator: "SchauFUCHS" },
   });
+  textOhnePlatzAuslassen(doc);
   const teile: Buffer[] = [];
   doc.on("data", (c: Buffer) => teile.push(c));
   const fertig = new Promise<Buffer>((resolve) => doc.on("end", () => resolve(Buffer.concat(teile))));
@@ -182,7 +201,8 @@ export function kicker(doc: Doc, text: string, x: number, y: number, farbe: stri
 export function briefkopf(
   doc: Doc,
   d: Design,
-  kopf: { verein: string; zeile: string; art?: string; titel: string; unter?: string; angaben?: [string, string][] },
+  /** angabenBreite, titelGroesse: Platz rechts für die Angaben (Vorgabe 62 mm) und Schriftgröße des Titels (Vorgabe 20) – auf A5 kleiner. */
+  kopf: { verein: string; zeile: string; art?: string; titel: string; unter?: string; angaben?: [string, string][]; angabenBreite?: number; titelGroesse?: number },
 ) {
   const x = links(doc);
   const w = breite(doc);
@@ -200,12 +220,12 @@ export function briefkopf(
   doc.save().rect(x, y, w, 1.2).fill(d.flaeche).restore();
   y += 6 * MM;
   const angaben = kopf.angaben ?? [];
-  const aw = angaben.length ? 62 * MM : 0;
+  const aw = angaben.length ? (kopf.angabenBreite ?? 62 * MM) : 0;
   if (kopf.art) {
     kicker(doc, kopf.art, x, y, d.farbe, w - aw);
     y += 4 * MM;
   }
-  doc.font(SERIF).fontSize(20).fillColor(TINTE).text(kopf.titel, x, y, { width: w - aw - 4 * MM, lineGap: -2 });
+  doc.font(SERIF).fontSize(kopf.titelGroesse ?? 20).fillColor(TINTE).text(kopf.titel, x, y, { width: w - aw - 4 * MM, lineGap: -2 });
   if (kopf.unter) doc.font(SANS_KURSIV).fontSize(9).fillColor(GRAU).text(kopf.unter, x, doc.y + 1, { width: w - aw - 4 * MM });
   let yL = doc.y;
   // Belegangaben rechts: Bezeichnung grau, Wert rechtsbündig.

@@ -54,8 +54,18 @@ describe("Formatvorgaben der Drucke (Rückmeldung: „Bei den Druckeinstellungen
   });
 
   test("Bewertungsliste: A4 mit zwei Listen nebeneinander, A5 mit einer Liste je Seite", () => {
-    expect(bewertungslisteBlatt("A4")).toEqual({ seite: { breite: 210, hoehe: 297 }, listenJeSeite: 2 });
-    expect(bewertungslisteBlatt("A5")).toEqual({ seite: { breite: 148, hoehe: 210 }, listenJeSeite: 1 });
+    expect(bewertungslisteBlatt("A4")).toMatchObject({ seite: { breite: 210, hoehe: 297 }, listenJeSeite: 2 });
+    expect(bewertungslisteBlatt("A5")).toMatchObject({ seite: { breite: 148, hoehe: 210 }, listenJeSeite: 1 });
+  });
+
+  test("Bewertungsliste: Spalten füllen die Liste, die Klasse behält in jedem Format mindestens 15 mm", () => {
+    for (const f of DRUCK_FORMAT_WAHL.bewertungsliste) {
+      const b = bewertungslisteBlatt(f);
+      const liste = (b.seite.breite - b.raender.links - b.raender.rechts - (b.listenJeSeite - 1) * b.luecke) / b.listenJeSeite;
+      expect(b.spalten.nr + b.spalten.klasse + b.spalten.note + b.spalten.pkt + b.spalten.preis).toBeCloseTo(liste, 9);
+      expect(b.spalten.klasse).toBeGreaterThanOrEqual(15);
+      for (const w of Object.values(b.spalten)) expect(w).toBeGreaterThan(0);
+    }
   });
 
   test("Hallenplan: ein Blatt, Ausrichtung nach der Zeichnung", () => {

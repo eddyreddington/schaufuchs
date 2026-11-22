@@ -4,18 +4,17 @@
  * Obmann im Kopf; Seitenzählung. Ohne Ausstellernamen (Entscheidung 005). Gliederung und Spalten rechnet
  * packages/domain/src/preisrichter-druck.ts.
  */
-import { bewertungslisteBlatt, bewertungslisteSpalten, bewertungslisteZeilen, druckFormateLesen, type ListenZeile } from "@schau/domain";
+import { bewertungslisteBlatt, bewertungslisteSpalten, bewertungslisteZeilen, druckFormateLesen, type ListenSpalten, type ListenZeile } from "@schau/domain";
+
+type ListenBlatt = ReturnType<typeof bewertungslisteBlatt>;
 import { and, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { prEinteilung, preisrichter } from "../db/schema";
 import { ladeEintraege, type Eintrag } from "../services/eintraege";
 import { zuteilung } from "../services/pruefung";
 import { briefkopf, datumDe, type Doc, erzeugePdf, fusszeilen, GRAU, HAARLINIE, MM, SANS, SANS_FETT, textImFeld, TINTE } from "./basis";
-import { breite, kopfzeile, ladeDesign, nr, type Schau, tier, unten, verein } from "./dokumente-gemeinsam";
+import { kopfzeile, ladeDesign, nr, type Schau, tier, unten, verein } from "./dokumente-gemeinsam";
 
-/** Schmale Ränder: zwei Listen nebeneinander brauchen die Breite (gelocht wird links); auf A5 dieselben. */
-const RAENDER = { top: 14 * MM, bottom: 18 * MM, left: 15 * MM, right: 15 * MM };
-const LUECKE = 6 * MM;
 /** Höhe des Spaltenkopfs und der Zeilen (Tierzeile mit Platz zum Eintragen von Hand). */
 const SPALTENKOPF = 6 * MM;
 const HOEHE = { rasse: 6.5 * MM, farbe: 5.5 * MM, tier: 6.5 * MM } as const;
@@ -53,6 +52,8 @@ export async function preisrichterListePdf(s: Schau, preisrichterId: number) {
         zeile: kopfzeile(s),
         art: "Bewertungsliste",
         titel: pr?.name ?? "Preisrichter nicht gefunden",
+        angabenBreite: blatt.kopfAngaben * MM,
+        titelGroesse: blatt.kopfTitel,
         unter: pr ? "Zum Eintragen in der Käfigreihe – maßgeblich ist die Bewertungskarte." : undefined,
         angaben: pr
           ? [
@@ -66,17 +67,25 @@ export async function preisrichterListePdf(s: Schau, preisrichterId: number) {
       });
       if (!pr) return;
       if (!meine.length) doc.font(SANS).fontSize(9).fillColor(GRAU).text("Keine Tiere zugeteilt.").fillColor(TINTE);
-      else listen(doc, d.flaeche, d.farbe, meine, blatt.listenJeSeite);
+      else listen(doc, d.flaeche, d.farbe, meine, blatt);
       fusszeilen(doc, `Bewertungsliste ${pr.name} · ${s.name}`);
     },
-    { size: [blatt.seite.breite * MM, blatt.seite.hoehe * MM], margins: RAENDER },
+    {
+      size: [blatt.seite.breite * MM, blatt.seite.hoehe * MM],
+      // Schmale Ränder: zwei Listen nebeneinander brauchen die Breite (gelocht wird links); Maße aus der Domain.
+      margins: { top: blatt.raender.oben * MM, bottom: blatt.raender.unten * MM, left: blatt.raender.links * MM, right: blatt.raender.rechts * MM },
+    },
   );
 }
 
 /** Die Zeilen laufend in Listen nebeneinander (A4: links, rechts, nächste Seite links …; A5: eine je Seite). */
-function listen(doc: Doc, flaeche: string, farbe: string, tiere: Tier[], jeSeite: 1 | 2) {
+function listen(doc: Doc, flaeche: string, farbe: string, tiere: Tier[], blatt: ListenBlatt) {
   const x0 = doc.page.margins.left;
-  const cw = (breite(doc) - (jeSeite - 1) * LUECKE) / jeSeite;
+  const jeSeite = blatt.listenJeSeite;
+  const LUECKE = blatt.luecke * MM;
+  // Spalten in Punkt; die Breite einer Liste ist ihre Summe (bewertungslisteBlatt rechnet sie aus der Seite).
+  const b = Object.fromEntries(Object.entries(blatt.spalten).map(([k, v]) => [k, v * MM])) as unknown as ListenSpalten;
+  const cw = b.nr + b.klasse + b.note + b.pkt + b.preis;
   const ersteOben = doc.y;
   const oben = (i: number) => (i < jeSeite ? ersteOben : doc.page.margins.top);
   const spalten = bewertungslisteSpalten(bewertungslisteZeilen(tiere), (z) => HOEHE[z.art], (i) => unten(doc) - oben(i) - SPALTENKOPF);
@@ -86,10 +95,10 @@ function listen(doc: Doc, flaeche: string, farbe: string, tiere: Tier[], jeSeite
     let y = oben(i);
     // Trennlinie zwischen den beiden Listen.
     if (i % jeSeite > 0) doc.save().lineWidth(0.3).strokeColor(HAARLINIE).moveTo(x - LUECKE / 2, y).lineTo(x - LUECKE / 2, unten(doc)).stroke().restore();
-    spaltenKopf(doc, x, y, cw);
+    spaltenKopf(doc, b, x, y, cw);
     y += SPALTENKOPF;
     for (const z of zeilen) {
-      zeile(doc, z, x, y, cw, flaeche, farbe);
+      zeile(doc, b, z, x, y, cw, flaeche, farbe);
       y += HOEHE[z.art];
     }
   });
@@ -97,17 +106,8 @@ function listen(doc: Doc, flaeche: string, farbe: string, tiere: Tier[], jeSeite
   doc.fillColor(TINTE);
 }
 
-/** Spalten einer Liste: Nummer, Klasse, Note, Punkte, Preis (die letzten drei zum Eintragen). */
-function spaltenBreiten(cw: number) {
-  const nr = 14 * MM;
-  const note = 16 * MM;
-  const pkt = 13 * MM;
-  const preis = 17 * MM;
-  return { nr, klasse: cw - nr - note - pkt - preis, note, pkt, preis };
-}
-
-function spaltenKopf(doc: Doc, x: number, y: number, cw: number) {
-  const b = spaltenBreiten(cw);
+/** Spaltenkopf einer Liste: Nummer, Klasse, Note, Punkte, Preis (die letzten drei zum Eintragen). */
+function spaltenKopf(doc: Doc, b: ListenSpalten, x: number, y: number, cw: number) {
   const titel: [string, number, "left" | "right"][] = [["Nr.", b.nr, "right"], ["Klasse", b.klasse, "left"], ["Note", b.note, "left"], ["Pkt.", b.pkt, "left"], ["Preis", b.preis, "left"]];
   let tx = x;
   doc.font(SANS_FETT).fontSize(7).fillColor(GRAU);
@@ -119,7 +119,7 @@ function spaltenKopf(doc: Doc, x: number, y: number, cw: number) {
   doc.fillColor(TINTE);
 }
 
-function zeile(doc: Doc, z: ListenZeile<Tier>, x: number, y: number, cw: number, flaeche: string, farbe: string) {
+function zeile(doc: Doc, b: ListenSpalten, z: ListenZeile<Tier>, x: number, y: number, cw: number, flaeche: string, farbe: string) {
   if (z.art !== "tier") {
     const text = z.fortsetzung ? `${z.text} (Forts.)` : z.text;
     if (z.art === "rasse") {
@@ -130,7 +130,6 @@ function zeile(doc: Doc, z: ListenZeile<Tier>, x: number, y: number, cw: number,
     return;
   }
   const e = z.tier;
-  const b = spaltenBreiten(cw);
   const h = HOEHE.tier;
   textImFeld(doc, nr(e), x + 1, y + 1.6 * MM, { breite: b.nr - 3, groesse: 10, min: 7, schrift: SANS_FETT, farbe: TINTE, align: "right" });
   textImFeld(doc, tier(e), x + b.nr + 2, y + 2 * MM, { breite: b.klasse - 4, groesse: 8.5, min: 6.5, schrift: SANS, farbe: TINTE });

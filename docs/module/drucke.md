@@ -56,3 +56,10 @@ Bewertungskarte, Preise stehen auf der Karte und im Katalog.
 - Katalogformat und Kartenvorlage werden nicht doppelt gespeichert: der Reiter liest sie (`druckvorlage.formate`) und
   verlinkt „Katalog gestalten“ bzw. bedient die bestehende Kartenwahl (`druckvorlage.waehlen`).
 - Jede Änderung mit `protokolliere()` (Aktion „Druckformate“, alt und neu vollständig).
+- Bewertungsliste: Ränder, Lücke, Spaltenbreiten und Kopf (Angaben 62 mm, auf A5 50 mm; Name 20 bzw. 16 pt) rechnet
+  `bewertungslisteBlatt()`; die Klasse behält in jedem Format mindestens 15 mm (Domain-Test).
+- Schutz für alle PDFs (`textOhnePlatzAuslassen()` in `pdf/basis.ts`, in `erzeugePdf` und im Katalog): Text mit einer Breite
+  ≤ 1 pt oder nicht endlich wird ausgelassen und im Log genannt. pdfkit 0.15 begrenzt die Breite nur bei Zeilenumbruch;
+  mit `lineBreak: false` und negativer Breite lief sein Zeilenumbruch endlos und hielt den ganzen Server an.
+- Schau aus Vorlage: die Kartenvorlage der alten Schau kommt als Kopie wie bei „Für diese Schau anpassen“ (begrenzt über
+  `kartenVorlageLesen()`, Name „Neue Schau: Vorlage“, Protokoll „Druckvorlage aus der Vorlage übernommen“).

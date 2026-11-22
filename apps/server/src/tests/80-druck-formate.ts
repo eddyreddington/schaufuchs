@@ -5,7 +5,7 @@
  * festen Formate der Übersicht stimmen mit den PDFs überein. Teil des Schau-Ablaufs.
  */
 import { describe, expect, test } from "bun:test";
-import { DRUCK_FORMATE_VORGABE, DRUCKSACHEN, type DrucksacheId, KARTEN_VORGABE, PAPIER_MM } from "@schau/domain";
+import { DRUCK_FORMATE_VORGABE, DRUCKSACHEN, type DrucksacheId, KARTEN_VORGABE, kartenVorlageLesen, PAPIER_MM } from "@schau/domain";
 import { adminKontext, m, pdfText, verkaufsbereit } from "./kontext";
 
 /** Seitengrößen aller Seiten in mm (aus den MediaBoxen). */
@@ -125,6 +125,22 @@ describe("Formatvorgaben der Drucke", () => {
     for (const n of nummern) expect(a5).toMatch(new RegExp(`(^|\\s)${n}(\\s|$)`, "m"));
     for (const x of ["Bewertungsliste", "Petra Papierformat", "90"]) expect(a5).toContain(x);
     expect(a5).not.toContain("Formgeheim");
+
+    // Langer Name im Kopf auf A5: Kopf schmaler für die Angaben, Name ganz lesbar, eine Seite bei wenigen Tieren.
+    const lang = "Hans-Joachim Freiherr von Schwarzenberg-Langenfeld";
+    const obmann = "Wilhelmine Obfrau-Überlänge";
+    const ob = await al().preisrichter.speichern({ schauId: id, name: obmann, anschrift: "", email: "", telefon: "", istObmann: true, sparten: [] });
+    const pr2 = await al().preisrichter.speichern({ schauId: id, name: lang, anschrift: "", email: "", telefon: "", istObmann: false, sparten: [], obmannId: ob.id });
+    await al().preisrichter.einteilungSetzen({ schauId: id, einteilung: [{ preisrichterId: preisrichterId, vonNr: nummern[0]!, bisNr: nummern[84]! }, { preisrichterId: pr2.id, vonNr: nummern[85]!, bisNr: nummern.at(-1)! }] });
+    const kurz = pdfText(await preisrichterListePdf(await laden(id), pr2.id));
+    expect(textSeiten(kurz)).toHaveLength(1);
+    const kopf = flach(textSeiten(kurz)[0]!.split("NR.")[0]!);
+    // Auf A5 sind die Angaben rechts schmaler: der Name braucht höchstens drei Zeilen (vorher vier).
+    const nameZeilen = textSeiten(kurz)[0]!.split("Zum Eintragen")[0]!.split("\n").filter((z) => /Hans-Joachim|Freiherr|Schwarzenberg|Langenfeld/.test(z));
+    expect(nameZeilen.length).toBeLessThanOrEqual(3);
+    for (const x of ["Schwarzenberg-", "Langenfeld", "Hans-Joachim", obmann, "Tiere", nummern.slice(85).length > 1 ? `${nummern[85]}–${nummern.at(-1)}` : String(nummern[85])]) expect(kopf).toContain(x);
+    // Der Name bricht nur an Leerzeichen bzw. Bindestrich um, nie mitten im Wort.
+    for (const wort of ["Freiherr", "Schwarzenberg-", "Langenfeld"]) expect(kopf).toMatch(new RegExp(`(^|\\s)${wort}`));
   });
 
   test("Hallenplan A3: ein Blatt in der Größe, Ausrichtung nach der Halle", async () => {
@@ -215,10 +231,50 @@ describe("Formatvorgaben der Drucke", () => {
     const [k] = await m.db.select().from(m.schema.druckvorlage).where(m.eq(m.schema.druckvorlage.id, f2.karten.vorlageId!));
     expect(k!.schauId).toBe(neu2);
     expect((await al().druckvorlage.fuerSchau({ schauId: neu2 })).vorlageId).toBe(k!.id);
+    // Name nicht verschachtelt („neu: alt: Verein“), sondern wie „Für diese Schau anpassen“; Übernahme im Protokoll.
+    expect(k!.name).toBe("Formvorlage neu zwei: Formvorlage Verein");
+    const p2 = (await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, neu2))).filter((x) => x.tabelle === "druckvorlage").sort((a, b) => a.id - b.id);
+    expect(p2.map((x) => [x.aktion, x.datensatzId, x.neu])).toEqual([["Druckvorlage aus der Vorlage übernommen", k!.id, { quelle: kopieAlt }]]);
+
+    // Gespeicherter Altbestand wird über kartenVorlageLesen() begrenzt (ADR 011), nicht roh kopiert.
+    await m.db.update(m.schema.druckvorlage).set({ daten: { ...KARTEN_VORGABE, fremd: "x", groesse: 1e9 } as never }).where(m.eq(m.schema.druckvorlage.id, kopieAlt));
+    const { id: neu3 } = await al().schau.anlegen({ name: "Formvorlage neu drei", ort: "Formhalle", vorlageId: alt });
+    const [k3] = await m.db.select().from(m.schema.druckvorlage).where(m.eq(m.schema.druckvorlage.id, (await al().druckvorlage.formate({ schauId: neu3 })).karten.vorlageId!));
+    expect(k3!.daten).toEqual(kartenVorlageLesen({ ...KARTEN_VORGABE, fremd: "x", groesse: 1e9 }));
+    expect(JSON.stringify(k3!.daten)).not.toContain("fremd");
 
     // Ohne Vorlage: Vorgabe.
     const { id: leer } = await al().schau.anlegen({ name: "Formvorlage leer", ort: "Formhalle" });
     expect((await al().druckvorlage.formate({ schauId: leer })).formate).toEqual(DRUCK_FORMATE_VORGABE);
+  });
+
+  test("Text ohne Platz (Breite ≤ 1) hängt nicht: das PDF ist in unter 2 s fertig, der Text fehlt", async () => {
+    // pdfkit 0.15 begrenzt die Breite nur bei Zeilenumbruch; mit lineBreak:false und negativer Breite lief der
+    // Zeilenumbruch endlos – Bun ist einthreadig, der ganze Server hing. Deshalb in einem eigenen Prozess mit Zeitlimit.
+    const skript = `
+      const { erzeugePdf } = await import("./src/pdf/basis");
+      const pdf = await erzeugePdf("Probe", (doc) => {
+        doc.text("vorher", 20, 20);
+        doc.text("negativ", 20, 40, { width: -30, lineBreak: false });
+        doc.text("null", 20, 60, { width: 0.5, lineBreak: false, ellipsis: true });
+        doc.text("unendlich", 20, 80, { width: Number.NaN, lineBreak: false });
+        doc.text("negativ umbrechend", 20, 100, { width: -30 });
+        doc.text("nachher", 20, 120);
+      });
+      process.stdout.write(pdf.toString("base64"));
+    `;
+    const p = Bun.spawn(["bun", "-e", skript], { cwd: `${import.meta.dir}/../..`, stdout: "pipe", stderr: "pipe" });
+    const zeit = setTimeout(() => p.kill(), 2000);
+    const start = Date.now();
+    const aus = await new Response(p.stdout).text();
+    await p.exited;
+    clearTimeout(zeit);
+    expect(Date.now() - start).toBeLessThan(2000);
+    expect(p.exitCode).toBe(0);
+    const t = pdfText(Buffer.from(aus, "base64"));
+    expect(t).toContain("vorher");
+    expect(t).toContain("nachher");
+    for (const x of ["negativ", "null", "unendlich"]) expect(t).not.toContain(x);
   });
 
   test("Feste Formate der Übersicht stimmen mit den PDFs überein", () =>
