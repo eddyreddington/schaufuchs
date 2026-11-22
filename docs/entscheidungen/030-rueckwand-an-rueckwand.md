@@ -1,4 +1,4 @@
-# 029 Käfige beim Stellen ausrichten: Rückwand an die Wand, Rückwand an Rückwand
+# 030 Käfige beim Stellen ausrichten: Rückwand an die Wand, Rückwand an Rückwand
 
 **Stand:** gilt (22.11.2026)
 

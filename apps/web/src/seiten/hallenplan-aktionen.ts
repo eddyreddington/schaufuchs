@@ -55,7 +55,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     const t = teile[0]!;
     const pr = drehPruefung(entwurf, plan, t);
     if (!pr.ok) return meldung(serverText(pr.meldung, sprache), "warnung");
-    // Verdeckte die gedrehte Front eine Wand oder ein Teil und ist die Gegenseite frei, dreht es um 180° weiter (Entscheidung 029).
+    // Verdeckte die gedrehte Front eine Wand oder ein Teil und ist die Gegenseite frei, dreht es um 180° weiter (Entscheidung 030).
     const hinweis = mitAusrichtung(aendern, (h) => gedrehtUndAusgerichtet(h, plan, t, d.masse), { ...zweisprachig((x) => x.halleWerkzeuge.aktionen.drehenWas), festschreiben: t.art === "reihe" || t.art === "platte" });
     if (hinweis) meldung(hinweis);
   };

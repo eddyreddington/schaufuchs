@@ -1,7 +1,7 @@
 /**
  * Käfige ausrichten, wenn sie gestellt werden (Verschieben, Pfeiltasten, Einsetzen, Drehen) – Rückwand an die Wand und
  * Rückwand an Rückwand (Wunsch des Vereins: „Wenn Käfige aneinander gestellt werden, richte sie automatisch so aus, dass die
- * Rückwände aneinander stehen und nicht die Front verdecken.“; Entscheidung 029).
+ * Rückwände aneinander stehen und nicht die Front verdecken.“; Entscheidung 030).
  *
  * Die Front eines eben gestellten Teils (Grundplatte, Käfigblock, eingesetzte Voliere) ist verdeckt, wenn sie zu einer Wand
  * zeigt (lange Seite bis `WAND_FANG` an der Hallenwand oder einer Innenwand des Grundrisses) oder ein anderes Teil an ihr

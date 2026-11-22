@@ -2,7 +2,7 @@
  * Käfige im Editor ausrichten, wenn sie gestellt werden (ohne React): nach Verschieben, Pfeiltasten, Drehen und Einsetzen.
  * Zeigt die Front eines gestellten Teils zu einer Wand oder an ein anderes Teil und ist die Gegenseite frei, dreht ihn die
  * Software an Ort und Stelle um 180° – Rückwand an die Wand bzw. an die Rückwand des anderen (`ausrichtungBeimStellen`,
- * Entscheidung 029). Nur die gestellten Teile drehen, die Nachbarn bleiben. Alles in einem Schritt (ein Rückgängig).
+ * Entscheidung 030). Nur die gestellten Teile drehen, die Nachbarn bleiben. Alles in einem Schritt (ein Rückgängig).
  */
 import { ausrichtungBeimStellen, type Halle, type HallenObjekt, type HallenTeil, type KaefigMasse, objektFront, ruhendeNachbarn, teilGroesse, verschiebeTeile, wandDrehungenAnwenden, type WandKandidat } from "@schau/domain";
 import { ot } from "../sprache-jetzt";

@@ -30,7 +30,7 @@ export function PlanBild({
   zielWahl = null,
   masse,
 }: {
-  /** Käfigmaße der Schau: eben eingesetzte Teile beim Ausrichten nach Verschieben und Drehen (Entscheidung 029). */
+  /** Käfigmaße der Schau: eben eingesetzte Teile beim Ausrichten nach Verschieben und Drehen (Entscheidung 030). */
   masse?: KaefigMasse | null;
   /**
    * Tier versetzen: über jedem Käfig eine Klickfläche (gleiche Größe hervorgehoben); ein Klick wählt das Ziel, ein Käfig
