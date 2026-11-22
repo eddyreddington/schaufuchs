@@ -28,6 +28,9 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     andereSchau: "Dit ontwerp hoort bij een andere show.",
     passtNicht: "Het ontwerp past niet meer bij deze versie en kan niet worden geladen.",
     entscheiden: "Kiezen kan alleen voor een ontwerp van deze show.",
+    eingeliefertEins: "1 dier is al ingekooid – staat het in het ontwerp ergens anders, dan moet het in de hal worden verplaatst.",
+    eingeliefertMehr: (n: string) => `${n} dieren zijn al ingekooid – staan ze in het ontwerp ergens anders, dan moeten ze in de hal worden verplaatst.`,
+    gedruckt: "De catalogus is gedrukt – na het laden kloppen kooiplaatsen en kaarten pas weer na „Kooiplaatsen volgens plan”.",
   },
   umriss: {
     ecken: "De plattegrond heeft minimaal 4 hoeken nodig.",

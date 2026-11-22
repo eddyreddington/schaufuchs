@@ -165,6 +165,13 @@ Tests: `girocode.test.ts`
 - `giroCodeText()` – Inhalt des GiroCodes (EPC069-12 Version 002, UTF-8) oder null, wenn die Angaben dafür nicht reichen (IBAN ungültig, kein Empfänger, Betrag außerhal …
 - Typen: `GiroCodeAngaben`
 
+### hallenentwurf.ts (18 Z.)
+Hallenplan-Entwürfe (Entscheidung 017): Rückfrage, bevor ein Entwurf die Halle ersetzt.
+Tests: `hallenentwurf.test.ts`
+
+- `IN_DER_HALLE` – Status eines Tiers, das schon in der Halle war: zählt für die Rückfrage.
+- `entwurfRueckfrage()` – Text der Rückfrage oder `null`, wenn ohne Rückfrage geladen werden kann.
+
 ### hallenplan-3d-rundgang.ts (65 Z.)
 Automatischer Rundgang durch die Halle (3D): die Gänge zwischen den Reihen in Schlangenlinie, in Augenhöhe.
 Tests: `hallenplan-3d-rundgang.test.ts`
@@ -480,7 +487,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (57 Z.)
+### index.ts (58 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -860,7 +867,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKasse`
 
-### server-katalog-halle.ts (66 Z.)
+### server-katalog-halle.ts (69 Z.)
 
 - `halle`
 
@@ -1059,7 +1066,7 @@ Texte der Oberfläche: serverKasse (Entscheidung 022) – Meldungen des Servers 
 
 - `serverKasse`
 
-### server-katalog-halle.ts (71 Z.)
+### server-katalog-halle.ts (74 Z.)
 
 - `halle` – Meldungen des Servers zum Hallenplan (Entscheidung 022): routers/katalog/hallenplan.ts, gemeinsam.ts, kaefige.ts, routers/hallenentwurf.ts und die …
 
@@ -1249,7 +1256,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKasse`
 
-### server-katalog-halle.ts (66 Z.)
+### server-katalog-halle.ts (69 Z.)
 
 - `halle`
 
@@ -1434,7 +1441,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKasse`
 
-### server-katalog-halle.ts (66 Z.)
+### server-katalog-halle.ts (69 Z.)
 
 - `halle`
 
@@ -1623,7 +1630,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKasse`
 
-### server-katalog-halle.ts (66 Z.)
+### server-katalog-halle.ts (69 Z.)
 
 - `halle`
 
@@ -1809,7 +1816,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKasse`
 
-### server-katalog-halle.ts (66 Z.)
+### server-katalog-halle.ts (69 Z.)
 
 - `halle`
 
@@ -2112,7 +2119,7 @@ Druckvorlagen (vorerst Bewertungskarte): Vorlagen des Vereins anlegen, ändern, 
 - `druckvorlage.briefSpeichern` mutation · admin
 - `druckvorlage.serienbriefAnzahl` query · admin – Wie viele Empfänger ein Serienbrief mit dieser Auswahl hätte (vor dem Erzeugen anzeigen).
 
-### routers/hallenentwurf.ts (164 Z.) → `hallenentwurf`
+### routers/hallenentwurf.ts (176 Z.) → `hallenentwurf`
 Entwürfe des Hallenplans (Entscheidung 017): den aktuellen Plan einer Schau als Entwurf speichern, einen Entwurf (oder einen archivierten aus einer …
 
 - `hallenentwurf.liste` query · angemeldet – Entwürfe dieser Schau und das Archiv des Vereins (neueste zuerst).
@@ -2550,7 +2557,7 @@ Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte al
 ### hallenplan-eigenschaften.tsx (564 Z.)
 Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle (`HalleEigenschaften`) mit ihren Eingabefe …
 
-### hallenplan-entwuerfe.tsx (166 Z.)
+### hallenplan-entwuerfe.tsx (177 Z.)
 Prozeduren: hallenentwurf.entscheiden, hallenentwurf.laden, hallenentwurf.liste, hallenentwurf.loeschen, hallenentwurf.speichern, hallenentwurf.umbenennen
 
 ### hallenplan-entwurf.ts (242 Z.)
@@ -2954,5 +2961,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `65-a-bogen-mitglieder.ts` (103 Z.) – A-Bögen für die Vereinsmitglieder (Vereinsverwaltung, „Aussteller“): je Mitglied ein A-Bogen zur gewählten Schau, vorausgefüllt mit Name und Anschr …
 - `66-preisverteilung.ts` (130 Z.) – Preisverteilung je Preisrichter als PDF (/datei/:schauId/preisverteilung.pdf): je Preisart so viele Zeilen wie sein Kontingent, vergebene mit Katal …
 - `67-pokaltisch.ts` (38 Z.) – Hallenplan: Pokaltisch (Tisch für die Ehrenpreise) als eingesetztes Möbel – gespeichert mit Maßen, kein Käfigplatz, bleibt beim Neu-Setzen, im gedr …
+- `68-kleinkram.ts` (92 Z.) – Kleinere Ergänzungen: Rückfrage beim Laden und Entscheiden eines Hallenplan-Entwurfs, wenn der Katalog gedruckt ist oder schon Tiere eingeliefert s …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

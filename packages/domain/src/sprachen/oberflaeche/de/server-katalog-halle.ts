@@ -30,6 +30,9 @@ export const halle = {
     andereSchau: "Dieser Entwurf gehört zu einer anderen Schau.",
     passtNicht: "Der Entwurf passt nicht mehr zu dieser Version und lässt sich nicht laden.",
     entscheiden: "Entscheiden lässt sich nur für einen Entwurf dieser Schau.",
+    eingeliefertEins: "1 Tier ist schon eingeliefert – sitzt es nach dem Entwurf woanders, muss es in der Halle umgesetzt werden.",
+    eingeliefertMehr: (n: string) => `${n} Tiere sind schon eingeliefert – sitzen sie nach dem Entwurf woanders, müssen sie in der Halle umgesetzt werden.`,
+    gedruckt: "Der Katalog ist gedruckt – Käfigplätze und Karten stimmen nach dem Laden erst wieder nach „Käfigplätze nach Plan“.",
   },
   /** Grundriss (Entscheidung 019): pruefeUmriss und pruefeHallenUmriss in der Domain. */
   umriss: {

@@ -3,13 +3,14 @@
  * einen archivierten aus einer früheren Schau) laden, sich für einen entscheiden – die übrigen Entwürfe der Schau gehen
  * dann ins Archiv des Vereins. Ein Entwurf derselben Schau kommt beim Laden genau so zurück, wie er gespeichert wurde
  * (Halle mit Versatz und festem Plan); ein Entwurf einer anderen Schau ersetzt die Halle über „Plan neu setzen“ (seine
- * festen Plätze gehörten zu anderen Tieren). Immer mit Protokoll.
+ * festen Plätze gehörten zu anderen Tieren). Immer mit Protokoll. Ist der Katalog gedruckt oder sind schon Tiere
+ * eingeliefert, kommt beim Laden und Entscheiden für einen Entwurf ohne `bestaetigt` nur die Rückfrage zurück.
  */
-import { halleOhneFestenPlan, stabilerText } from "@schau/domain";
-import { and, desc, eq } from "drizzle-orm";
+import { entwurfRueckfrage, halleOhneFestenPlan, IN_DER_HALLE, stabilerText } from "@schau/domain";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Tx } from "../db/client";
-import { hallenentwurf, schau } from "../db/schema";
+import { hallenentwurf, katalogeintrag, schau } from "../db/schema";
 import { protokolliere } from "../services/protokoll";
 import { adminProcedure, benutzerProcedure, dbId, fehler, ladeSchau, router } from "../trpc";
 import { HALLE_EINGABE, planNeuSetzenIn } from "./katalog";
@@ -24,6 +25,12 @@ async function ladeEntwurf(q: Pick<Tx, "select">, organisationId: number, id: nu
   return e;
 }
 const masse = (h: { breite: number; laenge: number }) => ({ breite: h.breite, laenge: h.laenge });
+
+/** Rückfrage, bevor ein Entwurf die Halle ersetzt (siehe `entwurfRueckfrage`); `null`: ohne Rückfrage. */
+async function rueckfrage(s: { id: number; katalogGedruckt: boolean }) {
+  const [z] = await db.select({ n: count() }).from(katalogeintrag).where(and(eq(katalogeintrag.schauId, s.id), inArray(katalogeintrag.status, [...IN_DER_HALLE])));
+  return entwurfRueckfrage({ gedruckt: s.katalogGedruckt, eingeliefert: Number(z?.n ?? 0) });
+}
 
 type Entwurf = Awaited<ReturnType<typeof ladeEntwurf>>;
 type Akteur = { benutzer: { id: number; name: string } };
@@ -102,11 +109,13 @@ export const hallenentwurfRouter = router({
   }),
 
   /** Entwurf dieser Schau (auch archiviert) oder aus dem Archiv einer früheren Schau laden – siehe `entwurfEinsetzen`. */
-  laden: adminProcedure.input(z.object({ schauId: dbId, id: dbId })).mutation(async ({ ctx, input }) => {
+  laden: adminProcedure.input(z.object({ schauId: dbId, id: dbId, bestaetigt: z.boolean().default(false) })).mutation(async ({ ctx, input }) => {
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
     if (s.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
     const e = await ladeEntwurf(db, ctx.benutzer.organisationId, input.id);
     if (!e.archiviert && e.schauId !== s.id) throw fehler("BAD_REQUEST", "Dieser Entwurf gehört zu einer anderen Schau.");
+    const frage = input.bestaetigt ? null : await rueckfrage(s);
+    if (frage) return { rueckfrage: frage };
     return entwurfEinsetzen(ctx, s, e, `Entwurf „${e.name}“ geladen`);
   }),
 
@@ -130,9 +139,10 @@ export const hallenentwurfRouter = router({
 
   /**
    * Entscheidung: Mit `id` wird dieser Entwurf geladen und gilt; ohne gilt der aktuelle Plan. Alle übrigen Entwürfe der
-   * Schau gehen ins Archiv des Vereins (für spätere Schauen); der gewählte Entwurf ist dann der Plan und fällt weg.
+   * Schau gehen ins Archiv des Vereins (für spätere Schauen); der gewählte Entwurf ist dann der Plan und fällt weg. Mit
+   * `id` die Rückfrage wie beim Laden; ohne bleibt die Halle, wie sie ist (keine Rückfrage).
    */
-  entscheiden: adminProcedure.input(z.object({ schauId: dbId, id: dbId.optional() })).mutation(async ({ ctx, input }) => {
+  entscheiden: adminProcedure.input(z.object({ schauId: dbId, id: dbId.optional(), bestaetigt: z.boolean().default(false) })).mutation(async ({ ctx, input }) => {
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
     if (s.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
     let gewaehlt: string | null = null;
@@ -140,6 +150,8 @@ export const hallenentwurfRouter = router({
       const e = await ladeEntwurf(db, ctx.benutzer.organisationId, input.id);
       if (e.archiviert || e.schauId !== s.id) throw fehler("BAD_REQUEST", "Entscheiden lässt sich nur für einen Entwurf dieser Schau.");
       gewaehlt = e.name;
+      const frage = input.bestaetigt ? null : await rueckfrage(s);
+      if (frage) return { rueckfrage: frage };
       // Ohne festen Plan setzt `planNeuSetzenIn` in eigener Transaktion neu – das geht nur vorher.
       if (!e.fest) await entwurfEinsetzen(ctx, s, e, `Entschieden für Entwurf „${e.name}“`);
     }

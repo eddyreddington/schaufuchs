@@ -1,6 +1,6 @@
 # 017 Hallenplan-Entwürfe und Archiv
 
-**Stand:** gilt (15.11.2026, Laden in derselben Schau geändert am 22.11.2026)
+**Stand:** gilt (15.11.2026, Laden in derselben Schau geändert am 22.11.2026, Rückfrage nach Druck und Einlieferung seit 22.11.2026)
 
 **Kontext:** Vor einer Schau entwirft die Ausstellungsleitung oft mehrere Hallenpläne (quer oder längs, mit oder ohne
 Einzelreihen an den Wänden) und der Verein entscheidet sich für einen. Die übrigen sind für spätere Schauen nützlich,
@@ -23,6 +23,10 @@ etwa in derselben Halle mit anderer Tierzahl.
   anderen Tieren.
 - „Entscheiden“ lädt den gewählten Entwurf (oder behält den aktuellen Plan) und archiviert alle übrigen Entwürfe der
   Schau. Höchstens 30 Entwürfe je Schau; das Archiv ist nicht begrenzt.
+- Rückfrage vor dem Laden und vor „Entscheiden“ für einen Entwurf, wenn der Katalog gedruckt ist oder schon Tiere
+  eingeliefert sind (auch als fehlend gemeldete und ausgesetzte): ohne `bestaetigt` antwortet der Server nur mit
+  `{ rueckfrage }` und ändert nichts (Text aus `entwurfRueckfrage` in der Domain, Muster wie `tierVersetzen`).
+  „Entscheiden“ für den aktuellen Plan fragt nicht, die Halle bleibt ja.
 - Wird eine Schau gelöscht, bleiben ihre archivierten Pläne (Schau-Bezug wird leer).
 
 **Folgen:** In derselben Schau ist ein Entwurf eine Sicherung des Plans; Tiere, die nach dem Speichern dazukamen,

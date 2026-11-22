@@ -28,6 +28,9 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     andereSchau: "This draft belongs to another show.",
     passtNicht: "The draft no longer fits this version and cannot be loaded.",
     entscheiden: "You can only decide on a draft of this show.",
+    eingeliefertEins: "1 animal has already been checked in – if the draft places it elsewhere, it must be moved in the hall.",
+    eingeliefertMehr: (n: string) => `${n} animals have already been checked in – if the draft places them elsewhere, they must be moved in the hall.`,
+    gedruckt: "The catalogue is printed – after loading, cage places and cards will only match again after “Cage places by plan”.",
   },
   umriss: {
     ecken: "The floor plan needs at least 4 corners.",

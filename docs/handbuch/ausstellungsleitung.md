@@ -1145,7 +1145,10 @@ Für eine Schau lassen sich mehrere Hallenpläne entwerfen und vergleichen. „E
   Archiv) kommt genau so zurück, wie er gespeichert wurde; Tiere, die seitdem dazukamen, bekommen freie Plätze,
   stornierte lassen ihren Platz frei. Ein Entwurf ohne festen Plan (automatisch geplant, oder vor Version 1.17 gespeichert)
   wird neu gesetzt wie mit „Plan neu setzen“. Die Katalognummern bleiben. Der ersetzte feste Plan steht vollständig im
-  Protokoll; wer den aktuellen Plan behalten will, speichert ihn trotzdem besser vorher als Entwurf.
+  Protokoll; wer den aktuellen Plan behalten will, speichert ihn trotzdem besser vorher als Entwurf. Ist der Katalog
+  schon gedruckt oder sind schon Tiere eingeliefert, fragt die Software noch einmal nach: Sitzt ein eingeliefertes Tier
+  nach dem Entwurf woanders, muss es in der Halle umgesetzt werden; nach dem Druck stimmen Käfigplätze und Karten erst
+  wieder nach „Käfigplätze nach Plan“. Dieselbe Rückfrage kommt bei „Diesen nehmen“.
 - **Diesen nehmen:** Der Verein hat entschieden – der Entwurf wird geladen und gilt. Alle übrigen Entwürfe der Schau
   gehen ins **Archiv**. „Aktuellen Plan nehmen – Entwürfe ins Archiv“ macht dasselbe mit dem Plan, der gerade gilt.
 - **Archiv:** Hier stehen die nicht gewählten Pläne aller früheren Schauen des Vereins, mit Schau und Datum. „Laden“

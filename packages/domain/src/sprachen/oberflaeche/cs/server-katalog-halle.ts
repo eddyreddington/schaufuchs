@@ -28,6 +28,9 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     andereSchau: "Tento návrh patří k jiné výstavě.",
     passtNicht: "Návrh už neodpovídá této verzi a nelze ho načíst.",
     entscheiden: "Rozhodnout lze jen o návrhu této výstavy.",
+    eingeliefertEins: "1 zvíře je už přijato – pokud ho návrh umístí jinam, je třeba ho v hale přemístit.",
+    eingeliefertMehr: (n: string) => `Už přijatá zvířata: ${n} – pokud je návrh umístí jinam, je třeba je v hale přemístit.`,
+    gedruckt: "Katalog je vytištěn – po načtení budou místa klecí a karty opět souhlasit až po „Místa klecí podle plánu“.",
   },
   umriss: {
     ecken: "Půdorys potřebuje alespoň 4 rohy.",

@@ -28,6 +28,9 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     andereSchau: "Ten projekt należy do innej wystawy.",
     passtNicht: "Projekt nie pasuje już do tej wersji i nie można go wczytać.",
     entscheiden: "Wybrać można tylko projekt tej wystawy.",
+    eingeliefertEins: "1 zwierzę zostało już dostarczone – jeśli projekt umieszcza je gdzie indziej, trzeba je przenieść w hali.",
+    eingeliefertMehr: (n: string) => `Zwierzęta już dostarczone: ${n} – jeśli projekt umieszcza je gdzie indziej, trzeba je przenieść w hali.`,
+    gedruckt: "Katalog jest wydrukowany – po wczytaniu miejsca klatek i karty zgadzają się znowu dopiero po „Miejsca klatek według planu”.",
   },
   umriss: {
     ecken: "Obrys hali musi mieć co najmniej 4 narożniki.",

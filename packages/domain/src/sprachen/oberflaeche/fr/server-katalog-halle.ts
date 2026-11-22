@@ -28,6 +28,9 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     andereSchau: "Ce brouillon appartient à une autre exposition.",
     passtNicht: "Le brouillon ne correspond plus à cette version et ne peut pas être chargé.",
     entscheiden: "Vous ne pouvez choisir qu’un brouillon de cette exposition.",
+    eingeliefertEins: "1 animal est déjà enlogé – si le brouillon le place ailleurs, il doit être déplacé dans la salle.",
+    eingeliefertMehr: (n: string) => `${n} animaux sont déjà enlogés – si le brouillon les place ailleurs, ils doivent être déplacés dans la salle.`,
+    gedruckt: "Le catalogue est imprimé – après le chargement, les places de cage et les cartes ne concordent à nouveau qu’après « Places de cage selon le plan ».",
   },
   umriss: {
     ecken: "Le contour de la salle doit avoir au moins 4 angles.",

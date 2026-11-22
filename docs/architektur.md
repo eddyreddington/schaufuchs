@@ -46,7 +46,7 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
 | Meisterschaften | `meisterschaft.ts` | `routers/meisterschaft.ts`, `services/meisterschaften.ts` | `meisterschaften.tsx`, `einstellungen-meisterschaften.tsx` |
 | Import aus Altprogrammen | `import.ts` | `routers/import.ts` (`datenimport.*`), `services/import.ts`, `import/xlsx.ts` | `import.tsx` |
 | Teilschauen (fortlaufende Katalognummern) | `teilschau.ts`, `katalog.ts` | `routers/schau/einstellungen.ts` (`teilschauenSetzen`), `services/eintraege.ts`, `pdf/katalog-tierteil.ts` | `einstellungen-teilschauen.tsx` |
-| Hallenplan-Entwürfe und Archiv | `hallenplan-entfernen.ts` (`halleOhneFestenPlan`) | `routers/hallenentwurf.ts`, `db/schema-hallenentwurf.ts` | `hallenplan-entwuerfe.tsx` |
+| Hallenplan-Entwürfe und Archiv | `hallenplan-entfernen.ts` (`halleOhneFestenPlan`), `hallenentwurf.ts` (`entwurfRueckfrage`) | `routers/hallenentwurf.ts`, `db/schema-hallenentwurf.ts` | `hallenplan-entwuerfe.tsx` |
 | SEPA-Lastschrift | `lastschrift.ts` | `routers/lastschrift.ts`, `db/schema-lastschrift.ts` | `lastschrift.tsx`, `aussteller-mandate.tsx`, `verein-lastschrift.tsx` |
 | Betrieb: Gesundheitsprüfung `/api/gesund` ([024](entscheidungen/024-gesundheitspruefung.md)) | `gesundheitspruefung.ts` (`schautageLaufen`, `offeneMigrationen`) | `index.ts`, `services/gesundheitspruefung.ts`, `db/schema-betrieb.ts`; Zeitpunkt der Sicherung aus `scripts/backup.sh` | – |
 | Betrieb: Lesemodus `NUR_LESEN` ([025](entscheidungen/025-lesemodus.md)) | `lesemodus.ts` (`NUR_LESEN_MELDUNG`) | `lesemodus.ts` (Ausnahmen, Sperre außerhalb von tRPC), `trpc.ts` (`basis`), `routers/betrieb.ts` (`betrieb.lesemodus`) | `komponenten/lesemodus.tsx` in `rahmen.tsx`, `richter-tablet.tsx`, `oeffentlich.tsx` |

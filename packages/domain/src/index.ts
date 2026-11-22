@@ -24,6 +24,7 @@ export * from "./hallenplan-folge";
 export * from "./hallenplan-druck";
 export * from "./hallenplan-wand";
 export * from "./hallenplan-entfernen";
+export * from "./hallenentwurf";
 export * from "./hallenplan-fehlend";
 export * from "./hallenplan-neu";
 export * from "./einteilung";

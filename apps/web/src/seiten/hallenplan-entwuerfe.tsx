@@ -1,6 +1,7 @@
+import { serverText } from "@schau/domain";
 import { useState, type FormEvent } from "react";
 import { datum, fehlerText } from "../lib";
-import { useOberflaeche } from "../sprache";
+import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { Dialog, Eingabe, FehlerAnzeige, Knopf, Laden, Leer, useFrage, useMeldung } from "../ui";
 
@@ -26,6 +27,7 @@ export function HallenEntwuerfe({ schauId, darfAendern }: { schauId: number; dar
 function Inhalt({ schauId, darfAendern }: { schauId: number; darfAendern: boolean }) {
   const q = trpc.hallenentwurf.liste.useQuery({ schauId });
   const texte = useOberflaeche();
+  const sprache = useSprache();
   const t = texte.halleBild.entwuerfe;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
@@ -53,16 +55,25 @@ function Inhalt({ schauId, darfAendern }: { schauId: number; darfAendern: boolea
   };
   const ladenFragen = async (id: number, n: string) => {
     if (!(await bestaetige({ titel: t.ladenFrage(n), text: t.ladenText, knopf: t.laden }))) return;
-    await laden.mutateAsync({ schauId, id });
+    // Katalog gedruckt oder Tiere schon eingeliefert: erst die Rückfrage des Servers, dann bestätigt noch einmal.
+    const r = await laden.mutateAsync({ schauId, id });
+    if ("rueckfrage" in r) {
+      if (!(await bestaetige({ titel: t.ladenFrage(n), text: serverText(r.rueckfrage, sprache), knopf: t.laden }))) return;
+      await laden.mutateAsync({ schauId, id, bestaetigt: true });
+    }
     await neu();
     meldung(t.geladen(n));
   };
   const entscheidenFragen = async (id?: number, n?: string) => {
     const text = `${n ? t.wirdGeladen(n) : t.aktuellerGilt} ${t.insArchiv}`;
     if (!(await bestaetige({ titel: t.entscheidenFrage, text, knopf: t.entscheiden }))) return;
-    const r = await entscheiden.mutateAsync({ schauId, ...(id ? { id } : {}) });
+    let r = await entscheiden.mutateAsync({ schauId, ...(id ? { id } : {}) });
+    if ("rueckfrage" in r) {
+      if (!(await bestaetige({ titel: t.entscheidenFrage, text: serverText(r.rueckfrage, sprache), knopf: t.entscheiden }))) return;
+      r = await entscheiden.mutateAsync({ schauId, id, bestaetigt: true });
+    }
     await neu();
-    meldung(t.entschieden(r.archiviert));
+    if ("archiviert" in r) meldung(t.entschieden(r.archiviert));
   };
   const umbenennenFragen = async (id: number, alt: string) => {
     const n = await eingabe({ titel: t.umbenennenTitel, feld: texte.allgemein.name, vorgabe: alt, mindestens: 1 });
