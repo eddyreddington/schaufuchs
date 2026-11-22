@@ -34,8 +34,22 @@ Sans 3) waren schon einheitlich.
 - Nichts wird gekürzt: Passt „nicht veröffentlicht“ in einer schmalen Spalte nicht (Atkinson, dreispaltig), steht dort
   „nicht veröff.“ statt „nicht…“. Der Schutz `textOhnePlatzAuslassen` bleibt.
 - Briefe, Belege, Bewertungskarten und alle anderen Drucke behalten ihre Schriften (`registriereSchriften` in `basis.ts`).
+- **Kein Kürzen mit „…“** (Nachtrag 22.11.2026, Rückmeldung eines Vereins: „Im Katalog wird abgekürzt, das darf nicht
+  sein“): Kein Inhalt – Rasse, Farbenschlag, Zusatz, Sparte, Preisrichter, Aussteller, Verein, Titel, Kolumnentitel,
+  Name der Schau in der Fußzeile, Text einer Anzeige – wird gekürzt. Reicht eine Zeile nicht, wird die Schrift bis zur
+  bisherigen Untergrenze kleiner, dann **bricht der Text um**: am Leerzeichen, nach einem Bindestrich, notfalls mitten
+  im Wort mit Trennstrich (`zeilenUmbrechen()`, `textUmbrochen()` in `basis.ts`). Die Höhe wird vor dem Setzen
+  gemessen; Rassenbalken, Klassenzeile, Tierzeile (in der Tabelle die ganze Zeile), Spartenband und Verzeichniszeilen
+  werden höher, Spalten- und Seitenwechsel rechnen damit. Aussteller: erst kleiner, dann der Vorname als Initiale
+  („Schmidt, W.“), mit „Jgd.“ dann das Kürzel kleiner und nur der Nachname (wie bisher); passt auch das nicht, bricht
+  der ganze Name um. Textanzeigen haben ein festes Feld: dort wird die Schrift kleiner, bis der Text passt.
+  `textImFeld` (kürzt) bleibt für Belege, Karten und Listen mit fester Zeilenhöhe und kommt im Katalog nicht mehr vor.
+  Einzige Ausnahme: „… und N weitere“ unter den kommenden Schauen – dort ist die Liste je Ebene fachlich begrenzt, und
+  die Zeile nennt, wie viele Termine fehlen; kein Name wird angeschnitten.
 
 **Folgen:** Wer bisher „Klassisch“ hatte, sieht Überschriften, Rassen und Farbenschläge jetzt in Plex statt Spectral,
 Grußworte und Stifter in Plex. Seitenzahl, Aufteilung und Umbruch bleiben im Wesentlichen gleich (Tierzeilen unverändert
 8,2 pt). Geprüft im Servertest `82-katalog-schriften` (pdffonts und pdftotext für jede Wahl, jede Aufteilung, A4 und A5,
-Kurzkatalog und `/s/:slug/katalog.pdf`) und im Domain-Test `katalog-typografie.test.ts`.
+Kurzkatalog und `/s/:slug/katalog.pdf`) und im Domain-Test `katalog-typografie.test.ts`; das Umbrechen im Servertest
+`83-katalog-nicht-kuerzen` (sehr lange Namen, jede Wahl, Aufteilung, A4/A5, mit und ohne Ergebnisse, Kurzkatalog:
+vollständig, kein „…“, keine überlappenden Wörter laut `pdftotext -bbox`).

@@ -48,12 +48,15 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
   in normal, fett, kursiv; Größen nur aus `KATALOG_GROESSEN` (im Kontext `G`, im Tierteil `GT`). Auszeichnung nur für den
   Schaunamen auf der Titelseite bei „Buch, schmal“ und „Ausgewogen“. Fehlt ein Schnitt, die Regular derselben Familie.
   Katalog-Teile nehmen nie `SANS`/`SERIF` aus `basis.ts` (die gehören Briefen und Belegen), sondern die Schnitte aus
-  `pdf/katalog-schrift.ts`. Nichts mit „…“ kürzen: lieber eine Kurzform („nicht veröff.“).
+  `pdf/katalog-schrift.ts`. Nichts mit „…“ kürzen: lieber eine Kurzform („nicht veröff.“). Lange Namen erst verkleinern,
+  dann umbrechen – mit `textUmbrochen()`/`zeilenUmbrechen()` aus `basis.ts` (nie `textImFeld`, das kürzt), Höhe vorher
+  messen (`zeichnen: false`), damit Spalten- und Seitenwechsel stimmen; Tierzeilen, Rassen- und Klassenköpfe,
+  Spartenband, Verzeichnisse und Kolumnentitel werden dann höher.
 
 ## Tests
 
 - Domain: `domain.test.ts` (Nummern, Nachmeldungen), `katalog-typografie.test.ts` (eine Familie je Wahl, Ersatzschnitt, Größenstufen), `einteilung-jugend.test.ts` (Jugendblock, Kennzeichen), `katalog-sortierung.test.ts` (Vorgabe = alte Folge in Zufallsschauen), `katalog-gliederung.test.ts`.
-- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `82-katalog-schriften` (pdffonts: nur die gewählte Familie, pdftotext: Text vollständig), `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog), `79-ablauf-halle` (Stand für „Nach Hallenplan vergeben“), `81-jugend-kennzeichen` („Jgd.“ in Druck, Online-Katalog, Ergebnissen).
+- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `82-katalog-schriften` (pdffonts: nur die gewählte Familie, pdftotext: Text vollständig), `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog), `79-ablauf-halle` (Stand für „Nach Hallenplan vergeben“), `81-jugend-kennzeichen` („Jgd.“ in Druck, Online-Katalog, Ergebnissen), `83-katalog-nicht-kuerzen` (sehr lange Namen in jeder Schrift, Aufteilung, A4/A5, mit und ohne Ergebnisse, Kurzkatalog: vollständig, kein „…“, keine überlappenden Wörter).
 
 ## Datenbank
 
