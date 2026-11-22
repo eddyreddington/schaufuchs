@@ -10,7 +10,8 @@ describe("Hallenplan: Aussehen der Halle (3D)", () => {
   const al = () => m.appRouter.createCaller(adminKontext);
   const halle = { breite: 1000, laenge: 1600, gang: 150, richtung: "laengs" as const, wandreihen: false, quergang: false, wandBuendig: false, hauptgang: { breite: 0, lage: "keiner" as const }, platte: { laenge: 210, tiefe: 70 }, jePlatte: {}, objekte: [], reihenVersatz: [], plattenVersatz: [], spartenStart: [], flaechen: [] };
   const zeile = async (id: number) => (await m.db.select().from(m.schema.schau).where(m.eq(m.schema.schau.id, id)))[0]!;
-  const protokoll = async (id: number) => (await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, id))).filter((p) => p.aktion === "Halle");
+  // Nach id sortiert: ohne ORDER BY liefert PostgreSQL die Zeilen in beliebiger Reihenfolge („der letzte“ wäre Zufall).
+  const protokoll = async (id: number) => (await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, id)).orderBy(m.schema.aenderung.id)).filter((p) => p.aktion === "Halle");
 
   test("speichern: nur Abweichungen von der Vorgabe, Farbe klein, unzulässige Werte abgelehnt, im Protokoll", async () => {
     const { id } = await al().schau.anlegen({ name: "Aussehen", ort: "Halle" });
