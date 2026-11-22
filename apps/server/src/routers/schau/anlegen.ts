@@ -271,9 +271,10 @@ async function kopiereAusVorlage(tx: Tx, von: number, nach: number) {
   if (preisarten.length) await tx.insert(preisart).values(preisarten.map(({ id: _, ...p }) => ({ ...p, schauId: nach })));
   // Preisrichter ohne PIN: die neue Schau bekommt neue PINs (alte Tablets melden sich nicht an der neuen Schau an).
   // Einzeln, damit die neuen Nummern sicher zugeordnet sind: die Zuordnung zum Obmann zeigt danach auf den Obmann der neuen Schau.
+  // Die Zusage galt der alten Schau: wieder offen, ohne Vorbehalt; „zugesagt für“ (z. B. mehrere Jahre) bleibt als Hinweis.
   const neueId = new Map<number, number>();
   for (const { id, createdAt: _, pinHash: __, obmannId: ___, ...r } of richter) {
-    const [neu] = await tx.insert(preisrichter).values({ ...r, schauId: nach }).returning({ id: preisrichter.id });
+    const [neu] = await tx.insert(preisrichter).values({ ...r, schauId: nach, zusage: "offen", vorbehalt: "" }).returning({ id: preisrichter.id });
     neueId.set(id, neu!.id);
   }
   for (const r of richter)

@@ -90,7 +90,7 @@ export const verein: OberflaecheTexte["verein"] = {
     belege: (n: number) => `usunięte dowody po upływie okresu: ${n}`,
     bestaetigungsmails: "E-maile z potwierdzeniem",
     tage: (n: number) => `${n} ${mnoga(n, "dzień", "dni", "dni")}`,
-    karenzDaten: "Data urodzenia, IBAN, dane kontaktowe i PIN sędziów",
+    karenzDaten: "Data urodzenia, IBAN, dane kontaktowe, PIN i zastrzeżenie sędziów",
     karenzFrist: (n: number) => `${n} ${mnoga(n, "dzień", "dni", "dni")} po zamknięciu wystawy`,
     verkaufDaten: "Dane kupujących, ewidencja sprzedaży, lista zwierząt, dziennik zdrowia i dane o szczepieniach",
     jahre: (n: number) => `${n} ${mnoga(n, "rok", "lata", "lat")}`,

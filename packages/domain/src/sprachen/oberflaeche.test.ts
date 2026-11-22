@@ -134,6 +134,15 @@ describe("Meldungen des Servers (serverText)", () => {
     expect(rest).toEqual([]);
   });
 
+  test("Einteilung nach Nummern: Sparte und Gruppe zugleich falsch, ganz übersetzt", () => {
+    const de = "Probe bewertet keine Hühner (Nr. 1, 2 …); Probe bewertet keine Gruppe X2 (Nr. 21 …). Bitte die Bereiche anders verteilen oder beim Preisrichter die Sparte bzw. Gruppe ergänzen.";
+    for (const s of SPRACHEN.filter((x) => x !== "de" && x !== "de-CH")) {
+      const ist = serverText(de, s);
+      expect(ist).not.toMatch(/bewertet|Bitte|Bereiche|ergänzen/);
+      expect(ist).toContain("X2");
+    }
+  });
+
   test("Gründe aus den Prüffunktionen (IBAN, BIC, Gläubiger-ID, Mandat): allein und so eingesetzt wie im Server übersetzt", () => {
     // Wie der Server sie einsetzt: domain sepa.ts / lastschrift.ts („Vereinskonto: …“, „Gläubiger-ID des Vereins: …“,
     // „<Name>: …“), routers/lastschrift.ts und schau/einstellungen.ts (allein).

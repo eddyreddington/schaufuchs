@@ -90,7 +90,7 @@ export const verein: OberflaecheTexte["verein"] = {
     belege: (n: number) => `${n} bonnen na afloop van de termijn verwijderd`,
     bestaetigungsmails: "Bevestigingsmails",
     tage: (n: number) => `${n} dagen`,
-    karenzDaten: "Geboortedatum, IBAN, contactgegevens en pincode van de keurmeesters",
+    karenzDaten: "Geboortedatum, IBAN, contactgegevens, pincode en voorbehoud van de keurmeesters",
     karenzFrist: (n: number) => `${n} dagen na het afsluiten van de show`,
     verkaufDaten: "Kopersgegevens, verkoopadministratie, dierenlijst, gezondheidsregister en vaccinatiegegevens",
     jahre: (n: number) => `${n} jaar`,

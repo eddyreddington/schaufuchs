@@ -303,7 +303,7 @@ Was beim Löschen geschieht: Kontaktdaten, Bankdaten, Geburtsdatum, gespeicherte
 
 **Aussteller von Testschauen** stehen in der Liste nur, wenn Sie oben „Test-Aussteller der Testschau „…““ wählen. Sie gehören nur zu ihrer Testschau (siehe 5.2). Bearbeiten, Auskunft und Löschen gehen wie bei echten Ausstellern – wichtig, falls sich eine echte Person über die öffentliche Seite in eine Testschau gemeldet hat.
 
-**Käufer und Preisrichter** haben keinen Aussteller-Datensatz. Für sie gibt es unter „Verein und Datenschutz“ den Reiter „Auskunft“ (Auskunft für Käufer und Preisrichter): Namen eingeben, „Suchen“ (durchsucht die Verkaufslisten und die Preisrichter aller Schauen des Vereins), bei Treffern „Als JSON speichern“. Anschrift und Kontakt eines Preisrichters ändern oder leeren Sie auf der Seite „Preisrichter“ der jeweiligen Schau. Von selbst löscht die Bereinigung Kontakt und PIN 30 Tage nach dem Abschluss der Schau, die Anschrift nach 3 Jahren.
+**Käufer und Preisrichter** haben keinen Aussteller-Datensatz. Für sie gibt es unter „Verein und Datenschutz“ den Reiter „Auskunft“ (Auskunft für Käufer und Preisrichter): Namen eingeben, „Suchen“ (durchsucht die Verkaufslisten und die Preisrichter aller Schauen des Vereins), bei Treffern „Als JSON speichern“. Anschrift und Kontakt eines Preisrichters ändern oder leeren Sie auf der Seite „Preisrichter“ der jeweiligen Schau. Die Auskunft enthält auch Sparten, Gruppen, Obmann und Zusage mit Zeitraum und Vorbehalt. Von selbst löscht die Bereinigung Kontakt, PIN, „Zugesagt für“ und Vorbehalt 30 Tage nach dem Abschluss der Schau, die Anschrift nach 3 Jahren.
 
 ### 3.6 Speicherfristen
 
@@ -312,7 +312,7 @@ Der Reiter „Speicherfristen“ nennt die Fristen, die der Server täglich von 
 | Daten | Frist |
 |---|---|
 | Bestätigungsmails | 180 Tage |
-| Geburtsdatum, IBAN, Kontaktdaten und PIN der Preisrichter | 30 Tage nach dem Abschluss der Schau; Geburtsdatum und IBAN frühestens 30 Tage nach dem Ende der Reklamationsfrist |
+| Geburtsdatum, IBAN, Kontaktdaten, PIN und Vorbehalt der Preisrichter | 30 Tage nach dem Abschluss der Schau; Geburtsdatum und IBAN frühestens 30 Tage nach dem Ende der Reklamationsfrist |
 | Käuferdaten, Verkaufsaufzeichnungen, Tierliste, Gesundheitsjournal, Impfangaben | 3 Jahre |
 | Buchungsbelege (Meldegeld, Auszahlungen, Kaufbelege) | 8 Jahre ab Jahresende |
 | Aussteller ohne Meldung seit 3 Jahren | werden gelöscht bzw. bis Fristende gesperrt |
@@ -555,7 +555,7 @@ Ein Bild, das sich beim Erstellen des Katalogs nicht lesen lässt, fehlt dort ei
 
 Jede Rasse gehört zu einer Gruppe des Verzeichnisses (Buchstaben A–M, Z1–Z3, BV o. ä.). Preisrichter sind oft nur für bestimmte Gruppen zugelassen; die Einteilung prüft das (siehe 5.7 und 5.8).
 
-- **Beim Einspielen:** vierte Spalte „Gruppe“, z. B. `Sparte;Rasse;Farbenschlag;Gruppe`. Mit dieser Kopfzeile gilt jeder kurze Text; ohne Kopfzeile nur eine Angabe wie A, Z1 oder BV (sonst meldet die Software ein Trennzeichen im Feld). Die Gruppe gilt für die ganze Rasse; steht bei derselben Rasse eine andere, gilt die erste und die Zeile wird gemeldet.
+- **Beim Einspielen:** vierte Spalte „Gruppe“, z. B. `Sparte;Rasse;Farbenschlag;Gruppe`. Mit dieser Kopfzeile gilt jeder kurze Text; ohne Kopfzeile nur eine Angabe wie A, Z1 oder BV, klein geschrieben nur mit Ziffer oder als einzelner Buchstabe („z 1“, „a“; sonst meldet die Software ein Trennzeichen im Feld). Die Gruppe gilt für die ganze Rasse; steht bei derselben Rasse eine andere, gilt die erste und die Zeile wird gemeldet.
 - **Von Hand:** bei der eigenen Version „Gruppen“ klicken, je Rasse die Gruppe eintragen (leer = keine), „Gruppen speichern“. Jede Änderung steht im Protokoll.
 
 Groß- und Kleinschreibung und Leerzeichen spielen keine Rolle („z 1“ wird „Z1“). Erlaubt sind bis zu 10 Buchstaben und Ziffern. Unter „Ansehen“ erscheint die Spalte „Gruppe“, sobald Gruppen gepflegt sind. Bei einer Version „für alle Vereine bereitgestellt“ lassen sich die Gruppen nicht ändern.
@@ -1292,7 +1292,7 @@ Jede Änderung an Terminen und Kalendern steht im Protokoll. Ändern dürfen nur
 - **Obmann für diesen Preisrichter:** Hier wählen Sie, welchem Obmann der Preisrichter zugeordnet ist (nur Preisrichter derselben Schau mit dem Haken „Obmann“, nicht er selbst). In der Liste steht „Obmann: …“. Nimmt man einem Obmann den Haken oder löscht ihn, verlieren die ihm zugeordneten Preisrichter die Zuordnung. Wer die Note „vorzüglich“ bestätigt, ändert sich dadurch nicht.
 - **Zusage:** „offen“ (Vorgabe), „zugesagt“ oder „abgesagt“, dazu „Zugesagt für“ (z. B. „2027 und 2028“) und ein „Vorbehalt“ (z. B. „klären wir, wenn der Termin bekannt ist“). In der Liste steht der Stand als Marke neben dem Namen, darunter Zusage-Zeitraum und Vorbehalt.
 
-Jede Änderung an einem Preisrichter steht im Protokoll, Anschrift, Telefon und E-Mail nur als „geändert“ ohne die Werte. Legen Sie eine Schau mit einer Vorlage an, kommen Gruppen, Zusage und die Zuordnung zum Obmann mit.
+Jede Änderung an einem Preisrichter steht im Protokoll, auch das Löschen; Anschrift, Telefon, E-Mail und Vorbehalt nur als „geändert“ ohne die Werte. Legen Sie eine Schau mit einer Vorlage an, kommen Gruppen, „Zugesagt für“ und die Zuordnung zum Obmann mit; die Zusage steht dort wieder auf „offen“, ohne Vorbehalt – fragen Sie für die neue Schau neu an.
 
 #### Preisrichterverpflichtung {#preisrichter-verpflichtung}
 
@@ -1697,7 +1697,7 @@ Ist die Reklamationsfrist abgelaufen und die Schau liegt über 8 Wochen zurück,
 
 ### 5.19 Datenschutz-Fristen und Auskunft nach der Schau
 
-- 30 Tage nach dem Abschluss löscht die Bereinigung IBAN, Geburtsdatum sowie Kontaktdaten und PIN der Preisrichter (siehe 3.6). IBAN und Geburtsdatum bleiben aber mindestens bis 30 Tage nach dem Ende der Reklamationsfrist – eine berechtigte Reklamation braucht noch die Bankverbindung.
+- 30 Tage nach dem Abschluss löscht die Bereinigung IBAN, Geburtsdatum sowie Kontaktdaten, PIN und Vorbehalt der Preisrichter (siehe 3.6). IBAN und Geburtsdatum bleiben aber mindestens bis 30 Tage nach dem Ende der Reklamationsfrist – eine berechtigte Reklamation braucht noch die Bankverbindung.
 - 12 Monate nach der Schau sind Ergebnisse und Online-Katalog nicht mehr im Internet abrufbar.
 - Verkaufsaufzeichnungen, Tierliste und Gesundheitsjournal bleiben 3 Jahre nach der Schau, Buchungsbelege 8 Jahre und die Inhalte des Änderungsprotokolls 10 Jahre ab Jahresende.
 - Auskunfts- und Löschwünsche bearbeiten Sie unter „Verein und Datenschutz“ (siehe 3.5).

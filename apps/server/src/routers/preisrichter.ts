@@ -14,7 +14,7 @@ import { oeffentlichSichtbarProcedure, benutzerProcedure, fehler, ladeSchau, rou
 import type { Tx } from "../db/client";
 import { pruefeNichtAbgeschlossen } from "../services/kasse";
 import { schlageEinteilungVor, type RichterWahl } from "../services/einteilung-vorschlag";
-import { speicherePreisrichter } from "../services/preisrichter-speichern";
+import { loeschePreisrichter, speicherePreisrichter } from "../services/preisrichter-speichern";
 
 /** Zufällige 8-stellige PIN, gleich verteilt (Werte oberhalb des letzten vollen Hundertmillionen-Blocks verworfen). */
 export function neuePin(): string {
@@ -77,7 +77,9 @@ async function schreibeEinteilung(
     const text = liste
       .map((f) => (f.gruppe != null ? `${f.name} bewertet keine Gruppe ${f.gruppe} (Nr. ${nr(f)})` : `${f.name} bewertet keine ${f.sparte || "Tiere ohne Sparte"} (Nr. ${nr(f)})`))
       .join("; ");
-    if (liste.every((f) => f.gruppe != null)) throw fehler("BAD_REQUEST", `${text}. Bitte die Bereiche anders verteilen oder beim Preisrichter die Gruppe ergänzen.`);
+    const gruppen = liste.filter((f) => f.gruppe != null).length;
+    if (gruppen === liste.length) throw fehler("BAD_REQUEST", `${text}. Bitte die Bereiche anders verteilen oder beim Preisrichter die Gruppe ergänzen.`);
+    if (gruppen > 0) throw fehler("BAD_REQUEST", `${text}. Bitte die Bereiche anders verteilen oder beim Preisrichter die Sparte bzw. Gruppe ergänzen.`);
     throw fehler("BAD_REQUEST", `${text}. Bitte die Bereiche anders verteilen oder beim Preisrichter die Sparte ergänzen.`);
   }
   if (umgehaengt.length && !bestaetigt) {
@@ -193,16 +195,7 @@ export const preisrichterRouter = router({
 
   loeschen: oeffentlichSichtbarProcedure.input(z.object({ schauId: dbId, id: dbId })).mutation(async ({ ctx, input }) => {
     await ladeSchau(ctx.benutzer.organisationId, input.schauId);
-    let geloescht: { id: number }[];
-    try {
-      geloescht = await db
-        .delete(preisrichter)
-        .where(and(eq(preisrichter.id, input.id), eq(preisrichter.schauId, input.schauId)))
-        .returning({ id: preisrichter.id });
-    } catch {
-      throw fehler("CONFLICT", "Der Preisrichter hat schon bewertet und kann nicht gelöscht werden.");
-    }
-    if (geloescht.length === 0) throw fehler("NOT_FOUND", "Preisrichter nicht gefunden.");
+    await loeschePreisrichter(input.schauId, input.id, ctx);
     return { ok: true };
   }),
 

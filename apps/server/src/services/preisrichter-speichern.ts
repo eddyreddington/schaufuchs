@@ -1,11 +1,13 @@
 /**
- * Preisrichter anlegen und ändern (`preisrichter.speichern`): Prüfung der Obmann-Zuordnung und der Gruppen, Protokoll der
- * Änderungen. Hört ein Obmann auf, Obmann zu sein, verlieren die ihm zugeordneten Preisrichter die Zuordnung.
+ * Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter
+ * Sperre der Preisrichter der Schau) und der Gruppen, Protokoll der Änderungen. Hört ein Obmann auf, Obmann zu sein, oder
+ * wird er gelöscht, verlieren die ihm zugeordneten Preisrichter die Zuordnung.
  */
 import { bdrgGruppe, bdrgGruppeGueltig, pruefeObmann, type Zusage } from "@schau/domain";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db, type Tx } from "../db/client";
 import { preisrichter } from "../db/schema";
+import { TRPCError } from "@trpc/server";
 import { fehler } from "../trpc";
 import { protokolliere, type Akteur } from "./protokoll";
 
@@ -29,9 +31,12 @@ export interface PreisrichterEingabe {
 
 type Zeile = typeof preisrichter.$inferSelect;
 /** Felder mit altem und neuem Wert im Protokoll. */
-const PROTOKOLL_FELDER = ["name", "anschriftImKatalog", "istObmann", "sparten", "gruppen", "obmannId", "zusage", "zugesagtFuer", "vorbehalt"] as const;
-/** Kontaktdaten: das Protokoll lässt sich nicht löschen – nur vermerken, dass sie sich geändert haben, ohne Werte. */
-const KONTAKT_FELDER = ["anschrift", "email", "telefon"] as const;
+const PROTOKOLL_FELDER = ["name", "anschriftImKatalog", "istObmann", "sparten", "gruppen", "obmannId", "zusage", "zugesagtFuer"] as const;
+/**
+ * Kontaktdaten und Vorbehalt (freier Text, kann Privates enthalten): das Protokoll lässt sich nicht löschen – nur
+ * vermerken, dass sie sich geändert haben, ohne Werte.
+ */
+const OHNE_WERT_FELDER = ["anschrift", "email", "telefon", "vorbehalt"] as const;
 
 /** Gruppen einheitlich (ohne Leerzeichen, groß), ohne Doppelte; eine ungültige lehnt ab. */
 export function gruppenAusEingabe(gruppen: string[]): string[] {
@@ -49,10 +54,14 @@ export async function speicherePreisrichter(input: PreisrichterEingabe, akteur: 
   const { id, gruppen, ...rest } = input;
   const werte = { ...rest, ...(gruppen ? { gruppen: gruppenAusEingabe(gruppen) } : {}) };
   return db.transaction(async (tx) => {
+    // Gesperrt (in fester Folge): ändert eine andere Anfrage gleichzeitig den Haken „Obmann“, wartet diese und sieht
+    // danach den neuen Stand – sonst zeigte die Zuordnung womöglich auf einen, der kein Obmann mehr ist.
     const derSchau = await tx
       .select({ id: preisrichter.id, istObmann: preisrichter.istObmann })
       .from(preisrichter)
-      .where(eq(preisrichter.schauId, input.schauId));
+      .where(eq(preisrichter.schauId, input.schauId))
+      .orderBy(asc(preisrichter.id))
+      .for("update");
     // Beim Ändern zählt der neue Stand des Preisrichters selbst (wird er gerade Obmann, ist er es noch nicht für sich).
     const grund = pruefeObmann(id, werte.obmannId, derSchau);
     if (grund === "selbst") throw fehler("BAD_REQUEST", "Ein Preisrichter kann nicht sein eigener Obmann sein.");
@@ -68,20 +77,39 @@ export async function speicherePreisrichter(input: PreisrichterEingabe, akteur: 
     const [neu] = await tx.update(preisrichter).set(werte).where(eq(preisrichter.id, id)).returning();
     const anders = (k: keyof Zeile) => JSON.stringify(alt[k]) !== JSON.stringify(neu![k]);
     const geaendert = PROTOKOLL_FELDER.filter(anders);
-    const kontakt = KONTAKT_FELDER.filter(anders);
-    if (geaendert.length || kontakt.length)
+    const ohneWert = OHNE_WERT_FELDER.filter(anders);
+    if (geaendert.length || ohneWert.length)
       await protokolliere(tx, {
         schauId: input.schauId,
         tabelle: "preisrichter",
         datensatzId: id,
         aktion: "geändert",
         alt: Object.fromEntries(geaendert.map((k) => [k, alt[k]])),
-        neu: { ...Object.fromEntries(geaendert.map((k) => [k, neu![k]])), ...(kontakt.length ? { kontaktGeaendert: kontakt } : {}) },
+        neu: { ...Object.fromEntries(geaendert.map((k) => [k, neu![k]])), ...(ohneWert.length ? { geaendertOhneWert: ohneWert } : {}) },
         akteur,
       });
     if (alt.istObmann && !neu!.istObmann) await loeseZuordnungen(tx, input.schauId, id, akteur);
     return { id };
   });
+}
+
+/**
+ * Löscht einen Preisrichter der Schau mit Protokoll (Felder wie beim Anlegen); die ihm als Obmann Zugeordneten verlieren
+ * die Zuordnung vorher ausdrücklich, mit Protokoll. Hat er schon bewertet, lehnt die Datenbank ab (CONFLICT).
+ */
+export async function loeschePreisrichter(schauId: number, id: number, akteur: Akteur): Promise<void> {
+  try {
+    await db.transaction(async (tx) => {
+      const [alt] = await tx.select().from(preisrichter).where(and(eq(preisrichter.id, id), eq(preisrichter.schauId, schauId))).for("update");
+      if (!alt) throw fehler("NOT_FOUND", "Preisrichter nicht gefunden.");
+      await loeseZuordnungen(tx, schauId, id, akteur);
+      await tx.delete(preisrichter).where(eq(preisrichter.id, id));
+      await protokolliere(tx, { schauId, tabelle: "preisrichter", datensatzId: id, aktion: "gelöscht", alt: auswahl(alt), akteur });
+    });
+  } catch (e) {
+    if (e instanceof TRPCError) throw e;
+    throw fehler("CONFLICT", "Der Preisrichter hat schon bewertet und kann nicht gelöscht werden.");
+  }
 }
 
 /** Ein Preisrichter ist nicht mehr Obmann: die ihm zugeordneten verlieren die Zuordnung (je mit Protokoll). */

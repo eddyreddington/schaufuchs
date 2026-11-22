@@ -89,6 +89,12 @@ describe("Preisrichter: Gruppen, Obmann, Zusage", () => {
       await expect(al().preisrichter.einteilungSetzen({ schauId: id, einteilung: [{ preisrichterId: x1.id, vonNr: Math.min(...nr), bisNr: Math.max(...nr) }] })).rejects.toThrow(
         /^Gruppe Eins bewertet keine Gruppe X2 \(Nr\. .+\)\. Bitte die Bereiche anders verteilen oder beim Preisrichter die Gruppe ergänzen\.$/,
       );
+      // Sparte und Gruppe zugleich falsch: der Schluss nennt beides.
+      const taube = await richter(id, "Gruppe Taube", { sparten: [stG.sparte], gruppen: ["X1"] });
+      await expect(al().preisrichter.einteilungSetzen({ schauId: id, einteilung: [{ preisrichterId: taube.id, vonNr: Math.min(...nr), bisNr: Math.max(...nr) }] })).rejects.toThrow(
+        /^Gruppe Taube bewertet keine .+ \(Nr\. .+\); Gruppe Taube bewertet keine Gruppe X2 \(Nr\. .+\)\. Bitte die Bereiche anders verteilen oder beim Preisrichter die Sparte bzw\. Gruppe ergänzen\.$/,
+      );
+      await al().preisrichter.loeschen({ schauId: id, id: taube.id });
       // Vorschlag nach Nummern: kein Strasser im Bereich von „Gruppe Eins“.
       const vn = await al().preisrichter.einteilungVorschlagen({ schauId: id });
       const strasserNr = liste.filter((e) => e.rasse === st.rasse).map((e) => e.katalogNr!);
@@ -119,24 +125,24 @@ describe("Preisrichter: Gruppen, Obmann, Zusage", () => {
     const fremdObmann = await richter(fremd.id, "Fremd Obmann", { istObmann: true });
     await expect(richter(id, "Zusage Richter", { id: pr.id, obmannId: fremdObmann.id })).rejects.toThrow("Obmann nicht gefunden.");
 
-    // Zusage ändern: Protokoll mit altem und neuem Stand; fehlende Angaben bleiben, wie sie sind.
+    // Zusage ändern: Protokoll mit altem und neuem Stand (Vorbehalt nur als geändert); fehlende Angaben bleiben, wie sie sind.
     const ab = await protokollAb();
     await richter(id, "Zusage Richter", { id: pr.id, zusage: "zugesagt", zugesagtFuer: "2027 und 2028", vorbehalt: "klären wir, wenn der Termin bekannt ist" });
     const n = (await al().preisrichter.liste({ schauId: id })).richter.find((x) => x.id === pr.id)!;
     expect([n.zusage, n.zugesagtFuer, n.vorbehalt, n.obmannId]).toEqual(["zugesagt", "2027 und 2028", "klären wir, wenn der Termin bekannt ist", obmann.id]);
     const prot = await protokoll(ab, "preisrichter");
     expect(prot.map((x) => [x.datensatzId, x.aktion])).toEqual([[pr.id, "geändert"]]);
-    expect(prot[0]!.alt).toEqual({ zusage: "offen", zugesagtFuer: "", vorbehalt: "" });
-    expect(prot[0]!.neu).toEqual({ zusage: "zugesagt", zugesagtFuer: "2027 und 2028", vorbehalt: "klären wir, wenn der Termin bekannt ist" });
+    expect(prot[0]!.alt).toEqual({ zusage: "offen", zugesagtFuer: "" });
+    expect(prot[0]!.neu).toEqual({ zusage: "zugesagt", zugesagtFuer: "2027 und 2028", geaendertOhneWert: ["vorbehalt"] });
     const neuAngelegt = await richter(id, "Zusage Neu", { zusage: "abgesagt" });
     expect((await protokoll(ab, "preisrichter")).at(-1)!.aktion).toBe("angelegt");
     await expect(richter(id, "Zusage Falsch", { zusage: "vielleicht" })).rejects.toThrow();
 
-    // Vorlage: die neue Schau bekommt eigene Preisrichter, der Obmann zeigt auf ihren Obmann.
+    // Vorlage: die neue Schau bekommt eigene Preisrichter, der Obmann zeigt auf ihren Obmann; die Zusage ist wieder offen.
     const kopie = await al().schau.anlegen({ name: "Obmann Kopie", ort: "Halle", vorlageId: id });
     const k = (await al().preisrichter.liste({ schauId: kopie.id })).richter;
     expect(k.find((x) => x.name === "Zusage Richter")!.obmannId).toBe(k.find((x) => x.name === "Zusage Obmann")!.id);
-    expect(k.find((x) => x.name === "Zusage Richter")!.zusage).toBe("zugesagt");
+    expect(k.find((x) => x.name === "Zusage Richter")!.zusage).toBe("offen");
 
     // Obmann nicht mehr Obmann: Zuordnung gelöst (mit Protokoll); gelöscht: ebenso.
     await richter(id, "Zusage Obmann", { id: obmann.id, istObmann: false });

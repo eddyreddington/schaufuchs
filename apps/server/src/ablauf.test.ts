@@ -103,3 +103,4 @@ import "./tests/67-pokaltisch";
 import "./tests/68-kleinkram";
 import "./tests/69-preisrichter-gruppen";
 import "./tests/70-preisrichter-drucke";
+import "./tests/71-preisrichter-gegenpruefung";

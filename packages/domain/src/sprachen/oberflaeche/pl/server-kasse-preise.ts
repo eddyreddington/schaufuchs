@@ -102,6 +102,7 @@ export const preisrichter: T["preisrichter"] = {
   /** BDRG-Gruppen und Obmann-Zuordnung (routers/preisrichter.ts, services/preisrichter-speichern.ts). */
   gruppeFalsch: (name: string, gruppe: string, nummern: string) => `${name} nie ocenia grupy ${gruppe} (nr ${nummern})`,
   gruppeVerteilen: (text: string) => `${text}. Prosimy inaczej rozdzielić zakresy lub uzupełnić grupę u sędziego.`,
+  sparteGruppeVerteilen: (text: string) => `${text}. Prosimy inaczej rozdzielić zakresy lub uzupełnić sekcję lub grupę u sędziego.`,
   gruppeRasse: (name: string, gruppe: string, rasse: string) =>
     `${name} nie ocenia grupy ${gruppe} (${rasse}). Prosimy wybrać innego sędziego lub uzupełnić grupę u sędziego.`,
   gruppeName: (gruppe: string) => `grupa ${gruppe}`,

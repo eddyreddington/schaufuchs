@@ -115,6 +115,7 @@ export const preisrichter = {
   /** BDRG-Gruppen und Obmann-Zuordnung (routers/preisrichter.ts, services/preisrichter-speichern.ts). */
   gruppeFalsch: (name: string, gruppe: string, nummern: string) => `${name} bewertet keine Gruppe ${gruppe} (Nr. ${nummern})`,
   gruppeVerteilen: (text: string) => `${text}. Bitte die Bereiche anders verteilen oder beim Preisrichter die Gruppe ergänzen.`,
+  sparteGruppeVerteilen: (text: string) => `${text}. Bitte die Bereiche anders verteilen oder beim Preisrichter die Sparte bzw. Gruppe ergänzen.`,
   gruppeRasse: (name: string, gruppe: string, rasse: string) =>
     `${name} bewertet keine Gruppe ${gruppe} (${rasse}). Bitte einen anderen Preisrichter wählen oder beim Preisrichter die Gruppe ergänzen.`,
   gruppeName: (gruppe: string) => `Gruppe ${gruppe}`,

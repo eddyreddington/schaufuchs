@@ -183,7 +183,8 @@ export async function ladeAuskunftPerson(organisationId: number, name: string) {
       .where(and(eq(schau.organisationId, organisationId), sql`lower(${verkauf.kaeuferName}) like ${muster}`))
       .orderBy(schau.id, verkauf.belegNr),
     db
-      .select({ id: preisrichter.id, schau: schau.name, name: preisrichter.name, anschrift: preisrichter.anschrift, email: preisrichter.email, telefon: preisrichter.telefon, istObmann: preisrichter.istObmann, pinGesetzt: sql<boolean>`${preisrichter.pinHash} is not null`, createdAt: preisrichter.createdAt })
+      .select({ id: preisrichter.id, schau: schau.name, name: preisrichter.name, anschrift: preisrichter.anschrift, email: preisrichter.email, telefon: preisrichter.telefon, istObmann: preisrichter.istObmann, pinGesetzt: sql<boolean>`${preisrichter.pinHash} is not null`, createdAt: preisrichter.createdAt,
+        anschriftImKatalog: preisrichter.anschriftImKatalog, sparten: preisrichter.sparten, gruppen: preisrichter.gruppen, zusage: preisrichter.zusage, zugesagtFuer: preisrichter.zugesagtFuer, vorbehalt: preisrichter.vorbehalt, obmann: sql<string | null>`(select o.name from preisrichter o where o.id = ${preisrichter.obmannId})` })
       .from(preisrichter)
       .innerJoin(schau, eq(schau.id, preisrichter.schauId))
       .where(and(eq(schau.organisationId, organisationId), sql`lower(${preisrichter.name}) like ${muster}`))
@@ -443,8 +444,8 @@ export async function bereinige(jetzt = new Date(), opts: { organisationId?: num
   n.preisrichter = (
     await db
       .update(preisrichter)
-      .set({ email: "", telefon: "", pinHash: null })
-      .where(and(or(ne(preisrichter.email, ""), ne(preisrichter.telefon, ""), isNotNull(preisrichter.pinHash)), abgeschlossenVor(karenz), vereinSchau(preisrichter.schauId)))
+      .set({ email: "", telefon: "", pinHash: null, vorbehalt: "", zugesagtFuer: "" }) // Vorbehalt: freier Text, kann Privates enthalten
+      .where(and(or(ne(preisrichter.email, ""), ne(preisrichter.telefon, ""), isNotNull(preisrichter.pinHash), ne(preisrichter.vorbehalt, ""), ne(preisrichter.zugesagtFuer, "")), abgeschlossenVor(karenz), vereinSchau(preisrichter.schauId)))
       .returning({ id: preisrichter.id })
   ).length;
   // Anschrift der Preisrichter: steht im gedruckten Katalog, wird intern nach 3 Jahren nicht mehr gebraucht.

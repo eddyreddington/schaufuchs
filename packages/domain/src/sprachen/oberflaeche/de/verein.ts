@@ -96,7 +96,7 @@ export const verein = {
     /** Tabelle der Fristen: Daten und Frist. */
     bestaetigungsmails: "Bestätigungsmails",
     tage: (n: number) => `${n} Tage`,
-    karenzDaten: "Geburtsdatum, IBAN, Kontaktdaten und PIN der Preisrichter",
+    karenzDaten: "Geburtsdatum, IBAN, Kontaktdaten, PIN und Vorbehalt der Preisrichter",
     karenzFrist: (n: number) => `${n} Tage nach dem Abschluss der Schau`,
     verkaufDaten: "Käuferdaten, Verkaufsaufzeichnungen, Tierliste, Gesundheitsjournal und Impfangaben",
     jahre: (n: number) => `${n} Jahre`,

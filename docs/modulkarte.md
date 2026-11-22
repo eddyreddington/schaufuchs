@@ -487,7 +487,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (59 Z.)
+### index.ts (60 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -880,7 +880,7 @@ Sammelt alle Exporte (`export * from …`).
 - `lastschrift`
 - `spenden`
 
-### server-kasse-preise.ts (128 Z.)
+### server-kasse-preise.ts (129 Z.)
 
 - `preise`
 - `bewertung`
@@ -1077,7 +1077,7 @@ Meldungen des Servers zu SEPA-Lastschrift (routers/lastschrift.ts, domain lastsc
 - `lastschrift` – Gläubiger-ID, Mandate, Lastschriftdatei, Rücklastschrift.
 - `spenden` – Spenden, Spender und Zuwendungsbestätigungen.
 
-### server-kasse-preise.ts (142 Z.)
+### server-kasse-preise.ts (143 Z.)
 Meldungen des Servers zu Preisen und Stiftungen (routers/preise.ts, services/preise.ts, domain preise.ts), Bewertung und Tablet (routers/bewertung. …
 
 - `preise` – Preise vergeben und entfernen, Stiftungen, Freigabe der Ergebnisse.
@@ -1269,7 +1269,7 @@ Sammelt alle Exporte (`export * from …`).
 - `lastschrift`
 - `spenden`
 
-### server-kasse-preise.ts (128 Z.)
+### server-kasse-preise.ts (129 Z.)
 
 - `preise`
 - `bewertung`
@@ -1454,7 +1454,7 @@ Sammelt alle Exporte (`export * from …`).
 - `lastschrift`
 - `spenden`
 
-### server-kasse-preise.ts (131 Z.)
+### server-kasse-preise.ts (132 Z.)
 
 - `preise`
 - `bewertung`
@@ -1643,7 +1643,7 @@ Sammelt alle Exporte (`export * from …`).
 - `lastschrift`
 - `spenden`
 
-### server-kasse-preise.ts (128 Z.)
+### server-kasse-preise.ts (129 Z.)
 
 - `preise`
 - `bewertung`
@@ -1829,7 +1829,7 @@ Sammelt alle Exporte (`export * from …`).
 - `lastschrift`
 - `spenden`
 
-### server-kasse-preise.ts (128 Z.)
+### server-kasse-preise.ts (129 Z.)
 
 - `preise`
 - `bewertung`
@@ -1921,7 +1921,7 @@ Umschreibungen der deutschen Grundlage: Schweizer Schreibung und französische S
 - `ohneEszett()` – Schweizer Schreibung: wie Deutsch, aber „ss“ statt „ß“.
 - `franzoesischeZeichen()` – Französische Satzzeichen: geschütztes Leerzeichen vor : ; ?
 
-### stammdaten.ts (126 Z.)
+### stammdaten.ts (134 Z.)
 
 - `zerlegeZeile()` – Zerlegt eine CSV-Zeile.
 - `parseStammdatenCsv()` – Liest eine CSV mit den Spalten Sparte;Rasse;Farbenschlag, freiwillig dazu Gruppe (BDRG-Gruppe der Rasse).
@@ -2340,7 +2340,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `preise.stiftungLoeschen` mutation · admin
 - `preise.freigeben` mutation · admin – Gibt die Ergebnisse frei (öffentlich sichtbar, Bewertung geschlossen).
 
-### routers/preisrichter.ts (399 Z.) → `preisrichter`
+### routers/preisrichter.ts (392 Z.) → `preisrichter`
 
 - `preisrichter.liste` query · angemeldet
 - `preisrichter.speichern` mutation · admin
@@ -2361,7 +2361,7 @@ Rassebilder: ansehen (alle Benutzer) und pflegen (Ausstellungsleitung).
 - `rassebild.angabenSetzen` mutation · admin – Urheber, Lizenz, Quelle und „geprüft“ ändern.
 - `rassebild.loeschen` mutation · admin
 
-### routers/schau/anlegen.ts (295 Z.) → `schau`
+### routers/schau/anlegen.ts (296 Z.) → `schau`
 Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
 
 - `schau.anlegen` mutation · admin – Neue Schau anlegen – leer mit Startwerten oder aus einer früheren Schau des Vereins als Vorlage.
@@ -2778,7 +2778,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `bewertung.ts` (193 Z.) · bewertungEingabe, RICHTER_PHASEN, speichereBewertung, setzeBewertungZurueck
 - `bremse.ts` (224 Z.) · Bremse, Wartezeit, anschlussSchluessel, netz48Schluessel, istLokaleAdresse, adressSchluessel
 - `datenschutz-lastschrift.ts` (75 Z.) – SEPA-Lastschrift im Datenschutz (Entscheidung 018): was über Mandate und Einzüge in die Auskunft gehört (Art. 15), was der Löschwunsch entfernt (Ar … · lastschriftAuskunft, loescheLastschriftDaten, bereinigeMandate
-- `datenschutz.ts` (592 Z.) · ladeVereinsangaben, ladeAuskunft, ladeAuskunftPerson, loescheAussteller, bereinige, starteBereinigung
+- `datenschutz.ts` (593 Z.) · ladeVereinsangaben, ladeAuskunft, ladeAuskunftPerson, loescheAussteller, bereinige, starteBereinigung
 - `einteilung-vorschlag.ts` (189 Z.) – Vorschlag für die Einteilung nach Nummern (und über Nummern je Farbenschlag auch nach Rassen): Tiere in Katalogfolge auf die Preisrichter verteilen … · schlageEinteilungVor
 - `einteilung.ts` (90 Z.) · sperreEinteilung, einteilTier, einteilSchluessel, ladeRegeln, bereicheDerSchau, rassenEinteilungAnwenden, einteilungNachStatus
 - `eintraege.ts` (259 Z.) · ladeEintraege, NICHT_VEROEFFENTLICHT, verdeckeNamen, ausstellerAnzeige, bezeichnung, alsFolge, meldebetrag, meldebetraege, skalaVon
@@ -2792,7 +2792,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `meldung.ts` (509 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, speichereMeldung, bindungen, hatAuszahlung
 - `post.ts` (155 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, sendeMail, sendeMailJetzt, versende, starteMailversand
 - `preise.ts` (174 Z.) · vergebePreis, entfernePreis
-- `preisrichter-speichern.ts` (100 Z.) – Preisrichter anlegen und ändern (`preisrichter.speichern`): Prüfung der Obmann-Zuordnung und der Gruppen, Protokoll der Änderungen. · gruppenAusEingabe, speicherePreisrichter
+- `preisrichter-speichern.ts` (128 Z.) – Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter Sperre der Preisrichter der S … · gruppenAusEingabe, speicherePreisrichter, loeschePreisrichter
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
 - `protokoll.ts` (37 Z.) · protokolliere
 - `pruefung.ts` (368 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste
@@ -3002,7 +3002,8 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `66-preisverteilung.ts` (130 Z.) – Preisverteilung je Preisrichter als PDF (/datei/:schauId/preisverteilung.pdf): je Preisart so viele Zeilen wie sein Kontingent, vergebene mit Katal …
 - `67-pokaltisch.ts` (38 Z.) – Hallenplan: Pokaltisch (Tisch für die Ehrenpreise) als eingesetztes Möbel – gespeichert mit Maßen, kein Käfigplatz, bleibt beim Neu-Setzen, im gedr …
 - `68-kleinkram.ts` (161 Z.) – Kleinere Ergänzungen: Rückfrage beim Laden und Entscheiden eines Hallenplan-Entwurfs, wenn der Katalog gedruckt ist oder schon Tiere eingeliefert s …
-- `69-preisrichter-gruppen.ts` (151 Z.) – Preisrichter, Stufe 1: BDRG-Gruppen je Rasse (Verzeichnis, CSV) und je Preisrichter mit Prüfung in der Einteilung, Zuordnung zu einem Obmann, Stand …
+- `69-preisrichter-gruppen.ts` (157 Z.) – Preisrichter, Stufe 1: BDRG-Gruppen je Rasse (Verzeichnis, CSV) und je Preisrichter mit Prüfung in der Einteilung, Zuordnung zu einem Obmann, Stand …
 - `70-preisrichter-drucke.ts` (132 Z.) – Preisrichter, Stufe 2: Preisrichterverpflichtung als Brief mit Abschnitt zum Abtrennen (/datei/:schauId/preisrichter-verpflichtung.pdf) und die Bew …
+- `71-preisrichter-gegenpruefung.ts` (103 Z.) – Preisrichter, Gegenprüfung: Zusage, Vorbehalt, Gruppen und Obmann in Auskunft, Bereinigung und Protokoll (Vorbehalt nur als „geändert“), Vorlage oh …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
