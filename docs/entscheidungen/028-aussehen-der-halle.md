@@ -44,11 +44,15 @@ Holz-Prallwand bis 2 m, 3,50 m hoch).
   Türart liegt an der Fläche, nicht in `aussehen`, weil sie je Eingang verschieden ist; gespeichert nur an Eingängen, nur
   gültig und nur abweichend von der Vorgabe (`flaecheBereinigt`, zod lehnt Unbekanntes ab). Wie das übrige Aussehen nie
   Plan: `festGeometrie` kennt keine Flächen, nur `halleSchluessel` ändert sich. Ab 1,30 m zweiflügelig (`tuerFluegel`),
-  Aufbau und Lage rein in `hallenplan-tueren.ts` (`tuerAufbau`, `tuerLage`). In 3D blendet die Tür mit dem Sturz darüber
+  unter 50 cm keine Tür (`TUER_MIN_BREITE`, die Öffnung bleibt); Aufbau in `hallenplan-tueren.ts` (`tuerAufbau`), Lage
+  in `hallenplan-3d-waende.ts` (`tuerLage`). Der Editor bereinigt seinen Entwurf genau wie der Server (`halleBereinigt`:
+  Tür, Aussehen, Nummernfolge), sonst wiche sein Stand vom gespeicherten ab (Konflikt, kein Rückgängig). In 3D blendet die Tür mit dem Sturz darüber
   aus (`SzeneTuer.wand`), Glas behält dabei seine eigene Deckkraft als Obergrenze; die bündige Tür trägt dieselbe Textur
   wie die Innenwand an derselben Stelle. Eine geschlossene Tür ist wie die Wand ein Hindernis für den Doppelklick, solange
   sie zu sehen ist; Rundgang und Gehen kennen keine Wände und bleiben unverändert. Im 2D-Plan und im Druck bleibt der
   Eingang eine Öffnung; im heruntergeladenen Modell sind die Türen dabei.
+- Beim Herunterladen sind Wände, Prallwand, Fenster und Türen voll deckend (`vollDeckend`), auch wenn sie in der Ansicht
+  gerade ausgeblendet sind; Glas behält seine eigene Deckkraft.
 - Käfige (Preisrichterfarben) und Sockelverkleidung ohne Tonemapping, damit ihre Farben der Legende entsprechen.
 
 **Folgen:** Als Teil der Halle kommt das Aussehen mit Entwürfen, dem Archiv (017) und einer neuen Schau aus der Vorlage
