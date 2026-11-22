@@ -1,5 +1,16 @@
 # SchauFUCHS 1.21 – Versionshinweise
 
+## 1.21.1 (22.11.2026)
+
+- **Katalog in einer Schrift:** Jeder Katalog steht jetzt in genau einer Schriftfamilie – der unter „Katalog gestalten“
+  gewählten – für Titel, Köpfe, Text, Tabellen und Zahlen; unterschieden wird nur durch fett, kursiv und feste
+  Größenstufen (Entscheidung 032). Nur „Buch, schmal“ und „Ausgewogen“ setzen den Schaunamen auf der Titelseite in
+  einer Auszeichnungsschrift. Wer „Klassisch“ nutzt, sieht Überschriften, Rassen, Farbenschläge und Grußworte jetzt in
+  Plex Condensed statt Spectral.
+- In schmalen Spalten steht „nicht veröff.“ statt eines gekürzten „nicht…“.
+
+Handbuch: Abschnitt „Katalog gestalten“ (Schrift).
+
 ## 1.21.0 (22.11.2026)
 
 Gegenüber 1.20.0 ist neu:

@@ -1,7 +1,7 @@
 {
   "name": "gefluegelschau",
   "private": true,
-  "version": "1.21.0",
+  "version": "1.21.1",
   "license": "EUPL-1.2",
   "description": "SchauFUCHS – Schauverwaltung für Rassegeflügelausstellungen",
   "workspaces": [
