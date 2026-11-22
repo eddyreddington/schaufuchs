@@ -23,7 +23,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 
 - Katalogfolge streng aufsteigend Reihe für Reihe, keine Sonderregeln je Sparte; Reihen geschlossen.
 - Grundplatten nie kürzen; Rest einer Platte darf die nächste Käfigart aufnehmen ([ADR 001](../entscheidungen/001-grundplatten-nie-kuerzen.md)).
-- Möbel (Tisch, Bank, Garnitur) sind keine Sperrfläche und verschieben nie Käfige ([ADR 002](../entscheidungen/002-moebel-keine-sperrflaeche.md)).
+- Möbel (Tisch, Bank, Garnitur, Pokaltisch) sind keine Sperrfläche und verschieben nie Käfige ([ADR 002](../entscheidungen/002-moebel-keine-sperrflaeche.md)).
 - Fester Plan vs. „Automatisch planen“ ([ADR 006](../entscheidungen/006-fester-plan.md)): fest = jeder Käfig behält seinen Platz.
 - Jede Käfigfront zeigt zu einem Gang (`frontFehler`), Rückwand an die Wand; vor Ein- und Notausgängen bleibt ein Gang frei.
 - Käfige nie auf Flächen; eingesetzte Teile nur ganz in der Halle (`pruefeLage`).
@@ -37,7 +37,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 - Domain: `packages/domain/src/hallenplan*.test.ts`, `stellvorschlaege.test.ts` (u. a. Zufallshallen, Möbel ohne Einfluss).
 - Server (`apps/server/src/tests`): `17-kaefige`, `19-hallenplan`, `24-plan-fest`, `31-stellvorschlaege`, `36-nach-plan-nummerieren`,
   `38-hallenplan-entfernen`, `39-hallenplan-druck`, `40-hallenplan-neu-setzen`, `41-hallenplan-3d`, `42-hallenplan-moebel-etagen`,
-  `44-pruefliste-hallenplan`.
+  `44-pruefliste-hallenplan`, `67-pokaltisch`.
 
 ## Datenbank
 

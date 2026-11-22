@@ -180,7 +180,7 @@ Tests: `hallenplan-3d-rundgang.test.ts`
 - `ohneSeite()` – Die Seite gehört nur zu Wänden, nicht zur Türöffnung.
 - `waendeImGrundriss()` – Wände entlang eines freien Grundrisses (Entscheidung 019): je Kante ein Wandstück außen an der Kante, bis zum um die Wanddicke versetzten Umriss – …
 
-### hallenplan-3d.ts (561 Z.)
+### hallenplan-3d.ts (566 Z.)
 Hallenplan räumlich: aus dem gerechneten Plan (`planeHalle`) die Körper für die 3D-Ansicht – Wände mit Türen, Aufsteller unter den Grundplatten, Kä …
 Tests: `hallenplan-3d.test.ts`
 
@@ -298,20 +298,23 @@ Hallenplan – interne Hilfen für die Rechnung (nicht über `hallenplan.ts` ver
 - `m()`
 - Typen: `Abschnitt`
 
-### hallenplan-moebel.ts (44 Z.)
-Hallenplan – Tisch, Bank und Garnitur: Arten, Namen, Standardmaße und Höhen, Maße mit Vorgaben und die Körper einer Garnitur (Bank, Tisch, Bank).
+### hallenplan-moebel.ts (63 Z.)
+Hallenplan – Tisch, Bank, Garnitur und Pokaltisch: Arten, Namen, Standardmaße und Höhen, Maße mit Vorgaben, die Körper einer Garnitur (Bank, Tisch, …
+Tests: `hallenplan-moebel.test.ts`
 
-- `MoebelArt` (Typ) – Tisch, Bank und Garnitur (Biertisch mit zwei Bänken): eingesetzte Teile ohne Käfigplatz.
+- `MoebelArt` (Typ) – Tisch, Bank, Garnitur (Biertisch mit zwei Bänken) und Pokaltisch (Ehrenpreise): eingesetzte Teile ohne Käfigplatz.
 - `MOEBEL_ARTEN`
 - `MOEBEL_NAME`
 - `TISCH_STANDARD` – Biertisch 220 × 50 cm, Bierbank 220 × 25 cm; in der Garnitur je eine Bank an jeder langen Seite, 15 cm vom Tisch.
 - `BANK_STANDARD`
 - `GARNITUR_ABSTAND`
+- `POKALTISCH_STANDARD` – Pokaltisch: ein breiterer Tisch für die Ehrenpreise, 200 × 80 cm.
 - `TISCH_HOEHE` – Höhen (cm) für die 3D-Ansicht.
 - `BANK_HOEHE`
 - `istMoebel()`
 - `moebelMass()` – Maße eines Möbelstücks mit Vorgaben: Länge, Tiefe (Tisch bzw. Bank) und bei der Garnitur die Tiefe der Bänke.
-- `moebelStuecke()` – Tisch, Bank oder Garnitur in der Lage `q` (Hallenkoordinaten): die Körper darin – eine Garnitur als Bank, Tisch, Bank quer zur Länge.
+- `moebelStuecke()` – Tisch, Bank, Garnitur oder Pokaltisch in der Lage `q` (Hallenkoordinaten): die Körper darin – eine Garnitur als Bank, Tisch, Bank quer zur Länge.
+- `pokalStellen()` – Pokale auf einem Pokaltisch in der Lage `q`: eine Reihe mittig längs der langen Seite, je etwa 50 cm einer (zwei bis sechs), mit Mittelpunkt (x, y …
 
 ### hallenplan-neu.ts (93 Z.)
 Plan neu setzen: Die Software stellt alle Käfige neu – nach den Einstellungen der Halle (Maße, Gänge, Richtung, Wandreihen, Grundplatten) und ihren …
@@ -749,7 +752,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (237 Z.)
+### halle-werkzeuge.ts (238 Z.)
 
 - `halleWerkzeuge`
 
@@ -855,7 +858,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKasse`
 
-### server-katalog-halle.ts (65 Z.)
+### server-katalog-halle.ts (66 Z.)
 
 - `halle`
 
@@ -938,7 +941,7 @@ Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt
 
 - `halleBild` – Texte der Oberfläche: halleBild (Entscheidung 022) – Zeichnung des Hallenplans, Entwürfe, Grundriss, 3D-Ansicht.
 
-### halle-werkzeuge.ts (243 Z.)
+### halle-werkzeuge.ts (244 Z.)
 
 - `halleWerkzeuge` – Texte der Oberfläche: halleWerkzeuge (Entscheidung 022) – Werkzeugleiste, Befehle und Aktionen des Hallenplan-Editors, kleine Teile (Tiere ohne Pla …
 
@@ -1054,7 +1057,7 @@ Texte der Oberfläche: serverKasse (Entscheidung 022) – Meldungen des Servers 
 
 - `serverKasse`
 
-### server-katalog-halle.ts (70 Z.)
+### server-katalog-halle.ts (71 Z.)
 
 - `halle` – Meldungen des Servers zum Hallenplan (Entscheidung 022): routers/katalog/hallenplan.ts, gemeinsam.ts, kaefige.ts, routers/hallenentwurf.ts und die …
 
@@ -1139,7 +1142,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `halleBild`
 
-### halle-werkzeuge.ts (233 Z.)
+### halle-werkzeuge.ts (234 Z.)
 
 - `halleWerkzeuge`
 
@@ -1244,7 +1247,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKasse`
 
-### server-katalog-halle.ts (65 Z.)
+### server-katalog-halle.ts (66 Z.)
 
 - `halle`
 
@@ -1324,7 +1327,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (233 Z.)
+### halle-werkzeuge.ts (234 Z.)
 
 - `halleWerkzeuge`
 
@@ -1429,7 +1432,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKasse`
 
-### server-katalog-halle.ts (65 Z.)
+### server-katalog-halle.ts (66 Z.)
 
 - `halle`
 
@@ -1513,7 +1516,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (233 Z.)
+### halle-werkzeuge.ts (234 Z.)
 
 - `halleWerkzeuge`
 
@@ -1618,7 +1621,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKasse`
 
-### server-katalog-halle.ts (65 Z.)
+### server-katalog-halle.ts (66 Z.)
 
 - `halle`
 
@@ -1698,7 +1701,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (238 Z.)
+### halle-werkzeuge.ts (239 Z.)
 
 - `halleWerkzeuge`
 
@@ -1804,7 +1807,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverKasse`
 
-### server-katalog-halle.ts (65 Z.)
+### server-katalog-halle.ts (66 Z.)
 
 - `halle`
 
@@ -2507,7 +2510,7 @@ Prozeduren: auth.status, schau.get, schau.protokoll
 
 ### fehler.tsx (46 Z.)
 
-### hallenplan-3d-bausteine.ts (283 Z.)
+### hallenplan-3d-bausteine.ts (296 Z.)
 Bausteine der 3D-Halle: Texturen (Gitter, Stoff, Turnhallenwand), Geometrien (Kasten, Schürzen, Innenseiten), Figuren, Schilder.
 
 ### hallenplan-3d-landschaft.ts (288 Z.)
@@ -2523,7 +2526,7 @@ Steuerkreuz unten rechts in der 3D-Ansicht – für Tablet und Maus, was am Rech
 ### hallenplan-3d-steuerung.ts (271 Z.)
 Bewegung der Kamera in der 3D-Ansicht über das Ziehen mit Maus oder Finger hinaus: weiches Auslaufen, Zoom zum Mauszeiger, per Doppelklick sanft hi …
 
-### hallenplan-3d-welt.ts (548 Z.)
+### hallenplan-3d-welt.ts (554 Z.)
 Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und Steuerung.
 
 ### hallenplan-3d.tsx (216 Z.)
@@ -2539,7 +2542,7 @@ Prozeduren: katalog.nummernNachPlan, katalog.tierVersetzen, katalog.wandreiheSte
 ### hallenplan-bild-bedienung.ts (312 Z.)
 Bedienung der Hallenplan-Zeichnung: Teile greifen, ziehen und loslassen (mit Prüfung gegen Wände und andere Teile), Auswahlrahmen, Fläche aufziehen …
 
-### hallenplan-bild.tsx (481 Z.)
+### hallenplan-bild.tsx (486 Z.)
 Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
 
 ### hallenplan-eigenschaften.tsx (564 Z.)
@@ -2570,21 +2573,21 @@ Was die Seite „Hallenplan“ beim Laden zeigt (Seite hallenplan.tsx).
 ### hallenplan-speichern.ts (12 Z.)
 Knopf „Speichern“ im Hallenplan (Seite hallenplan.tsx): was er nach der Prüfung meldet.
 
-### hallenplan-teile.tsx (253 Z.)
+### hallenplan-teile.tsx (265 Z.)
 Kleine Teile des Hallenplans: Muster und Legende, Tiere ohne Platz, Sparten in den Reihen, Angaben zu einem Käfig, Schalter „Automatisch planen“.
 Prozeduren: katalog.kaefigInfo
 
-### hallenplan-uebersicht.tsx (209 Z.)
+### hallenplan-uebersicht.tsx (219 Z.)
 Anzeige unter dem Hallenplan: Legende der Zeichnung, „Platz“ (gestellt, ohne Platz, frei) und die Aufbauliste je Reihe.
 
 ### hallenplan-vorschlaege.tsx (208 Z.)
 Stellvorschläge: dieselbe Halle in allen möglichen Aufstellungen, je mit Skizze (`HallenSkizze`).
 Prozeduren: katalog.planNeuSetzen, katalog.stellVorschlaege, katalog.stellVorschlaegeEntwurf
 
-### hallenplan-werkzeuge.tsx (302 Z.)
+### hallenplan-werkzeuge.tsx (303 Z.)
 Bausteine der Werkzeugleiste im Hallenplan-Editor: Symbole, Werkzeugknöpfe mit Tooltip (Name und Tastenkürzel), Gruppen und aufklappbare Menüs.
 
-### hallenplan-werkzeugleiste.tsx (211 Z.)
+### hallenplan-werkzeugleiste.tsx (212 Z.)
 Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen, Zoom, Menü „Plan“).
 
 ### hallenplan.tsx (561 Z.) – `/schau/:schauId/hallenplan`
@@ -2777,7 +2780,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `dokumente-kasse.ts` (344 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
 - `dokumente.ts` (553 Z.) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf
 - `girocode.ts` (38 Z.) – GiroCode im PDF (Entscheidung 021): QR-Code als Vektorgrafik (scharf in jedem Druck), daneben Bankverbindung und Verwendungszweck. · GIROCODE_GROESSE, qrZeichnen, giroCodeBlock
-- `hallenplan.ts` (417 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
+- `hallenplan.ts` (443 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog-anhang.ts` (147 Z.) – Katalog-PDF, Anhang: kommende Schauen, Anzeigen der Förderer und Notizseiten bis zur vollen Heftlage. · kommendeSchauenSeite, anzeigenSeiten, notizSeiten
 - `katalog-hilfen.ts` (65 Z.) – Katalog-PDF, gemeinsame Hilfen ohne PDF: Kurzvorschau-Auswahl, Anzahltexte („3 Stämme“) und der Bildnachweis (Adressen kürzen, Urheber bereinigen, … · KURZ_JE_ABTEILUNG, kurzauswahl, anzahlText, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis
@@ -2943,5 +2946,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `64-einrichten-befehl.ts` (249 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026): `schaufuchs einrichten` ruft im Container `bun src/einrichten.ts` auf.
 - `65-a-bogen-mitglieder.ts` (103 Z.) – A-Bögen für die Vereinsmitglieder (Vereinsverwaltung, „Aussteller“): je Mitglied ein A-Bogen zur gewählten Schau, vorausgefüllt mit Name und Anschr …
 - `66-preisverteilung.ts` (130 Z.) – Preisverteilung je Preisrichter als PDF (/datei/:schauId/preisverteilung.pdf): je Preisart so viele Zeilen wie sein Kontingent, vergebene mit Katal …
+- `67-pokaltisch.ts` (38 Z.) – Hallenplan: Pokaltisch (Tisch für die Ehrenpreise) als eingesetztes Möbel – gespeichert mit Maßen, kein Käfigplatz, bleibt beim Neu-Setzen, im gedr …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
