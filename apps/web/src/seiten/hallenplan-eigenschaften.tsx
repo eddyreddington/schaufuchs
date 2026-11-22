@@ -14,6 +14,7 @@ import { NummerFolgeEinstellung } from "./hallenplan-nummerfolge";
 import { type AussehenAendern, AussehenEinstellung } from "./hallenplan-aussehen";
 import { enterUebernimmt, MeterFeld, MitEinheit } from "./hallenplan-meterfeld";
 import { kaefigNameIn } from "./kaefige";
+import { TuerFeld } from "./hallenplan-tuer";
 
 export { MitEinheit };
 
@@ -296,6 +297,7 @@ export function FlaecheFelder({ halle, i, aendern }: { halle: Halle; i: number; 
         <MeterFeld label={t.breite} cm={g.b} min={20} setzen={(v) => setzeG({ b: v })} />
         <MeterFeld label={t.hoehe} cm={g.h} min={20} setzen={(v) => setzeG({ h: v })} />
       </div>
+      <TuerFeld halle={halle} i={i} aendern={aendern} />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { figurTeile, gitterTextur, hell, ladeBild, offenerKasten, pokalGeometrie
 import { baueLandschaft, type HallenSeite } from "./hallenplan-3d-landschaft";
 import { lichtWerte } from "./hallenplan-3d-licht";
 import { baueRaum, BODEN_LAGEN } from "./hallenplan-3d-raum";
+import { baueTueren } from "./hallenplan-3d-tueren";
 import { type Bewegung, bewegungFuer } from "./hallenplan-3d-steuerung";
 
 const M = 0.01; // cm → m
@@ -133,18 +134,23 @@ export function baueWelt(
     return k;
   };
   // Jede Wand mit eigenem Stoff: Wände, die zwischen Kamera und Halle stehen, blenden sich weich aus (siehe `wandDeckkraft`).
-  const wandTeile: { w: Quader; mesh: THREE.Mesh; stoff: THREE.MeshStandardMaterial; deck: number; mit: THREE.Material[]; schatten: THREE.Mesh[] }[] = [];
+  const wandTeile: { w: Quader; mesh: THREE.Mesh; stoff: THREE.MeshStandardMaterial; deck: number; mit: THREE.Material[]; schatten: THREE.Mesh[]; tueren: THREE.Mesh[] }[] = [];
   for (const w of s.waende) {
     const stoff = merk(wandStoff.clone());
     const k = kiste(w, stoff);
     k.castShadow = true;
     k.receiveShadow = true;
     modell.add(k);
-    wandTeile.push({ w, mesh: k, stoff, deck: -1, mit: [] as THREE.Material[], schatten: [] as THREE.Mesh[] });
+    wandTeile.push({ w, mesh: k, stoff, deck: -1, mit: [] as THREE.Material[], schatten: [] as THREE.Mesh[], tueren: [] as THREE.Mesh[] });
   }
   // Innenseite (Prallwand, Anstrich), Fenster, Geräte und Giebel blenden mit ihrer Wand aus; Geräte werfen dann keinen Schatten.
   for (const [i, stoffe] of raum.wandStoffe) wandTeile[i]?.mit.push(...stoffe);
   for (const [i, teile] of raum.wandSchatten) wandTeile[i]?.schatten.push(...teile);
+  // Türen in den Eingängen (hallenplan-3d-tueren.ts) gehören zum Sturz darüber; geschlossen wie die Wand ein Hindernis.
+  const tueren = baueTueren(modell, s, merk);
+  for (const [i, stoffe] of tueren.wandStoffe) wandTeile[i]?.mit.push(...stoffe);
+  for (const [i, teile] of tueren.wandSchatten) wandTeile[i]?.schatten.push(...teile);
+  for (const [i, teile] of tueren.wandHindernisse) wandTeile[i]?.tueren.push(...teile);
   // Türen auch bei ausgeblendeter Wand erkennbar: Umriss am Boden.
   const tuerLinie = merk(new THREE.LineBasicMaterial({ color: "#2b2f36" }));
   for (const t of s.tueren) {
@@ -396,7 +402,7 @@ export function baueWelt(
   steuerung.minDistance = 0.3;
   steuerung.maxDistance = groesse * 4;
   // Hindernisse für den Doppelklick: Käfige, Volieren und Wände, die gerade zu sehen sind (ausgeblendete nicht).
-  const hindernisse = () => [kaefige, ...volierenTreffer.map((x) => x.mesh), ...wandTeile.filter((x) => x.deck > 0.5).map((x) => x.mesh)];
+  const hindernisse = () => [kaefige, ...volierenTreffer.map((x) => x.mesh), ...wandTeile.filter((x) => x.deck > 0.5).flatMap((x) => [x.mesh, ...x.tueren])];
   const bewegung = bewegungFuer({ kamera, steuerung, dom: renderer.domElement, boden, hindernisse, punkte: s.rundgang, zeichne: () => zeichne(), beiRundgang });
   /** Deckkraft der Wände zur Kamera nachführen (weich); true, solange sich noch etwas ändert. */
   const waendeAnpassen = (): boolean => {
@@ -416,14 +422,15 @@ export function baueWelt(
       t.stoff.depthWrite = t.deck > 0.6;
       t.mesh.castShadow = t.deck > 0.5;
       for (const m of t.schatten) m.castShadow = t.deck > 0.5;
-      // Die Innenseite (Prallwand, Anstrich) geht mit.
+      // Die Innenseite (Prallwand, Anstrich) und die Türen gehen mit; Glas behält seine eigene Deckkraft als Obergrenze.
       for (const m of t.mit) {
-        m.opacity = t.deck;
+        const eigen = typeof m.userData.deckkraft === "number" ? m.userData.deckkraft : null;
+        m.opacity = t.deck * (eigen ?? 1);
         if (!m.transparent) {
           m.transparent = true;
           m.needsUpdate = true;
         }
-        m.depthWrite = t.deck > 0.6;
+        m.depthWrite = eigen == null && t.deck > 0.6;
       }
     }
     return weiter;

@@ -41,10 +41,10 @@ export interface Raum {
 }
 
 /** Drehung um die Hochachse, damit lokal +z von der Wand in die Halle zeigt (lokal +x entlang der Wand). */
-const NACH_INNEN: Record<SzeneSeite, number> = { z0: 0, z1: Math.PI, x0: Math.PI / 2, x1: -Math.PI / 2 };
+export const NACH_INNEN: Record<SzeneSeite, number> = { z0: 0, z1: Math.PI, x0: Math.PI / 2, x1: -Math.PI / 2 };
 
 /** Punkt an der Wand (Meter): entlang der Wand, Höhe, Abstand vor der Innenfläche. */
-function anWand(seite: SzeneSeite, ebene: number, entlang: number, y: number, vor: number): THREE.Vector3 {
+export function anWand(seite: SzeneSeite, ebene: number, entlang: number, y: number, vor: number): THREE.Vector3 {
   const innen = seite === "x0" || seite === "z0" ? 1 : -1;
   const quer = (ebene + innen * vor) * M;
   return seite[0] === "z" ? new THREE.Vector3(entlang * M, y * M, quer) : new THREE.Vector3(quer, y * M, entlang * M);

@@ -233,6 +233,25 @@ export function fensterTextur(): THREE.CanvasTexture {
   return textur(c, false);
 }
 
+/** Holztür: warmes Eichenfurnier, Maserung senkrecht (ein Blatt, nicht wiederholt). */
+export function holzTuerTextur(): THREE.CanvasTexture {
+  const [c, g] = leinwand(128, 320);
+  const r = zufall(29);
+  g.fillStyle = "#b3804c";
+  g.fillRect(0, 0, 128, 320);
+  for (let i = 0; i < 70; i++) {
+    const x = r() * 128, w = 0.6 + r() * 1.8;
+    g.strokeStyle = r() < 0.5 ? `rgba(95,58,26,${0.12 + r() * 0.2})` : `rgba(230,190,140,${0.08 + r() * 0.12})`;
+    g.lineWidth = w;
+    g.beginPath();
+    g.moveTo(x, 0);
+    g.bezierCurveTo(x + (r() - 0.5) * 8, 110, x + (r() - 0.5) * 8, 210, x + (r() - 0.5) * 4, 320);
+    g.stroke();
+  }
+  koernung(g, 128, 320, 900, 0.06, r);
+  return textur(c, false);
+}
+
 /** Holzdecke aus Profilbrettern (10 cm breit, mit Nut), warmes Holz; Kachel 1 × 1 m, Bretter entlang v. */
 export function deckenTextur(): THREE.CanvasTexture {
   const [c, g] = leinwand(256, 256);
