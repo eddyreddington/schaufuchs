@@ -2,7 +2,7 @@
  * Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle
  * (`HalleEigenschaften`) mit ihren Eingabefeldern.
  */
-import { type Punkt, type Halle, type HallenFlaeche, type NummerFolge, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, type KaefigTyp, LOCALE, moebelMass, type OberflaecheTexte, type WandSeite } from "@schau/domain";
+import { type Punkt, type Halle, type HallenFlaeche, type NummerFolge, type HallenAussehen, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, type KaefigTyp, LOCALE, moebelMass, type OberflaecheTexte, type WandSeite } from "@schau/domain";
 import { type InputHTMLAttributes, type ReactNode, useEffect, useRef, useState } from "react";
 import { useOberflaeche, useSprache } from "../sprache";
 import { Auswahl, Eingabe, Feld, Haken, Knopf, Marke } from "../ui";
@@ -11,6 +11,7 @@ import { type Aendern, type Aktionen, BLOCK_TYPEN, type FehlendeSetzen, HAUPTGAN
 import { AutomatikSchalter, OhnePlatz } from "./hallenplan-teile";
 import { GrundrissKnopf } from "./hallenplan-grundriss";
 import { NummerFolgeEinstellung } from "./hallenplan-nummerfolge";
+import { AussehenEinstellung } from "./hallenplan-aussehen";
 import { kaefigNameIn } from "./kaefige";
 
 /**
@@ -365,6 +366,7 @@ export function HalleEigenschaften({
   setzen,
   vorschlaege,
   nummerFolgeSetzen,
+  aussehenSetzen,
 }: {
   halle: Halle;
   plan: Plan;
@@ -378,6 +380,8 @@ export function HalleEigenschaften({
   vorschlaege: () => void;
   /** Einstellung „Nach Plan nummerieren“ speichern (ohne den Plan neu zu setzen); fehlt: nur ansehen. */
   nummerFolgeSetzen?: (f: NummerFolge | undefined) => void;
+  /** Aussehen in 3D speichern (ändert nie den Plan); fehlt: nur ansehen. */
+  aussehenSetzen?: (a: HallenAussehen | undefined) => void;
 }) {
   const t = useOberflaeche();
   const te = t.halle.eigenschaften;
@@ -470,6 +474,7 @@ export function HalleEigenschaften({
         <Haken label={te.buendig} checked={halle.wandBuendig ?? true} onChange={(v) => void aendernHalle({ wandBuendig: v }, (x) => x.halle.eigenschaften.buendigKurz)} />
       </div>
       <NummerFolgeEinstellung folge={halle.nummerFolge} reihen={plan.reihen.map((r) => r.nr)} setzen={nummerFolgeSetzen} />
+      <AussehenEinstellung aussehen={halle.aussehen} setzen={aussehenSetzen} />
       <details className="border-t border-linie pt-4">
         <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-grau hover:text-tinte">{te.grundplattenJeArt}</summary>
         <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-3">

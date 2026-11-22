@@ -291,6 +291,15 @@ function Plan({
               )
           : undefined
       }
+      aussehenSetzen={
+        kannPlanen && !d.abgeschlossen
+          ? (a) =>
+              void aendern((h) => {
+                const { aussehen: _, ...rest } = h;
+                return a ? { ...rest, aussehen: a } : rest;
+              }, zweisprachig((x) => x.halle.aussehen.geaendert))
+          : undefined
+      }
       vorschlaege={() => {
         setHalleDialog(false);
         setVorschlaegeOffen(true);
