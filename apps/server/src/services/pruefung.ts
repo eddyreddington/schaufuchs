@@ -1,4 +1,4 @@
-import { type Phase, gefordertCent, frontFehler, halleNormal, planeHalle, planUnordnung, gewichteteTierzahl, passtZuPreisart, ringjahrPasst, brauchtObmann, fehlendeVereinsangaben, formatKatalognummer, MELDEART_LABEL, normalisiereRegistriernummer, kontingent, type KontingentBasis, type Preisart, istAuslaendisch } from "@schau/domain";
+import { type Phase, gefordertCent, frontFehler, halleNormal, planeHalle, planUnordnung, gewichteteTierzahl, passtZuPreisart, ringjahrPasst, brauchtObmann, fehlendeVereinsangaben, formatKatalognummer, MELDEART_LABEL, normalisiereRegistriernummer, kontingent, hatKontingent, zaehltZumKontingent, stiftungUngedeckt, type KontingentBasis, type Preisart, istAuslaendisch } from "@schau/domain";
 import { and, asc, count, eq, ne, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { aussteller, auszahlung, gebuehr, katalogeintrag, meldung, preisart, preisrichter, prEinteilung, schau, stiftung } from "../db/schema";
@@ -81,6 +81,8 @@ export const ausgestellt = (e: Eintrag) => e.status !== "fehlt" && (e.status !==
  * Ein bewertetes Tier war nachweislich da, auch wenn die Einlieferung nicht abgehakt ist.
  * Je nach Einstellung der Schau eine Zeile je Preisrichter oder eine gemeinsame Zeile (preisrichterId = GESAMT).
  * „vergeben“ zählt alle Preise auf zugeteilten Tieren, auch auf als fehlend gemeldeten – sonst ließe sich das Kontingent überschreiten.
+ * Gestiftete Preisarten mit „zusätzlich je Preisrichter“ stehen mit darin (`zusatz`): gezählt werden nur ihre Preise
+ * ohne Stiftung, Preise aus einer Stiftung zählen gegen die Stiftung (`hatKontingent`, `zaehltZumKontingent`).
  */
 export function kontingente(
   eintraege: Eintrag[],
@@ -95,12 +97,14 @@ export function kontingente(
     tiere: tiere.length,
     bewertet: tiere.filter((e) => e.punkte != null).length,
     arten: arten
-      .filter((a) => a.quelle === "standgeld")
+      .filter((a) => hatKontingent(a))
       .map((a) => ({
         preisartId: a.id,
         kuerzel: a.kuerzel,
+        /** Zusatzpreise einer gestifteten Preisart (zusätzlich je Preisrichter), kein Kontingent aus dem Standgeld. */
+        zusatz: a.quelle === "stiftung",
         verfuegbar: kontingent(a, tiere.filter((e) => passtZuPreisart(a, e)).length, anzahlRichter),
-        vergeben: zugeteilt.reduce((n, e) => n + e.preise.filter((p) => p.preisartId === a.id).length, 0),
+        vergeben: zugeteilt.reduce((n, e) => n + e.preise.filter((p) => p.preisartId === a.id && zaehltZumKontingent(a, p)).length, 0),
       })),
   });
   if (je === "schau") {
@@ -323,17 +327,17 @@ export async function checkliste(schauId: number): Promise<Punkt[]> {
   // Preise
   if (["preise", "schau", "abrechnung"].includes(s.phase)) {
     const k = kontingente(aktiv, zuteil, richter, arten, s.kontingentJe);
-    const rest = k.flatMap((r) => r.arten.filter((a) => a.vergeben < a.verfuegbar).map((a) => `${r.name}: ${a.verfuegbar - a.vergeben} ${a.kuerzel}`));
+    // Freie Zusatzpreise (gestiftet, zusätzlich je Preisrichter) sind ein Angebot, kein offener Punkt.
+    const rest = k.flatMap((r) => r.arten.filter((a) => !a.zusatz && a.vergeben < a.verfuegbar).map((a) => `${r.name}: ${a.verfuegbar - a.vergeben} ${a.kuerzel}`));
     if (rest.length) add("hinweis", `Nicht vergebene Preise: ${rest.join("; ")}`, "preise");
     // Überzogen z. B. nach einer Änderung des Kontingents oder fehlenden Tieren.
     const ueber = k.flatMap((r) => r.arten.filter((a) => a.vergeben > a.verfuegbar).map((a) => `${r.name}: ${a.vergeben} von ${a.verfuegbar} ${a.kuerzel}`));
     if (ueber.length) add("fehler", `Kontingent überschritten: ${ueber.join("; ")}`, "preise", "preise");
-    // Stiftungspreise: gestiftete Zahl muss die Vergaben decken.
+    // Stiftungspreise: gestiftete Zahl muss die Vergaben aus Stiftungen decken (Zusatzpreise zählen oben im Kontingent).
     for (const a of arten.filter((x) => x.quelle === "stiftung")) {
-      const vergeben = aktiv.reduce((n, e) => n + e.preise.filter((p) => p.preisartId === a.id).length, 0);
-      // Wie bei der Vergabe: gestiftete Anzahl plus „zusätzlich je Preisrichter“.
-      const verfuegbar = stiftungen.filter((st) => st.preisartId === a.id).reduce((n, st) => n + st.anzahl, 0) + a.anzahlProPreisrichter * richter.length;
-      if (vergeben > verfuegbar) add("fehler", `Stiftungspreis ${a.kuerzel}: ${vergeben} vergeben, ${verfuegbar} verfügbar`, "preise", "preise");
+      const gestiftet = stiftungen.filter((st) => st.preisartId === a.id).reduce((n, st) => n + st.anzahl, 0);
+      const u = stiftungUngedeckt(a, gestiftet, aktiv.flatMap((e) => e.preise.filter((p) => p.preisartId === a.id)));
+      if (u) add("fehler", `Stiftungspreis ${a.kuerzel}: ${u.vergeben} vergeben, ${u.verfuegbar} verfügbar`, "preise", "preise");
     }
     if (!s.ergebnisseFreigegeben) add("hinweis", "Ergebnisse nicht freigegeben", "preise");
     const offen = offeneStiftungen(stiftungen, aktiv);

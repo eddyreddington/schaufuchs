@@ -1,4 +1,4 @@
-import { brauchtObmann, PHASEN, PHASEN_LABEL } from "@schau/domain";
+import { brauchtObmann, PHASEN, PHASEN_LABEL, stiftungUngedeckt } from "@schau/domain";
 import { and, asc, count, eq, sum } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Tx } from "../db/client";
@@ -14,20 +14,18 @@ import { adminProcedure, benutzerProcedure, fehler, ladeSchau, pruefeNachFreigab
 
 /**
  * Verringert sich die gestiftete Zahl einer Stiftungs-Preisart um „weniger“, müssen die schon vergebenen Preise gedeckt
- * bleiben – gerechnet wie bei der Vergabe (Stiftungen plus „zusätzlich je Preisrichter“). Standgeld-Preise hängen nicht
- * an Stiftungen und werden nicht geprüft.
+ * bleiben – gezählt wie bei der Vergabe (`stiftungUngedeckt`: Preise aus Stiftungen; Zusatzpreise „zusätzlich je
+ * Preisrichter“ zählen im Kontingent je Preisrichter). Standgeld-Preise hängen nicht an Stiftungen und werden nicht geprüft.
  */
 async function pruefeStiftungDeckung(tx: Tx, preisartId: number, weniger: number) {
   const [art] = await tx.select().from(preisart).where(eq(preisart.id, preisartId));
   if (!art || art.quelle !== "stiftung") return;
-  const [[v], [st], [pr]] = await Promise.all([
-    tx.select({ n: count() }).from(preisvergabe).where(eq(preisvergabe.preisartId, preisartId)),
+  const [vergaben, [st]] = await Promise.all([
+    tx.select({ stiftungId: preisvergabe.stiftungId }).from(preisvergabe).where(eq(preisvergabe.preisartId, preisartId)),
     tx.select({ n: sum(stiftung.anzahl) }).from(stiftung).where(eq(stiftung.preisartId, preisartId)),
-    tx.select({ n: count() }).from(preisrichter).where(eq(preisrichter.schauId, art.schauId)),
   ]);
-  const vergeben = Number(v?.n ?? 0);
-  const verfuegbar = Number(st?.n ?? 0) - weniger + art.anzahlProPreisrichter * Number(pr?.n ?? 0);
-  if (vergeben > verfuegbar) throw fehler("BAD_REQUEST", `Von diesem Stiftungspreis sind schon ${vergeben} vergeben – danach wären nur ${verfuegbar} verfügbar. Erst Preise entfernen.`);
+  const u = stiftungUngedeckt(art, Number(st?.n ?? 0) - weniger, vergaben);
+  if (u) throw fehler("BAD_REQUEST", `Von diesem Stiftungspreis sind schon ${u.vergeben} vergeben – danach wären nur ${u.verfuegbar} verfügbar. Erst Preise entfernen.`);
 }
 
 /**
@@ -243,20 +241,21 @@ export const preiseRouter = router({
       ]);
       const k = kontingente(eintraege, zuteilung(eintraege, einteilung), richter, arten, s.kontingentJe);
       const name = (z: { name: string }) => (s.kontingentJe === "schau" ? "" : ` (${z.name})`);
-      // Überzogenes Kontingent (z. B. nach einer Änderung) und zu wenig gestiftete Preise: erst bereinigen.
+      // Überzogenes Kontingent (z. B. nach einer Änderung, auch Zusatzpreise je Preisrichter) und zu wenig gestiftete Preise: erst bereinigen.
       const ueber = k.flatMap((z) => z.arten.filter((a) => a.vergeben > a.verfuegbar).map((a) => `${a.kuerzel} ${a.vergeben} von ${a.verfuegbar}${name(z)}`));
       if (ueber.length) throw fehler("BAD_REQUEST", `Kontingent überschritten: ${ueber.join(", ")}. Bitte erst Preise entfernen.`);
       const ungedeckt = arten
         .filter((a) => a.quelle === "stiftung")
         .flatMap((a) => {
-          const vergeben = eintraege.reduce((n, e) => n + e.preise.filter((p) => p.preisartId === a.id).length, 0);
-          const verfuegbar = stiftungen.filter((st) => st.preisartId === a.id).reduce((n, st) => n + st.anzahl, 0) + a.anzahlProPreisrichter * richter.length;
-          return vergeben > verfuegbar ? [`${a.kuerzel} ${vergeben} vergeben, ${verfuegbar} gestiftet`] : [];
+          const gestiftet = stiftungen.filter((st) => st.preisartId === a.id).reduce((n, st) => n + st.anzahl, 0);
+          const u = stiftungUngedeckt(a, gestiftet, eintraege.flatMap((e) => e.preise.filter((p) => p.preisartId === a.id)));
+          return u ? [`${a.kuerzel} ${u.vergeben} vergeben, ${u.verfuegbar} gestiftet`] : [];
         });
       if (ungedeckt.length) throw fehler("BAD_REQUEST", `Stiftungspreise nicht gedeckt: ${ungedeckt.join(", ")}. Bitte Stiftung ergänzen oder Preise entfernen.`);
       // Hinweise, keine Sperre: Freie Preise können berechtigt sein (kein Tier mit genug Punkten).
       if (!input.trotzdem) {
-        const frei = k.flatMap((z) => z.arten.filter((a) => a.vergeben < a.verfuegbar).map((a) => `${a.kuerzel} ${a.verfuegbar - a.vergeben} von ${a.verfuegbar}${name(z)}`));
+        // Freie Zusatzpreise (gestiftet, zusätzlich je Preisrichter) sind ein Angebot, kein Hinweis.
+        const frei = k.flatMap((z) => z.arten.filter((a) => !a.zusatz && a.vergeben < a.verfuegbar).map((a) => `${a.kuerzel} ${a.verfuegbar - a.vergeben} von ${a.verfuegbar}${name(z)}`));
         const ohneEinlieferung = eintraege.filter((e) => e.status === "katalogisiert" && e.bewertet).length;
         const stiftungFrei = offeneStiftungen(stiftungen, eintraege);
         const hinweise = [

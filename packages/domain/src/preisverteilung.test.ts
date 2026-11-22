@@ -39,20 +39,20 @@ test("gestiftete Preise und Kontingent für die ganze Schau: nur die vergebenen 
   expect(v.gesamtCent).toBe(2500);
 });
 
-test("gestiftet mit „zusätzlich je Preisrichter“: so viele Zeilen wie je Preisrichter, mehr Vergebene sind nicht überzählig", () => {
-  const jePr = { ...gestiftet, mindestZeilen: 2 };
+test("gestiftet mit „zusätzlich je Preisrichter“: so viele Zeilen wie je Preisrichter, mehr ohne Stiftung ist überzählig", () => {
+  const jePr = { ...gestiftet, verfuegbar: 2 };
   const leer = preisverteilung([jePr], []);
   expect(leer.zeilen.map((x) => `${x.lfd} ${x.kuerzel} ${x.nr || "_"} ${x.betragCent}`)).toEqual(["1 SE _ 1500", "2 SE _ 1500"]);
   expect([leer.vergebenCent, leer.gesamtCent]).toEqual([0, 3000]);
   const eins = preisverteilung([jePr], [{ preisartId: 5, nr: "8", betragCent: 1500 }]);
   expect(eins.zeilen.map((x) => `${x.lfd} ${x.nr || "_"}`)).toEqual(["1 8", "2 _"]);
-  // Mehr vergeben als je Preisrichter: alle stehen darin, keine ist „über dem Kontingent“.
+  // Mehr ohne Stiftung vergeben als je Preisrichter: alle stehen darin, der letzte ist „über dem Kontingent“.
   const drei = preisverteilung([jePr], ["1", "2", "3"].map((nr) => ({ preisartId: 5, nr, betragCent: 1500 })));
-  expect(drei.zeilen.map((x) => `${x.lfd} ${x.nr} ${x.ueberKontingent}`)).toEqual(["1 1 false", "2 2 false", "3 3 false"]);
+  expect(drei.zeilen.map((x) => `${x.lfd} ${x.nr} ${x.ueberKontingent}`)).toEqual(["1 1 false", "2 2 false", "3 3 true"]);
 });
 
 test("gestiftet mit „zusätzlich je Preisrichter“: Preise aus einer Stiftung belegen keine der Zeilen je Preisrichter", () => {
-  const jePr = { ...gestiftet, mindestZeilen: 2 };
+  const jePr = { ...gestiftet, verfuegbar: 2 };
   const ausStiftung = { preisartId: 5, nr: "8", betragCent: 3000, zusatz: "Stifter Muster", ausStiftung: true };
   // Aus der Stiftung vergeben: die zwei Zeilen je Preisrichter bleiben leer zum Eintragen.
   const eins = preisverteilung([jePr], [ausStiftung]);
@@ -63,6 +63,12 @@ test("gestiftet mit „zusätzlich je Preisrichter“: Preise aus einer Stiftung
   // Beide zusätzlichen vergeben: keine leere mehr, keine überzählig.
   const voll = preisverteilung([jePr], [ausStiftung, ...["9", "10"].map((nr) => ({ preisartId: 5, nr, betragCent: 1500 }))]);
   expect(voll.zeilen.map((x) => `${x.lfd} ${x.nr || "_"} ${x.ueberKontingent}`)).toEqual(["1 8 false", "2 9 false", "3 10 false"]);
+  // Eine zu viel ohne Stiftung: überzählig ist die letzte ohne Stiftung, nie der Preis aus der Stiftung.
+  const zuViel = preisverteilung([jePr], [...["9", "10"].map((nr) => ({ preisartId: 5, nr, betragCent: 1500 })), { ...ausStiftung, nr: "11" }, { preisartId: 5, nr: "12", betragCent: 1500 }]);
+  expect(zuViel.zeilen.map((x) => `${x.nr} ${x.ueberKontingent}`)).toEqual(["9 false", "10 false", "11 false", "12 true"]);
+  // An einem fehlenden Tier zuerst dieses.
+  const fehlt = preisverteilung([jePr], [{ preisartId: 5, nr: "9", betragCent: 1500, fehlt: true }, ...["10", "12"].map((nr) => ({ preisartId: 5, nr, betragCent: 1500 }))]);
+  expect(fehlt.zeilen.map((x) => `${x.nr} ${x.ueberKontingent}`)).toEqual(["9 true", "10 false", "12 false"]);
 });
 
 test("mehr vergeben als das Kontingent (z. B. nachträglich fehlende Tiere): alle Vergaben, die überzähligen markiert", () => {

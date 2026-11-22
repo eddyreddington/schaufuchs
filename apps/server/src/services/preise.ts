@@ -1,5 +1,5 @@
-import { bindungText, passtZuPreisart, pruefeVergabe, stiftungsanteil } from "@schau/domain";
-import { and, asc, eq, sum, sql } from "drizzle-orm";
+import { bindungText, hatKontingent, passtZuPreisart, pruefeVergabe, stiftungsanteil } from "@schau/domain";
+import { and, asc, eq, sql } from "drizzle-orm";
 import type { Tx } from "../db/client";
 import { katalogeintrag, meldung, preisart, preisrichter, preisvergabe, prEinteilung, schau, stiftung } from "../db/schema";
 import { fehler } from "../trpc";
@@ -22,8 +22,9 @@ function pruefeGrundNachFreigabe(s: { ergebnisseFreigegeben: boolean }, grund: s
 }
 
 /**
- * Vergibt einen Preis. Standgeldpreise gehen über das Kontingent des Preisrichters, der das Tier bewertet hat;
- * Stiftungspreise über die Anzahl der gestifteten Preise dieser Art.
+ * Vergibt einen Preis. Standgeldpreise gehen über das Kontingent des Preisrichters, dem das Tier zugeteilt ist;
+ * Stiftungspreise über die Anzahl der gestifteten Preise ihrer Stiftung, Zusatzpreise ohne Stiftung („zusätzlich je
+ * Preisrichter“) wie Standgeld über das Kontingent des Preisrichters (bei Kontingent „je Schau“ der ganzen Schau).
  */
 export async function vergebePreis(
   tx: Tx,
@@ -75,22 +76,19 @@ export async function vergebePreis(
   let betragCent = art.betragCent;
   let stiftungId: number | null = null;
   let stifter: string | null = null;
-  if (art.quelle === "standgeld") {
+  /** Kontingent des zuständigen Preisrichters (bzw. der Schau) – dieselbe Zählung wie die Seite „Preise“ (`kontingente`). */
+  const ausKontingent = async () => {
     if (zustaendig == null) throw fehler("BAD_REQUEST", "Das Tier ist keinem Preisrichter zugeteilt.");
     const richterListe = await tx.select({ id: preisrichter.id, name: preisrichter.name }).from(preisrichter).where(eq(preisrichter.schauId, a.schauId));
     const k = kontingente(alle, zu, richterListe, [art], s.kontingentJe);
     const zeile = s.kontingentJe === "schau" ? k[0] : k.find((x) => x.preisrichterId === zustaendig);
-    verfuegbar = zeile?.arten[0]?.verfuegbar ?? 0;
-    vergeben = zeile?.arten[0]?.vergeben ?? 0;
+    return { verfuegbar: zeile?.arten[0]?.verfuegbar ?? 0, vergeben: zeile?.arten[0]?.vergeben ?? 0 };
+  };
+  if (art.quelle === "standgeld") {
+    ({ verfuegbar, vergeben } = await ausKontingent());
   } else {
-    const [st] = await tx
-      .select({ n: sum(stiftung.anzahl) })
-      .from(stiftung)
-      .where(and(eq(stiftung.schauId, a.schauId), eq(stiftung.preisartId, art.id)));
-    verfuegbar = Number(st?.n ?? 0) + art.anzahlProPreisrichter * (await tx.select().from(preisrichter).where(eq(preisrichter.schauId, a.schauId))).length;
-    vergeben = alle.reduce((n, x) => n + x.preise.filter((p) => p.preisartId === art.id).length, 0);
     // Welche Stiftung: die gewählte oder die erste mit freien Preisen. Ohne freie Stiftung zählt der Preis zu
-    // „zusätzlich je Preisrichter“ (Betrag der Preisart).
+    // „zusätzlich je Preisrichter“ (Betrag der Preisart) – im Kontingent des zuständigen Preisrichters wie Standgeld.
     const stiftungen = await tx.select().from(stiftung).where(and(eq(stiftung.schauId, a.schauId), eq(stiftung.preisartId, art.id))).orderBy(asc(stiftung.id));
     const benutzt = (id: number) => alle.reduce((n, x) => n + x.preise.filter((p) => p.stiftungId === id).length, 0);
     const gewaehlt = a.ohneStiftung ? undefined : a.stiftungId != null ? stiftungen.find((st) => st.id === a.stiftungId) : stiftungen.find((st) => benutzt(st.id) < st.anzahl);
@@ -98,6 +96,9 @@ export async function vergebePreis(
     if (gewaehlt) {
       const frei = gewaehlt.anzahl - benutzt(gewaehlt.id);
       if (frei <= 0) throw fehler("BAD_REQUEST", `Die Stiftung von ${gewaehlt.stifter} ist schon vollständig vergeben.`);
+      // Preise aus einer Stiftung zählen nur gegen die Stiftung, nicht gegen die Zusatzpreise des Preisrichters.
+      vergeben = benutzt(gewaehlt.id);
+      verfuegbar = gewaehlt.anzahl;
       stiftungId = gewaehlt.id;
       stifter = gewaehlt.stifter;
       // Anteil aus dem noch nicht vergebenen Rest: nie mehr als gestiftet, auch nach Entfernen oder geänderter Anzahl.
@@ -105,6 +106,12 @@ export async function vergebePreis(
         const schon = alle.reduce((n, x) => n + x.preise.filter((p) => p.stiftungId === gewaehlt.id).reduce((m, p) => m + p.betragCent, 0), 0);
         betragCent = stiftungsanteil(gewaehlt.betragCent - schon, frei);
       }
+    } else if (hatKontingent(art)) {
+      ({ verfuegbar, vergeben } = await ausKontingent());
+    } else {
+      // Ohne „zusätzlich je Preisrichter“ gibt es ohne Stiftung keinen Preis.
+      vergeben = 0;
+      verfuegbar = 0;
     }
   }
 

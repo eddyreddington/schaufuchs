@@ -1439,10 +1439,10 @@ Die Note „vorzüglich“ und die Sondernote u.M. muss der Obmann bestätigen. 
 
 Schalten Sie auf „Preise & Freigabe“. Die Preisrichter vergeben ihre Preise aus dem Standgeld am Tablet aus ihrem Kontingent. **Gestiftete Preise vergibt nur die Ausstellungsleitung** hier am PC – das Tablet zeigt sie nicht (siehe „Stiftungen“). Die Seite „Preise“ zeigt:
 
-- **„Kontingente je Preisrichter“** (bzw. „Kontingent (gemeinsam für die Schau)“) – je Preisart „vergeben / verfügbar“, gelb, solange noch etwas offen ist; daneben **„Preisverteilung (PDF)“** für alle Preisrichter,
+- **„Kontingente je Preisrichter“** (bzw. „Kontingent (gemeinsam für die Schau)“) – je Preisart „vergeben / verfügbar“, gelb, solange noch etwas offen ist; gestiftete Preisarten mit „Zusätzlich je Preisrichter“ stehen mit darin, gezählt nur ihre Preise ohne bestimmte Stiftung (siehe „Stiftungen“); daneben **„Preisverteilung (PDF)“** für alle Preisrichter,
 - **„Tiere mit Punkten“** – alle bewerteten Tiere, nach Punkten sortiert, mit ihren Preisen.
 
-**Preisverteilung (PDF):** je Preisrichter ein Blatt ab neuer Seite, ohne Ausstellernamen. Je Preisart aus dem Standgeld (auch Bänder und Sachpreise) stehen so viele Zeilen darauf, wie sein Kontingent erlaubt: vergebene mit Katalognummer und Wert, die übrigen leer zum Eintragen in der Halle. Gestiftete Preise erscheinen nur, wenn sie an seine Tiere vergeben sind, mit dem Stifter unter „Bemerkung“ – hat die gestiftete Preisart „Zusätzlich je Preisrichter“, stehen davon auf jedem Blatt so viele Zeilen für Preise ohne bestimmte Stiftung (vergebene und leere), wie dort eingetragen ist; Preise aus einer Stiftung stehen zusätzlich darin und belegen keine dieser Zeilen. Unten stehen der Gesamtwert und, wie viel davon vergeben ist. Ist das Kontingent für die ganze Schau eingestellt, zeigt das Blatt nur die vergebenen Preise. Preise an Tieren, die als fehlend gemeldet sind, tragen „Tier fehlt“. Wurde mehr vergeben, als das Kontingent heute erlaubt (z. B. weil danach Tiere als fehlend gemeldet wurden), steht „über dem Kontingent“ zuerst bei den Preisen an fehlenden Tieren, sonst bei den letzten Nummern.
+**Preisverteilung (PDF):** je Preisrichter ein Blatt ab neuer Seite, ohne Ausstellernamen. Je Preisart aus dem Standgeld (auch Bänder und Sachpreise) stehen so viele Zeilen darauf, wie sein Kontingent erlaubt: vergebene mit Katalognummer und Wert, die übrigen leer zum Eintragen in der Halle. Gestiftete Preise erscheinen nur, wenn sie an seine Tiere vergeben sind, mit dem Stifter unter „Bemerkung“ – hat die gestiftete Preisart „Zusätzlich je Preisrichter“, stehen davon auf jedem Blatt so viele Zeilen für Preise ohne bestimmte Stiftung (vergebene und leere), wie dort eingetragen ist; Preise aus einer Stiftung stehen zusätzlich darin und belegen keine dieser Zeilen. Mehr Preise ohne Stiftung als „Zusätzlich je Preisrichter“ tragen „über dem Kontingent“. Unten stehen der Gesamtwert und, wie viel davon vergeben ist. Ist das Kontingent für die ganze Schau eingestellt, zeigt das Blatt nur die vergebenen Preise. Preise an Tieren, die als fehlend gemeldet sind, tragen „Tier fehlt“. Wurde mehr vergeben, als das Kontingent heute erlaubt (z. B. weil danach Tiere als fehlend gemeldet wurden), steht „über dem Kontingent“ zuerst bei den Preisen an fehlenden Tieren, sonst bei den letzten Nummern.
 
 **Preis von der Papierkarte eintragen:** beim Tier auf „+ E“ (bzw. das Kürzel) klicken. Angeboten werden nur Preisarten, die zum Tier passen (Bindung an Jugend, Senioren oder Sparte). Einen Preis entfernen Sie mit einem Klick auf das vergebene Kürzel und bestätigen mit „Entfernen“.
 
@@ -1454,7 +1454,7 @@ Die Software prüft jede Vergabe:
 | Mindestpunkte | „… erst ab … Punkten.“ |
 | Jede Preisart je Tier nur einmal | „Das Tier hat bereits ….“ |
 | **Je Tier höchstens ein Geldpreis aus dem Standgeld** (E oder Z); Bänder und Stiftungen kommen zusätzlich | „Das Tier hat bereits einen Geldpreis aus dem Standgeld.“ |
-| Kontingent | „Kontingent für … ist ausgeschöpft (…).“ |
+| Kontingent (auch Zusatzpreise ohne Stiftung, siehe „Stiftungen“) | „Kontingent für … ist ausgeschöpft (…).“ |
 | Bindung der Preisart (Jugend, Senioren, Sparte) | „„…“ gilt nur Jugend – dieses Tier passt nicht dazu.“ |
 | Gestiftete Preise nur durch die Ausstellungsleitung (auch über die Schnittstelle des Tablets) | „Gestiftete Preise vergibt die Ausstellungsleitung.“ |
 | Keine Preise für fehlende oder gesperrte Tiere | „Tier ist als fehlend gemeldet …“ / „Tier ist im Gesundheitsjournal gesperrt …“ |
@@ -1472,9 +1472,9 @@ Gestiftete Preise (Bänder, Ehrenpreise von Verbänden und Stiftern) tragen Sie 
 
 Die Tabelle zeigt je Stiftung „Anzahl“, „vergeben“, „Betrag“, „Vorgabe“ und „Eingang“; ein Klick auf den Stifter öffnet wie „Bearbeiten“ das Formular. Unter „Preise und Stifter“ im Katalog stehen gestiftete Preise nur, wenn sie rechtzeitig vor dem Druck eingehen und hier eingetragen sind. Eine Stiftung ohne Preisart (z. B. online mit der Meldung zugesagt) trägt die Marke „keine Preisart“: Sie zählt für keinen Preis. Ordnen Sie ihr mit „Bearbeiten“ eine gestiftete Preisart zu – ab der Phase „Preise & Freigabe“ ist das ein roter Punkt in der Prüfliste.
 
-Verfügbar sind von einer gestifteten Preisart: die Summe der gestifteten Anzahl plus „Zusätzlich je Preisrichter“ mal Zahl der Preisrichter.
+Verfügbar sind von einer gestifteten Preisart die gestifteten Preise jeder Stiftung und, wenn die Preisart „Zusätzlich je Preisrichter“ hat, diese Zusatzpreise ohne Stiftung. **Die Zusatzpreise zählen je Preisrichter:** Jeder Preisrichter hat so viele für die Tiere, die ihm zugeteilt sind – nutzt ein anderer seine nicht, bekommt er deshalb nicht mehr. Ist das Kontingent für die ganze Schau eingestellt („Preise aus dem Standgeld verteilen“), gelten die Zusatzpreise gemeinsam: „Zusätzlich je Preisrichter“ mal Zahl der Preisrichter. Tiere ohne Preisrichter bekommen keinen Zusatzpreis („Das Tier ist keinem Preisrichter zugeteilt.“). Preise aus einer Stiftung zählen nur gegen die Stiftung, auch an Tieren ohne Preisrichter. Ohne „Zusätzlich je Preisrichter“ gibt es einen gestifteten Preis nur aus einer Stiftung.
 
-**Gestifteten Preis vergeben:** Klicken Sie beim Tier auf das Kürzel der gestifteten Preisart. Es öffnet sich „Gestifteter Preis für Nr. …“ mit allen Stiftungen dieser Preisart: Stifter, wie viele noch frei sind, der Betrag je Preis und die Vorgabe des Stifters. Prüfen Sie die Vorgabe und klicken Sie die passende Stiftung an. Gibt es bei der Preisart „Zusätzlich je Preisrichter“, steht darunter „Ohne bestimmte Stiftung (zusätzlich je Preisrichter)“; dann gilt der Betrag der Preisart.
+**Gestifteten Preis vergeben:** Klicken Sie beim Tier auf das Kürzel der gestifteten Preisart. Es öffnet sich „Gestifteter Preis für Nr. …“ mit allen Stiftungen dieser Preisart: Stifter, wie viele noch frei sind, der Betrag je Preis und die Vorgabe des Stifters. Prüfen Sie die Vorgabe und klicken Sie die passende Stiftung an. Gibt es bei der Preisart „Zusätzlich je Preisrichter“, steht darunter „Ohne bestimmte Stiftung (zusätzlich je Preisrichter)“; dann gilt der Betrag der Preisart. Hat der Preisrichter des Tieres seine Zusatzpreise schon vergeben, ist dieser Knopf grau. Ist keine Stiftung mehr frei, vergibt ein Klick auf das Kürzel gleich einen Zusatzpreis; sind auch die Zusatzpreise des Preisrichters vergeben, wird die Preisart beim Tier nicht mehr angeboten.
 
 - **Der Gewinner bekommt den Anteil der Stiftung je Preis.** Jeder Preis bekommt den noch nicht vergebenen Rest der Stiftung, geteilt durch die freien Plätze (aufgerundet; der letzte genau den Rest): 20,00 € für 3 Preise ergibt 6,67 €, 6,67 €, 6,66 €. So zahlt die Schau nie mehr aus als gestiftet – auch wenn Sie einen Preis entfernen oder die Anzahl später ändern.
 - Die Vergabe merkt sich die Stiftung. Beim Darüberfahren über das vergebene Kürzel steht „Gestiftet von … – Preis entfernen“.
@@ -1497,13 +1497,13 @@ Die Freigabe geht nur, wenn
 - alle Tiere (außer den fehlenden) bewertet sind – sonst „… Tiere sind noch nicht bewertet.“,
 - alle Noten „vorzüglich“ und u.M. vom Obmann bestätigt sind – sonst „… Bewertungen („vorzüglich“ oder u.M.) sind noch nicht vom Obmann bestätigt.“,
 - alle bestätigten Tiere eine Katalognummer haben – sonst „… bestätigte Tiere haben keine Katalognummer – erst nummerieren oder die Meldung bereinigen.“,
-- kein Kontingent überschritten ist (z. B. nach einer geänderten Einteilung) – sonst „Kontingent überschritten: … Bitte erst Preise entfernen.“,
-- die vergebenen gestifteten Preise durch Stiftungen gedeckt sind – sonst „Stiftungspreise nicht gedeckt: … Bitte Stiftung ergänzen oder Preise entfernen.“
+- kein Kontingent überschritten ist (z. B. nach einer geänderten Einteilung; auch die Zusatzpreise gestifteter Preisarten je Preisrichter) – sonst „Kontingent überschritten: … Bitte erst Preise entfernen.“,
+- die Preise aus Stiftungen durch die gestiftete Anzahl gedeckt sind – sonst „Stiftungspreise nicht gedeckt: … Bitte Stiftung ergänzen oder Preise entfernen.“
 
 Vor der Freigabe weist die Software auf weitere Punkte hin und fragt nach („Trotzdem freigeben?“, Knopf „Freigeben“):
 
 - Die Schau steht noch vor der Phase „Preise & Freigabe“ – dann können die Preisrichter am Tablet noch Preise vergeben.
-- Es sind noch Preise aus dem Kontingent frei, z. B. „Noch freie Preise: E 2 von 3 (Preisrichter Müller).“ Das kann richtig sein, wenn kein Tier die Mindestpunkte erreicht.
+- Es sind noch Preise aus dem Kontingent frei, z. B. „Noch freie Preise: E 2 von 3 (Preisrichter Müller).“ Das kann richtig sein, wenn kein Tier die Mindestpunkte erreicht. Freie Zusatzpreise gestifteter Preisarten („Zusätzlich je Preisrichter“) nennt die Software nicht.
 - Gestiftete Preise sind noch nicht vergeben („Gestiftete Preise noch nicht vergeben: …“).
 - Tiere sind bewertet, aber nicht als eingeliefert abgehakt („… Tiere sind bewertet, aber nicht als eingeliefert abgehakt (Nachweis prüfen oder mit Grund einliefern).“).
 

@@ -528,7 +528,10 @@ describe("Nachbesserung nach der Gegenprüfung", () => {
       await bewerte(al, s.id, t.id);
     }
     await phase(s.id, "preise");
-    await m.db.insert(m.schema.preisrichter).values({ schauId: s.id, name: "PR Rest" });
+    const [prRest] = await m.db.insert(m.schema.preisrichter).values({ schauId: s.id, name: "PR Rest" }).returning();
+    // Zusatzpreise ohne Stiftung zählen je Preisrichter: die Tiere brauchen einen.
+    const nrn = tiere.map((t) => t.katalogNr!);
+    await m.db.insert(m.schema.prEinteilung).values({ schauId: s.id, preisrichterId: prRest!.id, vonNr: Math.min(...nrn), bisNr: Math.max(...nrn) });
     const art = { schauId: s.id, kuerzel: "PR", name: "Rest-Ehrenpreis", betragCent: 0, sachpreis: "Plakette", quelle: "stiftung" as const, schluesselProTiere: null, anzahlProSchluessel: 0, anzahlProPreisrichter: 1, mindestpunkte: null, rundung: "voll" as const, folge: 90 };
     await al.schau.preisartSpeichern(art);
     const pr = (await al.preise.uebersicht({ schauId: s.id })).preisarten.find((p) => p.kuerzel === "PR")!;

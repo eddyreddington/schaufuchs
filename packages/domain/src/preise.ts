@@ -45,12 +45,41 @@ export function bindungText(p: Pick<Preisart, "zielgruppe" | "sparte">): string 
  * `preisrichter`: wie viele Preisrichter sich das Kontingent teilen (für die feste Anzahl je Preisrichter).
  */
 export function kontingent(p: Preisart, tiere: number, preisrichter = 1): number {
+  // Gestiftet: die Stiftungen geben die Anzahl vor, ein Kontingent gibt es nur für „zusätzlich je Preisrichter“.
+  if (p.quelle === "stiftung") return p.anzahlProPreisrichter * preisrichter;
   let schluessel = 0;
   if (p.schluesselProTiere && tiere > 0) {
     const q = tiere / p.schluesselProTiere;
     schluessel = p.rundung === "angefangen" ? Math.ceil(q) : Math.floor(q);
   }
   return schluessel * p.anzahlProSchluessel + p.anzahlProPreisrichter * preisrichter;
+}
+
+/**
+ * Hat die Preisart ein Kontingent (je Preisrichter oder für die ganze Schau)? Preise aus dem Standgeld immer, gestiftete
+ * nur mit „zusätzlich je Preisrichter“: Diese Zusatzpreise ohne Stiftung zählen je Preisrichter wie ein Kontingent.
+ */
+export function hatKontingent(p: Pick<Preisart, "quelle" | "anzahlProPreisrichter">): boolean {
+  return p.quelle === "standgeld" || p.anzahlProPreisrichter > 0;
+}
+
+/** Zählt ein vergebener Preis zum Kontingent? Aus dem Standgeld immer; gestiftet nur ohne Stiftung (Zusatzpreis) – Preise aus einer Stiftung zählen gegen die Stiftung. */
+export function zaehltZumKontingent(p: Pick<Preisart, "quelle">, vergabe: { stiftungId: number | null }): boolean {
+  return p.quelle === "standgeld" || vergabe.stiftungId == null;
+}
+
+/**
+ * Sind die vergebenen Preise einer gestifteten Preisart gedeckt? Preise aus einer Stiftung durch die gestiftete Anzahl;
+ * Preise ohne Stiftung zählen bei „zusätzlich je Preisrichter“ zum Kontingent je Preisrichter, sonst ebenfalls gegen die
+ * gestiftete Anzahl. Null: gedeckt.
+ */
+export function stiftungUngedeckt(
+  p: Pick<Preisart, "quelle" | "anzahlProPreisrichter">,
+  gestiftet: number,
+  vergaben: { stiftungId: number | null }[],
+): { vergeben: number; verfuegbar: number } | null {
+  const vergeben = vergaben.filter((v) => !(hatKontingent(p) && zaehltZumKontingent(p, v))).length;
+  return vergeben > gestiftet ? { vergeben, verfuegbar: gestiftet } : null;
 }
 
 export interface VergabePruefung {
@@ -62,7 +91,7 @@ export interface VergabePruefung {
   hatGeldpreis: boolean;
   /** Hat der Eintrag diese Preisart schon? */
   hatDiesePreisart: boolean;
-  /** Schon vergeben / verfügbar – für Standgeldpreise je Preisrichter, für Stiftungen gesamt. */
+  /** Schon vergeben / verfügbar – im Kontingent (Standgeld, Zusatzpreise je Preisrichter) bzw. in der gewählten Stiftung. */
   vergeben: number;
   verfuegbar: number;
 }

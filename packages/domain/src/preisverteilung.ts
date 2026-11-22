@@ -2,8 +2,8 @@
  * Preisverteilung eines Preisrichters (Blatt für die Preisvergabe in der Halle): je Preisart so viele Zeilen, wie der
  * Preisrichter vergeben darf. Schon vergebene Preise stehen mit Katalognummer darin, die übrigen Zeilen bleiben leer
  * zum Eintragen. Preisarten ohne Kontingent je Preisrichter (gestiftete Preise, Kontingent für die ganze Schau) zeigen
- * nur die vergebenen – außer gestifteten mit „zusätzlich je Preisrichter“: davon so viele Zeilen wie je Preisrichter,
- * Preise aus einer Stiftung kommen dazu.
+ * nur die vergebenen. Gestiftete mit „zusätzlich je Preisrichter“ haben ein Kontingent für die Preise ohne Stiftung;
+ * Preise aus einer Stiftung belegen keine dieser Zeilen, kommen dazu und sind nie überzählig.
  */
 
 /** Eine Preisart der Schau, in Druckfolge. */
@@ -15,13 +15,11 @@ export interface VerteilungArt {
   betragCent: number;
   /** Sachpreis statt Geld, z. B. „Pokal“; leer: keiner. */
   sachpreis: string;
-  /** Kontingent dieses Preisrichters; null: keins je Preisrichter (Stiftung, Kontingent für die ganze Schau). */
-  verfuegbar: number | null;
   /**
-   * Ohne Kontingent so viele Zeilen für Preise ohne Stiftung (gestiftete Preisart mit „zusätzlich je Preisrichter“).
-   * Preise aus einer Stiftung belegen keine davon und kommen dazu; nichts davon ist überzählig.
+   * Kontingent dieses Preisrichters (bei gestifteten Preisen: „zusätzlich je Preisrichter“ für Preise ohne Stiftung);
+   * null: keins je Preisrichter (Stiftung ohne Zusatzpreise, Kontingent für die ganze Schau).
    */
-  mindestZeilen?: number;
+  verfuegbar: number | null;
 }
 
 /** Ein vergebener Preis an einem Tier dieses Preisrichters, in Katalogfolge. */
@@ -65,12 +63,12 @@ export function preisverteilung(arten: VerteilungArt[], vergaben: VerteilungVerg
   const zeilen: VerteilungZeile[] = [];
   for (const a of arten) {
     const vergeben = vergaben.filter((v) => v.preisartId === a.preisartId);
-    // Leere Zeilen: was vom Kontingent bzw. von „zusätzlich je Preisrichter“ noch frei ist. Preise aus einer Stiftung
-    // zählen nur beim Kontingent mit (dort gibt es keine), bei „zusätzlich je Preisrichter“ nicht.
-    const belegt = a.verfuegbar == null ? vergeben.filter((v) => !v.ausStiftung).length : vergeben.length;
-    const anzahl = vergeben.length + Math.max(0, (a.verfuegbar ?? a.mindestZeilen ?? 0) - belegt);
-    const zuViel = a.verfuegbar == null ? 0 : Math.max(0, vergeben.length - a.verfuegbar);
-    const ueber = new Set([...vergeben.filter((v) => v.fehlt), ...vergeben.filter((v) => !v.fehlt).reverse()].slice(0, zuViel));
+    // Leere Zeilen: was vom Kontingent noch frei ist. Preise aus einer Stiftung belegen keine davon und sind nie
+    // überzählig (sie zählen gegen die Stiftung) – wie bei der Vergabe (zaehltZumKontingent).
+    const imKontingent = vergeben.filter((v) => !v.ausStiftung);
+    const anzahl = vergeben.length + Math.max(0, (a.verfuegbar ?? 0) - imKontingent.length);
+    const zuViel = a.verfuegbar == null ? 0 : Math.max(0, imKontingent.length - a.verfuegbar);
+    const ueber = new Set([...imKontingent.filter((v) => v.fehlt), ...imKontingent.filter((v) => !v.fehlt).reverse()].slice(0, zuViel));
     for (let i = 0; i < anzahl; i++) {
       const v = vergeben[i];
       zeilen.push({

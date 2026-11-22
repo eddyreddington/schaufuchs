@@ -228,7 +228,8 @@ async function richterDaten(richterId: number, schauId: number, istObmann: boole
     schau: { id: s.id, name: s.name, phase: s.phase, freigegeben: s.ergebnisseFreigegeben, offen: RICHTER_PHASEN.includes(s.phase) && !s.ergebnisseFreigegeben },
     skala: skala ?? STANDARD_NOTENSKALA,
     tiere: meine.map(anonym),
-    kontingent: k?.arten ?? [],
+    // Nur Kontingente aus dem Standgeld: Zusatzpreise gestifteter Preisarten vergibt die Ausstellungsleitung.
+    kontingent: (k?.arten ?? []).filter((a) => !a.zusatz),
     preisarten: arten.filter((a) => a.quelle === "standgeld").map((a) => ({ id: a.id, kuerzel: a.kuerzel, name: a.name, mindestpunkte: a.mindestpunkte })),
     // Nur Bausteine, die zu den Tieren dieses Preisrichters passen (das Tablet holt die Daten regelmäßig neu).
     textbausteine: bausteine

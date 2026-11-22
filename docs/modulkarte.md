@@ -636,13 +636,16 @@ Tests: `meldebogen.test.ts`
 - `pruefeBewertung()` – Prüft eine Bewertung.
 - Typen: `NotenStufe`, `BewertungsWert`
 
-### preise.ts (105 Z.)
+### preise.ts (134 Z.)
 
 - `passtZuPreisart()` – Passt das Tier zur Bindung der Preisart (Zielgruppe, Sparte)?
 - `PR_GEWICHT` – Gewicht einer Meldung bei der Höchstzahl je Preisrichter (PV-Hinweise): Stamm 2, Voliere 3, Bruteier 3.
 - `gewichteteTierzahl()` – Gewichtete Tierzahl eines Preisrichters aus den Meldearten seiner Tiere.
 - `bindungText()` – Kurzer Text zur Bindung für Katalog und Oberfläche („nur Jugend“, „Sparte Tauben“), leer ohne Bindung.
 - `kontingent()` – Wie viele Preise dieser Art bei `tiere` ausgestellten Tieren vergeben werden dürfen.
+- `hatKontingent()` – Hat die Preisart ein Kontingent (je Preisrichter oder für die ganze Schau)?
+- `zaehltZumKontingent()` – Zählt ein vergebener Preis zum Kontingent?
+- `stiftungUngedeckt()` – Sind die vergebenen Preise einer gestifteten Preisart gedeckt?
 - `pruefeVergabe()` – Prüft eine Preisvergabe.
 - `pruefeNotenaenderung()` – Prüft, ob eine Bewertung geändert oder zurückgesetzt werden darf, obwohl das Tier schon Preise hat.
 - `stiftungsanteil()` – Anteil des nächsten gestifteten Preises: der noch nicht vergebene Rest der Stiftung, geteilt durch die freien Plätze (aufgerundet; der letzte Platz …
@@ -672,7 +675,7 @@ Tests: `preisrichter-zulassung.test.ts`
 - `pruefeObmann()` – Obmann für einen Preisrichter: leer oder ein Obmann derselben Schau, nicht er selbst.
 - Typen: `Zusage`
 
-### preisverteilung.ts (92 Z.)
+### preisverteilung.ts (90 Z.)
 Preisverteilung eines Preisrichters (Blatt für die Preisvergabe in der Halle): je Preisart so viele Zeilen, wie der Preisrichter vergeben darf.
 Tests: `preisverteilung.test.ts`
 
@@ -2050,7 +2053,7 @@ Tests: `zuwendungsbestaetigung.test.ts`
 - `betragFelder()` – Betrag in Ziffern und Buchstaben (BMF Nr. 5).
 - `sachSaetze()` – Text der Sachzuwendung: Bezeichnung und die zutreffenden Sätze zur Herkunft und zu den Unterlagen.
 
-Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `einteilung-jugend.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-nummerfolge.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `oberflaeche.test.ts`, `preisbindung.test.ts`, `sprachen.test.ts`, `stammdaten-gruppe.test.ts`, `stiftung.test.ts`
+Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `einteilung-jugend.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-nummerfolge.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `oberflaeche.test.ts`, `preisbindung.test.ts`, `sprachen.test.ts`, `stammdaten-gruppe.test.ts`, `stiftung.test.ts`, `zusatzpreise.test.ts`
 
 ## tRPC-Prozeduren `apps/server/src/routers`
 
@@ -2112,7 +2115,7 @@ Betrieb: Zustand der Installation für die Oberfläche (Lesemodus, Entscheidung 
 
 - `betrieb.lesemodus` query · öffentlich – Läuft der Lesemodus?
 
-### routers/bewertung.ts (384 Z.) → `bewertung`, `richter`
+### routers/bewertung.ts (385 Z.) → `bewertung`, `richter`
 
 - `bewertung.liste` query · angemeldet
 - `bewertung.setzen` mutation · admin
@@ -2333,7 +2336,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `oeffentlich.onlineVeroeffentlichung` mutation · öffentlich – Einwilligung in die Online-Veröffentlichung erteilen oder widerrufen (Art. 7 Abs. 3 DSGVO) – so einfach wie die Erteilung.
 - `oeffentlich.ergebnisse` query · öffentlich
 
-### routers/preise.ts (300 Z.) → `preise`
+### routers/preise.ts (299 Z.) → `preise`
 
 - `preise.uebersicht` query · angemeldet
 - `preise.vergeben` mutation · admin
@@ -2696,7 +2699,7 @@ Prozeduren: meldung.liste, schau.get
 ### oeffentlich.tsx (573 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
 Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.meineMeldung, oeffentlich.melden, oeffentlich.onlineVeroeffentlichung, oeffentlich.rechtstexte, oeffentlich.schau
 
-### preise.tsx (480 Z.) – `/schau/:schauId/preise`
+### preise.tsx (490 Z.) – `/schau/:schauId/preise`
 Prozeduren: auth.status, preise.entfernen, preise.freigeben, preise.stiftungBarErhalten, preise.stiftungLoeschen, preise.stiftungSpeichern, preise.uebersicht, preise.vergeben, schau.get
 
 ### preisrichter-form.tsx (108 Z.)
@@ -2798,11 +2801,11 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
 - `meldung.ts` (509 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, speichereMeldung, bindungen, hatAuszahlung
 - `post.ts` (155 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, sendeMail, sendeMailJetzt, versende, starteMailversand
-- `preise.ts` (174 Z.) · vergebePreis, entfernePreis
+- `preise.ts` (181 Z.) · vergebePreis, entfernePreis
 - `preisrichter-speichern.ts` (128 Z.) – Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter Sperre der Preisrichter der S … · gruppenAusEingabe, speicherePreisrichter, loeschePreisrichter
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
 - `protokoll.ts` (37 Z.) · protokolliere
-- `pruefung.ts` (368 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste
+- `pruefung.ts` (372 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste
 - `rassebild.ts` (86 Z.) – Rassebilder für den Katalog: prüfen und speichern (Oberfläche und Einspielen aus dem Netz). · RASSEBILD_MAX_BYTES, jpegAnzeige, oeffneBild, pruefeRassebild, speichereRassebild
 - `serienbrief.ts` (34 Z.) – Empfänger eines Serienbriefs: Vereinsmitglieder, alle Aussteller des Vereins oder die Aussteller mit bestätigter Meldung zu einer Schau. · SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger
 - `spenden-quittung.ts` (34 Z.) – Spendenquittung einer Spende erzeugen (für das Belegarchiv, services/kassenbuch.ts): Briefkopf und Farbe aus der Briefvorlage des Vereins, Hinweis … · spendenquittung
@@ -2848,7 +2851,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `katalog-vorspann.ts` (310 Z.) – Katalog-PDF, Inhaltsteile vor dem Tierteil: Grußworte, Ausstellungsleitung und Termine, Preisrichter, Kennzahlen, Preise und Stifter, Bestimmungen, … · vorspann, ehrentafel
 - `katalog.ts` (89 Z.) – Katalog-PDF, Einstieg: lädt die Grundlage (katalog-kontext.ts) und setzt die Teile der Reihe nach – Titelseite (katalog-titel.ts), Vorspann und Ehr … · katalogPdf
 - `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
-- `preisverteilung.ts` (113 Z.) – Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und leeren Zeilen zum Eintragen in der … · preisverteilungPdf
+- `preisverteilung.ts` (114 Z.) – Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und leeren Zeilen zum Eintragen in der … · preisverteilungPdf
 - `spenden.ts` (257 Z.) – Spenden: Zuwendungsbestätigung nach amtlichem Muster (Geld, Sache, Sammelbestätigung mit Anlage) und die einfache Spendenquittung für die Kasse. · zuwendungsbestaetigungPdf, spendenquittungPdf
 - `verpflichtung.ts` (143 Z.) – Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins (Briefkopf, Anschrift im Fenster, Fußzeile wie der B-Bogen) mit der Bitte um Bew … · preisrichterVerpflichtungPdf
 
@@ -2975,7 +2978,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `32-eingabepruefung.ts` (59 Z.) – Eingabeprüfung (zod 4): eigene Fehlertexte bleiben, Standardtexte auf Deutsch.
 - `33-vereinsverzeichnis.ts` (57 Z.) – Vereinsverzeichnis: einspielen (nur Namen, nichts überschrieben, Prüfung auf Kontaktdaten, Protokoll) und Vorschläge in Verwaltung und öffentlicher …
 - `34-katalog-gestaltung.ts` (304 Z.) – Druckkatalog: Schrift und Gestaltung wählbar, A4 als Vorgabe, Stiche je Sparte (einmal eingebettet), Öffnungszeiten untereinander.
-- `35-pruefung-nachbesserung.ts` (574 Z.) – Nachbesserungen aus der Gesamtprüfung vom 13.11.2026 (interne Prüfung): Sperren nach Festschreiben und Abschluss, Geld-Lücken, Protokoll, rechtssic …
+- `35-pruefung-nachbesserung.ts` (577 Z.) – Nachbesserungen aus der Gesamtprüfung vom 13.11.2026 (interne Prüfung): Sperren nach Festschreiben und Abschluss, Geld-Lücken, Protokoll, rechtssic …
 - `36-nach-plan-nummerieren.ts` (248 Z.) – Nach dem Umstellen im Hallenplan neu nummerieren: vor dem Festschreiben der Katalognummern die Katalognummern (und Käfigplätze) in der Reihenfolge …
 - `37-kommende-schauen.ts` (204 Z.) – Kommende Schauen: Termine pflegen, Kalender abonnieren ohne stilles Überschreiben, Katalogseite mit Kreiswahl, eigener Kalender.
 - `38-hallenplan-entfernen.ts` (88 Z.) – Leere Plätze im festen Hallenplan entfernen: über das Speichern der Halle (wie jede Änderung im Editor), nur leere Platten und Plätze im festen Pla …
@@ -3014,5 +3017,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `71-preisrichter-gegenpruefung.ts` (103 Z.) – Preisrichter, Gegenprüfung: Zusage, Vorbehalt, Gruppen und Obmann in Auskunft, Bereinigung und Protokoll (Vorbehalt nur als „geändert“), Vorlage oh …
 - `72-jugend-einteilung.ts` (155 Z.) – Jugend separat oder eingereiht: Katalognummern (eigener Block am Ende oder in der Rasse) und Preisrichter-Einteilung nach Rassen („mit der Rasse“ w …
 - `73-jugend-gegenpruefung.ts` (65 Z.) – Jugend in der Einteilung, Gegenprüfung: Umschalten meldet Tiere ohne Preisrichter und Nachmeldungen wie das Speichern der Einteilung; gespeicherte …
+- `74-zusatzpreise-je-pr.ts` (131 Z.) – Gestiftete Preisarten mit „zusätzlich je Preisrichter“: Die Zusatzpreise ohne Stiftung zählen je Preisrichter (bei Kontingent „je Schau“ für die ga …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

@@ -1,4 +1,4 @@
-import { bewertungsText, passtZuPreisart, serverText } from "@schau/domain";
+import { bewertungsText, hatKontingent, passtZuPreisart, serverText } from "@schau/domain";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { centZuText, datum, fehlerText, formatEuro, formatKatalognummer, parseEuro, alterLabel } from "../lib";
 import { useSchauId } from "../rahmen";
@@ -43,7 +43,7 @@ export function Preise() {
   const [pr, setPr] = useState<number | "">("");
   const [stiftung, setStiftung] = useState<Partial<Daten["stiftungen"][number]> | null>(null);
   // Gestifteter Preis: erst die Stiftung wählen (Betrag und Vorgabe des Stifters).
-  const [stiftungWahl, setStiftungWahl] = useState<{ eintragId: number; nr: string; preisartId: number } | null>(null);
+  const [stiftungWahl, setStiftungWahl] = useState<{ eintragId: number; nr: string; preisartId: number; preisrichterId: number | null } | null>(null);
   const neu = () => utils.preise.invalidate();
   const vergeben = trpc.preise.vergeben.useMutation({
     onSuccess: neu,
@@ -106,6 +106,14 @@ export function Preise() {
   const d = daten.data;
   /** Aus einer Stiftung schon vergebene Preise. */
   const benutzt = (stiftungId: number) => d.eintraege.reduce((n, e) => n + e.preise.filter((p) => p.stiftungId === stiftungId).length, 0);
+  /** Kontingent der Preisart beim zuständigen Preisrichter (bzw. der Schau) – wie der Server zählt. */
+  const imKontingent = (preisartId: number, preisrichterId: number | null) =>
+    (d.kontingentJe === "schau" ? d.kontingente[0] : d.kontingente.find((x) => x.preisrichterId === preisrichterId))?.arten.find((x) => x.preisartId === preisartId);
+  /** Noch ein Zusatzpreis ohne Stiftung („zusätzlich je Preisrichter“) frei? Nur bei Tieren mit Preisrichter. */
+  const zusatzFrei = (preisartId: number, preisrichterId: number | null) => {
+    const a = imKontingent(preisartId, preisrichterId);
+    return preisrichterId != null && a != null && a.vergeben < a.verfuegbar;
+  };
   const istAdmin = status.data?.benutzer?.rolle === "admin";
   const liste = d.eintraege.filter((e) => pr === "" || e.preisrichterId === pr).sort((a, b) => (b.punkte ?? 0) - (a.punkte ?? 0) || (a.katalogNr ?? 0) - (b.katalogNr ?? 0));
 
@@ -166,7 +174,7 @@ export function Preise() {
               <th>{d.kontingentJe === "schau" ? tp.bereich : t.allgemein.preisrichter}</th>
               <th className="text-right">{t.allgemein.tiere}</th>
               <th className="text-right">{tp.bewertet}</th>
-              {d.preisarten.filter((p) => p.quelle === "standgeld").map((p) => <th key={p.id} className="text-right">{p.kuerzel}</th>)}
+              {d.preisarten.filter((p) => hatKontingent(p)).map((p) => <th key={p.id} className="text-right">{p.kuerzel}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -253,10 +261,11 @@ export function Preise() {
                           .filter((p) => passtZuPreisart(p, e))
                           // Je Tier nur ein Geldpreis aus dem Standgeld (E oder Z); Bänder und Stiftungen zusätzlich.
                           .filter((p) => !(p.quelle === "standgeld" && p.betragCent > 0 && e.preise.some((x) => x.quelle === "standgeld" && x.betragCent > 0)))
-                          // Ausgeschöpfte Kontingente nicht anbieten (der Server lehnte sonst erst nach dem Klick ab).
+                          // Ausgeschöpfte Kontingente nicht anbieten (der Server lehnte sonst erst nach dem Klick ab). Gestiftete:
+                          // solange eine Stiftung oder ein Zusatzpreis des Preisrichters frei ist.
                           .filter((p) => {
-                            const k = d.kontingentJe === "schau" ? d.kontingente[0] : d.kontingente.find((x) => x.preisrichterId === e.preisrichterId);
-                            const a = k?.arten.find((x) => x.preisartId === p.id);
+                            if (p.quelle === "stiftung") return d.stiftungen.some((st) => st.preisartId === p.id && benutzt(st.id) < st.anzahl) || zusatzFrei(p.id, e.preisrichterId);
+                            const a = imKontingent(p.id, e.preisrichterId);
                             return !a || a.vergeben < a.verfuegbar;
                           })
                           .map((p) => (
@@ -266,7 +275,7 @@ export function Preise() {
                               className={ZEILE}
                               onClick={() =>
                                 p.quelle === "stiftung" && d.stiftungen.some((st) => st.preisartId === p.id)
-                                  ? setStiftungWahl({ eintragId: e.id, nr: formatKatalognummer(e), preisartId: p.id })
+                                  ? setStiftungWahl({ eintragId: e.id, nr: formatKatalognummer(e), preisartId: p.id, preisrichterId: e.preisrichterId })
                                   : vergeben.mutate({ schauId, katalogeintragId: e.id, preisartId: p.id })
                               }
                             >
@@ -400,6 +409,7 @@ export function Preise() {
             {(d.preisarten.find((p) => p.id === stiftungWahl.preisartId)?.anzahlProPreisrichter ?? 0) > 0 && (
               <Knopf
                 variante="leise"
+                disabled={!zusatzFrei(stiftungWahl.preisartId, stiftungWahl.preisrichterId) || vergeben.isPending}
                 onClick={() => {
                   vergeben.mutate({ schauId, katalogeintragId: stiftungWahl.eintragId, preisartId: stiftungWahl.preisartId, ohneStiftung: true });
                   setStiftungWahl(null);
