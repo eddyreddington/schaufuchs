@@ -1,4 +1,6 @@
 /** Texte der Oberfläche: schau.einstellungen (Entscheidung 022) – Seite „Einstellungen“ der Schau und ihre Abschnitte. */
+import { druckFormate } from "./schau-druck-formate";
+
 export const schauEinstellungen = {
   /** seiten/einstellungen.tsx */
   seite: {
@@ -146,6 +148,8 @@ export const schauEinstellungen = {
     anpassen: "Für diese Schau anpassen",
     vereinsVorlagen: "Vorlagen des Vereins",
     briefvorlage: "Briefvorlage",
+    /** Übersicht der Formate (Entscheidung 029) */
+    formate: druckFormate,
   },
   /** seiten/einstellungen-verwalten.tsx */
   verwalten: {

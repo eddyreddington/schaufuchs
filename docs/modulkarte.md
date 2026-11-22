@@ -963,7 +963,11 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (188 Z.)
+### schau-druck-formate.ts (59 Z.)
+
+- `druckFormate`
+
+### schau-einstellungen.ts (191 Z.)
 
 - `schauEinstellungen`
 
@@ -1157,9 +1161,14 @@ Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mi
 
 - `rahmen` – Texte der Oberfläche: rahmen (Entscheidung 022) – App-Rahmen mit Seitenmenü und Benutzermenü, Anmeldung, Einladung, Hilfe-Rahmen, Fehlerseite und d …
 
-### schau-einstellungen.ts (195 Z.)
+### schau-druck-formate.ts (58 Z.)
 
-- `schauEinstellungen` – Texte der Oberfläche: schau.einstellungen (Entscheidung 022) – Seite „Einstellungen“ der Schau und ihre Abschnitte.
+- `druckFormate` – Texte der Oberfläche: schau.einstellungen.druck.formate (Entscheidung 022, 029) – Übersicht der Drucke im Reiter „Druck“.
+
+### schau-einstellungen.ts (199 Z.)
+Texte der Oberfläche: schau.einstellungen (Entscheidung 022) – Seite „Einstellungen“ der Schau und ihre Abschnitte.
+
+- `schauEinstellungen`
 
 ### schau.ts (129 Z.)
 Texte der Oberfläche: schau (Entscheidung 022) – Liste der Schauen, Übersicht; Einstellungen in schau-einstellungen.
@@ -1352,7 +1361,11 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (188 Z.)
+### schau-druck-formate.ts (59 Z.)
+
+- `druckFormate`
+
+### schau-einstellungen.ts (191 Z.)
 
 - `schauEinstellungen`
 
@@ -1537,7 +1550,11 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (188 Z.)
+### schau-druck-formate.ts (59 Z.)
+
+- `druckFormate`
+
+### schau-einstellungen.ts (191 Z.)
 
 - `schauEinstellungen`
 
@@ -1726,7 +1743,11 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (188 Z.)
+### schau-druck-formate.ts (59 Z.)
+
+- `druckFormate`
+
+### schau-einstellungen.ts (191 Z.)
 
 - `schauEinstellungen`
 
@@ -1912,7 +1933,11 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (188 Z.)
+### schau-druck-formate.ts (59 Z.)
+
+- `druckFormate`
+
+### schau-einstellungen.ts (191 Z.)
 
 - `schauEinstellungen`
 
@@ -2634,8 +2659,8 @@ Prozeduren: auth.einladungAnnehmen, auth.einladungPruefen, auth.status
 ### einlieferung.tsx (518 Z.) – `/schau/:schauId/einlieferung`
 Prozeduren: auth.status, halle.gesundheit, halle.gesundheitErfassen, halle.gesundheitFreigeben, halle.kaefigSetzen, halle.ringnummerSetzen, halle.statusSetzen, halle.suche, halle.vetSetzen, meldung.zahlungErfassen, schau.get
 
-### einstellungen-druck.tsx (63 Z.)
-Prozeduren: druckvorlage.fuerSchau, druckvorlage.fuerSchauAnpassen, druckvorlage.waehlen
+### einstellungen-druck.tsx (147 Z.)
+Prozeduren: druckvorlage.formate, druckvorlage.formateSetzen, druckvorlage.fuerSchau, druckvorlage.fuerSchauAnpassen, druckvorlage.waehlen
 
 ### einstellungen-meisterschaften.tsx (269 Z.)
 Prozeduren: meisterschaft.regeln, meisterschaft.speichern

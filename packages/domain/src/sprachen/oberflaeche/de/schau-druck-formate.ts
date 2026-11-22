@@ -1,0 +1,58 @@
+/** Texte der Oberfläche: schau.einstellungen.druck.formate (Entscheidung 022, 029) – Übersicht der Drucke im Reiter „Druck“. */
+export const druckFormate = {
+  gespeichert: "Format gespeichert.",
+  hilfe: "Hilfe zu Druckformaten",
+  drucksache: "Drucksache",
+  format: "Format",
+  einstellung: "Einstellung",
+  nurAnsehen: "Nur Administratoren ändern die Formate.",
+  fest: "fest",
+  katalogGestalten: "Katalog gestalten",
+  hoch: "hoch",
+  quer: "quer",
+  din5008: "DIN 5008",
+  amtlich: "amtliches Muster",
+  formatWahl: "Format wählen",
+  katalog: {
+    A5: "A5 hoch (Heft)",
+    A4: "A4 hoch",
+  },
+  sachen: {
+    aBogen: "A-Bogen (Meldebogen)",
+    bBogen: "B-Bogen mit Ringkarten",
+    katalog: "Katalog",
+    bewertungskarten: "Bewertungskarten",
+    bewertungsliste: "Bewertungsliste",
+    verpflichtung: "Preisrichterverpflichtung",
+    preisverteilung: "Preisverteilung",
+    meisterschaften: "Meisterschaften",
+    kaufbeleg: "Kaufbeleg mit Ausgabeschein",
+    kassenbeleg: "Kassenbelege und Spendenquittung",
+    kassenbericht: "Kassenbericht",
+    abrechnung: "Abrechnung und Quittung",
+    abrechnungListe: "Abrechnung aller Aussteller",
+    zuwendung: "Zuwendungsbestätigung",
+    serienbrief: "Serienbrief",
+    amtslisten: "Listen für das Veterinäramt",
+    hallenplan: "Hallenplan",
+    aufbauliste: "Aufbauliste",
+  },
+  wahl: {
+    bewertungsliste: {
+      A4: "A4 hoch, zwei Listen nebeneinander",
+      A5: "A5 hoch, eine Liste je Seite",
+    },
+    hallenplan: {
+      A4: "A4, ein Blatt",
+      A3: "A3, ein Blatt",
+    },
+    kaufbeleg: {
+      A5: "A5 quer",
+      A4: "A4 hoch, Beleg oben mit Schnittlinie",
+    },
+    kassenbeleg: {
+      A5: "A5 quer",
+      A4: "A4 hoch, Beleg oben mit Schnittlinie",
+    },
+  },
+};

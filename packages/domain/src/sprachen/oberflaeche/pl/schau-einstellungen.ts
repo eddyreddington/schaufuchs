@@ -1,4 +1,5 @@
 import type { OberflaecheTexte } from "..";
+import { druckFormate } from "./schau-druck-formate";
 
 export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   seite: {
@@ -140,6 +141,8 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
     anpassen: "Dostosuj dla tej wystawy",
     vereinsVorlagen: "Szablony klubu",
     briefvorlage: "Szablon listu",
+    /** Übersicht der Formate (Entscheidung 029) */
+    formate: druckFormate,
   },
   verwalten: {
     inAnfuehrung: (name: string) => `„${name}”`,
