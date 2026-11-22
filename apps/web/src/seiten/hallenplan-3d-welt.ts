@@ -8,7 +8,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { ot } from "../sprache-jetzt";
 import { figurTeile, gitterTextur, hell, ladeBild, offenerKasten, pokalGeometrie, schildSprite, schuerzenGeometrie, stoffKachel, type Teil, wackel } from "./hallenplan-3d-bausteine";
 import { baueLandschaft, type HallenSeite } from "./hallenplan-3d-landschaft";
-import { baueRaum } from "./hallenplan-3d-raum";
+import { baueRaum, BODEN_LAGEN } from "./hallenplan-3d-raum";
 import { type Bewegung, bewegungFuer } from "./hallenplan-3d-steuerung";
 
 const M = 0.01; // cm → m
@@ -108,9 +108,10 @@ export function baueWelt(
   // Flächen am Boden: freier Bereich, Volierenbereich, Eingang.
   const flaechenFarbe = { sperre: "#cfd4dc", volieren: "#d6e8dc", eingang: "#ffffff" } as const;
   for (const f of s.flaechen) {
-    const m = new THREE.Mesh(merk(new THREE.PlaneGeometry(f.q.b * M, f.q.h * M)), merk(new THREE.MeshStandardMaterial({ color: flaechenFarbe[f.art] })));
+    const { y, vorzug } = BODEN_LAGEN.flaechen;
+    const m = new THREE.Mesh(merk(new THREE.PlaneGeometry(f.q.b * M, f.q.h * M)), merk(new THREE.MeshStandardMaterial({ color: flaechenFarbe[f.art], polygonOffset: true, polygonOffsetFactor: vorzug, polygonOffsetUnits: vorzug })));
     m.rotation.x = -Math.PI / 2;
-    m.position.set((f.q.x + f.q.b / 2) * M, 0.004, (f.q.y + f.q.h / 2) * M);
+    m.position.set((f.q.x + f.q.b / 2) * M, y, (f.q.y + f.q.h / 2) * M);
     m.receiveShadow = true;
     modell.add(m);
   }
@@ -468,7 +469,7 @@ export function baueWelt(
     if (a === "oben") {
       // Ganze Halle samt Wänden im Bild; die Wandkronen liegen näher an der Kamera, daher die Wandhöhe obendrauf.
       const rand = 2 * s.wandDicke * M;
-      const h = (Math.max(L + rand, (B + rand) / kamera.aspect) / 2 / Math.tan(THREE.MathUtils.degToRad(kamera.fov / 2))) * 1.06 + s.firstHoehe * M;
+      const h = (Math.max(L + rand, (B + rand) / kamera.aspect) / 2 / Math.tan(THREE.MathUtils.degToRad(kamera.fov / 2))) * 1.06 + s.wandHoehe * M;
       kamera.position.set(mitte.x, h, mitte.z + 0.001);
       steuerung.target.set(mitte.x, 0, mitte.z);
     } else if (a === "gang") {

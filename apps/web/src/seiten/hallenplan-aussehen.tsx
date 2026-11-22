@@ -1,5 +1,5 @@
 /** Abschnitt „Aussehen (3D)“ in den Eigenschaften der Halle (Entscheidung 028). */
-import { aussehenBereinigt, aussehenVon, deckeSchalten, FIRST_HOEHE_MAX, HALLEN_BOEDEN, type HallenAussehen, type HallenBoden, PRALLWAND_HOEHE_MAX, PRALLWAND_VORGABEN, WAND_HOEHE_MAX, WAND_HOEHE_MIN } from "@schau/domain";
+import { aussehenBereinigt, aussehenVon, deckeSchalten, wandHoeheSetzen, FIRST_HOEHE_MAX, HALLEN_BOEDEN, type HallenAussehen, type HallenBoden, PRALLWAND_HOEHE_MAX, PRALLWAND_VORGABEN, WAND_HOEHE_MAX, WAND_HOEHE_MIN } from "@schau/domain";
 import { useEffect, useRef, useState } from "react";
 import { useOberflaeche } from "../sprache";
 import { Auswahl, Feld, Haken, HilfeLink } from "../ui";
@@ -24,7 +24,9 @@ export function AussehenEinstellung({ aussehen, aendern }: { aussehen: HallenAus
   /** Höhe übernehmen, nur wenn sie so gespeichert würde (sonst springt das Feld zurück statt einen anderen Wert zu zeigen). */
   const hoehe = (feld: "prallwandHoehe" | "wandHoehe" | "firstHoehe") => (cm: number) => {
     if (aussehenVon({ ...(aussehen ?? {}), [feld]: cm })[feld] !== cm) return false;
-    neu({ [feld]: cm });
+    // Die Wand nimmt einen gesetzten First mit (Dachhöhe bleibt), siehe `wandHoeheSetzen`.
+    if (feld === "wandHoehe") aendern?.((alt) => wandHoeheSetzen(alt, cm));
+    else neu({ [feld]: cm });
     return true;
   };
   // Freie Farbe: beim Ziehen im Farbwähler erst nach einer kurzen Pause speichern, beim Verlassen der Eigenschaften sofort.
@@ -73,7 +75,12 @@ export function AussehenEinstellung({ aussehen, aendern }: { aussehen: HallenAus
                 title={t[v.name]}
                 aria-label={t[v.name]}
                 aria-pressed={a.prallwand === v.farbe}
-                onClick={() => neu({ prallwand: v.farbe })}
+                onClick={() => {
+                  // Eine noch wartende freie Farbe fällt weg – die gewählte Vorgabe gilt.
+                  if (offen.current) clearTimeout(offen.current.zeit);
+                  offen.current = null;
+                  neu({ prallwand: v.farbe });
+                }}
                 className={`size-8 rounded-md border ${a.prallwand === v.farbe ? "border-tinte ring-2 ring-tinte/30" : "border-linie-stark"}`}
                 style={{ background: v.farbe === "holz" ? HOLZ : v.farbe }}
               />

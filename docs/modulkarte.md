@@ -224,7 +224,7 @@ Tests: `hallenplan-3d-rundgang.test.ts`
 - `ohneSeite()` – Die Seite gehört nur zu Wänden, nicht zur Türöffnung.
 - `waendeImGrundriss()` – Wände entlang eines freien Grundrisses (Entscheidung 019): je Kante ein Wandstück außen an der Kante, bis zum um die Wanddicke versetzten Umriss – …
 
-### hallenplan-3d.ts (577 Z.)
+### hallenplan-3d.ts (578 Z.)
 Hallenplan räumlich: aus dem gerechneten Plan (`planeHalle`) die Körper für die 3D-Ansicht – Wände mit Türen, Aufsteller unter den Grundplatten, Kä …
 Tests: `hallenplan-3d.test.ts`
 
@@ -257,7 +257,7 @@ Tests: `hallenplan-3d.test.ts`
 - `schuerzenFuer()` – Verkleidung der Sockel: Sockel mit derselben Front, die quer zur Reihe gleich liegen und aneinanderstoßen, bilden ein Stück Reihe.
 - Typen: `Verkleidung`, `Figur`, `SzeneKaefig`, `SzeneVoliere`, `SzeneTuer`, `SzeneFlaeche`, `SzeneBeschriftung`, `HallenSzene`
 
-### hallenplan-aussehen.ts (104 Z.)
+### hallenplan-aussehen.ts (115 Z.)
 Tests: `hallenplan-aussehen.test.ts`
 
 - `HALLEN_BOEDEN` – Aussehen der Halle in der 3D-Ansicht (Entscheidung 028): Boden und Folie, Prallwand, Wand- und Firsthöhe, Fenster, Decke, Spielfeldlinien und Geräte.
@@ -272,6 +272,7 @@ Tests: `hallenplan-aussehen.test.ts`
 - `aussehenVon()` – Aussehen mit allen Vorgaben, Werte begrenzt (ungültige Angaben gelten als nicht gesetzt).
 - `aussehenBereinigt()` – Zum Speichern: nur, was von der Vorgabe abweicht (der First nur, wenn er höher ist als die Wand); ohne Abweichung nichts (die Halle bleibt wie ohne …
 - `deckeSchalten()` – Decke ein- oder ausschalten; beim Einschalten ohne je eingestellte Wand- und Firsthöhe mit `DECKE_VORSCHLAG`.
+- `wandHoeheSetzen()` – Wandhöhe ändern: War ein First über der Wand gesetzt, zieht er mit (die Dachhöhe First − Wand bleibt, höchstens bis `FIRST_HOEHE_MAX`); sonst bleib …
 - `wirksamerFirst()` – Firsthöhe, die in 3D gilt: das Satteldach nur mit Decke und rechteckigem Grundriss, sonst flach in Wandhöhe.
 - Typen: `HallenBoden`, `HallenAussehen`, `VollesAussehen`
 
@@ -2613,10 +2614,15 @@ Bausteine der 3D-Halle: Texturen (Gitter, Stoff), Geometrien (Kasten, Schürzen,
 ### hallenplan-3d-decke.ts (127 Z.)
 Decke der 3D-Halle (Entscheidung 028): Holzdecke aus Profilbrettern – flach oder als Satteldach –, Leimbinder entlang der Decke, Giebel an den Stir …
 
+### hallenplan-3d-folie.test.ts (16 Z.)
+
+### hallenplan-3d-folie.ts (15 Z.)
+Schalter „Folie“ in der 3D-Ansicht (Entscheidung 028): nur die Ansicht, gespeichert wird nichts.
+
 ### hallenplan-3d-landschaft.ts (288 Z.)
 Umgebung der 3D-Halle (nur zur Anschauung, ohne Maße): Himmel mit Wolken, Wiese, ein heller Hof um die Halle, vor dem Haupteingang ein Parkplatz, g …
 
-### hallenplan-3d-raum.ts (247 Z.)
+### hallenplan-3d-raum.ts (260 Z.)
 Der Raum der 3D-Halle nach ihrem Aussehen (Entscheidung 028): Boden mit Belag, Folie und Meterraster, Spielfeldlinien, Innenseiten der Wände mit Pr …
 
 ### hallenplan-3d-seite.tsx (56 Z.) – `/schau/:schauId/hallenplan/3d`
@@ -2632,16 +2638,16 @@ Bewegung der Kamera in der 3D-Ansicht über das Ziehen mit Maus oder Finger hina
 ### hallenplan-3d-texturen.ts (304 Z.)
 Texturen der 3D-Halle, aus kleinen Canvas-Bildern gerechnet (keine Bilddateien): Bodenbeläge (Mosaikparkett, Sportboden, Estrich), Innenwand mit Pr …
 
-### hallenplan-3d-welt.ts (547 Z.)
+### hallenplan-3d-welt.ts (548 Z.)
 Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und Steuerung.
 
-### hallenplan-3d.tsx (233 Z.)
+### hallenplan-3d.tsx (231 Z.)
 Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben oder im Gang in Augenhöhe, mit Tasten oder Steuerkreuz gehen und als a …
 
 ### hallenplan-aktionen.ts (214 Z.)
 Werkzeuge des Hallenplan-Editors für die Auswahl und für neue Teile: am Raster ausrichten, drehen, an den Platz zurück, Leeres entfernen, Teile und …
 
-### hallenplan-aussehen.tsx (100 Z.)
+### hallenplan-aussehen.tsx (107 Z.)
 Abschnitt „Aussehen (3D)“ in den Eigenschaften der Halle (Entscheidung 028).
 
 ### hallenplan-befehle.ts (289 Z.)

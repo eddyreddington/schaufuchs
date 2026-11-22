@@ -43,7 +43,7 @@ export function Hallenplan() {
   return (
     <div className={`druck-quer ${SEITE}`}>
       {d.plan && d.halle ? (
-        <Plan d={d} halle={d.halle} plan={d.plan} schauId={schauId} istAdmin={istAdmin} nachladen={nachladen} />
+        <Plan key={schauId} d={d} halle={d.halle} plan={d.plan} schauId={schauId} istAdmin={istAdmin} nachladen={nachladen} />
       ) : (
         <>
           <Seitenkopf titel={th.titel} hilfe="hallenplan" />

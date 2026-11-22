@@ -10,6 +10,7 @@ import { useOberflaeche, useSprache } from "../sprache";
 import { ot } from "../sprache-jetzt";
 import { HilfeLink, Knopf, KnopfLink } from "../ui";
 import { hell } from "./hallenplan-3d-bausteine";
+import { type FolienWahl, folieJetzt } from "./hallenplan-3d-folie";
 import { Steuerkreuz } from "./hallenplan-3d-steuerkreuz";
 import { type Richtung, TASTE } from "./hallenplan-3d-steuerung";
 import { type Ansicht, baueWelt, type Treffer, type Welt } from "./hallenplan-3d-welt";
@@ -53,10 +54,8 @@ export default function Hallenplan3D({
   const [rundgang, setRundgang] = useState(false);
   // Folie über dem Boden: Startwert aus der Einstellung der Halle; der Schalter hier wirkt nur auf die Ansicht (speichert nicht).
   const folieGespeichert = aussehenVon(halle.aussehen).abdeckung;
-  const [folie, setFolie] = useState(folieGespeichert);
-  useEffect(() => setFolie(folieGespeichert), [folieGespeichert]);
-  const folieRef = useRef(folie);
-  folieRef.current = folie;
+  const [folienWahl, setFolienWahl] = useState<FolienWahl | null>(null);
+  const folie = folieJetzt(folieGespeichert, folienWahl);
   const richterName = useMemo(() => new Map(richter.map((r) => [r.id, r.name])), [richter]);
 
   useEffect(() => {
@@ -70,7 +69,6 @@ export default function Hallenplan3D({
       return;
     }
     welt.current = w;
-    w.folie(folieRef.current);
     w.ansicht(ansichtRef.current);
     const beiZeigen = (e: PointerEvent) => {
       if (e.pointerType === "touch" && e.buttons) return;
@@ -91,6 +89,9 @@ export default function Hallenplan3D({
       setRundgang(false);
     };
   }, [szene, richterIndex, richterName]);
+
+  // Folie nach jedem Aufbau und jedem Umschalten (dieser Effekt steht nach dem Aufbau und läuft daher danach).
+  useEffect(() => welt.current?.folie(folie), [folie, szene, richterIndex, richterName]);
 
   // Tasten im ganzen Fenster, gleichmäßig solange gedrückt (TASTE); Umschalt schneller, Esc hält den Rundgang an.
   // Nicht in Eingabefeldern und nicht mit Strg, ⌘ oder Alt (Tastenkürzel des Browsers).
@@ -170,10 +171,7 @@ export default function Hallenplan3D({
           <Knopf
             variante={folie ? "primaer" : "zweit"}
             aria-pressed={folie}
-            onClick={() => {
-              setFolie(!folie);
-              welt.current?.folie(!folie);
-            }}
+            onClick={() => setFolienWahl({ fuer: folieGespeichert, an: !folie })}
           >
             {t.folie}
           </Knopf>

@@ -26,8 +26,17 @@ Holz-Prallwand bis 2 m, 3,50 m hoch).
   Seite in der Mitte, geschlossene Giebel, Binder entlang der Neigung); beim freien Grundriss bleibt es flach, weil ein
   Satteldach dort selten passt. Leuchten hängen unter den Bindern, mindestens 1,50 m über dem höchsten Käfig und nie unter
   3 m, sonst direkt an der Decke. Das Einschalten der Decke schlägt Wand 7 m und First 9 m vor, solange beide nie
-  eingestellt waren – als gespeicherter Wert im Panel, nicht still in der Darstellung.
-- Folie: Startwert aus dem Aussehen; der Schalter „Folie“ in der 3D-Ansicht wirkt nur auf die Ansicht und speichert nicht.
+  eingestellt waren – als gespeicherter Wert im Panel, nicht still in der Darstellung. Bewusst hingenommen: Wer die
+  Wandhöhe ausdrücklich auf die Vorgabe 3,50 m gestellt hat, bekommt den Vorschlag trotzdem (gespeichert wird nur die
+  Abweichung, 3,50 m sind von „nie eingestellt“ nicht zu unterscheiden); er lässt sich gleich darunter zurückstellen.
+- Wandhöhe ändern (`wandHoeheSetzen`): Ein gesetzter First zieht mit, die Dachhöhe (First − Wand) bleibt, höchstens bis
+  20 m – sonst verschwände das Satteldach still, sobald die Wand den First erreicht.
+- Wände beim Blick von oben: Sie werden durchsichtiger, sobald die Kamera über der Decke an ihrer Stelle steht
+  (`deckenHoehe`, beim Satteldach zur Mitte höher). Die Ansicht „Von oben“ rechnet mit der Wandhöhe (die Decke ist von
+  oben ohnehin verborgen).
+- Folie: Startwert aus dem Aussehen; der Schalter „Folie“ in der 3D-Ansicht wirkt nur auf die Ansicht und speichert nicht
+  (`folieJetzt`: die eigene Wahl gilt, bis sich die gespeicherte Einstellung ändert). Lagen am Boden fest
+  (`BODEN_LAGEN`): Linien unter der Folie, darüber die Flächen, oben das Meterraster – mit Höhe und Tiefenvorzug.
 - Im heruntergeladenen Modell (glTF): Boden, Folie wie gezeigt, Linien, Wände, Fenster, Geräte und die Decke (immer, auch
   wenn sie in der Ansicht gerade verborgen ist); das Meterraster nicht (nur Hilfe zum Abschätzen in der Ansicht).
 - Käfige (Preisrichterfarben) und Sockelverkleidung ohne Tonemapping, damit ihre Farben der Legende entsprechen.

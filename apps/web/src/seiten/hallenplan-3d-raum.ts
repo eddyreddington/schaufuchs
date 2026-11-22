@@ -14,6 +14,18 @@ const M = 0.01; // cm → m
 
 type Merk = <T extends { dispose: () => void }>(x: T) => T;
 
+/**
+ * Lagen über dem Boden (Meter) und ihr Vorzug in der Tiefe (polygonOffset, je kleiner, desto weiter vorn): Linien unter der
+ * Folie, die Folie unter den Flächen (Sperre, Volieren, Eingang), das Meterraster ganz oben. Die Höhen allein reichen im
+ * flachen Blick aus der Ferne nicht (Tiefenauflösung), deshalb zusätzlich der Vorzug.
+ */
+export const BODEN_LAGEN = {
+  linien: { y: 0.003, vorzug: -2 },
+  folie: { y: 0.004, vorzug: -4 },
+  flaechen: { y: 0.006, vorzug: -6 },
+  raster: { y: 0.008 },
+} as const;
+
 export interface Raum {
   boden: THREE.Mesh;
   /** Stoffe je Wandstück (Index in `s.waende`), die mit der Wand aus- und einblenden. */
@@ -126,12 +138,12 @@ export function baueRaum(szene: THREE.Scene, modell: THREE.Group, s: HallenSzene
   // Folie: graue Schutzbahnen über dem Boden (deckt Belag und Linien ab), Bahnen entlang der langen Seite.
   const folienTex = merk(folienTextur());
   const fk = FOLIE_KACHEL * M;
-  const folienStoff = merk(new THREE.MeshStandardMaterial({ map: folienTex, roughness: 0.6, metalness: 0, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+  const folienStoff = merk(new THREE.MeshStandardMaterial({ map: folienTex, roughness: 0.6, metalness: 0, polygonOffset: true, polygonOffsetFactor: BODEN_LAGEN.folie.vorzug, polygonOffsetUnits: BODEN_LAGEN.folie.vorzug }));
   const folie = new THREE.Mesh(boden.geometry, folienStoff);
   folie.name = "Folie"; // bleibt deutsch (Name im 3D-Modell)
   folie.rotation.copy(boden.rotation);
   folie.position.copy(boden.position);
-  folie.position.y = 0.0035;
+  folie.position.y = BODEN_LAGEN.folie.y;
   folie.receiveShadow = true;
   // Textur: gedreht wird vor dem Skalieren – bei gedrehter Kachel die Wiederholung über Kreuz.
   const quer = s.breite >= s.laenge;
@@ -145,9 +157,10 @@ export function baueRaum(szene: THREE.Scene, modell: THREE.Group, s: HallenSzene
   // Meterraster: fein, nur innerhalb des Grundrisses – zum Abschätzen von Maßen, ohne den Belag zu überdecken.
   const drin = (x: number, z: number) => !s.umriss || punktInUmriss({ x: x / M, y: z / M }, s.umriss);
   const raster: number[] = [];
-  // Über Folie und Flächen (6 mm), damit es auch auf der Folie zu sehen ist.
-  for (let x = 1; x < B; x++) for (let z = 0; z < L; z++) if (drin(x, z + 0.5)) raster.push(x, 0.006, z, x, 0.006, Math.min(L, z + 1));
-  for (let z = 1; z < L; z++) for (let x = 0; x < B; x++) if (drin(x + 0.5, z)) raster.push(x, 0.006, z, Math.min(B, x + 1), 0.006, z);
+  // Über Folie und Flächen, damit es auch auf der Folie zu sehen ist.
+  const ry = BODEN_LAGEN.raster.y;
+  for (let x = 1; x < B; x++) for (let z = 0; z < L; z++) if (drin(x, z + 0.5)) raster.push(x, ry, z, x, ry, Math.min(L, z + 1));
+  for (let z = 1; z < L; z++) for (let x = 0; x < B; x++) if (drin(x + 0.5, z)) raster.push(x, ry, z, Math.min(B, x + 1), ry, z);
   const rasterGeo = merk(new THREE.BufferGeometry());
   rasterGeo.setAttribute("position", new THREE.Float32BufferAttribute(raster, 3));
   const rasterLinien = new THREE.LineSegments(rasterGeo, merk(new THREE.LineBasicMaterial({ color: "#5a4a30", transparent: true, opacity: 0.12, depthWrite: false })));
@@ -159,8 +172,8 @@ export function baueRaum(szene: THREE.Scene, modell: THREE.Group, s: HallenSzene
   for (const farbe of ["schwarz", "blau", "rot"] as const) {
     const zuege = linien.filter((l) => l.farbe === farbe).map((l) => l.punkte);
     if (!zuege.length) continue;
-    const m = new THREE.Mesh(merk(linienGeometrie(zuege, LINIEN_BREITE)), merk(new THREE.MeshStandardMaterial({ color: FARBE[farbe], roughness: 0.6, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 })));
-    m.position.y = 0.003;
+    const m = new THREE.Mesh(merk(linienGeometrie(zuege, LINIEN_BREITE)), merk(new THREE.MeshStandardMaterial({ color: FARBE[farbe], roughness: 0.6, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: BODEN_LAGEN.linien.vorzug, polygonOffsetUnits: BODEN_LAGEN.linien.vorzug })));
+    m.position.y = BODEN_LAGEN.linien.y;
     m.receiveShadow = true;
     modell.add(m);
   }
