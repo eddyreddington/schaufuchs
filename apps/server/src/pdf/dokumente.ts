@@ -1,10 +1,9 @@
 import { betragInWorten, gefordertCent, gesamtabrechnungZeilen, briefWerte, formatEuro, formatIban, fuelle, oeffnungszeitenZeilen } from "@schau/domain";
 import { and, asc, eq, isNull, ne } from "drizzle-orm";
 import { db } from "../db/client";
-import { aussteller, katalogeintrag, meldung, prEinteilung, preisrichter, type schau, spende, spender, verkauf } from "../db/schema";
+import { aussteller, katalogeintrag, meldung, type schau, spende, spender, verkauf } from "../db/schema";
 import { abrechnungListe } from "../routers/kasse";
 import { ladeEintraege, meldebetrag, type Eintrag } from "../services/eintraege";
-import { zuteilung } from "../services/pruefung";
 import {
   angaben,
   briefkopf,
@@ -44,59 +43,7 @@ export async function bewertungskartenPdf(s: Schau, nurPreisrichterId?: number) 
   return kartenNachVorlagePdf(s, await ladeDesign(s), nurPreisrichterId);
 }
 
-// ── Bewertungsliste ───────────────────────────────────────────────────────
-
-/** Bewertungsliste für einen Preisrichter (zum Mitnehmen in die Käfigreihe), mit Platz zum Eintragen. */
-export async function preisrichterListePdf(s: Schau, preisrichterId: number) {
-  const [eintraege, einteilung, [pr], d] = await Promise.all([
-    ladeEintraege(s.id, { nurBestaetigt: true }),
-    db.select().from(prEinteilung).where(eq(prEinteilung.schauId, s.id)),
-    // Nur Preisrichter dieser Schau – sonst ließen sich Namen fremder Schauen über die ID abfragen.
-    Number.isFinite(preisrichterId)
-      ? db.select().from(preisrichter).where(and(eq(preisrichter.id, preisrichterId), eq(preisrichter.schauId, s.id)))
-      : Promise.resolve([]),
-    ladeDesign(s),
-  ]);
-  const zu = zuteilung(eintraege, einteilung);
-  const meine = pr ? eintraege.filter((e) => zu.get(e.id) === pr.id) : [];
-  const bereiche = pr ? einteilung.filter((x) => x.preisrichterId === pr.id).map((x) => (x.vonNr === x.bisNr ? `${x.vonNr}` : `${x.vonNr}–${x.bisNr}`)).join(", ") : "";
-  return erzeugePdf(
-    `Bewertungsliste ${pr?.name ?? ""}`,
-    (doc) => {
-      briefkopf(doc, d, {
-        verein: verein(s),
-        zeile: kopfzeile(s),
-        art: "Bewertungsliste",
-        titel: pr?.name ?? "Preisrichter nicht gefunden",
-        unter: pr ? "Zum Eintragen in der Käfigreihe – maßgeblich ist die Bewertungskarte." : undefined,
-        angaben: pr
-          ? [
-              ["Bewertung", datumDe(s.bewertungAm) || "–"],
-              ["Nummern", bereiche || "–"],
-              ["Tiere", String(meine.length)],
-            ]
-          : [],
-      });
-      if (!pr) return;
-      const w = breite(doc);
-      tabelle(
-        doc,
-        [
-          { titel: "Nr.", breite: 13 * MM, align: "right", fett: true },
-          { titel: "Rasse, Farbenschlag", breite: w - 13 * MM - 26 * MM - 24 * MM - 16 * MM - 34 * MM },
-          { titel: "Klasse", breite: 26 * MM },
-          { titel: "Note / Pkt.", breite: 24 * MM },
-          { titel: "Preis", breite: 16 * MM },
-          { titel: "Bemerkung", breite: 34 * MM },
-        ],
-        meine.map((e) => [nr(e), e.bezeichnung, tier(e), e.status === "fehlt" ? "fehlt" : "", "", ""]),
-        { schrift: 9, zeilenhoehe: 15, streifen: d.flaeche },
-      );
-      fusszeilen(doc, `Bewertungsliste ${pr.name} · ${s.name}`);
-    },
-    { margins: A4_RAENDER },
-  );
-}
+// Die Bewertungsliste je Preisrichter steht in bewertungsliste.ts.
 
 // ── B-Bogen und Ringkarten ────────────────────────────────────────────────
 

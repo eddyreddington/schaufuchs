@@ -125,7 +125,7 @@ describe("PDF-Drucke: Bewertungskarte und Bewertungsliste", () => {
   const seiten = (pdf: Buffer) => (pdf.toString("latin1").match(/\/Type \/Page\b(?!s)/g) ?? []).length;
 
   test("Bewertungsliste nennt nur Preisrichter der eigenen Schau", async () => {
-    const { preisrichterListePdf } = await import("../pdf/dokumente");
+    const { preisrichterListePdf } = await import("../pdf/bewertungsliste");
     const [s] = await m.db.select().from(m.schema.schau).where(m.eq(m.schema.schau.slug, "testschau-2026"));
     const [eigener] = await m.db.select().from(m.schema.preisrichter).where(m.eq(m.schema.preisrichter.schauId, s!.id));
     const admin = m.appRouter.createCaller(adminKontext);
