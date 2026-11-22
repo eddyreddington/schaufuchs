@@ -2,6 +2,7 @@
  * Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und
  * leeren Zeilen zum Eintragen in der Halle. Ohne Ausstellernamen (Entscheidung 005). Die Zeilen rechnet
  * `preisverteilung` (packages/domain), das Kontingent `kontingente` – dieselbe Rechnung wie auf der Seite „Preise“.
+ * Gestiftete Preisarten mit „zusätzlich je Preisrichter“ bekommen bei Kontingent je Preisrichter so viele Zeilen.
  */
 import { formatEuro, preisverteilung, type VerteilungArt } from "@schau/domain";
 import { asc, eq } from "drizzle-orm";
@@ -40,6 +41,8 @@ export async function preisverteilungPdf(s: Schau, preisrichterId?: number) {
       betragCent: a.betragCent,
       sachpreis: a.sachpreis,
       verfuegbar: a.quelle === "standgeld" && k ? (k.arten.find((x) => x.preisartId === a.id)?.verfuegbar ?? 0) : null,
+      // Gestiftet mit „zusätzlich je Preisrichter“ (vergebePreis in services/preise.ts): so viele Zeilen je Preisrichter.
+      ...(a.quelle === "stiftung" && jePr && a.anzahlProPreisrichter > 0 ? { mindestZeilen: a.anzahlProPreisrichter } : {}),
     }));
     // Gleiche Zählung wie das Kontingent: alle Preise an Tieren seiner Nummern, in Katalogfolge.
     const vergaben = seine.flatMap((e) =>

@@ -39,6 +39,18 @@ test("gestiftete Preise und Kontingent für die ganze Schau: nur die vergebenen 
   expect(v.gesamtCent).toBe(2500);
 });
 
+test("gestiftet mit „zusätzlich je Preisrichter“: so viele Zeilen wie je Preisrichter, mehr Vergebene sind nicht überzählig", () => {
+  const jePr = { ...gestiftet, mindestZeilen: 2 };
+  const leer = preisverteilung([jePr], []);
+  expect(leer.zeilen.map((x) => `${x.lfd} ${x.kuerzel} ${x.nr || "_"} ${x.betragCent}`)).toEqual(["1 SE _ 1500", "2 SE _ 1500"]);
+  expect([leer.vergebenCent, leer.gesamtCent]).toEqual([0, 3000]);
+  const eins = preisverteilung([jePr], [{ preisartId: 5, nr: "8", betragCent: 2000, zusatz: "Stifter Muster" }]);
+  expect(eins.zeilen.map((x) => `${x.lfd} ${x.nr || "_"} ${x.zusatz}`)).toEqual(["1 8 Stifter Muster", "2 _ "]);
+  // Mehr vergeben (aus Stiftungen für die ganze Schau): alle stehen darin, keine ist „über dem Kontingent“.
+  const drei = preisverteilung([jePr], ["1", "2", "3"].map((nr) => ({ preisartId: 5, nr, betragCent: 1500 })));
+  expect(drei.zeilen.map((x) => `${x.lfd} ${x.nr} ${x.ueberKontingent}`)).toEqual(["1 1 false", "2 2 false", "3 3 false"]);
+});
+
 test("mehr vergeben als das Kontingent (z. B. nachträglich fehlende Tiere): alle Vergaben, die überzähligen markiert", () => {
   const v = preisverteilung([z, pokal], [
     { preisartId: 3, nr: "1", betragCent: 500 },

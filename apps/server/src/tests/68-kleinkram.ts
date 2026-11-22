@@ -1,9 +1,10 @@
 /**
  * Kleinere Ergänzungen: Rückfrage beim Laden und Entscheiden eines Hallenplan-Entwurfs, wenn der Katalog gedruckt ist
- * oder schon Tiere eingeliefert sind (Entscheidung 017). Teil des Schau-Ablaufs.
+ * oder schon Tiere eingeliefert sind (Entscheidung 017); gestiftete Preise „zusätzlich je Preisrichter“ auf der
+ * Preisverteilung jedes Preisrichters. Teil des Schau-Ablaufs.
  */
 import { describe, expect, test } from "bun:test";
-import { adminKontext, m } from "./kontext";
+import { adminKontext, m, pdfText } from "./kontext";
 
 describe("Hallenplan-Entwurf: Rückfrage nach Druck und Einlieferung", () => {
   const al = () => m.appRouter.createCaller(adminKontext);
@@ -88,5 +89,71 @@ describe("Hallenplan-Entwurf: Rückfrage nach Druck und Einlieferung", () => {
     await m.db.update(m.schema.schau).set({ katalogGedruckt: true }).where(m.eq(m.schema.schau.id, id));
     expect(await al().hallenentwurf.entscheiden({ schauId: id, id: a, bestaetigt: true })).toEqual({ archiviert: 1 });
     expect((await zeile(id)).halle!.breite).toBe(1000);
+  });
+});
+
+describe("Preisverteilung: gestiftet zusätzlich je Preisrichter", () => {
+  const al = () => m.appRouter.createCaller(adminKontext);
+  const hol = async (pfad: string, cookie: string) => (await import("../index")).default.fetch(new Request(`http://test${pfad}`, { headers: { cookie } }));
+  const art = { betragCent: 0, sachpreis: "", quelle: "standgeld" as const, schluesselProTiere: null, anzahlProSchluessel: 1, anzahlProPreisrichter: 0, mindestpunkte: null, rundung: "voll" as const };
+
+  test("je Preisrichter so viele Zeilen wie „zusätzlich je Preisrichter“, vergebene mit Nummer und Stifter", async () => {
+    const cfg = (await import("../config")).config;
+    const pflichtVorher = cfg.zweiFaktorPflichtAdmin;
+    cfg.zweiFaktorPflichtAdmin = false;
+    try {
+      const { neueSitzung } = await import("../auth");
+      const cookie = `schau_sitzung=${await neueSitzung({ benutzerId: adminKontext.benutzer!.id })}`;
+      const { id } = await al().schau.anlegen({ name: "Zusatzpreisschau", ort: "Halle" });
+      const s = await al().schau.get({ id });
+      const [wy] = await al().stammdaten.suche({ versionId: s.stammdatenVersionId!, q: "Wyandotten weiß" });
+      const pos = { farbenschlagId: wy!.id, freitext: "", art: "einzeltier" as const, geschlecht: "1,0", alter: "jung" as const, istAoc: false, istNeuzuechtung: false, eigeneZucht: true, verkaufspreisCent: null };
+      const aussteller = { vorname: "Zora", nachname: "Zusatzgeheim", strasse: "", plz: "", ort: "", telefon: "", email: "", verein: "", kreisverband: "", registriernummer: "", geburtsdatum: null, istPreisrichter: false };
+      const r = await al().meldung.speichern({ schauId: id, aussteller, eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, positionen: Array.from({ length: 3 }, () => pos) });
+      await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
+      await al().katalog.nummernVergeben({ schauId: id });
+      const tiere = (await al().katalog.liste({ schauId: id })).sort((a, b) => a.katalogNr! - b.katalogNr!);
+
+      // Gestiftete Plakette ZP mit 2 zusätzlich je Preisrichter (Betrag der Preisart 5 €), dazu eine Stiftung über 30 €.
+      await al().schau.preisartSpeichern({ schauId: id, ...art, kuerzel: "ZP", name: "Zusatzplakette", betragCent: 500, quelle: "stiftung", anzahlProSchluessel: 0, anzahlProPreisrichter: 2, folge: 90 });
+      const zp = (await al().preise.uebersicht({ schauId: id })).preisarten.find((a) => a.kuerzel === "ZP")!;
+      await al().preise.stiftungSpeichern({ schauId: id, stifter: "Kreisverband Süd", preisartId: zp.id, anzahl: 1, betragCent: 3000, vorgabe: "", eingegangenAm: null });
+      for (const name of ["Carla Cedrus", "Dora Douglasie"]) await al().preisrichter.speichern({ schauId: id, name, anschrift: "", telefon: "", email: "", istObmann: false, sparten: [] });
+      const [carla, dora] = (await m.db.select().from(m.schema.preisrichter).where(m.eq(m.schema.preisrichter.schauId, id))).sort((a, b) => a.name.localeCompare(b.name));
+      await al().preisrichter.einteilungSetzen({ schauId: id, einteilung: [{ preisrichterId: carla!.id, vonNr: tiere[0]!.katalogNr!, bisNr: tiere[2]!.katalogNr! }] });
+
+      await m.db.update(m.schema.schau).set({ phase: "bewertung" }).where(m.eq(m.schema.schau.id, id));
+      for (const t of tiere) {
+        await m.db.update(m.schema.katalogeintrag).set({ status: "eingeliefert" }).where(m.eq(m.schema.katalogeintrag.id, t.id));
+        await al().bewertung.setzen({ schauId: id, katalogeintragId: t.id, punkte: 94, sondernote: null, vorzuege: "", wuensche: "", maengel: "", geraetZeit: new Date(), grund: "" } as never);
+      }
+      await m.db.update(m.schema.schau).set({ phase: "preise" }).where(m.eq(m.schema.schau.id, id));
+      await al().preise.vergeben({ schauId: id, katalogeintragId: tiere[1]!.id, preisartId: zp.id });
+
+      const blatt = async (pr: number) => pdfText(Buffer.from(await (await hol(`/datei/${id}/preisverteilung.pdf?preisrichter=${pr}`, cookie)).arrayBuffer()));
+      const c = await blatt(carla!.id);
+      // Carla: zwei Zeilen ZP – die vergebene (aus der Stiftung, 30 €) mit Nummer und Stifter, eine leer zu 5 €.
+      expect(c.match(/ZP Zusatzplakette/g)!.length).toBe(2);
+      expect(c).toMatch(new RegExp(`\\b1\\s+ZP Zusatzplakette\\s+${tiere[1]!.katalogNr}\\s+30,00 €\\s+Kreisverband Süd`));
+      expect(c).toMatch(/\b2\s+ZP Zusatzplakette\s+5,00/);
+      expect(c).not.toContain("über dem Kontingent");
+      expect(c).not.toContain("Zusatzgeheim");
+      // Dora ohne Tiere: ihre zwei Zeilen leer zum Eintragen.
+      const d = await blatt(dora!.id);
+      expect(d.match(/ZP Zusatzplakette/g)!.length).toBe(2);
+      expect(d).toMatch(/\b1\s+ZP Zusatzplakette\s+5,00[\s\S]*\b2\s+ZP Zusatzplakette\s+5,00/);
+
+      // Mehr vergeben als je Preisrichter (Stiftung plus zwei zusätzliche): alle stehen darin, keine überzählig.
+      for (const i of [0, 2]) await al().preise.vergeben({ schauId: id, katalogeintragId: tiere[i]!.id, preisartId: zp.id, ohneStiftung: true });
+      const mehr = await blatt(carla!.id);
+      expect(mehr.match(/ZP Zusatzplakette/g)!.length).toBe(3);
+      expect(mehr).not.toContain("über dem Kontingent");
+
+      // Kontingent für die ganze Schau: nur das Vergebene – Dora hat keine Zeile.
+      await m.db.update(m.schema.schau).set({ kontingentJe: "schau" }).where(m.eq(m.schema.schau.id, id));
+      expect(await blatt(dora!.id)).not.toContain("ZP Zusatzplakette");
+    } finally {
+      cfg.zweiFaktorPflichtAdmin = pflichtVorher;
+    }
   });
 });

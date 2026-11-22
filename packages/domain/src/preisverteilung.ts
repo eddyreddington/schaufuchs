@@ -2,7 +2,7 @@
  * Preisverteilung eines Preisrichters (Blatt für die Preisvergabe in der Halle): je Preisart so viele Zeilen, wie der
  * Preisrichter vergeben darf. Schon vergebene Preise stehen mit Katalognummer darin, die übrigen Zeilen bleiben leer
  * zum Eintragen. Preisarten ohne Kontingent je Preisrichter (gestiftete Preise, Kontingent für die ganze Schau) zeigen
- * nur die vergebenen.
+ * nur die vergebenen – außer gestifteten mit „zusätzlich je Preisrichter“: davon so viele Zeilen wie je Preisrichter.
  */
 
 /** Eine Preisart der Schau, in Druckfolge. */
@@ -16,6 +16,11 @@ export interface VerteilungArt {
   sachpreis: string;
   /** Kontingent dieses Preisrichters; null: keins je Preisrichter (Stiftung, Kontingent für die ganze Schau). */
   verfuegbar: number | null;
+  /**
+   * Ohne Kontingent mindestens so viele Zeilen (gestiftete Preisart mit „zusätzlich je Preisrichter“). Mehr Vergebene
+   * kommen aus Stiftungen für die ganze Schau und sind nicht überzählig.
+   */
+  mindestZeilen?: number;
 }
 
 /** Ein vergebener Preis an einem Tier dieses Preisrichters, in Katalogfolge. */
@@ -57,7 +62,7 @@ export function preisverteilung(arten: VerteilungArt[], vergaben: VerteilungVerg
   const zeilen: VerteilungZeile[] = [];
   for (const a of arten) {
     const vergeben = vergaben.filter((v) => v.preisartId === a.preisartId);
-    const anzahl = Math.max(a.verfuegbar ?? 0, vergeben.length);
+    const anzahl = Math.max(a.verfuegbar ?? a.mindestZeilen ?? 0, vergeben.length);
     const zuViel = a.verfuegbar == null ? 0 : Math.max(0, vergeben.length - a.verfuegbar);
     const ueber = new Set([...vergeben.filter((v) => v.fehlt), ...vergeben.filter((v) => !v.fehlt).reverse()].slice(0, zuViel));
     for (let i = 0; i < anzahl; i++) {
