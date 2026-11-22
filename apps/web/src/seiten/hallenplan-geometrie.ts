@@ -265,21 +265,19 @@ export const innen = (q: Rechteck, a: Rechteck) => q.x >= a.x - 0.5 && q.y >= a.
 
 /**
  * Grundplatten, Käfigblöcke und Volieren, wie sie im Entwurf stehen (Lage und Front), als Kandidaten für die
- * Wandausrichtung (siehe wandAusrichtung). `nur`: nur diese Teile (eine Reihe steht für ihre Platten).
+ * Ausrichtung (siehe wandAusrichtung, ausrichtungBeimStellen).
  */
-export function wandKandidatenImEntwurf(halle: Halle, plan: NonNullable<Daten["plan"]>, nur: HallenTeil[] | null): WandKandidat[] {
+export function wandKandidatenImEntwurf(halle: Halle, plan: NonNullable<Daten["plan"]>): WandKandidat[] {
   const aus: WandKandidat[] = [];
   for (const k of planKoerper(halle, plan)) {
     const t = k.teil;
     if (t?.art === "platte") {
-      if (nur && !nur.some((n) => (n.art === "platte" && n.reihe === t.reihe && n.i === t.i) || (n.art === "reihe" && n.nr === t.reihe))) continue;
       const reihe = plan.reihen.find((r) => r.nr === t.reihe);
       const pl = reihe?.platten[t.i];
       if (!reihe || !pl) continue;
       const front = dreheBlick(frontDerReihe(reihe, plan.quer, pl.drehung ?? 0), reihenLage(halle, reihe).vorschauDrehung(t.i));
       aus.push({ teil: t, rechteck: k.rechteck, front, belegt: pl.belegt });
     } else if (t?.art === "objekt") {
-      if (nur && !nur.some((n) => n.art === "objekt" && n.id === t.id)) continue;
       const o = plan.objekte.find((x) => x.id === t.id);
       const e = (halle.objekte ?? []).find((x) => x.id === t.id);
       if (!o || !e || (o.art !== "kaefigblock" && o.art !== "voliere")) continue;

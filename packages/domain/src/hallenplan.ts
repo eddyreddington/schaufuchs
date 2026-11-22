@@ -290,7 +290,7 @@ export function planeHalle(eingabe: Halle, tiere: PlanTier[], masse: KaefigMasse
  * Reihen meldet das schon „… steht im Gang vor R…“). Je Reihe höchstens ein Hinweis, z. B. „R3: Front zu R4“,
  * „Block 40 × 40 × 40 cm: Front zur Wand“.
  */
-export function frontFehler(halle: Pick<Halle, "breite" | "laenge" | "gang" | "flaechen">, plan: Pick<Hallenplan, "quer" | "reihen" | "objekte" | "volieren">): string[] {
+export function frontFehler(halle: Pick<Halle, "breite" | "laenge" | "gang" | "flaechen"> & Partial<Pick<Halle, "umriss">>, plan: Pick<Hallenplan, "quer" | "reihen" | "objekte" | "volieren">): string[] {
   const T = 0.5;
   const ueber = (a: Rechteck, b: Rechteck) => a.x < b.x + b.b - T && b.x < a.x + a.b - T && a.y < b.y + b.h - T && b.y < a.y + a.h - T;
   const innen = (q: Rechteck) => q.x >= -T && q.y >= -T && q.x + q.b <= halle.breite + T && q.y + q.h <= halle.laenge + T;
@@ -298,14 +298,17 @@ export function frontFehler(halle: Pick<Halle, "breite" | "laenge" | "gang" | "f
     ...plan.reihen.flatMap((r) => r.platten.filter((pl) => !pl.entfernt).map((pl) => ({ name: `R${r.nr}`, q: pl.rechteck, moebel: false }))),
     ...plan.objekte.map((o) => ({ name: o.name, q: o.rechteck, moebel: istMoebel(o) })),
     ...plan.volieren.map((v) => ({ name: `Voliere${v.nr ? ` Nr. ${v.nr}` : ""}`, q: v.rechteck, moebel: false })),
-    ...halle.flaechen.filter((f) => f.art === "sperre").map((f) => ({ name: `„${f.name}“`, q: { x: f.x, y: f.y, b: f.breite, h: f.tiefe }, moebel: false })),
+    // Außerhalb eines freien Grundrisses ist Wand (Entscheidung 019) – auch wenn die Halle die Sperrflächen nicht mitbringt.
+    ...mitUmrissSperren({ umriss: halle.umriss, flaechen: halle.flaechen })
+      .flaechen.filter((f) => f.art === "sperre")
+      .map((f) => ({ name: `„${f.name}“`, q: { x: f.x, y: f.y, b: f.breite, h: f.tiefe }, moebel: false, wand: !!f.aussen })),
   ];
   // Tische und Bänke dürfen vor Käfigen stehen (Rückmeldung 14.11.2026) – sie zählen hier nicht.
   const fehler = (q: Rechteck, blick: Blick, _mitMoebel: boolean): string | null => {
     const s = streifenVor(q, blick, Math.max(0, halle.gang));
     // Was direkt davor steht, zuerst nennen; sonst die Wand.
     const h = hindernisse.find((x) => x.q !== q && !x.moebel && ueberlappt(s, x.q));
-    if (h) return `Front zu ${h.name}`;
+    if (h) return "wand" in h && h.wand ? "Front zur Wand" : `Front zu ${h.name}`;
     return innen(s) ? null : "Front zur Wand";
   };
   const aus: string[] = [];

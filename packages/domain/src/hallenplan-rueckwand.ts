@@ -1,72 +1,73 @@
 /**
- * Käfige aneinander mit der Rückwand an die Rückwand (Wunsch des Vereins: „Wenn Käfige aneinander gestellt werden, richte sie
- * automatisch so aus, dass die Rückwände aneinander stehen und nicht die Front verdecken.“). Zwei Teile (Grundplatte,
- * Käfigblock, eingesetzte Voliere) stehen aneinander, wenn eine Front- oder Rückseite des einen einer Front- oder Rückseite des
- * anderen gegenübersteht – bündig oder bis `WAND_FANG` – und sie sich entlang dieser Seite überlappen (Ecke an Ecke und
- * Seitenwand an Seitenwand zählen nicht). Zeigt die Front eines eben gestellten Teils auf ein anliegendes Teil, ist sie verdeckt:
- * Das Teil dreht an Ort und Stelle um 180° – nur das bewegte, nie der ruhende Nachbar – und nur, wenn seine Front danach weder
- * an einer Wand noch an einem anderen Teil liegt. Zuerst gilt die Wand (`wandAusrichtung`), dann die Nachbarn: So dreht nichts
- * hin und her. Reine Rechnung.
+ * Käfige ausrichten, wenn sie gestellt werden (Verschieben, Pfeiltasten, Einsetzen, Drehen) – Rückwand an die Wand und
+ * Rückwand an Rückwand (Wunsch des Vereins: „Wenn Käfige aneinander gestellt werden, richte sie automatisch so aus, dass die
+ * Rückwände aneinander stehen und nicht die Front verdecken.“; Entscheidung 029).
+ *
+ * Die Front eines eben gestellten Teils (Grundplatte, Käfigblock, eingesetzte Voliere) ist verdeckt, wenn sie zu einer Wand
+ * zeigt (lange Seite bis `WAND_FANG` an der Hallenwand oder einer Innenwand des Grundrisses) oder ein anderes Teil an ihr
+ * anliegt (bis `WAND_FANG`, mit dessen Front, Rück- oder Seitenwand, mindestens `UEBERLAPP_MIN` überlappend). Dann dreht das
+ * Teil an Ort und Stelle um 180° – aber nur, wenn die Gegenrichtung frei ist: nach einer Wand nicht direkt an einem Teil oder
+ * einer Wand, nach einem Nachbarn ein ganzer Gang (Gangbreite, wie `frontFehler`). Sonst bleibt alles, wie es ist. Es dreht nur,
+ * was gestellt wurde, nie der ruhende Nachbar. Erst die Wand, dann die Nachbarn: So dreht nichts hin und her. Reine Rechnung.
  */
-import type { Blick, Halle, Rechteck } from "./hallenplan";
+import { streifenVor, ueberlappt } from "./hallenplan-rechtecke";
+import type { Halle, Hallenplan, Rechteck } from "./hallenplan-typen";
 import type { HallenTeil } from "./hallenplan-gruppe";
-import { kandidatGewaehlt, WAND_FANG, wandAusrichtung, type WandDrehung, type WandKandidat } from "./hallenplan-wandfront";
+import { gegen, gegenueber, innenWaende, kandidatGewaehlt, liegtAn, WAND_FANG, wandSoll, type WandDrehung, type WandKandidat } from "./hallenplan-wandfront";
 
-/** Rechenspiel (cm): so viel Überschneidung gilt noch als bündig, so viel Überlappung entlang der Seite noch als Ecke. */
 const T = 0.5;
-
-const gegen = (b: Blick): Blick => `${b[0]}${b[1] === "+" ? "-" : "+"}` as Blick;
 const gleichesTeil = (a: WandKandidat["teil"], b: WandKandidat["teil"]) =>
   a.art === "platte" ? b.art === "platte" && a.reihe === b.reihe && a.i === b.i : b.art === "objekt" && a.id === b.id;
 
-/** Abstand (cm) von der Seite `blick` von q bis zur gegenüberliegenden Seite von n und die Überlappung entlang der Seite. */
-function gegenueber(q: Rechteck, blick: Blick, n: Rechteck): { abstand: number; ueberlappt: number } {
-  const x = blick[0] === "x";
-  const abstand =
-    blick === "x+" ? n.x - (q.x + q.b) : blick === "x-" ? q.x - (n.x + n.b) : blick === "z+" ? n.y - (q.y + q.h) : q.y - (n.y + n.h);
-  const ueberlappt = x ? Math.min(q.y + q.h, n.y + n.h) - Math.max(q.y, n.y) : Math.min(q.x + q.b, n.x + n.b) - Math.max(q.x, n.x);
-  return { abstand, ueberlappt };
-}
+/** Ruhende Nachbarn, die nie selbst drehen: die Volieren im Volierenbereich. */
+export const ruhendeNachbarn = (plan: Pick<Hallenplan, "volieren">): Rechteck[] => plan.volieren.map((v) => v.rechteck);
 
-const liegtAn = (q: Rechteck, blick: Blick, n: Rechteck, fang: number) => {
-  const g = gegenueber(q, blick, n);
-  return g.abstand >= -T && g.abstand <= fang && g.ueberlappt > T;
-};
-
-/**
- * Teil, das an der Seite `blick` von k anliegt: mit seiner Front- oder Rückseite (Front parallel zu `blick`) – nur dann
- * stehen zwei Teile Front bzw. Rücken aneinander. `jedeSeite`: auch ein Teil, das mit einer Seitenwand dort steht.
- */
-export function anliegend(k: WandKandidat, blick: Blick, alle: WandKandidat[], fang = WAND_FANG, jedeSeite = false): WandKandidat | null {
-  return alle.find((n) => !gleichesTeil(n.teil, k.teil) && (jedeSeite || n.front[0] === blick[0]) && liegtAn(k.rechteck, blick, n.rechteck, fang)) ?? null;
-}
-
-/** Liegt die Seite `blick` an einer Hallenwand (bündig oder bis `fang`)? */
-const anWand = (halle: Pick<Halle, "breite" | "laenge">, q: Rechteck, blick: Blick, fang: number) =>
+/** Liegt die Seite `blick` an der Hallenwand (bündig oder bis `fang`)? */
+const anWand = (halle: Pick<Halle, "breite" | "laenge">, q: Rechteck, blick: string, fang: number) =>
   blick === "x+" ? q.x + q.b >= halle.breite - fang : blick === "x-" ? q.x <= fang : blick === "z+" ? q.y + q.h >= halle.laenge - fang : q.y <= fang;
 
 /**
- * Was nach dem Stellen (Verschieben, Pfeiltasten) zu drehen ist, je um 180° an Ort und Stelle: `wand` – Front zur Wand
- * (`wandAusrichtung`), `ruecken` – Front an einem anliegenden Teil. `alle`: alle Kandidaten im Plan (auch die ruhenden
- * Nachbarn), `nur`: die bewegten Teile (eine Reihe steht für ihre Platten); null = alle. Nur bewegte Teile drehen.
+ * Was beim Stellen zu drehen ist, je um 180° an Ort und Stelle: `wand` – Front zu einer Wand, `ruecken` – Front an einem
+ * anliegenden Teil. `alle`: alle Kandidaten im Plan (auch die ruhenden), `nur`: die gestellten Teile (eine Reihe steht für
+ * ihre Platten; null = alle), `ruhend`: weitere Nachbarn, die nie drehen (`ruhendeNachbarn`).
  */
 export function ausrichtungBeimStellen(
-  halle: Pick<Halle, "breite" | "laenge">,
+  halle: Pick<Halle, "breite" | "laenge" | "gang" | "flaechen"> & Partial<Pick<Halle, "umriss">>,
   alle: WandKandidat[],
   nur: HallenTeil[] | null,
+  ruhend: Rechteck[] = [],
   fang = WAND_FANG,
 ): { wand: WandDrehung[]; ruecken: WandDrehung[] } {
-  const wand = wandAusrichtung(halle, alle.filter((k) => kandidatGewaehlt(k.teil, nur)), fang);
-  // Fronten nach der Wand-Ausrichtung; jede Drehung gilt sofort für die folgenden Teile.
-  const jetzt = alle.map((k) => ({ ...k, front: wand.find((d) => gleichesTeil(d.teil, k.teil))?.front ?? k.front }));
+  const innen = innenWaende(halle);
+  const sperren = halle.flaechen.filter((f) => f.art === "sperre").map((f) => ({ x: f.x, y: f.y, b: f.breite, h: f.tiefe }));
+  const jetzt = alle.map((k) => ({ ...k }));
+  const andere = (k: WandKandidat) => [...jetzt.filter((n) => !gleichesTeil(n.teil, k.teil)).map((n) => n.rechteck), ...ruhend];
+  // Nicht direkt verdeckt: keine Wand, keine Innenwand und kein Teil bis `fang` vor der Seite.
+  const direktFrei = (k: WandKandidat, b: WandKandidat["front"]) => !anWand(halle, k.rechteck, b, fang) && ![...andere(k), ...innen].some((n) => liegtAn(k.rechteck, b, n, fang));
+  // Ein ganzer Gang frei (wie `frontFehler`): in der Halle, ohne Teil, Innenwand oder Sperrfläche; Möbel zählen nicht.
+  const gangFrei = (k: WandKandidat, b: WandKandidat["front"]) => {
+    const s = streifenVor(k.rechteck, b, Math.max(halle.gang, fang + 1));
+    const drin = s.x >= -T && s.y >= -T && s.x + s.b <= halle.breite + T && s.y + s.h <= halle.laenge + T;
+    return drin && ![...andere(k), ...innen, ...sperren].some((n) => ueberlappt(s, n));
+  };
+  const gestellt = jetzt.map((k, i) => ({ k, i })).filter(({ k }) => kandidatGewaehlt(k.teil, nur));
+
+  const wand: WandDrehung[] = [];
+  for (const { k, i } of gestellt) {
+    const soll = wandSoll(halle, k.rechteck, fang, innen);
+    if (!soll || !gegenueber(k.front, soll) || !direktFrei(k, soll)) continue;
+    wand.push({ teil: k.teil, grad: 180, front: soll, belegt: k.belegt });
+    jetzt[i] = { ...k, front: soll };
+  }
   const ruecken: WandDrehung[] = [];
-  jetzt.forEach((k, i) => {
-    if (!kandidatGewaehlt(k.teil, nur) || wand.some((d) => gleichesTeil(d.teil, k.teil))) return;
-    if (!anliegend(k, k.front, jetzt, fang)) return;
+  for (const { i } of gestellt) {
+    const k = jetzt[i]!;
+    if (wand.some((d) => gleichesTeil(d.teil, k.teil))) continue;
+    if (!andere(k).some((n) => liegtAn(k.rechteck, k.front, n, fang))) continue;
     const neu = gegen(k.front);
-    if (anWand(halle, k.rechteck, neu, fang) || anliegend(k, neu, jetzt, fang, true)) return;
+    if (!gangFrei(k, neu)) continue;
     ruecken.push({ teil: k.teil, grad: 180, front: neu, belegt: k.belegt });
     jetzt[i] = { ...k, front: neu };
-  });
+  }
   return { wand, ruecken };
 }

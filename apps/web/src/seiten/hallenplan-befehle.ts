@@ -170,7 +170,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
   /** Alle Käfige an den Wänden mit der Rückwand an die Wand drehen (für Pläne von vorher, z. B. von Hand an die Wand geschoben). */
   const anWaendenAusrichten = async () => {
     await kette.current.catch(() => {});
-    const d = wandAusrichtung(entwurfRef.current, wandKandidatenImEntwurf(entwurfRef.current, plan, null));
+    const d = wandAusrichtung(entwurfRef.current, wandKandidatenImEntwurf(entwurfRef.current, plan));
     if (!d.length) return meldung(tb.alleAnWand);
     if (
       !(await bestaetige({
@@ -180,7 +180,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
       }))
     )
       return;
-    aendern((h) => wandDrehungenAnwenden(h, wandAusrichtung(h, wandKandidatenImEntwurf(h, plan, null))), {
+    aendern((h) => wandDrehungenAnwenden(h, wandAusrichtung(h, wandKandidatenImEntwurf(h, plan))), {
       ...zweisprachig((x) => x.halleWerkzeuge.befehle.wandWas),
       grund: `An den Wänden ausgerichtet: ${d.length} ${d.length === 1 ? "Teil" : "Teile"} gedreht`, // bleibt deutsch (Protokoll)
       festschreiben: d.some((x) => x.teil.art === "platte"),
