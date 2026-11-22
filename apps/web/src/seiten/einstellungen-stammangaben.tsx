@@ -190,8 +190,15 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
                 )}
               </Feld>
               <Feld label={ts.ersteNummer}>{(fid) => <Eingabe id={fid} type="number" min={1} value={d.katalogStart} onChange={(e) => set("katalogStart", Number(e.target.value))} />}</Feld>
+              <Feld label={ts.jugendImKatalog} hinweis={s.katalogGedruckt ? ts.festgeschrieben : <HilfeLink abschnitt="jugend-im-katalog">{ts.hilfeJugend}</HilfeLink>}>
+                {(fid) => (
+                  <Auswahl id={fid} value={d.jugendSeparat ? "block" : "eingereiht"} disabled={s.katalogGedruckt} onChange={(e) => set("jugendSeparat", e.target.value === "block")}>
+                    <option value="block">{ts.jugendAmEnde}</option>
+                    <option value="eingereiht">{ts.jugendEingereiht}</option>
+                  </Auswahl>
+                )}
+              </Feld>
               <div className="flex flex-col gap-2 md:col-span-2">
-                <Haken label={ts.jugendBlock} checked={d.jugendSeparat} onChange={(v) => set("jugendSeparat", v)} disabled={s.katalogGedruckt} />
                 <Haken label={ts.staemmeVorn} checked={d.staemmeVorn} onChange={(v) => set("staemmeVorn", v)} disabled={s.katalogGedruckt} hinweis={s.katalogGedruckt ? ts.festgeschrieben : undefined} />
               </div>
               <KaefigFolge wert={d.kaefigFolge} setzen={(f) => set("kaefigFolge", f)} gesperrt={s.katalogGedruckt} masse={s.kaefigMasse} />

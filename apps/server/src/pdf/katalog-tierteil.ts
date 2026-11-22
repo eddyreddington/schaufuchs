@@ -2,7 +2,7 @@
  * Katalog-PDF, Tierteil: zwei oder drei Spalten bzw. Tabelle, Spartenköpfe mit Stich, Rassenköpfe mit Rassebild,
  * Preisrichter-, Klassen- und Tierzeilen; Teilschauen und Jugend nacheinander. Liefert das Register der Rassen.
  */
-import { formatEuro, formatKatalognummer, gruppenAbteilung, MELDEART_LABEL } from "@schau/domain";
+import { formatEuro, formatKatalognummer, gruppenAbteilung, istJugendBlock, MELDEART_LABEL } from "@schau/domain";
 import { oeffneBild } from "../services/rassebild";
 import { ausstellerAnzeige, type Eintrag } from "../services/eintraege";
 import { GRAU, HAARLINIE, MM, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, SERIF_KURSIV, textImFeld, TINTE } from "./basis";
@@ -146,8 +146,8 @@ export function tierteilSetzen(K: KatalogKontext) {
   const teilschauGruppen = [...new Map(tierteilListe.map((e) => [e.teilschauFolge, e.teilschauName ?? ""] as const)).entries()].sort((a, b) => a[0] - b[0]);
   for (const [folge, name] of teilschauGruppen) {
     const liste = tierteilListe.filter((e) => e.teilschauFolge === folge);
-    const erwachsen = liste.filter((e) => !(s.jugendSeparat && e.istJugend));
-    const jugend = s.jugendSeparat ? liste.filter((e) => e.istJugend) : [];
+    const erwachsen = liste.filter((e) => !istJugendBlock(e, s));
+    const jugend = liste.filter((e) => istJugendBlock(e, s));
     if (erwachsen.length) {
       imTierteil = false; // jede Teilschau beginnt auf neuer Seite
       tierteil(erwachsen, name);

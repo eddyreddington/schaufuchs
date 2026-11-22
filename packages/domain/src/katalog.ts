@@ -192,13 +192,21 @@ function abteilungFolge(art: Meldeart, staemmeVorn: boolean | undefined): number
   return a === "Volieren" ? 0 : a === "Stämme" ? 1 : 2;
 }
 
+/**
+ * Steht das Tier im eigenen Jugendblock (Einstellung „Jugend im Katalog: eigener Block am Ende“)? Bei „in der Rasse
+ * eingereiht“ nie – dann ist die Jugend keine eigene Abteilung in Katalog, Kurzkatalog und Ergebnissen.
+ */
+export function istJugendBlock(e: { istJugend: boolean }, opts: { jugendSeparat: boolean }): boolean {
+  return opts.jugendSeparat && e.istJugend;
+}
+
 export function vergleicheFolge(a: FolgeEintrag, b: FolgeEintrag, opts: FolgeOptionen): number {
   const schritte = sortierungNormal(opts.sortierung).filter((s) => !s.aus);
   // Stehen die Tiere eines Ausstellers nicht zusammen, gilt bei sonst Gleichem der Meldeeingang.
   const mitAussteller = schritte.some((s) => s.kriterium === "aussteller" || s.kriterium === "ausstellernummer");
   const keys = (e: FolgeEintrag): (number | string)[] => [
     e.teilschauFolge ?? 0,
-    opts.jugendSeparat ? (e.istJugend ? 1 : 0) : 0,
+    istJugendBlock(e, opts) ? 1 : 0,
     blockFolge(e, opts.kaefigFolge),
     abteilungFolge(e.art, opts.staemmeVorn),
     ...schritte.flatMap((s) => schluessel(e, s)),

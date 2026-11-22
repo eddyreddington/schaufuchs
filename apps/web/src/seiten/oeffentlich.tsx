@@ -1,4 +1,4 @@
-import { datumIn, euroIn, gefordertCent, gruppenAbteilung, normalisiereRegistriernummer, oeffnungszeitenZeilen, type AdressVorschlaege, type KaefigMasse, type KaefigRegel, type Sprache, type Texte } from "@schau/domain";
+import { datumIn, euroIn, gefordertCent, gruppenAbteilung, istJugendBlock, normalisiereRegistriernummer, oeffnungszeitenZeilen, type AdressVorschlaege, type KaefigMasse, type KaefigRegel, type Sprache, type Texte } from "@schau/domain";
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AusstellerFelder, leererAussteller } from "../komponenten/aussteller";
@@ -509,7 +509,7 @@ export function Ergebnisse() {
     const map = new Map<string, typeof tiere>();
     for (const t of tiere) {
       // Jugend, Volieren und Stämme bilden eigene Blöcke wie im Katalog.
-      const jugend = t.istJugend && e.data?.freigegeben && e.data.jugendSeparat ? `${tx.ergebnisse.jugend} – ` : "";
+      const jugend = e.data?.freigegeben && istJugendBlock(t, e.data) ? `${tx.ergebnisse.jugend} – ` : "";
       const abteilung = e.data?.freigegeben && gruppenAbteilung(t.art, e.data.staemmeVorn) ? tx.abteilung[t.art as "stamm" | "voliere"] : null;
       const k = `${jugend}${abteilung ? `${abteilung} – ` : ""}${t.sparte}: ${t.bezeichnung}`;
       map.set(k, [...(map.get(k) ?? []), t]);

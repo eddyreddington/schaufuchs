@@ -2,7 +2,7 @@
  * Katalog-PDF, Grundlage für alle Teile: lädt die Daten der Schau, legt das PDF an und stellt die gemeinsamen
  * Satzhilfen bereit (Seiten, Inhaltsverzeichnis, Gliederung, Seitentitel, Absätze, Angabenlisten, Stiche).
  */
-import { bewertungsText, gruppenAbteilung, KATALOG_LINIEN_INFO, type KatalogGliederungsTeil, type KatalogSeitenbereich, STANDARD_NOTENSKALA } from "@schau/domain";
+import { bewertungsText, gruppenAbteilung, istJugendBlock, KATALOG_LINIEN_INFO, type KatalogGliederungsTeil, type KatalogSeitenbereich, STANDARD_NOTENSKALA } from "@schau/domain";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import PDFDocument from "pdfkit";
 import { db } from "../db/client";
@@ -59,7 +59,7 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
   const alle = verdeckeNamen(roh, opts.online ? "online" : "druck");
   const eintraege = alle.filter((e) => e.katalogNr != null);
   // Tierteil, Rassebilder und Ausstellerverzeichnis; Kennzahlen, Preisrichter und Ehrentafel zählen immer alle Tiere.
-  const tierteilListe = opts.kurz ? kurzauswahl(eintraege, (e) => `${gruppenAbteilung(e.art, s.staemmeVorn) ?? e.sparte ?? ""}|${e.istJugend}`) : eintraege;
+  const tierteilListe = opts.kurz ? kurzauswahl(eintraege, (e) => `${gruppenAbteilung(e.art, s.staemmeVorn) ?? e.sparte ?? ""}|${istJugendBlock(e, s)}`) : eintraege;
   // Rassebilder des Vereins für die Rassen dieser Schau – nur geprüfte (automatisch gefundene erst nach dem Prüfen).
   const rassenNamen = [...new Set(tierteilListe.map((e) => e.rasse ?? e.einordnungRasse ?? "").filter(Boolean))];
   const rassebilder = rassenNamen.length
