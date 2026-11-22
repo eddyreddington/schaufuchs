@@ -1335,7 +1335,6 @@
   "uv",
   "rgba(0,0,0,0)",
   "rgba(0,0,0,0.045)",
-  "#f6f4ee",
   "#dcc29a",
   "#d8bd93",
   "#dfc6a0",
@@ -1343,9 +1342,7 @@
   "#dbc198",
   "#d9bf95",
   "rgba(120,85,45,0.10)",
-  "rgba(110,75,40,0.45)",
-  "#dde9f2",
-  "#c3cfd8"
+  "rgba(110,75,40,0.45)"
  ],
  "apps/web/src/seiten/hallenplan-3d-landschaft.ts": [
   "#e4ecf2",
@@ -1420,11 +1417,7 @@
   "aria-label",
   "Halle räumlich",
   "Halle",
-  "#e4efff",
-  "#fff1dc",
-  "#ecdcbc",
   "position",
-  "#dccaa5",
   "#cfd4dc",
   "#d6e8dc",
   "#ffffff",

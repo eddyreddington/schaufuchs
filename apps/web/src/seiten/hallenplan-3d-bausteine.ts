@@ -1,4 +1,4 @@
-/** Bausteine der 3D-Halle: Texturen (Gitter, Stoff, Turnhallenwand), Geometrien (Kasten, Schürzen, Innenseiten), Figuren, Schilder. */
+/** Bausteine der 3D-Halle: Texturen (Gitter, Stoff), Geometrien (Kasten, Schürzen, Innenseiten), Figuren, Schilder. */
 import { verkleidungsKachel, type SzeneSchuerze, type WandInnenseite, type Figur, type HallenSzene } from "@schau/domain";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -80,7 +80,7 @@ export function schildSprite(text: string): THREE.Sprite {
   g.fillText(text, 14, c.height / 2 + 2);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false }));
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, toneMapped: false }));
   const h = 0.32;
   sp.scale.set((h * c.width) / c.height, h, 1);
   return sp;
@@ -225,64 +225,10 @@ export function stoffKachel(farbe: string, hoehe: number, logo: HTMLCanvasElemen
   return { canvas: c, laenge: k.laenge };
 }
 
-/** Länge einer Kachel der Turnhallen-Wand entlang der Wand (cm). */
-export const TURNHALLE_KACHEL = 120;
-
-/**
- * Innenseite einer Turnhalle als Textur, 120 cm breit und so hoch wie die Wand: unten Holz-Prallwand (helle Birke, senkrechte
- * Paneele mit Stoßfugen) bis 2 m, Abschlussleiste, ein schmales gedecktes Blau, darüber hell gestrichen, oben ein Lichtband.
- */
-export function turnhallenWand(wandHoehe: number): THREE.CanvasTexture {
-  const pxCm = 3;
-  const c = document.createElement("canvas");
-  c.width = TURNHALLE_KACHEL * pxCm;
-  c.height = Math.round(wandHoehe * pxCm);
-  const g = c.getContext("2d")!;
-  const yVon = (cm: number) => c.height - cm * pxCm; // cm über dem Boden → Pixel von oben
-  const band = (von: number, bis: number, farbe: string) => {
-    g.fillStyle = farbe;
-    g.fillRect(0, yVon(bis), c.width, (bis - von) * pxCm);
-  };
-  // Anstrich.
-  band(0, wandHoehe, "#f6f4ee");
-  // Prallwand: Paneele 20 cm breit, Ton leicht wechselnd, feine Maserung, dunklere Fugen.
-  const holz = ["#dcc29a", "#d8bd93", "#dfc6a0", "#d6ba8f", "#dbc198", "#d9bf95"];
-  for (let i = 0; i < TURNHALLE_KACHEL / 20; i++) {
-    g.fillStyle = holz[i % holz.length]!;
-    g.fillRect(i * 20 * pxCm, yVon(200), 20 * pxCm, 200 * pxCm);
-    g.strokeStyle = "rgba(120,85,45,0.10)";
-    g.lineWidth = 1;
-    for (let k = 0; k < 4; k++) {
-      const x = (i * 20 + 3 + k * 4.5) * pxCm;
-      g.beginPath();
-      g.moveTo(x, yVon(200));
-      g.lineTo(x + ((k % 2) * 2 - 1) * 2, yVon(0));
-      g.stroke();
-    }
-    g.fillStyle = "rgba(110,75,40,0.45)";
-    g.fillRect(i * 20 * pxCm, yVon(200), 1, 200 * pxCm);
-  }
-  band(200, 205, "#b98d58"); // Abschlussleiste
-  band(205, 220, "#46709a"); // Farbband (gedecktes Blau)
-  // Lichtband unter der Decke: leicht bläulich, mit Pfosten.
-  const lichtVon = Math.max(230, wandHoehe - 50), lichtBis = wandHoehe - 12;
-  if (lichtBis > lichtVon) {
-    band(lichtVon, lichtBis, "#dde9f2");
-    g.fillStyle = "#c3cfd8";
-    for (let x = 0; x < TURNHALLE_KACHEL; x += 60) g.fillRect(x * pxCm, yVon(lichtBis), 2 * pxCm, (lichtBis - lichtVon) * pxCm);
-    band(lichtVon - 2, lichtVon, "#c3cfd8");
-    band(lichtBis, lichtBis + 2, "#c3cfd8");
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 4;
-  return t;
-}
-
 /** Fläche auf der Innenseite eines Wandstücks (Meter), 0,5 cm vor der Wand; u in cm entlang der Wand, v = Höhe / Wandhöhe. */
 export function innenseitenGeometrie(f: WandInnenseite, s: HallenSzene): THREE.BufferGeometry {
-  const ab = 0.5;
-  const ebene = f.seite === "x0" ? ab : f.seite === "x1" ? s.breite - ab : f.seite === "z0" ? ab : s.laenge - ab;
+  // 0,5 cm vor der Innenfläche der Wand (beim freien Grundriss steht sie nicht immer am Hallenrand).
+  const ebene = f.ebene + (f.seite === "x0" || f.seite === "z0" ? 0.5 : -0.5);
   const entlangX = f.seite === "z0" || f.seite === "z1";
   const p = (entlang: number, y: number): [number, number, number] => (entlangX ? [entlang * M, y * M, ebene * M] : [ebene * M, y * M, entlang * M]);
   const n = f.seite === "x0" ? [1, 0, 0] : f.seite === "x1" ? [-1, 0, 0] : f.seite === "z0" ? [0, 0, 1] : [0, 0, -1];

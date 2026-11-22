@@ -2,12 +2,13 @@
  * Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und
  * Steuerung. Gezeichnet wird nur bei Bedarf (Bewegung, Zeigen), nicht in Dauerschleife. Maßstab Meter (Fachlogik in cm).
  */
-import { POKAL_SKALA, punktInUmriss, type Verkleidung, type SzeneSchuerze, richterFarbe, wandDeckkraft, wandInnenseiten, type Quader, type Blick, type Figur, type HallenSzene, type SzeneKaefig, type SzeneTier } from "@schau/domain";
+import { POKAL_SKALA, type Verkleidung, type SzeneSchuerze, richterFarbe, wandDeckkraft, type Quader, type Blick, type Figur, type HallenSzene, type SzeneKaefig, type SzeneTier } from "@schau/domain";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { ot } from "../sprache-jetzt";
-import { figurTeile, gitterTextur, hell, innenseitenGeometrie, ladeBild, offenerKasten, pokalGeometrie, schildSprite, schuerzenGeometrie, stoffKachel, type Teil, TURNHALLE_KACHEL, turnhallenWand, wackel } from "./hallenplan-3d-bausteine";
+import { figurTeile, gitterTextur, hell, ladeBild, offenerKasten, pokalGeometrie, schildSprite, schuerzenGeometrie, stoffKachel, type Teil, wackel } from "./hallenplan-3d-bausteine";
 import { baueLandschaft, type HallenSeite } from "./hallenplan-3d-landschaft";
+import { baueRaum } from "./hallenplan-3d-raum";
 import { type Bewegung, bewegungFuer } from "./hallenplan-3d-steuerung";
 
 const M = 0.01; // cm → m
@@ -57,6 +58,9 @@ export function baueWelt(
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  // Filmisches Tonemapping: helle Flächen (weiße Wände, Fenster) laufen weich aus statt hart weiß.
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
   kasten.appendChild(renderer.domElement);
   renderer.domElement.setAttribute("aria-label", ot().halleBild.dreiD.raeumlich);
 
@@ -75,9 +79,10 @@ export function baueWelt(
   const groesse = Math.max(B, L);
   const mitte = new THREE.Vector3(B / 2, 0, L / 2);
 
-  // Licht: Himmel (leicht blau) und Wiese, dazu eine warme Sonne mit Schatten über der Halle.
-  scene.add(new THREE.HemisphereLight("#e4efff", "#a7b48c", 1.55));
-  const sonne = new THREE.DirectionalLight("#fff1dc", 1.75);
+  // Licht: Himmel (leicht blau) und warmes Licht vom Boden zurück (Holz), dazu eine warme, nicht zu harte Sonne mit
+  // weichen Schatten über der Halle.
+  scene.add(new THREE.HemisphereLight("#eaf0fb", "#c8b08a", 1.6));
+  const sonne = new THREE.DirectionalLight("#ffe8c8", 1.9);
   sonne.position.set(mitte.x - groesse * 0.4, groesse * 0.9, mitte.z - groesse * 0.3);
   sonne.target.position.copy(mitte);
   sonne.castShadow = true;
@@ -89,31 +94,14 @@ export function baueWelt(
   sc.bottom = -groesse * 0.8;
   sc.far = groesse * 3;
   sonne.shadow.bias = -0.0005;
+  sonne.shadow.normalBias = 0.02;
   scene.add(sonne, sonne.target);
 
-  // Außen: Himmel, Wiese, Hof, Bäume und Hügel (hallenplan-3d-landschaft.ts); innen der Hallenboden mit Meterraster.
+  // Außen: Himmel, Wiese, Hof, Bäume und Hügel (hallenplan-3d-landschaft.ts); innen Boden, Linien, Innenwände, Fenster,
+  // Geräte und Decke nach dem Aussehen der Halle (hallenplan-3d-raum.ts).
   baueLandschaft(scene, B, L, merk, vorneSeite(s));
-  // Hallenboden: das Rechteck oder der freie Grundriss (Entscheidung 019); das Meterraster nur innerhalb.
-  const bodenStoff = merk(new THREE.MeshStandardMaterial({ color: "#ecdcbc" }));
-  let boden: THREE.Mesh;
-  if (s.umriss) {
-    const form = new THREE.Shape(s.umriss.map((p) => new THREE.Vector2(p.x * M, -p.y * M)));
-    boden = new THREE.Mesh(merk(new THREE.ShapeGeometry(form)), bodenStoff);
-    boden.rotation.x = -Math.PI / 2;
-  } else {
-    boden = new THREE.Mesh(merk(new THREE.PlaneGeometry(B, L)), bodenStoff);
-    boden.rotation.x = -Math.PI / 2;
-    boden.position.set(B / 2, 0, L / 2);
-  }
-  boden.receiveShadow = true;
-  modell.add(boden);
-  const drin = (x: number, z: number) => !s.umriss || punktInUmriss({ x: x / M, y: z / M }, s.umriss);
-  const raster: number[] = [];
-  for (let x = 1; x < B; x++) for (let z = 0; z < L; z++) if (drin(x, z + 0.5)) raster.push(x, 0.002, z, x, 0.002, Math.min(L, z + 1));
-  for (let z = 1; z < L; z++) for (let x = 0; x < B; x++) if (drin(x + 0.5, z)) raster.push(x, 0.002, z, Math.min(B, x + 1), 0.002, z);
-  const rasterGeo = merk(new THREE.BufferGeometry());
-  rasterGeo.setAttribute("position", new THREE.Float32BufferAttribute(raster, 3));
-  scene.add(new THREE.LineSegments(rasterGeo, merk(new THREE.LineBasicMaterial({ color: "#dccaa5" }))));
+  const raum = baueRaum(modell, s, merk);
+  const boden = raum.boden;
 
   // Flächen am Boden: freier Bereich, Volierenbereich, Eingang.
   const flaechenFarbe = { sperre: "#cfd4dc", volieren: "#d6e8dc", eingang: "#ffffff" } as const;
@@ -146,20 +134,8 @@ export function baueWelt(
     modell.add(k);
     wandTeile.push({ w, mesh: k, stoff, deck: -1, mit: [] as THREE.Material[] });
   }
-  // Innenseite wie in einer Turnhalle: Holz-Prallwand bis 2 m, Abschlussleiste, schmales Farbband, darüber hell gestrichen,
-  // oben ein Lichtband. Eine kleine Textur (Canvas), entlang der Wand wiederholt; leichtes Eigenleuchten aus derselben
-  // Textur, damit die Wand auch im Schatten hell bleibt. Je Wandstück ein eigener Stoff (blendet mit der Wand aus).
-  const innenTex = merk(turnhallenWand(s.wandHoehe));
-  innenTex.wrapS = THREE.RepeatWrapping;
-  innenTex.repeat.set(1 / TURNHALLE_KACHEL, 1);
-  const innenStoff = merk(new THREE.MeshStandardMaterial({ map: innenTex, emissive: "#ffffff", emissiveMap: innenTex, emissiveIntensity: 0.55, roughness: 0.9, side: THREE.DoubleSide }));
-  for (const f of wandInnenseiten(s)) {
-    const stoff = merk(innenStoff.clone());
-    const m = new THREE.Mesh(merk(innenseitenGeometrie(f, s)), stoff);
-    m.receiveShadow = true;
-    modell.add(m);
-    wandTeile[f.wand]?.mit.push(stoff);
-  }
+  // Innenseite (Prallwand, Anstrich), Fenster und Geräte blenden mit ihrer Wand aus.
+  for (const [i, stoffe] of raum.wandStoffe) wandTeile[i]?.mit.push(...stoffe);
   // Türen auch bei ausgeblendeter Wand erkennbar: Umriss am Boden.
   const tuerLinie = merk(new THREE.LineBasicMaterial({ color: "#2b2f36" }));
   for (const t of s.tueren) {
@@ -455,6 +431,7 @@ export function baueWelt(
       // Im Rundgang führt der Rundgang die Kamera; OrbitControls würde sie sonst um den Rest-Schwung verschieben.
       if (!bewegung.imRundgang()) steuerung.update();
       const weiter = waendeAnpassen() || faehrt;
+      raum.deckeNachfuehren(kamera.position);
       // Dunst beginnt knapp hinter der Halle (wie weit die Kamera auch weg ist): die Halle bleibt scharf, die Umgebung tritt zurück.
       if (scene.fog instanceof THREE.Fog) {
         scene.fog.near = kamera.position.distanceTo(steuerung.target) + groesse * 0.7;
