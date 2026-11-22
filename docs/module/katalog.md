@@ -15,7 +15,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 | Server, Sortierung | `apps/server/src/routers/schau/einstellungen.ts` | `schau.katalogSortierungSetzen` (nur Ausstellungsleitung, gesperrt nach Festschreiben, Protokoll) |
 | Server, Gestaltung | `apps/server/src/routers/katalog-gestaltung.ts` | `katalogGestaltung.laden/speichern`, Bilder, Beiträge (`beitragSpeichern`, `beitraegeOrdnen`) |
 | PDF | `apps/server/src/pdf/katalog.ts` (Einstieg) mit `katalog-kontext.ts`, `-hilfen.ts`, `-titel.ts`, `-vorspann.ts`, `-tierteil.ts`, `-verzeichnisse.ts`, `-anhang.ts` | `katalogPdf()`; ausgeliefert über `/datei/:schauId/katalog.pdf` (`src/datei-katalog.ts`) und öffentlich `/s/:slug/katalog.pdf` (`src/datei-oeffentlich.ts`), nacheinander in einer Warteschlange (`katalogNacheinander` in `datei-katalog.ts`) |
-| Web | `apps/web/src/seiten/katalog.tsx`, `katalog-reihenfolge.tsx`, `katalog-gestalten.tsx` mit `katalog-gestalten-*.tsx`, `katalog-vorschau.tsx` (PDF-Vorschau) | Routen `/schau/:id/katalog`, `/schau/:id/katalog/gestalten` |
+| Web | `apps/web/src/seiten/katalog.tsx`, `katalog-reihenfolge.tsx`, `katalog-gestalten.tsx` mit `katalog-gestalten-*.tsx` (Bilder: `useBildHochladen`, `BildHochladen`, `BildAblage` – hineingezogen wie über „Bild wählen“, mit `DateiAblage` aus `ui-ablage.tsx`, Regeln in `ablage.ts`), `katalog-vorschau.tsx` (PDF-Vorschau) | Routen `/schau/:id/katalog`, `/schau/:id/katalog/gestalten` |
 
 ## Regeln und Invarianten
 

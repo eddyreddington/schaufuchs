@@ -5,7 +5,7 @@ import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Auswahl, Dialog, Eingabe, Feld, Haken, Hinweis, Knopf, Marke, Textfeld, useAenderungenWarnen, useFrage, useMeldung } from "../ui";
 import { Schalter } from "./katalog-gestalten-bausteine";
-import { BildHochladen, BildNachweis, Vorschau } from "./katalog-gestalten-bilder";
+import { BildAblage, BildHochladen, BildNachweis, useBildHochladen, Vorschau } from "./katalog-gestalten-bilder";
 import type { Art, Beitrag, Form } from "./katalog-gestalten-form";
 
 /* Katalog gestalten, Reiter „Teile und Reihenfolge“: Gliederung mit Seitenzahlen, Beiträge (Grußworte, Seiten, Anzeigen). */
@@ -189,6 +189,7 @@ function BeitragForm({ schauId, art, start, fertig }: { schauId: number; art: Ar
     },
   });
   const set = <K extends keyof typeof b>(k: K, v: (typeof b)[K]) => setB((x) => ({ ...x, [k]: v }));
+  const hochladen = useBildHochladen(schauId, "beitrag", (id) => set("bildId", id));
   const senden = (e: FormEvent) => {
     e.preventDefault();
     speichern.mutate({ schauId, beitrag: { id: start.id, art, ...b } });
@@ -215,15 +216,15 @@ function BeitragForm({ schauId, art, start, fertig }: { schauId: number; art: Ar
       <Feld label={f.text} hinweis={tt.absatzHinweis}>
         {(fid) => <Textfeld id={fid} rows={art === "grusswort" ? 12 : 6} value={b.text} onChange={(e) => set("text", e.target.value)} />}
       </Feld>
-      <div className="flex flex-col gap-2">
+      <BildAblage hochladen={hochladen} className="flex flex-col gap-2">
         <span className="text-sm font-semibold">{f.bild}</span>
         <div className="flex flex-wrap items-center gap-3">
           {b.bildId && <Vorschau schauId={schauId} bildId={b.bildId} alt={f.bild} klein />}
-          <BildHochladen schauId={schauId} rolle="beitrag" beschriftung={b.bildId ? tt.anderesBild : tt.bildWaehlen} fertig={(id) => set("bildId", id)} />
+          <BildHochladen hochladen={hochladen} beschriftung={b.bildId ? tt.anderesBild : tt.bildWaehlen} />
           {b.bildId && <Knopf type="button" variante="leise" onClick={() => set("bildId", null)}>{tt.ohneBild}</Knopf>}
         </div>
         {b.bildId && art !== "anzeige" && <BildNachweis schauId={schauId} bildId={b.bildId} />}
-      </div>
+      </BildAblage>
       {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
       <div className="flex flex-wrap justify-end gap-2">
         <Knopf type="button" onClick={fertig}>{t.allgemein.abbrechen}</Knopf>

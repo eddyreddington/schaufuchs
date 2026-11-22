@@ -171,6 +171,7 @@ export const katalog: OberflaecheTexte["katalog"] = {
     lizenzHinweis: "e.g. “CC BY-SA 4.0”, not NC or ND",
     quelle: "Source (address)",
     hilfe: "Help on picture credits",
+    hierherZiehen: "or drag it here",
   },
   teile,
   gliederung,

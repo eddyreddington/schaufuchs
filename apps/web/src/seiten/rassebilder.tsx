@@ -1,10 +1,11 @@
 import { serverText } from "@schau/domain";
 import { useState, type FormEvent } from "react";
+import { BILD_TYPEN } from "../ablage";
 import { fehlerText } from "../lib";
 import { useOberflaeche, useSprache } from "../sprache";
 import { ot } from "../sprache-jetzt";
 import { trpc, type Ausgabe } from "../trpc";
-import { Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, Segmente, Suchfeld, useFrage, useMeldung } from "../ui";
+import { Auswahl, DateiAblage, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, Segmente, Suchfeld, useFrage, useMeldung } from "../ui";
 
 type Zeile = Ausgabe["rassebild"]["liste"][number];
 type Angaben = { urheber: string; lizenz: string; lizenzUrl: string; quelle: string };
@@ -170,13 +171,13 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {angezeigt.map((z) => (
           <li key={z.rasse} className="flex flex-col overflow-hidden rounded-xl border border-linie bg-weiss shadow-[0_1px_2px_rgb(16_20_28/0.04)]">
-            <div className="flex h-40 items-center justify-center border-b border-linie bg-papier">
+            <DateiAblage accept={BILD_TYPEN} onDatei={(f) => void datei(z, f)} deaktiviert={!istAdmin || hochladen.isPending} className="flex h-40 items-center justify-center border-b border-linie bg-papier">
               {z.bild ? (
                 <img src={`/datei/rassebild/${z.bild.id}?v=${encodeURIComponent(String(z.bild.stand))}`} alt={t.bildVon(z.rasse)} loading="lazy" className="max-h-40 w-full object-contain" />
               ) : (
                 <span className="text-sm text-grau">{t.keinBild}</span>
               )}
-            </div>
+            </DateiAblage>
             <div className="flex flex-1 flex-col gap-1 p-3 text-sm">
               <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span className="font-semibold text-tinte">{z.rasse}</span>

@@ -2,8 +2,9 @@
  * Einstieg für alle UI-Bausteine – Seiten importieren von hier. Die Bausteine selbst liegen in den Teildateien:
  * ui-knoepfe (Knöpfe), ui-felder (Formularfelder), ui-ungespeichert (Warnung vor dem Verlassen), ui-seite
  * (Seitenkopf, Abschnitte, Hinweise …), ui-speichern (Speicherleiste, Speicherstatus), ui-dialog (Dialog, Rückfragen),
- * ui-meldungen (Toast); gemeinsame Kleinteile in ui-basis.
+ * ui-meldungen (Toast), ui-ablage (Dateien hineinziehen); gemeinsame Kleinteile in ui-basis.
  */
+export { DateiAblage, useAblageAbfangen } from "./ui-ablage";
 export { Knopf, KnopfLink, knopfKlasse } from "./ui-knoepfe";
 export { Auswahl, Eingabe, Feld, Haken, Textfeld } from "./ui-felder";
 export { UngespeichertWaechter, useAenderungenWarnen, useUngespeichertWarnung } from "./ui-ungespeichert";

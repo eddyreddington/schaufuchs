@@ -180,6 +180,7 @@ export const katalog = {
     lizenzHinweis: "z. B. „CC BY-SA 4.0“, nicht NC oder ND",
     quelle: "Quelle (Adresse)",
     hilfe: "Hilfe zum Bildnachweis",
+    hierherZiehen: "oder hierher ziehen",
   },
   teile,
   gliederung,

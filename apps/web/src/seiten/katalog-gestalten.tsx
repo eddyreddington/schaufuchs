@@ -6,7 +6,7 @@ import { useOberflaeche } from "../sprache";
 import { KommendeSchauen } from "./kommende-schauen";
 import { KatalogVorschau } from "./katalog-vorschau";
 import { trpc } from "../trpc";
-import { FehlerAnzeige, Hinweis, useFrage, Knopf, KnopfLink, Laden, Marke, SEITE, Seitenkopf, Speicherleiste, useMeldung, useUngespeichertWarnung } from "../ui";
+import { FehlerAnzeige, Hinweis, useFrage, Knopf, KnopfLink, Laden, Marke, SEITE, Seitenkopf, Speicherleiste, useAblageAbfangen, useMeldung, useUngespeichertWarnung } from "../ui";
 import { Aufbau } from "./katalog-gestalten-aufbau";
 import { Schalter } from "./katalog-gestalten-bausteine";
 import { formAus, type Daten, type Form } from "./katalog-gestalten-form";
@@ -27,6 +27,8 @@ export function KatalogGestalten() {
   const termine = trpc.termine.laden.useQuery({ schauId });
   const status = trpc.auth.status.useQuery();
   const schau = trpc.schau.get.useQuery({ id: schauId });
+  // Ein Bild neben die Ablageflächen gezogen: nicht öffnen (der Browser verließe sonst die Seite mit allen Änderungen).
+  useAblageAbfangen();
   if (daten.error) return <FehlerAnzeige fehler={daten.error} nochmal={() => daten.refetch()} />;
   if (!daten.data || !schau.data) return <Laden />;
   // Ändern sich gespeicherte Teile (Beiträge, Bilder, Termine, Schau), lädt die Vorschau neu.

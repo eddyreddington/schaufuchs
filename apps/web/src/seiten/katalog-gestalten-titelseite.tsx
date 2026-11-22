@@ -8,7 +8,7 @@ import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Auswahl, Eingabe, Feld, Knopf, Textfeld, useFrage, useMeldung } from "../ui";
 import { Gruppe, Kacheln } from "./katalog-gestalten-bausteine";
-import { BildHochladen, BildNachweis, Vorschau } from "./katalog-gestalten-bilder";
+import { BildAblage, BildHochladen, BildNachweis, useBildHochladen, Vorschau } from "./katalog-gestalten-bilder";
 import type { Daten, Form } from "./katalog-gestalten-form";
 
 /* Katalog gestalten, Reiter „Titelseite“: Vereinslogo und Titelbild, Hintergrund, Angaben auf dem Titel, Ausstellungsleitung. */
@@ -67,30 +67,34 @@ export function Titelseite({ schauId, d, set, bilder }: { schauId: number; d: Fo
 }
 
 function TitelBilder({ schauId, bilder }: { schauId: number; bilder: Daten["bilder"] }) {
+  const tt = useOberflaeche().katalog.titelseite;
+  return (
+    <div className="grid gap-6 sm:grid-cols-2">
+      <TitelBild schauId={schauId} bilder={bilder} rolle="logo" label={tt.vereinslogo} leer={tt.keinLogo} />
+      <TitelBild schauId={schauId} bilder={bilder} rolle="titel" label={tt.titelbild} leer={tt.keinFoto} />
+    </div>
+  );
+}
+
+/** Logo bzw. Titelbild: Vorschau, „Bild wählen“ oder hineinziehen, Entfernen, Bildnachweis. */
+function TitelBild({ schauId, bilder, rolle, label, leer }: { schauId: number; bilder: Daten["bilder"]; rolle: "logo" | "titel"; label: string; leer: string }) {
   const t = useOberflaeche();
   const tt = t.katalog.titelseite;
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const loeschen = trpc.katalogGestaltung.bildLoeschen.useMutation({ onSuccess: () => utils.katalogGestaltung.laden.invalidate(), onError: (e) => meldung(fehlerText(e), "fehler") });
   const { bestaetige } = useFrage();
-  const feld = (rolle: "logo" | "titel", label: string, leer: string) => {
-    const b = bilder.find((x) => x.rolle === rolle);
-    return (
-      <div className="flex flex-col gap-2">
-        <span className="text-sm font-semibold">{label}</span>
-        {b ? <Vorschau schauId={schauId} bildId={b.id} alt={label} /> : <div className="flex h-32 w-56 max-w-full items-center justify-center rounded-lg border border-dashed border-linie-stark bg-papier text-sm text-grau">{leer}</div>}
-        <div className="flex flex-wrap gap-2">
-          <BildHochladen schauId={schauId} rolle={rolle} beschriftung={b ? tt.ersetzen : tt.bildWaehlen} fertig={() => meldung(tt.gespeichert(label))} />
-          {b && <Knopf variante="leise" onClick={async () => (await bestaetige({ titel: tt.entfernenFrage(label), knopf: t.allgemein.entfernen, gefahr: true })) && loeschen.mutate({ schauId, id: b.id })}>{t.allgemein.entfernen}</Knopf>}
-        </div>
-        {b && <BildNachweis schauId={schauId} bildId={b.id} />}
-      </div>
-    );
-  };
+  const hochladen = useBildHochladen(schauId, rolle, () => meldung(tt.gespeichert(label)));
+  const b = bilder.find((x) => x.rolle === rolle);
   return (
-    <div className="grid gap-6 sm:grid-cols-2">
-      {feld("logo", tt.vereinslogo, tt.keinLogo)}
-      {feld("titel", tt.titelbild, tt.keinFoto)}
-    </div>
+    <BildAblage hochladen={hochladen} className="flex flex-col gap-2">
+      <span className="text-sm font-semibold">{label}</span>
+      {b ? <Vorschau schauId={schauId} bildId={b.id} alt={label} /> : <div className="flex h-32 w-56 max-w-full items-center justify-center rounded-lg border border-dashed border-linie-stark bg-papier text-sm text-grau">{leer}</div>}
+      <div className="flex flex-wrap gap-2">
+        <BildHochladen hochladen={hochladen} beschriftung={b ? tt.ersetzen : tt.bildWaehlen} />
+        {b && <Knopf variante="leise" onClick={async () => (await bestaetige({ titel: tt.entfernenFrage(label), knopf: t.allgemein.entfernen, gefahr: true })) && loeschen.mutate({ schauId, id: b.id })}>{t.allgemein.entfernen}</Knopf>}
+      </div>
+      {b && <BildNachweis schauId={schauId} bildId={b.id} />}
+    </BildAblage>
   );
 }

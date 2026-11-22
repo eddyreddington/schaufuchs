@@ -1,11 +1,12 @@
 import { AUFSTELLER_STANDARD, verkleidungVon, type Aufsteller, ETAGEN_MAX, KAEFIG_TYP_LABEL, KAEFIG_TYPEN, kaefigeJePlatte, kaefigMass, platteFuer, kaefigName, type KaefigMasse, type KaefigTyp, type OberflaecheTexte, serverText } from "@schau/domain";
 import { useState, type ReactNode } from "react";
+import { BILD_TYPEN } from "../ablage";
 import { fehlerText } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
 import { useOberflaeche, useSprache } from "../sprache";
 import { trpc, type Ausgabe } from "../trpc";
-import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, Laden, Leer, ReiterLeiste, ReiterTafel, Seitenkopf, Speicherleiste, useMeldung, useReiter } from "../ui";
+import { Abschnitt, Auswahl, DateiAblage, Eingabe, FehlerAnzeige, Feld, Haken, HilfeLink, Hinweis, Knopf, Laden, Leer, ReiterLeiste, ReiterTafel, Seitenkopf, Speicherleiste, useMeldung, useReiter } from "../ui";
 
 /**
  * Käfigbedarf für den Aufbau der Halle: je Käfiggröße, wie viele Tiere gemeldet und bestätigt sind und welche
@@ -462,7 +463,7 @@ function AufstellerFeld({ schauId, aufsteller, darf }: { schauId: number; aufste
           {(id) => <input id={id} type="color" value={farbe} onChange={(e) => setFarbe(e.target.value)} disabled={!darf || !an} className="h-10 w-16 cursor-pointer rounded border border-linie bg-weiss disabled:opacity-50" />}
         </Feld>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <DateiAblage accept={BILD_TYPEN} onDatei={(d) => void hochladen(d)} deaktiviert={!darf || bildSetzen.isPending} className="mt-4 flex flex-wrap items-center gap-3">
         <span className="text-sm font-semibold">{tk.logoBanner}</span>
         {v.bildId != null ? <img src={`/datei/${schauId}/bild/${v.bildId}`} alt={tk.logo} className="h-12 max-w-[16rem] rounded border border-linie object-contain" /> : <span className="text-sm text-grau">{tk.keins}</span>}
         {darf && (
@@ -478,7 +479,7 @@ function AufstellerFeld({ schauId, aufsteller, darf }: { schauId: number; aufste
             )}
           </>
         )}
-      </div>
+      </DateiAblage>
       <Speicherleiste
         sichtbar={geaendert}
         onVerwerfen={() => {

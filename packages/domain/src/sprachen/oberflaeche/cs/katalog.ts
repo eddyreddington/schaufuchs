@@ -173,6 +173,7 @@ export const katalog: OberflaecheTexte["katalog"] = {
     lizenzHinweis: "např. „CC BY-SA 4.0“, ne NC ani ND",
     quelle: "Zdroj (adresa)",
     hilfe: "Nápověda ke zdroji obrázku",
+    hierherZiehen: "nebo přetáhněte sem",
   },
   teile,
   gliederung,

@@ -798,7 +798,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (179 Z.)
+### katalog.ts (180 Z.)
 
 - `katalog`
 
@@ -988,7 +988,7 @@ Texte der Oberfläche: kasse – Tierverkauf, Abrechnung, Kassenbuch, Kontoauszu
 - `teile` – Texte der Oberfläche: katalog.teile und katalog.gliederung – Reiter „Teile und Reihenfolge“ mit Beiträgen (Entscheidung 022).
 - `gliederung` – Namen der Teile in der Gliederung (Schlüssel wie `KATALOG_GLIEDERUNG` der Domain; dort stehen die Namen für das PDF).
 
-### katalog.ts (186 Z.)
+### katalog.ts (187 Z.)
 Texte der Oberfläche: katalog – Katalognummern, Reihenfolge, Katalog gestalten mit Vorschau (Entscheidung 022).
 
 - `katalog`
@@ -1187,7 +1187,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (177 Z.)
+### katalog.ts (178 Z.)
 
 - `katalog`
 
@@ -1372,7 +1372,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (177 Z.)
+### katalog.ts (178 Z.)
 
 - `katalog`
 
@@ -1561,7 +1561,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (177 Z.)
+### katalog.ts (178 Z.)
 
 - `katalog`
 
@@ -1747,7 +1747,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (181 Z.)
+### katalog.ts (182 Z.)
 
 - `katalog`
 
@@ -2614,7 +2614,7 @@ Prozeduren: auth.status
 ### import.tsx (432 Z.) – `/import`
 Prozeduren: datenimport.laeufe, datenimport.lesen, datenimport.pruefen, datenimport.uebernehmen, datenimport.zuruecknehmen, schau.liste
 
-### kaefige.tsx (532 Z.) – `/schau/:schauId/kaefige`
+### kaefige.tsx (533 Z.) – `/schau/:schauId/kaefige`
 Prozeduren: katalog.aufstellerSetzen, katalog.kaefigMassSetzen, katalog.kaefigRegelSetzen, katalog.kaefigbedarf, katalog.plattenSetzen, katalog.sockelBildEntfernen, katalog.sockelBildSetzen
 
 ### kassenbuch.tsx (337 Z.) – `/schau/:schauId/kassenbuch`
@@ -2624,18 +2624,18 @@ Prozeduren: kasse.belege, kasse.kassenbewegung, kasse.kassenbuch, kasse.tagesabs
 
 ### katalog-gestalten-bausteine.tsx (55 Z.)
 
-### katalog-gestalten-bilder.tsx (163 Z.)
+### katalog-gestalten-bilder.tsx (184 Z.)
 Prozeduren: katalogGestaltung.bildAngabenSetzen, katalogGestaltung.bildHochladen, katalogGestaltung.laden
 
 ### katalog-gestalten-form.ts (33 Z.)
 
-### katalog-gestalten-teile.tsx (234 Z.)
+### katalog-gestalten-teile.tsx (235 Z.)
 Prozeduren: katalogGestaltung.beitraegeOrdnen, katalogGestaltung.beitragLoeschen, katalogGestaltung.beitragSpeichern
 
-### katalog-gestalten-titelseite.tsx (96 Z.)
+### katalog-gestalten-titelseite.tsx (100 Z.)
 Prozeduren: katalogGestaltung.bildLoeschen
 
-### katalog-gestalten.tsx (201 Z.) – `/schau/:schauId/katalog/gestalten`
+### katalog-gestalten.tsx (203 Z.) – `/schau/:schauId/katalog/gestalten`
 Prozeduren: auth.status, katalogGestaltung.laden, katalogGestaltung.speichern, schau.get, termine.laden
 
 ### katalog-reihenfolge.tsx (96 Z.)
@@ -2676,7 +2676,7 @@ Prozeduren: preisrichter.einteilungSetzen, preisrichter.einteilungVorschlagen, p
 ### protokoll.tsx (138 Z.) – `/schau/:schauId/protokoll`
 Prozeduren: schau.protokoll, schau.protokollPruefen
 
-### rassebilder.tsx (276 Z.)
+### rassebilder.tsx (277 Z.)
 Prozeduren: rassebild.angabenSetzen, rassebild.hochladen, rassebild.liste, rassebild.loeschen
 
 ### richter-anmeldung.tsx (170 Z.)
@@ -2864,6 +2864,8 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `girocode.tsx` (42 Z.) – Überweisung des Meldegelds für Aussteller (Entscheidung 021): Bankverbindung, Verwendungszweck mit Referenz und der GiroCode zum Scannen mit der Ba … · Ueberweisung
 - `lesemodus.tsx` (48 Z.) – Hinweis im Lesemodus (Entscheidung 025): Der Server nimmt gerade keine Änderungen an. · LesemodusLeiste, LesemodusTablet, useLesemodusAussteller
 - `positionen.tsx` (480 Z.) · neuePosition, alsEingabe, pruefePositionen, ausEintrag, FarbenschlagWahl, PositionenEditor
+- `ablage.test.ts` (36 Z.)
+- `ablage.ts` (43 Z.) · BILD_TYPEN, ziehtDateien, passtZu, dateiAusAblage, ablageAbfangen
 - `abmeldung.tsx` (80 Z.) · eingabeVorMs, useAutoAbmeldung, AbmeldeHinweis
 - `lib.ts` (51 Z.) · fehlerText, datum, datumZeit, heuteIso, centZuText, alterLabel
 - `main.tsx` (22 Z.)
@@ -2879,6 +2881,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `sprache.tsx` (199 Z.) – Sprache der Oberfläche. · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, useOberflaeche, SprachWahl, fehlerFuerAussteller
 - `symbole.tsx` (46 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
+- `ui-ablage.tsx` (70 Z.) · useAblageAbfangen, DateiAblage
 - `ui-basis.ts` (11 Z.) · cx, TON
 - `ui-dialog.tsx` (128 Z.) – Dialog und Rückfragen als eigener Dialog (useFrage statt prompt/confirm). · Dialog, FragenAnbieter, useFrage
 - `ui-felder.tsx` (71 Z.) – Formularfelder: Feld mit Beschriftung, Eingabe, Textfeld, Auswahl, Haken. · feldKlasse, Feld, Eingabe, Textfeld, Auswahl, Haken
@@ -2888,7 +2891,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `ui-seite.tsx` (235 Z.) – Bausteine einer Seite: Hinweise, Marken, Seitenkopf, Abschnitte, Tabellenrahmen, Suche, Kennzahlen, Lade- und Leerzustand. · Hinweis, Marke, useSeitentitel, SEITENRAND, SEITE, SCHMAL, LESEBREITE, Seitenkopf, HilfeLink, Abschnitt, TabellenRahmen, Suchfeld, Segmente, Formular, FormAbschnitt, Kennzahlen, Leer, Laden, FehlerAnzeige
 - `ui-speichern.tsx` (80 Z.) – Speichern in der Kopfleiste: Speicherleiste bei ungespeicherten Änderungen, Speicherstatus bei sofortigem Speichern. · SpeicherPlatz, Speicherleiste, SpeicherStatus
 - `ui-ungespeichert.tsx` (65 Z.) – Warnung vor dem Verlassen mit ungespeicherten Eingaben (Formulare anmelden, ein Wächter im Wurzel-Layout). · useUngespeichertWarnung, useAenderungenWarnen, UngespeichertWaechter
-- `ui.tsx` (34 Z.) – Einstieg für alle UI-Bausteine – Seiten importieren von hier.
+- `ui.tsx` (35 Z.) – Einstieg für alle UI-Bausteine – Seiten importieren von hier.
 
 ## Server-Tests `apps/server/src/tests`
 

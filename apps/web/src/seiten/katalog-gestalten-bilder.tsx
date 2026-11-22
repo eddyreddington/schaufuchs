@@ -1,11 +1,12 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import { BILD_TYPEN } from "../ablage";
 import { fehlerText } from "../lib";
 import { useOberflaeche } from "../sprache";
 import { ot } from "../sprache-jetzt";
 import { trpc } from "../trpc";
-import { Dialog, Eingabe, Feld, Hinweis, HilfeLink, Knopf, useMeldung } from "../ui";
+import { DateiAblage, Dialog, Eingabe, Feld, Hinweis, HilfeLink, Knopf, useMeldung } from "../ui";
 
-/* Katalog gestalten: Bilder hochladen (vorher auf Druckgröße verkleinert), Vorschau und Bildnachweis. */
+/* Katalog gestalten: Bilder hochladen (über „Bild wählen“ oder hineingezogen, vorher auf Druckgröße verkleinert), Vorschau und Bildnachweis. */
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
@@ -67,10 +68,12 @@ async function vorbereiten(datei: File, rolle: "logo" | "titel" | "beitrag"): Pr
 }
 
 
-/** Wählt eine Bilddatei, prüft Typ und Größe und lädt sie hoch. Gibt die neue Bild-ID weiter. */
-export function BildHochladen({ schauId, rolle, beschriftung, fertig }: { schauId: number; rolle: "logo" | "titel" | "beitrag"; beschriftung: string; fertig: (id: number) => void }) {
+/**
+ * Prüft Typ und Größe einer Bilddatei, verkleinert sie und lädt sie hoch; gibt die neue Bild-ID weiter. Für den Knopf
+ * (`BildHochladen`) und die Ablagefläche (`BildAblage`) desselben Felds – ein hineingezogenes Bild geht denselben Weg.
+ */
+export function useBildHochladen(schauId: number, rolle: "logo" | "titel" | "beitrag", fertig: (id: number) => void) {
   const tb = useOberflaeche().katalog.bilder;
-  const input = useRef<HTMLInputElement>(null);
   const meldung = useMeldung();
   const utils = trpc.useUtils();
   const hoch = trpc.katalogGestaltung.bildHochladen.useMutation({
@@ -80,9 +83,9 @@ export function BildHochladen({ schauId, rolle, beschriftung, fertig }: { schauI
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
-  const gewaehlt = async (datei: File | undefined) => {
+  const waehlen = async (datei: File | undefined) => {
     if (!datei) return;
-    if (!["image/jpeg", "image/png"].includes(datei.type)) return meldung(tb.falschesFormat, "fehler");
+    if (!(BILD_TYPEN as readonly string[]).includes(datei.type)) return meldung(tb.falschesFormat, "fehler");
     // Große Handyfotos sind kein Problem: der Browser rechnet sie vorher herunter.
     if (datei.size > 40 * 1024 * 1024) return meldung(tb.ueber40, "fehler");
     const { base64, name } = await vorbereiten(datei, rolle);
@@ -91,11 +94,29 @@ export function BildHochladen({ schauId, rolle, beschriftung, fertig }: { schauI
     if (rolle === "logo" && bytes > 600 * 1024) return meldung(tb.logoZuGross, "fehler");
     hoch.mutate({ schauId, rolle, name, base64 });
   };
+  return { waehlen, laedt: hoch.isPending };
+}
+type Hochladen = ReturnType<typeof useBildHochladen>;
+
+/** Knopf zur Dateiauswahl mit dem Hinweis „oder hierher ziehen“ – das Feld dazu in `BildAblage` fassen. */
+export function BildHochladen({ hochladen, beschriftung }: { hochladen: Hochladen; beschriftung: string }) {
+  const tb = useOberflaeche().katalog.bilder;
+  const input = useRef<HTMLInputElement>(null);
   return (
-    <>
-      <input ref={input} type="file" accept="image/jpeg,image/png" className="hidden" onChange={(e) => { void gewaehlt(e.target.files?.[0]); e.target.value = ""; }} />
-      <Knopf type="button" onClick={() => input.current?.click()} laedt={hoch.isPending}>{beschriftung}</Knopf>
-    </>
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <input ref={input} type="file" accept={BILD_TYPEN.join(",")} className="hidden" onChange={(e) => { void hochladen.waehlen(e.target.files?.[0]); e.target.value = ""; }} />
+      <Knopf type="button" onClick={() => input.current?.click()} laedt={hochladen.laedt}>{beschriftung}</Knopf>
+      <span className="text-sm text-grau">{tb.hierherZiehen}</span>
+    </span>
+  );
+}
+
+/** Ein Bildfeld als Ablagefläche: ein hineingezogenes Bild wird angenommen wie über „Bild wählen“. */
+export function BildAblage({ hochladen, className, children }: { hochladen: Hochladen; className?: string; children: ReactNode }) {
+  return (
+    <DateiAblage accept={BILD_TYPEN} onDatei={(d) => void hochladen.waehlen(d)} deaktiviert={hochladen.laedt} className={className}>
+      {children}
+    </DateiAblage>
   );
 }
 
