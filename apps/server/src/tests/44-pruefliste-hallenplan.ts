@@ -1,5 +1,5 @@
 /**
- * Prüfliste ab der Phase „Katalog & Halle“: Hinweise zum Hallenplan (Tiere ohne Platz, Käfigfront zur Wand oder zu einer
+ * Prüfliste ab der Phase „Halle & Katalog“: Hinweise zum Hallenplan (Tiere ohne Platz, Käfigfront zur Wand oder zu einer
  * Reihe, Nummern nicht in Planfolge, Plan nicht festgeschrieben) – gelb, mit Link auf den Hallenplan, halten keinen
  * Phasenwechsel auf; vor dem Meldeschluss nicht. Teil des Schau-Ablaufs.
  */
@@ -10,8 +10,8 @@ import { adminKontext, m } from "./kontext";
 describe("Prüfliste: Hallenplan", () => {
   const al = () => m.appRouter.createCaller(adminKontext);
 
-  test("Hinweise ab „Katalog & Halle“, nicht vorher, halten nichts auf", async () => {
-    expect(PHASEN_LABEL.katalog).toBe("Katalog & Halle");
+  test("Hinweise ab „Halle & Katalog“, nicht vorher, halten nichts auf", async () => {
+    expect(PHASEN_LABEL.katalog).toBe("Halle & Katalog");
     const { id } = await al().schau.anlegen({ name: "Prüfliste Halle", ort: "Halle" });
     const s = await al().schau.get({ id });
     const [wy] = await al().stammdaten.suche({ versionId: s.stammdatenVersionId!, q: "Wyandotten" });

@@ -21,7 +21,7 @@ export const serverSchauImport: OberflaecheTexte["serverSchau"]["import"] = {
     ersteTabelle: "Chybí první list sešitu.",
   },
   uebernehmen: {
-    nurBisKatalog: "Přihlášky lze importovat jen do fáze „Katalog a hala“.",
+    nurBisKatalog: "Přihlášky lze importovat jen do fáze „Hala a katalog“.",
     zeile: (zeile: string, vorname: string, nachname: string, text: string) => `Řádek ${zeile} (${vorname} ${nachname}): ${text}`,
     laufFehlt: "Import nenalezen.",
     schonZurueck: "Import už byl vrácen zpět.",

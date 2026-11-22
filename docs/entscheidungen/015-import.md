@@ -28,7 +28,7 @@ sich rückgängig machen lassen, wenn die Zuordnung falsch war.
 - Rassen: genauer Treffer, sonst Vorschläge nach Ähnlichkeit; die Wahl der Ausstellungsleitung lernt der Verein
   (`organisation.import_zuordnungen`, gespeichert über die Namen, damit sie auch für einen neuen Verzeichnisstand gilt).
 - Jeder Import ist ein Importlauf (`importlauf`) mit den angelegten Meldungen und Ausstellern. Zurücknehmen löscht
-  genau diese – nur bis zur Phase „Katalog & Halle“, solange niemand die Meldungen danach bearbeitet hat (Protokoll
+  genau diese – nur bis zur Phase „Halle & Katalog“, solange niemand die Meldungen danach bearbeitet hat (Protokoll
   nach dem Eintrag „Import“) und nichts daran hängt (Zahlung, Katalognummer, Bewertung, Preis, Verkauf, Stiftung,
   Spende, Abrechnung, offene SEPA-Datei); sonst bleibt alles stehen. Neu angelegte Aussteller bleiben, wenn sie danach
   bearbeitet wurden oder anderswo gebraucht werden. Jede gelöschte Meldung erhält einen eigenen Protokolleintrag.

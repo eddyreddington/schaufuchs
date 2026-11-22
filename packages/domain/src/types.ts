@@ -16,7 +16,7 @@ export type Phase = (typeof PHASEN)[number];
 export const PHASEN_LABEL: Record<Phase, string> = {
   vorbereitung: "Vorbereitung",
   meldung: "Meldephase",
-  katalog: "Katalog & Halle",
+  katalog: "Halle & Katalog",
   einlieferung: "Einlieferung",
   bewertung: "Bewertung",
   preise: "Preise & Freigabe",

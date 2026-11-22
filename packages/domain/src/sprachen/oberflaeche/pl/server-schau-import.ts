@@ -21,7 +21,7 @@ export const serverSchauImport: OberflaecheTexte["serverSchau"]["import"] = {
     ersteTabelle: "Brak pierwszego arkusza skoroszytu.",
   },
   uebernehmen: {
-    nurBisKatalog: "Zgłoszenia można importować tylko do etapu „Katalog i hala”.",
+    nurBisKatalog: "Zgłoszenia można importować tylko do etapu „Hala i katalog”.",
     zeile: (zeile: string, vorname: string, nachname: string, text: string) => `Wiersz ${zeile} (${vorname} ${nachname}): ${text}`,
     laufFehlt: "Nie znaleziono importu.",
     schonZurueck: "Import został już cofnięty.",

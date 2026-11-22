@@ -21,7 +21,7 @@ export const serverSchauImport: OberflaecheTexte["serverSchau"]["import"] = {
     ersteTabelle: "The first sheet of the workbook is missing.",
   },
   uebernehmen: {
-    nurBisKatalog: "Entries can only be imported up to the stage “Catalogue & hall”.",
+    nurBisKatalog: "Entries can only be imported up to the stage “Hall & catalogue”.",
     zeile: (zeile: string, vorname: string, nachname: string, text: string) => `Row ${zeile} (${vorname} ${nachname}): ${text}`,
     laufFehlt: "Import run not found.",
     schonZurueck: "The import has already been undone.",

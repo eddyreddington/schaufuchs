@@ -21,7 +21,7 @@ export const serverSchauImport: OberflaecheTexte["serverSchau"]["import"] = {
     ersteTabelle: "Het eerste werkblad van de werkmap ontbreekt.",
   },
   uebernehmen: {
-    nurBisKatalog: "Inschrijvingen kunnen alleen tot de fase „Catalogus & hal” worden geïmporteerd.",
+    nurBisKatalog: "Inschrijvingen kunnen alleen tot de fase „Hal & catalogus” worden geïmporteerd.",
     zeile: (zeile: string, vorname: string, nachname: string, text: string) => `Regel ${zeile} (${vorname} ${nachname}): ${text}`,
     laufFehlt: "Import niet gevonden.",
     schonZurueck: "De import is al teruggedraaid.",

@@ -120,7 +120,7 @@ describe("Meldungen des Servers (serverText)", () => {
       "Unbekanntes Format: In der Datei fehlen die Spalten Buchungstag und Betrag. Bitte den Umsatzexport als CSV oder camt.053 (XML) hochladen.",
       // Demodaten (testschau.ts über routers/schau/anlegen.ts) und Anmeldung (auth.ts, TRPCError).
       "Demodaten nicht vollständig eingespielt: Es werden gerade schon Demodaten eingespielt – bitte gleich noch einmal versuchen.",
-      "Demodaten nicht vollständig eingespielt: Die Schau steht in der Phase „Katalog & Halle“ – erwartet: Vorbereitung oder Meldephase.",
+      "Demodaten nicht vollständig eingespielt: Die Schau steht in der Phase „Halle & Katalog“ – erwartet: Vorbereitung oder Meldephase.",
       "Demodaten nicht vollständig eingespielt: „Probe 7“ hat schon Meldungen – Testdaten nur in eine leere Schau (nichts wird überschrieben).",
       "Die Anmeldung ist abgelaufen. Bitte noch einmal anmelden.",
       "Der Server ist gerade ausgelastet. Bitte gleich noch einmal versuchen.",

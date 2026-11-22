@@ -23,7 +23,7 @@ export const serverSchauImport = {
     ersteTabelle: "Die erste Tabelle der Mappe fehlt.",
   },
   uebernehmen: {
-    nurBisKatalog: "Meldungen lassen sich nur bis zur Phase „Katalog & Halle“ importieren.",
+    nurBisKatalog: "Meldungen lassen sich nur bis zur Phase „Halle & Katalog“ importieren.",
     zeile: (zeile: string, vorname: string, nachname: string, text: string) => `Zeile ${zeile} (${vorname} ${nachname}): ${text}`,
     laufFehlt: "Importlauf nicht gefunden.",
     schonZurueck: "Der Import ist schon zurückgenommen.",

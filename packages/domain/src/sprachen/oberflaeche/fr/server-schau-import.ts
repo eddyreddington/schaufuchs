@@ -21,7 +21,7 @@ export const serverSchauImport: OberflaecheTexte["serverSchau"]["import"] = {
     ersteTabelle: "La première feuille du classeur manque.",
   },
   uebernehmen: {
-    nurBisKatalog: "Les inscriptions ne peuvent être importées que jusqu’à l’étape « Catalogue & salle ».",
+    nurBisKatalog: "Les inscriptions ne peuvent être importées que jusqu’à l’étape « Salle & catalogue ».",
     zeile: (zeile: string, vorname: string, nachname: string, text: string) => `Ligne ${zeile} (${vorname} ${nachname}) : ${text}`,
     laufFehlt: "Importation introuvable.",
     schonZurueck: "L’importation est déjà annulée.",

@@ -161,7 +161,7 @@ Jede Schau läuft durch neun Phasen. Die Phase stellt **nur die Ausstellungsleit
 |---|---|---|
 | 1 | „Vorbereitung“ | nichts – die Ausstellungsleitung legt Termine, Standgeld und Preise fest |
 | 2 | „Meldephase“ | Papiermeldungen erfassen, Meldegeld bar annehmen; das Online-Formular ist offen |
-| 3 | „Katalog & Halle“ | Nachmeldungen nach Absprache erfassen; die Ausstellungsleitung vergibt die Katalognummern |
+| 3 | „Halle & Katalog“ | Nachmeldungen nach Absprache erfassen; die Ausstellungsleitung vergibt die Katalognummern |
 | 4 | „Einlieferung“ | Meldegeld bar kassieren, Tiere abhaken, Impfnachweise prüfen, Ringnummern eintragen |
 | 5 | „Bewertung“ | Fragen der Preisrichter weitergeben; Noten vergeben Sie nicht |
 | 6 | „Preise & Freigabe“ | **Tierverkauf beginnt** |

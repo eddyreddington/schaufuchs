@@ -43,7 +43,7 @@ export async function importPruefen(q: Lesen, organisationId: number, e: ImportE
   if (e.art === "meldungen") {
     [s = null] = await q.select().from(schau).where(and(eq(schau.id, e.schauId ?? 0), eq(schau.organisationId, organisationId)));
     if (!s) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
-    if (!IMPORT_PHASEN.includes(s.phase)) throw fehler("BAD_REQUEST", "Meldungen lassen sich nur bis zur Phase „Katalog & Halle“ importieren.");
+    if (!IMPORT_PHASEN.includes(s.phase)) throw fehler("BAD_REQUEST", "Meldungen lassen sich nur bis zur Phase „Halle & Katalog“ importieren.");
   }
 
   // Aussteller wiedererkennen: Registriernummer, sonst Vorname, Nachname und PLZ – auch gesperrte und gelöschte, damit
@@ -298,7 +298,7 @@ export async function importUebernehmen(organisationId: number, e: ImportEingabe
 
 /**
  * Nimmt einen Importlauf zurück: seine Meldungen und die Aussteller, die er neu angelegt hat. Nur in den Phasen bis
- * „Katalog & Halle“ und solange niemand die Meldungen danach bearbeitet hat und nichts daran hängt (Zahlung,
+ * „Halle & Katalog“ und solange niemand die Meldungen danach bearbeitet hat und nichts daran hängt (Zahlung,
  * Katalognummer, Bewertung, Stiftung, Spende, Abrechnung, SEPA-Datei) – sonst bleibt alles stehen, mit Begründung.
  * Ein Aussteller bleibt, wenn er danach bearbeitet wurde oder anderswo gebraucht wird.
  */

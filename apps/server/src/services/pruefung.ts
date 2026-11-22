@@ -267,7 +267,7 @@ export async function checkliste(schauId: number): Promise<Punkt[]> {
     const grenze = r.istObmann ? s.obmannHoechstzahl : s.prHoechstzahl;
     if (zahl > grenze) add("hinweis", `${r.name}: ${zahl} Tiere, höchstens ${grenze}${r.istObmann ? " als Obmann" : ""}`, "preisrichter");
   }
-  // Hallenplan – nach dem Meldeschluss, bis die Käfige stehen (Katalog & Halle, Einlieferung). Nur Hinweise: sie halten
+  // Hallenplan – nach dem Meldeschluss, bis die Käfige stehen (Halle & Katalog, Einlieferung). Nur Hinweise: sie halten
   // keinen Phasenwechsel auf. Gerechnet wie die Seite „Hallenplan“ (dieselben Tiere, derselbe Plan).
   if (s.halle && (s.phase === "katalog" || s.phase === "einlieferung")) {
     try {

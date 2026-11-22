@@ -115,7 +115,7 @@ export const fach: OberflaecheTexte["fach"] = {
   PHASEN_LABEL: {
     vorbereitung: "Przygotowanie",
     meldung: "Etap zgłoszeń",
-    katalog: "Katalog i hala",
+    katalog: "Hala i katalog",
     einlieferung: "Dostarczenie zwierząt",
     bewertung: "Ocena",
     preise: "Nagrody i udostępnienie",
