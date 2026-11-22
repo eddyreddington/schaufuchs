@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { offeneMigrationen, schautageLaufen, type SchauZeitraum } from "./gesundheitspruefung";
+import { migrationsverzeichnisFehler, offeneMigrationen, schautageLaufen, type SchauZeitraum } from "./gesundheitspruefung";
 
 /** Bewertung Freitag, geöffnet Samstag und Sonntag – Einlieferung am Donnerstag. */
 const dezember: SchauZeitraum = {
@@ -70,5 +70,43 @@ describe("offeneMigrationen", () => {
     expect(offeneMigrationen(journal, 2000)).toBe(1);
     expect(offeneMigrationen(journal, 3000)).toBe(0);
     expect(offeneMigrationen(journal, 9000)).toBe(0);
+  });
+});
+
+describe("migrationsverzeichnisFehler", () => {
+  const eintrag = (idx: number, when: number, name: string) => ({ idx, when, tag: `${String(idx).padStart(4, "0")}_${name}` });
+  const stand = {
+    journal: [eintrag(0, 1000, "anfang"), eintrag(1, 2000, "spalte")],
+    dateien: ["0000_anfang.sql", "0001_spalte.sql"],
+    schnappschuesse: [
+      { datei: "0000_snapshot.json", id: "a", prevId: "00000000-0000-0000-0000-000000000000" },
+      { datei: "0001_snapshot.json", id: "b", prevId: "a" },
+    ],
+  };
+  const pruefe = (aenderung: Partial<typeof stand>) => migrationsverzeichnisFehler({ ...stand, ...aenderung });
+
+  test("ein sauberes Verzeichnis hat keine Fehler", () => {
+    expect(pruefe({})).toEqual([]);
+  });
+
+  test("nach dem Merge nur umbenannt: älterer Zeitstempel als die Migration davor", () => {
+    // Zweig B mergt nach Zweig A und benennt seine 0001 in 0002 um, behält aber den when-Wert von vorher.
+    const journal = [...stand.journal, { idx: 2, when: 1500, tag: "0002_andere" }];
+    const fehler = pruefe({ journal, dateien: [...stand.dateien, "0002_andere.sql"] });
+    expect(fehler.join("\n")).toContain("0002_andere");
+    expect(fehler.join("\n")).toContain("übersprungen");
+  });
+
+  test("gleiche Nummer zweimal, Lücken und fehlende oder überzählige Dateien", () => {
+    expect(pruefe({ dateien: [...stand.dateien, "0001_andere.sql"] }).join("\n")).toContain("0001_andere.sql");
+    expect(pruefe({ journal: [stand.journal[0]!, eintrag(2, 2000, "spalte")], dateien: ["0000_anfang.sql", "0002_spalte.sql"] }).join("\n")).toContain("0002_spalte");
+    expect(pruefe({ dateien: ["0000_anfang.sql"] }).join("\n")).toContain("0001_spalte.sql");
+    expect(pruefe({ journal: [stand.journal[0]!, { ...stand.journal[1]!, tag: "0002_spalte" }] }).length).toBeGreaterThan(0);
+  });
+
+  test("Schnappschüsse müssen eine Kette bilden", () => {
+    const schnappschuesse = [stand.schnappschuesse[0]!, { datei: "0001_snapshot.json", id: "b", prevId: "x" }];
+    expect(pruefe({ schnappschuesse }).join("\n")).toContain("0001_snapshot.json");
+    expect(pruefe({ schnappschuesse: [stand.schnappschuesse[0]!] }).join("\n")).toContain("0001_snapshot.json");
   });
 });

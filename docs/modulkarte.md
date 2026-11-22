@@ -148,13 +148,16 @@ Tests: `einteilung.test.ts`
 - `anteil()` – Prozentsatz in Basispunkten (1500 = 15 %), kaufmännisch gerundet auf Cent.
 - `betragInWorten()` – Betrag in Worten für Quittungen: 23550 → „zweihundertfünfunddreißig Euro und fünfzig Cent“.
 
-### gesundheitspruefung.ts (45 Z.)
+### gesundheitspruefung.ts (89 Z.)
 Angaben der Gesundheitsprüfung `GET /api/gesund` für Überwachung und Update-Läufe (Entscheidung 024).
 Tests: `gesundheitspruefung.test.ts`
 
 - `SchauZeitraum` (Typ) – Was von einer Schau für die Schautage zählt.
 - `schautageLaufen()` – Laufen gerade Schautage?
 - `offeneMigrationen()` – Noch nicht eingespielte Migrationen: alle aus dem Verzeichnis (`when` in drizzle/meta/_journal.json), die jünger sind als die zuletzt eingespielte …
+- `MigrationsEintrag` (Typ) – Ein Eintrag aus drizzle/meta/_journal.json.
+- `Migrationsverzeichnis` (Typ) – Stand des Migrationsverzeichnisses: Journal, SQL-Dateien und Schnappschüsse (meta/NNNN_snapshot.json).
+- `migrationsverzeichnisFehler()` – Fehler im Migrationsverzeichnis, wie sie entstehen, wenn zwei Zweige je eine Migration mit derselben Nummer anlegen und beim Merge nur umbenannt wird.
 
 ### girocode.ts (84 Z.)
 Überweisung des Meldegelds mit Referenz und GiroCode (Entscheidung 021): Jede Meldung bekommt eine Referenz nach ISO 11649 („RF“ + Prüfziffern), di …
@@ -3008,7 +3011,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `59-girocode.ts` (146 Z.) – Überweisung mit Referenz und GiroCode (Entscheidung 021): nur mit vollständigem Vereinskonto, Referenz je Meldung im Verwendungszweck, Code über de …
 - `60-kontoauszug.ts` (138 Z.) – Kontoauszug-Import (Entscheidung 023): Datei prüfen (Zuordnung über Referenz bzw. Name und Betrag), ausgewählte Gutschriften buchen, Meldung bestät …
 - `61-oberflaeche-sprache.ts` (62 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
-- `62-gesundheitspruefung.ts` (116 Z.) – Gesundheitsprüfung `/api/gesund` (Entscheidung 024): neben `ok` und `version` die letzte Sicherung, offene Migrationen und laufende Schautage.
+- `62-gesundheitspruefung.ts` (127 Z.) – Gesundheitsprüfung `/api/gesund` (Entscheidung 024): neben `ok` und `version` die letzte Sicherung, offene Migrationen und laufende Schautage.
 - `63-lesemodus.ts` (137 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an – außer Anmelden, Abmelden, Zwei-Faktor einrichten, eigenes Pass …
 - `64-einrichten-befehl.ts` (249 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026): `schaufuchs einrichten` ruft im Container `bun src/einrichten.ts` auf.
 - `65-a-bogen-mitglieder.ts` (103 Z.) – A-Bögen für die Vereinsmitglieder (Vereinsverwaltung, „Aussteller“): je Mitglied ein A-Bogen zur gewählten Schau, vorausgefüllt mit Name und Anschr …

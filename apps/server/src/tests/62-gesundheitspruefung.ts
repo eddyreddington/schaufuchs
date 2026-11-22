@@ -3,8 +3,9 @@
  * Migrationen und laufende Schautage.
  */
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { migrationsverzeichnisFehler } from "@schau/domain";
 import { gesundAngaben } from "../services/gesundheitspruefung";
 import { adminKontext, m } from "./kontext";
 
@@ -55,6 +56,16 @@ describe("Gesundheitsprüfung", () => {
       await m.db.delete(m.schema.sicherung);
       if (vorher) await m.db.insert(m.schema.sicherung).values(vorher);
     }
+  });
+
+  test("Migrationsverzeichnis: Nummern, Zeitstempel und Schnappschüsse passen (nach jedem Merge)", () => {
+    const ordner = join(import.meta.dir, "../../drizzle");
+    const lies = (datei: string) => JSON.parse(readFileSync(join(ordner, datei), "utf8"));
+    const schnappschuesse = readdirSync(join(ordner, "meta"))
+      .filter((d) => d.endsWith("_snapshot.json"))
+      .map((datei) => ({ datei, id: lies(`meta/${datei}`).id as string, prevId: lies(`meta/${datei}`).prevId as string }));
+    const dateien = readdirSync(ordner).filter((d) => d.endsWith(".sql"));
+    expect(migrationsverzeichnisFehler({ journal: lies("meta/_journal.json").entries, dateien, schnappschuesse })).toEqual([]);
   });
 
   test("offene Migrationen gegen das Verzeichnis der eingespielten", async () => {

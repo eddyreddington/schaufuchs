@@ -37,3 +37,8 @@ fallen sollte? Bisher musste der Betreiber dafür in `./backups` schauen bzw. si
 also über 26), oder wenn `migrationenOffen` > 0 ist. Ein Update-Lauf wartet bei `schautage: true` und behandelt `null`
 vorsichtig wie `true`. Was als Schautag zählt, regelt `schautageLaufen()` in
 `packages/domain/src/gesundheitspruefung.ts`.
+
+Weil `migrationenOffen` wie das Einspielen nur nach `when` zählt, muss das Journal streng aufsteigen: Nummern lückenlos,
+`when` jünger als bei der Migration davor, je Eintrag eine SQL-Datei und eine Kette der Schnappschüsse.
+`migrationsverzeichnisFehler()` prüft das im Servertest `62-gesundheitspruefung`, so fällt eine nach einem Merge nur
+umbenannte Migration in `bun run pruefen` auf (Vorgehen beim Merge: `docs/architektur.md`, Datenbank).

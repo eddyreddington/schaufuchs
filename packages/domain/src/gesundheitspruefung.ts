@@ -43,3 +43,47 @@ export function schautageLaufen(schauen: readonly SchauZeitraum[], heute: string
 export function offeneMigrationen(verzeichnis: readonly number[], zuletztEingespielt: number | null): number {
   return verzeichnis.filter((w) => zuletztEingespielt == null || w > zuletztEingespielt).length;
 }
+
+/** Ein Eintrag aus drizzle/meta/_journal.json. */
+export interface MigrationsEintrag {
+  idx: number;
+  when: number;
+  tag: string;
+}
+
+/** Stand des Migrationsverzeichnisses: Journal, SQL-Dateien und Schnappschüsse (meta/NNNN_snapshot.json). */
+export interface Migrationsverzeichnis {
+  journal: readonly MigrationsEintrag[];
+  dateien: readonly string[];
+  schnappschuesse: readonly { datei: string; id: string; prevId: string }[];
+}
+
+/**
+ * Fehler im Migrationsverzeichnis, wie sie entstehen, wenn zwei Zweige je eine Migration mit derselben Nummer anlegen
+ * und beim Merge nur umbenannt wird. Das Einspielen (drizzle-orm) übernimmt nur Migrationen, deren `when` jünger ist
+ * als die zuletzt eingespielte; ein älterer Wert hinter einer jüngeren Migration würde ohne Meldung übersprungen.
+ * Abhilfe: die Migration des später gemergten Zweigs verwerfen und auf dem neuen Stand mit `db:generate` neu erzeugen.
+ */
+export function migrationsverzeichnisFehler(v: Migrationsverzeichnis): string[] {
+  const fehler: string[] = [];
+  const nummer = (i: number) => String(i).padStart(4, "0");
+  v.journal.forEach((e, i) => {
+    if (e.idx !== i) fehler.push(`Journal: ${e.tag} hat idx ${e.idx}, erwartet ${i}`);
+    if (!e.tag.startsWith(`${nummer(i)}_`)) fehler.push(`Journal: ${e.tag} trägt nicht die Nummer ${nummer(i)}`);
+    const davor = v.journal[i - 1];
+    if (davor && e.when <= davor.when) fehler.push(`Journal: ${e.tag} ist nicht jünger als ${davor.tag} und würde beim Einspielen übersprungen`);
+  });
+  const erwartet = new Set(v.journal.map((e) => `${e.tag}.sql`));
+  for (const d of v.dateien) if (!erwartet.has(d)) fehler.push(`Datei ${d} steht nicht im Journal`);
+  for (const d of erwartet) if (!v.dateien.includes(d)) fehler.push(`Datei ${d} fehlt`);
+  const kette = new Map(v.schnappschuesse.map((s) => [s.datei, s]));
+  v.journal.forEach((_, i) => {
+    const datei = `${nummer(i)}_snapshot.json`;
+    const s = kette.get(datei);
+    if (!s) return void fehler.push(`Schnappschuss ${datei} fehlt`);
+    const davor = kette.get(`${nummer(i - 1)}_snapshot.json`);
+    if (i > 0 && davor && s.prevId !== davor.id) fehler.push(`Schnappschuss ${datei} folgt nicht auf ${nummer(i - 1)}_snapshot.json`);
+  });
+  if (v.schnappschuesse.length > v.journal.length) fehler.push("Mehr Schnappschüsse als Migrationen im Journal");
+  return fehler;
+}

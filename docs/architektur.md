@@ -22,6 +22,9 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
 - **Datenbank:** Schema-Einstieg `apps/server/src/db/schema.ts` (Drizzle), Tabellen nach Fachgebiet in `db/schema-*.ts`.
   Änderung am Schema: passende `schema-*.ts` ändern (neue Datei in `schema.ts` weiterreichen),
   `cd apps/server && bun run db:generate` erzeugt die Migration in `apps/server/drizzle/NNNN_*.sql` (mit ins Repo).
+  Legen zwei Zweige je eine Migration an, verwirft der zweite beim Merge seine Migration samt Schnappschuss und
+  Journal-Eintrag und erzeugt sie auf dem neuen Stand neu – nur umbenennen hieße, sie würde beim Einspielen still
+  übersprungen. Der Servertest `62-gesundheitspruefung` prüft das (`migrationsverzeichnisFehler()`).
   Betrieb spielt sie mit `bun run db:migrate` ein, Entwicklung und Tests mit `db:push`. Danach immer `db/schutz.sql`
   (Trigger für Protokoll und Kasse, wiederholbar).
 - **Protokoll:** Jede Änderung an Bewertung, Preisen, Verkauf und Geld schreibt `protokolliere()` (`services/protokoll.ts`)
