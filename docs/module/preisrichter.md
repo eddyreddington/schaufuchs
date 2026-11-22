@@ -9,15 +9,15 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
 | Wo | Datei | Wichtig |
 |---|---|---|
 | Zulassung, Obmann, Zusage | `packages/domain/src/preisrichter-zulassung.ts` | `darfBewerten()` (Sparte und Gruppe), `bewertetSparte()`, `bewertetGruppe()`, `bdrgGruppe()` / `bdrgGruppeGueltig()`, `pruefeObmann()`, `ZUSAGEN` |
-| Einteilung nach Rassen | `packages/domain/src/einteilung.ts` | `richterNachRasse()`, `bereicheAusRassen()`, `regelnAusZuteilung()` |
+| Einteilung nach Rassen | `packages/domain/src/einteilung.ts` | `richterNachRasse()` (Jugendregel vor Farbenschlag vor Rasse), `bereicheAusRassen()`, `regelnAusZuteilung()`, `vergleicheEinteilFolge()` |
 | Gruppe im Verzeichnis | `packages/domain/src/stammdaten.ts` | `parseStammdatenCsv()`: freiwillige vierte Spalte „Gruppe“ |
-| Server, Preisrichter | `apps/server/src/routers/preisrichter.ts` | `preisrichter.liste`, `.speichern` und `.loeschen` (→ `services/preisrichter-speichern.ts`), `.einteilungSetzen`, `.zuteilungSetzen`, Vorschläge |
+| Server, Preisrichter | `apps/server/src/routers/preisrichter.ts` | `preisrichter.liste`, `.speichern` und `.loeschen` (→ `services/preisrichter-speichern.ts`), `.einteilungSetzen`, `.zuteilungSetzen`, `.einteilungJugendSetzen`, Vorschläge; `services/einteilung.ts` (`einteilTier()`, `bereicheDerSchau()`) |
 | Server, Vorschlag | `apps/server/src/services/einteilung-vorschlag.ts` | `schlageEinteilungVor()`: nur an Preisrichter, die Sparte und Gruppe bewerten |
 | Server, Gruppen pflegen | `apps/server/src/routers/stammdaten.ts` | `stammdaten.gruppenSetzen` (nur eigene Version, Protokoll), `gliederung` und `baum` mit `gruppe` |
 | Server, Einträge | `apps/server/src/services/eintraege.ts` | `gruppe` je Eintrag (Rasse bzw. bei freier Bezeichnung die gewählte Rasse) |
 | Vorlage | `apps/server/src/routers/schau/anlegen.ts` | Preisrichter mit Gruppen und „zugesagt für“ übernommen (Zusage wieder offen, ohne Vorbehalt), Obmann-Zuordnung auf die neue Schau umgesetzt |
 | Drucke | `apps/server/src/pdf/verpflichtung.ts`, `pdf/bewertungsliste.ts`, Fachregeln `packages/domain/src/preisrichter-druck.ts` | `preisrichterVerpflichtungPdf()` (`/datei/:schauId/preisrichter-verpflichtung.pdf`, `?preisrichter=`), `preisrichterListePdf()` (`/datei/:schauId/preisrichter/:prId/liste.pdf`); `verpflichtungGruppen()`, `bewertungslisteZeilen()`, `bewertungslisteSpalten()` |
-| Web | `apps/web/src/seiten/preisrichter.tsx` (Liste, Einteilungen), `preisrichter-form.tsx` (Dialog), `stammdaten-gruppen.tsx` | Route `/schau/:schauId/preisrichter`, `/stammdaten` → „Gruppen“ |
+| Web | `apps/web/src/seiten/preisrichter.tsx` (Liste, Einteilung nach Nummern), `preisrichter-rassen.tsx` (Einteilung nach Rassen), `preisrichter-form.tsx` (Dialog), `stammdaten-gruppen.tsx` | Route `/schau/:schauId/preisrichter`, `/stammdaten` → „Gruppen“ |
 
 ## Regeln und Invarianten
 
@@ -25,6 +25,12 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
   Gruppen geprüft. Ein Farbenschlag zählt mit der Gruppe seiner Rasse.
 - Fremde Sparte oder fremde Gruppe: Einteilung nach Rassen und nach Nummern lehnen ab und nennen Preisrichter, Sparte bzw.
   Gruppe und Rasse bzw. Nummern; die Vorschläge teilen solche Tiere nicht zu („Kein Preisrichter für: Gruppe …“).
+- Jugend in der Einteilung (`schau.einteilung_jugend_separat`, Vorgabe „mit der Rasse“): Bei „separat“ ist die Jugend je
+  Rasse eine eigene Einheit (Zeile „Jugend: Rasse“, Regel mit `jugend: true`, auch je Farbenschlag), im Vorschlag eigene
+  Einheit, in der Folge wie im Katalog (Jugendblock am Ende oder hinter ihrer Rasse). Regeln ohne Merkmal gelten für
+  Senioren und Jugend; ein Jugendtier geht erst nach den Jugendregeln, dann wie die Senioren. Bei „mit der Rasse“ gelten
+  Jugendregeln nicht (bleiben gespeichert). Umschalten mit Protokoll (Tabelle `schau`), unter der Einteilungssperre, mit
+  Neuberechnung der Bereiche und Rückfrage bei bewerteten Tieren; aus der Vorlage übernommen.
 - Gruppen werden einheitlich gespeichert (ohne Leerzeichen, groß, höchstens 10 Zeichen aus Buchstaben und Ziffern).
 - Obmann-Zuordnung: nur ein Obmann derselben Schau, nicht er selbst. Verliert ein Obmann den Haken, werden die ihm
   zugeordneten Preisrichter gelöst, ebenso beim Löschen (je mit Protokoll; `loeschePreisrichter()`). Die Prüfung liest die
@@ -48,12 +54,14 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
 
 ## Tests
 
-- Domain: `preisrichter-zulassung.test.ts`, `preisrichter-druck.test.ts`, `stammdaten-gruppe.test.ts`, `einteilung.test.ts`.
+- Domain: `preisrichter-zulassung.test.ts`, `preisrichter-druck.test.ts`, `stammdaten-gruppe.test.ts`, `einteilung.test.ts`, `einteilung-jugend.test.ts`.
 - Server (`apps/server/src/tests`): `03-tablet-halle-drucke` (Bewertungsliste nur eigene Schau), `29-einteilung-rassen`,
   `30-einteilung-gegenpruefung`, `69-preisrichter-gruppen`, `70-preisrichter-drucke` (Verpflichtung, Bewertungsliste),
-  `71-preisrichter-gegenpruefung` (Auskunft, Bereinigung, Vorlage, Löschen, Sperre); `src/einteilung.test.ts` (Vorschlag).
+  `71-preisrichter-gegenpruefung` (Auskunft, Bereinigung, Vorlage, Löschen, Sperre), `72-jugend-einteilung` (Jugend separat
+  oder eingereiht, Katalog und Einteilung); `src/einteilung.test.ts` (Vorschlag).
 
 ## Datenbank
 
 `rasse.gruppe` (Text, leer = nicht gepflegt). `preisrichter`: `sparten`, `gruppen` (jsonb), `obmann_id` (→ `preisrichter`,
-beim Löschen leer), `zusage` (Aufzählung `pr_zusage`), `zugesagt_fuer`, `vorbehalt` – Migration 0068.
+beim Löschen leer), `zusage` (Aufzählung `pr_zusage`), `zugesagt_fuer`, `vorbehalt` – Migration 0068. `pr_zuteilung.jugend` (eindeutig je Schau, Sparte, Rasse, Farbenschlag,
+Jugend) und `schau.einteilung_jugend_separat` – Migration 0069.

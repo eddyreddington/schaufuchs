@@ -720,9 +720,9 @@ Die Seite „Einstellungen“ zeigt jeden Punkt in einem eigenen Reiter: „Scha
 | „Bankverbindung für das Meldegeld“ | erscheint bei Zahlung vorab im Meldeformular und in der Eingangsbestätigung; mit GiroCode gilt stattdessen das Vereinskonto |
 | „Kontoinhaber“, „IBAN“, „BIC“ | Vereinskonto für Überweisungen an Aussteller (SEPA-Datei) und für den GiroCode. Ohne IBAN keine SEPA-Datei. |
 | „Preise aus dem Standgeld verteilen“ | „je Preisrichter (aus seinen Tieren)“ oder „gemeinsam für die ganze Schau“ – üblich ist je Preisrichter |
-| „Jugend als eigener Block im Katalog“ | nach dem Festschreiben gesperrt |
+| „Jugend im Katalog“ | „eigener Block am Ende“ (Vorgabe) oder „in der Rasse eingereiht“, siehe unten. Nach dem Festschreiben gesperrt. |
 | „Volieren und Stämme vor den Einzeltieren“ | nach dem Festschreiben gesperrt |
-| „Katalognummern nach Käfigblöcken (so wie die Käfige in der Halle stehen)“ | Jede Käfiggröße bekommt einen durchgehenden Nummernblock, in der Reihenfolge, die Sie mit ↑ und ↓ festlegen (so wie die Käfige in der Halle stehen); innerhalb eines Blocks gilt die Ausstellungsfolge. Eine Sparte kann dann in zwei Blöcken stehen, z. B. Gänse im Großkäfig und Enten im Hühnerkäfig. Mit „Jugend als eigener Block“ folgt die Jugend dahinter wieder in derselben Blockfolge. Wirkt beim nächsten Nummern-Vergeben, nach dem Festschreiben gesperrt. |
+| „Katalognummern nach Käfigblöcken (so wie die Käfige in der Halle stehen)“ | Jede Käfiggröße bekommt einen durchgehenden Nummernblock, in der Reihenfolge, die Sie mit ↑ und ↓ festlegen (so wie die Käfige in der Halle stehen); innerhalb eines Blocks gilt die Ausstellungsfolge. Eine Sparte kann dann in zwei Blöcken stehen, z. B. Gänse im Großkäfig und Enten im Hühnerkäfig. Mit „Jugend im Katalog: eigener Block am Ende“ folgt die Jugend dahinter wieder in derselben Blockfolge. Wirkt beim nächsten Nummern-Vergeben, nach dem Festschreiben gesperrt. |
 | „Sonderbestimmungen“ | erscheinen im Meldeformular; Aussteller stimmen ihnen zu |
 | „Pflichterklärungen der Aussteller“ | je Zeile eine Erklärung, die Aussteller ankreuzen müssen (z. B. Herkunft nicht aus Sperrbezirk) |
 | Veterinäramt: „Zuständiges Veterinäramt“, „Registriernummer der Veranstaltung“, „Angezeigt am“, „Aktenzeichen“ | Die Prüfliste erinnert an die Anzeige spätestens 4 Wochen vor der Schau. Beim Tippen in „Zuständiges Veterinäramt“ schlägt die Software Ämter aus einem Verzeichnis aller Landkreise und kreisfreien Städte vor (Kreis oder Ort eingeben); ein Klick trägt Amt und Anschrift ein. Passt der Ort der Schau zu einem Kreis, steht das Amt als „Vorschlag“ unter dem leeren Feld. Bitte die Angaben vor der Anzeige kurz prüfen – Zuständigkeiten ändern sich. |
@@ -734,6 +734,15 @@ Die Seite „Einstellungen“ zeigt jeden Punkt in einem eigenen Reiter: „Scha
 | „Aussteller aus anderen Mitgliedstaaten zugelassen“ | Vorbelegt ist der Haken gesetzt. Ohne Haken lehnt die Meldung ausländische Registriernummern ab („Diese Schau nimmt keine Tiere aus dem Ausland an …“). Mit Haken brauchen deren Tiere ein amtliches Gesundheitszertifikat und eine TRACES-NT-Meldung, auch Tauben eine ND-Impfung; das Veterinäramt kontrolliert beim Einlass. Die Prüfliste weist auf solche Meldungen hin. |
 
 Klicken Sie auf „Einstellungen speichern“.
+
+#### Jugend im Katalog {#jugend-im-katalog}
+
+Wie die Tiere der Jugend im Katalog stehen, wählen Sie im Reiter „Katalog und Preise“ unter „Jugend im Katalog“:
+
+- **„eigener Block am Ende“** (Vorgabe): Die Jugend bekommt hinter allen Senioren eigene Nummern, im Katalog eine eigene Abteilung „Jugend“ (mit Sparten und Rassen wie vorn), in den Ergebnissen eigene Überschriften „Jugend – …“. Mit Teilschauen gilt das je Teilschau.
+- **„in der Rasse eingereiht“**: Die Jugendtiere stehen bei ihrer Rasse und ihrem Farbenschlag zwischen den Senioren, nach der Reihenfolge der Nummern (siehe „Reihenfolge der Katalognummern“). Eine eigene Jugendabteilung gibt es dann weder im Katalog noch in den Ergebnissen; im Katalog steht beim Tier weiter „Jugend“.
+
+Die Wahl gilt beim nächsten „Katalognummern vergeben“ für Nummern, Hallenplan, Bewertungskarten, Listen und Ergebnisse. Nach dem Festschreiben ist sie gesperrt („Festgeschrieben“). Wie die Preisrichter die Jugend bekommen, stellen Sie davon unabhängig unter „Preisrichter“ ein (siehe 5.8, „Jugend in der Einteilung“).
 
 **Schau löschen:** Eine Schau, die nur zum Ausprobieren angelegt wurde, löschen Sie in den Einstellungen im Reiter „Verwalten“ mit „Schau löschen …“. Das geht nur, solange sie in der Phase „Vorbereitung“ steht und noch keine Meldungen, Stiftungen oder Kassenbuchungen hat. Zur Sicherheit tippen Sie den Namen der Schau ein und geben einen Grund an; das Löschen steht danach im Protokoll des Vereins. Einstellungen, Preisrichter und Katalogseiten der Schau sind dann weg. Eine **Testschau** dagegen lässt sich in jeder Phase löschen, mit allen Meldungen, ihren Test-Ausstellern, Bewertungen, Kasse und Belegen; echte Aussteller sind davon nie betroffen.
 
@@ -952,7 +961,7 @@ Schalten Sie mit „Weiter zu Katalog & Halle“ um. Damit schließt die Online-
 ![Katalognummern vergeben, Ausgaben drucken, Nummern festschreiben.](bilder/katalognummern.jpg)
 
 1. „Katalognummern“ → „Katalognummern vergeben“ (oben im Seitenkopf, wie „Nummern festschreiben“).
-2. Die Software nummeriert alle bestätigten Tiere lückenlos in Ausstellungsfolge. Ohne eigene Wahl gilt: Sparte, Rasse, Farbenschlag, dann je Züchter 1,0 jung, 1,0 alt, 0,1 jung, 0,1 alt – die Tiere eines Züchters stehen im Farbenschlag also nacheinander, auch wenn er nachgemeldet hat. Mit „Volieren und Stämme vor den Einzeltieren“ entsprechend vorn, mit „Jugend als eigener Block“ getrennt. Die Käfignummer ist die Katalognummer. Eine andere Folge stellen Sie unter „Reihenfolge der Nummern“ ein (siehe unten).
+2. Die Software nummeriert alle bestätigten Tiere lückenlos in Ausstellungsfolge. Ohne eigene Wahl gilt: Sparte, Rasse, Farbenschlag, dann je Züchter 1,0 jung, 1,0 alt, 0,1 jung, 0,1 alt – die Tiere eines Züchters stehen im Farbenschlag also nacheinander, auch wenn er nachgemeldet hat. Mit „Volieren und Stämme vor den Einzeltieren“ entsprechend vorn, mit „Jugend im Katalog: eigener Block am Ende“ getrennt, mit „in der Rasse eingereiht“ zwischen den Senioren (siehe „Jugend im Katalog“ in 5.3). Die Käfignummer ist die Katalognummer. Eine andere Folge stellen Sie unter „Reihenfolge der Nummern“ ein (siehe unten).
 
 Bis zum Festschreiben können Sie beliebig oft neu vergeben, etwa nach späten Zahlungen. Dabei werden **alle** Nummern neu gesetzt. Sind die Preisrichter nach Rassen eingeteilt (unter „Preisrichter“), bekommen sie ihre Nummernbereiche dabei gleich mit.
 
@@ -971,7 +980,7 @@ Auf der Seite „Katalognummern“ legt der Abschnitt „Reihenfolge der Nummern
 | Alter | „jung vor alt“ oder „alt vor jung“. |
 
 - Mit den Haken schalten Sie Meldeart, Verein, Aussteller, Ausstellernummer, Geschlecht und Alter an oder ab, mit ↑ und ↓ verschieben Sie sie untereinander (unterhalb von Farbenschlag). Beispiel: Steht „Geschlecht“ über „Aussteller“, kommen im Farbenschlag erst alle 1,0 (je Aussteller), dann alle 0,1. Steht „Alter“ über „Geschlecht“, kommen erst alle Jungtiere, dann die alten. Volieren und Stämme als eigene Abteilung vor allen Einzeltieren stellen Sie in den Einstellungen ein (siehe unten).
-- Vorweg gilt die Gliederung aus den Einstellungen (Reiter „Katalog und Preise“): „Jugend als eigener Block“ (Jugend am Ende), Käfigblöcke und „Volieren und Stämme vor den Einzeltieren“. Die Zeile „Vorweg: …“ nennt sie, der Link führt dorthin. In den Einstellungen steht unter „Reihenfolge der Nummern“ die aktuelle Folge mit einem Link hierher.
+- Vorweg gilt die Gliederung aus den Einstellungen (Reiter „Katalog und Preise“): „Jugend im Katalog“ (eigener Block am Ende oder in der Rasse eingereiht), Käfigblöcke und „Volieren und Stämme vor den Einzeltieren“. Die Zeile „Vorweg: …“ nennt sie, der Link führt dorthin. In den Einstellungen steht unter „Reihenfolge der Nummern“ die aktuelle Folge mit einem Link hierher.
 - „Vorgabe“ stellt die bisherige Folge wieder her. Gespeichert wird mit „Reihenfolge speichern“ oben rechts; die Änderung steht im Protokoll („Reihenfolge der Katalognummern“).
 - Die Nummern ändern sich erst beim nächsten „Katalognummern vergeben“. Nach dem Festschreiben ist die Reihenfolge gesperrt („Festgeschrieben“). Nachmeldungen bekommen ihre Unternummer nach der gespeicherten Folge, vorhandene Nummern bleiben.
 - Laufen die Nummern nach dem Hallenplan („Nach Plan nummerieren“), bestimmt der Plan die Folge. Der Plan selbst stellt nicht nummerierte Tiere in der hier gewählten Folge auf.
@@ -993,7 +1002,7 @@ Sind Einteilung und Drucke fertig, klicken Sie „Nummern festschreiben“ und b
 - bestehende Nummern ändern sich nicht mehr,
 - nachträglich bestätigte Tiere nummerieren Sie mit „Nachmeldungen nummerieren“; sie bekommen Unternummern wie **100a**,
 - passt eine Nachmeldung nicht sauber in die Folge, meldet die Software „Nicht ganz in Ausstellungsfolge …“ – vermerken Sie das im Katalognachtrag,
-- Verzeichnisversion, Jugendblock und Reihenfolge der Stämme sind gesperrt,
+- Verzeichnisversion, „Jugend im Katalog“ und Reihenfolge der Stämme sind gesperrt,
 - nummerierte Tiere bleiben in ihrer Meldung, und Rasse, Farbenschlag, Art, Geschlecht und Alter lassen sich nicht mehr ändern – sie stehen schon auf Karten und im Katalog. In der Meldung steht dann „Katalog festgeschrieben – Tier bleibt so. Falsches Tier: bei der Einlieferung „fehlt“ und richtig nachmelden.“ Kommt ein Tier nicht, markieren Sie es bei der Einlieferung als „fehlt“; das richtige Tier melden Sie nach (Unternummer). Die ganze Meldung lässt sich weiter stornieren.
 
 „Festschreibung aufheben“ geht nur, solange es noch keine Bewertungen, Preise oder Verkäufe gibt. Danach passen gedruckte Bewertungskarten nicht mehr.
@@ -1315,6 +1324,17 @@ Die Seite „Preisrichter“ steht in der Seitenleiste bei der Vorbereitung (Pre
 5. Oben rechts „Rassen-Einteilung speichern“. Sind die Katalognummern schon vergeben, werden die Bereiche gleich neu berechnet.
 
 Eine Nachmeldung mit Unternummer (24a) geht an den Preisrichter der Nummer 24 – gehörte sie nach ihrer Rasse zu einem anderen, nennt die Software die Nummer nach dem Speichern.
+
+#### Jugend in der Einteilung {#einteilung-jugend}
+
+Oben im Reiter „Einteilung nach Rassen“ wählen Sie unter „Jugend in der Einteilung“, wie die Tiere der Jugend an die Preisrichter gehen:
+
+- **„mit der Rasse“** (Vorgabe): Die Jugend einer Rasse bewertet der Preisrichter dieser Rasse bzw. ihres Farbenschlags.
+- **„separat“**: Je Rasse mit Jugendtieren steht eine eigene Zeile „Jugend: Rasse“ mit der Zahl der Jugendtiere (und auf Wunsch „Farbenschläge“). Dort wählen Sie einen eigenen Preisrichter; „wie die Rasse“ lässt die Jugend beim Preisrichter der Rasse. Eine Wahl für einen Farbenschlag der Jugend geht vor der Wahl für die ganze Jugend der Rasse. Die Zeilen stehen wie im Katalog: mit „Jugend im Katalog: eigener Block am Ende“ hinter allen Senioren der Sparte, sonst gleich unter ihrer Rasse.
+
+Bei „separat“ behandelt „Gleichmäßig verteilen“ die Jugend jeder Rasse als eigene Einheit; Sparten und Gruppen der Preisrichter gelten wie bei den Senioren. Die Bereiche nach Nummern ergeben sich wie gewohnt aus der Einteilung – steht die Jugend im Katalog eingereiht, kann ein Preisrichter so mehrere kleine Bereiche bekommen.
+
+Die Einstellung wirkt sofort und steht im Protokoll („Jugend in der Einteilung“). Sind schon Katalognummern vergeben, rechnet die Software die Bereiche gleich neu; wechseln dabei schon bewertete Tiere den Preisrichter, fragt sie vorher nach. Zurück auf „mit der Rasse“ bleiben die Preisrichter der Jugendzeilen gespeichert, gelten aber erst wieder bei „separat“. Eine neue Schau aus einer Vorlage übernimmt die Einstellung.
 
 #### Einteilung nach Nummern
 

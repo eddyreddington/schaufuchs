@@ -21,9 +21,10 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 
 - Vor dem Festschreiben setzt jede Vergabe **alle** Nummern neu, lückenlos ab `katalogStart`. Nach dem Festschreiben
   (`schau.katalog_gedruckt`) ändert sich keine bestehende Nummer mehr; Nachmeldungen bekommen Nummer des Vorgängers plus Unternummer.
-- Gliederung: Jugend (wenn getrennt), Käfigblöcke, Volieren und Stämme vorn (wenn gewählt); darin Sparte, Rasse, Farbenschlag
+- Gliederung: Jugend (`schau.jugend_separat`: „eigener Block am Ende“, sonst „in der Rasse eingereiht“; `istJugendBlock()`
+  für Nummern, Katalog-PDF, Kurzkatalog und Ergebnisse), Käfigblöcke, Volieren und Stämme vorn (wenn gewählt); darin Sparte, Rasse, Farbenschlag
   fest, dann die gewählten Kriterien. Vorgabe = bisherige Folge; gespeicherte Listen ohne neue Kriterien sortieren unverändert.
-- Nach dem Festschreiben gesperrt: Sortierung, Verzeichnisversion, Jugendblock, Reihenfolge der Stämme, Rasse/Art/Geschlecht/Alter nummerierter Tiere.
+- Nach dem Festschreiben gesperrt: Sortierung, Verzeichnisversion, „Jugend im Katalog“, Reihenfolge der Stämme, Rasse/Art/Geschlecht/Alter nummerierter Tiere.
 - Sind die Preisrichter nach Rassen eingeteilt, folgen die Nummernbereiche den neuen Nummern.
 - Änderungen mit `protokolliere()`; öffentlich sichtbare Gestaltung über `oeffentlichSichtbarProcedure` (erneuert Zwischenspeicher).
 - Namen im gedruckten Katalog nur mit unterschriebenem Meldebogen, im Internet zusätzlich mit Online-Einwilligung; online keine Wohnanschrift.
@@ -32,7 +33,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 ## Tests
 
 - Domain: `domain.test.ts` (Nummern, Nachmeldungen), `katalog-sortierung.test.ts` (Vorgabe = alte Folge in Zufallsschauen), `katalog-gliederung.test.ts`.
-- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `36-nach-plan-nummerieren`, `43-katalog-sortierung`.
+- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog).
 
 ## Datenbank
 

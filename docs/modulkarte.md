@@ -120,13 +120,15 @@ Tests: `druckvorlage.test.ts`
 
 - `EingabeFehler` (Klasse) – Fehler in den Angaben (hochgeladene Datei, Konto, Mandat), dessen Text der Server wörtlich als Meldung zeigen darf.
 
-### einteilung.ts (99 Z.)
+### einteilung.ts (135 Z.)
 Preisrichter-Einteilung nach Rassen: Vor der Nummernvergabe teilt die Ausstellungsleitung die Preisrichter nach Sparte, Rasse und – wo eine Rasse g …
 Tests: `einteilung.test.ts`
 
 - `RassenRegel` (Typ) – Eine Regel: diese Rasse (bzw. dieser Farbenschlag der Rasse) geht an diesen Preisrichter.
 - `EinteilTier` (Typ) – Was ein Tier für die Einteilung ausmacht.
 - `richterNachRasse()` – Preisrichter für ein Tier: eine Regel für seinen Farbenschlag geht vor der Regel für die ganze Rasse.
+- `EinteilFolgeTier` (Typ) – Für die Folge der Einteilung: ein Tier mit den Stellen aus dem Verzeichnis (null = nicht im Verzeichnis).
+- `vergleicheEinteilFolge()` – Folge der Einteilung nach Rassen: Sparte, Rasse, Farbenschlag (ohne Verzeichnis-Folge dahinter, nach dem Namen).
 - `bereicheAusRassen()` – Nummernbereiche aus der Einteilung nach Rassen.
 - `regelnAusZuteilung()` – Aus einer Einteilung nach Nummern (z. B. dem gleichmäßigen Vorschlag) Regeln je Rasse machen: Geht eine Rasse ganz an einen Preisrichter, eine Rege …
 
@@ -511,7 +513,7 @@ Käfige: Welche Käfiggröße braucht ein gemeldetes Tier, und welche Käfignumm
 - `kaefigVorschlag()` – Vorschlag für eine Rasse, wenn er von der automatischen Größe abweicht – sonst null.
 - Typen: `KaefigTyp`, `KaefigVorschlag`
 
-### katalog.ts (316 Z.)
+### katalog.ts (324 Z.)
 
 - `FolgeEintrag` (Typ) – Ein Katalogeintrag mit allem, was für die Ausstellungsfolge zählt.
 - `SORTIER_KRITERIEN` – Kriterien, nach denen die Katalognummern innerhalb der Gliederung (Jugend, Käfigblöcke, Volieren und Stämme vorn) laufen.
@@ -523,6 +525,7 @@ Käfige: Welche Käfiggröße braucht ein gemeldetes Tier, und welche Käfignumm
 - `istStandardSortierung()` – Ist das die Vorgabe?
 - `sortierungText()` – Kurztext: „Sparte, Rasse, Farbenschlag, Meldeart, Aussteller, Geschlecht (1,0 vor 0,1), Alter (jung vor alt)“.
 - `gruppenAbteilung()` – Eigene Abteilung im Katalog, wenn Stämme und Volieren vorn stehen – sonst null (Tier steht in seiner Sparte).
+- `istJugendBlock()` – Steht das Tier im eigenen Jugendblock (Einstellung „Jugend im Katalog: eigener Block am Ende“)?
 - `vergleicheFolge()`
 - `vergebeKatalognummern()` – Vergibt alle Katalognummern neu, lückenlos ab `start`.
 - `nachmeldungsNummer()` – Nummer für eine Nachmeldung, ohne bestehende Nummern zu ändern: Sie bekommt die Nummer ihres Vorgängers in der Ausstellungsfolge plus Unternummer ( …
@@ -843,7 +846,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (118 Z.)
+### preisrichter.ts (124 Z.)
 
 - `preisrichter`
 
@@ -851,7 +854,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (184 Z.)
+### schau-einstellungen.ts (187 Z.)
 
 - `schauEinstellungen`
 
@@ -1036,7 +1039,7 @@ Texte der Oberfläche: preisrichter, Teil import – Import aus Altprogrammen (E
 
 - `preisrichterTermine` – Texte der Oberfläche: preisrichter, Teil termine – Katalogseite „Kommende Schauen“ (Entscheidung 022).
 
-### preisrichter.ts (116 Z.)
+### preisrichter.ts (122 Z.)
 Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mit Einteilung, dazu die Seiten „Kommende Schauen“ (`termine`) und Impor …
 
 - `preisrichter`
@@ -1045,7 +1048,7 @@ Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mi
 
 - `rahmen` – Texte der Oberfläche: rahmen (Entscheidung 022) – App-Rahmen mit Seitenmenü und Benutzermenü, Anmeldung, Einladung, Hilfe-Rahmen, Fehlerseite und d …
 
-### schau-einstellungen.ts (191 Z.)
+### schau-einstellungen.ts (194 Z.)
 
 - `schauEinstellungen` – Texte der Oberfläche: schau.einstellungen (Entscheidung 022) – Seite „Einstellungen“ der Schau und ihre Abschnitte.
 
@@ -1232,7 +1235,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (115 Z.)
+### preisrichter.ts (121 Z.)
 
 - `preisrichter`
 
@@ -1240,7 +1243,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (184 Z.)
+### schau-einstellungen.ts (187 Z.)
 
 - `schauEinstellungen`
 
@@ -1417,7 +1420,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (115 Z.)
+### preisrichter.ts (121 Z.)
 
 - `preisrichter`
 
@@ -1425,7 +1428,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (184 Z.)
+### schau-einstellungen.ts (187 Z.)
 
 - `schauEinstellungen`
 
@@ -1606,7 +1609,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (115 Z.)
+### preisrichter.ts (121 Z.)
 
 - `preisrichter`
 
@@ -1614,7 +1617,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (184 Z.)
+### schau-einstellungen.ts (187 Z.)
 
 - `schauEinstellungen`
 
@@ -1792,7 +1795,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (119 Z.)
+### preisrichter.ts (125 Z.)
 
 - `preisrichter`
 
@@ -1800,7 +1803,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (184 Z.)
+### schau-einstellungen.ts (187 Z.)
 
 - `schauEinstellungen`
 
@@ -2047,7 +2050,7 @@ Tests: `zuwendungsbestaetigung.test.ts`
 - `betragFelder()` – Betrag in Ziffern und Buchstaben (BMF Nr. 5).
 - `sachSaetze()` – Text der Sachzuwendung: Bezeichnung und die zutreffenden Sätze zur Herkunft und zu den Unterlagen.
 
-Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-nummerfolge.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `oberflaeche.test.ts`, `preisbindung.test.ts`, `sprachen.test.ts`, `stammdaten-gruppe.test.ts`, `stiftung.test.ts`
+Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `einteilung-jugend.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-nummerfolge.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `oberflaeche.test.ts`, `preisbindung.test.ts`, `sprachen.test.ts`, `stammdaten-gruppe.test.ts`, `stiftung.test.ts`
 
 ## tRPC-Prozeduren `apps/server/src/routers`
 
@@ -2340,7 +2343,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `preise.stiftungLoeschen` mutation · admin
 - `preise.freigeben` mutation · admin – Gibt die Ergebnisse frei (öffentlich sichtbar, Bewertung geschlossen).
 
-### routers/preisrichter.ts (392 Z.) → `preisrichter`
+### routers/preisrichter.ts (428 Z.) → `preisrichter`
 
 - `preisrichter.liste` query · angemeldet
 - `preisrichter.speichern` mutation · admin
@@ -2351,7 +2354,8 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `preisrichter.einteilungVorschlagen` query · admin
 - `preisrichter.zuteilung` query · angemeldet – Einteilung nach Rassen: alle gemeldeten Rassen (offene und bestätigte Meldungen) in Ausstellungsfolge mit Tierzahl und Farbenschlägen, dazu die ges …
 - `preisrichter.zuteilungSetzen` mutation · admin – Einteilung nach Rassen speichern.
-- `preisrichter.zuteilungVorschlagen` query · admin – Vorschlag: gleichmäßig verteilen in der Folge Sparte, Rasse, Farbenschlag (ohne die Blöcke für Stämme und Jugend – so liegt jede Rasse beisammen un …
+- `preisrichter.zuteilungVorschlagen` query · admin – Vorschlag: gleichmäßig verteilen in der Folge Sparte, Rasse, Farbenschlag (ohne die Blöcke für Stämme – so liegt jede Rasse beisammen und wird nur …
+- `preisrichter.einteilungJugendSetzen` mutation · admin – Jugend in der Einteilung nach Rassen: mit ihrer Rasse (Vorgabe) oder separat mit eigenen Zeilen und Preisrichtern.
 
 ### routers/rassebild.ts (107 Z.) → `rassebild`
 Rassebilder: ansehen (alle Benutzer) und pflegen (Ausstellungsleitung).
@@ -2361,7 +2365,7 @@ Rassebilder: ansehen (alle Benutzer) und pflegen (Ausstellungsleitung).
 - `rassebild.angabenSetzen` mutation · admin – Urheber, Lizenz, Quelle und „geprüft“ ändern.
 - `rassebild.loeschen` mutation · admin
 
-### routers/schau/anlegen.ts (296 Z.) → `schau`
+### routers/schau/anlegen.ts (297 Z.) → `schau`
 Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
 
 - `schau.anlegen` mutation · admin – Neue Schau anlegen – leer mit Startwerten oder aus einer früheren Schau des Vereins als Vorlage.
@@ -2527,7 +2531,7 @@ Prozeduren: schau.notenskalaSetzen
 ### einstellungen-preise.tsx (263 Z.)
 Prozeduren: schau.gebuehrenSetzen, schau.preisartLoeschen, schau.preisartSpeichern
 
-### einstellungen-stammangaben.tsx (328 Z.)
+### einstellungen-stammangaben.tsx (335 Z.)
 Prozeduren: schau.aktualisieren, stammdaten.versionen
 
 ### einstellungen-teilschauen.tsx (73 Z.)
@@ -2699,8 +2703,11 @@ Prozeduren: auth.status, preise.entfernen, preise.freigeben, preise.stiftungBarE
 Dialog „Preisrichter hinzufügen“ bzw. „Preisrichter bearbeiten“: Angaben, Sparten, BDRG-Gruppen, Obmann und Zusage.
 Prozeduren: preisrichter.speichern, stammdaten.gliederung
 
-### preisrichter.tsx (543 Z.) – `/schau/:schauId/preisrichter`
-Prozeduren: preisrichter.einteilungSetzen, preisrichter.einteilungVorschlagen, preisrichter.liste, preisrichter.loeschen, preisrichter.pinErzeugen, preisrichter.sperreAufheben, preisrichter.zuteilung, preisrichter.zuteilungSetzen, preisrichter.zuteilungVorschlagen, schau.get
+### preisrichter-rassen.tsx (222 Z.)
+Prozeduren: preisrichter.einteilungJugendSetzen, preisrichter.zuteilung, preisrichter.zuteilungSetzen, preisrichter.zuteilungVorschlagen
+
+### preisrichter.tsx (352 Z.) – `/schau/:schauId/preisrichter`
+Prozeduren: preisrichter.einteilungSetzen, preisrichter.einteilungVorschlagen, preisrichter.liste, preisrichter.loeschen, preisrichter.pinErzeugen, preisrichter.sperreAufheben, preisrichter.zuteilung, schau.get
 
 ### protokoll.tsx (138 Z.) – `/schau/:schauId/protokoll`
 Prozeduren: schau.protokoll, schau.protokollPruefen
@@ -2780,7 +2787,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datenschutz-lastschrift.ts` (75 Z.) – SEPA-Lastschrift im Datenschutz (Entscheidung 018): was über Mandate und Einzüge in die Auskunft gehört (Art. 15), was der Löschwunsch entfernt (Ar … · lastschriftAuskunft, loescheLastschriftDaten, bereinigeMandate
 - `datenschutz.ts` (593 Z.) · ladeVereinsangaben, ladeAuskunft, ladeAuskunftPerson, loescheAussteller, bereinige, starteBereinigung
 - `einteilung-vorschlag.ts` (189 Z.) – Vorschlag für die Einteilung nach Nummern (und über Nummern je Farbenschlag auch nach Rassen): Tiere in Katalogfolge auf die Preisrichter verteilen … · schlageEinteilungVor
-- `einteilung.ts` (90 Z.) · sperreEinteilung, einteilTier, einteilSchluessel, ladeRegeln, bereicheDerSchau, rassenEinteilungAnwenden, einteilungNachStatus
+- `einteilung.ts` (101 Z.) · sperreEinteilung, einteilTier, einteilSchluessel, ladeRegeln, jugendSeparatEingeteilt, bereicheDerSchau, rassenEinteilungAnwenden, einteilungNachStatus
 - `eintraege.ts` (259 Z.) · ladeEintraege, NICHT_VEROEFFENTLICHT, verdeckeNamen, ausstellerAnzeige, bezeichnung, alsFolge, meldebetrag, meldebetraege, skalaVon
 - `ersteinrichtung.ts` (111 Z.) – Ersteinrichtung: Verein und erster Administrator. · ersteinrichtungAngaben, BEREITS_EINGERICHTET, richteEinMitPasswort, richteEinPerBefehl
 - `fehlertext.ts` (5 Z.) · kurzerFehler
@@ -2852,7 +2859,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `geheim.ts` (112 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, entschluessele, geheimText, geheimJsonLesen, geheimJson
 - `schema-aufzaehlungen.ts` (20 Z.) – Aufzählungstypen der Datenbank (pgEnum) – Phasen, Meldearten, Status, Zahlarten u. a. Über schema.ts exportiert. · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum, zusageEnum
 - `schema-betrieb.ts` (12 Z.) – Betrieb: Angaben für die Gesundheitsprüfung (Entscheidung 024). · sicherung
-- `schema-bewertung.ts` (114 Z.) – Preisrichter und Bewertung: Vereinsverzeichnis, Preisrichter, Einteilung, Bewertung, Textbausteine. · vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein
+- `schema-bewertung.ts` (116 Z.) – Preisrichter und Bewertung: Vereinsverzeichnis, Preisrichter, Einteilung, Bewertung, Textbausteine. · vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein
 - `schema-hallenentwurf.ts` (35 Z.) – Entwürfe des Hallenplans (Entscheidung 017): Je Schau mehrere Varianten speichern und laden; ist entschieden, gehen die übrigen ins Archiv des Vere … · hallenentwurf
 - `schema-import.ts` (26 Z.) – Import aus Altprogrammen (Entscheidung 015): je Importlauf, was er angelegt hat – damit „Zurücknehmen“ genau das wieder entfernt, solange nichts we … · importlauf
 - `schema-kasse.ts` (79 Z.) – Kassenbuch und Belegarchiv: Kassenbewegungen, Tagesabschlüsse, Belege; SEPA-Überweisungsläufe. · KASSENBEWEGUNG_ARTEN, kassenbewegung, kassenabschluss, beleg, sepaLauf
@@ -2861,7 +2868,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `schema-mandant.ts` (135 Z.) – Mandant (Verein) mit Benutzern und Sitzungen; Stammdaten des Verzeichnisses (Sparten, Rassen, Farbenschläge je Version). · organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag
 - `schema-meldung.ts` (174 Z.) – Aussteller und Meldungen: Aussteller, Meldung, Zahlung des Meldegelds, Katalogeinträge (Tiere). · aussteller, meldung, zahlung, katalogeintrag
 - `schema-protokoll.ts` (73 Z.) – Protokoll und Post: Änderungsprotokoll mit Hash-Kette und ihren Vermerken, Postausgang. · aenderung, postausgang, aenderungKette, aenderungGeloescht, aenderungAnonymisiert
-- `schema-schau.ts` (143 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
+- `schema-schau.ts` (145 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
 - `schema-spenden.ts` (115 Z.) – Spenden (Entscheidung 013): Spenderverzeichnis des Vereins, Spenden je Schau und Zuwendungsbestätigungen. · spender, spende, zuwendungsbestaetigung, bestaetigungSpende
 - `schema-termine.ts` (68 Z.) – Kommende Schauen: abonnierte Kalender und Termine anderer Schauen für den Katalog. · TERMIN_STATUS, terminabo, schautermin
 - `schema-verkauf.ts` (138 Z.) – Preise, Verkauf, Geld: Stiftungen, Preisvergabe, Verkauf mit Zahlungseingang, Tiergesundheit, Auszahlungen. · stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung
@@ -3005,5 +3012,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `69-preisrichter-gruppen.ts` (157 Z.) – Preisrichter, Stufe 1: BDRG-Gruppen je Rasse (Verzeichnis, CSV) und je Preisrichter mit Prüfung in der Einteilung, Zuordnung zu einem Obmann, Stand …
 - `70-preisrichter-drucke.ts` (132 Z.) – Preisrichter, Stufe 2: Preisrichterverpflichtung als Brief mit Abschnitt zum Abtrennen (/datei/:schauId/preisrichter-verpflichtung.pdf) und die Bew …
 - `71-preisrichter-gegenpruefung.ts` (103 Z.) – Preisrichter, Gegenprüfung: Zusage, Vorbehalt, Gruppen und Obmann in Auskunft, Bereinigung und Protokoll (Vorbehalt nur als „geändert“), Vorlage oh …
+- `72-jugend-einteilung.ts` (155 Z.) – Jugend separat oder eingereiht: Katalognummern (eigener Block am Ende oder in der Rasse) und Preisrichter-Einteilung nach Rassen („mit der Rasse“ w …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

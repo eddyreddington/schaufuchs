@@ -257,7 +257,7 @@ Vor dem Speichern prüft die Software jede Zeile. Fehler stehen rot unter dem Fo
 
 ### Jugendliche Aussteller
 
-1. Setzen Sie den Haken „Jugendlicher“ (Jugendtarif und Jugendblock im Katalog).
+1. Setzen Sie den Haken „Jugendlicher“ (Jugendtarif; im Katalog je nach Einstellung der Schau eigener Jugendblock oder bei der Rasse).
 2. Tragen Sie das „Geburtsdatum (nur Jugend)“ ein.
 3. Tragen Sie unter „Erziehungsberechtigter“ ein, wer auf dem Meldebogen unterschrieben hat.
 
