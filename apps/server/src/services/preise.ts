@@ -110,8 +110,7 @@ export async function vergebePreis(
       ({ verfuegbar, vergeben } = await ausKontingent());
     } else {
       // Ohne „zusätzlich je Preisrichter“ gibt es ohne Stiftung keinen Preis.
-      vergeben = 0;
-      verfuegbar = 0;
+      throw fehler("BAD_REQUEST", "Diesen Preis gibt es nur aus einer Stiftung.");
     }
   }
 

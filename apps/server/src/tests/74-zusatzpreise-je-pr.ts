@@ -16,6 +16,7 @@ describe("Zusatzpreise je Preisrichter", () => {
   let zp = 0;
   let pe = 0;
   let stiftungId = 0;
+  let sued = 0;
   const zpZeile = async () =>
     (await al().preise.uebersicht({ schauId: id })).kontingente.map((k) => `${k.name}: ${k.arten.filter((a) => a.preisartId === zp).map((a) => `${a.vergeben}/${a.verfuegbar}`).join("")}`);
   const ohne = (i: number) => al().preise.vergeben({ schauId: id, katalogeintragId: tiere[i]!.id, preisartId: zp, ohneStiftung: true });
@@ -40,7 +41,8 @@ describe("Zusatzpreise je Preisrichter", () => {
     pe = arten.find((a) => a.kuerzel === "PE")!.id;
     await al().preise.stiftungSpeichern({ schauId: id, stifter: "Kreisverband Nord", preisartId: zp, anzahl: 2, betragCent: 2000, vorgabe: "", eingegangenAm: null });
     await al().preise.stiftungSpeichern({ schauId: id, stifter: "Verband Ost", preisartId: pe, anzahl: 2, betragCent: 0, vorgabe: "", eingegangenAm: null });
-    stiftungId = (await m.db.select().from(m.schema.stiftung).where(m.eq(m.schema.stiftung.preisartId, zp)))[0]!.id;
+    await al().preise.stiftungSpeichern({ schauId: id, stifter: "Kreisverband Süd", preisartId: zp, anzahl: 1, betragCent: 0, vorgabe: "", eingegangenAm: null });
+    [stiftungId, sued] = (await m.db.select().from(m.schema.stiftung).where(m.eq(m.schema.stiftung.preisartId, zp))).map((st) => st.id).sort((x, y) => x - y) as [number, number];
     for (const name of [anna.name, bert.name]) await al().preisrichter.speichern({ schauId: id, name, anschrift: "", telefon: "", email: "", istObmann: false, sparten: [] });
     const pr = (await m.db.select().from(m.schema.preisrichter).where(m.eq(m.schema.preisrichter.schauId, id))).sort((a, b) => a.name.localeCompare(b.name));
     anna = pr[0]!;
@@ -59,8 +61,10 @@ describe("Zusatzpreise je Preisrichter", () => {
     await expect(ohne(1)).rejects.toThrow("ausgeschöpft");
     expect(await zpZeile()).toEqual(["Anna Ahorn: 1/1", "Bert Birke: 0/1"]);
     await ohne(4);
-    // Ohne Preisrichter kein Zusatzpreis.
+    // Ohne Preisrichter kein Zusatzpreis, wohl aber ein Preis aus einer Stiftung (zählt nur gegen die Stiftung).
     await expect(ohne(6)).rejects.toThrow("keinem Preisrichter");
+    await al().preise.vergeben({ schauId: id, katalogeintragId: tiere[6]!.id, preisartId: zp, stiftungId: sued });
+    expect(await zpZeile()).toEqual(["Anna Ahorn: 1/1", "Bert Birke: 1/1"]);
 
     // Preise aus der Stiftung zählen gegen die Stiftung, nicht gegen Annas Zusatzpreis: beide an Annas Tiere.
     await al().preise.vergeben({ schauId: id, katalogeintragId: tiere[1]!.id, preisartId: zp, stiftungId });
@@ -72,7 +76,7 @@ describe("Zusatzpreise je Preisrichter", () => {
     await expect(al().preise.vergeben({ schauId: id, katalogeintragId: tiere[5]!.id, preisartId: zp })).rejects.toThrow("ausgeschöpft");
 
     // PE ohne „zusätzlich je Preisrichter“: nur aus der Stiftung, nicht bewusst ohne.
-    await expect(al().preise.vergeben({ schauId: id, katalogeintragId: tiere[0]!.id, preisartId: pe, ohneStiftung: true })).rejects.toThrow("ausgeschöpft");
+    await expect(al().preise.vergeben({ schauId: id, katalogeintragId: tiere[0]!.id, preisartId: pe, ohneStiftung: true })).rejects.toThrow("Diesen Preis gibt es nur aus einer Stiftung.");
     await al().preise.vergeben({ schauId: id, katalogeintragId: tiere[0]!.id, preisartId: pe });
 
     // Das Tablet zeigt nur die Kontingente aus dem Standgeld; gestiftete Preise vergibt die Ausstellungsleitung.
@@ -105,6 +109,12 @@ describe("Zusatzpreise je Preisrichter", () => {
     // Freie Zusatzpreise sind kein Hinweis (sie sind ein Angebot), überzogene sperren die Freigabe.
     expect(pkt.find((p) => p.text.startsWith("Nicht vergebene Preise"))?.text ?? "").not.toContain("ZP");
     await expect(al().preise.freigeben({ schauId: id, freigegeben: true, trotzdem: true })).rejects.toThrow("ZP 2 von 1 (Anna Ahorn)");
+    // Schon freigegeben (z. B. nach der alten Zählung verteilt): überzogene Zusatzpreise nur als Hinweis, kein roter Punkt.
+    await m.db.update(m.schema.schau).set({ ergebnisseFreigegeben: true }).where(m.eq(m.schema.schau.id, id));
+    const frei = await (await import("../services/pruefung")).checkliste(id);
+    expect(frei.filter((p) => p.art === "fehler" && /ZP/.test(p.text))).toEqual([]);
+    expect(frei.find((p) => p.art === "hinweis" && p.text.startsWith("Kontingent überschritten"))?.text).toContain("Anna Ahorn: 2 von 1 ZP");
+    await m.db.update(m.schema.schau).set({ ergebnisseFreigegeben: false }).where(m.eq(m.schema.schau.id, id));
 
     const cfg = (await import("../config")).config;
     const pflichtVorher = cfg.zweiFaktorPflichtAdmin;
@@ -126,6 +136,21 @@ describe("Zusatzpreise je Preisrichter", () => {
       expect(b).not.toContain("über dem Kontingent");
     } finally {
       cfg.zweiFaktorPflichtAdmin = pflichtVorher;
+    }
+  });
+
+  test("Freigabe: Preise ohne Stiftung bei Preisart ohne Zusatzpreise sind nicht gedeckt", async () => {
+    // Je Schau: die Zusatzpreise passen (2/2), es bleibt nur die fehlende Deckung bei PE.
+    await m.db.update(m.schema.schau).set({ kontingentJe: "schau" }).where(m.eq(m.schema.schau.id, id));
+    // Zwei PE ohne Stiftung (z. B. aus der Zeit vor der Stiftungszuordnung), dazu der eine aus der Stiftung: 3 von 2.
+    const ohneSt = await m.db
+      .insert(m.schema.preisvergabe)
+      .values([1, 2].map((i) => ({ katalogeintragId: tiere[i]!.id, preisartId: pe, preisrichterId: anna.id, betragCent: 0, stiftungId: null })))
+      .returning();
+    try {
+      await expect(al().preise.freigeben({ schauId: id, freigegeben: true, trotzdem: true })).rejects.toThrow("Stiftungspreise nicht gedeckt: PE 3 vergeben, 2 gestiftet");
+    } finally {
+      for (const v of ohneSt) await m.db.delete(m.schema.preisvergabe).where(m.eq(m.schema.preisvergabe.id, v.id));
     }
   });
 });

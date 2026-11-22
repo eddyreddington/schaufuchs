@@ -52,6 +52,7 @@ export const preise = {
   keinRichter: "Das Tier ist keinem Preisrichter zugeteilt.",
   stiftungArt: "Diese Stiftung gehört nicht zu dieser Preisart.",
   stiftungVoll: (stifter: string) => `Die Stiftung von ${stifter} ist schon vollständig vergeben.`,
+  nurAusStiftung: "Diesen Preis gibt es nur aus einer Stiftung.",
   preisFehlt: "Preis nicht gefunden.",
   nichtIhr: "Nicht Ihr Preis.",
   /** Prüfung der Vergabe (pruefeVergabe). */

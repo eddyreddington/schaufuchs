@@ -45,6 +45,7 @@ export const preise: T["preise"] = {
   keinRichter: "Zvíře není přiděleno žádnému posuzovateli.",
   stiftungArt: "Toto věnování nepatří k tomuto druhu ceny.",
   stiftungVoll: (stifter: string) => `Věnování od dárce ${stifter} je už zcela uděleno.`,
+  nurAusStiftung: "Tuto cenu lze udělit jen z věnování.",
   preisFehlt: "Cena nenalezena.",
   nichtIhr: "Toto není vaše cena.",
   keinePunkte: "Zvíře nemá bodové hodnocení.",

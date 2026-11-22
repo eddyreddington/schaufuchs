@@ -45,6 +45,7 @@ export const preise: T["preise"] = {
   keinRichter: "The animal is not assigned to a judge.",
   stiftungArt: "This sponsorship does not belong to this prize type.",
   stiftungVoll: (stifter: string) => `The sponsorship from ${stifter} has already been fully awarded.`,
+  nurAusStiftung: "This prize is only available from a sponsorship.",
   preisFehlt: "Prize not found.",
   nichtIhr: "Not your prize.",
   keinePunkte: "The animal has no points grading.",

@@ -45,6 +45,7 @@ export const preise: T["preise"] = {
   keinRichter: "Zwierzę nie jest przydzielone żadnemu sędziemu.",
   stiftungArt: "Ta fundacja nie należy do tego rodzaju nagrody.",
   stiftungVoll: (stifter: string) => `Fundacja od: ${stifter} jest już w pełni przyznana.`,
+  nurAusStiftung: "Ta nagroda jest dostępna tylko z fundacji.",
   preisFehlt: "Nie znaleziono nagrody.",
   nichtIhr: "To nie Państwa nagroda.",
   keinePunkte: "Zwierzę nie ma oceny punktowej.",

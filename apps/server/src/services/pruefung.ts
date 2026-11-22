@@ -330,9 +330,14 @@ export async function checkliste(schauId: number): Promise<Punkt[]> {
     // Freie Zusatzpreise (gestiftet, zusätzlich je Preisrichter) sind ein Angebot, kein offener Punkt.
     const rest = k.flatMap((r) => r.arten.filter((a) => !a.zusatz && a.vergeben < a.verfuegbar).map((a) => `${r.name}: ${a.verfuegbar - a.vergeben} ${a.kuerzel}`));
     if (rest.length) add("hinweis", `Nicht vergebene Preise: ${rest.join("; ")}`, "preise");
-    // Überzogen z. B. nach einer Änderung des Kontingents oder fehlenden Tieren.
-    const ueber = k.flatMap((r) => r.arten.filter((a) => a.vergeben > a.verfuegbar).map((a) => `${r.name}: ${a.vergeben} von ${a.verfuegbar} ${a.kuerzel}`));
-    if (ueber.length) add("fehler", `Kontingent überschritten: ${ueber.join("; ")}`, "preise", "preise");
+    // Überzogen z. B. nach einer Änderung des Kontingents oder fehlenden Tieren. Zusatzpreise gestifteter Preisarten
+    // zählten früher für die ganze Schau: In schon freigegebenen Schauen ist ihr Überziehen nur ein Hinweis.
+    const ueber = (zusatz: boolean) =>
+      k.flatMap((r) => r.arten.filter((a) => a.zusatz === zusatz && a.vergeben > a.verfuegbar).map((a) => `${r.name}: ${a.vergeben} von ${a.verfuegbar} ${a.kuerzel}`));
+    const ueberStandgeld = ueber(false);
+    const ueberZusatz = ueber(true);
+    if (ueberStandgeld.length) add("fehler", `Kontingent überschritten: ${ueberStandgeld.join("; ")}`, "preise", "preise");
+    if (ueberZusatz.length) add(s.ergebnisseFreigegeben ? "hinweis" : "fehler", `Kontingent überschritten: ${ueberZusatz.join("; ")}`, "preise", "preise");
     // Stiftungspreise: gestiftete Zahl muss die Vergaben aus Stiftungen decken (Zusatzpreise zählen oben im Kontingent).
     for (const a of arten.filter((x) => x.quelle === "stiftung")) {
       const gestiftet = stiftungen.filter((st) => st.preisartId === a.id).reduce((n, st) => n + st.anzahl, 0);

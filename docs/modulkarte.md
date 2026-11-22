@@ -886,7 +886,7 @@ Sammelt alle Exporte (`export * from …`).
 - `lastschrift`
 - `spenden`
 
-### server-kasse-preise.ts (129 Z.)
+### server-kasse-preise.ts (130 Z.)
 
 - `preise`
 - `bewertung`
@@ -1083,7 +1083,7 @@ Meldungen des Servers zu SEPA-Lastschrift (routers/lastschrift.ts, domain lastsc
 - `lastschrift` – Gläubiger-ID, Mandate, Lastschriftdatei, Rücklastschrift.
 - `spenden` – Spenden, Spender und Zuwendungsbestätigungen.
 
-### server-kasse-preise.ts (143 Z.)
+### server-kasse-preise.ts (144 Z.)
 Meldungen des Servers zu Preisen und Stiftungen (routers/preise.ts, services/preise.ts, domain preise.ts), Bewertung und Tablet (routers/bewertung. …
 
 - `preise` – Preise vergeben und entfernen, Stiftungen, Freigabe der Ergebnisse.
@@ -1275,7 +1275,7 @@ Sammelt alle Exporte (`export * from …`).
 - `lastschrift`
 - `spenden`
 
-### server-kasse-preise.ts (129 Z.)
+### server-kasse-preise.ts (130 Z.)
 
 - `preise`
 - `bewertung`
@@ -1460,7 +1460,7 @@ Sammelt alle Exporte (`export * from …`).
 - `lastschrift`
 - `spenden`
 
-### server-kasse-preise.ts (132 Z.)
+### server-kasse-preise.ts (133 Z.)
 
 - `preise`
 - `bewertung`
@@ -1649,7 +1649,7 @@ Sammelt alle Exporte (`export * from …`).
 - `lastschrift`
 - `spenden`
 
-### server-kasse-preise.ts (129 Z.)
+### server-kasse-preise.ts (130 Z.)
 
 - `preise`
 - `bewertung`
@@ -1835,7 +1835,7 @@ Sammelt alle Exporte (`export * from …`).
 - `lastschrift`
 - `spenden`
 
-### server-kasse-preise.ts (129 Z.)
+### server-kasse-preise.ts (130 Z.)
 
 - `preise`
 - `bewertung`
@@ -2801,11 +2801,11 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
 - `meldung.ts` (509 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, speichereMeldung, bindungen, hatAuszahlung
 - `post.ts` (155 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, sendeMail, sendeMailJetzt, versende, starteMailversand
-- `preise.ts` (181 Z.) · vergebePreis, entfernePreis
+- `preise.ts` (180 Z.) · vergebePreis, entfernePreis
 - `preisrichter-speichern.ts` (128 Z.) – Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter Sperre der Preisrichter der S … · gruppenAusEingabe, speicherePreisrichter, loeschePreisrichter
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
 - `protokoll.ts` (37 Z.) · protokolliere
-- `pruefung.ts` (372 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste
+- `pruefung.ts` (377 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste
 - `rassebild.ts` (86 Z.) – Rassebilder für den Katalog: prüfen und speichern (Oberfläche und Einspielen aus dem Netz). · RASSEBILD_MAX_BYTES, jpegAnzeige, oeffneBild, pruefeRassebild, speichereRassebild
 - `serienbrief.ts` (34 Z.) – Empfänger eines Serienbriefs: Vereinsmitglieder, alle Aussteller des Vereins oder die Aussteller mit bestätigter Meldung zu einer Schau. · SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger
 - `spenden-quittung.ts` (34 Z.) – Spendenquittung einer Spende erzeugen (für das Belegarchiv, services/kassenbuch.ts): Briefkopf und Farbe aus der Briefvorlage des Vereins, Hinweis … · spendenquittung
@@ -3017,6 +3017,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `71-preisrichter-gegenpruefung.ts` (103 Z.) – Preisrichter, Gegenprüfung: Zusage, Vorbehalt, Gruppen und Obmann in Auskunft, Bereinigung und Protokoll (Vorbehalt nur als „geändert“), Vorlage oh …
 - `72-jugend-einteilung.ts` (155 Z.) – Jugend separat oder eingereiht: Katalognummern (eigener Block am Ende oder in der Rasse) und Preisrichter-Einteilung nach Rassen („mit der Rasse“ w …
 - `73-jugend-gegenpruefung.ts` (65 Z.) – Jugend in der Einteilung, Gegenprüfung: Umschalten meldet Tiere ohne Preisrichter und Nachmeldungen wie das Speichern der Einteilung; gespeicherte …
-- `74-zusatzpreise-je-pr.ts` (131 Z.) – Gestiftete Preisarten mit „zusätzlich je Preisrichter“: Die Zusatzpreise ohne Stiftung zählen je Preisrichter (bei Kontingent „je Schau“ für die ga …
+- `74-zusatzpreise-je-pr.ts` (156 Z.) – Gestiftete Preisarten mit „zusätzlich je Preisrichter“: Die Zusatzpreise ohne Stiftung zählen je Preisrichter (bei Kontingent „je Schau“ für die ga …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

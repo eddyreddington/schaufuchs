@@ -46,6 +46,7 @@ export const preise: T["preise"] = {
   keinRichter: "L’animal n’est attribué à aucun juge.",
   stiftungArt: "Cette dotation n’appartient pas à ce type de prix.",
   stiftungVoll: (stifter: string) => `La dotation de ${stifter} est déjà entièrement attribuée.`,
+  nurAusStiftung: "Ce prix n’est attribué que sur une dotation.",
   preisFehlt: "Prix introuvable.",
   nichtIhr: "Ce n’est pas votre prix.",
   keinePunkte: "L’animal n’a pas de jugement en points.",

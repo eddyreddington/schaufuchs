@@ -45,6 +45,7 @@ export const preise: T["preise"] = {
   keinRichter: "Het dier is aan geen keurmeester toegewezen.",
   stiftungArt: "Deze schenking hoort niet bij deze prijssoort.",
   stiftungVoll: (stifter: string) => `De schenking van ${stifter} is al volledig toegekend.`,
+  nurAusStiftung: "Deze prijs is er alleen uit een schenking.",
   preisFehlt: "Prijs niet gevonden.",
   nichtIhr: "Niet uw prijs.",
   keinePunkte: "Het dier heeft geen puntenkeuring.",
