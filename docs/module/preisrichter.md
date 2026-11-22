@@ -15,8 +15,8 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
 | Server, Vorschlag | `apps/server/src/services/einteilung-vorschlag.ts` | `schlageEinteilungVor()`: nur an Preisrichter, die Sparte und Gruppe bewerten |
 | Server, Gruppen pflegen | `apps/server/src/routers/stammdaten.ts` | `stammdaten.gruppenSetzen` (nur eigene Version, Protokoll), `gliederung` und `baum` mit `gruppe` |
 | Server, Einträge | `apps/server/src/services/eintraege.ts` | `gruppe` je Eintrag (Rasse bzw. bei freier Bezeichnung die gewählte Rasse) |
-| Vorlage | `apps/server/src/routers/schau/anlegen.ts` | Preisrichter mit Gruppen und „zugesagt für“ übernommen (Zusage wieder offen, ohne Vorbehalt), Obmann-Zuordnung auf die neue Schau umgesetzt |
-| Drucke | `apps/server/src/pdf/verpflichtung.ts`, `pdf/bewertungsliste.ts`, Fachregeln `packages/domain/src/preisrichter-druck.ts` | `preisrichterVerpflichtungPdf()` (`/datei/:schauId/preisrichter-verpflichtung.pdf`, `?preisrichter=`), `preisrichterListePdf()` (`/datei/:schauId/preisrichter/:prId/liste.pdf`); `verpflichtungGruppen()`, `bewertungslisteZeilen()`, `bewertungslisteSpalten()` |
+| Vorlage | `apps/server/src/routers/schau/anlegen.ts` | Preisrichter mit Sparten und Gruppen übernommen (Zusage wieder offen, „zugesagt für“ und Vorbehalt leer), Obmann-Zuordnung auf die neue Schau umgesetzt |
+| Drucke | `apps/server/src/pdf/verpflichtung.ts`, `pdf/bewertungsliste.ts`, Fachregeln `packages/domain/src/preisrichter-druck.ts` | `preisrichterVerpflichtungPdf()` (`/datei/:schauId/preisrichter-verpflichtung.pdf`, `?preisrichter=`), `preisrichterListePdf()` (`/datei/:schauId/preisrichter/:prId/liste.pdf`); `verpflichtungBrief()`, `VERPFLICHTUNG_MUSTER`, `rueckmeldungFehler()`, `verpflichtungGruppen()`, `bewertungslisteZeilen()`, `bewertungslisteSpalten()` |
 | Web | `apps/web/src/seiten/preisrichter.tsx` (Liste, Einteilung nach Nummern), `preisrichter-rassen.tsx` (Einteilung nach Rassen), `preisrichter-form.tsx` (Dialog), `stammdaten-gruppen.tsx` | Route `/schau/:schauId/preisrichter`, `/stammdaten` → „Gruppen“ |
 
 ## Regeln und Invarianten
@@ -39,7 +39,7 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
   Preisrichter der Schau gesperrt (`for update`), damit eine gleichzeitige Änderung des Hakens nicht übersehen wird. Die Bestätigung der Noten
   (`bewertung.obmannBestaetigen`) ist davon unabhängig.
 - Zusage `offen` | `zugesagt` | `abgesagt` (Vorgabe offen), dazu „zugesagt für“ und Vorbehalt als freier Text. Aus der
-  Vorlage: Zusage wieder `offen`, Vorbehalt leer, „zugesagt für“ bleibt.
+  Vorlage: Zusage wieder `offen`, „zugesagt für“ und Vorbehalt leer; Sparten, Gruppen und Obmann bleiben.
 - Jede Änderung am Preisrichter mit `protokolliere()` (Tabelle `preisrichter`, alter und neuer Wert; Anlegen, Ändern,
   Löschen); Kontaktdaten und Vorbehalt nur als „geändert“ vermerkt (`geaendertOhneWert`), ohne Werte (das Protokoll lässt
   sich nicht löschen). Gruppen im Verzeichnis: Tabelle `stammdaten_version`.
@@ -48,7 +48,11 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
 - Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins ([ADR 012](../entscheidungen/012-briefvorlage.md)),
   alle Preisrichter (nach Namen, je Brief ab neuer Seite) oder einer; Abschnitt zum Abtrennen mit Name, Zusage/Absage,
   Gruppen zum Ankreuzen (die im Verzeichnis der Schau vorkommenden, sonst A–M, Z1–Z3), Vorbehalt, Datum, Unterschrift.
-  Wer die Rückmeldung bekommt, trägt Zusage, Gruppen und Vorbehalt von Hand beim Preisrichter ein.
+  Betreff und Text aus der Briefvorlage (Teil `verpflichtung`, Platzhalter wie in den anderen Texten, dazu
+  `{Bewertungstag}` und `{Rückmeldung}`); leer der feste Text (`verpflichtungBrief()`), der Ort, Bewertungstag und
+  „Rückmeldung bis“ nur nennt, wenn sie feststehen. „Rückmeldung der Preisrichter bis“ (`schau.preisrichterRueckmeldungBis`,
+  Reiter „Termine“, nicht nach dem Bewertungstag, kommt nicht aus der Vorlage) steht im Brief, im Informationsblock und
+  im Abschnitt. Wer die Rückmeldung bekommt, trägt Zusage, Gruppen und Vorbehalt von Hand beim Preisrichter ein.
 - Bewertungsliste: zwei Listen nebeneinander je A4-Seite, laufend; Zwischenkopf je Rasse und Farbenschlag (läuft eine
   Rasse in die nächste Spalte, dort als „(Forts.)“), kein Kopf allein am Spaltenende; Spalten Nr., Klasse, Note, Pkt.,
   Preis; Obmann im Kopf (der zugeordnete, sonst leer); Seitenzählung; keine Ausstellernamen ([ADR 005](../entscheidungen/005-anonyme-bewertung.md)).
@@ -61,10 +65,12 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
   `30-einteilung-gegenpruefung`, `69-preisrichter-gruppen`, `70-preisrichter-drucke` (Verpflichtung, Bewertungsliste),
   `71-preisrichter-gegenpruefung` (Auskunft, Bereinigung, Vorlage, Löschen, Sperre), `72-jugend-einteilung` (Jugend separat
   oder eingereiht, Katalog und Einteilung), `73-jugend-gegenpruefung` (Umschalten meldet Tiere ohne Preisrichter,
-  Jugendregeln überstehen Speichern bei „mit der Rasse“); `src/einteilung.test.ts` (Vorschlag).
+  Jugendregeln überstehen Speichern bei „mit der Rasse“), `76-verpflichtung-zusage` (Rückmeldetermin, eigener Brieftext,
+  Zusage aus der Vorlage); `src/einteilung.test.ts` (Vorschlag).
 
 ## Datenbank
 
 `rasse.gruppe` (Text, leer = nicht gepflegt). `preisrichter`: `sparten`, `gruppen` (jsonb), `obmann_id` (→ `preisrichter`,
 beim Löschen leer), `zusage` (Aufzählung `pr_zusage`), `zugesagt_fuer`, `vorbehalt` – Migration 0068. `pr_zuteilung.jugend` (eindeutig je Schau, Sparte, Rasse, Farbenschlag,
 Jugend) und `schau.einteilung_jugend_separat` – Migration 0069.
+`schau.preisrichter_rueckmeldung_bis` (Datum, leer = nicht genannt) – Migration 0070.

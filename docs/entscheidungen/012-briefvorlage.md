@@ -26,4 +26,7 @@ schreiben können, ohne dass jede Schau neu eingerichtet werden muss.
 
 **Folgen:** Spendenquittung und Zuwendungsbestätigung (1.2.1) nutzen Briefkopf und Fußzeile dieser Vorlage. Die
 Preisrichterverpflichtung (`apps/server/src/pdf/verpflichtung.ts`) ist ebenfalls ein Brief nach dieser Vorlage, je
-Preisrichter ab neuer Seite; ihr Text ist fest (Schau, Ort, Bewertungstag), der Gruß kommt aus dem Serienbrief der Vorlage.
+Preisrichter ab neuer Seite. Betreff und Text stehen als eigener Teil `verpflichtung` in der Vorlage (Platzhalter
+`{Bewertungstag}` und `{Rückmeldung}` zusätzlich); leer gilt der bisher feste Text, der Ort, Bewertungstag und
+„Rückmeldung bis“ nur nennt, wenn sie feststehen (Bedingungen lassen sich mit Platzhaltern nicht ausdrücken). Der Gruß
+kommt aus dem Serienbrief der Vorlage.
