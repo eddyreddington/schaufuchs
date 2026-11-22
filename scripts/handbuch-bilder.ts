@@ -240,7 +240,14 @@ try {
   await bild("kaefige", A, adminA, `${S}/kaefige`);
   await bild("hallenplan", A, adminA, `${S}/hallenplan`, () => s.ruhig(1500));
   await bild("druckkatalog", A, adminA, `${S}/katalog/gestalten`, () => s.ruhig(3000));
+  // 3D-Ansicht mit eingestelltem Aussehen (Holzdecke, Linien); Aussehen ändert den Plan nicht (Entscheidung 028).
+  if (soll("hallenplan-3d")) {
+    const aussehen = { decke: true, linien: true, prallwand: "#6d8571", wandHoehe: 700, firstHoehe: 900 };
+    await dbA`update schau set halle = jsonb_set(halle, '{aussehen}', ${aussehen}::jsonb) where id = ${schau}`;
+  }
+  await bild("hallenplan-3d", A, adminA, `${S}/hallenplan/3d`, () => s.ruhig(4000));
   await bild("preisrichter", A, adminA, `${S}/preisrichter`);
+  await bild("preisrichter-rassen", A, adminA, `${S}/preisrichter#einteilung-rassen`, () => s.ruhig(800));
   await bild("einlieferung", A, adminA, `${S}/einlieferung`);
   await bild("bewertung-pc", A, adminA, `${S}/bewertung`);
 

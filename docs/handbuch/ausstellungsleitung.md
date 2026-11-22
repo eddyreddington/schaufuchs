@@ -1,6 +1,6 @@
 # Handbuch für die Ausstellungsleitung
 
-SchauFUCHS 1.19.0 · Stand 22. November 2026
+SchauFUCHS 1.20.0 · Stand 22. November 2026
 
 Dieses Handbuch richtet sich an die Ausstellungsleitung, also an alle, die in SchauFUCHS die Rolle **Administrator** haben. Es führt Sie von der Anmeldung über die Einrichtung des Vereins bis durch eine komplette Schau – vom Anlegen bis zum Abschluss. Wörter in „Anführungszeichen“ stehen genau so auf dem Bildschirm. Was sich mit Version 1.2.1 geändert hat, steht in den Versionshinweisen.
 
@@ -34,7 +34,7 @@ SchauFUCHS erreichen Sie im Browser unter:
 
 Ohne Telefon geht im zweiten Schritt auch ein **Notfallcode** (siehe 1.3).
 
-Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.19.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.19.0“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
+Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.20.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.20.0“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
 
 > **Tipp:** Melden Sie sich an fremden oder gemeinsam genutzten Rechnern immer mit „Abmelden“ ab.
 
@@ -1183,6 +1183,8 @@ Eine neue Schau übernimmt wie bisher die Halle der letzten Schau; das Archiv ko
 
 Der Knopf **3D** (im Editor in der Werkzeugleiste unter *Ansicht*, für Helfer oben neben „Vollansicht“) öffnet die Halle räumlich in einem neuen Browser-Tab: Wände mit Ein- und Notausgängen (über einem Ausgang, dessen Name „Not…“ enthält, hängt ein grünes Schild), die Aufsteller mit den Grundplatten, die Käfige in ihrer Breite, Tiefe und Höhe (Maße unter „Käfige“) – wie Ausstellungskäfige gebaut: Seitenwände und Rückwand dicht, damit die Tiere sich nicht sehen, vorn und oben Gitter; die Gitterfront zeigt immer zum Gang, die Rückwand zur Wand bzw. zur Rückwand der Gegenreihe (eingesetzte Käfigblöcke richten sich nach der Reihe, in der sie stehen) – die eingesetzten Käfigblöcke, Käfige in Etagen übereinander, die Volieren (Rückwand und Seiten dicht, vorn und oben Draht, die Front wie im Plan), Tische und Bänke und die Flächen am Boden. Die Käfige tragen die Farbe ihres Preisrichters wie im Plan (Legende unten links), freie Plätze sind grau. In jedem belegten Käfig sitzt eine einfache Figur: Huhn, kleiner bei Zwerghühnern, Taube, Ente, Gans oder Pute; die Farbe richtet sich grob nach dem Farbenschlag. In einer Voliere laufen mehrere Tiere. Um die Halle liegt eine Umgebung mit Himmel, Wiese und Hof, vor dem Haupteingang (der Seite mit den meisten Eingängen) ein Parkplatz, gegenüber ein Sportplatz und ein paar Bäume – nur zur Anschauung: Sie hat keine Maße, gehört nicht zum heruntergeladenen 3D-Modell und verdeckt die Halle nicht.
 
+![Halle in 3D von schräg oben: Reihen mit Käfigen in den Farben der Preisrichter, Parkett mit Spielfeldlinien, graugrüne Prallwand und Fenster.](bilder/hallenplan-3d.jpg)
+
 Gezeigt wird der gespeicherte Plan, derselbe wie in der Zeichnung. Ist im Editor noch eine Änderung unterwegs, geht der Tab gleich auf und zeigt die Halle, sobald sie gespeichert ist. Oben steht, von wann der Stand ist. Wechseln Sie zurück in den 3D-Tab, lädt er den Plan neu – Sie können also im einen Tab planen und im anderen schauen; „Neu laden“ holt den Stand sofort. Den Tab können Sie als Lesezeichen ablegen oder neu laden.
 
 - **Bewegen:** mit gedrückter linker Maustaste drehen, mit dem Mausrad zum Mauszeiger hin zoomen, mit der rechten Maustaste (oder Umschalt) verschieben; die Bewegung läuft weich aus. Am Tablet mit einem Finger drehen, mit zwei Fingern zoomen und verschieben. Ein **Doppelklick** auf den Hallenboden bringt Sie dorthin, im Gang in Augenhöhe.
@@ -1207,9 +1209,9 @@ Im Editor unter den Eigenschaften der Halle (nichts gewählt) stellen Sie im auf
 - **Boden mit Folie abgedeckt:** Viele Hallen legen zur Schau graue Schutzfolie aus; dann ist vom Parkett und von den Linien nichts zu sehen. In der 3D-Ansicht können Sie die Folie mit dem Knopf „Folie“ zum Vergleich weg- und wieder hinlegen, ohne die Einstellung zu ändern.
 - **Prallwand:** Farbe der Wandverkleidung unten – Holz hell (Vorgabe), Graugrün, Grau, Blau oder eine eigene Farbe – und ihre Höhe (Vorgabe 2 m).
 - **Wandhöhe:** bis zur Decke bzw. zum Dachansatz (Vorgabe 3,50 m; 2,80 bis 15 m). Sporthallen sind meist 5,50 bis 7 m hoch.
-- **Firsthöhe:** Höhe der Halle in der Mitte (bis 20 m). Ist sie höher als die Wand, steigt die Decke als Satteldach von den Längswänden zur Mitte an (First entlang der langen Seite), mit geschlossenen Giebeln an den Stirnseiten; gleich hoch heißt flache Decke. Beim freien Grundriss bleibt die Decke flach. Die Firsthöhe wirkt mit der Holzdecke.
+- **Firsthöhe:** Höhe der Halle in der Mitte (bis 20 m). Ist sie höher als die Wand, steigt die Decke als Satteldach von den Längswänden zur Mitte an (First entlang der langen Seite), mit geschlossenen Giebeln an den Stirnseiten; gleich hoch heißt flache Decke. Ändern Sie danach die Wandhöhe, zieht der First mit – das Dach bleibt gleich hoch (höchstens bis 20 m). Beim freien Grundriss bleibt die Decke flach. Die Firsthöhe wirkt mit der Holzdecke.
 - **Fenster:** ein Fensterband oben an den Längsseiten, nie über einer Tür.
-- **Holzdecke mit Leuchten:** Profilbretter, Leimbinder und Leuchtbänder. Haben Sie Wand- und Firsthöhe nie eingestellt, schlägt das Einschalten eine übliche Sporthalle vor (Wand 7 m, First 9 m) – ändern Sie die Werte darunter, wenn Ihre Halle anders ist. Die Leuchten hängen unter den Bindern, aber mindestens 1,50 m über dem höchsten Käfig und nie unter 3 m; ist die Decke dafür zu niedrig, sitzen sie direkt an der Decke. Die Decke sehen Sie nur von innen (im Gang, beim Rundgang); von oben oder außen ist sie weg, damit sie nichts verdeckt. Im heruntergeladenen 3D-Modell ist sie immer dabei, das Meterraster nicht.
+- **Holzdecke mit Leuchten:** Profilbretter, Leimbinder und Leuchtbänder. Steht die Wand noch auf der Vorgabe von 3,50 m und ist kein First gesetzt, schlägt das Einschalten eine übliche Sporthalle vor (Wand 7 m, First 9 m) – ändern Sie die Werte darunter, wenn Ihre Halle anders ist. Die Leuchten hängen unter den Bindern, aber mindestens 1,50 m über dem höchsten Käfig und nie unter 3 m; ist die Decke dafür zu niedrig, sitzen sie direkt an der Decke. Die Decke sehen Sie nur von innen (im Gang, beim Rundgang); von oben oder außen ist sie weg, damit sie nichts verdeckt. Im heruntergeladenen 3D-Modell ist sie immer dabei, das Meterraster nicht.
 - **Spielfeldlinien:** Handball (schwarz), Volleyball (blau) und Basketball (rot), passend zur Größe der Halle; in kleinen Hallen und wenn das Feld beim freien Grundriss nicht ganz hineinpasst, ohne Linien.
 - **Sportgeräte an den Wänden:** Basketballbretter mittig oben an den Stirnwänden und eine Sprossenwand – nur dort, wo keine Tür ist und keine Käfige an der Wand stehen.
 
@@ -1335,6 +1337,8 @@ Unten steht ein Abschnitt zum Abtrennen (gestrichelte Linie, „hier abtrennen�
 #### Einteilung nach Rassen (vor den Katalognummern)
 
 Die Seite „Preisrichter“ steht in der Seitenleiste bei der Vorbereitung (Preisrichter anlegen). Eingeteilt wird nach dem Meldeschluss: Teilen Sie die Preisrichter **nach Rassen** ein, dann vergeben Sie die Nummern. Die Nummernbereiche je Preisrichter rechnet die Software beim Vergeben selbst – auch beim Neu-Vergeben und bei Nachmeldungen.
+
+![Reiter „Einteilung nach Rassen“: je Rasse ein Preisrichter, darüber die Auswahl „Jugend in der Einteilung“ und die Tiere je Preisrichter.](bilder/preisrichter-rassen.jpg)
 
 1. Im Reiter „Einteilung nach Rassen“ stehen alle gemeldeten Rassen (offene und bestätigte Meldungen) nach Sparten in Ausstellungsfolge, mit der Zahl der Tiere.
 2. Je Rasse einen Preisrichter wählen. Zur Auswahl stehen nur Preisrichter, die diese Sparte und – wenn sie Gruppen eingetragen haben – die Gruppe der Rasse bewerten. Eine große Rasse teilen Sie mit „Farbenschläge“: Je Farbenschlag lässt sich ein anderer Preisrichter wählen, „wie die Rasse“ übernimmt den der Rasse.
