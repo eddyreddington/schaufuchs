@@ -4,7 +4,6 @@
  * festen Plan (`festGeometrie` kennt keine Flächen), nur den Stand der Halle (`halleSchluessel`).
  */
 import type { HallenFlaeche } from "./hallenplan-typen";
-import { type HallenSzene, type SzeneSeite, type SzeneTuer, wandSeiten } from "./hallenplan-3d";
 
 export const TUER_ARTEN = ["wand", "glas", "holz", "offen"] as const;
 export type TuerArt = (typeof TUER_ARTEN)[number];
@@ -57,42 +56,29 @@ export interface TuerAufbau {
 const ZARGE: Record<Exclude<TuerArt, "offen">, number> = { wand: 1.2, glas: 6, holz: 6 };
 /** Fuge zwischen zwei Flügeln (cm). */
 const MITTE = 0.8;
+/** Glastür: Rahmenprofil an den Seiten und oben, unten der höhere Sockel (cm). */
+export const GLAS_PROFIL = 7;
+export const GLAS_SOCKEL = 16;
+/** Panikstange: so weit bleibt sie von den Kanten des Blatts (cm). */
+export const PANIK_RAND = 8;
+/** Schmaler (cm entlang der Wand) ist es keine Tür: Die Öffnung bleibt offen (Server erlaubt Flächen ab 10 cm). */
+export const TUER_MIN_BREITE = 50;
 
 /**
- * Tür in einer Öffnung `breite` × `hoehe` (cm): ab `ZWEIFLUEGELIG_AB` zwei gleiche Flügel mit den Griffen zur Mitte, sonst
- * einer mit dem Griff rechts. Offen: keine Tür (null).
+ * Tür in einer Öffnung `breite` × `hoehe` (cm): ab `ZWEIFLUEGELIG_AB` (oder wie `fluegel` sagt) zwei gleiche Flügel mit den
+ * Griffen zur Mitte, sonst einer mit dem Griff rechts. Offen oder schmaler als `TUER_MIN_BREITE`: keine Tür (null).
  */
-export function tuerAufbau(t: { art: TuerArt; breite: number; hoehe: number; notausgang: boolean }): TuerAufbau | null {
-  if (t.art === "offen" || t.breite < 10 || t.hoehe < 10) return null;
-  const zarge = Math.min(ZARGE[t.art], t.breite / 6);
+export function tuerAufbau(t: { art: TuerArt; breite: number; hoehe: number; notausgang: boolean; fluegel?: 1 | 2 }): TuerAufbau | null {
+  if (t.art === "offen" || t.breite < TUER_MIN_BREITE || t.hoehe < 2 * (GLAS_PROFIL + GLAS_SOCKEL)) return null;
+  const zarge = ZARGE[t.art];
   const innen = t.breite / 2 - zarge;
   const abstand = Math.min(10, innen / 4);
   const blaetter: TuerBlatt[] =
-    tuerFluegel(t.breite) === 2
+    (t.fluegel ?? tuerFluegel(t.breite)) === 2
       ? [
           { von: -innen, bis: -MITTE / 2, griff: -MITTE / 2 - abstand },
           { von: MITTE / 2, bis: innen, griff: MITTE / 2 + abstand },
         ]
       : [{ von: -innen, bis: innen, griff: innen - abstand }];
   return { zarge, hoehe: t.hoehe - zarge - 1, blaetter, griffHoehe: Math.min(GRIFF_HOEHE, t.hoehe / 2), panik: t.notausgang };
-}
-
-/**
- * Lage einer Tür in der Szene (cm): Seite ihrer Wand, Ebene der Innenfläche (x bei x0/x1, z bei z0/z1), Mitte und Breite
- * entlang der Wand, Wandstärke. `richtung`: so läuft „rechts“ für den Blick aus der Halle auf die Tür in Szene-Koordinaten
- * (rechtshändig: oben y, in die Halle z, entlang x = y × z).
- */
-export function tuerLage(t: Pick<SzeneTuer, "q" | "wand">, s: Pick<HallenSzene, "waende" | "breite" | "laenge">): { seite: SzeneSeite; ebene: number; mitte: number; breite: number; tiefe: number; richtung: 1 | -1 } {
-  const q = t.q;
-  const seite = s.waende[t.wand]?.seite ?? wandSeiten(q, s)[0] ?? "z0";
-  const entlangX = seite === "z0" || seite === "z1";
-  const ebene = seite === "x0" ? q.x + q.b : seite === "x1" ? q.x : seite === "z0" ? q.z + q.t : q.z;
-  return {
-    seite,
-    ebene,
-    mitte: entlangX ? q.x + q.b / 2 : q.z + q.t / 2,
-    breite: entlangX ? q.b : q.t,
-    tiefe: entlangX ? q.t : q.b,
-    richtung: seite === "z0" || seite === "x1" ? 1 : -1,
-  };
 }

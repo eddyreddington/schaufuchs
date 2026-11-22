@@ -11,11 +11,13 @@ import { kaefigMass, type KaefigMasse, type KaefigTyp } from "./kaefige";
 import { artenDerSparte } from "./textbausteine";
 import { zeichnungDerHalle } from "./hallenplan-druck";
 import { rundgang, type RundgangPunkt } from "./hallenplan-3d-rundgang";
-import { ohneSeite, waendeImGrundriss } from "./hallenplan-3d-waende";
-import { type TuerArt, tuerArtVon, tuerFluegel } from "./hallenplan-tueren";
+import { waendeUndTueren, wandSeiten } from "./hallenplan-3d-waende";
+import type { TuerArt } from "./hallenplan-tueren";
 import { aussehenVon, type VollesAussehen, wirksamerFirst } from "./hallenplan-aussehen";
 import { deckenHoehe } from "./hallenplan-3d-dach";
 import { istRechteckUmriss, type Punkt, umrissNormal } from "./hallenplan-umriss";
+
+export { tuerLage, wandSeiten } from "./hallenplan-3d-waende";
 
 /** Aufsteller (Gestelle, auf denen die Grundplatten mit den Käfigen stehen). */
 export interface Aufsteller {
@@ -245,60 +247,6 @@ function szeneTier(t: PlanTier & { farbe?: string | null }, platz: { b: number; 
 
 const quader = (q: Rechteck, y: number, h: number): Quader => ({ x: q.x, z: q.y, y, b: q.b, t: q.h, h });
 
-/** Wand, an der eine Tür liegt (wie im 2D-Plan: die berührte Wand, an der ihre lange Seite liegt). */
-function tuerWand(halle: Pick<Halle, "breite" | "laenge">, f: Pick<HallenFlaeche, "x" | "y" | "breite" | "tiefe">, spiel = 10): "x0" | "x1" | "z0" | "z1" | null {
-  const stehend = f.tiefe > f.breite;
-  const an = [
-    { w: "x0" as const, an: f.x <= spiel, laengs: stehend },
-    { w: "x1" as const, an: f.x + f.breite >= halle.breite - spiel, laengs: stehend },
-    { w: "z0" as const, an: f.y <= spiel, laengs: !stehend },
-    { w: "z1" as const, an: f.y + f.tiefe >= halle.laenge - spiel, laengs: !stehend },
-  ].filter((x) => x.an);
-  return (an.find((x) => x.laengs) ?? an[0])?.w ?? null;
-}
-
-/** Wände um die Halle (außen anliegend), mit Öffnungen an den Türen und einem Sturz darüber. */
-function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen" | "umriss">, H: number): { waende: Quader[]; tueren: SzeneTuer[] } {
-  if (!istRechteckUmriss(halle.umriss)) return waendeImGrundriss(umrissNormal(halle.umriss!), halle.flaechen.filter((f) => !f.aussen), { dicke: WAND_DICKE, hoehe: H, tuerHoehe: TUER_HOEHE });
-  const B = halle.breite, L = halle.laenge, d = WAND_DICKE;
-  const oeffnungen: Record<"x0" | "x1" | "z0" | "z1", { von: number; bis: number; name: string; art: TuerArt }[]> = { x0: [], x1: [], z0: [], z1: [] };
-  for (const f of halle.flaechen) {
-    if (f.art !== "eingang") continue;
-    const w = tuerWand(halle, f);
-    if (!w) continue;
-    const entlangX = w === "z0" || w === "z1";
-    const von = Math.max(0, entlangX ? f.x : f.y);
-    const bis = Math.min(entlangX ? B : L, entlangX ? f.x + f.breite : f.y + f.tiefe);
-    if (bis - von > 1) oeffnungen[w].push({ von, bis, name: f.name, art: tuerArtVon(f) });
-  }
-  const waende: Quader[] = [];
-  const tueren: SzeneTuer[] = [];
-  // Je Wand: Abschnitte zwischen den Öffnungen voll hoch, über den Öffnungen der Sturz. Die Wände an x laufen über die Ecken.
-  const seiten = [
-    { w: "z0" as const, len: B, q: (a: number, b: number, y: number, h: number): Quader => ({ x: a, z: -d, y, b: b - a, t: d, h, seite: "z0" }) },
-    { w: "z1" as const, len: B, q: (a: number, b: number, y: number, h: number): Quader => ({ x: a, z: L, y, b: b - a, t: d, h, seite: "z1" }) },
-    { w: "x0" as const, len: L, q: (a: number, b: number, y: number, h: number): Quader => ({ x: -d, z: a, y, b: d, t: b - a, h, seite: "x0" }) },
-    { w: "x1" as const, len: L, q: (a: number, b: number, y: number, h: number): Quader => ({ x: B, z: a, y, b: d, t: b - a, h, seite: "x1" }) },
-  ];
-  for (const s of seiten) {
-    const o = [...oeffnungen[s.w]].sort((a, b) => a.von - b.von);
-    let pos = 0;
-    for (const x of o) {
-      if (x.von > pos + 0.5) waende.push(s.q(pos, x.von, 0, H));
-      const von = Math.max(pos, x.von);
-      if (x.bis > von + 0.5) {
-        waende.push(s.q(von, x.bis, TUER_HOEHE, H - TUER_HOEHE));
-        tueren.push({ q: ohneSeite(s.q(von, x.bis, 0, TUER_HOEHE)), name: x.name, notausgang: /not/.test(klein(x.name)), art: x.art, fluegel: tuerFluegel(x.bis - von), wand: waende.length - 1 });
-      }
-      pos = Math.max(pos, x.bis);
-    }
-    if (s.len > pos + 0.5) waende.push(s.q(pos, s.len, 0, H));
-  }
-  // Ecken außen schließen.
-  for (const [x, z] of [[-d, -d], [B, -d], [-d, L], [B, L]] as const) waende.push({ x, z, y: 0, b: d, t: d, h: H });
-  return { waende, tueren };
-}
-
 /**
  * Standpunkt im Gang: zwischen den ersten beiden Reihen, deren Fronten sich gegenüberstehen (im Reihensystem, ohne Handversatz),
  * am Anfang der Reihen in Augenhöhe, Blick den Gang entlang. Ohne solche Reihen: an der Hallenwand, Blick in die Halle.
@@ -408,7 +356,7 @@ export function hallenSzene(
   }
 
   const aussehen = aussehenVon(halle.aussehen);
-  const { waende, tueren } = waendeUndTueren(halle, aussehen.wandHoehe);
+  const { waende, tueren } = waendeUndTueren(halle, { dicke: WAND_DICKE, hoehe: aussehen.wandHoehe, tuerHoehe: TUER_HOEHE });
   const flaechen: SzeneFlaeche[] = halle.flaechen.map((f) => ({ art: f.art, name: f.name, q: { x: f.x, y: f.y, b: f.breite, h: f.tiefe } }));
   for (const f of flaechen) if (f.art !== "eingang") beschriftungen.push({ text: f.name, x: f.q.x + f.q.b / 2, y: 40, z: f.q.y + f.q.h / 2 });
   // Türen beschriftet (auch wenn ihre Wand gerade ausgeblendet ist), knapp in der Halle über dem Boden.
@@ -473,17 +421,6 @@ export function vertauscht(s: HallenSzene): HallenSzene {
 
 /** Seite der Halle, an der eine Wand steht (Szene: x0 links, x1 rechts, z0 hinten/oben im Plan, z1 vorn/unten). */
 export type SzeneSeite = "x0" | "x1" | "z0" | "z1";
-
-/** An welchen Seiten ein Wandstück steht (eine Ecke an zweien). */
-export function wandSeiten(w: Quader, s: Pick<HallenSzene, "breite" | "laenge">): SzeneSeite[] {
-  if (w.seite) return [w.seite];
-  const seiten: SzeneSeite[] = [];
-  if (w.x + w.b <= 0.5) seiten.push("x0");
-  if (w.x >= s.breite - 0.5) seiten.push("x1");
-  if (w.z + w.t <= 0.5) seiten.push("z0");
-  if (w.z >= s.laenge - 0.5) seiten.push("z1");
-  return seiten;
-}
 
 const weich = (a: number, b: number, v: number) => {
   const t = Math.min(1, Math.max(0, (v - a) / (b - a)));

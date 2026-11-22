@@ -4,7 +4,7 @@
  * (dunkler Rahmen, Glas halb durchsichtig, Griffstangen) oder Holztür (Zarge, Drücker). Aufbau und Lage aus der Fachlogik
  * (`tuerAufbau`, `tuerLage`); je Tür und Stoff ein Körper. Alles blendet mit dem Sturz der Tür aus (`wandStoffe`).
  */
-import { type HallenSzene, type SzeneTuer, tuerAufbau, tuerLage } from "@schau/domain";
+import { GLAS_PROFIL, GLAS_SOCKEL, type HallenSzene, PANIK_RAND, type SzeneTuer, tuerAufbau, tuerLage } from "@schau/domain";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { anWand, NACH_INNEN } from "./hallenplan-3d-raum";
@@ -44,7 +44,7 @@ const stange = (r: number, laenge: number, senkrecht: boolean, x: number, y: num
 /** Teile einer Tür in Tür-Koordinaten, nach Stoff (Meter); die Haut mit u in cm entlang der Wand wie die Innenwand. */
 function tuerTeile(t: SzeneTuer, lage: ReturnType<typeof tuerLage>, wandHoehe: number): Partial<Record<StoffArt, THREE.BufferGeometry[]>> | null {
   if (t.art === "offen") return null;
-  const a = tuerAufbau({ art: t.art, breite: lage.breite, hoehe: t.q.h, notausgang: t.notausgang });
+  const a = tuerAufbau({ art: t.art, breite: lage.breite, hoehe: t.q.h, notausgang: t.notausgang, fluegel: t.fluegel });
   if (!a) return null;
   const teile: Partial<Record<StoffArt, THREE.BufferGeometry[]>> = {};
   const dazu = (art: StoffArt, g: THREE.BufferGeometry) => (teile[art] ??= []).push(g);
@@ -61,8 +61,9 @@ function tuerTeile(t: SzeneTuer, lage: ReturnType<typeof tuerLage>, wandHoehe: n
   for (const b of a.blaetter) {
     if (t.art === "wand") {
       // Blatt wie die Wand: außen hell gestrichen, innen die Haut mit Prallwand und Anstrich an derselben Stelle wie die Wand.
-      dazu("rand", kasten(b.von, b.bis, unten, oben, hinten, vorn - 0.1));
-      const haut = new THREE.PlaneGeometry((b.bis - b.von) * M, a.hoehe * M).translate(((b.von + b.bis) / 2) * M, ((unten + oben) / 2) * M, (vorn - 0.05) * M);
+      // Die Haut 4 mm vor dem Blatt (und mit Tiefenvorzug): sonst flimmern beide aus der Ferne in großen Hallen.
+      dazu("rand", kasten(b.von, b.bis, unten, oben, hinten, vorn - 0.5));
+      const haut = new THREE.PlaneGeometry((b.bis - b.von) * M, a.hoehe * M).translate(((b.von + b.bis) / 2) * M, ((unten + oben) / 2) * M, (vorn - 0.1) * M);
       const p = haut.getAttribute("position"), uv = haut.getAttribute("uv");
       for (let i = 0; i < p.count; i++) uv.setXY(i, lage.mitte + lage.richtung * (p.getX(i) / M), p.getY(i) / M / wandHoehe);
       dazu("haut", haut);
@@ -70,7 +71,7 @@ function tuerTeile(t: SzeneTuer, lage: ReturnType<typeof tuerLage>, wandHoehe: n
       dazu("holz", kasten(b.von, b.bis, unten, oben, hinten, vorn));
     } else {
       // Glastür: Rahmenprofil ringsum (unten höher), dazwischen das Glas in der Mitte des Blatts.
-      const p = 7, sockel = 16;
+      const p = GLAS_PROFIL, sockel = GLAS_SOCKEL;
       dazu("rahmen", kasten(b.von, b.von + p, unten, oben, hinten, vorn));
       dazu("rahmen", kasten(b.bis - p, b.bis, unten, oben, hinten, vorn));
       dazu("rahmen", kasten(b.von + p, b.bis - p, oben - p, oben, hinten, vorn));
@@ -91,7 +92,7 @@ function tuerTeile(t: SzeneTuer, lage: ReturnType<typeof tuerLage>, wandHoehe: n
     }
     // Notausgang: Panikstange innen quer über das Blatt, mit zwei Haltern.
     if (a.panik) {
-      const l = b.bis - b.von - 16, mx = (b.von + b.bis) / 2;
+      const l = b.bis - b.von - 2 * PANIK_RAND, mx = (b.von + b.bis) / 2;
       dazu("metall", stange(1.8, l, false, mx, a.griffHoehe - 5, vorn + 8));
       for (const x of [mx - l / 2 + 3, mx + l / 2 - 3]) dazu("metall", kasten(x - 2, x + 2, a.griffHoehe - 8, a.griffHoehe - 2, vorn, vorn + 8));
     }
@@ -114,7 +115,7 @@ export function baueTueren(modell: THREE.Group, s: HallenSzene, merk: Merk): Tue
     if (art === "haut") {
       const tex = merk(wandTextur(s.aussehen));
       tex.repeat.set(1 / WAND_KACHEL, 1);
-      m = new THREE.MeshStandardMaterial({ map: tex, emissive: "#ffffff", emissiveMap: tex, emissiveIntensity: 0.3, roughness: 0.9 });
+      m = new THREE.MeshStandardMaterial({ map: tex, emissive: "#ffffff", emissiveMap: tex, emissiveIntensity: 0.3, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
     } else if (art === "holz") {
       const tex = merk(holzTuerTextur());
       m = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, emissive: "#3a2412", emissiveIntensity: 0.25 });
@@ -138,9 +139,11 @@ export function baueTueren(modell: THREE.Group, s: HallenSzene, merk: Merk): Tue
     for (const [art, geos] of Object.entries(teile) as [StoffArt, THREE.BufferGeometry[]][]) {
       const geo = merk(mergeGeometries(geos)!);
       for (const g of geos) g.dispose();
-      geo.rotateY(NACH_INNEN[lage.seite]).translate(p.x, 0, p.z);
+      // Geometrie um die Türmitte, der Körper an der Tür: so sortiert three.js durchsichtige Teile (Glas) richtig.
+      geo.rotateY(NACH_INNEN[lage.seite]);
       const m = merk(stoff(art).clone());
       const mesh = new THREE.Mesh(geo, m);
+      mesh.position.set(p.x, 0, p.z);
       mesh.name = `Tür ${t.name}`; // bleibt deutsch (Name im 3D-Modell)
       mesh.receiveShadow = art !== "glas";
       mesh.castShadow = art !== "glas";

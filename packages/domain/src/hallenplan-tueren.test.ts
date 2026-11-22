@@ -1,6 +1,7 @@
 /** Türen in den Eingängen: Vorgabe, Bereinigung, Flügel aus der Breite, Aufbau, in der Szene, nie Einfluss auf den Plan. */
 import { describe, expect, test } from "bun:test";
-import { flaecheBereinigt, istTuerArt, TUER_ARTEN, TUER_VORGABE, tuerArtVon, tuerAufbau, tuerFluegel, tuerLage, ZWEIFLUEGELIG_AB } from "./hallenplan-tueren";
+import { flaecheBereinigt, GLAS_PROFIL, GLAS_SOCKEL, istTuerArt, PANIK_RAND, TUER_ARTEN, TUER_MIN_BREITE, TUER_VORGABE, tuerArtVon, tuerAufbau, tuerFluegel, ZWEIFLUEGELIG_AB } from "./hallenplan-tueren";
+import { tuerLage } from "./hallenplan-3d-waende";
 import { festGeometrie, festschreiben, HALLE_STANDARD, halleSchluessel, planeHalle, type Halle, type HallenFlaeche, type PlanTier } from "./hallenplan";
 import { hallenSzene, TUER_HOEHE } from "./hallenplan-3d";
 
@@ -56,6 +57,24 @@ describe("Türen: Flügel und Aufbau", () => {
     // Bündig wie die Wand: nur eine feine Fuge statt eines Rahmens.
     expect(tuerAufbau({ art: "wand", breite: 100, hoehe: TUER_HOEHE, notausgang: false })!.zarge).toBeLessThan(2);
     expect(tuerAufbau({ art: "offen", breite: 100, hoehe: TUER_HOEHE, notausgang: false })).toBeNull();
+    // Flügel aus der Szene (SzeneTuer.fluegel) gehen vor.
+    expect(tuerAufbau({ art: "holz", breite: 300, hoehe: TUER_HOEHE, notausgang: false, fluegel: 1 })!.blaetter).toHaveLength(1);
+  });
+
+  test(`schmaler als ${TUER_MIN_BREITE} cm bleibt die Öffnung; darüber haben Glas und Panikstange immer Platz`, () => {
+    for (let breite = 10; breite <= 400; breite += 5)
+      for (const art of ["wand", "glas", "holz"] as const) {
+        const a = tuerAufbau({ art, breite, hoehe: TUER_HOEHE, notausgang: true });
+        if (breite < TUER_MIN_BREITE) {
+          expect(a).toBeNull();
+          continue;
+        }
+        expect(a!.hoehe - GLAS_PROFIL - GLAS_SOCKEL).toBeGreaterThan(0);
+        for (const b of a!.blaetter) {
+          expect(b.bis - b.von - 2 * GLAS_PROFIL).toBeGreaterThan(0);
+          expect(b.bis - b.von - 2 * PANIK_RAND).toBeGreaterThan(0);
+        }
+      }
   });
 });
 

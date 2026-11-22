@@ -11,6 +11,7 @@ import { baueLandschaft, type HallenSeite } from "./hallenplan-3d-landschaft";
 import { lichtWerte } from "./hallenplan-3d-licht";
 import { baueRaum, BODEN_LAGEN } from "./hallenplan-3d-raum";
 import { baueTueren } from "./hallenplan-3d-tueren";
+import { vollDeckend } from "./hallenplan-3d-export";
 import { type Bewegung, bewegungFuer } from "./hallenplan-3d-steuerung";
 
 const M = 0.01; // cm → m
@@ -515,12 +516,15 @@ export function baueWelt(
 
   const herunterladen = async () => {
     const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
-    // Im Modell: die Decke immer (in der Ansicht nur von innen), die Folie wie gerade gezeigt; das Meterraster nicht.
+    // Im Modell: die Decke immer (in der Ansicht nur von innen), Wände und Türen voll (auch gerade ausgeblendete), die Folie
+    // wie gerade gezeigt; das Meterraster nicht.
     const zurueck = raum.fuerExport();
+    const waendeZurueck = vollDeckend(wandTeile.flatMap((t) => [t.stoff, ...t.mit]));
     let daten: ArrayBuffer | object;
     try {
       daten = await new GLTFExporter().parseAsync(modell, { binary: true });
     } finally {
+      waendeZurueck();
       zurueck();
     }
     const url = URL.createObjectURL(new Blob([daten as ArrayBuffer], { type: "model/gltf-binary" }));
