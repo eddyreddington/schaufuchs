@@ -25,9 +25,15 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
   für Nummern, Katalog-PDF, Kurzkatalog und Ergebnisse), Käfigblöcke, Volieren und Stämme vorn (wenn gewählt); darin Sparte, Rasse, Farbenschlag
   fest, dann die gewählten Kriterien. Vorgabe = bisherige Folge; gespeicherte Listen ohne neue Kriterien sortieren unverändert.
 - Jugend-Kennzeichen: Bei „in der Rasse eingereiht“ bekommt jedes Jugendtier „Jgd.“ (`jugendKennzeichen()`, `JUGEND_KUERZEL`)
-  – im Katalog-PDF (auch online und im Kurzkatalog) hinter dem Aussteller, in der Legende erklärt; in den öffentlichen Ergebnissen
-  in der Spalte Klasse (Text `ergebnisse.jugendKuerzel` der Sprache). Beim eigenen Block nie, dort steht die Überschrift.
-  Das Kürzel steht nur an Zeilen, die ohnehin erscheinen; ohne Einwilligung bleibt der Name verdeckt (wie beim Block).
+  – im Katalog-PDF (auch online und im Kurzkatalog) hinter dem Aussteller, in der Legende erklärt (`ausstellerFeld` in
+  `pdf/katalog-tierteil.ts`: gleiche Größe und Grundlinie wie der Name; ist es eng, erst Mindestgröße, dann Vorname als
+  Initiale, dann Kürzel kleiner, zuletzt nur der Nachname). In den öffentlichen Ergebnissen eine Marke mit dem Wort „Jugend“
+  (`ergebnisse.jugend` der Sprache) in der Spalte Aussteller – kein Kürzel hinter dem Alter, das läse sich wie „jung“.
+  Beim eigenen Block nie, dort steht die Überschrift. Die Ehrentafel bleibt ohne Kennzeichen.
+- Öffentliche Ergebnisse liefern nur, was die Seite zeigt: je Tier `jugendBlock` (Gruppierung) und `jugendKennzeichen`
+  (Marke), aber kein `istJugend` und keine Einstellung `jugendSeparat`. Die Marke steht auch an Zeilen ohne
+  Online-Einwilligung („nicht veröffentlicht“): Sie nennt wie die Überschrift des Jugendblocks nur die Klasse, nicht die
+  Person – Name, Verein, Alter und Erziehungsberechtigter bleiben verdeckt.
 - Nach dem Festschreiben gesperrt: Sortierung, Verzeichnisversion, „Jugend im Katalog“, Reihenfolge der Stämme, Rasse/Art/Geschlecht/Alter nummerierter Tiere.
 - Sind die Preisrichter nach Rassen eingeteilt, folgen die Nummernbereiche den neuen Nummern.
 - Die Katalognummern kommen nach dem Hallenplan ([ADR 031](../entscheidungen/031-hallenplan-vor-katalognummern.md)):

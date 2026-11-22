@@ -375,17 +375,33 @@ export function tierteilSetzen(K: KatalogKontext) {
 
   /**
    * Aussteller in seinem Feld; steht die Jugend in der Rasse eingereiht, folgt dem Namen das Kürzel „Jgd.“ in derselben
-   * Zeile – der Platz dafür ist vorab abgezogen, der Name wird notfalls kleiner, nichts bricht um.
+   * Zeile und Größe, auf derselben Grundlinie. Reicht der Platz nicht: erst die Schrift bis zur Mindestgröße, dann der
+   * Vorname als Initiale („Schmidt, W.“), dann das Kürzel kleiner, zuletzt nur der Nachname – abgeschnitten wird er
+   * erst, wenn auch das nicht passt. Nichts bricht um.
    */
   function ausstellerFeld(e: Eintrag, x: number, y: number, breite: number) {
-    const kennzeichen = jugendKennzeichen(e, s);
-    doc.font(SANS_KURSIV).fontSize(GR);
-    const kw = kennzeichen ? doc.widthOfString(JUGEND_KUERZEL) + 1.2 * MM : 0;
-    const name = ausstellerAnzeige(e);
-    const gr = textImFeld(doc, name, x, y, { breite: breite - kw, groesse: GR, min: 6.8 * kt, schrift: SANS, farbe: TINTE });
-    if (!kennzeichen) return;
-    const nw = Math.min(breite - kw, doc.font(SANS).fontSize(gr).widthOfString(name));
-    doc.font(SANS_KURSIV).fontSize(GR).fillColor(GRAU).text(JUGEND_KUERZEL, x + nw + 1.2 * MM, y, { width: kw, lineBreak: false });
+    const min = 6.8 * kt;
+    if (!jugendKennzeichen(e, s)) {
+      textImFeld(doc, ausstellerAnzeige(e), x, y, { breite, groesse: GR, min, schrift: SANS, farbe: TINTE });
+      return;
+    }
+    const luft = 1 * MM;
+    const w = (t: string, schrift: string, g: number) => doc.font(schrift).fontSize(g).widthOfString(t);
+    const stufen = (von: number, bis: number) => [...Array.from({ length: Math.max(0, Math.ceil((von - bis) / 0.5)) }, (_, i) => von - i * 0.5), bis];
+    const [ganz, initiale, nachname] = e.verdeckt || !e.vorname ? [ausstellerAnzeige(e)] : [ausstellerAnzeige(e), `${e.nachname}, ${e.vorname.charAt(0)}.`, e.nachname];
+    const kMin = 5.5 * kt;
+    const wahl = [
+      ...stufen(GR, min).map((g) => ({ name: ganz!, g, kg: g })),
+      ...(initiale ? stufen(GR, min).map((g) => ({ name: initiale, g, kg: g })) : []),
+      ...(initiale ? stufen(min, kMin).map((kg) => ({ name: initiale, g: min, kg })) : []),
+      ...(nachname ? stufen(min, kMin).map((kg) => ({ name: nachname, g: min, kg })) : []),
+    ].find((v) => w(v.name, SANS, v.g) + luft + w(JUGEND_KUERZEL, SANS_KURSIV, v.kg) <= breite) ?? { name: nachname ?? ganz!, g: min, kg: kMin };
+    const kw = w(JUGEND_KUERZEL, SANS_KURSIV, wahl.kg);
+    const frei = breite - luft - kw;
+    textImFeld(doc, wahl.name, x, y, { breite: frei, groesse: wahl.g, min: wahl.g, schrift: SANS, farbe: TINTE });
+    const grundlinie = y - aufLinie(SANS, wahl.g, 0);
+    const nw = Math.min(frei, w(wahl.name, SANS, wahl.g));
+    doc.font(SANS_KURSIV).fontSize(wahl.kg).fillColor(GRAU).text(JUGEND_KUERZEL, x + nw + luft, aufLinie(SANS_KURSIV, wahl.kg, grundlinie), { width: kw + 1, lineBreak: false });
     doc.fillColor(TINTE);
   }
 

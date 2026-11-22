@@ -1,4 +1,4 @@
-import { datumIn, euroIn, gefordertCent, gruppenAbteilung, istJugendBlock, normalisiereRegistriernummer, oeffnungszeitenZeilen, type AdressVorschlaege, type KaefigMasse, type KaefigRegel, type Sprache, type Texte } from "@schau/domain";
+import { datumIn, euroIn, gefordertCent, gruppenAbteilung, normalisiereRegistriernummer, oeffnungszeitenZeilen, type AdressVorschlaege, type KaefigMasse, type KaefigRegel, type Sprache, type Texte } from "@schau/domain";
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AusstellerFelder, leererAussteller } from "../komponenten/aussteller";
@@ -509,7 +509,7 @@ export function Ergebnisse() {
     const map = new Map<string, typeof tiere>();
     for (const t of tiere) {
       // Jugend, Volieren und Stämme bilden eigene Blöcke wie im Katalog.
-      const jugend = e.data?.freigegeben && istJugendBlock(t, e.data) ? `${tx.ergebnisse.jugend} – ` : "";
+      const jugend = e.data?.freigegeben && t.jugendBlock ? `${tx.ergebnisse.jugend} – ` : "";
       const abteilung = e.data?.freigegeben && gruppenAbteilung(t.art, e.data.staemmeVorn) ? tx.abteilung[t.art as "stamm" | "voliere"] : null;
       const k = `${jugend}${abteilung ? `${abteilung} – ` : ""}${t.sparte}: ${t.bezeichnung}`;
       map.set(k, [...(map.get(k) ?? []), t]);
@@ -553,11 +553,13 @@ export function Ergebnisse() {
                     {tiere.map((x) => (
                       <tr key={`${x.katalogNr}${x.suffix}`}>
                         <td className="nummer w-20 text-right text-lg">{formatKatalognummer(x)}</td>
-                        <td className="w-32">
-                          {x.geschlecht} {tx.alter[x.alter]}
-                          {x.jugendKennzeichen && <abbr title={t.jugend} className="ml-1 whitespace-nowrap text-sm text-grau no-underline">{t.jugendKuerzel}</abbr>}
+                        <td className="w-32">{x.geschlecht} {tx.alter[x.alter]}</td>
+                        <td>
+                          {x.verdeckt ? <span className="italic text-grau">{t.nichtVeroeffentlicht}</span> : x.aussteller}
+                          {/* Jugend in der Rasse eingereiht: ausgeschriebene Marke wie im Druck hinter dem Aussteller (nicht mit „jung“ zu verwechseln). */}
+                          {x.jugendKennzeichen && <span className="ml-2"><Marke>{t.jugend}</Marke></span>}
+                          <span className="block text-sm text-grau">{x.verein}</span>
                         </td>
-                        <td>{x.verdeckt ? <span className="italic text-grau">{t.nichtVeroeffentlicht}</span> : x.aussteller}<span className="block text-sm text-grau">{x.verein}</span></td>
                         <td className="w-24 text-lg font-semibold">{x.ergebnis === "fehlt" ? t.fehlt : x.ergebnis}</td>
                         <td className="w-32">
                           <span className="flex flex-wrap gap-1">{x.preise.map((p) => <Marke key={p} ton="info">{p}</Marke>)}</span>

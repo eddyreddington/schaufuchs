@@ -1,5 +1,5 @@
 import { verzeichnisVorschlaegeZwischengespeichert } from "../services/vereinsverzeichnis";
-import { adressVorschlaege, bewertungsText, datenschutzAbschnitte, datenschutzKurz, datumIn, fehlendeVereinsangaben, heuteBerlin, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, jugendKennzeichen, MELDEARTEN, mitVerzeichnis, NUR_LESEN_MELDUNG, onlineAbgelaufen, SPRACHEN, teilschauenLesen, texte, type Sprache } from "@schau/domain";
+import { adressVorschlaege, bewertungsText, datenschutzAbschnitte, datenschutzKurz, datumIn, fehlendeVereinsangaben, heuteBerlin, impressumAbschnitte, istJugendBlock, istJugendlich, JUGEND_ALTERSGRENZE, jugendKennzeichen, MELDEARTEN, mitVerzeichnis, NUR_LESEN_MELDUNG, onlineAbgelaufen, SPRACHEN, teilschauenLesen, texte, type Sprache } from "@schau/domain";
 import { heuteDe } from "../services/tiergesundheit";
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -319,7 +319,6 @@ async function berechneErgebnisse(s: typeof schau.$inferSelect) {
     freigegeben: true as const,
     name: s.name,
     test: s.test,
-    jugendSeparat: s.jugendSeparat,
     staemmeVorn: s.staemmeVorn,
     tiere: eintraege
       .filter((e) => e.katalogNr != null)
@@ -339,8 +338,10 @@ async function berechneErgebnisse(s: typeof schau.$inferSelect) {
         aussteller: e.verdeckt ? "nicht veröffentlicht" : `${e.vorname} ${e.nachname}`,
         verdeckt: e.verdeckt,
         verein: e.verein,
-        istJugend: e.istJugend,
-        /** „Jgd.“ an der Zeile: nur bei Jugend in der Rasse eingereiht (beim eigenen Block steht die Überschrift). */
+        // Kein „istJugend“: nur, was die Seite zeigt – die Überschrift des Jugendblocks oder die Marke an der Zeile.
+        /** Steht im eigenen Block „Jugend – …“ (Einstellung „eigener Block am Ende“). */
+        jugendBlock: istJugendBlock(e, s),
+        /** Marke „Jugend“ an der Zeile: nur bei Jugend in der Rasse eingereiht (beim eigenen Block steht die Überschrift). */
         jugendKennzeichen: jugendKennzeichen(e, s),
       })),
   };

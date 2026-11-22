@@ -212,7 +212,6 @@ export const nl: Texte = {
     nichtVeroeffentlicht: "niet gepubliceerd",
     fehlt: "afwezig",
     jugend: "Jeugd",
-    jugendKuerzel: "Jgd.",
   },
   fehler: {
     seiteFehlt: "Deze pagina bestaat niet",

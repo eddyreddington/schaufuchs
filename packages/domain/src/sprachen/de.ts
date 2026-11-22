@@ -222,7 +222,6 @@ export const de = {
     nichtVeroeffentlicht: "nicht veröffentlicht",
     fehlt: "fehlt",
     jugend: "Jugend",
-    jugendKuerzel: "Jgd.",
   },
   fehler: {
     seiteFehlt: "Diese Seite gibt es nicht",

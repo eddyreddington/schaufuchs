@@ -27,6 +27,8 @@ describe("Jugend-Kennzeichen „Jgd.“", () => {
     await melde("Jonas", "Junior", 2, true, true);
     // Jugendlicher ohne Online-Einwilligung: im Internet ohne Namen.
     await melde("Vera", "Verborgen", 1, true, false);
+    // Doppelname: in schmalen Spalten Vorname als Initiale bzw. weg – der Nachname bleibt ganz.
+    await melde("Wilhelmine", "Wolf-Bauer", 1, true, true);
 
     const einstellen = async (jugendSeparat: boolean) => {
       await al().schau.aktualisieren({ id, daten: { ...(await al().schau.get({ id })), jugendSeparat } });
@@ -59,6 +61,19 @@ describe("Jugend-Kennzeichen „Jgd.“", () => {
       expect(z.some((x) => /jugendabteilung/i.test(x))).toBe(false);
     }
 
+    // Schmale Spalten mit Ergebnissen und breiter Schrift: Nachname ganz, „Jgd.“ in derselben Zeile, nichts abgeschnitten.
+    for (const [art, vorschau] of [
+      ["A4 dreispaltig", { format: "A4", aufteilung: "dreispaltig", schrift: "lesbar" }],
+      ["A5 zweispaltig", { format: "A5", aufteilung: "zweispaltig", schrift: "lesbar" }],
+    ] as const) {
+      const z = zeilen(await katalogPdf(s, { vorschau })).filter((x) => /^\d+ /.test(x));
+      for (const name of ["Wolf-Bauer", "Junior", "Verborgen"]) {
+        const zeile = z.filter((x) => x.includes(name));
+        expect({ art, name, zeilen: zeile.length, ohneKuerzel: zeile.filter((x) => !/ Jgd\.$/.test(x)) }).toEqual({ art, name, zeilen: name === "Junior" ? 2 : 1, ohneKuerzel: [] });
+      }
+      expect({ art, gekuerzt: z.filter((x) => x.includes("…")) }).toEqual({ art, gekuerzt: [] });
+    }
+
     // Online-Katalog: nur mit Einwilligung ein Name – ohne steht die Zeile wie sonst mit „nicht veröffentlicht“.
     const online = zeilen(await katalogPdf(s, { online: true }));
     expect(online.filter((x) => /Junior, Jonas Jgd\./.test(x)).length).toBe(2);
@@ -79,6 +94,9 @@ describe("Jugend-Kennzeichen „Jgd.“", () => {
     expect(kenn("Senta Seniorin")).toEqual([false, false]);
     expect(kenn("nicht veröffentlicht")).toEqual([true]);
     expect(JSON.stringify(e1)).not.toMatch(/Verborgen|Vera|Erika|Elternteil|geburtsdatum/);
+    // Nur, was die Seite zeigt: kein „istJugend“ je Tier, keine Einstellung „jugendSeparat“ (Gruppierung kommt fertig).
+    expect(JSON.stringify(e1)).not.toMatch(/istJugend|jugendSeparat/);
+    expect(e1.tiere.every((t) => t.jugendBlock === false)).toBe(true);
 
     // ── eigener Block am Ende: die Überschrift „Jugend“ kennzeichnet, nirgends ein Kürzel ──
     s = await einstellen(true);
@@ -90,6 +108,7 @@ describe("Jugend-Kennzeichen „Jgd.“", () => {
     const e2 = await ergebnisse();
     if (!e2.freigegeben) throw new Error("nicht freigegeben");
     expect(e2.tiere.map((t) => t.jugendKennzeichen)).toEqual(e2.tiere.map(() => false));
-    expect(e2.tiere.filter((t) => t.istJugend).length).toBe(3);
+    expect(e2.tiere.filter((t) => t.jugendBlock).length).toBe(4);
+    expect(JSON.stringify(e2)).not.toMatch(/istJugend|jugendSeparat/);
   });
 });

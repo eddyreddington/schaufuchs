@@ -212,7 +212,6 @@ export const fr: Texte = {
     nichtVeroeffentlicht: "non publié",
     fehlt: "absent",
     jugend: "Jeunes",
-    jugendKuerzel: "Jeun.",
   },
   fehler: {
     seiteFehlt: "Cette page n’existe pas",
