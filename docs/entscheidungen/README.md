@@ -33,3 +33,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [027](027-bdrg-daten-nutzung.md) | BDRG-Daten: Nutzung im Verein, kein Verzeichnis im Repo |
 | [028](028-aussehen-der-halle.md) | Aussehen der Halle in 3D: einstellbar, ändert nie den Plan |
 | [029](029-druckformate.md) | Formatvorgaben der Drucke je Schau, eine Übersicht im Reiter „Druck“ |
+| [029](029-rueckwand-an-rueckwand.md) | Käfige beim Verschieben ausrichten: Rückwand an die Wand, Rückwand an Rückwand |

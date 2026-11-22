@@ -12,7 +12,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 | Neu setzen | `hallenplan-neu.ts` | `neuSetzen()`, `halleZumNeuSetzen()`, `vonHandGeplant()`, `fehlendeImPlan()` |
 | Fehlende Käfige | `hallenplan-fehlend.ts` | `fehlendeKaefige()`, `fehlendeEinsetzen()` (nur in nutzbare Reihenstücke, nie in Gänge) |
 | Editor-Logik | `hallenplan-gruppe.ts`, `hallenplan-entfernen.ts` | `verschiebeTeile()`, `pruefeVerschiebung()`, `pruefeLage()`, `rasterAusrichten()`, `leereEntfernen()`, `pruefeEntfernt()` |
-| Front, Wand | `hallenplan-wandfront.ts`, `hallenplan-wand.ts` | `wandAusrichtung()` (Rückwand an die Wand), `mitWandreihe()` |
+| Front, Wand | `hallenplan-wandfront.ts`, `hallenplan-rueckwand.ts`, `hallenplan-wand.ts` | `wandAusrichtung()` (Rückwand an die Wand), `ausrichtungBeimStellen()` (beim Verschieben: erst Wand, dann Rückwand an Rückwand, [ADR 029](../entscheidungen/029-rueckwand-an-rueckwand.md)), `mitWandreihe()`; Web: `hallenplan-ausrichten.ts` (`verschiebenUndAusrichten`) |
 | Folge | `hallenplan-folge.ts` | `planFolge()` („Nach Plan nummerieren“, nur Nummern, kein Tier wechselt den Käfig; Einstellung `Halle.nummerFolge`, Oberfläche `hallenplan-nummerfolge.tsx`), `planUnordnung()` |
 | Druck, 3D | `hallenplan-druck.ts`, `hallenplan-3d.ts`, `hallenplan-3d-waende.ts`, `hallenplan-3d-rundgang.ts`, `stellvorschlaege.ts`, `kaefige.ts` | `zeichnungDerHalle()`, `richterFarbe()`, `hallenSzene()`, `waendeImGrundriss()`, `rundgang()` (Wegpunkte des Rundgangs), `stellVorschlaege()`, `kaefigTyp()`, `kaefigMass()` |
 | Aussehen (3D) | `hallenplan-aussehen.ts`, `hallenplan-3d-ausstattung.ts`, `hallenplan-3d-dach.ts`, `hallenplan-tueren.ts` | `Halle.aussehen` ([ADR 028](../entscheidungen/028-aussehen-der-halle.md)): `aussehenVon()` (Vorgaben, Grenzen), `aussehenBereinigt()` (nur Abweichungen speichern), `deckeSchalten()` (Vorschlag 7/9 m), `wandHoeheSetzen()` (First zieht mit), `wirksamerFirst()`; `fensterInWaenden()`, `geraeteAnWaenden()`, `spielfeldLinien()`; `dachVon()`, `deckenHoehe()`, `deckeSichtbar()`, `deckenTeile()` (Binder, Leuchten), `giebel()`, `hoechstesInDerHalle()`; Türen je Eingang (`HallenFlaeche.tuer`): `tuerArtVon()`, `flaecheBereinigt()`, `tuerFluegel()` (ab 1,30 m zweiflügelig), `tuerAufbau()` (ab 50 cm), `tuerLage()` (`hallenplan-3d-waende.ts`); `halleBereinigt()` (`hallenplan-bereinigen.ts`: so bereinigt wie der Server, auch im Entwurf des Editors). Web: `hallenplan-aussehen.tsx` (Abschnitt „Aussehen (3D)“), `hallenplan-meterfeld.tsx` (`MeterFeld`, `MitEinheit`), `hallenplan-3d-raum.ts` (Boden, Folie, Linien, Innenwände, Fenster, Geräte; `BODEN_LAGEN`), `hallenplan-3d-decke.ts` (Decke, Binder, Giebel, Leuchten), `hallenplan-3d-texturen.ts` (Canvas-Texturen), `hallenplan-3d-tueren.ts` (Türen, blenden mit dem Sturz aus), `hallenplan-3d-export.ts` (`vollDeckend`: im 3D-Modell alles voll), `hallenplan-tuer.tsx` (Auswahl „Tür“ beim gewählten Eingang); Schalter „Folie“ in `hallenplan-3d.tsx` mit `hallenplan-3d-folie.ts` (`folieJetzt`) |
@@ -28,6 +28,9 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 - Pokale auf dem Pokaltisch (`pokalStellen`, 3D) stehen mit Henkeln (`POKAL_BREITE`) ganz auf der Platte und berühren sich nicht; auf kleinen Tischen werden sie kleiner.
 - Fester Plan vs. „Automatisch planen“ ([ADR 006](../entscheidungen/006-fester-plan.md)): fest = jeder Käfig behält seinen Platz.
 - Jede Käfigfront zeigt zu einem Gang (`frontFehler`), Rückwand an die Wand; vor Ein- und Notausgängen bleibt ein Gang frei.
+- Beim Verschieben (Ziehen, Pfeiltasten) dreht nur das bewegte Teil um 180° an Ort und Stelle: Front zur Wand → Rückwand an
+  die Wand; Front an der langen Seite eines anderen Teils (bis `WAND_FANG`) → Rückwand an Rückwand, aber nur, wenn die Front
+  danach frei ist ([ADR 029](../entscheidungen/029-rueckwand-an-rueckwand.md)).
 - Käfige nie auf Flächen; eingesetzte Teile nur ganz in der Halle (`pruefeLage`).
 - Freier Grundriss ([ADR 019](../entscheidungen/019-freier-grundriss.md)): rechtwinklig; außerhalb wird für Planung und Verschieben Sperrfläche (`mitUmrissSperren`, „Hallenwand“); Wände in Plan, Druck und 3D entlang der Kanten.
 - Helfer sehen den Plan nur an; Ändern nur Ausstellungsleitung (`adminProcedure`), jede Änderung mit `protokolliere()`.
@@ -48,7 +51,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 
 ## Tests
 
-- Web: `apps/web/src/seiten/hallenplan-*.test.ts` (Laden, Speichern, Wiederholen ohne Verbindung, Folie in 3D, Entwurf bereinigt wie der Server, 3D-Modell voll deckend).
+- Web: `apps/web/src/seiten/hallenplan-*.test.ts` (Laden, Speichern, Wiederholen ohne Verbindung, Folie in 3D, Entwurf bereinigt wie der Server, 3D-Modell voll deckend, Ausrichten beim Verschieben).
 - Domain: `packages/domain/src/hallenplan*.test.ts`, `stellvorschlaege.test.ts` (u. a. Zufallshallen, Möbel ohne Einfluss, Aussehen ohne Einfluss).
 - Server (`apps/server/src/tests`): `17-kaefige`, `19-hallenplan`, `24-plan-fest`, `31-stellvorschlaege`, `36-nach-plan-nummerieren`,
   `38-hallenplan-entfernen`, `39-hallenplan-druck`, `40-hallenplan-neu-setzen`, `41-hallenplan-3d`, `42-hallenplan-moebel-etagen`,
