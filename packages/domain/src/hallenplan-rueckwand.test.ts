@@ -7,7 +7,7 @@ import { describe, expect, test } from "bun:test";
 import { festschreiben, frontFehler, HALLE_STANDARD, planeHalle, type Blick, type Halle, type HallenObjekt, type PlanTier, type Rechteck } from "./hallenplan";
 import type { HallenTeil } from "./hallenplan-gruppe";
 import { ausrichtungBeimStellen, ruhendeNachbarn } from "./hallenplan-rueckwand";
-import { wandAusrichtung, wandDrehungenAnwenden, wandKandidaten, type WandDrehung } from "./hallenplan-wandfront";
+import { wandAusrichtung, wandDrehungenAnwenden, wandKandidaten, type WandDrehung, type WandKandidat } from "./hallenplan-wandfront";
 
 const masse = { huehner: { breite: 70, tiefe: 70, hoehe: 70 }, zwerghuehner: { breite: 50, tiefe: 50, hoehe: 50 }, tauben: { breite: 40, tiefe: 40, hoehe: 40 }, voliere: { breite: 200, tiefe: 100, hoehe: 150 } };
 const leer: Halle = { ...HALLE_STANDARD, richtung: "laengs", breite: 1000, laenge: 2000, gang: 150, wandreihen: false, hauptgang: { breite: 0, lage: "keiner" }, flaechen: [] };
@@ -108,6 +108,9 @@ describe("Käfige aneinander: Rückwand an Rückwand", () => {
     expect(ausrichtungBeimStellen(s.neu, wandKandidaten(s.nachher), [objekt("a")])).toEqual(nichts);
     // Nur an der Wand, kein Nachbar: wie bisher.
     expect(kurz(stellen([block("a", 300, 0, "z-")], ["a"]).a.wand)).toEqual([["a", "z+"]]);
+    // Hinter a eine Sperrfläche („Bühne“) direkt anliegend: auch dann nicht drehen.
+    const buehne: Halle = { ...leer, flaechen: [{ name: "Bühne", art: "sperre", x: 300, y: 40, breite: 200, tiefe: 200 }] };
+    expect(stellen([block("a", 300, 0, "z-")], ["a"], buehne).a).toEqual(nichts);
   });
 
   test("Pfeiltasten im Engpass zwischen Wand und Nachbar: kein Hin- und Herdrehen", () => {
@@ -174,6 +177,39 @@ describe("Käfige aneinander: Rückwand an Rückwand", () => {
   });
 });
 
+describe("Käfige aneinander: eine Reihe dreht nur als Ganzes", () => {
+  // Reihe 7 aus drei Grundplatten (70 × 210 cm) übereinander, Front nach rechts (x+); ein Taubenblock (200 × 40) stößt mit der
+  // kurzen Seite an die Front von Platte 1 (T-Stoß).
+  const platte = (i: number, x: number, front: Blick): WandKandidat => ({ teil: { art: "platte", reihe: 7, i }, rechteck: { x, y: i * 210, b: 70, h: 210 }, front, belegt: 3 });
+  const reihe = (x: number, front: Blick = "x+") => [0, 1, 2].map((i) => platte(i, x, front));
+  const teil = (id: string, x: number, y: number, b: number, h: number, front: Blick): WandKandidat => ({ teil: { art: "objekt", id }, rechteck: { x, y, b, h }, front, belegt: 0 });
+  const t = teil("t", 370, 250, 200, 40, "z+");
+  const r7: HallenTeil[] = [{ art: "reihe", nr: 7 }];
+  const plattenVon = (d: WandDrehung[]) => kurz(d);
+
+  test("Von der Wand weggerückt (3 m Gang dahinter): die ganze Reihe dreht", () => {
+    const a = ausrichtungBeimStellen(leer, [...reihe(300), t], r7);
+    expect(a.wand).toEqual([]);
+    expect(plattenVon(a.ruecken)).toEqual([0, 1, 2].map((i) => [`R7/${i}`, "x-"]));
+  });
+
+  test("Nicht für alle Platten ein Gang frei: die Reihe dreht gar nicht – keine einzelne Platte mitten in der Reihe", () => {
+    // 50 cm vor der Wand.
+    expect(ausrichtungBeimStellen(leer, [...reihe(50), t], r7)).toEqual(nichts);
+    // Hinter Platte 2 steht ein Block.
+    const hinten = teil("h", 150, 430, 40, 200, "x-");
+    expect(ausrichtungBeimStellen(leer, [...reihe(300), t, hinten], r7)).toEqual(nichts);
+    // Mehrere Platten derselben Reihe zusammen gestellt: ebenso.
+    expect(ausrichtungBeimStellen(leer, [...reihe(300), t, hinten], [{ art: "platte", reihe: 7, i: 1 }, { art: "platte", reihe: 7, i: 2 }])).toEqual(nichts);
+    // Eine einzeln gestellte Platte dreht wie bisher für sich.
+    expect(plattenVon(ausrichtungBeimStellen(leer, [...reihe(300), t, hinten], [{ art: "platte", reihe: 7, i: 1 }]).ruecken)).toEqual([["R7/1", "x-"]]);
+  });
+
+  test("An die Wand gestellt, Front zur Wand: die ganze Reihe dreht (Rückwand an die Wand)", () => {
+    expect(plattenVon(ausrichtungBeimStellen(leer, reihe(10, "x-"), r7).wand)).toEqual([0, 1, 2].map((i) => [`R7/${i}`, "x+"]));
+  });
+});
+
 describe("Käfige aneinander: mit Reihen aus der Planung", () => {
   let id = 0;
   const art = (n: number, typ: PlanTier["typ"]): PlanTier[] => Array.from({ length: n }, () => ({ id: ++id, typ, nr: String(id), rasse: "R", sparte: "S", preisrichterId: null }));
@@ -199,7 +235,7 @@ describe("Käfige aneinander: mit Reihen aus der Planung", () => {
     // Doppelreihe mit Front nach links (x-): davor der Gang bis zur linken Wand.
     const r = p0.reihen.find((x) => x.art === "doppel" && x.front === "links" && x.platten.length >= 2)!;
     const pl = r.platten[0]!.rechteck;
-    expect(pl.x).toBeGreaterThanOrEqual(190);
+    expect(pl.x - 48).toBeGreaterThanOrEqual(halle.gang);
     // Taubenblock senkrecht im Gang, rechte lange Seite bündig an der Front der Platte, Front zur Platte.
     const h1: Halle = { ...halle, objekte: [block("b", pl.x - 40, pl.y, "x+", 90)] };
     const p1 = plane(h1);

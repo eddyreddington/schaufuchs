@@ -7,7 +7,7 @@ import { eingangAnWand, istRechteckUmriss, ueberlappt, umrissNormal, umrissSperr
 import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { useFrage, useMeldung } from "../ui";
-import { type Ausgerichtet, ausrichtHinweis, eingesetztUndAusgerichtet, gedrehtUndAusgerichtet } from "./hallenplan-ausrichten";
+import { eingesetztUndAusgerichtet, gedrehtUndAusgerichtet, mitAusrichtung } from "./hallenplan-ausrichten";
 import { type HallenEntwurf } from "./hallenplan-entwurf";
 import { type Aktionen, type Daten, drehPruefung, EINGANG_TIEFE, entfernenText, type Plan, planKoerper, RASTER, raster, vollstaendig, wandText, type Ziel, zuTeilen, zweisprachig } from "./hallenplan-geometrie";
 
@@ -56,18 +56,8 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     const pr = drehPruefung(entwurf, plan, t);
     if (!pr.ok) return meldung(serverText(pr.meldung, sprache), "warnung");
     // Verdeckte die gedrehte Front eine Wand oder ein Teil und ist die Gegenseite frei, dreht es um 180° weiter (Entscheidung 029).
-    const hinweis = ausgerichtet((h) => gedrehtUndAusgerichtet(h, plan, t, d.masse), { ...zweisprachig((x) => x.halleWerkzeuge.aktionen.drehenWas), festschreiben: t.art === "reihe" || t.art === "platte" });
+    const hinweis = mitAusrichtung(aendern, (h) => gedrehtUndAusgerichtet(h, plan, t, d.masse), { ...zweisprachig((x) => x.halleWerkzeuge.aktionen.drehenWas), festschreiben: t.art === "reihe" || t.art === "platte" });
     if (hinweis) meldung(hinweis);
-  };
-  /** Ändern samt Ausrichtung (ein Schritt); Ergebnis: Hinweis, was gedreht wurde (oder null). */
-  const ausgerichtet = (f: (h: Halle) => Ausgerichtet, opt: Parameters<typeof aendern>[1]): string | null => {
-    let r: Pick<Ausgerichtet, "wand" | "ruecken"> = { wand: 0, ruecken: 0 };
-    aendern((h) => {
-      const a = f(h);
-      r = a;
-      return a.halle;
-    }, opt);
-    return ausrichtHinweis(r);
   };
   /** Gewählte Reihen und Platten an ihren gerechneten Platz (Versatz und Drehung weg). */
   const zurueckTeile = teile.filter((t) => (t.art === "reihe" ? entwurf.reihenVersatz!.some((x) => x.nr === t.nr) : t.art === "platte" && entwurf.plattenVersatz!.some((x) => x.reihe === t.reihe && x.platte === t.i)));
@@ -127,7 +117,8 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
   /** „1 Tier bleibt ohne Platz.“ bzw. Mehrzahl. */
   const ohnePlatz = (n: number) => (n === 1 ? ta.tiereOhnePlatzEins : ta.tiereOhnePlatz(n));
   const neueId = () => `t${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
-  const einsetzen = (art: HallenObjekt["art"], typ?: KaefigTyp) => {
+  /** Ein Teil einsetzen; `stumm`: den Hinweis zur Ausrichtung nicht zeigen, nur zurückgeben. */
+  const einsetzen = (art: HallenObjekt["art"], typ?: KaefigTyp, stumm = false): string | null => {
     // Neues Teil möglichst in die Mitte der Halle, auf einen freien Platz (nicht auf ein eben eingesetztes) – von dort an
     // den richtigen Platz ziehen. Tische und Bänke gern in einen freien Bereich.
     const id = neueId();
@@ -141,9 +132,10 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     const belegt = moebel ? [...planKoerper(entwurf, plan).filter((k) => !k.freiBereich).map((k) => k.rechteck), ...teile] : belegtJetzt().map((b) => b.q);
     const ort = freieStelle(entwurf, belegt, { b: groesse.lang, h: groesse.kurz }, start);
     const was = moebel ? ta.moebelEinsetzen(t.fach.MOEBEL_NAME[art as MoebelArt]) : art === "voliere" ? tg.voliereEinsetzen : tg.blockEinsetzen;
-    const hinweis = ausgerichtet((h) => eingesetztUndAusgerichtet({ ...h, objekte: [...(h.objekte ?? []), { id, art, ...(art === "kaefigblock" ? { typ: typ ?? "huehner" } : {}), ...ort, drehung: 0 }] }, plan, [id], d.masse), { was });
+    const hinweis = mitAusrichtung(aendern, (h) => eingesetztUndAusgerichtet({ ...h, objekte: [...(h.objekte ?? []), { id, art, ...(art === "kaefigblock" ? { typ: typ ?? "huehner" } : {}), ...ort, drehung: 0 }] }, plan, [id], d.masse), { was });
     setAuswahl([{ art: "objekt", id }]);
-    if (hinweis) meldung(hinweis);
+    if (hinweis && !stumm) meldung(hinweis);
+    return hinweis;
   };
   /** Was im Entwurf Platz einnimmt (wie beim Verschieben, dazu alle eingesetzten Teile); Grundplatten mit Käfigart. */
   const belegtJetzt = (): Belegt[] => [
@@ -166,8 +158,8 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     const { einsaetze, ohne } = fehlendeImPlan(entwurf, plan, d.masse, { volieren: true, belegtDazu: belegtJetzt(), ...(nur ? { nur: { typ: nur, hoechstens: 1 } } : {}) });
     if (!einsaetze.length) {
       if (!nur) return meldung(ta.keinPlatzMehr(ohnePlatz(ohne)), "warnung");
-      einsetzen(nur === "voliere" ? "voliere" : "kaefigblock", nur === "voliere" ? undefined : nur);
-      return meldung(ta.keinPlatzMitte, "warnung");
+      const gedreht = einsetzen(nur === "voliere" ? "voliere" : "kaefigblock", nur === "voliere" ? undefined : nur, true);
+      return meldung(gedreht ? `${ta.keinPlatzMitte} ${gedreht}` : ta.keinPlatzMitte, "warnung");
     }
     const basis = neueId();
     // Käfigblöcke gehören zum automatischen Plan (Neu-Setzen setzt sie ohne Rückfrage neu); Volieren nicht (die setzt das
@@ -177,7 +169,8 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     for (const e of einsaetze) zaehlen.set(e.typ, (zaehlen.get(e.typ) ?? 0) + 1);
     const liste = (x: OberflaecheTexte) => [...zaehlen].map(([typ, n]) => (typ === "voliere" ? x.halleWerkzeuge.gemeinsam.volieren(n) : x.halleWerkzeuge.aktionen.bloeckeArt(n, x.fach.KAEFIG_TYP_MEHRZAHL[typ]))).join(", ");
     const was = liste(t);
-    const hinweis = ausgerichtet(
+    const hinweis = mitAusrichtung(
+      aendern,
       (h) => eingesetztUndAusgerichtet({ ...h, objekte: [...(h.objekte ?? []), ...neu] }, plan, neu.map((o) => o.id), d.masse),
       { ...zweisprachig((x) => x.halleWerkzeuge.aktionen.fehlendeWas), grund: `Fehlende Käfige eingesetzt: ${liste(oberflaeche("de"))}` }, // bleibt deutsch (Protokoll)
     );

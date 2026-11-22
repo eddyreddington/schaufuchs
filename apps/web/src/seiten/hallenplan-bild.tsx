@@ -1,7 +1,7 @@
 /**
  * Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
  */
-import { istRechteckUmriss, tuerOeffnung, umrissNormal, umrissSperren, umrissVersetzt, umrissVon, type Blick, blockPlatz, dreheBlick, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenObjekt, istMoebel, kaefigKanten, type KaefigPlatz, type KaefigTyp, type MoebelArt, moebelStuecke, objektFront, type PlanKaefig, type Rechteck, reihenSchilder, RICHTER_FARBE, richterFarbe, richterSchraffur, type Strecke, type WandSeite } from "@schau/domain";
+import { istRechteckUmriss, tuerOeffnung, umrissNormal, umrissSperren, umrissVersetzt, umrissVon, type Blick, blockPlatz, dreheBlick, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenObjekt, istMoebel, kaefigKanten, type KaefigMasse, type KaefigPlatz, type KaefigTyp, type MoebelArt, moebelStuecke, objektFront, type PlanKaefig, type Rechteck, reihenSchilder, RICHTER_FARBE, richterFarbe, richterSchraffur, type Strecke, type WandSeite } from "@schau/domain";
 import { useLayoutEffect, useRef } from "react";
 import { useOberflaeche } from "../sprache";
 import { type Aendern, BAU, type Daten, huelle, kaefigBezeichnung, meter, objektLage, platzWeg, RAND_CM, RASTER, type Ziel, zielPlaetze, zuTeilen } from "./hallenplan-geometrie";
@@ -28,7 +28,10 @@ export function PlanBild({
   gezeichnet,
   anWand,
   zielWahl = null,
+  masse,
 }: {
+  /** Käfigmaße der Schau: eben eingesetzte Teile beim Ausrichten nach Verschieben und Drehen (Entscheidung 029). */
+  masse?: KaefigMasse | null;
   /**
    * Tier versetzen: über jedem Käfig eine Klickfläche (gleiche Größe hervorgehoben); ein Klick wählt das Ziel, ein Käfig
    * anderer Größe meldet nur. Sonst lässt sich in dieser Zeit nichts greifen.
@@ -83,7 +86,7 @@ export function PlanBild({
   const quer = halle.laenge > halle.breite;
   const W = quer ? halle.laenge : halle.breite;
   const H = quer ? halle.breite : halle.laenge;
-  const { bedienbar, drehen, ergaenzen, gegriffen, greifen, hallenPunkt, loslassen, markiert, pfeilWeg, rahmen, rahmenRef, reiheImEntwurf, setRahmen, setZug, versatz, verschiebeAuswahl, verschoben, ziehen, zug, zugRef } = usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, aendern, mehrfach, melden, pfeilRef, zeichnen, gezeichnet, anWand, quer, svgRef });
+  const { bedienbar, drehen, ergaenzen, gegriffen, greifen, hallenPunkt, loslassen, markiert, pfeilWeg, rahmen, rahmenRef, reiheImEntwurf, setRahmen, setZug, versatz, verschiebeAuswahl, verschoben, ziehen, zug, zugRef } = usePlanBedienung({ halle, plan, masse, bearbeiten, auswahl, waehlen, aendern, mehrfach, melden, pfeilRef, zeichnen, gezeichnet, anWand, quer, svgRef });
   /** Rechteck aus Hallenkoordinaten (x entlang der Breite, y entlang der Länge) in Zeichenkoordinaten. */
   const r = (x: number, y: number, b: number, t: number) => (quer ? { x: y, y: x, width: t, height: b } : { x, y, width: b, height: t });
   const rr = (q: Rechteck) => r(q.x, q.y, q.b, q.h);

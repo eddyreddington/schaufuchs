@@ -3,15 +3,16 @@
  * Auswahlrahmen, Fläche aufziehen, Pfeiltasten, Drehen, eine Doppelreihe an die Wand ziehen und die Vorschau während
  * des Ziehens (`versatz`, `verschoben`, `reiheImEntwurf`). Die Zeichnung selbst steht in hallenplan-bild.tsx.
  */
-import { anKantenEinrasten, serverText, type Halle, type HallenFlaeche, type HallenTeil, pruefeVerschiebung, type Rechteck, type Reihe, type VerschiebePruefung, type WandSeite, wandSeiteVon } from "@schau/domain";
-import { type Ausgerichtet, ausrichtHinweis, gedrehtUndAusgerichtet, verschiebenUndAusrichten } from "./hallenplan-ausrichten";
+import { anKantenEinrasten, serverText, type Halle, type HallenFlaeche, type HallenTeil, type KaefigMasse, pruefeVerschiebung, type Rechteck, type Reihe, type VerschiebePruefung, type WandSeite, wandSeiteVon } from "@schau/domain";
+import { gedrehtUndAusgerichtet, mitAusrichtung, verschiebenUndAusrichten } from "./hallenplan-ausrichten";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOberflaeche, useSprache } from "../sprache";
 import { type Aendern, drehPruefung, freierPlatz, gleich, groesseAendern, innen, type Plan, planKoerper, plattenDa, type Rahmen, RASTER, raster, reihenLage, type Ziel, type Zug, zuTeilen, zweisprachig } from "./hallenplan-geometrie";
 
-export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, aendern, mehrfach, melden, pfeilRef, zeichnen, gezeichnet, anWand, quer, svgRef }: {
+export function usePlanBedienung({ halle, plan, masse, bearbeiten, auswahl, waehlen, aendern, mehrfach, melden, pfeilRef, zeichnen, gezeichnet, anWand, quer, svgRef }: {
   halle: Halle;
   plan: Plan;
+  masse?: KaefigMasse | null;
   bearbeiten: boolean;
   auswahl: Ziel[];
   waehlen: (z: Ziel[]) => void;
@@ -231,20 +232,10 @@ export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, ae
     // Der Entwurf übernimmt die neue Lage sofort; gespeichert wird im Hintergrund – eine Änderung für die ganze Gruppe.
     // Landet ein Käfig mit der Front an einer Wand oder an einem anderen Teil, dreht ihn die Software so, dass die Rückwand an
     // der Wand bzw. an der Rückwand des anderen liegt (ein Schritt, ein Rückgängig).
-    ausgerichtet((h) => verschiebenUndAusrichten(h, plan, ziele, dx, dy), {
+    const hinweis = mitAusrichtung(aendern, (h) => verschiebenUndAusrichten(h, plan, ziele, dx, dy, masse), {
       ...zweisprachig((x) => x.halleBild.bedienung.verschieben),
       festschreiben: ziele.some((t) => t.art === "reihe" || t.art === "platte"),
     });
-  };
-  /** Ändern samt Ausrichtung (ein Schritt) und Hinweis, was gedreht wurde. */
-  const ausgerichtet = (f: (h: Halle) => Ausgerichtet, opt: Parameters<Aendern>[1]) => {
-    let r: Pick<Ausgerichtet, "wand" | "ruecken"> = { wand: 0, ruecken: 0 };
-    aendern((h) => {
-      const a = f(h);
-      r = a;
-      return a.halle;
-    }, opt);
-    const hinweis = ausrichtHinweis(r);
     if (hinweis) melden?.(hinweis);
   };
   /**
@@ -279,7 +270,8 @@ export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, ae
     if (!t) return;
     const pr = drehPruefung(halle, plan, t);
     if (!pr.ok) return meldeFach(pr.meldung);
-    ausgerichtet((h) => gedrehtUndAusgerichtet(h, plan, t), { ...zweisprachig((x) => x.halleBild.bedienung.drehen), festschreiben: t.art === "reihe" || t.art === "platte" });
+    const hinweis = mitAusrichtung(aendern, (h) => gedrehtUndAusgerichtet(h, plan, t, masse), { ...zweisprachig((x) => x.halleBild.bedienung.drehen), festschreiben: t.art === "reihe" || t.art === "platte" });
+    if (hinweis) melden?.(hinweis);
   };
   /**
    * Pfeiltasten am Teil mit dem Fokus: gehört es zur Auswahl (auch als Platte einer gewählten Reihe), rückt die ganze

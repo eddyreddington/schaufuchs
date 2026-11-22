@@ -444,12 +444,12 @@ Hallenplan – Stellen im Reihensystem: Reihen und ihre Abschnitte, Grundplatten
 - `planeAusgeglichen()` – Automatische Aufstellung mit ruhigem Bild (Rückmeldung 14.11.2026): Die Tiere stehen streng in Katalogfolge Reihe für Reihe, lückenlos – auch über …
 - `planeImReihensystem()` – Stellen im Reihensystem.
 
-### hallenplan-rueckwand.ts (73 Z.)
+### hallenplan-rueckwand.ts (77 Z.)
 Käfige ausrichten, wenn sie gestellt werden (Verschieben, Pfeiltasten, Einsetzen, Drehen) – Rückwand an die Wand und Rückwand an Rückwand (Wunsch d …
 Tests: `hallenplan-rueckwand.test.ts`
 
 - `ruhendeNachbarn()` – Ruhende Nachbarn, die nie selbst drehen: die Volieren im Volierenbereich.
-- `ausrichtungBeimStellen()` – Was beim Stellen zu drehen ist, je um 180° an Ort und Stelle: `wand` – Front zu einer Wand, `ruecken` – Front an einem anliegenden Teil.
+- `ausrichtungBeimStellen()` – Was beim Stellen zu drehen ist, je um 180° an Ort und Stelle: `wand` – Front zu einer Wand, `ruecken` – Front an einem anliegenden Teil (oder mit s …
 
 ### hallenplan-tueren.ts (84 Z.)
 Türen in den Eingängen (3D, Entscheidung 028): Art der Tür je Eingang oder Ausgang – bündig wie die Wand, Glastür, Holztür oder offen (nur die Öffn …
@@ -2751,12 +2751,12 @@ Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volier
 ### hallenplan-3d.tsx (231 Z.)
 Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben oder im Gang in Augenhöhe, mit Tasten oder Steuerkreuz gehen und als a …
 
-### hallenplan-aktionen.ts (232 Z.)
+### hallenplan-aktionen.ts (225 Z.)
 Werkzeuge des Hallenplan-Editors für die Auswahl und für neue Teile: am Raster ausrichten, drehen, an den Platz zurück, Leeres entfernen, Teile und …
 
-### hallenplan-ausrichten.test.ts (68 Z.)
+### hallenplan-ausrichten.test.ts (103 Z.)
 
-### hallenplan-ausrichten.ts (60 Z.)
+### hallenplan-ausrichten.ts (76 Z.)
 Käfige im Editor ausrichten, wenn sie gestellt werden (ohne React): nach Verschieben, Pfeiltasten, Drehen und Einsetzen.
 
 ### hallenplan-aussehen.tsx (107 Z.)
@@ -2768,10 +2768,10 @@ Prozeduren: katalog.nummernNachPlan, katalog.tierVersetzen, katalog.wandreiheSte
 
 ### hallenplan-bereinigt.test.ts (26 Z.)
 
-### hallenplan-bild-bedienung.ts (318 Z.)
+### hallenplan-bild-bedienung.ts (310 Z.)
 Bedienung der Hallenplan-Zeichnung: Teile greifen, ziehen und loslassen (mit Prüfung gegen Wände und andere Teile), Auswahlrahmen, Fläche aufziehen …
 
-### hallenplan-bild.tsx (486 Z.)
+### hallenplan-bild.tsx (489 Z.)
 Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
 
 ### hallenplan-eigenschaften.tsx (520 Z.)
@@ -2830,7 +2830,7 @@ Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen,
 ### hallenplan-wiederholen.ts (122 Z.)
 Automatisches Wiederholen beim Speichern im Hallenplan-Editor (hallenplan-entwurf.ts): rein, mit eingesetztem Senden und Warten.
 
-### hallenplan.tsx (572 Z.) – `/schau/:schauId/hallenplan`
+### hallenplan.tsx (573 Z.) – `/schau/:schauId/hallenplan`
 Seite „Hallenplan“: neue Halle anlegen und der Editor (`Plan`) mit Speichern, Rückgängig, Auswahl und Tastatur.
 Prozeduren: katalog.halleSetzen, katalog.hallenplan
 

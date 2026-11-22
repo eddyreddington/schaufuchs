@@ -6,7 +6,7 @@
  */
 import { ausrichtungBeimStellen, type Halle, type HallenObjekt, type HallenTeil, type KaefigMasse, objektFront, ruhendeNachbarn, teilGroesse, verschiebeTeile, wandDrehungenAnwenden, type WandKandidat } from "@schau/domain";
 import { ot } from "../sprache-jetzt";
-import { type Daten, gedreht, vollstaendig, wandKandidatenImEntwurf, zahlWort } from "./hallenplan-geometrie";
+import { type Aendern, type Daten, gedreht, vollstaendig, wandKandidatenImEntwurf, zahlWort } from "./hallenplan-geometrie";
 
 type Plan = NonNullable<Daten["plan"]>;
 export interface Ausgerichtet {
@@ -18,7 +18,6 @@ export interface Ausgerichtet {
 
 /** Eingesetzte Teile, die der Plan noch nicht kennt (eben eingesetzt, noch nicht gespeichert), als Kandidaten. */
 function neueKandidaten(h: Halle, plan: Plan, masse: KaefigMasse | null | undefined): WandKandidat[] {
-  if (masse === undefined) return [];
   return (h.objekte ?? [])
     .filter((o): o is HallenObjekt & { art: "kaefigblock" | "voliere" } => (o.art === "kaefigblock" || o.art === "voliere") && !plan.objekte.some((p) => p.id === o.id))
     .map((o) => {
@@ -28,26 +27,43 @@ function neueKandidaten(h: Halle, plan: Plan, masse: KaefigMasse | null | undefi
     });
 }
 
-/** Die gestellten Teile `ziele` im Entwurf h ausrichten. `masse`: auch noch nicht gespeicherte Teile berücksichtigen. */
-export function ausrichten(h: Halle, plan: Plan, ziele: HallenTeil[], masse?: KaefigMasse | null): Ausgerichtet {
+/**
+ * Die gestellten Teile `ziele` im Entwurf h ausrichten. `masse` (Käfigmaße der Schau): für eben eingesetzte Teile, die der
+ * Plan vom Server noch nicht kennt.
+ */
+export function ausrichten(h: Halle, plan: Plan, ziele: HallenTeil[], masse: KaefigMasse | null | undefined): Ausgerichtet {
   const v = vollstaendig(h);
   const a = ausrichtungBeimStellen(v, [...wandKandidatenImEntwurf(v, plan), ...neueKandidaten(v, plan, masse)], ziele, ruhendeNachbarn(plan));
   return { halle: wandDrehungenAnwenden(v, [...a.wand, ...a.ruecken]), wand: a.wand.length, ruecken: a.ruecken.length };
 }
 
 /** Auswahl um dx/dy verschieben und ausrichten. */
-export const verschiebenUndAusrichten = (h: Halle, plan: Plan, ziele: HallenTeil[], dx: number, dy: number): Ausgerichtet =>
-  ausrichten(verschiebeTeile(vollstaendig(h), ziele, dx, dy), plan, ziele);
+export const verschiebenUndAusrichten = (h: Halle, plan: Plan, ziele: HallenTeil[], dx: number, dy: number, masse: KaefigMasse | null | undefined): Ausgerichtet =>
+  ausrichten(verschiebeTeile(vollstaendig(h), ziele, dx, dy), plan, ziele, masse);
 
 /**
  * Ein Teil drehen (R, Doppelklick, Knopf) und ausrichten. Die Drehung des Nutzers bleibt, solange die Front danach frei ist;
  * nur wenn sie verdeckt wäre und die Gegenseite frei ist, dreht es um 180° weiter.
  */
-export const gedrehtUndAusgerichtet = (h: Halle, plan: Plan, t: HallenTeil, masse?: KaefigMasse | null): Ausgerichtet => ausrichten(gedreht(h, t), plan, [t], masse);
+export const gedrehtUndAusgerichtet = (h: Halle, plan: Plan, t: HallenTeil, masse: KaefigMasse | null | undefined): Ausgerichtet => ausrichten(gedreht(h, t), plan, [t], masse);
 
-/** Eben eingesetzte Teile (Ids, schon in h) ausrichten. */
-export const eingesetztUndAusgerichtet = (h: Halle, plan: Plan, ids: string[], masse: KaefigMasse | null | undefined): Ausgerichtet =>
-  ausrichten(h, plan, ids.map((id) => ({ art: "objekt", id })), masse ?? null);
+/** Eben eingesetzte Teile (Ids, schon in h) ausrichten; automatisch eingesetzte bleiben automatisch (`auto`). */
+export function eingesetztUndAusgerichtet(h: Halle, plan: Plan, ids: string[], masse: KaefigMasse | null | undefined): Ausgerichtet {
+  const a = ausrichten(h, plan, ids.map((id) => ({ art: "objekt", id })), masse);
+  const auto = new Set((h.objekte ?? []).filter((o) => o.auto && ids.includes(o.id)).map((o) => o.id));
+  return { ...a, halle: { ...a.halle, objekte: (a.halle.objekte ?? []).map((o) => (auto.has(o.id) && !o.auto ? { ...o, auto: true } : o)) } };
+}
+
+/** Ändern samt Ausrichtung als ein Schritt (ein Rückgängig); Ergebnis: Hinweis, was gedreht wurde (oder null). */
+export function mitAusrichtung(aendern: (f: (h: Halle) => Halle, opt?: Parameters<Aendern>[1]) => unknown, f: (h: Halle) => Ausgerichtet, opt?: Parameters<Aendern>[1]): string | null {
+  let r: Pick<Ausgerichtet, "wand" | "ruecken"> = { wand: 0, ruecken: 0 };
+  aendern((h) => {
+    const a = f(h);
+    r = a;
+    return a.halle;
+  }, opt);
+  return ausrichtHinweis(r);
+}
 
 /** Hinweis nach dem Ausrichten (null: nichts gedreht). */
 export function ausrichtHinweis({ wand, ruecken }: Pick<Ausgerichtet, "wand" | "ruecken">): string | null {

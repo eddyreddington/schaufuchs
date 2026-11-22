@@ -466,6 +466,7 @@ function Plan({
                 zeichnen={bearbeiten ? zeichnen : null}
                 gezeichnet={flaecheAufgezogen}
                 anWand={(nr, seite) => void anWandFragen(nr, seite)}
+                masse={d.masse}
                 zielWahl={bearbeiten && versetzen ? { tierId: versetzen.tierId, typ: versetzen.typ, waehlen: (p) => void zielGewaehlt(p), falsch: () => meldung(th.andereGroesse, "warnung") } : null}
               />
               {bearbeiten && versetzen && (
