@@ -132,10 +132,11 @@ describe("Preisverteilung: gestiftet zusätzlich je Preisrichter", () => {
 
       const blatt = async (pr: number) => pdfText(Buffer.from(await (await hol(`/datei/${id}/preisverteilung.pdf?preisrichter=${pr}`, cookie)).arrayBuffer()));
       const c = await blatt(carla!.id);
-      // Carla: zwei Zeilen ZP – die vergebene (aus der Stiftung, 30 €) mit Nummer und Stifter, eine leer zu 5 €.
-      expect(c.match(/ZP Zusatzplakette/g)!.length).toBe(2);
+      // Carla: die vergebene aus der Stiftung (30 €) mit Nummer und Stifter, dazu ihre zwei zusätzlichen leer zu 5 € –
+      // ein Preis aus der Stiftung belegt keine der Zeilen „zusätzlich je Preisrichter“.
+      expect(c.match(/ZP Zusatzplakette/g)!.length).toBe(3);
       expect(c).toMatch(new RegExp(`\\b1\\s+ZP Zusatzplakette\\s+${tiere[1]!.katalogNr}\\s+30,00 €\\s+Kreisverband Süd`));
-      expect(c).toMatch(/\b2\s+ZP Zusatzplakette\s+5,00/);
+      expect(c).toMatch(/\b2\s+ZP Zusatzplakette\s+5,00[\s\S]*\b3\s+ZP Zusatzplakette\s+5,00/);
       expect(c).not.toContain("über dem Kontingent");
       expect(c).not.toContain("Zusatzgeheim");
       // Dora ohne Tiere: ihre zwei Zeilen leer zum Eintragen.
@@ -143,10 +144,11 @@ describe("Preisverteilung: gestiftet zusätzlich je Preisrichter", () => {
       expect(d.match(/ZP Zusatzplakette/g)!.length).toBe(2);
       expect(d).toMatch(/\b1\s+ZP Zusatzplakette\s+5,00[\s\S]*\b2\s+ZP Zusatzplakette\s+5,00/);
 
-      // Mehr vergeben als je Preisrichter (Stiftung plus zwei zusätzliche): alle stehen darin, keine überzählig.
+      // Beide zusätzlichen auch vergeben: drei Zeilen, alle mit Nummer, keine überzählig.
       for (const i of [0, 2]) await al().preise.vergeben({ schauId: id, katalogeintragId: tiere[i]!.id, preisartId: zp.id, ohneStiftung: true });
       const mehr = await blatt(carla!.id);
       expect(mehr.match(/ZP Zusatzplakette/g)!.length).toBe(3);
+      for (const i of [0, 2]) expect(mehr).toMatch(new RegExp(`ZP Zusatzplakette\\s+${tiere[i]!.katalogNr}\\s+5,00 €`));
       expect(mehr).not.toContain("über dem Kontingent");
 
       // Kontingent für die ganze Schau: nur das Vergebene – Dora hat keine Zeile.

@@ -2,7 +2,8 @@
  * Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und
  * leeren Zeilen zum Eintragen in der Halle. Ohne Ausstellernamen (Entscheidung 005). Die Zeilen rechnet
  * `preisverteilung` (packages/domain), das Kontingent `kontingente` – dieselbe Rechnung wie auf der Seite „Preise“.
- * Gestiftete Preisarten mit „zusätzlich je Preisrichter“ bekommen bei Kontingent je Preisrichter so viele Zeilen.
+ * Gestiftete Preisarten mit „zusätzlich je Preisrichter“ bekommen bei Kontingent je Preisrichter so viele Zeilen;
+ * Preise aus einer Stiftung belegen keine davon und stehen zusätzlich darin.
  */
 import { formatEuro, preisverteilung, type VerteilungArt } from "@schau/domain";
 import { asc, eq } from "drizzle-orm";
@@ -41,12 +42,13 @@ export async function preisverteilungPdf(s: Schau, preisrichterId?: number) {
       betragCent: a.betragCent,
       sachpreis: a.sachpreis,
       verfuegbar: a.quelle === "standgeld" && k ? (k.arten.find((x) => x.preisartId === a.id)?.verfuegbar ?? 0) : null,
-      // Gestiftet mit „zusätzlich je Preisrichter“ (vergebePreis in services/preise.ts): so viele Zeilen je Preisrichter.
+      // Gestiftet mit „zusätzlich je Preisrichter“ (vergebePreis in services/preise.ts): so viele Zeilen je Preisrichter
+      // für Preise ohne Stiftung; Preise aus einer Stiftung kommen dazu (ausStiftung unten).
       ...(a.quelle === "stiftung" && jePr && a.anzahlProPreisrichter > 0 ? { mindestZeilen: a.anzahlProPreisrichter } : {}),
     }));
     // Gleiche Zählung wie das Kontingent: alle Preise an Tieren seiner Nummern, in Katalogfolge.
     const vergaben = seine.flatMap((e) =>
-      e.preise.map((p) => ({ preisartId: p.preisartId, nr: nr(e), betragCent: p.betragCent, zusatz: p.stiftungId ? (stifter.get(p.stiftungId) ?? "") : "", fehlt: e.status === "fehlt" })),
+      e.preise.map((p) => ({ preisartId: p.preisartId, nr: nr(e), betragCent: p.betragCent, zusatz: p.stiftungId ? (stifter.get(p.stiftungId) ?? "") : "", fehlt: e.status === "fehlt", ausStiftung: p.stiftungId != null })),
     );
     const bereiche = einteilung.filter((x) => x.preisrichterId === r.id).map((x) => (x.vonNr === x.bisNr ? `${x.vonNr}` : `${x.vonNr}–${x.bisNr}`)).join(", ");
     // Tierzahl wie beim Kontingent (ohne fehlende), auch wenn das Kontingent für die ganze Schau gilt.

@@ -44,11 +44,25 @@ test("gestiftet mit „zusätzlich je Preisrichter“: so viele Zeilen wie je Pr
   const leer = preisverteilung([jePr], []);
   expect(leer.zeilen.map((x) => `${x.lfd} ${x.kuerzel} ${x.nr || "_"} ${x.betragCent}`)).toEqual(["1 SE _ 1500", "2 SE _ 1500"]);
   expect([leer.vergebenCent, leer.gesamtCent]).toEqual([0, 3000]);
-  const eins = preisverteilung([jePr], [{ preisartId: 5, nr: "8", betragCent: 2000, zusatz: "Stifter Muster" }]);
-  expect(eins.zeilen.map((x) => `${x.lfd} ${x.nr || "_"} ${x.zusatz}`)).toEqual(["1 8 Stifter Muster", "2 _ "]);
-  // Mehr vergeben (aus Stiftungen für die ganze Schau): alle stehen darin, keine ist „über dem Kontingent“.
+  const eins = preisverteilung([jePr], [{ preisartId: 5, nr: "8", betragCent: 1500 }]);
+  expect(eins.zeilen.map((x) => `${x.lfd} ${x.nr || "_"}`)).toEqual(["1 8", "2 _"]);
+  // Mehr vergeben als je Preisrichter: alle stehen darin, keine ist „über dem Kontingent“.
   const drei = preisverteilung([jePr], ["1", "2", "3"].map((nr) => ({ preisartId: 5, nr, betragCent: 1500 })));
   expect(drei.zeilen.map((x) => `${x.lfd} ${x.nr} ${x.ueberKontingent}`)).toEqual(["1 1 false", "2 2 false", "3 3 false"]);
+});
+
+test("gestiftet mit „zusätzlich je Preisrichter“: Preise aus einer Stiftung belegen keine der Zeilen je Preisrichter", () => {
+  const jePr = { ...gestiftet, mindestZeilen: 2 };
+  const ausStiftung = { preisartId: 5, nr: "8", betragCent: 3000, zusatz: "Stifter Muster", ausStiftung: true };
+  // Aus der Stiftung vergeben: die zwei Zeilen je Preisrichter bleiben leer zum Eintragen.
+  const eins = preisverteilung([jePr], [ausStiftung]);
+  expect(eins.zeilen.map((x) => `${x.lfd} ${x.nr || "_"} ${x.betragCent}`)).toEqual(["1 8 3000", "2 _ 1500", "3 _ 1500"]);
+  // Eine zusätzliche dazu: noch eine leer.
+  const zwei = preisverteilung([jePr], [ausStiftung, { preisartId: 5, nr: "9", betragCent: 1500 }]);
+  expect(zwei.zeilen.map((x) => `${x.lfd} ${x.nr || "_"}`)).toEqual(["1 8", "2 9", "3 _"]);
+  // Beide zusätzlichen vergeben: keine leere mehr, keine überzählig.
+  const voll = preisverteilung([jePr], [ausStiftung, ...["9", "10"].map((nr) => ({ preisartId: 5, nr, betragCent: 1500 }))]);
+  expect(voll.zeilen.map((x) => `${x.lfd} ${x.nr || "_"} ${x.ueberKontingent}`)).toEqual(["1 8 false", "2 9 false", "3 10 false"]);
 });
 
 test("mehr vergeben als das Kontingent (z. B. nachträglich fehlende Tiere): alle Vergaben, die überzähligen markiert", () => {
