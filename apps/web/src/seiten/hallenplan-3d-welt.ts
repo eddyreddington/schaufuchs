@@ -2,7 +2,7 @@
  * Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und
  * Steuerung. Gezeichnet wird nur bei Bedarf (Bewegung, Zeigen), nicht in Dauerschleife. Maßstab Meter (Fachlogik in cm).
  */
-import { POKAL_SKALA, type Verkleidung, type SzeneSchuerze, richterFarbe, wandDeckkraft, type Quader, type Blick, type Figur, type HallenSzene, type SzeneKaefig, type SzeneTier } from "@schau/domain";
+import { hinderniskarte, POKAL_SKALA, type Verkleidung, type SzeneSchuerze, richterFarbe, wandDeckkraft, type Quader, type Blick, type Figur, type HallenSzene, type SzeneKaefig, type SzeneTier } from "@schau/domain";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { ot } from "../sprache-jetzt";
@@ -404,7 +404,7 @@ export function baueWelt(
   steuerung.maxDistance = groesse * 4;
   // Hindernisse für den Doppelklick: Käfige, Volieren und Wände, die gerade zu sehen sind (ausgeblendete nicht).
   const hindernisse = () => [kaefige, ...volierenTreffer.map((x) => x.mesh), ...wandTeile.filter((x) => x.deck > 0.5).flatMap((x) => [x.mesh, ...x.tueren])];
-  const bewegung = bewegungFuer({ kamera, steuerung, dom: renderer.domElement, boden, hindernisse, punkte: s.rundgang, zeichne: () => zeichne(), beiRundgang });
+  const bewegung = bewegungFuer({ kamera, steuerung, dom: renderer.domElement, boden, hindernisse, punkte: s.rundgang, karte: hinderniskarte(s), zeichne: () => zeichne(), beiRundgang });
   /** Deckkraft der Wände zur Kamera nachführen (weich); true, solange sich noch etwas ändert. */
   const waendeAnpassen = (): boolean => {
     const k = { x: kamera.position.x / M, y: kamera.position.y / M, z: kamera.position.z / M };

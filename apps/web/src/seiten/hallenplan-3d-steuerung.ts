@@ -2,13 +2,15 @@
  * Bewegung der Kamera in der 3D-Ansicht über das Ziehen mit Maus oder Finger hinaus: weiches Auslaufen, Zoom zum
  * Mauszeiger, per Doppelklick sanft hinfliegen, Gehen, Drehen und Zoomen per Taste oder Steuerkreuz (gleichmäßig, solange
  * gedrückt) und der automatische Rundgang durch die Gänge (Wegpunkte aus der Fachlogik, `HallenSzene.rundgang`). Jede
- * eigene Bewegung hält den Rundgang an.
+ * eigene Bewegung hält den Rundgang an. Der Rundgang fährt die Punkte gerade von Punkt zu Punkt ab (die Fachlogik rundet die
+ * Ecken und prüft jede Strecke gegen die Hinderniskarte); der Blick dreht gemächlich, an Ecken geht es langsamer. Im Gang
+ * gleitet man beim Gehen an Käfigen und Wänden entlang statt hindurch (`gleite`).
  *
  * Zwei Arten zu schauen: Steht die Kamera in Augenhöhe (unter `GANG_HOEHE`), ist man „im Gang“ – Drehen sieht sich auf der
  * Stelle um, Gehen in Schritttempo, Doppelklick bringt einen in Augenhöhe dorthin. Von weiter oben kreist die Ansicht um
  * den Blickpunkt, Gehen und Hinfliegen richten sich nach dem Abstand.
  */
-import type { RundgangPunkt } from "@schau/domain";
+import { gleite, type Hinderniskarte, type RundgangPunkt, wegZwischen } from "@schau/domain";
 import * as THREE from "three";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
@@ -22,8 +24,13 @@ const DREH = 1.4;
 const ZOOM = 1.2;
 /** Umschalt: schneller. */
 const SCHNELL = 3;
-/** Bis zu dieser Kamerahöhe (m) gilt „im Gang“ (Augenhöhe 1,65 m, im Rundgang über Reihenenden 3 m). */
+/** Bis zu dieser Kamerahöhe (m) gilt „im Gang“ (Augenhöhe 1,65 m; der Rundgang bleibt in Augenhöhe). */
 const GANG_HOEHE = 3.2;
+/** Anflug zum Rundgang von oben: mindestens so hoch (m) – über allen Käfigen und Volieren –, dann senkrecht hinab. */
+const UEBER_REIHEN = 3.5;
+/** Drehen des Blicks im Rundgang (rad/s) und wie weit voraus (m) die Gehrichtung gilt. */
+const RUNDGANG_DREH = 0.9;
+const RICHTUNG_VORAUS = 1;
 /** Der Blick im Rundgang: so weit voraus (m) und so tief unter Augenhöhe (m). */
 const VORAUS = 2.5;
 const SENKUNG = 0.35;
@@ -88,6 +95,8 @@ export function bewegungFuer(o: {
   /** Was davor liegen kann (Käfige, Volieren, sichtbare Wände): ein Doppelklick darauf fliegt nicht. */
   hindernisse: () => THREE.Object3D[];
   punkte: RundgangPunkt[];
+  /** Hinderniskarte der Szene (cm): Gehen im Gang und der Weg zum Anfang des Rundgangs bleiben frei. */
+  karte: Hinderniskarte | null;
   zeichne: () => void;
   /** Meldet Start und Ende des Rundgangs (auch wenn er von selbst endet). */
   beiRundgang: (laeuft: boolean) => void;
@@ -98,11 +107,11 @@ export function bewegungFuer(o: {
   steuerung.zoomToCursor = true;
 
   let flug: Flug | null = null;
-  // Rechtwinklige Kehren am Reihenende: "chordal" schwingt am wenigsten über die Wegpunkte hinaus (nicht in die Wand).
-  const roh = o.punkte.length >= 2 ? new THREE.CatmullRomCurve3(o.punkte.map((p) => new THREE.Vector3(p.x * M, p.y * M, p.z * M)), false, "chordal") : null;
-  const laenge = roh ? roh.getLength() : 0;
-  const kurve = laenge > 0.01 ? roh : null;
+  const rundgangPunkte = o.punkte.map((p) => new THREE.Vector3(p.x * M, p.y * M, p.z * M));
+  let bahn = bahnAus(rundgangPunkte);
+  const moeglich = bahn.laenge > 0.01;
   let weg: number | null = null; // zurückgelegt (m), solange der Rundgang läuft
+  let blick = 0; // Blickrichtung im Rundgang (Winkel um die Hochachse)
   let laeuft = false; // Rundgang gemeldet (auch während des Hinflugs zum Start)
   const gedrueckt = new Set<Richtung>();
   let flink = false;
@@ -152,18 +161,22 @@ export function bewegungFuer(o: {
   const weich = (t: number) => t * t * (3 - 2 * t);
   const v = new THREE.Vector3(), seit = new THREE.Vector3();
 
-  /** Punkt auf dem Rundgang nach `m` Metern; über das Ende hinaus geradeaus weiter (Blick am Schluss). */
-  const aufWeg = (m: number, ziel: THREE.Vector3) => {
-    if (m <= laenge) return kurve!.getPointAt(Math.max(0, m / laenge), ziel);
-    kurve!.getPointAt(1, ziel);
-    return ziel.add(kurve!.getTangentAt(1, v).multiplyScalar(m - laenge));
+  /** Kamera auf den Rundgang nach `m` Metern setzen, Blick in Richtung `winkel` (2,5 m voraus, leicht gesenkt). */
+  const stelleAufWeg = (m: number, winkel: number, pos: THREE.Vector3, ziel: THREE.Vector3) => {
+    bahnPunkt(bahn, m, pos);
+    ziel.set(pos.x + Math.sin(winkel) * VORAUS, pos.y - SENKUNG, pos.z + Math.cos(winkel) * VORAUS);
   };
-  /** Kamera auf den Rundgang nach `m` Metern setzen (Ziel 2,5 m voraus, leicht gesenkt). */
-  const stelleAufWeg = (m: number, pos: THREE.Vector3, ziel: THREE.Vector3) => {
-    aufWeg(m, pos);
-    aufWeg(m + VORAUS, ziel);
-    ziel.y = pos.y - SENKUNG;
+  /** Ein Schritt im Rundgang: Blick dreht höchstens `RUNDGANG_DREH` zur Gehrichtung, je größer die Drehung, desto langsamer. */
+  const rundgangSchritt = (dt: number) => {
+    const soll = bahnWinkel(bahn, weg! + RICHTUNG_VORAUS);
+    const rest = Math.atan2(Math.sin(soll - blick), Math.cos(soll - blick));
+    blick += Math.max(-RUNDGANG_DREH * dt, Math.min(RUNDGANG_DREH * dt, rest));
+    weg = Math.min(bahn.laenge, weg! + TEMPO * dt * Math.max(0, 1 - Math.abs(rest) / (Math.PI / 2)));
+    stelleAufWeg(weg, blick, kamera.position, steuerung.target);
+    kamera.lookAt(steuerung.target);
+    if (weg >= bahn.laenge) anhalten();
   };
+  const blickVonKamera = () => Math.atan2(steuerung.target.x - kamera.position.x, steuerung.target.z - kamera.position.z);
 
   /** Gedrückte Richtungen für dt Sekunden anwenden. */
   const tasten = (dt: number) => {
@@ -180,6 +193,12 @@ export function bewegungFuer(o: {
       v.normalize();
       seit.crossVectors(v, OBEN).normalize();
       const d = v.multiplyScalar(vor * tempo).add(seit.multiplyScalar(quer * tempo));
+      if (gang && o.karte) {
+        // Im Gang nicht durch Käfige und Wände: an ihnen entlang gleiten.
+        const von = { x: kamera.position.x / M, z: kamera.position.z / M };
+        const nach = gleite(o.karte, von, { x: von.x + d.x / M, z: von.z + d.z / M });
+        d.set((nach.x - von.x) * M, 0, (nach.z - von.z) * M);
+      }
       kamera.position.add(d);
       steuerung.target.add(d);
     }
@@ -205,7 +224,7 @@ export function bewegungFuer(o: {
   };
 
   return {
-    rundgangMoeglich: !!kurve,
+    rundgangMoeglich: moeglich,
     imRundgang: () => weg != null,
     schritt: (dt) => {
       if (gedrueckt.size) {
@@ -224,11 +243,8 @@ export function bewegungFuer(o: {
         }
         return true;
       }
-      if (weg != null && kurve) {
-        weg = Math.min(laenge, weg + TEMPO * dt);
-        stelleAufWeg(weg, kamera.position, steuerung.target);
-        kamera.lookAt(steuerung.target);
-        if (weg >= laenge) anhalten();
+      if (weg != null) {
+        rundgangSchritt(dt);
         return true;
       }
       return false;
@@ -248,16 +264,36 @@ export function bewegungFuer(o: {
       flink = false;
     },
     rundgang: (an) => {
-      if (!an || !kurve) return anhalten();
+      if (!an || !moeglich) return anhalten();
       gedrueckt.clear();
       beruhigen();
       laeuft = true;
       o.beiRundgang(true);
-      // Erst sanft an den Anfang, dann gehen – kein Sprung, wenn man gerade von oben schaut.
+      bahn = bahnAus(rundgangPunkte);
+      const start = rundgangPunkte[0]!;
+      const los = (winkel: number) => () => {
+        blick = winkel;
+        weg = 0;
+      };
+      // Steht man im Gang: zu Fuß auf freiem Weg zum Anfang (Blick dreht unterwegs mit).
+      const zuFuss = imGang() && o.karte ? wegZwischen(o.karte, { x: kamera.position.x / M, z: kamera.position.z / M }, { x: start.x / M, z: start.z / M }) : null;
+      if (zuFuss) {
+        bahn = bahnAus([...zuFuss.map((p) => new THREE.Vector3(p.x * M, start.y, p.z * M)), ...rundgangPunkte.slice(1)]);
+        const winkel = blickVonKamera(), nachPos = new THREE.Vector3(), nachZiel = new THREE.Vector3();
+        stelleAufWeg(0, winkel, nachPos, nachZiel);
+        flug = { vonPos: kamera.position.clone(), vonZiel: steuerung.target.clone(), nachPos, nachZiel, t: 0, dauer: 0.4, dann: los(winkel) };
+        return o.zeichne();
+      }
+      // Sonst von oben: hinauf über die Reihen, waagrecht über den Anfang, senkrecht hinab – nie durch Käfige.
+      const winkel = bahnWinkel(bahn, RICHTUNG_VORAUS), hoch = Math.max(kamera.position.y, UEBER_REIHEN);
+      const oben = new THREE.Vector3(kamera.position.x, hoch, kamera.position.z), ueber = new THREE.Vector3(start.x, hoch, start.z);
+      const boden = new THREE.Vector3(start.x + Math.sin(winkel), 0, start.z + Math.cos(winkel));
       const nachPos = new THREE.Vector3(), nachZiel = new THREE.Vector3();
-      stelleAufWeg(0, nachPos, nachZiel);
-      const dauer = Math.min(2, 0.6 + kamera.position.distanceTo(nachPos) / 25);
-      flug = { vonPos: kamera.position.clone(), vonZiel: steuerung.target.clone(), nachPos, nachZiel, t: 0, dauer, dann: () => (weg = 0) };
+      stelleAufWeg(0, winkel, nachPos, nachZiel);
+      const hinab: Flug = { vonPos: ueber, vonZiel: boden, nachPos, nachZiel, t: 0, dauer: Math.min(2.5, 0.6 + (hoch - nachPos.y) / 6), dann: los(winkel) };
+      const hinueber: Flug = { vonPos: oben, vonZiel: steuerung.target.clone().add(oben).sub(kamera.position), nachPos: ueber, nachZiel: boden, t: 0, dauer: Math.min(2.5, 0.5 + oben.distanceTo(ueber) / 20), dann: () => (flug = hinab) };
+      const hinauf: Flug = { vonPos: kamera.position.clone(), vonZiel: steuerung.target.clone(), nachPos: oben, nachZiel: hinueber.vonZiel.clone(), t: 0, dauer: Math.max(0.01, (hoch - kamera.position.y) / 2.5), dann: () => (flug = hinueber) };
+      flug = hoch > kamera.position.y + 0.01 ? hinauf : hinueber;
       o.zeichne();
     },
     anhalten,
@@ -268,4 +304,44 @@ export function bewegungFuer(o: {
       dom.removeEventListener("dblclick", doppelklick);
     },
   };
+}
+
+/** Strecken des Rundgangs (m) mit der Weglänge bis zu jedem Punkt. */
+interface Bahn {
+  punkte: THREE.Vector3[];
+  bis: number[];
+  laenge: number;
+}
+
+function bahnAus(punkte: THREE.Vector3[]): Bahn {
+  const bis = [0];
+  for (let i = 1; i < punkte.length; i++) bis.push(bis[i - 1]! + punkte[i]!.distanceTo(punkte[i - 1]!));
+  return { punkte, bis, laenge: bis.at(-1) ?? 0 };
+}
+
+/** Strecke, in der die Weglänge m liegt (Index des Anfangs). */
+function streckeBei(b: Bahn, m: number): number {
+  let lo = 0, hi = b.punkte.length - 1;
+  while (hi - lo > 1) {
+    const mitte = (lo + hi) >> 1;
+    if (b.bis[mitte]! <= m) lo = mitte;
+    else hi = mitte;
+  }
+  return lo;
+}
+
+/** Punkt nach m Metern, gerade zwischen den Wegpunkten (nie eine Kurve, die eine Ecke abschneidet). */
+function bahnPunkt(b: Bahn, m: number, ziel: THREE.Vector3): THREE.Vector3 {
+  if (b.punkte.length < 2) return ziel.copy(b.punkte[0] ?? ziel);
+  const i = streckeBei(b, Math.max(0, Math.min(b.laenge, m)));
+  const l = b.bis[i + 1]! - b.bis[i]!;
+  return ziel.lerpVectors(b.punkte[i]!, b.punkte[i + 1]!, l > 0 ? Math.min(1, (Math.min(b.laenge, m) - b.bis[i]!) / l) : 0);
+}
+
+/** Gehrichtung nach m Metern als Winkel um die Hochachse (0: entlang +z). */
+function bahnWinkel(b: Bahn, m: number): number {
+  if (b.punkte.length < 2) return 0;
+  const i = streckeBei(b, Math.max(0, Math.min(b.laenge - 1e-6, m)));
+  const a = b.punkte[i]!, e = b.punkte[i + 1]!;
+  return Math.atan2(e.x - a.x, e.z - a.z);
 }
