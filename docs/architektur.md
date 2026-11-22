@@ -34,7 +34,7 @@ Abhängigkeiten nur nach unten: web → Typen des Servers (`AppRouter`) → doma
 | Schau, Phasen, Prüfliste | `types.ts` | `routers/schau.ts` mit `routers/schau/*` (Phase: `phase.ts`), `services/pruefung.ts` | `einstellungen.tsx`, `einstellungen-*.tsx`, `uebersicht.tsx` |
 | Stammdaten (Rassen, Vereine, Veterinärämter) | `stammdaten.ts`, `veterinaeramt.ts` | `routers/stammdaten.ts`, `services/vereinsverzeichnis.ts` | `stammdaten.tsx`, `rassebilder.tsx` |
 | Meldung, Aussteller, Gebühren | `gebuehren.ts`, `adressen.ts`, `besatz.ts` | `routers/meldung.ts`, `routers/oeffentlich.ts`, `services/meldung.ts` | `meldungen.tsx`, `meldung-bearbeiten.tsx`, `oeffentlich.tsx` |
-| Preisrichter, Einteilung | `einteilung.ts` | `routers/preisrichter.ts`, `services/einteilung.ts` | `preisrichter.tsx` |
+| Preisrichter, Einteilung, Gruppen, Obmann, Zusage | `einteilung.ts`, `preisrichter-zulassung.ts` | `routers/preisrichter.ts`, `services/einteilung.ts`, `services/einteilung-vorschlag.ts`, `services/preisrichter-speichern.ts` | `preisrichter.tsx`, `preisrichter-form.tsx` – [Moduldoku](module/preisrichter.md) |
 | **Halle** (Käfige, Hallenplan, 3D) | `kaefige.ts`, `hallenplan*.ts` | `routers/katalog/kaefige.ts`, `hallenplan.ts`, `gemeinsam.ts`, `pdf/hallenplan.ts` | `kaefige.tsx`, `hallenplan*.tsx` – [Moduldoku](module/halle.md) |
 | **Katalog** (Nummern, Sortierung, Druck) | `katalog.ts` | `routers/katalog/nummern.ts`, `routers/katalog-gestaltung.ts`, `pdf/katalog.ts` mit `pdf/katalog-*.ts` | `katalog*.tsx` – [Moduldoku](module/katalog.md) |
 | Schautage (Einlieferung, Bewertung, Preise) | `noten.ts`, `preise.ts`, `tiergesundheit.ts`, `textbausteine.ts` | `routers/katalog/einlieferung.ts`, `gesundheit.ts` (`halle.*`), `routers/bewertung.ts`, `routers/preise.ts`, Grundbestand der Textbausteine `services/textbausteine-gestalt/-kopf/-rumpf/-gefieder.ts` | `einlieferung.tsx`, `bewertung.tsx`, `richter.tsx`, `richter-*.tsx`, `preise.tsx` |
@@ -77,7 +77,7 @@ gegen dieselbe Datenbank (Einstieg `ablauf.test.ts`); neue Prüfungen als neuer 
 - Änderungen an Bewertung, Preisen, Verkauf, Geld über `protokolliere()` – [ADR 003](entscheidungen/003-protokoll-hash-kette.md)
 - Preisrichter sehen keine Ausstellernamen – [ADR 005](entscheidungen/005-anonyme-bewertung.md)
 - Keine Erklärtexte in der Oberfläche, „Hilfe zu …“ ins Handbuch – [ADR 008](entscheidungen/008-handbuch-statt-erklaertexte.md)
-- Keine BDRG-Daten ohne Nutzungsrecht – [ADR 007](entscheidungen/007-keine-bdrg-daten.md)
+- BDRG-Daten nur über Pflege und Import, nicht im Repo – [ADR 007](entscheidungen/007-keine-bdrg-daten.md)
 - Deutsche Fachbegriffe in Oberfläche und Code-Bezeichnern
 - Dateien unter 600 Zeilen halten (Ziel 400); größere beim nächsten Anfassen teilen
 

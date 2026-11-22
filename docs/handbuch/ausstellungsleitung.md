@@ -506,7 +506,7 @@ Das Verzeichnis der Rassen und Farbenschläge bestimmt zweierlei: was Aussteller
 3. Unter „Datei“ eine CSV-Datei wählen oder die Zeilen unter „Inhalt“ einfügen.
 4. „Einspielen“ klicken.
 
-Aufbau der Datei: drei Spalten **Sparte;Rasse;Farbenschlag**. Trennzeichen Semikolon, Komma oder Tabulator; eine Kopfzeile ist erlaubt. **Die Reihenfolge der Zeilen ist die Ausstellungsfolge.** Nach dem Einspielen meldet die Software, wie viele Farbenschläge übernommen und wie viele Zeilen übersprungen wurden.
+Aufbau der Datei: drei Spalten **Sparte;Rasse;Farbenschlag**, freiwillig als vierte Spalte die **Gruppe** der Rasse (siehe 4.5). Trennzeichen Semikolon, Komma oder Tabulator; eine Kopfzeile ist erlaubt. **Die Reihenfolge der Zeilen ist die Ausstellungsfolge.** Nach dem Einspielen meldet die Software, wie viele Farbenschläge übernommen und wie viele Zeilen übersprungen wurden.
 
 Mit „Ansehen“ oder einem Klick auf den Namen öffnen Sie eine Version und durchsuchen sie mit dem Suchfeld; unten steht die Anzahl. „Löschen“ geht nur, solange keine Schau sie verwendet und keine gemeldeten Tiere darauf verweisen.
 
@@ -550,6 +550,15 @@ Im Katalog steht bei jeder Rassen-Überschrift ein Foto der Rasse; Urheber und L
 Ein Grundbestand stammt aus Wikipedia/Wikimedia Commons, nur frei lizenzierte Fotos mit Urheber und Lizenz. Sichere Treffer aus dem eigenen Wikipedia-Artikel der Rasse sind schon als geprüft markiert. Alles andere ist **„ungeprüft“**, zum Beispiel ein Bild der Großform bei einer Zwergrasse. Es kommt erst in den Katalog, wenn Sie bei der Rasse auf „Passt“ klicken. „Angezeigte als geprüft markieren“ bestätigt nach der Rückfrage „… Bilder als geprüft markieren?“ alle gerade angezeigten Bilder auf einmal (höchstens die ersten 200), bitte vorher ansehen. Bilder ohne passende Lizenzangabe bleiben dabei ungeprüft; die Meldung danach nennt ihre Rassen („Ohne passende Lizenzangabe ungeprüft geblieben: …“). Passt ein Bild nicht, ersetzen oder löschen Sie es.
 
 Ein Bild, das sich beim Erstellen des Katalogs nicht lesen lässt, fehlt dort einfach; der Katalog entsteht trotzdem. Das gilt auch für Logo, Titelbild und Anzeigen; beschädigte PNG-Dateien nimmt schon das Hochladen nicht an.
+
+### 4.5 Gruppen der Rassen {#rassen-gruppen}
+
+Jede Rasse gehört zu einer Gruppe des Verzeichnisses (Buchstaben A–M, Z1–Z3, BV o. ä.). Preisrichter sind oft nur für bestimmte Gruppen zugelassen; die Einteilung prüft das (siehe 5.7 und 5.8).
+
+- **Beim Einspielen:** vierte Spalte „Gruppe“, z. B. `Sparte;Rasse;Farbenschlag;Gruppe`. Mit dieser Kopfzeile gilt jeder kurze Text; ohne Kopfzeile nur eine Angabe wie A, Z1 oder BV (sonst meldet die Software ein Trennzeichen im Feld). Die Gruppe gilt für die ganze Rasse; steht bei derselben Rasse eine andere, gilt die erste und die Zeile wird gemeldet.
+- **Von Hand:** bei der eigenen Version „Gruppen“ klicken, je Rasse die Gruppe eintragen (leer = keine), „Gruppen speichern“. Jede Änderung steht im Protokoll.
+
+Groß- und Kleinschreibung und Leerzeichen spielen keine Rolle („z 1“ wird „Z1“). Erlaubt sind bis zu 10 Buchstaben und Ziffern. Unter „Ansehen“ erscheint die Spalte „Gruppe“, sobald Gruppen gepflegt sind. Bei einer Version „für alle Vereine bereitgestellt“ lassen sich die Gruppen nicht ändern.
 
 ## 5. Eine Schau von Anfang bis Ende
 
@@ -1269,13 +1278,21 @@ Jede Änderung an Terminen und Kalendern steht im Protokoll. Ändern dürfen nur
 1. „Preisrichter“ → „Preisrichter hinzufügen“.
 2. „Name“, „Anschrift“, „Telefon“, „E-Mail“ eintragen.
 3. Bei einem Preisrichter den Haken „Obmann“ setzen. Er bestätigt die Note „vorzüglich“ (und u.M.). Den Haken dürfen mehrere haben – bei großen Schauen zwei Obmänner, die sich gegenseitig bestätigen.
-4. Unter „Bewertet diese Sparten“ ankreuzen, was er bewertet – z. B. nur „Tauben“ oder „Hühner“ und „Zwerghühner“. Kein Haken heißt: alle Sparten. In der Liste steht darunter „bewertet: …“.
+4. Unter „Bewertet diese Sparten“ ankreuzen, was er bewertet – z. B. nur „Tauben“ oder „Hühner“ und „Zwerghühner“. Kein Haken heißt: alle Sparten. In der Liste steht darunter „bewertet: …“. Unter „Zugelassen für Gruppen“ tragen Sie zusätzlich die Gruppen ein, für die er zugelassen ist, z. B. „A, C, Z1“ (leer = keine Einschränkung über Gruppen; siehe unten).
 5. „Anschrift im gedruckten Katalog nennen“ nur ankreuzen, wenn der Preisrichter einverstanden ist. Sonst stehen im Katalog Name, Obmann und Nummern; im Internet steht die Anschrift nie. Bei Preisrichtern, die schon vor Version 1.0 mit Anschrift angelegt waren, ist der Haken gesetzt (bisheriger Stand) – prüfen Sie das bei der nächsten Schau.
 6. „Speichern“.
 
 > **Wichtig:** Der Obmann kann seine eigenen Bewertungen nicht selbst bestätigen. Legen Sie deshalb einen zweiten Obmann an. Gibt es nur einen, bestätigt ein anderer Preisrichter dessen eigene Bewertungen – das geht aber nur am PC: Sie tragen die Bestätigung unter „Bewertung“ im Abschnitt „Wartet auf den Obmann (…)“ ein (der andere Preisrichter steht dort mit dem Zusatz „(nur für eigene Bewertungen des Obmanns)“). Am Tablet sieht nur ein Obmann die zu bestätigenden Noten. Mit nur einem einzigen Preisrichter kann niemand bestätigen – die Prüfliste weist darauf hin.
 
 Ändern: „Bearbeiten“ oder ein Klick auf den Namen. Einen Preisrichter, der schon bewertet hat, können Sie nicht mehr löschen.
+
+#### Gruppen, Obmann und Zusage {#preisrichter-gruppen-zusage}
+
+- **Zugelassen für Gruppen:** Hat ein Preisrichter Gruppen eingetragen, bekommt er nur Rassen dieser Gruppen – genau wie bei den Sparten. Unter dem Feld stehen die Gruppen, die im Verzeichnis der Schau vorkommen (siehe 4.5). Rassen ohne Gruppe im Verzeichnis prüft die Software nicht über Gruppen. In der Liste steht „Gruppen: …“.
+- **Obmann für diesen Preisrichter:** Hier wählen Sie, welchem Obmann der Preisrichter zugeordnet ist (nur Preisrichter derselben Schau mit dem Haken „Obmann“, nicht er selbst). In der Liste steht „Obmann: …“. Nimmt man einem Obmann den Haken oder löscht ihn, verlieren die ihm zugeordneten Preisrichter die Zuordnung. Wer die Note „vorzüglich“ bestätigt, ändert sich dadurch nicht.
+- **Zusage:** „offen“ (Vorgabe), „zugesagt“ oder „abgesagt“, dazu „Zugesagt für“ (z. B. „2027 und 2028“) und ein „Vorbehalt“ (z. B. „klären wir, wenn der Termin bekannt ist“). In der Liste steht der Stand als Marke neben dem Namen, darunter Zusage-Zeitraum und Vorbehalt.
+
+Jede Änderung an einem Preisrichter steht im Protokoll, Anschrift, Telefon und E-Mail nur als „geändert“ ohne die Werte. Legen Sie eine Schau mit einer Vorlage an, kommen Gruppen, Zusage und die Zuordnung zum Obmann mit.
 
 ### 5.8 Einteilung und PINs
 
@@ -1284,8 +1301,8 @@ Jede Änderung an Terminen und Kalendern steht im Protokoll. Ändern dürfen nur
 Die Seite „Preisrichter“ steht in der Seitenleiste bei der Vorbereitung (Preisrichter anlegen). Eingeteilt wird nach dem Meldeschluss: Teilen Sie die Preisrichter **nach Rassen** ein, dann vergeben Sie die Nummern. Die Nummernbereiche je Preisrichter rechnet die Software beim Vergeben selbst – auch beim Neu-Vergeben und bei Nachmeldungen.
 
 1. Im Reiter „Einteilung nach Rassen“ stehen alle gemeldeten Rassen (offene und bestätigte Meldungen) nach Sparten in Ausstellungsfolge, mit der Zahl der Tiere.
-2. Je Rasse einen Preisrichter wählen. Zur Auswahl stehen nur Preisrichter, die diese Sparte bewerten. Eine große Rasse teilen Sie mit „Farbenschläge“: Je Farbenschlag lässt sich ein anderer Preisrichter wählen, „wie die Rasse“ übernimmt den der Rasse.
-3. Oder „Gleichmäßig verteilen“: Die Software schlägt eine Einteilung vor. Sie trennt möglichst keine Rasse, beachtet die Sparten der Preisrichter, lässt eine Sparte möglichst bei einem und teilt eine Rasse nur, wenn es nicht anders geht (dann je Farbenschlag). Ein Obmann bekommt weniger Tiere: Verteilt wird im Verhältnis der Höchstzahlen aus den Einstellungen (Vorgabe 60 je Obmann zu 80 je Preisrichter). Bewertet niemand eine Sparte, steht „Kein Preisrichter für: …“ da; diese Tiere bleiben ohne Preisrichter. Ergänzen Sie dann bei einem Preisrichter die Sparte (siehe 5.7) oder legen Sie einen weiteren an. Derselbe Hinweis erscheint bei der Einteilung nach Nummern.
+2. Je Rasse einen Preisrichter wählen. Zur Auswahl stehen nur Preisrichter, die diese Sparte und – wenn sie Gruppen eingetragen haben – die Gruppe der Rasse bewerten. Eine große Rasse teilen Sie mit „Farbenschläge“: Je Farbenschlag lässt sich ein anderer Preisrichter wählen, „wie die Rasse“ übernimmt den der Rasse.
+3. Oder „Gleichmäßig verteilen“: Die Software schlägt eine Einteilung vor. Sie trennt möglichst keine Rasse, beachtet Sparten und Gruppen der Preisrichter, lässt eine Sparte möglichst bei einem und teilt eine Rasse nur, wenn es nicht anders geht (dann je Farbenschlag). Ein Obmann bekommt weniger Tiere: Verteilt wird im Verhältnis der Höchstzahlen aus den Einstellungen (Vorgabe 60 je Obmann zu 80 je Preisrichter). Bewertet niemand eine Sparte, steht „Kein Preisrichter für: …“ da (bei einer fehlenden Gruppe „Gruppe …“); diese Tiere bleiben ohne Preisrichter. Ergänzen Sie dann bei einem Preisrichter die Sparte bzw. Gruppe (siehe 5.7) oder legen Sie einen weiteren an. Derselbe Hinweis erscheint bei der Einteilung nach Nummern.
 4. Über der Tabelle steht, wie viele Tiere jeder Preisrichter hätte und wie viele noch ohne Preisrichter sind. Hat ein Preisrichter mehr Tiere als die Höchstzahl aus den Einstellungen (Stamm zählt 2, Voliere und Bruteier 3), nennt die Prüfliste ihn als gelben Hinweis.
 5. Oben rechts „Rassen-Einteilung speichern“. Sind die Katalognummern schon vergeben, werden die Bereiche gleich neu berechnet.
 
@@ -1295,7 +1312,7 @@ Eine Nachmeldung mit Unternummer (24a) geht an den Preisrichter der Nummer 24 �
 
 Der Reiter „Einteilung nach Nummern“ zeigt die Bereiche je Preisrichter, sobald Katalognummern vergeben sind. Hier lässt sich auch von Hand nach Nummern einteilen (ohne Einteilung nach Rassen, etwa in älteren Schauen): „Gleichmäßig verteilen“, Zeilen anpassen („von Nr.“, „bis Nr.“, „Bereich hinzufügen“, „✕“), oben rechts „Nummern-Einteilung speichern“. Ändern Sie die Bereiche hier, obwohl nach Rassen eingeteilt ist, fragt die Software nach: Die Einteilung nach Rassen gilt danach nicht mehr, und die Bereiche folgen neuen Nummern nicht mehr von selbst.
 
-Bereiche dürfen sich nicht überschneiden. Gerät ein Bereich an einen Preisrichter, der eine der Sparten darin nicht bewertet, lehnt die Software das Speichern ab und nennt Preisrichter, Sparte und Nummern. Oben steht, wie viele Tiere „ohne Preisrichter“ sind – das muss vor der Bewertung 0 sein. Die Tabelle der Preisrichter zeigt je Person „Bereich“, „Tiere“ und „bewertet“.
+Bereiche dürfen sich nicht überschneiden. Gerät ein Bereich an einen Preisrichter, der eine der Sparten oder Gruppen darin nicht bewertet, lehnt die Software das Speichern ab und nennt Preisrichter, Sparte bzw. Gruppe und Nummern. Oben steht, wie viele Tiere „ohne Preisrichter“ sind – das muss vor der Bewertung 0 sein. Die Tabelle der Preisrichter zeigt je Person „Bereich“, „Tiere“ und „bewertet“.
 
 Wechseln schon bewertete Tiere den Preisrichter, fragt die Software nach: Kontingent und Preise dieser Tiere gehen auf den neuen Preisrichter über.
 

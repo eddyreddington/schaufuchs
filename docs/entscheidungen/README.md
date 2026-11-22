@@ -12,7 +12,7 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [004](004-geld-in-cent.md) | Geld in Cent, Provisionen in Basispunkten |
 | [005](005-anonyme-bewertung.md) | Preisrichter sehen keine Ausstellernamen |
 | [006](006-fester-plan.md) | Fester Plan und „Automatisch planen“ |
-| [007](007-keine-bdrg-daten.md) | Keine BDRG-Daten ohne Nutzungsrecht |
+| [007](007-keine-bdrg-daten.md) | BDRG-Daten: Nutzung geklärt, Verzeichnis nicht im Repo |
 | [008](008-handbuch-statt-erklaertexte.md) | Keine Erklärtexte in der Oberfläche, Handbuch-Links |
 | [011](011-druckvorlagen.md) | Druckvorlagen: Verein legt fest, Schau wählt |
 | [012](012-briefvorlage.md) | Briefvorlage: eine je Verein, Texte mit Platzhaltern |
