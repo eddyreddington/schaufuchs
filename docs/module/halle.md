@@ -51,8 +51,10 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
   (`tuer`, Vorgabe „wie Wand“): nur Darstellung, im Editor über den gewöhnlichen Speicherweg (`aendern`), nie „Plan neu setzen“.
 - Hallenplan vor den Katalognummern ([ADR 029](../entscheidungen/029-hallenplan-vor-katalognummern.md)): `planTiere`
   setzt den Preisrichter mit `richterImPlan` – mit Nummer aus den Nummernbereichen, ohne Nummer aus der Einteilung nach
-  Rassen (Jugend separat beachtet); gilt für Plan, Druck, 3D und `kaefigInfo`. `hallenStand()` (`gemeinsam.ts`) liefert
-  Halle, fester Plan, Tiere mit und ohne Platz für Übersicht (`arbeitsZiel`) und Seite „Katalognummern“ (`katalog.nummernStand`).
+  Rassen (Jugend separat beachtet, in `kaefigInfo` als `preisrichterVorgesehen`); gilt für Plan, Druck, 3D und `kaefigInfo`.
+  Farben (`richterFolge`) in der Folge des ersten Käfigs im Plan, nicht nach Nummern – beim Nummerieren wechselt keine.
+  Stand für den Ablauf: `hallenStandVon()` (Domain; Halle, fest, veraltet, Tiere mit und ohne Platz, nummeriert), auf dem
+  Server einmal mit der Prüfliste (`pruefliste()`, Übersicht: `arbeitsZiel`) bzw. über `hallenStand()` für `katalog.nummernStand`.
 - Domain-Funktionen sind rein; Zufallshallen-Tests prüfen Invarianten über viele Hallen.
 
 ## Tests
