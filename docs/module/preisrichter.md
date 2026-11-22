@@ -49,7 +49,7 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
   alle Preisrichter (nach Namen, je Brief ab neuer Seite) oder einer; Abschnitt zum Abtrennen mit Name, Zusage/Absage,
   Gruppen zum Ankreuzen (die im Verzeichnis der Schau vorkommenden, sonst A–M, Z1–Z3), Vorbehalt, Datum, Unterschrift.
   Betreff und Text aus der Briefvorlage (Teil `verpflichtung`, Platzhalter wie in den anderen Texten, dazu
-  `{Bewertungstag}` und `{Rückmeldung}`); leer der feste Text (`verpflichtungBrief()`), der Ort, Bewertungstag und
+  `{Bewertungstag}` und `{Rückmeldung}`); je Feld leer der feste Betreff bzw. Text (`verpflichtungBrief()`), der Ort, Bewertungstag und
   „Rückmeldung bis“ nur nennt, wenn sie feststehen. „Rückmeldung der Preisrichter bis“ (`schau.preisrichterRueckmeldungBis`,
   Reiter „Termine“, nicht nach dem Bewertungstag, kommt nicht aus der Vorlage) steht im Brief, im Informationsblock und
   im Abschnitt. Wer die Rückmeldung bekommt, trägt Zusage, Gruppen und Vorbehalt von Hand beim Preisrichter ein.
