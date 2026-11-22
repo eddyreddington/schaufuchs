@@ -2,7 +2,7 @@
  * Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und
  * Steuerung. Gezeichnet wird nur bei Bedarf (Bewegung, Zeigen), nicht in Dauerschleife. Maßstab Meter (Fachlogik in cm).
  */
-import { punktInUmriss, type Verkleidung, type SzeneSchuerze, richterFarbe, wandDeckkraft, wandInnenseiten, type Quader, type Blick, type Figur, type HallenSzene, type SzeneKaefig, type SzeneTier } from "@schau/domain";
+import { POKAL_SKALA, punktInUmriss, type Verkleidung, type SzeneSchuerze, richterFarbe, wandDeckkraft, wandInnenseiten, type Quader, type Blick, type Figur, type HallenSzene, type SzeneKaefig, type SzeneTier } from "@schau/domain";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { ot } from "../sprache-jetzt";
@@ -277,7 +277,7 @@ export function baueWelt(
     const gold = merk(new THREE.MeshStandardMaterial({ color: "#d9b23a", metalness: 0.8, roughness: 0.3 }));
     const pokale = new THREE.InstancedMesh(merk(pokalGeometrie()), gold, Math.max(1, stellen.length));
     pokale.count = stellen.length;
-    stellen.forEach((p, i) => setze(pokale, i, p.x * M, p.y * M, p.z * M, p.h * 0.6 * M, p.h * M, p.h * 0.6 * M));
+    stellen.forEach((p, i) => setze(pokale, i, p.x * M, p.y * M, p.z * M, p.h * POKAL_SKALA * M, p.h * M, p.h * POKAL_SKALA * M));
     for (const im of [oben, fuesse, pokale]) {
       im.castShadow = true;
       im.receiveShadow = true;

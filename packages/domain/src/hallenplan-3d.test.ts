@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test";
 import { AUFSTELLER_STANDARD, PLATTEN_STAERKE, VERKLEIDUNG_STANDARD, verkleidungVon, verkleidungsKachel, wandInnenseiten, figurFuer, gangStandpunkt, gefiederFarbe, hallenSzene as szeneWieImPlan, TUER_HOEHE, vertauscht, WAND_DURCHSICHTIG, WAND_HOEHE, wandDeckkraft, wandSeiten, type Quader } from "./hallenplan-3d";
 import { zeichnungDerHalle } from "./hallenplan-druck";
-import { frontDerReihe, HALLE_STANDARD, planeHalle, type Halle, type PlanTier } from "./hallenplan";
+import { frontDerReihe, HALLE_STANDARD, planeHalle, POKAL_BREITE, type Halle, type PlanTier } from "./hallenplan";
 import { neuSetzen } from "./hallenplan-neu";
 
 /** Die Szene in Hallenkoordinaten (x = Breite, z = Länge) – so prüfen die Tests die Geometrie; die Abbildung wie im Plan prüft ein eigener Test. */
@@ -198,8 +198,16 @@ describe("3D-Szene: Tische und Bänke", () => {
     const [a, b] = s.moebel;
     expect(a!.pokale!.map((p) => [p.x, p.z])).toEqual([[125, 2640], [175, 2640], [225, 2640], [275, 2640]]);
     expect(b!.pokale).toHaveLength(6);
-    // Jeder Pokal steht auf seinem Tisch.
-    for (const m of s.moebel) for (const p of m.pokale!) expect(p.x > m.q.x && p.x < m.q.x + m.q.b && p.z > m.q.z && p.z < m.q.z + m.q.t).toBe(true);
+    // Jeder Pokal steht mit Henkeln ganz auf seinem Tisch, auch auf dem kleinsten (30 × 10 cm).
+    const klein: Halle = { ...h, objekte: [...(h.objekte ?? []), { id: "k", art: "pokaltisch", x: 900, y: 2600, drehung: 0, laenge: 30, tiefe: 10 }] };
+    const sk = hallenSzene(klein, planeHalle(klein, [], masse), masse);
+    expect(sk.moebel[2]!.q).toMatchObject({ b: 30, t: 10 });
+    for (const m of sk.moebel) {
+      for (const p of m.pokale!) {
+        const r = (POKAL_BREITE * p.h) / 2;
+        expect(p.x - r >= m.q.x && p.x + r <= m.q.x + m.q.b && p.z - r >= m.q.z && p.z + r <= m.q.z + m.q.t).toBe(true);
+      }
+    }
     // Tisch und Bank haben keine Pokale.
     const ohne = hallenSzene({ ...halle, objekte: [{ id: "t", art: "tisch", x: 100, y: 2600, drehung: 0 }] }, planeHalle({ ...halle, objekte: [{ id: "t", art: "tisch", x: 100, y: 2600, drehung: 0 }] }, [], masse), masse);
     expect(ohne.moebel[0]!.pokale).toBeUndefined();

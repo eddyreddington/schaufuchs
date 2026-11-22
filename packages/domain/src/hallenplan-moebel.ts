@@ -47,17 +47,26 @@ export function moebelStuecke(o: { art: MoebelArt; laenge?: number; tiefe?: numb
 
 /** Höhen der Pokale (cm) im Wechsel, damit die Reihe nach Ehrenpreisen aussieht und nicht nach Flaschen. */
 const POKAL_HOEHEN = [30, 38, 26, 34, 28, 36] as const;
+/**
+ * Pokal in 3D: Breite und Tiefe je cm Höhe (`POKAL_SKALA`, Körper 0,8, Henkel außen bei ±0,55) und die Hülle mit Henkeln
+ * (`POKAL_BREITE` × Höhe), in beiden Richtungen gleich gerechnet, weil die Henkel nicht mit dem Tisch drehen.
+ */
+export const POKAL_SKALA = 0.6;
+export const POKAL_BREITE = 1.1 * POKAL_SKALA;
 
 /**
  * Pokale auf einem Pokaltisch in der Lage `q`: eine Reihe mittig längs der langen Seite, je etwa 50 cm einer (zwei bis
- * sechs), mit Mittelpunkt (x, y in Hallenkoordinaten) und Höhe. Für die 3D-Ansicht.
+ * sechs), mit Mittelpunkt (x, y in Hallenkoordinaten) und Höhe. Auf schmalen oder kurzen Tischen werden sie kleiner, bis
+ * die Hülle mit Henkeln in ihr Feld passt (kurze Seite × lange Seite / Anzahl). Für die 3D-Ansicht.
  */
 export function pokalStellen(q: Rechteck): { x: number; y: number; h: number }[] {
   const laengsX = q.b >= q.h;
   const lang = laengsX ? q.b : q.h;
+  const kurz = laengsX ? q.h : q.b;
   const n = Math.max(2, Math.min(POKAL_HOEHEN.length, Math.round(lang / 50)));
+  const hoechstens = Math.min(kurz, lang / n) / POKAL_BREITE;
   return Array.from({ length: n }, (_, i) => {
     const a = ((i + 0.5) * lang) / n;
-    return { x: laengsX ? q.x + a : q.x + q.b / 2, y: laengsX ? q.y + q.h / 2 : q.y + a, h: POKAL_HOEHEN[i]! };
+    return { x: laengsX ? q.x + a : q.x + q.b / 2, y: laengsX ? q.y + q.h / 2 : q.y + a, h: Math.min(POKAL_HOEHEN[i]!, hoechstens) };
   });
 }

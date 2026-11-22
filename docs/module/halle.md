@@ -24,6 +24,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 - Katalogfolge streng aufsteigend Reihe für Reihe, keine Sonderregeln je Sparte; Reihen geschlossen.
 - Grundplatten nie kürzen; Rest einer Platte darf die nächste Käfigart aufnehmen ([ADR 001](../entscheidungen/001-grundplatten-nie-kuerzen.md)).
 - Möbel (Tisch, Bank, Garnitur, Pokaltisch) sind keine Sperrfläche und verschieben nie Käfige ([ADR 002](../entscheidungen/002-moebel-keine-sperrflaeche.md)).
+- Pokale auf dem Pokaltisch (`pokalStellen`, 3D) stehen mit Henkeln (`POKAL_BREITE`) ganz auf der Platte und berühren sich nicht; auf kleinen Tischen werden sie kleiner.
 - Fester Plan vs. „Automatisch planen“ ([ADR 006](../entscheidungen/006-fester-plan.md)): fest = jeder Käfig behält seinen Platz.
 - Jede Käfigfront zeigt zu einem Gang (`frontFehler`), Rückwand an die Wand; vor Ein- und Notausgängen bleibt ein Gang frei.
 - Käfige nie auf Flächen; eingesetzte Teile nur ganz in der Halle (`pruefeLage`).

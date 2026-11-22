@@ -298,7 +298,7 @@ Hallenplan – interne Hilfen für die Rechnung (nicht über `hallenplan.ts` ver
 - `m()`
 - Typen: `Abschnitt`
 
-### hallenplan-moebel.ts (63 Z.)
+### hallenplan-moebel.ts (72 Z.)
 Hallenplan – Tisch, Bank, Garnitur und Pokaltisch: Arten, Namen, Standardmaße und Höhen, Maße mit Vorgaben, die Körper einer Garnitur (Bank, Tisch, …
 Tests: `hallenplan-moebel.test.ts`
 
@@ -314,6 +314,8 @@ Tests: `hallenplan-moebel.test.ts`
 - `istMoebel()`
 - `moebelMass()` – Maße eines Möbelstücks mit Vorgaben: Länge, Tiefe (Tisch bzw. Bank) und bei der Garnitur die Tiefe der Bänke.
 - `moebelStuecke()` – Tisch, Bank, Garnitur oder Pokaltisch in der Lage `q` (Hallenkoordinaten): die Körper darin – eine Garnitur als Bank, Tisch, Bank quer zur Länge.
+- `POKAL_SKALA` – Pokal in 3D: Breite und Tiefe je cm Höhe (`POKAL_SKALA`, Körper 0,8, Henkel außen bei ±0,55) und die Hülle mit Henkeln (`POKAL_BREITE` × Höhe), in …
+- `POKAL_BREITE`
 - `pokalStellen()` – Pokale auf einem Pokaltisch in der Lage `q`: eine Reihe mittig längs der langen Seite, je etwa 50 cm einer (zwei bis sechs), mit Mittelpunkt (x, y …
 
 ### hallenplan-neu.ts (93 Z.)
