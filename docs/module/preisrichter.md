@@ -9,7 +9,7 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
 | Wo | Datei | Wichtig |
 |---|---|---|
 | Zulassung, Obmann, Zusage | `packages/domain/src/preisrichter-zulassung.ts` | `darfBewerten()` (Sparte und Gruppe), `bewertetSparte()`, `bewertetGruppe()`, `bdrgGruppe()` / `bdrgGruppeGueltig()`, `pruefeObmann()`, `ZUSAGEN` |
-| Einteilung nach Rassen | `packages/domain/src/einteilung.ts` | `richterNachRasse()` (Jugendregel vor Farbenschlag vor Rasse), `bereicheAusRassen()`, `regelnAusZuteilung()`, `vergleicheEinteilFolge()` |
+| Einteilung nach Rassen | `packages/domain/src/einteilung.ts` | `richterNachRasse()` (Jugendregel vor Farbenschlag vor Rasse), `richterImPlan()` (Hallenplan: ohne Nummer nach Rasse, mit Nummer nach Bereich, [ADR 029](../entscheidungen/029-hallenplan-vor-katalognummern.md)), `bereicheAusRassen()`, `regelnAusZuteilung()`, `vergleicheEinteilFolge()` |
 | Gruppe im Verzeichnis | `packages/domain/src/stammdaten.ts` | `parseStammdatenCsv()`: freiwillige vierte Spalte „Gruppe“ |
 | Server, Preisrichter | `apps/server/src/routers/preisrichter.ts` | `preisrichter.liste`, `.speichern` und `.loeschen` (→ `services/preisrichter-speichern.ts`), `.einteilungSetzen`, `.zuteilungSetzen`, `.einteilungJugendSetzen`, Vorschläge; `services/einteilung.ts` (`einteilTier()`, `bereicheDerSchau()`) |
 | Server, Vorschlag | `apps/server/src/services/einteilung-vorschlag.ts` | `schlageEinteilungVor()`: nur an Preisrichter, die Sparte und Gruppe bewerten |

@@ -34,3 +34,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [028](028-aussehen-der-halle.md) | Aussehen der Halle in 3D: einstellbar, ändert nie den Plan |
 | [029](029-druckformate.md) | Formatvorgaben der Drucke je Schau, eine Übersicht im Reiter „Druck“ |
 | [030](030-rueckwand-an-rueckwand.md) | Käfige beim Stellen ausrichten: Rückwand an die Wand, Rückwand an Rückwand |
+| [029](029-hallenplan-vor-katalognummern.md) | Hallenplan vor den Katalognummern: Ablauf, Übersicht, Prüfliste, Farben vor den Nummern |

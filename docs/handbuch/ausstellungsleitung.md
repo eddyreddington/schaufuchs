@@ -412,7 +412,7 @@ Unter „Spender“ (linke Leiste) stehen alle Spender des Vereins, über alle S
 
 Unter „Import“ (linke Leiste, nur Administratoren) übernehmen Sie Meldungen oder Aussteller aus einem anderen Programm, zum Beispiel aus einem älteren Schau- oder Vereinsprogramm. Es gibt dafür kein festes Format: Speichern Sie die Liste im alten Programm als Excel-Datei (.xlsx) oder als CSV- bzw. Textdatei (auch „Unicode-Text“ aus Excel). Das alte Excel-Format .xls wird nicht gelesen; öffnen Sie solche Dateien in Excel oder LibreOffice und speichern Sie sie als .xlsx. Eine Datei darf höchstens 8 MB und 5000 Zeilen haben. Steht über der Überschriftenzeile noch ein Titel, löschen Sie diese Zeile vorher in der Datei.
 
-1. **Datei:** Wählen Sie, was importiert wird: „Meldungen in eine Schau“ (dann die Schau, nur bis zur Phase „Katalog & Halle“) oder „Aussteller ins Verzeichnis“. Danach die Datei.
+1. **Datei:** Wählen Sie, was importiert wird: „Meldungen in eine Schau“ (dann die Schau, nur bis zur Phase „Halle & Katalog“) oder „Aussteller ins Verzeichnis“. Danach die Datei.
 2. **Spalten zuordnen:** Für jede Spalte steht dort, welches Feld SchauFUCHS darin vermutet, darunter die ersten Zeilen. Prüfen Sie die Zuordnung und ändern Sie sie, wo nötig. Spalten ohne Feld werden nicht übernommen. Ein Name in einer Spalte wird als „Nachname, Vorname“ gelesen; ohne Komma gilt der letzte Teil als Nachname. Gibt es daneben eine Spalte „Vorname“, gilt „Name“ als Nachname. Ebenso wird „PLZ und Ort“ in einer Spalte getrennt. Geschlecht wird als 1,0 / 0,1 (auch „Hahn“, „Henne“, „m“, „w“) gelesen, das Alter als jung oder alt (auch „J“, „A“, „Vj“). Ein Geschlecht wie 1,2 ergibt einen Stamm. Dann „Prüfen“.
 3. **Prüfen:** Oben stehen die Zahlen: Zeilen, übernehmbare Zeilen, Zeilen mit Fehlern, neue und vorhandene Aussteller. Zeilen mit Fehlern werden nicht übernommen; die Tabelle „Zeilen mit Fehlern oder Hinweisen“ nennt den Grund – etwa fehlender Vor- oder Nachname, unlesbares Geschlecht oder Alter, ein ausländischer Aussteller in einer Schau ohne Tiere aus dem Ausland, „Jugend“ bei einem Aussteller, der laut gespeichertem Geburtsdatum nicht mehr jugendlich ist. Was entbehrlich ist, wird mit Hinweis weggelassen: eine unlesbare E-Mail-Adresse, Telefonnummer oder Registriernummer. Eine vierstellige PLZ (Excel lässt die führende 0 weg) wird mit 0 ergänzt.
 4. **Rassen und Farbenschläge:** Steht eine Rasse genau so im Verzeichnis der Schau, ist sie zugeordnet („genau gefunden“). Sonst wählen Sie aus den Vorschlägen den richtigen Eintrag oder „auslassen“. Diese Wahl merkt sich SchauFUCHS für den Verein: Beim nächsten Import mit derselben Schreibweise steht sie schon da („wie beim letzten Import“).
@@ -420,7 +420,7 @@ Unter „Import“ (linke Leiste, nur Administratoren) übernehmen Sie Meldungen
 
 **Aussteller wiedererkennen:** Gibt es einen Aussteller schon (gleiche Registriernummer, sonst gleicher Vor- und Nachname und gleiche PLZ), wird die Meldung bei ihm angelegt. Seine gespeicherten Daten bleiben, wie sie sind, auch wenn die Datei eine andere Anschrift hat; ändern Sie sie bei Bedarf unter „Aussteller“. Steht in der Datei eine andere Registriernummer, ist es ein anderer Aussteller (etwa Vater und Sohn mit gleichem Namen). Passt eine Zeile ohne Registriernummer zu mehreren Nummern – in der Datei oder bei vorhandenen Ausstellern –, ist sie ein Fehler („Name passt zu mehreren Registriernummern“): Tragen Sie die Nummer in der Datei nach. Hat er in der Schau schon eine Meldung, wird er übersprungen. So entsteht nichts doppelt, wenn Sie dieselbe Datei zweimal importieren. Gesperrte und gelöschte Aussteller werden nicht importiert. In einer Testschau entstehen alle Aussteller als Test-Aussteller.
 
-**Zurücknehmen:** Unter „Frühere Importe“ steht jeder Import. „Zurücknehmen“ löscht seine Meldungen und die Aussteller, die er neu angelegt hat – nur bis zur Phase „Katalog & Halle“ und solange nichts weiter damit geschehen ist: niemand hat die Meldungen danach bearbeitet (auch nicht bestätigt), keine Zahlung, keine Katalognummern, keine Bewertung, kein Ehrenpreis, keine Spende, keine Abrechnung. Sonst bleibt alles stehen, und einzelne Meldungen stornieren Sie wie gewohnt. Ein neu angelegter Aussteller, den jemand danach bearbeitet hat oder der woanders gebraucht wird, bleibt erhalten. Import und Rücknahme stehen im Protokoll, die Rücknahme bei jeder Meldung.
+**Zurücknehmen:** Unter „Frühere Importe“ steht jeder Import. „Zurücknehmen“ löscht seine Meldungen und die Aussteller, die er neu angelegt hat – nur bis zur Phase „Halle & Katalog“ und solange nichts weiter damit geschehen ist: niemand hat die Meldungen danach bearbeitet (auch nicht bestätigt), keine Zahlung, keine Katalognummern, keine Bewertung, kein Ehrenpreis, keine Spende, keine Abrechnung. Sonst bleibt alles stehen, und einzelne Meldungen stornieren Sie wie gewohnt. Ein neu angelegter Aussteller, den jemand danach bearbeitet hat oder der woanders gebraucht wird, bleibt erhalten. Import und Rücknahme stehen im Protokoll, die Rücknahme bei jeder Meldung.
 
 ### 3.13 SEPA-Lastschrift {#sepa-lastschrift}
 
@@ -594,7 +594,7 @@ Jede Schau steht in genau einer Phase. Die Phase bestimmt, was gerade möglich i
 |---|---|---|
 | 1 | Vorbereitung | Termine, Gebühren, Preise, Verzeichnis festlegen |
 | 2 | Meldephase | Online- und Papiermeldungen, Zahlungen |
-| 3 | Katalog & Halle | nach dem Meldeschluss: Preisrichter einteilen, Käfige, Hallenplan, Katalognummern, Katalog, Festschreiben |
+| 3 | Halle & Katalog | nach dem Meldeschluss: Preisrichter einteilen, Käfige, Hallenplan, Katalognummern (nach dem Plan), Katalog, Festschreiben |
 | 4 | Einlieferung | Tiere und Nachweise abhaken |
 | 5 | Bewertung | Preisrichter bewerten (Tablet oder Papier) |
 | 6 | Preise & Freigabe | Preise vergeben, Ergebnisse freigeben |
@@ -605,18 +605,19 @@ Jede Schau steht in genau einer Phase. Die Phase bestimmt, was gerade möglich i
 **Phase wechseln:** Öffnen Sie die Schau. Die Seite „Übersicht“ zeigt im Abschnitt „Ablauf der Schau“ alle neun Phasen; die aktuelle ist hervorgehoben.
 
 - „Weiter zu: …“ schaltet in die nächste Phase.
+- Der Knopf daneben führt dorthin, wo in der Phase die Arbeit liegt. In „Halle & Katalog“ ist das zuerst der Hallenplan („Zum Hallenplan“) – solange keine Halle angelegt ist, Tiere ohne Platz sind oder der Plan nicht festgeschrieben ist –, danach die Katalognummern („Zu den Katalognummern“).
 - Ein Klick auf eine andere Phase stellt diese ein. Beim Überspringen fragt die Software: „Weiter zur Phase „…“?“
 - **Zurück** geht nur mit Grund: Es öffnet sich „Zurück zur Phase „…““ mit dem Feld „Grund“ (mindestens 3 Zeichen, steht im Protokoll); dann „Zurückstellen“.
 
-**Was den Wechsel nach vorn aufhält:** Vor jedem Wechsel nach vorn – auch wenn Sie Phasen überspringen, etwa von der Vorbereitung direkt zu „Katalog & Halle“ – prüft die Software (nur der Schritt von der Vorbereitung in die Meldephase prüft allein Gebühren, Meldeschluss und Impressum, siehe unten):
+**Was den Wechsel nach vorn aufhält:** Vor jedem Wechsel nach vorn – auch wenn Sie Phasen überspringen, etwa von der Vorbereitung direkt zu „Halle & Katalog“ – prüft die Software (nur der Schritt von der Vorbereitung in die Meldephase prüft allein Gebühren, Meldeschluss und Impressum, siehe unten):
 
-- **Rote Punkte der Prüfliste.** Jeder rote Punkt gehört zu einer Phase, bis zu der er erledigt sein muss – zum Beispiel fehlende Stammdaten bis zur Vorbereitung, die Anzeige beim Veterinäramt bis zu „Katalog & Halle“, Tiere ohne Preisrichter bis zur Einlieferung, unbewertete Tiere, offene Obmann-Bestätigungen und eingelieferte Tiere ohne Ringnummer bis zu „Preise & Freigabe“. Steht ein solcher Punkt noch offen, hält er den Wechsel in eine spätere Phase auf.
+- **Rote Punkte der Prüfliste.** Jeder rote Punkt gehört zu einer Phase, bis zu der er erledigt sein muss – zum Beispiel fehlende Stammdaten bis zur Vorbereitung, die Anzeige beim Veterinäramt bis zu „Halle & Katalog“, Tiere ohne Preisrichter bis zur Einlieferung, unbewertete Tiere, offene Obmann-Bestätigungen und eingelieferte Tiere ohne Ringnummer bis zu „Preise & Freigabe“. Steht ein solcher Punkt noch offen, hält er den Wechsel in eine spätere Phase auf.
 - **Bewertung und Freigabe.** Nach „Schau & Verkauf“ oder weiter geht es erst, wenn alle nummerierten Tiere bewertet und die Ergebnisse freigegeben sind – auch beim Überspringen.
 - **Beim Abschluss** zusätzlich die laufende Reklamationsfrist und die offenen Punkte der Kasse (siehe 5.18). Eine abgesagte Schau braucht zum Abschluss nur die Kasse (Erstattungen).
 
 Dann meldet die Software „Vor „…“ ist noch offen: …“ und fragt „Trotzdem weiter zu „…“?“. Weiter geht es nur bewusst: mit einem Grund im Feld „Grund“ und dem Knopf „Trotzdem weiter“. Der Grund steht im Protokoll.
 
-Auch beim Überspringen der Meldephase (z. B. von der Vorbereitung direkt zu „Katalog & Halle“) prüft die Software Gebühren, Meldeschluss und Impressum (siehe 5.4). Wer die Phase „Katalog & Halle“ überspringt, wird außerdem an Tiere ohne Katalognummer erinnert.
+Auch beim Überspringen der Meldephase (z. B. von der Vorbereitung direkt zu „Halle & Katalog“) prüft die Software Gebühren, Meldeschluss und Impressum (siehe 5.4). Wer die Phase „Halle & Katalog“ überspringt, wird außerdem an Tiere ohne Katalognummer erinnert.
 
 Darunter steht, ob die Tablets der Preisrichter gerade offen sind: „offen für Bewertung“ in den Phasen „Einlieferung“, „Bewertung“ und „Preise & Freigabe“ – solange die Ergebnisse nicht freigegeben sind. (Die Software schreibt dort verkürzt „Preise“; gemeint ist die Phase „Preise & Freigabe“. Ebenso sprechen Tierverkauf und Abrechnung verkürzt von den Phasen „Preise“, „Schau“ und „Abrechnung“.)
 
@@ -653,13 +654,13 @@ Darunter stehen „Alle Schauen“, die Gruppe „Verein“ (Aussteller, Spender
 
 #### Punkte der Prüfliste
 
-Die Prüfliste nennt jeden Punkt nur kurz. Hier steht, was dahintersteckt. In den Phasen „Katalog & Halle“ und „Einlieferung“ stehen unter „Hallenplan“ auch Hinweise zum Plan (gelb, sie halten keinen Wechsel auf); ein Klick führt in den Hallenplan.
+Die Prüfliste nennt jeden Punkt nur kurz. Hier steht, was dahintersteckt. Die Punkte stehen nach der Seite, auf der man sie erledigt, in der Folge des Ablaufs: Einstellungen, Verein, Meldungen, Preisrichter, Hallenplan, Katalognummern, Katalog, dann die Schautage. In den Phasen „Halle & Katalog“ und „Einlieferung“ stehen unter „Hallenplan“ auch Hinweise zum Plan (gelb, sie halten keinen Wechsel auf); ein Klick führt in den Hallenplan.
 
 | Punkt | Bedeutung |
 |---|---|
-| Veterinäramt-Anzeige fehlt / Schau beim Veterinäramt anzeigen | Die Schau muss spätestens 4 Wochen vor dem Bewertungstag beim Veterinäramt angezeigt sein. Ab dieser Frist ist es ein Fehler, der den Wechsel nach „Katalog & Halle“ aufhält. Ohne Bewertungstag kann die Software die Frist nicht berechnen. |
+| Veterinäramt-Anzeige fehlt / Schau beim Veterinäramt anzeigen | Die Schau muss spätestens 4 Wochen vor dem Bewertungstag beim Veterinäramt angezeigt sein. Ab dieser Frist ist es ein Fehler, der den Wechsel nach „Halle & Katalog“ aufhält. Ohne Bewertungstag kann die Software die Frist nicht berechnen. |
 | Registriernummer der Veranstaltung fehlt | Die Nummer, die das Veterinäramt für die Schau vergibt; sie steht auf den Listen für das Amt. |
-| Klinische Untersuchung nicht festgelegt | Nach § 7 GeflPestSchV: regionale Schau, Einlassuntersuchung oder Bescheinigung (Einstellungen › Veterinäramt). Ab der Phase „Katalog & Halle“ ein Fehler. |
+| Klinische Untersuchung nicht festgelegt | Nach § 7 GeflPestSchV: regionale Schau, Einlassuntersuchung oder Bescheinigung (Einstellungen › Veterinäramt). Ab der Phase „Halle & Katalog“ ein Fehler. |
 | Einlassuntersuchung: Datum und Tierarzt fehlen | Nachweis für das Veterinäramt, wenn die Tiere beim Einlass untersucht werden. |
 | … Meldungen aus dem Ausland | Ausländische Tiere brauchen ein amtliches Gesundheitszertifikat und eine TRACES-NT-Meldung, dazu tierärztliche Einlasskontrolle und Überwachung (gilt dann für die ganze Schau); auch Tauben brauchen eine ND-Impfung. Mit dem Veterinäramt abstimmen. |
 | Katalog-Impressum: Angabe „Druck“ fehlt | Der gedruckte Katalog braucht nach dem Landespressegesetz die Druckerei mit Anschrift oder „Eigendruck“ (Katalog › Aufbau). |
@@ -675,7 +676,7 @@ Die Prüfliste nennt jeden Punkt nur kurz. Hier steht, was dahintersteckt. In de
 | … Jugendmeldungen ohne Geburtsdatum / ohne Erziehungsberechtigten | Ohne Geburtsdatum ist der Jugendtarif nicht belegt. |
 | … stornierte oder abgelehnte Meldungen mit Zahlung | Das Geld fällt aus der Abrechnung: erstatten (Zahlung mit negativem Betrag) oder in der Meldung „Verfall buchen“. In der Abrechnung ein Fehler. |
 | Online-Meldung ist geschlossen | Die Halle ist voll, ein Teil davon nur durch unbestätigte Meldungen. Unbekannte Meldungen prüfen und ablehnen. |
-| … Tiere ohne Katalognummer | Bestätigte Tiere ohne Nummer. Erst ab der Phase „Katalog & Halle“ (nach dem Meldeschluss) und dort ein Fehler bis zur Einlieferung; vorher kommen laufend Meldungen dazu. |
+| … Tiere ohne Katalognummer | Bestätigte Tiere ohne Nummer. Erst ab der Phase „Halle & Katalog“ (nach dem Meldeschluss) und dort ein Fehler bis zur Einlieferung; vorher kommen laufend Meldungen dazu. |
 | … Tiere ohne Platz (Hallenplan) | Im Hallenplan finden so viele Tiere keinen Käfig. Halle, Grundplatten oder Käfigblöcke anpassen, „Plan neu setzen“ oder „Fehlende Käfige einsetzen“ (siehe Hallenplan). |
 | Käfigfront zur Wand oder zu einer Reihe (Hallenplan) | Eine Reihe, Platte oder ein Block steht mit der offenen Seite zur Wand oder zu einer anderen Reihe; rechts steht, welche (z. B. „R3: Front zu R4“). Im Hallenplan umdrehen, z. B. mit „Käfige an den Wänden ausrichten …“. |
 | Nummern bzw. Käfignummern nicht in Planfolge (Hallenplan) | Im festen Plan wurden Käfige umgestellt, die Nummern laufen nicht mehr in der Folge der Reihen. Im Hallenplan „Nach Plan nummerieren“. |
@@ -683,7 +684,7 @@ Die Prüfliste nennt jeden Punkt nur kurz. Hier steht, was dahintersteckt. In de
 | … Tiere ohne Preisrichter | Diese Tiere sind keinem Preisrichter zugeteilt. Fehler bis zur Einlieferung. |
 | Name: … Tiere, höchstens … | Mehr Tiere als die Höchstzahl je Preisrichter oder Obmann. Gezählt wird gewichtet: Stamm zählt 2, Voliere und Bruteier 3. Nur ein Hinweis. |
 | Kein Obmann bestimmt / Nur ein Obmann / Nur ein Preisrichter | „vorzüglich“ und u.M. muss ein Obmann bestätigen. Gibt es nur einen Obmann, bestätigt ein anderer Preisrichter dieser Schau seine eigenen Noten. Bei nur einem Preisrichter kann niemand bestätigen. |
-| … Preisrichter ohne Tablet-PIN | Ohne PIN kann sich der Preisrichter nicht am Tablet anmelden (siehe 5.8). Erst ab der Phase „Katalog & Halle“. |
+| … Preisrichter ohne Tablet-PIN | Ohne PIN kann sich der Preisrichter nicht am Tablet anmelden (siehe 5.8). Erst ab der Phase „Halle & Katalog“. |
 | … Tiere weder eingeliefert noch fehlend | Unbewertete Tiere zählen nicht zum Preiskontingent. |
 | … Tiere bewertet, aber nicht als eingeliefert abgehakt | Meist fehlt der geprüfte Nachweis; die Tierliste braucht die Einlieferung. Nachweis prüfen oder mit Grund einliefern. |
 | … eingelieferte Tiere ohne Ringnummer | Die Kennzeichnung gehört in die Liste für das Veterinäramt. |
@@ -769,7 +770,7 @@ Die Wahl gilt beim nächsten „Katalognummern vergeben“ für Nummern, Hallenp
 
 **Schau löschen:** Eine Schau, die nur zum Ausprobieren angelegt wurde, löschen Sie in den Einstellungen im Reiter „Verwalten“ mit „Schau löschen …“. Das geht nur, solange sie in der Phase „Vorbereitung“ steht und noch keine Meldungen, Stiftungen oder Kassenbuchungen hat. Zur Sicherheit tippen Sie den Namen der Schau ein und geben einen Grund an; das Löschen steht danach im Protokoll des Vereins. Einstellungen, Preisrichter und Katalogseiten der Schau sind dann weg. Eine **Testschau** dagegen lässt sich in jeder Phase löschen, mit allen Meldungen, ihren Test-Ausstellern, Bewertungen, Kasse und Belegen; echte Aussteller sind davon nie betroffen.
 
-**Schau absagen:** Muss eine Schau ausfallen, etwa wegen eines Ausstellungsverbots bei einer Tierseuche, sagen Sie sie in den Einstellungen im Reiter „Verwalten“ mit „Schau absagen …“ ab. Das geht in den Phasen „Vorbereitung“, „Meldephase“ und „Katalog & Halle“, also bis vor der Einlieferung. Sind schon Tiere in der Halle, stimmen Sie das Vorgehen mit dem Veterinäramt ab und schließen über die normale Abrechnung ab. Im Fenster tragen Sie den Grund ein (er steht in der E-Mail an die Aussteller) und bestätigen mit „Schau absagen“. Das lässt sich nicht rückgängig machen. Dann geschieht Folgendes:
+**Schau absagen:** Muss eine Schau ausfallen, etwa wegen eines Ausstellungsverbots bei einer Tierseuche, sagen Sie sie in den Einstellungen im Reiter „Verwalten“ mit „Schau absagen …“ ab. Das geht in den Phasen „Vorbereitung“, „Meldephase“ und „Halle & Katalog“, also bis vor der Einlieferung. Sind schon Tiere in der Halle, stimmen Sie das Vorgehen mit dem Veterinäramt ab und schließen über die normale Abrechnung ab. Im Fenster tragen Sie den Grund ein (er steht in der E-Mail an die Aussteller) und bestätigen mit „Schau absagen“. Das lässt sich nicht rückgängig machen. Dann geschieht Folgendes:
 
 - Alle offenen und bestätigten Meldungen werden storniert. Vor dem Festschreiben verlieren die Tiere ihre Nummern, danach bleiben die gedruckten Nummern reserviert.
 - Jeder Aussteller mit E-Mail-Adresse bekommt die Nachricht „Abgesagt: …“ mit dem Grund und dem Hinweis, dass gezahltes Meldegeld erstattet wird.
@@ -961,78 +962,25 @@ Im Abschnitt „Für den Aussteller“ finden Sie „A-Bogen zum Unterschreiben 
 
 > **Tipp:** Die Liste „Meldungen“ zeigt je Aussteller Betrag und bezahlten Betrag; mit dem Status-Filter finden Sie schnell alle „offen“-Meldungen.
 
-### 5.5 Nach dem Meldeschluss: Phase „Katalog & Halle“
+### 5.5 Nach dem Meldeschluss: Phase „Halle & Katalog“
 
-Schalten Sie mit „Weiter zu Katalog & Halle“ um. Damit schließt die Online-Meldung.
+Schalten Sie mit „Weiter zu Halle & Katalog“ um. Damit schließt die Online-Meldung.
 
 **Reihenfolge nach dem Meldeschluss** (so stehen die Seiten auch in der Seitenleiste unter „Nach dem Meldeschluss“):
 
 1. Offene Meldungen bestätigen oder ablehnen (unten).
 2. Preisrichter nach Rassen einteilen (siehe 5.8) – die Nummernbereiche folgen später den Katalognummern von selbst.
 3. „Käfige“: Käfigbedarf prüfen, Käfiggröße je Rasse festlegen.
-4. „Hallenplan“: die Käfige in der Halle aufstellen. Die Halle können Sie schon in der Vorbereitung anlegen; planen lässt sie sich erst sinnvoll mit den Meldungen.
-5. „Katalognummern“: Reihenfolge wählen und vergeben (unten), wenn gewünscht nach dem Plan („Nach Plan nummerieren“ im Hallenplan).
-6. Ausgaben drucken, „Katalog“ gestalten, Nummern festschreiben.
+4. „Hallenplan“: die Käfige in der Halle aufstellen und den Plan festschreiben. Die Farben der Preisrichter stehen schon vor den Nummern im Plan (aus der Einteilung nach Rassen). Die Halle können Sie schon in der Vorbereitung anlegen; planen lässt sie sich erst sinnvoll mit den Meldungen.
+5. „Katalognummern“: nach dem Hallenplan vergeben („Nach Hallenplan vergeben“, siehe „Katalognummern vergeben“ unten) – die Nummern folgen dann den Käfigen. Ohne Hallenplan in Ausstellungsfolge.
+6. Ausgaben drucken, „Katalog“ gestalten (siehe 5.6), Nummern festschreiben.
+
+Der Knopf der Phase auf der Übersicht und die Prüfliste folgen dieser Reihenfolge (siehe 5.1). Die Abschnitte unten stehen ebenso: erst Käfige und Hallenplan, dann die Katalognummern.
 
 **Unbezahlte Meldungen:** Die Software lehnt unbezahlte Meldungen nach dem Meldeschluss **nicht** automatisch ab. Das ist Absicht: Viele Vereine kassieren das Meldegeld erst bei der Einlieferung.
 
 - **Bezahlung bei der Einlieferung (so bei uns):** Bestätigen Sie die offenen Meldungen unter „Meldungen“ (Filter „offen“) von Hand mit „Bestätigen“. Nur bestätigte Meldungen bekommen Katalognummern und erscheinen bei der Einlieferung. Kassiert wird dann an der Einlieferung im Kasten „Meldegeld“.
 - **Bezahlung vorab:** Fassen Sie bei offenen Meldungen nach und entscheiden Sie je Meldung: „Bestätigen“ oder „Ablehnen“.
-
-#### Katalognummern vergeben
-
-![Katalognummern vergeben, Ausgaben drucken, Nummern festschreiben.](bilder/katalognummern.jpg)
-
-1. „Katalognummern“ → „Katalognummern vergeben“ (oben im Seitenkopf, wie „Nummern festschreiben“).
-2. Die Software nummeriert alle bestätigten Tiere lückenlos in Ausstellungsfolge. Ohne eigene Wahl gilt: Sparte, Rasse, Farbenschlag, dann je Züchter 1,0 jung, 1,0 alt, 0,1 jung, 0,1 alt – die Tiere eines Züchters stehen im Farbenschlag also nacheinander, auch wenn er nachgemeldet hat. Mit „Volieren und Stämme vor den Einzeltieren“ entsprechend vorn, mit „Jugend im Katalog: eigener Block am Ende“ getrennt, mit „in der Rasse eingereiht“ zwischen den Senioren (siehe „Jugend im Katalog“ in 5.3). Die Käfignummer ist die Katalognummer. Eine andere Folge stellen Sie unter „Reihenfolge der Nummern“ ein (siehe unten).
-
-Bis zum Festschreiben können Sie beliebig oft neu vergeben, etwa nach späten Zahlungen. Dabei werden **alle** Nummern neu gesetzt. Sind die Preisrichter nach Rassen eingeteilt (unter „Preisrichter“), bekommen sie ihre Nummernbereiche dabei gleich mit.
-
-#### Reihenfolge der Katalognummern
-
-Auf der Seite „Katalognummern“ legt der Abschnitt „Reihenfolge der Nummern“ fest, wonach die Nummern laufen. Die Liste ist die Rangfolge: Das oberste Merkmal entscheidet zuerst, das nächste nur bei Gleichstand, und so weiter.
-
-| Merkmal | Wahl |
-|---|---|
-| Sparte, Rasse, Farbenschlag | immer an und immer oben, in der Folge des Verzeichnisses (Rassen und Farbenschläge). So bleiben Sparten- und Rassenköpfe im Katalog, das Rassenverzeichnis und die Reihen im Hallenplan zusammen. Tiere ohne Verzeichniseintrag (AOC, Neuzüchtung) stehen nach ihrer Bezeichnung dahinter. |
-| Meldeart | „Einzeltier, Stamm, Voliere“ oder „Voliere, Stamm, Einzeltier“; Bruteier immer am Ende. |
-| Verein | „Tiere eines Vereins zusammen“ (Verein aus der Angabe beim Aussteller, Groß- und Kleinschreibung egal; ohne Verein dahinter). Ab Werk aus. |
-| Aussteller | „Tiere eines Ausstellers zusammen“ (nach Name, auch über Nachmeldungen). Ohne Haken stehen gleiche Tiere verschiedener Aussteller in der Folge des Meldeeingangs. |
-| Ausstellernummer | „nach Nummer des Ausstellers“ statt nach dem Namen: die Nummer, unter der der Aussteller im Verein erfasst ist (Reihenfolge der Erfassung). Ab Werk aus; für „statt Name“ den Haken bei „Aussteller“ herausnehmen. |
-| Geschlecht | „1,0 vor 0,1“ oder „0,1 vor 1,0“; Stämme und Gruppen (z. B. 1,2) dahinter. |
-| Alter | „jung vor alt“ oder „alt vor jung“. |
-
-- Mit den Haken schalten Sie Meldeart, Verein, Aussteller, Ausstellernummer, Geschlecht und Alter an oder ab, mit ↑ und ↓ verschieben Sie sie untereinander (unterhalb von Farbenschlag). Beispiel: Steht „Geschlecht“ über „Aussteller“, kommen im Farbenschlag erst alle 1,0 (je Aussteller), dann alle 0,1. Steht „Alter“ über „Geschlecht“, kommen erst alle Jungtiere, dann die alten. Volieren und Stämme als eigene Abteilung vor allen Einzeltieren stellen Sie in den Einstellungen ein (siehe unten).
-- Vorweg gilt die Gliederung aus den Einstellungen (Reiter „Katalog und Preise“): „Jugend im Katalog“ (eigener Block am Ende oder in der Rasse eingereiht), Käfigblöcke und „Volieren und Stämme vor den Einzeltieren“. Die Zeile „Vorweg: …“ nennt sie, der Link führt dorthin. In den Einstellungen steht unter „Reihenfolge der Nummern“ die aktuelle Folge mit einem Link hierher.
-- „Vorgabe“ stellt die bisherige Folge wieder her. Gespeichert wird mit „Reihenfolge speichern“ oben rechts; die Änderung steht im Protokoll („Reihenfolge der Katalognummern“).
-- Die Nummern ändern sich erst beim nächsten „Katalognummern vergeben“. Nach dem Festschreiben ist die Reihenfolge gesperrt („Festgeschrieben“). Nachmeldungen bekommen ihre Unternummer nach der gespeicherten Folge, vorhandene Nummern bleiben.
-- Laufen die Nummern nach dem Hallenplan („Nach Plan nummerieren“), bestimmt der Plan die Folge. Der Plan selbst stellt nicht nummerierte Tiere in der hier gewählten Folge auf.
-
-#### Ausgaben drucken
-
-Unter „Drucken und Exportieren“:
-
-- „Bewertungskarten (PDF)“,
-- „B-Bögen und Ringkarten (PDF)“ – für alle Aussteller (dasselbe gibt es unter „Meldungen“ als „B-Bögen und Ringkarten (alle)“ und je Meldung einzeln),
-- „Ergebnisliste (CSV für Excel)“.
-
-Die B-Bögen und Ringkarten verschicken Sie selbst (Post oder E-Mail); die Software versendet sie nicht.
-
-#### Nummern festschreiben
-
-Sind Einteilung und Drucke fertig, klicken Sie „Nummern festschreiben“ und bestätigen die Rückfrage „Katalognummern festschreiben?“ mit „Festschreiben“. Danach:
-
-- bestehende Nummern ändern sich nicht mehr,
-- nachträglich bestätigte Tiere nummerieren Sie mit „Nachmeldungen nummerieren“; sie bekommen Unternummern wie **100a**,
-- passt eine Nachmeldung nicht sauber in die Folge, meldet die Software „Nicht ganz in Ausstellungsfolge …“ – vermerken Sie das im Katalognachtrag,
-- Verzeichnisversion, „Jugend im Katalog“ und Reihenfolge der Stämme sind gesperrt,
-- nummerierte Tiere bleiben in ihrer Meldung, und Rasse, Farbenschlag, Art, Geschlecht und Alter lassen sich nicht mehr ändern – sie stehen schon auf Karten und im Katalog. In der Meldung steht dann „Katalog festgeschrieben – Tier bleibt so. Falsches Tier: bei der Einlieferung „fehlt“ und richtig nachmelden.“ Kommt ein Tier nicht, markieren Sie es bei der Einlieferung als „fehlt“; das richtige Tier melden Sie nach (Unternummer). Die ganze Meldung lässt sich weiter stornieren.
-
-„Festschreibung aufheben“ geht nur, solange es noch keine Bewertungen, Preise oder Verkäufe gibt. Danach passen gedruckte Bewertungskarten nicht mehr.
-
-> **Wichtig:** Sobald das erste Tier bewertet, prämiert oder verkauft ist, lässt sich nicht mehr neu nummerieren: „Neu nummerieren geht nicht mehr – es gibt schon Bewertungen, Preise oder Verkäufe … Bitte die Nummern festschreiben; neue Tiere bekommen dann Unternummern.“ Schreiben Sie die Nummern deshalb spätestens vor der Einlieferung fest.
-
-> **Tipp:** Wird eine bestätigte Meldung storniert oder abgelehnt, verliert sie ihre Nummern nur vor dem Festschreiben. Danach bleiben gedruckte Nummern reserviert und kommen zurück, wenn die Meldung wieder aufgenommen wird.
 
 #### Käfige (Käfigbedarf)
 
@@ -1069,7 +1017,7 @@ Unter „Hallenplan“ rechnet die Software aus, wie die Käfige in Ihrer Halle 
 5. „bündig an Wänden ohne Eingang“ (Vorgabe): Die Reihen gehen bis an die Wand, so wie üblich gestellt wird. Ein Eingang oder Notausgang hält nur dort einen Gang frei, wo er ist: Die Reihen davor beginnen erst hinter dem Gang, alle anderen gehen bis an dieselbe Wand. Am Hauptgang bleibt der Gang frei. Ohne Hauptgang bleibt am Ende der Reihen ein Quergang, damit die Gänge zwischen den Reihen nicht an beiden Enden zu sind. Grundplatten stehen immer ganz und werden nie gekürzt: Passt am Ende einer Reihe keine ganze Platte mehr, bleibt der Rest frei und kommt zum Quergang hinzu. Beispiel: Halle 15,5 m, Quergang 1,5 m, also 14 m Reihe – Hühnerplatten zu 2,1 m passen sechsmal (12,6 m), unten bleiben 2,9 m frei; Zwerghühner- und Taubenplatten zu 2,0 m füllen die 14 m. Die Einzelreihen an den Wänden stehen ohnehin direkt an der Wand.
 6. **Eine geänderte Einstellung setzt den Plan neu:** Maße, Gänge, Hauptgang, Reihenrichtung (quer/längs), Wandreihen, „bündig“ oder Grundplatten – die Software stellt alle Käfige neu, genau wie mit „Plan neu setzen“ (siehe unten): Verschobenes und eingesetzte Teile der alten Aufstellung fallen weg, Tiere, die nicht in die Reihen passen, bekommen Käfigblöcke. Ist der Plan fest oder steht etwas von Hand Geplantes (verschobene Reihen oder Platten, von Hand eingesetzte oder verschobene Blöcke, Volieren), kommt vorher die Rückfrage „Plan neu setzen?“; mit „Abbrechen“ bleibt alles, wie es ist. Käfigblöcke, die die Software selbst eingesetzt hat (beim Neu-Setzen oder mit „Alle fehlenden Käfige einsetzen“), zählen nicht dazu – im automatischen Plan wechseln Sie also ohne Rückfrage z. B. zwischen quer und längs, und die Blöcke werden jedes Mal passend neu gesetzt.
 
-Solange keine Tiere gemeldet sind, ist die Halle leer. Der Plan stellt alle gemeldeten Tiere (offene und bestätigte Meldungen – gemeldet heißt noch nicht eingeliefert, aufgebaut wird ja vorher) in Katalogfolge (= Käfignummern) Platte für Platte und Reihe für Reihe auf, mit den Maßen Ihrer Käfige (unter „Käfige“). Jede Reihe heißt R1, R2 …; die Käfige tragen ihre Nummer, und jeder Preisrichter hat eine eigene Farbe (in der Reihenfolge der Katalognummern; ab dem fünften zusätzlich schraffiert, damit die Farben auch bei Farbschwäche und im Schwarzweiß-Druck unterscheidbar bleiben). Der Plan ist wie eine Bauzeichnung gezeichnet: kräftige Wände, Eingänge als Öffnung in der Wand, alles in der Halle mit feinen dunklen Linien. Die Bauteile haben eigene, neutrale Farben: Grundplatten sandfarben, freie Bereiche fein grau schraffiert, Volierenbereiche grün gestrichelt, eingesetzte Volieren weiß mit kräftigerem Rand. Ein leichtes Raster von 0,5 m (jeder Meter etwas kräftiger) und die Meterzahlen unten und links helfen beim Abmessen. Die Legende steht unter dem Plan. Gezeichnet sind nur die Reihen mit Käfigen; wie viel Platz noch frei ist, steht unter „Platz“. Darunter stehen:
+Solange keine Tiere gemeldet sind, ist die Halle leer. Der Plan stellt alle gemeldeten Tiere (offene und bestätigte Meldungen – gemeldet heißt noch nicht eingeliefert, aufgebaut wird ja vorher) in Katalogfolge (= Käfignummern) Platte für Platte und Reihe für Reihe auf, mit den Maßen Ihrer Käfige (unter „Käfige“). Jede Reihe heißt R1, R2 …; die Käfige tragen ihre Nummer, und jeder Preisrichter hat eine eigene Farbe – schon vor den Katalognummern: Ein Tier ohne Nummer bekommt den Preisrichter aus der Einteilung nach Rassen (auch die Jugend, wenn sie separat eingeteilt ist), ein nummeriertes den seines Nummernbereichs (Farben in der Reihenfolge der Katalognummern; ab dem fünften zusätzlich schraffiert, damit die Farben auch bei Farbschwäche und im Schwarzweiß-Druck unterscheidbar bleiben). Der Plan ist wie eine Bauzeichnung gezeichnet: kräftige Wände, Eingänge als Öffnung in der Wand, alles in der Halle mit feinen dunklen Linien. Die Bauteile haben eigene, neutrale Farben: Grundplatten sandfarben, freie Bereiche fein grau schraffiert, Volierenbereiche grün gestrichelt, eingesetzte Volieren weiß mit kräftigerem Rand. Ein leichtes Raster von 0,5 m (jeder Meter etwas kräftiger) und die Meterzahlen unten und links helfen beim Abmessen. Die Legende steht unter dem Plan. Gezeichnet sind nur die Reihen mit Käfigen; wie viel Platz noch frei ist, steht unter „Platz“. Darunter stehen:
 
 - **Platz:** ob alle Käfige Platz haben, wie viele Grundplatten noch frei sind und wie viele Käfige jeder Art noch hineinpassen würden – auf ganzen Platten in den freien Reihen plus die freien Plätze auf angefangenen Platten. Fehlt das Maß für Stammkäfige oder Volieren, steht ein Hinweis da – tragen Sie es unter „Käfige“ ein.
 - **Aufbauliste je Reihe:** Lage, Käfignummern, Käfige je Maß, Zahl der Grundplatten und die Länge der Käfigblöcke („Länge“ ist die Summe der Grundplatten der Reihe; die Platten stehen lückenlos aneinander), Rassen und Preisrichter – mit „Zusammen“ für die ganze Halle und darunter die Grundplatten je Käfigart.
@@ -1145,9 +1093,9 @@ Volieren und Käfigblöcke erscheinen in der Mitte der Halle bzw. auf dem nächs
 
 #### Nach Plan nummerieren {#hallenplan-nummerieren}
 
-Sind die Käfige im festgeschriebenen Plan umgestellt, vergibt „Nach Plan nummerieren“ die Nummern in der Reihenfolge, in der die Käfige jetzt stehen: Reihe für Reihe, in jeder Reihe vom Anfang zum Ende (so wie die Software stellt) – eine einzeln versetzte Platte dort, wo sie jetzt steht, eine gedrehte Reihe von ihrem eigenen Anfang, ein eingesetzter Käfigblock an seiner Stelle –, danach die Volieren in der Folge, in der sie aufgebaut werden. Dabei wechselt kein Tier den Käfig: Freie Plätze bleiben frei, wo sie sind, auch mitten in einer Reihe – vergeben werden nur die Nummern. Freie Plätze auf der letzten Platte einer Käfigart vor der nächsten Käfigart sind Reserve, kein Platz „dazwischen“. Vorher erscheint eine Rückfrage. Nach dem Umstellen zeigt ein Hinweis unter dem Plan, wenn freie Plätze zwischen belegten stehen oder die Nummern nicht mehr der Reihenfolge im Plan folgen; im zweiten Fall mit dem Knopf „Jetzt nach Plan nummerieren“ (nach dem Druck „Jetzt Käfigplätze nach Plan vergeben“). Einen freien Platz dazwischen füllen Sie bei Bedarf mit „Tier versetzen“. Von selbst nummeriert die Software nach dem Verschieben nicht um – sonst sprängen die Nummern bei jedem Ziehen, und gedruckte Karten stimmten nicht mehr. Eingesetzte Käfigblöcke nehmen die Tiere ohne Platz in dieser Planfolge auf (der vorderste Block die kleinsten Nummern) – nach dem Nummerieren bleibt jedes Tier in seinem Block, und der Hinweis „Nummern nicht in Planfolge“ verschwindet.
+Steht der Plan fest, vergibt „Nach Plan nummerieren“ (im Menü „Plan“ des Editors, auf der Seite „Katalognummern“ als „Nach Hallenplan vergeben“) die Nummern in der Reihenfolge, in der die Käfige jetzt stehen: Reihe für Reihe, in jeder Reihe vom Anfang zum Ende (so wie die Software stellt) – eine einzeln versetzte Platte dort, wo sie jetzt steht, eine gedrehte Reihe von ihrem eigenen Anfang, ein eingesetzter Käfigblock an seiner Stelle –, danach die Volieren in der Folge, in der sie aufgebaut werden. Dabei wechselt kein Tier den Käfig: Freie Plätze bleiben frei, wo sie sind, auch mitten in einer Reihe – vergeben werden nur die Nummern. Freie Plätze auf der letzten Platte einer Käfigart vor der nächsten Käfigart sind Reserve, kein Platz „dazwischen“. Vorher erscheint eine Rückfrage. Nach dem Umstellen zeigt ein Hinweis unter dem Plan, wenn freie Plätze zwischen belegten stehen oder die Nummern nicht mehr der Reihenfolge im Plan folgen; im zweiten Fall mit dem Knopf „Jetzt nach Plan nummerieren“ (nach dem Druck „Jetzt Käfigplätze nach Plan vergeben“). Einen freien Platz dazwischen füllen Sie bei Bedarf mit „Tier versetzen“. Von selbst nummeriert die Software nach dem Verschieben nicht um – sonst sprängen die Nummern bei jedem Ziehen, und gedruckte Karten stimmten nicht mehr. Eingesetzte Käfigblöcke nehmen die Tiere ohne Platz in dieser Planfolge auf (der vorderste Block die kleinsten Nummern) – nach dem Nummerieren bleibt jedes Tier in seinem Block, und der Hinweis „Nummern nicht in Planfolge“ verschwindet.
 
-- *Katalognummern noch nicht festgeschrieben:* Alle bestätigten Tiere bekommen neue Katalognummern ab der eingestellten Startnummer, Käfignummer gleich Katalognummer; Tiere ohne Platz kommen ans Ende. Die Nummern folgen dann dem Plan, nicht mehr der Katalogfolge – steht eine Rasse an zwei Stellen in der Halle, steht sie auch im Katalog an zwei Stellen. „Katalognummern vergeben“ unter „Katalognummern“ stellt die Katalogfolge wieder her. Ist nach Rassen eingeteilt, folgen die Preisrichter-Bereiche den neuen Nummern; eine Einteilung von Hand nach Nummernbereichen bleibt auf den alten Nummern stehen – die Meldung danach weist darauf hin, bitte unter „Preisrichter“ neu einteilen. Gibt es schon Bewertungen, Preise oder Verkäufe, geht das nicht mehr.
+- *Katalognummern noch nicht festgeschrieben:* Alle bestätigten Tiere bekommen neue Katalognummern ab der eingestellten Startnummer, Käfignummer gleich Katalognummer; Tiere ohne Platz kommen ans Ende. Die Nummern folgen dann dem Plan, nicht mehr der Katalogfolge – steht eine Rasse an zwei Stellen in der Halle, steht sie auch im Katalog an zwei Stellen. „Ohne Hallenplan vergeben“ unter „Katalognummern“ stellt die Katalogfolge wieder her. Ist nach Rassen eingeteilt, folgen die Preisrichter-Bereiche den neuen Nummern; eine Einteilung von Hand nach Nummernbereichen bleibt auf den alten Nummern stehen – die Meldung danach weist darauf hin, bitte unter „Preisrichter“ neu einteilen. Gibt es schon Bewertungen, Preise oder Verkäufe, geht das nicht mehr.
 - *Katalognummern festgeschrieben (Katalog gedruckt):* Der Knopf heißt dann „Käfigplätze nach Plan“. Die Katalognummern bleiben, wie sie sind; vergeben werden nur die Käfignummern 1, 2, 3 … in der Reihenfolge des Plans. Bewertungs- und Käfigkarten zeigen dann „Käfig-Nr.“ neben der Katalognummer – schon gedruckte Karten bitte neu drucken. Tiere ohne Platz bekommen keine Käfignummer. Eine Nachmeldung bekommt danach zunächst nur ihre Unternummer, keine Käfignummer; führen Sie „Käfigplätze nach Plan“ nach dem Nachmelden noch einmal aus – die Nachmeldung bekommt ihren Platz, die übrigen Tiere behalten ihre Käfignummer, solange vor ihnen nichts dazukommt.
 
 Das geht nur mit festgeschriebenem Plan, denn sonst würde die Software die Käfige nach den neuen Nummern wieder umstellen. In der abgeschlossenen Schau ist es gesperrt. Das Protokoll hält jede geänderte Nummer mit altem und neuem Wert fest.
@@ -1248,6 +1196,65 @@ In der 3D-Ansicht steht in jedem Eingang und Ausgang eine geschlossene Tür, lei
 - **offen:** keine Tür, nur die Öffnung (für Tore und Durchgänge).
 
 Ein Ausgang breiter als 1,30 m bekommt eine zweiflügelige Tür; schmaler als 50 cm bleibt er eine Öffnung. Ein Notausgang (Name enthält „Not…“) hat innen eine Panikstange und behält das grüne Schild. Die Tür ist reine Anschauung: Sie ändert nie den Plan, die Käfigplätze oder die Nummern, auch nicht im festgeschriebenen Plan, und hält keinen Rundgang auf. Die Wahl wird sofort gespeichert und steht im Protokoll; sie gehört zum Eingang und kommt mit Entwürfen, dem Archiv und einer neuen Schau aus der Vorlage mit. Im heruntergeladenen 3D-Modell sind die Türen dabei, voll zu sehen wie alle Wände – auch wenn sie in der Ansicht gerade ausgeblendet sind. Im 2D-Plan und im Druck bleibt der Eingang eine Öffnung.
+
+#### Katalognummern vergeben
+
+![Katalognummern vergeben, Ausgaben drucken, Nummern festschreiben.](bilder/katalognummern.jpg)
+
+Die Katalognummern kommen nach dem Hallenplan. Steht ein festgeschriebener Plan mit Tieren, zeigt die Seite „Katalognummern“ oben im Seitenkopf **„Nach Hallenplan vergeben“** als ersten Weg: Die Tiere bekommen ihre Nummern in der Folge der Käfige im Plan – genau wie „Nach Plan nummerieren“ im Halleneditor, mit derselben Rückfrage „Katalognummern nach dem Plan vergeben?“ (Knopf „Neu nummerieren“; siehe „Nach Plan nummerieren“ oben). Daneben steht „Ohne Hallenplan vergeben“: Das nummeriert in Ausstellungsfolge wie unten beschrieben; die Käfige im festen Plan bleiben dabei stehen, die Prüfliste meldet dann „Nummern nicht in Planfolge“. Ist keine Halle angelegt oder der Plan nicht festgeschrieben (automatisch gestellt), steht wie bisher „Katalognummern vergeben“ – im automatischen Plan rücken die Käfige danach von selbst in Nummernfolge.
+
+Ohne Hallenplan:
+
+1. „Katalognummern“ → „Katalognummern vergeben“ (oben im Seitenkopf, wie „Nummern festschreiben“).
+2. Die Software nummeriert alle bestätigten Tiere lückenlos in Ausstellungsfolge. Ohne eigene Wahl gilt: Sparte, Rasse, Farbenschlag, dann je Züchter 1,0 jung, 1,0 alt, 0,1 jung, 0,1 alt – die Tiere eines Züchters stehen im Farbenschlag also nacheinander, auch wenn er nachgemeldet hat. Mit „Volieren und Stämme vor den Einzeltieren“ entsprechend vorn, mit „Jugend im Katalog: eigener Block am Ende“ getrennt, mit „in der Rasse eingereiht“ zwischen den Senioren (siehe „Jugend im Katalog“ in 5.3). Die Käfignummer ist die Katalognummer. Eine andere Folge stellen Sie unter „Reihenfolge der Nummern“ ein (siehe unten).
+
+Bis zum Festschreiben können Sie beliebig oft neu vergeben, etwa nach späten Zahlungen. Dabei werden **alle** Nummern neu gesetzt. Sind die Preisrichter nach Rassen eingeteilt (unter „Preisrichter“), bekommen sie ihre Nummernbereiche dabei gleich mit.
+
+#### Reihenfolge der Katalognummern
+
+Auf der Seite „Katalognummern“ legt der Abschnitt „Reihenfolge der Nummern“ fest, wonach die Nummern laufen. Die Liste ist die Rangfolge: Das oberste Merkmal entscheidet zuerst, das nächste nur bei Gleichstand, und so weiter.
+
+| Merkmal | Wahl |
+|---|---|
+| Sparte, Rasse, Farbenschlag | immer an und immer oben, in der Folge des Verzeichnisses (Rassen und Farbenschläge). So bleiben Sparten- und Rassenköpfe im Katalog, das Rassenverzeichnis und die Reihen im Hallenplan zusammen. Tiere ohne Verzeichniseintrag (AOC, Neuzüchtung) stehen nach ihrer Bezeichnung dahinter. |
+| Meldeart | „Einzeltier, Stamm, Voliere“ oder „Voliere, Stamm, Einzeltier“; Bruteier immer am Ende. |
+| Verein | „Tiere eines Vereins zusammen“ (Verein aus der Angabe beim Aussteller, Groß- und Kleinschreibung egal; ohne Verein dahinter). Ab Werk aus. |
+| Aussteller | „Tiere eines Ausstellers zusammen“ (nach Name, auch über Nachmeldungen). Ohne Haken stehen gleiche Tiere verschiedener Aussteller in der Folge des Meldeeingangs. |
+| Ausstellernummer | „nach Nummer des Ausstellers“ statt nach dem Namen: die Nummer, unter der der Aussteller im Verein erfasst ist (Reihenfolge der Erfassung). Ab Werk aus; für „statt Name“ den Haken bei „Aussteller“ herausnehmen. |
+| Geschlecht | „1,0 vor 0,1“ oder „0,1 vor 1,0“; Stämme und Gruppen (z. B. 1,2) dahinter. |
+| Alter | „jung vor alt“ oder „alt vor jung“. |
+
+- Mit den Haken schalten Sie Meldeart, Verein, Aussteller, Ausstellernummer, Geschlecht und Alter an oder ab, mit ↑ und ↓ verschieben Sie sie untereinander (unterhalb von Farbenschlag). Beispiel: Steht „Geschlecht“ über „Aussteller“, kommen im Farbenschlag erst alle 1,0 (je Aussteller), dann alle 0,1. Steht „Alter“ über „Geschlecht“, kommen erst alle Jungtiere, dann die alten. Volieren und Stämme als eigene Abteilung vor allen Einzeltieren stellen Sie in den Einstellungen ein (siehe unten).
+- Vorweg gilt die Gliederung aus den Einstellungen (Reiter „Katalog und Preise“): „Jugend im Katalog“ (eigener Block am Ende oder in der Rasse eingereiht), Käfigblöcke und „Volieren und Stämme vor den Einzeltieren“. Die Zeile „Vorweg: …“ nennt sie, der Link führt dorthin. In den Einstellungen steht unter „Reihenfolge der Nummern“ die aktuelle Folge mit einem Link hierher.
+- „Vorgabe“ stellt die bisherige Folge wieder her. Gespeichert wird mit „Reihenfolge speichern“ oben rechts; die Änderung steht im Protokoll („Reihenfolge der Katalognummern“).
+- Die Nummern ändern sich erst beim nächsten „Katalognummern vergeben“. Nach dem Festschreiben ist die Reihenfolge gesperrt („Festgeschrieben“). Nachmeldungen bekommen ihre Unternummer nach der gespeicherten Folge, vorhandene Nummern bleiben.
+- Laufen die Nummern nach dem Hallenplan („Nach Plan nummerieren“), bestimmt der Plan die Folge. Der Plan selbst stellt nicht nummerierte Tiere in der hier gewählten Folge auf.
+
+#### Ausgaben drucken
+
+Unter „Drucken und Exportieren“:
+
+- „Bewertungskarten (PDF)“,
+- „B-Bögen und Ringkarten (PDF)“ – für alle Aussteller (dasselbe gibt es unter „Meldungen“ als „B-Bögen und Ringkarten (alle)“ und je Meldung einzeln),
+- „Ergebnisliste (CSV für Excel)“.
+
+Die B-Bögen und Ringkarten verschicken Sie selbst (Post oder E-Mail); die Software versendet sie nicht.
+
+#### Nummern festschreiben
+
+Sind Einteilung und Drucke fertig, klicken Sie „Nummern festschreiben“ und bestätigen die Rückfrage „Katalognummern festschreiben?“ mit „Festschreiben“. Danach:
+
+- bestehende Nummern ändern sich nicht mehr,
+- nachträglich bestätigte Tiere nummerieren Sie mit „Nachmeldungen nummerieren“; sie bekommen Unternummern wie **100a**,
+- passt eine Nachmeldung nicht sauber in die Folge, meldet die Software „Nicht ganz in Ausstellungsfolge …“ – vermerken Sie das im Katalognachtrag,
+- Verzeichnisversion, „Jugend im Katalog“ und Reihenfolge der Stämme sind gesperrt,
+- nummerierte Tiere bleiben in ihrer Meldung, und Rasse, Farbenschlag, Art, Geschlecht und Alter lassen sich nicht mehr ändern – sie stehen schon auf Karten und im Katalog. In der Meldung steht dann „Katalog festgeschrieben – Tier bleibt so. Falsches Tier: bei der Einlieferung „fehlt“ und richtig nachmelden.“ Kommt ein Tier nicht, markieren Sie es bei der Einlieferung als „fehlt“; das richtige Tier melden Sie nach (Unternummer). Die ganze Meldung lässt sich weiter stornieren.
+
+„Festschreibung aufheben“ geht nur, solange es noch keine Bewertungen, Preise oder Verkäufe gibt. Danach passen gedruckte Bewertungskarten nicht mehr.
+
+> **Wichtig:** Sobald das erste Tier bewertet, prämiert oder verkauft ist, lässt sich nicht mehr neu nummerieren: „Neu nummerieren geht nicht mehr – es gibt schon Bewertungen, Preise oder Verkäufe … Bitte die Nummern festschreiben; neue Tiere bekommen dann Unternummern.“ Schreiben Sie die Nummern deshalb spätestens vor der Einlieferung fest.
+
+> **Tipp:** Wird eine bestätigte Meldung storniert oder abgelehnt, verliert sie ihre Nummern nur vor dem Festschreiben. Danach bleiben gedruckte Nummern reserviert und kommen zurück, wenn die Meldung wieder aufgenommen wird.
 
 ### 5.6 Katalog gestalten
 
@@ -1368,7 +1375,7 @@ Unten steht ein Abschnitt zum Abtrennen (gestrichelte Linie, „hier abtrennen�
 
 #### Einteilung nach Rassen (vor den Katalognummern)
 
-Die Seite „Preisrichter“ steht in der Seitenleiste bei der Vorbereitung (Preisrichter anlegen). Eingeteilt wird nach dem Meldeschluss: Teilen Sie die Preisrichter **nach Rassen** ein, dann vergeben Sie die Nummern. Die Nummernbereiche je Preisrichter rechnet die Software beim Vergeben selbst – auch beim Neu-Vergeben und bei Nachmeldungen.
+Die Seite „Preisrichter“ steht in der Seitenleiste bei der Vorbereitung (Preisrichter anlegen). Eingeteilt wird nach dem Meldeschluss: Teilen Sie die Preisrichter **nach Rassen** ein, stellen Sie den Hallenplan auf (er zeigt die Preisrichter schon farbig), dann vergeben Sie die Nummern (siehe 5.5). Die Nummernbereiche je Preisrichter rechnet die Software beim Vergeben selbst – auch beim Neu-Vergeben und bei Nachmeldungen.
 
 ![Reiter „Einteilung nach Rassen“: je Rasse ein Preisrichter, darüber die Auswahl „Jugend in der Einteilung“ und die Tiere je Preisrichter.](bilder/preisrichter-rassen.jpg)
 
@@ -1961,7 +1968,7 @@ Einstellbar sind unter anderem:
 |---|---|---|---|---|---|
 | Vorbereitung | – | – | – | – | – |
 | Meldephase | offen (bis Meldeschluss / Kapazität) | – | – | – | – |
-| Katalog & Halle | – | – | – | – | – |
+| Halle & Katalog | – | – | – | – | – |
 | Einlieferung | – | offen | – | – | – |
 | Bewertung | – | offen | – | – | – |
 | Preise & Freigabe | – | offen bis zur Freigabe | ja | – | – |
@@ -1969,4 +1976,4 @@ Einstellbar sind unter anderem:
 | Aussetzen & Abrechnung | – | – | – | ja | ja |
 | Abgeschlossen | – | – | – | – | – |
 
-Zusätzlich: Die Kurzadresse ist nur in der Vorbereitung änderbar, und auch dort nicht mehr, sobald es Meldungen oder Tablet-PINs gibt. Den Wechsel nach vorn halten ab der Meldephase rote Prüflisten-Punkte, die fehlende Freigabe (ab „Schau & Verkauf“) und beim Abschluss die laufende Reklamationsfrist auf (siehe 5.1). Absagen lässt sich eine Schau bis einschließlich der Phase „Katalog & Halle“. Ab der Phase „Aussetzen & Abrechnung“ ändern Helfer an Meldungen nichts mehr, was Geld betrifft. In der Phase „Abgeschlossen“ ist die Schau nur noch zu lesen: Meldungen, Zahlungen, Kasse, Bewertung, Preise, Freigabe, Einteilung, Nummern, Tierstatus, Impfnachweise und Auszahlungen sind gesperrt.
+Zusätzlich: Die Kurzadresse ist nur in der Vorbereitung änderbar, und auch dort nicht mehr, sobald es Meldungen oder Tablet-PINs gibt. Den Wechsel nach vorn halten ab der Meldephase rote Prüflisten-Punkte, die fehlende Freigabe (ab „Schau & Verkauf“) und beim Abschluss die laufende Reklamationsfrist auf (siehe 5.1). Absagen lässt sich eine Schau bis einschließlich der Phase „Halle & Katalog“. Ab der Phase „Aussetzen & Abrechnung“ ändern Helfer an Meldungen nichts mehr, was Geld betrifft. In der Phase „Abgeschlossen“ ist die Schau nur noch zu lesen: Meldungen, Zahlungen, Kasse, Bewertung, Preise, Freigabe, Einteilung, Nummern, Tierstatus, Impfnachweise und Auszahlungen sind gesperrt.

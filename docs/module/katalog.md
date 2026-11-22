@@ -26,6 +26,10 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
   fest, dann die gewählten Kriterien. Vorgabe = bisherige Folge; gespeicherte Listen ohne neue Kriterien sortieren unverändert.
 - Nach dem Festschreiben gesperrt: Sortierung, Verzeichnisversion, „Jugend im Katalog“, Reihenfolge der Stämme, Rasse/Art/Geschlecht/Alter nummerierter Tiere.
 - Sind die Preisrichter nach Rassen eingeteilt, folgen die Nummernbereiche den neuen Nummern.
+- Die Katalognummern kommen nach dem Hallenplan ([ADR 029](../entscheidungen/029-hallenplan-vor-katalognummern.md)):
+  Steht ein fester Plan mit Tieren (`nachPlanVergeben`, Stand aus `katalog.nummernStand`), zeigt die Seite „Nach Hallenplan
+  vergeben“ (`katalog.nummernNachPlan`, Rückfrage wie im Editor) als ersten Knopf und „Ohne Hallenplan vergeben“
+  (`katalog.nummernVergeben`) daneben; sonst wie bisher „Katalognummern vergeben“. Nach dem Festschreiben „Nachmeldungen nummerieren“.
 - Änderungen mit `protokolliere()`; öffentlich sichtbare Gestaltung über `oeffentlichSichtbarProcedure` (erneuert Zwischenspeicher).
 - Namen im gedruckten Katalog nur mit unterschriebenem Meldebogen, im Internet zusätzlich mit Online-Einwilligung; online keine Wohnanschrift.
 - Bilder nur mit Bildnachweis (Urheber, Lizenz, Quelle).
@@ -33,7 +37,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 ## Tests
 
 - Domain: `domain.test.ts` (Nummern, Nachmeldungen), `katalog-sortierung.test.ts` (Vorgabe = alte Folge in Zufallsschauen), `katalog-gliederung.test.ts`.
-- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog).
+- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog), `79-ablauf-halle` (Stand für „Nach Hallenplan vergeben“).
 
 ## Datenbank
 

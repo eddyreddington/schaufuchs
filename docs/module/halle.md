@@ -49,6 +49,10 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
   ([ADR 028](../entscheidungen/028-aussehen-der-halle.md)). Gespeichert über `halleSetzen` (zod in `HALLE_EINGABE`), nur
   Abweichungen von der Vorgabe; kommt als Teil der Halle mit Entwürfen und Vorlagen mit. Ebenso die Tür je Eingang
   (`tuer`, Vorgabe „wie Wand“): nur Darstellung, im Editor über den gewöhnlichen Speicherweg (`aendern`), nie „Plan neu setzen“.
+- Hallenplan vor den Katalognummern ([ADR 029](../entscheidungen/029-hallenplan-vor-katalognummern.md)): `planTiere`
+  setzt den Preisrichter mit `richterImPlan` – mit Nummer aus den Nummernbereichen, ohne Nummer aus der Einteilung nach
+  Rassen (Jugend separat beachtet); gilt für Plan, Druck, 3D und `kaefigInfo`. `hallenStand()` (`gemeinsam.ts`) liefert
+  Halle, fester Plan, Tiere mit und ohne Platz für Übersicht (`arbeitsZiel`) und Seite „Katalognummern“ (`katalog.nummernStand`).
 - Domain-Funktionen sind rein; Zufallshallen-Tests prüfen Invarianten über viele Hallen.
 
 ## Tests
@@ -57,7 +61,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 - Domain: `packages/domain/src/hallenplan*.test.ts`, `stellvorschlaege.test.ts` (u. a. Zufallshallen, Möbel ohne Einfluss, Aussehen ohne Einfluss).
 - Server (`apps/server/src/tests`): `17-kaefige`, `19-hallenplan`, `24-plan-fest`, `31-stellvorschlaege`, `36-nach-plan-nummerieren`,
   `38-hallenplan-entfernen`, `39-hallenplan-druck`, `40-hallenplan-neu-setzen`, `41-hallenplan-3d`, `42-hallenplan-moebel-etagen`,
-  `44-pruefliste-hallenplan`, `67-pokaltisch`, `75-halle-aussehen`, `78-tueren`.
+  `44-pruefliste-hallenplan`, `67-pokaltisch`, `75-halle-aussehen`, `78-tueren`, `79-ablauf-halle` (Farben vor den Nummern, Ablauf).
 
 ## Datenbank
 
