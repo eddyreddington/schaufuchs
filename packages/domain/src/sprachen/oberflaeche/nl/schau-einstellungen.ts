@@ -40,6 +40,7 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
     keineGrenze: "geen grens",
     meldeschluss: "Sluiting inschrijving",
     bewertungAm: "Keuring op",
+    rueckmeldungPreisrichter: "Antwoord keurmeesters uiterlijk",
     einlieferung: "Inkooien",
     einlieferungBeispiel: "bijv. donderdag 15–20 uur",
     tierausgabe: "Uitkooien",

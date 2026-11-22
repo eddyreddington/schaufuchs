@@ -25,6 +25,8 @@ export const schau = pgTable("schau", {
   meldeschluss: date("meldeschluss"),
   einlieferung: text("einlieferung").notNull().default(""),
   bewertungAm: date("bewertung_am"),
+  /** Bis wann die Preisrichter den Abschnitt der Verpflichtung zurücksenden sollen; leer = nicht genannt. */
+  preisrichterRueckmeldungBis: date("preisrichter_rueckmeldung_bis"),
   oeffnungszeiten: text("oeffnungszeiten").notNull().default(""),
   aussetzen: text("aussetzen").notNull().default(""),
   reklamationsfrist: date("reklamationsfrist"),

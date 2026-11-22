@@ -40,6 +40,7 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
     keineGrenze: "aucune limite",
     meldeschluss: "Clôture des inscriptions",
     bewertungAm: "Jugement le",
+    rueckmeldungPreisrichter: "Réponse des juges avant le",
     einlieferung: "Enlogement",
     einlieferungBeispiel: "p. ex. jeudi 15 h–20 h",
     tierausgabe: "Délogement",

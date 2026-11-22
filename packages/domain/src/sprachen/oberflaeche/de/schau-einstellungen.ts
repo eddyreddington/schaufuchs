@@ -42,6 +42,7 @@ export const schauEinstellungen = {
     keineGrenze: "keine Grenze",
     meldeschluss: "Meldeschluss",
     bewertungAm: "Bewertung am",
+    rueckmeldungPreisrichter: "Rückmeldung der Preisrichter bis",
     einlieferung: "Einlieferung",
     einlieferungBeispiel: "z. B. Donnerstag 15–20 Uhr",
     tierausgabe: "Tierausgabe",

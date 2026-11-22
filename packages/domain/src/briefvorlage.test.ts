@@ -15,6 +15,13 @@ describe("Briefvorlage", () => {
     expect(unbekanntePlatzhalter("{constructor} {hasOwnProperty}")).toEqual(["constructor", "hasOwnProperty"]);
   });
 
+  test("Bewertungstag und Rückmeldung als Platzhalter; fehlen sie, bleiben sie leer", () => {
+    const w = briefWerte({ vorname: "", nachname: "Bruno Buche" }, { verein: "V", schau: "S", bewertungstag: "06.11.2027", rueckmeldung: "01.10.2027", datum: "1.9.2027" });
+    expect(fuelle("{Name}: Bewertung am {Bewertungstag}, Antwort bis {Rückmeldung}", w)).toBe("Bruno Buche: Bewertung am 06.11.2027, Antwort bis 01.10.2027");
+    expect(fuelle("[{Bewertungstag}|{Rückmeldung}]", werte)).toBe("[|]");
+    expect(unbekanntePlatzhalter("{Bewertungstag} {Rückmeldung} {Rueckmeldung}")).toEqual(["Rueckmeldung"]);
+  });
+
   test("Anrede ohne Namen", () => {
     expect(briefWerte({ vorname: "", nachname: "" }, { verein: "V", datum: "1.1.2027" }).Anrede).toBe("Guten Tag");
   });
@@ -36,5 +43,8 @@ describe("Briefvorlage", () => {
     expect(v.serienbrief).toEqual({ ...BRIEF_VORGABE.serienbrief, betreff: "Rundbrief" });
     // Briefkopf höchstens drei Zeilen, sonst läuft er ins Anschriftfeld.
     expect(briefVorlageLesen({ kopf: "a\nb\nc\nd\ne" }).kopf).toBe("a\nb\nc");
+    // Preisrichterverpflichtung: leer heißt fester Text; ältere Vorlagen ohne den Teil bekommen ihn leer.
+    expect(BRIEF_VORGABE.verpflichtung).toEqual({ betreff: "", text: "" });
+    expect(briefVorlageLesen({ verpflichtung: { text: "x".repeat(9000), betreff: 7 } }).verpflichtung).toEqual({ betreff: "", text: "x".repeat(8000) });
   });
 });

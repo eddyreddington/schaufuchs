@@ -49,7 +49,7 @@ Tests: `abmeldung.test.ts`
 - `pruefeBesatz()` – Hinweis, wenn der gemeldete Besatz nicht der Vorgabe entspricht (der Preisrichter vergibt dann o.B.).
 - `tierzahl()` – Anzahl der Tiere hinter einer Geschlechtsangabe: „1,0“ → 1, „1,2“ → 3, „3,3“ → 6. Für Aufzeichnungen über abgegebene Tiere (Stamm und Voliere zähle …
 
-### briefvorlage.ts (117 Z.)
+### briefvorlage.ts (137 Z.)
 Briefvorlage des Vereins: wie Briefe aussehen (DIN 5008 für Fensterumschläge, Briefkopf, Fußzeile) und welche Texte in ihnen stehen.
 Tests: `briefvorlage.test.ts`
 
@@ -651,10 +651,13 @@ Tests: `meldebogen.test.ts`
 - `stiftungsanteil()` – Anteil des nächsten gestifteten Preises: der noch nicht vergebene Rest der Stiftung, geteilt durch die freien Plätze (aufgerundet; der letzte Platz …
 - Typen: `Preisart`, `VergabePruefung`
 
-### preisrichter-druck.ts (96 Z.)
-Drucke für Preisrichter: Gruppen zum Ankreuzen in der Preisrichterverpflichtung und die Gliederung der Bewertungsliste (Zwischenköpfe je Rasse und …
+### preisrichter-druck.ts (132 Z.)
+Drucke für Preisrichter: Text und Gruppen zum Ankreuzen in der Preisrichterverpflichtung und die Gliederung der Bewertungsliste (Zwischenköpfe je R …
 Tests: `preisrichter-druck.test.ts`
 
+- `VERPFLICHTUNG_MUSTER` – Muster für einen eigenen Text der Verpflichtung (Briefvorlage, „Muster einsetzen“).
+- `verpflichtungBrief()` – Betreff und Text der Preisrichterverpflichtung: eigener Text der Briefvorlage mit Platzhaltern, sonst (leer) der feste Text, der Ort, Bewertungstag …
+- `rueckmeldungFehler()` – „Rückmeldung der Preisrichter bis“ (JJJJ-MM-TT) darf nicht nach dem Bewertungstag liegen; null = in Ordnung.
 - `GRUPPEN_VORGABE` – Gruppen zum Ankreuzen, wenn im Verzeichnis keine gepflegt sind: A bis M, Z1 bis Z3.
 - `verpflichtungGruppen()` – Gruppen zum Ankreuzen: die im Verzeichnis der Schau vorkommenden (einheitlich, ohne Doppelte, A … Z1 … Z10), sonst die Vorgabe.
 - `ListenZeile` (Typ) – Eine Zeile der Bewertungsliste: Zwischenkopf (Rasse, Farbenschlag; `fortsetzung` oben in einer neuen Spalte) oder ein Tier.
@@ -857,7 +860,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (187 Z.)
+### schau-einstellungen.ts (188 Z.)
 
 - `schauEinstellungen`
 
@@ -954,7 +957,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `verein`
 
-### vorlagen.ts (234 Z.)
+### vorlagen.ts (239 Z.)
 
 - `vorlagen`
 
@@ -1051,7 +1054,7 @@ Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mi
 
 - `rahmen` – Texte der Oberfläche: rahmen (Entscheidung 022) – App-Rahmen mit Seitenmenü und Benutzermenü, Anmeldung, Einladung, Hilfe-Rahmen, Fehlerseite und d …
 
-### schau-einstellungen.ts (194 Z.)
+### schau-einstellungen.ts (195 Z.)
 
 - `schauEinstellungen` – Texte der Oberfläche: schau.einstellungen (Entscheidung 022) – Seite „Einstellungen“ der Schau und ihre Abschnitte.
 
@@ -1156,7 +1159,7 @@ Texte der Oberfläche: verein – Verein und Datenschutz, automatische Abmeldung
 
 - `verein`
 
-### vorlagen.ts (235 Z.)
+### vorlagen.ts (238 Z.)
 Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungskarte), Briefvorlage und Serienbrief, Rassen und Farbenschläge (Verzei …
 
 - `vorlagen`
@@ -1246,7 +1249,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (187 Z.)
+### schau-einstellungen.ts (188 Z.)
 
 - `schauEinstellungen`
 
@@ -1342,7 +1345,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `verein`
 
-### vorlagen.ts (233 Z.)
+### vorlagen.ts (238 Z.)
 
 - `vorlagen`
 
@@ -1431,7 +1434,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (187 Z.)
+### schau-einstellungen.ts (188 Z.)
 
 - `schauEinstellungen`
 
@@ -1527,7 +1530,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `verein`
 
-### vorlagen.ts (234 Z.)
+### vorlagen.ts (239 Z.)
 
 - `vorlagen`
 
@@ -1620,7 +1623,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (187 Z.)
+### schau-einstellungen.ts (188 Z.)
 
 - `schauEinstellungen`
 
@@ -1716,7 +1719,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `verein`
 
-### vorlagen.ts (233 Z.)
+### vorlagen.ts (238 Z.)
 
 - `vorlagen`
 
@@ -1806,7 +1809,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `rahmen`
 
-### schau-einstellungen.ts (187 Z.)
+### schau-einstellungen.ts (188 Z.)
 
 - `schauEinstellungen`
 
@@ -1903,7 +1906,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `verein`
 
-### vorlagen.ts (238 Z.)
+### vorlagen.ts (243 Z.)
 
 - `vorlagen`
 
@@ -2368,7 +2371,7 @@ Rassebilder: ansehen (alle Benutzer) und pflegen (Ausstellungsleitung).
 - `rassebild.angabenSetzen` mutation · admin – Urheber, Lizenz, Quelle und „geprüft“ ändern.
 - `rassebild.loeschen` mutation · admin
 
-### routers/schau/anlegen.ts (297 Z.) → `schau`
+### routers/schau/anlegen.ts (298 Z.) → `schau`
 Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau löschen und als Testschau kennzeichnen.
 
 - `schau.anlegen` mutation · admin – Neue Schau anlegen – leer mit Startwerten oder aus einer früheren Schau des Vereins als Vorlage.
@@ -2377,7 +2380,7 @@ Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau l�
 - `schau.alsTestschau` mutation · admin – Eine bestehende Schau als Testschau kennzeichnen (z. B. eine zum Üben angelegte mit Demo-Meldungen): ihre Aussteller werden Test-Aussteller und ver …
 - `schau.testschauVorschau` query · admin – Vor dem Kennzeichnen: wer würde Test-Aussteller, wer ist echt (und verhindert es)?
 
-### routers/schau/einstellungen.ts (235 Z.) → `schau`
+### routers/schau/einstellungen.ts (239 Z.) → `schau`
 Einstellungen einer Schau: Felder speichern, Reihenfolge der Katalognummern, Teilschauen und Notenskala.
 
 - `schau.aktualisieren` mutation · admin
@@ -2508,7 +2511,7 @@ Prozeduren: auth.benutzerAnlegen, auth.benutzerGet, auth.benutzerListe, auth.sta
 ### bewertung.tsx (335 Z.) – `/schau/:schauId/bewertung`
 Prozeduren: auth.status, bewertung.liste, bewertung.obmannBestaetigen, bewertung.setzen, bewertung.zuruecksetzen
 
-### briefvorlage.tsx (268 Z.) – `/verein/briefvorlage`
+### briefvorlage.tsx (281 Z.) – `/verein/briefvorlage`
 Prozeduren: druckvorlage.brief, druckvorlage.briefSpeichern, druckvorlage.serienbriefAnzahl, schau.liste
 
 ### druckvorlage-vorschau.tsx (159 Z.)
@@ -2534,7 +2537,7 @@ Prozeduren: schau.notenskalaSetzen
 ### einstellungen-preise.tsx (263 Z.)
 Prozeduren: schau.gebuehrenSetzen, schau.preisartLoeschen, schau.preisartSpeichern
 
-### einstellungen-stammangaben.tsx (335 Z.)
+### einstellungen-stammangaben.tsx (337 Z.)
 Prozeduren: schau.aktualisieren, stammdaten.versionen
 
 ### einstellungen-teilschauen.tsx (73 Z.)
@@ -2853,7 +2856,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
 - `preisverteilung.ts` (114 Z.) – Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und leeren Zeilen zum Eintragen in der … · preisverteilungPdf
 - `spenden.ts` (257 Z.) – Spenden: Zuwendungsbestätigung nach amtlichem Muster (Geld, Sache, Sammelbestätigung mit Anlage) und die einfache Spendenquittung für die Kasse. · zuwendungsbestaetigungPdf, spendenquittungPdf
-- `verpflichtung.ts` (143 Z.) – Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins (Briefkopf, Anschrift im Fenster, Fußzeile wie der B-Bogen) mit der Bitte um Bew … · preisrichterVerpflichtungPdf
+- `verpflichtung.ts` (149 Z.) – Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins (Briefkopf, Anschrift im Fenster, Fußzeile wie der B-Bogen) mit der Bitte um Bew … · preisrichterVerpflichtungPdf
 
 ### Datenbank `apps/server/src/db`
 
@@ -2871,7 +2874,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `schema-mandant.ts` (135 Z.) – Mandant (Verein) mit Benutzern und Sitzungen; Stammdaten des Verzeichnisses (Sparten, Rassen, Farbenschläge je Version). · organisation, benutzer, sitzung, stammdatenVersion, sparte, rasse, farbenschlag
 - `schema-meldung.ts` (174 Z.) – Aussteller und Meldungen: Aussteller, Meldung, Zahlung des Meldegelds, Katalogeinträge (Tiere). · aussteller, meldung, zahlung, katalogeintrag
 - `schema-protokoll.ts` (73 Z.) – Protokoll und Post: Änderungsprotokoll mit Hash-Kette und ihren Vermerken, Postausgang. · aenderung, postausgang, aenderungKette, aenderungGeloescht, aenderungAnonymisiert
-- `schema-schau.ts` (145 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
+- `schema-schau.ts` (147 Z.) – Schau mit ihren Regeln: Schau, Gebühren, Preisarten. · schau, gebuehr, preisart
 - `schema-spenden.ts` (115 Z.) – Spenden (Entscheidung 013): Spenderverzeichnis des Vereins, Spenden je Schau und Zuwendungsbestätigungen. · spender, spende, zuwendungsbestaetigung, bestaetigungSpende
 - `schema-termine.ts` (68 Z.) – Kommende Schauen: abonnierte Kalender und Termine anderer Schauen für den Katalog. · TERMIN_STATUS, terminabo, schautermin
 - `schema-verkauf.ts` (138 Z.) – Preise, Verkauf, Geld: Stiftungen, Preisvergabe, Verkauf mit Zahlungseingang, Tiergesundheit, Auszahlungen. · stiftung, preisvergabe, verkauf, verkaufZahlungseingang, gesundheit, auszahlung
@@ -2885,7 +2888,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `besucher-adresse.ts` (31 Z.) – Adresse des Besuchers für die Bremsen (tRPC-Kontext und öffentliche Dateien), auch hinter einem eigenen Proxy (TRUST_PROXY). · clientIp
 - `config.ts` (34 Z.) · config
 - `csv.ts` (15 Z.) – CSV für Excel: Semikolon, BOM, Schutz vor Formel-Injektion. · csv
-- `datei-druckvorlage.ts` (125 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien, briefDateien
+- `datei-druckvorlage.ts` (130 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien, briefDateien
 - `datei-exporte.ts` (318 Z.) – Datei-Adressen der Listen und Exporte (angemeldete Benutzer der eigenen Schau): Kassenbuch (CSV), Protokoll mit Hash-Kette (CSV, JSON), Verkaufslis … · exportDateien
 - `datei-hilfen.ts` (49 Z.) – Gemeinsame Bausteine der Datei-Adressen (/datei/...): Zahlen und Daten aus der Adresse prüfen, Schau des angemeldeten Benutzers laden, Datei-Antwor … · zahlAus, datumAus, schauMitBenutzer, schauFuer, datei, pdf, archivPdf
 - `datei-katalog.ts` (131 Z.) – Datei-Adressen für Bilder und Katalog (angemeldete Benutzer der eigenen Schau): GET /datei/:schauId/bild/:bildId – Vorschau hochgeladener Katalogbi … · katalogNacheinander, katalogDateien
@@ -3012,11 +3015,12 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `66-preisverteilung.ts` (130 Z.) – Preisverteilung je Preisrichter als PDF (/datei/:schauId/preisverteilung.pdf): je Preisart so viele Zeilen wie sein Kontingent, vergebene mit Katal …
 - `67-pokaltisch.ts` (38 Z.) – Hallenplan: Pokaltisch (Tisch für die Ehrenpreise) als eingesetztes Möbel – gespeichert mit Maßen, kein Käfigplatz, bleibt beim Neu-Setzen, im gedr …
 - `68-kleinkram.ts` (161 Z.) – Kleinere Ergänzungen: Rückfrage beim Laden und Entscheiden eines Hallenplan-Entwurfs, wenn der Katalog gedruckt ist oder schon Tiere eingeliefert s …
-- `69-preisrichter-gruppen.ts` (157 Z.) – Preisrichter, Stufe 1: BDRG-Gruppen je Rasse (Verzeichnis, CSV) und je Preisrichter mit Prüfung in der Einteilung, Zuordnung zu einem Obmann, Stand …
+- `69-preisrichter-gruppen.ts` (159 Z.) – Preisrichter, Stufe 1: BDRG-Gruppen je Rasse (Verzeichnis, CSV) und je Preisrichter mit Prüfung in der Einteilung, Zuordnung zu einem Obmann, Stand …
 - `70-preisrichter-drucke.ts` (132 Z.) – Preisrichter, Stufe 2: Preisrichterverpflichtung als Brief mit Abschnitt zum Abtrennen (/datei/:schauId/preisrichter-verpflichtung.pdf) und die Bew …
 - `71-preisrichter-gegenpruefung.ts` (103 Z.) – Preisrichter, Gegenprüfung: Zusage, Vorbehalt, Gruppen und Obmann in Auskunft, Bereinigung und Protokoll (Vorbehalt nur als „geändert“), Vorlage oh …
 - `72-jugend-einteilung.ts` (155 Z.) – Jugend separat oder eingereiht: Katalognummern (eigener Block am Ende oder in der Rasse) und Preisrichter-Einteilung nach Rassen („mit der Rasse“ w …
 - `73-jugend-gegenpruefung.ts` (65 Z.) – Jugend in der Einteilung, Gegenprüfung: Umschalten meldet Tiere ohne Preisrichter und Nachmeldungen wie das Speichern der Einteilung; gespeicherte …
 - `74-zusatzpreise-je-pr.ts` (156 Z.) – Gestiftete Preisarten mit „zusätzlich je Preisrichter“: Die Zusatzpreise ohne Stiftung zählen je Preisrichter (bei Kontingent „je Schau“ für die ga …
+- `76-verpflichtung-zusage.ts` (124 Z.) – Preisrichterverpflichtung, Nachbesserung: Termin „Rückmeldung der Preisrichter bis“ in den Einstellungen der Schau (Prüfung, Protokoll, nicht aus d …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

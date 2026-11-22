@@ -1,5 +1,5 @@
 /** Einstellungen einer Schau: Felder speichern, Reihenfolge der Katalognummern, Teilschauen und Notenskala. */
-import { teilschauenLesen, TEILSCHAUEN_MAX, KONTINGENT_BASEN, imEwr, normalisiereIban, pruefeBic, pruefeIban, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal } from "@schau/domain";
+import { rueckmeldungFehler, teilschauenLesen, TEILSCHAUEN_MAX, KONTINGENT_BASEN, imEwr, normalisiereIban, pruefeBic, pruefeIban, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal } from "@schau/domain";
 import { and, count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
@@ -19,6 +19,8 @@ const schauFelder = z.object({
   meldeschluss: datum,
   einlieferung: z.string().max(500),
   bewertungAm: datum,
+  /** Rückmeldung der Preisrichter bis (Verpflichtung); fehlt das Feld (ältere Oberfläche), bleibt der Stand. */
+  preisrichterRueckmeldungBis: datum.optional(),
   oeffnungszeiten: z.string().max(500),
   aussetzen: z.string().max(500),
   reklamationsfrist: datum,
@@ -112,6 +114,8 @@ export const einstellungen = {
         const spaetestens = new Date(Date.now() + 3 * 366 * 86_400_000).toISOString().slice(0, 10);
         if (input.daten.bewertungAm < fruehestens || input.daten.bewertungAm > spaetestens) throw fehler("BAD_REQUEST", "Der Bewertungstag liegt mehr als ein Jahr vor dem Anlegen der Schau oder mehr als drei Jahre in der Zukunft – bitte das Jahr prüfen.");
       }
+      const rueckmeldung = rueckmeldungFehler(dt.preisrichterRueckmeldungBis === undefined ? alt.preisrichterRueckmeldungBis : dt.preisrichterRueckmeldungBis, dt.bewertungAm);
+      if (rueckmeldung) throw fehler("BAD_REQUEST", rueckmeldung);
       if (alt.katalogGedruckt && input.daten.stammdatenVersionId !== alt.stammdatenVersionId) {
         throw fehler("BAD_REQUEST", "Die Katalognummern sind festgeschrieben – die Stammdaten lassen sich nicht mehr wechseln.");
       }

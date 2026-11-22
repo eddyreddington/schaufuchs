@@ -89,7 +89,7 @@ export function briefDateien(app: Hono<any>) {
     const inhalt = await serienbriefPdf(
       d,
       v,
-      { verein, unterzeile: s ? [s.name, s.ort].filter(Boolean).join(" · ") : "", standardFuss: verein, betreff: v.serienbrief.betreff, text: v.serienbrief.text, gruss: v.serienbrief.gruss, datum: heute, werte: (e) => briefWerte(e, { verein, schau: s?.name, ort: s?.ort, einlieferung: s?.einlieferung, meldeschluss: s?.meldeschluss ? datumDe(s.meldeschluss) : "", datum: heute }) },
+      { verein, unterzeile: s ? [s.name, s.ort].filter(Boolean).join(" · ") : "", standardFuss: verein, betreff: v.serienbrief.betreff, text: v.serienbrief.text, gruss: v.serienbrief.gruss, datum: heute, werte: (e) => briefWerte(e, schauWerte(verein, s, heute)) },
       [{ vorname: "Karla", nachname: "Muster", strasse: "Lindenweg 12", plz: "12345", ort: "Musterdorf" }],
     );
     return pdfAntwort(c, inhalt, "briefvorlage.pdf");
@@ -111,11 +111,16 @@ export function briefDateien(app: Hono<any>) {
     const inhalt = await serienbriefPdf(
       d,
       v,
-      { verein, unterzeile: s ? [s.name, s.ort].filter(Boolean).join(" · ") : "", standardFuss: verein, betreff: text(k.betreff, 200), text: text(k.text, 8000), gruss: text(k.gruss, 300), datum: heute, werte: (e) => briefWerte(e, { verein, schau: s?.name, ort: s?.ort, einlieferung: s?.einlieferung, meldeschluss: s?.meldeschluss ? datumDe(s.meldeschluss) : "", datum: heute }) },
+      { verein, unterzeile: s ? [s.name, s.ort].filter(Boolean).join(" · ") : "", standardFuss: verein, betreff: text(k.betreff, 200), text: text(k.text, 8000), gruss: text(k.gruss, 300), datum: heute, werte: (e) => briefWerte(e, schauWerte(verein, s, heute)) },
       empfaenger,
     );
     return pdfAntwort(c, inhalt, "serienbrief.pdf");
   });
+}
+
+/** Platzhalter aus der Schau (falls gewählt) für Vorschau und Serienbrief. */
+function schauWerte(verein: string, s: typeof schau.$inferSelect | null, datum: string) {
+  return { verein, schau: s?.name, ort: s?.ort, einlieferung: s?.einlieferung, meldeschluss: datumDe(s?.meldeschluss), bewertungstag: datumDe(s?.bewertungAm), rueckmeldung: datumDe(s?.preisrichterRueckmeldungBis), datum };
 }
 
 async function eigeneSchau(organisationId: number, id: number) {

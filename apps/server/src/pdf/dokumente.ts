@@ -89,7 +89,7 @@ export async function ausstellerUnterlagenPdf(s: Schau, meldungIds: number[]) {
   function bBogen(doc: Doc, m: typeof meldung.$inferSelect, a: typeof aussteller.$inferSelect, tiere: Eintrag[], b: { summeCent: number; bezahltCent: number; stiftungCent: number; spendeCent: number }, ue: Ueberweisung | null) {
     const x = doc.page.margins.left;
     const w = breite(doc);
-    const werte = briefWerte(a, { verein: verein(s), schau: s.name, ort: s.ort, einlieferung: s.einlieferung, datum: heute });
+    const werte = briefWerte(a, { verein: verein(s), schau: s.name, ort: s.ort, meldeschluss: datumDe(s.meldeschluss), einlieferung: s.einlieferung, bewertungstag: datumDe(s.bewertungAm), rueckmeldung: datumDe(s.preisrichterRueckmeldungBis), datum: heute });
     briefKopf(doc, d, vorlage, {
       verein: verein(s),
       unterzeile: kopfzeile(s),

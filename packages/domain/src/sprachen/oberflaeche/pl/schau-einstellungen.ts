@@ -40,6 +40,7 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
     keineGrenze: "bez limitu",
     meldeschluss: "Termin zgłoszeń",
     bewertungAm: "Ocena dnia",
+    rueckmeldungPreisrichter: "Odpowiedź sędziów do",
     einlieferung: "Dostarczenie zwierząt",
     einlieferungBeispiel: "np. czwartek 15–20",
     tierausgabe: "Odbiór zwierząt",

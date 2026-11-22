@@ -1,9 +1,45 @@
 /**
- * Drucke für Preisrichter: Gruppen zum Ankreuzen in der Preisrichterverpflichtung und die Gliederung der Bewertungsliste
+ * Drucke für Preisrichter: Text und Gruppen zum Ankreuzen in der Preisrichterverpflichtung und die Gliederung der Bewertungsliste
  * (Zwischenköpfe je Rasse und Farbenschlag, zwei Spalten je Seite). Gezeichnet in apps/server/src/pdf/verpflichtung.ts
  * und apps/server/src/pdf/bewertungsliste.ts.
  */
+import { type BriefPlatzhalter, fuelle } from "./briefvorlage";
 import { bdrgGruppe } from "./preisrichter-zulassung";
+
+/**
+ * Muster für einen eigenen Text der Verpflichtung (Briefvorlage, „Muster einsetzen“). Mit Ort, Bewertungstag und
+ * Rückmeldung ergibt es genau den festen Text; fehlt eine Angabe, bleibt im eigenen Text eine Lücke.
+ */
+export const VERPFLICHTUNG_MUSTER = {
+  betreff: "Bitte um Bewertung – {Schau}",
+  text: [
+    "{Anrede},",
+    "wir möchten Sie herzlich bitten, bei unserer Schau „{Schau}“ in {Ort} am {Bewertungstag} als Preisrichter zu bewerten.",
+    "Bitte senden Sie uns den unteren Abschnitt bis {Rückmeldung} ausgefüllt und unterschrieben zurück. Kreuzen Sie dabei die Gruppen an, die Sie bewerten möchten.",
+  ].join("\n\n"),
+};
+
+/**
+ * Betreff und Text der Preisrichterverpflichtung: eigener Text der Briefvorlage mit Platzhaltern, sonst (leer) der feste
+ * Text, der Ort, Bewertungstag und „Rückmeldung bis“ nur nennt, wenn sie feststehen.
+ */
+export function verpflichtungBrief(v: { betreff: string; text: string }, w: Record<BriefPlatzhalter, string>): { betreff: string; text: string } {
+  const betreff = fuelle(v.betreff.trim() ? v.betreff : VERPFLICHTUNG_MUSTER.betreff, w);
+  if (v.text.trim()) return { betreff, text: fuelle(v.text, w) };
+  const wo = [w.Ort ? `in ${w.Ort}` : "", w.Bewertungstag ? `am ${w.Bewertungstag}` : ""].filter(Boolean).join(" ");
+  const text = [
+    `${w.Anrede},`,
+    `wir möchten Sie herzlich bitten, bei unserer Schau „${w.Schau}“${wo ? ` ${wo}` : ""} als Preisrichter zu bewerten.`,
+    `Bitte senden Sie uns den unteren Abschnitt${w.Rückmeldung ? ` bis ${w.Rückmeldung}` : ""} ausgefüllt und unterschrieben zurück. Kreuzen Sie dabei die Gruppen an, die Sie bewerten möchten.`,
+  ].join("\n\n");
+  return { betreff, text };
+}
+
+/** „Rückmeldung der Preisrichter bis“ (JJJJ-MM-TT) darf nicht nach dem Bewertungstag liegen; null = in Ordnung. */
+export function rueckmeldungFehler(rueckmeldungBis: string | null | undefined, bewertungAm: string | null | undefined): string | null {
+  if (!rueckmeldungBis || !bewertungAm || rueckmeldungBis <= bewertungAm) return null;
+  return "Die Rückmeldung der Preisrichter liegt nach dem Bewertungstag – bitte das Datum prüfen.";
+}
 
 /** Gruppen zum Ankreuzen, wenn im Verzeichnis keine gepflegt sind: A bis M, Z1 bis Z3. */
 export const GRUPPEN_VORGABE = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "Z1", "Z2", "Z3"] as const;

@@ -1,8 +1,8 @@
 /**
  * Briefvorlage des Vereins: wie Briefe aussehen (DIN 5008 für Fensterumschläge, Briefkopf, Fußzeile) und welche Texte
  * in ihnen stehen. Texte dürfen Platzhalter wie {Vorname} oder {Schau} enthalten; fuelle() setzt sie ein.
- * Genutzt für die Meldebestätigung (B-Bogen), Serienbriefe an Aussteller oder Mitglieder und – Kopf und Fußzeile –
- * für Abrechnung und Quittungen. Gezeichnet wird in apps/server/src/pdf/brief.ts. Entscheidung 011/012.
+ * Genutzt für die Meldebestätigung (B-Bogen), Serienbriefe an Aussteller oder Mitglieder, die Preisrichterverpflichtung
+ * und – Kopf und Fußzeile – für Abrechnung und Quittungen. Gezeichnet wird in apps/server/src/pdf/brief.ts. Entscheidung 011/012.
  */
 
 /** Platzhalter, die in Brieftexten erlaubt sind, mit Erklärung für die Oberfläche. */
@@ -16,6 +16,8 @@ export const BRIEF_PLATZHALTER = {
   Ort: "Ort der Schau",
   Meldeschluss: "Meldeschluss der Schau",
   Einlieferung: "Einlieferung der Schau",
+  Bewertungstag: "Bewertungstag der Schau",
+  Rückmeldung: "Rückmeldung der Preisrichter bis",
   Datum: "heutiges Datum",
 } as const;
 export type BriefPlatzhalter = keyof typeof BRIEF_PLATZHALTER;
@@ -34,6 +36,8 @@ export interface BriefVorlage {
   falzmarken: boolean;
   meldebestaetigung: { einleitung: string; hinweise: string; gruss: string };
   serienbrief: { betreff: string; text: string; gruss: string };
+  /** Preisrichterverpflichtung; leer = fester Text (verpflichtungBrief in preisrichter-druck.ts), Gruß wie im Serienbrief. */
+  verpflichtung: { betreff: string; text: string };
 }
 
 /** So sahen Briefe bisher aus – Ausgangspunkt jeder Vorlage. */
@@ -55,6 +59,7 @@ export const BRIEF_VORGABE: BriefVorlage = {
     gruss: "",
   },
   serienbrief: { betreff: "Einladung zur {Schau}", text: "{Anrede},\n\n", gruss: "Mit freundlichen Grüßen\n{Verein}" },
+  verpflichtung: { betreff: "", text: "" },
 };
 
 /** Lage des Anschriftfelds nach DIN 5008 in mm (Form A / B): oben links, Rücksendezone zuerst, dann die Anschrift. */
@@ -84,10 +89,23 @@ export function unbekanntePlatzhalter(text: string): string[] {
 /** Werte der Platzhalter für einen Empfänger. */
 export function briefWerte(
   p: { vorname: string; nachname: string },
-  s: { verein: string; schau?: string; ort?: string; meldeschluss?: string; einlieferung?: string; datum: string },
+  s: { verein: string; schau?: string; ort?: string; meldeschluss?: string; einlieferung?: string; bewertungstag?: string; rueckmeldung?: string; datum: string },
 ): Record<BriefPlatzhalter, string> {
   const name = `${p.vorname} ${p.nachname}`.trim();
-  return { Anrede: name ? `Guten Tag ${name}` : "Guten Tag", Vorname: p.vorname, Nachname: p.nachname, Name: name, Verein: s.verein, Schau: s.schau ?? "", Ort: s.ort ?? "", Meldeschluss: s.meldeschluss ?? "", Einlieferung: s.einlieferung ?? "", Datum: s.datum };
+  return {
+    Anrede: name ? `Guten Tag ${name}` : "Guten Tag",
+    Vorname: p.vorname,
+    Nachname: p.nachname,
+    Name: name,
+    Verein: s.verein,
+    Schau: s.schau ?? "",
+    Ort: s.ort ?? "",
+    Meldeschluss: s.meldeschluss ?? "",
+    Einlieferung: s.einlieferung ?? "",
+    Bewertungstag: s.bewertungstag ?? "",
+    Rückmeldung: s.rueckmeldung ?? "",
+    Datum: s.datum,
+  };
 }
 
 const text = (w: unknown, max: number, vorgabe: string) => (typeof w === "string" ? w.slice(0, max) : vorgabe);
@@ -103,6 +121,7 @@ export function briefVorlageLesen(roh: unknown): BriefVorlage {
   const fuss = Array.isArray(r.fuss) ? r.fuss : [];
   const mb = objekt(r.meldebestaetigung);
   const sb = objekt(r.serienbrief);
+  const vp = objekt(r.verpflichtung);
   return {
     form: r.form === "A" ? "A" : "B",
     logo: r.logo !== false,
@@ -113,5 +132,6 @@ export function briefVorlageLesen(roh: unknown): BriefVorlage {
     falzmarken: r.falzmarken !== false,
     meldebestaetigung: { einleitung: text(mb.einleitung, 1000, v.meldebestaetigung.einleitung), hinweise: text(mb.hinweise, 2000, v.meldebestaetigung.hinweise), gruss: text(mb.gruss, 300, v.meldebestaetigung.gruss) },
     serienbrief: { betreff: text(sb.betreff, 200, v.serienbrief.betreff), text: text(sb.text, 8000, v.serienbrief.text), gruss: text(sb.gruss, 300, v.serienbrief.gruss) },
+    verpflichtung: { betreff: text(vp.betreff, 200, v.verpflichtung.betreff), text: text(vp.text, 8000, v.verpflichtung.text) },
   };
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "schau" ADD COLUMN "preisrichter_rueckmeldung_bis" date;

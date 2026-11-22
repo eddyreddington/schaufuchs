@@ -138,11 +138,13 @@ describe("Preisrichter: Gruppen, Obmann, Zusage", () => {
     expect((await protokoll(ab, "preisrichter")).at(-1)!.aktion).toBe("angelegt");
     await expect(richter(id, "Zusage Falsch", { zusage: "vielleicht" })).rejects.toThrow();
 
-    // Vorlage: die neue Schau bekommt eigene Preisrichter, der Obmann zeigt auf ihren Obmann; die Zusage ist wieder offen.
+    // Vorlage: die neue Schau bekommt eigene Preisrichter, der Obmann zeigt auf ihren Obmann; die Zusage startet wieder
+    // bei „offen“, ohne „zugesagt für“ und Vorbehalt.
     const kopie = await al().schau.anlegen({ name: "Obmann Kopie", ort: "Halle", vorlageId: id });
     const k = (await al().preisrichter.liste({ schauId: kopie.id })).richter;
-    expect(k.find((x) => x.name === "Zusage Richter")!.obmannId).toBe(k.find((x) => x.name === "Zusage Obmann")!.id);
-    expect(k.find((x) => x.name === "Zusage Richter")!.zusage).toBe("offen");
+    const kr = k.find((x) => x.name === "Zusage Richter")!;
+    expect(kr.obmannId).toBe(k.find((x) => x.name === "Zusage Obmann")!.id);
+    expect([kr.zusage, kr.zugesagtFuer, kr.vorbehalt]).toEqual(["offen", "", ""]);
 
     // Obmann nicht mehr Obmann: Zuordnung gelöst (mit Protokoll); gelöscht: ebenso.
     await richter(id, "Zusage Obmann", { id: obmann.id, istObmann: false });

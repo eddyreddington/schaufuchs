@@ -40,6 +40,7 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
     keineGrenze: "no limit",
     meldeschluss: "Entry deadline",
     bewertungAm: "Judging on",
+    rueckmeldungPreisrichter: "Judges to reply by",
     einlieferung: "Delivery of animals",
     einlieferungBeispiel: "e.g. Thursday 3–8 pm",
     tierausgabe: "Collection of animals",

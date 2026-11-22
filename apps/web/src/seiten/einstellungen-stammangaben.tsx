@@ -37,6 +37,7 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
     meldeschluss: s.meldeschluss,
     einlieferung: s.einlieferung,
     bewertungAm: s.bewertungAm,
+    preisrichterRueckmeldungBis: s.preisrichterRueckmeldungBis,
     oeffnungszeiten: s.oeffnungszeiten,
     aussetzen: s.aussetzen,
     reklamationsfrist: s.reklamationsfrist,
@@ -131,6 +132,7 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
             <FormAbschnitt id="termine" titel={ta.termine}>
               {text("meldeschluss", ts.meldeschluss, undefined, "date")}
               {text("bewertungAm", ts.bewertungAm, undefined, "date")}
+              {text("preisrichterRueckmeldungBis", ts.rueckmeldungPreisrichter, undefined, "date")}
               <Feld label={ts.einlieferung}>{(fid) => <Eingabe id={fid} placeholder={ts.einlieferungBeispiel} value={d.einlieferung} onChange={(e) => set("einlieferung", e.target.value)} />}</Feld>
               {text("aussetzen", ts.tierausgabe)}
               <Feld label={ts.oeffnungszeiten} hinweis={ts.jeTagZeile}>

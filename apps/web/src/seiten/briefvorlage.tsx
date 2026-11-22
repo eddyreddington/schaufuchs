@@ -1,4 +1,4 @@
-import { BRIEF_PLATZHALTER, unbekanntePlatzhalter, type BriefVorlage } from "@schau/domain";
+import { BRIEF_PLATZHALTER, unbekanntePlatzhalter, VERPFLICHTUNG_MUSTER, type BriefVorlage } from "@schau/domain";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { fehlerText } from "../lib";
@@ -8,13 +8,13 @@ import { Abschnitt, Auswahl, Eingabe, FehlerAnzeige, Feld, FormAbschnitt, Formul
 import { BriefVorschau, pdfOeffnen } from "./druckvorlage-vorschau";
 
 /** Teile des Briefs als Reiter (im Anker der Adresse, z. B. …/briefvorlage#serienbrief). */
-const TEILE = ["briefbogen", "fusszeile", "meldebestaetigung", "serienbrief"] as const;
+const TEILE = ["briefbogen", "fusszeile", "meldebestaetigung", "serienbrief", "verpflichtung"] as const;
 /** Alle Teile teilen sich eine Tafel (nur der gewählte wird gezeichnet, der Stand liegt im Formular). */
 const BRIEF_TAFEL = "tafel-brief";
 
 /**
- * Briefvorlage des Vereins (/verein/briefvorlage): Briefbogen nach DIN 5008, Fußzeile, Texte der Meldebestätigung und
- * des Serienbriefs – links bearbeiten, rechts ein Beispielbrief. Darunter: Serienbrief an Mitglieder oder Aussteller.
+ * Briefvorlage des Vereins (/verein/briefvorlage): Briefbogen nach DIN 5008, Fußzeile, Texte der Meldebestätigung, des
+ * Serienbriefs und der Preisrichterverpflichtung – links bearbeiten, rechts ein Beispielbrief. Darunter: Serienbrief an Mitglieder oder Aussteller.
  */
 export function BriefvorlageSeite() {
   const q = trpc.druckvorlage.brief.useQuery();
@@ -55,7 +55,7 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
   const [aktiv, waehlen] = useReiter(TEILE);
   const geaendert = JSON.stringify(v) !== JSON.stringify(start);
   useEffect(() => onGeaendert(geaendert), [geaendert, onGeaendert]);
-  const falsch = unbekanntePlatzhalter([v.meldebestaetigung.einleitung, v.meldebestaetigung.hinweise, v.meldebestaetigung.gruss, v.serienbrief.betreff, v.serienbrief.text, v.serienbrief.gruss].join("\n"));
+  const falsch = unbekanntePlatzhalter([v.meldebestaetigung.einleitung, v.meldebestaetigung.hinweise, v.meldebestaetigung.gruss, v.serienbrief.betreff, v.serienbrief.text, v.serienbrief.gruss, v.verpflichtung.betreff, v.verpflichtung.text].join("\n"));
 
   return (
     <>
@@ -78,6 +78,7 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
               { id: "fusszeile", label: t.fusszeile },
               { id: "meldebestaetigung", label: t.meldebestaetigung },
               { id: "serienbrief", label: t.serienbrief },
+              { id: "verpflichtung", label: t.verpflichtung },
             ]}
             aktiv={aktiv}
             waehlen={waehlen}
@@ -98,9 +99,11 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
               )}
               {aktiv === "meldebestaetigung" && <Texte titel={t.meldebestaetigung} unter={t.meldebestaetigungUnter} werte={v.meldebestaetigung} vorgabe={vorgabe.meldebestaetigung} setzen={(w) => setze("meldebestaetigung", w)} felder={[["einleitung", t.einleitung, 3, 1000], ["hinweise", t.hinweise, 4, 2000], ["gruss", t.gruss, 2, 300]]} />}
               {aktiv === "serienbrief" && <Texte titel={t.serienbrief} unter={t.serienbriefUnter} werte={v.serienbrief} vorgabe={vorgabe.serienbrief} setzen={(w) => setze("serienbrief", w)} felder={[["betreff", t.betreff, 1, 200], ["text", t.text, 8, 8000], ["gruss", t.gruss, 2, 300]]} />}
+              {/* Leer = fester Text; das Muster zeigt ihn mit Platzhaltern und lässt sich zum Bearbeiten einsetzen. */}
+              {aktiv === "verpflichtung" && <Texte titel={t.verpflichtung} unter={t.verpflichtungUnter} werte={v.verpflichtung} vorgabe={vorgabe.verpflichtung} muster={VERPFLICHTUNG_MUSTER} setzen={(w) => setze("verpflichtung", w)} felder={[["betreff", t.betreff, 1, 200], ["text", t.text, 8, 8000]]} />}
             </div>
-            {/* Platzhalter gelten für die Texte von Meldebestätigung und Serienbrief. */}
-            {(aktiv === "meldebestaetigung" || aktiv === "serienbrief") && (
+            {/* Platzhalter gelten für die Texte von Meldebestätigung, Serienbrief und Verpflichtung. */}
+            {(aktiv === "meldebestaetigung" || aktiv === "serienbrief" || aktiv === "verpflichtung") && (
               <div className="flex flex-col gap-1 px-5 py-4 text-sm text-grau">
                 <p className="font-semibold text-tinte">{t.platzhalter}</p>
                 <p>
@@ -164,9 +167,13 @@ function Briefbogen({ v, setze }: { v: BriefVorlage; setze: Setze }) {
   );
 }
 
-/** Textfelder eines Briefs mit „Vorgabe einsetzen“. */
-function Texte<T extends Record<string, string>>({ titel, unter, werte, vorgabe, setzen, felder }: { titel: string; unter: string; werte: T; vorgabe: T; setzen: (w: T) => void; felder: [keyof T & string, string, number, number][] }) {
+/**
+ * Textfelder eines Briefs mit „Vorgabe einsetzen“. `muster`: Texte als Platzhalter der leeren Felder, mit „Muster
+ * einsetzen“, solange alle leer sind (leer heißt dort: fester Text).
+ */
+function Texte<T extends Record<string, string>>({ titel, unter, werte, vorgabe, muster, setzen, felder }: { titel: string; unter: string; werte: T; vorgabe: T; muster?: T; setzen: (w: T) => void; felder: [keyof T & string, string, number, number][] }) {
   const istVorgabe = JSON.stringify(werte) === JSON.stringify(vorgabe);
+  const leer = Object.values(werte).every((w) => !w.trim());
   const t = useOberflaeche().vorlagen.brief;
   return (
     <FormAbschnitt
@@ -174,10 +181,16 @@ function Texte<T extends Record<string, string>>({ titel, unter, werte, vorgabe,
       unter={unter}
       spalten={1}
       aktionen={
-        !istVorgabe && (
-          <Knopf variante="leise" onClick={() => setzen(vorgabe)}>
-            {t.vorgabeEinsetzen}
+        muster && leer ? (
+          <Knopf variante="leise" onClick={() => setzen(muster)}>
+            {t.musterEinsetzen}
           </Knopf>
+        ) : (
+          !istVorgabe && (
+            <Knopf variante="leise" onClick={() => setzen(vorgabe)}>
+              {t.vorgabeEinsetzen}
+            </Knopf>
+          )
         )
       }
     >
@@ -185,9 +198,9 @@ function Texte<T extends Record<string, string>>({ titel, unter, werte, vorgabe,
         <Feld key={k} label={label}>
           {(fid) =>
             zeilen === 1 ? (
-              <Eingabe id={fid} maxLength={max} value={werte[k]} onChange={(e) => setzen({ ...werte, [k]: e.target.value })} />
+              <Eingabe id={fid} maxLength={max} value={werte[k]} placeholder={muster?.[k]} onChange={(e) => setzen({ ...werte, [k]: e.target.value })} />
             ) : (
-              <Textfeld id={fid} rows={zeilen} maxLength={max} value={werte[k]} onChange={(e) => setzen({ ...werte, [k]: e.target.value })} />
+              <Textfeld id={fid} rows={zeilen} maxLength={max} value={werte[k]} placeholder={muster?.[k]} onChange={(e) => setzen({ ...werte, [k]: e.target.value })} />
             )
           }
         </Feld>

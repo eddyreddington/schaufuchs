@@ -2,9 +2,10 @@
  * Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins (Briefkopf, Anschrift im Fenster, Fußzeile wie der
  * B-Bogen) mit der Bitte um Bewertung bei der Schau und einem Abschnitt zum Abtrennen – Name, Zusage oder Absage, Gruppen
  * zum Ankreuzen, Vorbehalt, Datum, Unterschrift. Alle Preisrichter der Schau (je Brief ab neuer Seite) oder nur einer.
- * Die Gruppen rechnet `verpflichtungGruppen` (packages/domain/src/preisrichter-druck.ts).
+ * Betreff und Text aus der Briefvorlage (leer: fester Text) und die Gruppen rechnet packages/domain/src/preisrichter-druck.ts
+ * (`verpflichtungBrief`, `verpflichtungGruppen`); „Rückmeldung bis“ aus den Einstellungen der Schau.
  */
-import { briefWerte, fuelle, verpflichtungGruppen } from "@schau/domain";
+import { briefWerte, fuelle, verpflichtungBrief, verpflichtungGruppen } from "@schau/domain";
 import { asc, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { preisrichter, rasse } from "../db/schema";
@@ -33,6 +34,7 @@ export async function preisrichterVerpflichtungPdf(s: Schau, preisrichterId?: nu
   const gruppen = verpflichtungGruppen(verzeichnis.map((v) => v.gruppe));
   const heute = datumDe(new Date());
   const tag = datumDe(s.bewertungAm);
+  const rueckmeldung = datumDe(s.preisrichterRueckmeldungBis);
 
   return erzeugePdf(
     `Preisrichterverpflichtung ${s.name}`,
@@ -52,7 +54,10 @@ export async function preisrichterVerpflichtungPdf(s: Schau, preisrichterId?: nu
   function brief(doc: Doc, r: Richter) {
     const x = doc.page.margins.left;
     const w = breite(doc);
-    const werte = briefWerte({ vorname: "", nachname: r.name }, { verein: verein(s), schau: s.name, ort: s.ort, datum: heute });
+    const werte = briefWerte(
+      { vorname: "", nachname: r.name },
+      { verein: verein(s), schau: s.name, ort: s.ort, meldeschluss: datumDe(s.meldeschluss), einlieferung: s.einlieferung, bewertungstag: tag, rueckmeldung, datum: heute },
+    );
     briefKopf(doc, d, vorlage, {
       verein: verein(s),
       unterzeile: kopfzeile(s),
@@ -60,16 +65,12 @@ export async function preisrichterVerpflichtungPdf(s: Schau, preisrichterId?: nu
       angaben: [
         ["Schau", s.name],
         ["Bewertung", tag || "–"],
+        ...(rueckmeldung ? [["Rückmeldung bis", rueckmeldung] as [string, string]] : []),
         ["Datum", heute],
       ],
     });
-    doc.font(SERIF).fontSize(14).fillColor(TINTE).text(`Bitte um Bewertung – ${s.name}`, x, doc.y, { width: w });
-    const wo = [s.ort ? `in ${s.ort}` : "", tag ? `am ${tag}` : ""].filter(Boolean).join(" ");
-    const text = [
-      `${werte.Anrede},`,
-      `wir möchten Sie herzlich bitten, bei unserer Schau „${s.name}“${wo ? ` ${wo}` : ""} als Preisrichter zu bewerten.`,
-      "Bitte senden Sie uns den unteren Abschnitt ausgefüllt und unterschrieben zurück. Kreuzen Sie dabei die Gruppen an, die Sie bewerten möchten.",
-    ].join("\n\n");
+    const { betreff, text } = verpflichtungBrief(vorlage.verpflichtung, werte);
+    doc.font(SERIF).fontSize(14).fillColor(TINTE).text(betreff, x, doc.y, { width: w });
     doc.font(SANS).fontSize(10).fillColor(TINTE).text(text, x, doc.y + 4 * MM, { width: w, lineGap: 2 });
     const gruss = fuelle(vorlage.serienbrief.gruss, werte).trim() || `Mit freundlichen Grüßen\n${verein(s)}`;
     doc.text(gruss, x, doc.y + 6 * MM, { width: w, lineGap: 2 });
@@ -106,7 +107,12 @@ export async function preisrichterVerpflichtungPdf(s: Schau, preisrichterId?: nu
     let yy = y + 7 * MM;
     kicker(doc, `Preisrichterverpflichtung · Rückmeldung an ${verein(s)}`, x, yy, d.farbe, w);
     yy += 4.5 * MM;
-    doc.font(SERIF).fontSize(12).fillColor(TINTE).text([s.name, s.ort, tag].filter(Boolean).join(" · "), x, yy, { width: w, lineBreak: false, ellipsis: true });
+    // Rechts in der Zeile der Schau: bis wann der Abschnitt zurück sein soll.
+    const bis = rueckmeldung ? `Rückmeldung bis ${rueckmeldung}` : "";
+    doc.font(SANS_FETT).fontSize(9.5);
+    const bisBreite = bis ? doc.widthOfString(bis) + 4 * MM : 0;
+    if (bis) doc.fillColor(TINTE).text(bis, x + w - bisBreite, yy + 0.8 * MM, { width: bisBreite, align: "right", lineBreak: false });
+    doc.font(SERIF).fontSize(12).fillColor(TINTE).text([s.name, s.ort, tag].filter(Boolean).join(" · "), x, yy, { width: w - bisBreite, lineBreak: false, ellipsis: true });
     yy += 8 * MM;
     // Name des Preisrichters, darunter Zusage oder Absage.
     doc.font(SANS).fontSize(8).fillColor(GRAU).text("Name", x, yy + 0.8 * MM, { lineBreak: false });

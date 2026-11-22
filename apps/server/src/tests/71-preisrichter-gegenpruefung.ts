@@ -48,14 +48,14 @@ describe("Preisrichter: Gegenprüfung Datenschutz, Vorlage, Löschen, Sperre", (
     expect((await zeile(neu.id)).vorbehalt).toBe("");
   });
 
-  test("Vorlage: Zusage wieder offen, ohne Vorbehalt; „zugesagt für“ bleibt als Hinweis", async () => {
+  test("Vorlage: Zusage wieder offen, ohne „zugesagt für“ und Vorbehalt", async () => {
     const { id } = await al().schau.anlegen({ name: "Vorlage Zusage", ort: "Halle" });
     await richter(id, "Vorlage Zugesagt", { zusage: "zugesagt", zugesagtFuer: "2027 und 2028", vorbehalt: "Termin klären" });
     await richter(id, "Vorlage Abgesagt", { zusage: "abgesagt" });
     const kopie = await al().schau.anlegen({ name: "Vorlage Zusage Kopie", ort: "Halle", vorlageId: id });
     const k = (await al().preisrichter.liste({ schauId: kopie.id })).richter;
     const zu = k.find((x) => x.name === "Vorlage Zugesagt")!;
-    expect([zu.zusage, zu.zugesagtFuer, zu.vorbehalt]).toEqual(["offen", "2027 und 2028", ""]);
+    expect([zu.zusage, zu.zugesagtFuer, zu.vorbehalt]).toEqual(["offen", "", ""]);
     expect(k.find((x) => x.name === "Vorlage Abgesagt")!.zusage).toBe("offen");
   });
 

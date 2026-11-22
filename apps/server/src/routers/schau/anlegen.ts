@@ -53,7 +53,7 @@ export const schauAnlegen = {
   /**
    * Neue Schau anlegen – leer mit Startwerten oder aus einer früheren Schau des Vereins als Vorlage. Mit Vorlage kommt alles
    * mit außer Meldungen und Geld: Einstellungen (ohne Termine und Bearbeitungsstand), Gebühren, Preisarten, Preisrichter
-   * (ohne PIN), Katalog-Gestaltung, Beiträge, Bilder, Käfigregeln, Käfigmaße und Halle. Nicht übernommen: Meldungen, Tiere,
+   * (ohne PIN, Zusage wieder offen), Katalog-Gestaltung, Beiträge, Bilder, Käfigregeln, Käfigmaße und Halle. Nicht übernommen: Meldungen, Tiere,
    * Stiftungen, Kasse, Belege, Auszahlungen, Gesundheitsjournal und die Preisrichter-Einteilung nach Katalognummern.
    */
   anlegen: adminProcedure
@@ -272,10 +272,11 @@ async function kopiereAusVorlage(tx: Tx, von: number, nach: number) {
   if (preisarten.length) await tx.insert(preisart).values(preisarten.map(({ id: _, ...p }) => ({ ...p, schauId: nach })));
   // Preisrichter ohne PIN: die neue Schau bekommt neue PINs (alte Tablets melden sich nicht an der neuen Schau an).
   // Einzeln, damit die neuen Nummern sicher zugeordnet sind: die Zuordnung zum Obmann zeigt danach auf den Obmann der neuen Schau.
-  // Die Zusage galt der alten Schau: wieder offen, ohne Vorbehalt; „zugesagt für“ (z. B. mehrere Jahre) bleibt als Hinweis.
+  // Die Zusage galt der alten Schau: sie startet wieder bei „offen“, ohne „zugesagt für“ und Vorbehalt. Gruppen,
+  // Sparten und Obmann bleiben.
   const neueId = new Map<number, number>();
   for (const { id, createdAt: _, pinHash: __, obmannId: ___, ...r } of richter) {
-    const [neu] = await tx.insert(preisrichter).values({ ...r, schauId: nach, zusage: "offen", vorbehalt: "" }).returning({ id: preisrichter.id });
+    const [neu] = await tx.insert(preisrichter).values({ ...r, schauId: nach, zusage: "offen", zugesagtFuer: "", vorbehalt: "" }).returning({ id: preisrichter.id });
     neueId.set(id, neu!.id);
   }
   for (const r of richter)
