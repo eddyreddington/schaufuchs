@@ -6,7 +6,7 @@ import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
 import { trpc } from "../trpc";
 import { RichterForm, type Richter } from "./preisrichter-form";
-import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, ReiterLeiste, ReiterTafel, SEITE, Seitenkopf, Speicherleiste, TabellenRahmen, useFrage, useMeldung, useReiter, useUngespeichertWarnung } from "../ui";
+import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Hinweis, Knopf, knopfKlasse, KnopfLink, Laden, Leer, Marke, ReiterLeiste, ReiterTafel, SEITE, Seitenkopf, Speicherleiste, TabellenRahmen, useFrage, useMeldung, useReiter, useUngespeichertWarnung } from "../ui";
 
 /** Ruhige Textknöpfe für Aktionen in Tabellenzeilen. */
 const ZEILE = "min-h-8 px-2 text-sm";
@@ -53,7 +53,16 @@ export function Preisrichter() {
         titel={t.allgemein.preisrichter}
         unter={richter.length ? tx.unter(richter.length, tiere, bewertet) : undefined}
         hilfe="preisrichter-anlegen"
-        aktionen={istAdmin && <Knopf variante="primaer" onClick={() => setBearbeiten({})}>{tx.hinzufuegen}</Knopf>}
+        aktionen={
+          <>
+            {richter.length > 0 && (
+              <KnopfLink href={`/datei/${schauId}/preisrichter-verpflichtung.pdf`} target="_blank" rel="noreferrer" title={tx.verpflichtungTitel}>
+                {tx.verpflichtungenAlle}
+              </KnopfLink>
+            )}
+            {istAdmin && <Knopf variante="primaer" onClick={() => setBearbeiten({})}>{tx.hinzufuegen}</Knopf>}
+          </>
+        }
       />
       {reiter.length > 1 && (
         <ReiterLeiste
@@ -162,6 +171,7 @@ export function Preisrichter() {
                         )}
                         <a href={`/datei/${schauId}/preisrichter/${r.id}/liste.pdf`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>{tx.liste}</a>
                         <a href={`/datei/${schauId}/bewertungskarten.pdf?preisrichter=${r.id}`} target="_blank" rel="noreferrer" className={knopfKlasse("leise", false, ZEILE)}>{tx.karten}</a>
+                        <a href={`/datei/${schauId}/preisrichter-verpflichtung.pdf?preisrichter=${r.id}`} target="_blank" rel="noreferrer" title={tx.verpflichtungTitel} className={knopfKlasse("leise", false, ZEILE)}>{tx.verpflichtung}</a>
                         <a href={`/datei/${schauId}/preisverteilung.pdf?preisrichter=${r.id}`} target="_blank" rel="noreferrer" title={tx.preiseTitel} className={knopfKlasse("leise", false, ZEILE)}>{tx.preise}</a>
                         {istAdmin && (
                           <>
