@@ -18,6 +18,7 @@ const BAU = {
   sperre: { fill: "#e9ebee", stroke: "#6b7383" },
   volieren: { fill: "#eef5f1", stroke: "#3d5a50" },
   moebel: { tisch: "#e3cfae", bank: "#efe2cb", stroke: "#8a6d45" },
+  pokal: { fill: "#d9b23a", stroke: "#7a5c12" },
   frei: "#7c8696",
   reihe: "#2547a8",
   // Käfigwände von oben (wie auf dem Bildschirm): Rückwand kräftig, Seiten fein, offene Front hell gestrichelt.
@@ -178,10 +179,11 @@ function zeichne(doc: Doc, d: Daten, abb: Abb, g: { W: number; H: number; ox: nu
   for (const o of plan.objekte) {
     const q = abb(o.rechteck);
     if (istMoebel(o)) {
-      // Tisch, Bank, Garnitur: Holzton, die Garnitur als Bank, Tisch, Bank.
+      // Tisch, Bank, Garnitur: Holzton, die Garnitur als Bank, Tisch, Bank; der Pokaltisch mit einem Pokal in der Mitte.
       for (const m of moebelStuecke(o, o.rechteck)) {
         const g2 = abb(m.q);
-        doc.save().lineWidth(0.4).strokeColor(BAU.moebel.stroke).fillColor(m.art === "tisch" ? BAU.moebel.tisch : BAU.moebel.bank).rect(g2.x, g2.y, g2.b, g2.h).fillAndStroke().restore();
+        doc.save().lineWidth(0.4).strokeColor(BAU.moebel.stroke).fillColor(m.art === "bank" ? BAU.moebel.bank : BAU.moebel.tisch).rect(g2.x, g2.y, g2.b, g2.h).fillAndStroke().restore();
+        if (m.art === "pokaltisch") pokal(doc, g2.x + g2.b / 2, g2.y + g2.h / 2, Math.min(g2.b, g2.h) * 0.8);
       }
       continue;
     }
@@ -246,6 +248,19 @@ function kaefig(doc: Doc, k: Pick<PlanKaefig, "nr" | "kaefig" | "preisrichterId"
   if (w > q.b * 0.9) gr = (gr * q.b * 0.9) / w;
   doc.fontSize(gr);
   doc.text(nr, q.x + q.b / 2 - doc.widthOfString(nr) / 2, q.y + q.h / 2 - gr * 0.62, { lineBreak: false });
+}
+
+/** Pokal (Ehrenpreis) als Zeichen, `gr` hoch und breit, um die Mitte (cx, cy): Schale mit Henkeln, Fuß, Sockel. */
+function pokal(doc: Doc, cx: number, cy: number, gr: number) {
+  const x = (u: number) => cx + (u - 0.5) * gr, y = (v: number) => cy + (v - 0.5) * gr;
+  doc.save().lineWidth(Math.max(0.3, gr * 0.06)).strokeColor(BAU.pokal.stroke).fillColor(BAU.pokal.fill);
+  // Henkel links und rechts.
+  doc.moveTo(x(0.26), y(0.16)).quadraticCurveTo(x(0.02), y(0.16), x(0.3), y(0.4)).stroke();
+  doc.moveTo(x(0.74), y(0.16)).quadraticCurveTo(x(0.98), y(0.16), x(0.7), y(0.4)).stroke();
+  // Schale, Fuß und Sockel.
+  doc.moveTo(x(0.22), y(0.08)).lineTo(x(0.78), y(0.08)).quadraticCurveTo(x(0.76), y(0.52), x(0.5), y(0.56)).quadraticCurveTo(x(0.24), y(0.52), x(0.22), y(0.08)).closePath().fillAndStroke();
+  doc.rect(x(0.45), y(0.56), gr * 0.1, gr * 0.2).fillAndStroke();
+  doc.rect(x(0.3), y(0.76), gr * 0.4, gr * 0.14).fillAndStroke().restore();
 }
 
 /** Diagonale Linien im Rechteck (wie die Schraffur im Plan). */
@@ -318,8 +333,19 @@ function legende(doc: Doc, d: Daten, x0: number, b: number, unten: number, messe
         doc.lineWidth(1.3).strokeColor(BAU.kaefigwand.rueck).moveTo(x, y).lineTo(x + feld.b, y).stroke().restore();
       },
     },
-    ...(d.plan.objekte.some(istMoebel)
+    ...(d.plan.objekte.some((o) => istMoebel(o) && o.art !== "pokaltisch")
       ? [{ text: "Tisch / Bank", male: (x: number, y: number) => void doc.save().lineWidth(0.4).strokeColor(BAU.moebel.stroke).fillColor(BAU.moebel.tisch).rect(x, y + feld.h * 0.25, feld.b, feld.h * 0.5).fillAndStroke().restore() }]
+      : []),
+    ...(d.plan.objekte.some((o) => o.art === "pokaltisch")
+      ? [
+          {
+            text: "Pokaltisch",
+            male: (x: number, y: number) => {
+              doc.save().lineWidth(0.4).strokeColor(BAU.moebel.stroke).fillColor(BAU.moebel.tisch).rect(x, y, feld.b, feld.h).fillAndStroke().restore();
+              pokal(doc, x + feld.b / 2, y + feld.h / 2, feld.h * 0.9);
+            },
+          },
+        ]
       : []),
   ];
   doc.font(SANS).fontSize(gr);

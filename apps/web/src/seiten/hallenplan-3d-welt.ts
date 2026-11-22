@@ -6,7 +6,7 @@ import { punktInUmriss, type Verkleidung, type SzeneSchuerze, richterFarbe, wand
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { ot } from "../sprache-jetzt";
-import { figurTeile, gitterTextur, hell, innenseitenGeometrie, ladeBild, offenerKasten, schildSprite, schuerzenGeometrie, stoffKachel, type Teil, TURNHALLE_KACHEL, turnhallenWand, wackel } from "./hallenplan-3d-bausteine";
+import { figurTeile, gitterTextur, hell, innenseitenGeometrie, ladeBild, offenerKasten, pokalGeometrie, schildSprite, schuerzenGeometrie, stoffKachel, type Teil, TURNHALLE_KACHEL, turnhallenWand, wackel } from "./hallenplan-3d-bausteine";
 import { baueLandschaft, type HallenSeite } from "./hallenplan-3d-landschaft";
 import { type Bewegung, bewegungFuer } from "./hallenplan-3d-steuerung";
 
@@ -254,7 +254,7 @@ export function baueWelt(
     modell.add(im);
   }
 
-  // Tische und Bänke: Platte auf zwei Klappbeinen nahe den Enden (wie eine Bierzeltgarnitur).
+  // Tische und Bänke: Platte auf zwei Klappbeinen nahe den Enden (wie eine Bierzeltgarnitur); Pokaltische ebenso, mit Pokalen.
   if (s.moebel.length) {
     const holz = merk(new THREE.MeshStandardMaterial({ color: "#c49a63", roughness: 0.8 }));
     const gestell = merk(new THREE.MeshStandardMaterial({ color: "#5b6270", metalness: 0.5, roughness: 0.5 }));
@@ -272,7 +272,13 @@ export function baueWelt(
         setze(fuesse, i * 2 + j, x * M, 0, z * M, (laengsX ? 4 : kurz * 0.85) * M, (q.h - st) * M, (laengsX ? kurz * 0.85 : 4) * M);
       });
     });
-    for (const im of [oben, fuesse]) {
+    // Pokaltische: goldene Pokale auf der Platte (Stellen aus der Fachlogik, `pokalStellen`).
+    const stellen = s.moebel.flatMap((m) => (m.pokale ?? []).map((p) => ({ ...p, y: m.q.h })));
+    const gold = merk(new THREE.MeshStandardMaterial({ color: "#d9b23a", metalness: 0.8, roughness: 0.3 }));
+    const pokale = new THREE.InstancedMesh(merk(pokalGeometrie()), gold, Math.max(1, stellen.length));
+    pokale.count = stellen.length;
+    stellen.forEach((p, i) => setze(pokale, i, p.x * M, p.y * M, p.z * M, p.h * 0.6 * M, p.h * M, p.h * 0.6 * M));
+    for (const im of [oben, fuesse, pokale]) {
       im.castShadow = true;
       im.receiveShadow = true;
       im.instanceMatrix.needsUpdate = true;

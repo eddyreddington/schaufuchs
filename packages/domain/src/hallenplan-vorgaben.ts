@@ -4,7 +4,7 @@
  */
 import { kaefigMass, type KaefigMasse, type KaefigTyp } from "./kaefige";
 import { istRechteckUmriss, umrissNormal } from "./hallenplan-umriss";
-import { moebelMass } from "./hallenplan-moebel";
+import { istMoebel, moebelMass } from "./hallenplan-moebel";
 import { VOLIERE_ERSATZ } from "./hallenplan-intern";
 import type { Grundplatte, Halle, HallenObjekt, Hauptgang } from "./hallenplan-typen";
 
@@ -60,7 +60,7 @@ export const VOLIEREN_GANG = 150;
  * wie die Grundplatte seiner Käfigart (ohne Maß: die Grundplatte der Halle).
  */
 export function teilGroesse(o: { art: HallenObjekt["art"]; typ?: KaefigTyp; laenge?: number; tiefe?: number; bankTiefe?: number }, halle: Pick<Halle, "platte" | "jePlatte" | "plattenMass">, masse: KaefigMasse | null | undefined): { lang: number; kurz: number } {
-  if (o.art === "tisch" || o.art === "bank" || o.art === "garnitur") {
+  if (istMoebel(o)) {
     // Ungedreht liegt die Länge in x (wie bei Volieren und Blöcken die lange Seite).
     const m = moebelMass({ ...o, art: o.art });
     return { lang: m.laenge, kurz: m.gesamt };

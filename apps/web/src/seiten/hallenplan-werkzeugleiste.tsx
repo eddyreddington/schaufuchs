@@ -133,11 +133,12 @@ export function Werkzeugleiste({
                   ["garnitur", tl.garnitur],
                   ["tisch", tl.tisch],
                   ["bank", tl.bank],
+                  ["pokaltisch", tl.pokaltisch],
                 ] as const
               ).map(([art, text]) => (
                 <MenueEintrag
                   key={art}
-                  symbol="tisch"
+                  symbol={art === "pokaltisch" ? "pokal" : "tisch"}
                   onClick={() => {
                     zu();
                     einsetzen(art);

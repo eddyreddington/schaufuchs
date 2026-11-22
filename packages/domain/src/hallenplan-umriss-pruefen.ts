@@ -6,7 +6,7 @@ import { type Halle, type HallenFlaeche, type Rechteck, teilGroesse, ueberlappt 
 import { istRechteckUmriss, type Punkt, pruefeUmriss, umrissMasse, umrissNormal, umrissSperren } from "./hallenplan-umriss";
 import type { KaefigMasse } from "./kaefige";
 
-const TEIL_NAME: Record<NonNullable<Halle["objekte"]>[number]["art"], string> = { voliere: "Eine Voliere", kaefigblock: "Ein Käfigblock", tisch: "Ein Tisch", bank: "Eine Bank", garnitur: "Eine Garnitur" };
+const TEIL_NAME: Record<NonNullable<Halle["objekte"]>[number]["art"], string> = { voliere: "Eine Voliere", kaefigblock: "Ein Käfigblock", tisch: "Ein Tisch", bank: "Eine Bank", garnitur: "Eine Garnitur", pokaltisch: "Ein Pokaltisch" };
 
 /** Null = in Ordnung, sonst die Meldung für die Ausstellungsleitung. */
 /**

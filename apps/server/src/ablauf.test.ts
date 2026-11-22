@@ -99,3 +99,4 @@ import "./tests/63-lesemodus";
 import "./tests/64-einrichten-befehl";
 import "./tests/65-a-bogen-mitglieder";
 import "./tests/66-preisverteilung";
+import "./tests/67-pokaltisch";

@@ -3,7 +3,7 @@
  * zurück, Leeres entfernen, Teile und fehlende Käfige einsetzen, Fläche aufziehen; dazu die Aktionen für Leiste,
  * Eigenschaften und Tastenkürzel (`aktionen`).
  */
-import { eingangAnWand, istRechteckUmriss, ueberlappt, umrissNormal, umrissSperren, umrissVon, type Belegt, fehlendeImPlan, freieStelle, type HallenFlaeche, type HallenObjekt, type KaefigTyp, leereEntfernen, type MoebelArt, oberflaeche, type OberflaecheTexte, rasterAusrichten, type Rechteck, serverText, teilGroesse, type WandSeite } from "@schau/domain";
+import { eingangAnWand, istRechteckUmriss, ueberlappt, umrissNormal, umrissSperren, umrissVon, type Belegt, fehlendeImPlan, freieStelle, type HallenFlaeche, type HallenObjekt, type KaefigTyp, leereEntfernen, istMoebel, type MoebelArt, oberflaeche, type OberflaecheTexte, rasterAusrichten, type Rechteck, serverText, teilGroesse, type WandSeite } from "@schau/domain";
 import { useOberflaeche, useSprache } from "../sprache";
 import { trpc } from "../trpc";
 import { useFrage, useMeldung } from "../ui";
@@ -120,7 +120,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
     // Neues Teil möglichst in die Mitte der Halle, auf einen freien Platz (nicht auf ein eben eingesetztes) – von dort an
     // den richtigen Platz ziehen. Tische und Bänke gern in einen freien Bereich.
     const id = neueId();
-    const moebel = art === "tisch" || art === "bank" || art === "garnitur";
+    const moebel = istMoebel({ art });
     const groesse = teilGroesse({ art, typ }, entwurf, d.masse);
     const start = { x: raster(entwurf.breite / 2 - groesse.lang / 2), y: raster(entwurf.laenge / 2 - groesse.kurz / 2) };
     const teile = (entwurf.objekte ?? []).map((o) => {

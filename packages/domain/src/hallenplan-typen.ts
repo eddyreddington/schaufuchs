@@ -142,7 +142,7 @@ export interface HallenObjekt {
   art: "voliere" | "kaefigblock" | MoebelArt;
   /** Käfigart des Blocks (nur Käfigblock). */
   typ?: KaefigTyp;
-  /** Tisch, Bank, Garnitur: Länge (lange Seite) und Tiefe des Tisches bzw. der Bank in cm; fehlt: Vorgabe. */
+  /** Tisch, Bank, Garnitur, Pokaltisch: Länge (lange Seite) und Tiefe des Tisches bzw. der Bank in cm; fehlt: Vorgabe. */
   laenge?: number;
   tiefe?: number;
   /** Garnitur: Tiefe der beiden Bänke (cm); fehlt: Vorgabe. */

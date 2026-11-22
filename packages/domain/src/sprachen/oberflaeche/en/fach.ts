@@ -104,7 +104,7 @@ export const fach: OberflaecheTexte["fach"] = {
   KATALOG_TITELBILD_INFO: { eingepasst: "Fitted", randlos: "Full bleed" },
   KATALOG_TITELHINTERGRUND_INFO: { weiss: "White", getoent: "Light club colour", papier: "Paper tone" },
   MELDEART_LABEL: { einzeltier: "Single bird", stamm: "Breeding pen", voliere: "Aviary", bruteier: "Hatching eggs (set)" },
-  MOEBEL_NAME: { tisch: "Table", bank: "Bench", garnitur: "Table set" },
+  MOEBEL_NAME: { tisch: "Table", bank: "Bench", garnitur: "Table set", pokaltisch: "Trophy table" },
   NACHWEIS_LABEL: {
     nd: "ND vaccination (chickens, turkeys)",
     pmv: "PMV vaccination (pigeons)",

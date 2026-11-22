@@ -104,7 +104,7 @@ export const fach: OberflaecheTexte["fach"] = {
   KATALOG_TITELBILD_INFO: { eingepasst: "Dopasowane", randlos: "Bez marginesów" },
   KATALOG_TITELHINTERGRUND_INFO: { weiss: "Biały", getoent: "Delikatnie w kolorze klubu", papier: "Odcień papieru" },
   MELDEART_LABEL: { einzeltier: "Pojedynczy ptak", stamm: "Grupa hodowlana", voliere: "Woliera", bruteier: "Jaja wylęgowe (zestaw)" },
-  MOEBEL_NAME: { tisch: "Stół", bank: "Ławka", garnitur: "Zestaw biesiadny" },
+  MOEBEL_NAME: { tisch: "Stół", bank: "Ławka", garnitur: "Zestaw biesiadny", pokaltisch: "Stół z pucharami" },
   NACHWEIS_LABEL: {
     nd: "Szczepienie ND (kury, indyki)",
     pmv: "Szczepienie PMV (gołębie)",

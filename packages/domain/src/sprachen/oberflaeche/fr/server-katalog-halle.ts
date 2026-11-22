@@ -42,6 +42,7 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     tisch: "Une table se trouve hors du contour – veuillez d’abord la déplacer ou la supprimer.",
     bank: "Un banc se trouve hors du contour – veuillez d’abord le déplacer ou le supprimer.",
     garnitur: "Un ensemble table et bancs se trouve hors du contour – veuillez d’abord le déplacer ou le supprimer.",
+    pokaltisch: "Une table des trophées se trouve hors du contour – veuillez d’abord la déplacer ou la supprimer.",
   },
   entfernen: {
     nurFest: "Les places vides ne peuvent être retirées que dans un plan figé.",

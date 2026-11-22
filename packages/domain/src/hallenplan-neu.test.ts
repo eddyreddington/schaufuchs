@@ -354,7 +354,7 @@ describe("Plan neu setzen mit Tischen und Bänken (und Etagen)", () => {
       ...halle.flaechen.filter((x) => x.art === "eingang").map((x) => eingangsGang(halle, x)),
     ];
     for (let v = 0; aus.length < zahl && v < 200; v++) {
-      const art = (["tisch", "bank", "garnitur"] as const)[ri(0, 2)]!;
+      const art = (["tisch", "bank", "garnitur", "pokaltisch"] as const)[ri(0, 3)]!;
       const o: HallenObjekt = { id: `m${aus.length}`, art, x: 0, y: 0, drehung: rnd() < 0.5 ? 0 : 90 };
       const { lang, kurz } = teilGroesse(o, halle, masse);
       const [b, h] = o.drehung === 90 ? [kurz, lang] : [lang, kurz];
@@ -427,7 +427,7 @@ describe("Plan neu setzen mit Tischen und Bänken (und Etagen)", () => {
     expect(p.warnungen.filter((w) => /überschneidet|steht im Gang/.test(w))).toEqual([]);
   });
 
-  // Dieselben 300 Zufallshallen wie oben, dazu bis zu sechs Tische, Bänke und Garnituren.
+  // Dieselben 300 Zufallshallen wie oben, dazu bis zu sechs Tische, Bänke, Garnituren und Pokaltische.
   let seed = 7;
   const rnd = () => {
     seed = (seed * 1103515245 + 12345) % 2147483648;

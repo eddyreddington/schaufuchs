@@ -287,7 +287,7 @@ export function MeterFeld({ label, cm, setzen, min = 0, max = 50000 }: { label: 
   );
 }
 
-/** Ein gewählter Tisch, eine Bank oder Garnitur: Maße (Länge, Tiefe, bei der Garnitur die Tiefe der Bänke), dazu die Lage. */
+/** Ein gewählter Tisch, Pokaltisch, eine Bank oder Garnitur: Maße (Länge, Tiefe, bei der Garnitur die Tiefe der Bänke), dazu die Lage. */
 export function MoebelFelder({ halle, id, aendern, zeilen }: { halle: Halle; id: string; aendern: Aendern; zeilen: [string, string][] }) {
   const t = useOberflaeche();
   const o = (halle.objekte ?? []).find((x) => x.id === id);

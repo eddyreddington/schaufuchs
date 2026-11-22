@@ -42,6 +42,7 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     tisch: "Een tafel ligt buiten de plattegrond – verplaats of verwijder deze eerst.",
     bank: "Een bank ligt buiten de plattegrond – verplaats of verwijder deze eerst.",
     garnitur: "Een tafelset ligt buiten de plattegrond – verplaats of verwijder deze eerst.",
+    pokaltisch: "Een bekertafel ligt buiten de plattegrond – verplaats of verwijder deze eerst.",
   },
   entfernen: {
     nurFest: "Lege plaatsen kunnen alleen in een vastgelegd plan worden verwijderd.",

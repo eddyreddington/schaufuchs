@@ -107,6 +107,7 @@ export const halleWerkzeuge: OberflaecheTexte["halleWerkzeuge"] = {
     voliere: "Volière",
     tischeBaenke: "Tables et bancs",
     garnitur: "Ensemble (table avec deux bancs)",
+    pokaltisch: "Table des trophées (prix d’honneur)",
     tisch: "Table",
     bank: "Banc",
     bearbeiten: "Modifier",

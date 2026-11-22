@@ -28,6 +28,18 @@ function kaefigAnzahlT(t: OberflaecheTexte, n: number, typ: KaefigTyp, masse?: K
   return m ? `${n} ${art} (${cm(m.breite)} × ${cm(m.tiefe)} × ${cm(m.hoehe)} cm)` : `${n} ${art}`;
 }
 
+/** Pokal (Ehrenpreis) auf dem Pokaltisch: Schale mit Henkeln, Fuß und Sockel, `gr` groß um die Mitte (cx, cy). */
+export function PokalZeichen({ cx, cy, gr }: { cx: number; cy: number; gr: number }) {
+  return (
+    <g transform={`translate(${cx - gr / 2} ${cy - gr / 2}) scale(${gr})`} fill="#d9b23a" stroke="#7a5c12" strokeWidth={1} vectorEffect="non-scaling-stroke" strokeLinejoin="round" pointerEvents="none">
+      <path d="M0.26 0.16Q0.02 0.16 0.3 0.4M0.74 0.16Q0.98 0.16 0.7 0.4" fill="none" vectorEffect="non-scaling-stroke" />
+      <path d="M0.22 0.08H0.78Q0.76 0.52 0.5 0.56Q0.24 0.52 0.22 0.08Z" vectorEffect="non-scaling-stroke" />
+      <rect x={0.45} y={0.56} width={0.1} height={0.2} vectorEffect="non-scaling-stroke" />
+      <rect x={0.3} y={0.76} width={0.4} height={0.14} vectorEffect="non-scaling-stroke" />
+    </g>
+  );
+}
+
 /** Muster für Zeichnung und Legende (SVG-Attribute, keine Inline-Styles). `massstab` verkleinert sie für die Legende. */
 export function Muster({ idPrefix = "", massstab = 1 }: { idPrefix?: string; massstab?: number }) {
   const f = 24 * massstab, s = 14 * massstab;

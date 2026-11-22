@@ -42,6 +42,7 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     tisch: "Stół leży poza obrysem – najpierw należy go przesunąć lub usunąć.",
     bank: "Ławka leży poza obrysem – najpierw należy ją przesunąć lub usunąć.",
     garnitur: "Zestaw stół z ławkami leży poza obrysem – najpierw należy go przesunąć lub usunąć.",
+    pokaltisch: "Stół z pucharami leży poza obrysem – najpierw należy go przesunąć lub usunąć.",
   },
   entfernen: {
     nurFest: "Puste miejsca można usuwać tylko w ustalonym planie.",

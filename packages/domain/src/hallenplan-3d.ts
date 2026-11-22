@@ -6,7 +6,7 @@
  * Koordinaten in cm, y nach oben; x und z wie in der Zeichnung des Plans (`zeichnungDerHalle`): x nach rechts, z nach unten. Liegt
  * die Halle im Plan quer (länger als breit), ist x die Hallenlänge und z die Breite – sonst x die Breite, z die Länge.
  */
-import { BANK_HOEHE, blockPlatz, objektFront, etagenVon, frontDerReihe, istMoebel, moebelStuecke, TISCH_HOEHE, type Blick, type Halle, type HallenFlaeche, type Hallenplan, type PlanTier, type Rechteck } from "./hallenplan";
+import { BANK_HOEHE, blockPlatz, objektFront, etagenVon, frontDerReihe, istMoebel, type MoebelArt, moebelStuecke, pokalStellen, TISCH_HOEHE, type Blick, type Halle, type HallenFlaeche, type Hallenplan, type PlanTier, type Rechteck } from "./hallenplan";
 import { kaefigMass, type KaefigMasse, type KaefigTyp } from "./kaefige";
 import { artenDerSparte } from "./textbausteine";
 import { zeichnungDerHalle } from "./hallenplan-druck";
@@ -164,8 +164,8 @@ export interface HallenSzene {
   aufsteller: Quader[];
   kaefige: SzeneKaefig[];
   volieren: SzeneVoliere[];
-  /** Tische und Bänke (eine Garnitur als Tisch mit zwei Bänken); q bis Oberkante der Platte. */
-  moebel: { art: "tisch" | "bank"; q: Quader; name: string }[];
+  /** Tische und Bänke (eine Garnitur als Tisch mit zwei Bänken), Pokaltische mit Pokalen (Mitte, Höhe); q bis Oberkante der Platte. */
+  moebel: { art: "tisch" | "bank" | "pokaltisch"; q: Quader; name: string; pokale?: { x: number; z: number; h: number }[] }[];
   /** Verkleidung der Sockel unter den Grundplatten: Front zum Gang und Stirnseiten je Stück Reihe (nicht an Rücken und Wand). */
   schuerzen: SzeneSchuerze[];
   beschriftungen: SzeneBeschriftung[];
@@ -308,9 +308,14 @@ export function gangStandpunkt(halle: Pick<Halle, "breite" | "laenge" | "richtun
   return { von: { x: halle.breite / 2, y: AUGEN_HOEHE, z: 60 }, nach: { x: halle.breite / 2, y: AUGEN_HOEHE - 25, z: Math.min(halle.laenge, 660) } };
 }
 
-/** Tisch, Bank oder Garnitur als Körper in ihrer Grundfläche (siehe `moebelStuecke`). */
-function moebelTeile(art: "tisch" | "bank" | "garnitur", o: { laenge?: number; tiefe?: number; bankTiefe?: number }, q: Rechteck, name: string): HallenSzene["moebel"] {
-  return moebelStuecke({ ...o, art }, q).map((m) => ({ art: m.art, q: quader(m.q, 0, m.art === "tisch" ? TISCH_HOEHE : BANK_HOEHE), name }));
+/** Tisch, Bank, Garnitur oder Pokaltisch als Körper in ihrer Grundfläche (siehe `moebelStuecke`, `pokalStellen`). */
+function moebelTeile(art: MoebelArt, o: { laenge?: number; tiefe?: number; bankTiefe?: number }, q: Rechteck, name: string): HallenSzene["moebel"] {
+  return moebelStuecke({ ...o, art }, q).map((m) => ({
+    art: m.art,
+    q: quader(m.q, 0, m.art === "bank" ? BANK_HOEHE : TISCH_HOEHE),
+    name,
+    ...(m.art === "pokaltisch" ? { pokale: pokalStellen(m.q).map((p) => ({ x: p.x, z: p.y, h: p.h })) } : {}),
+  }));
 }
 
 /**
@@ -443,7 +448,7 @@ export function vertauscht(s: HallenSzene): HallenSzene {
     aufsteller: s.aufsteller.map(q),
     kaefige: s.kaefige.map((k) => ({ ...k, q: q(k.q), front: blick[k.front] })),
     volieren: s.volieren.map((v) => ({ ...v, q: q(v.q), ...(v.front ? { front: blick[v.front] } : {}) })),
-    moebel: s.moebel.map((m) => ({ ...m, q: q(m.q) })),
+    moebel: s.moebel.map((m) => ({ ...m, q: q(m.q), ...(m.pokale ? { pokale: m.pokale.map((x) => ({ x: x.z, z: x.x, h: x.h })) } : {}) })),
     schuerzen: s.schuerzen.map((m) => ({ ...m, q: q(m.q), aussen: blick[m.aussen] })),
     beschriftungen: s.beschriftungen.map((b) => ({ ...b, x: b.z, z: b.x })),
     gang: { von: p(s.gang.von), nach: p(s.gang.nach) },

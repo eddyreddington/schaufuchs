@@ -42,6 +42,7 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     tisch: "A table lies outside the floor plan – please move or remove it first.",
     bank: "A bench lies outside the floor plan – please move or remove it first.",
     garnitur: "A table set lies outside the floor plan – please move or remove it first.",
+    pokaltisch: "A trophy table lies outside the floor plan – please move or remove it first.",
   },
   entfernen: {
     nurFest: "Empty places can only be removed in a fixed plan.",

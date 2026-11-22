@@ -42,6 +42,7 @@ export const halle: OberflaecheTexte["serverKatalog"]["halle"] = {
     tisch: "Stůl leží mimo půdorys – nejprve ho přesuňte nebo odstraňte.",
     bank: "Lavice leží mimo půdorys – nejprve ji přesuňte nebo odstraňte.",
     garnitur: "Pivní set leží mimo půdorys – nejprve ho přesuňte nebo odstraňte.",
+    pokaltisch: "Stůl s poháry leží mimo půdorys – nejprve ho přesuňte nebo odstraňte.",
   },
   entfernen: {
     nurFest: "Prázdná místa lze odstraňovat jen v zafixovaném plánu.",

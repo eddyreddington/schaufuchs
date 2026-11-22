@@ -18,6 +18,19 @@ export function wackel(id: number): number {
   return (x - Math.floor(x) - 0.5) * 0.7;
 }
 
+/**
+ * Pokal als Drehkörper, 1 hoch und 1 breit (Boden in der Mitte bei y = 0): Sockel, Fuß, Schale und zwei Henkel – für die
+ * Pokaltische.
+ */
+export function pokalGeometrie(): THREE.BufferGeometry {
+  const profil = [[0, 0], [0.32, 0], [0.32, 0.1], [0.12, 0.12], [0.06, 0.18], [0.05, 0.42], [0.12, 0.46], [0.3, 0.58], [0.38, 0.78], [0.4, 1], [0.36, 1], [0.34, 0.8], [0, 0.6]].map(([r, y]) => new THREE.Vector2(r, y));
+  const koerper = new THREE.LatheGeometry(profil, 20);
+  const henkel = [-1, 1].map((s) => new THREE.TorusGeometry(0.14, 0.03, 6, 12, Math.PI).rotateZ(s > 0 ? -Math.PI / 2 : Math.PI / 2).translate(s * 0.38, 0.8, 0));
+  const alle = [koerper, ...henkel].map((g) => (g.index ? g.toNonIndexed() : g));
+  for (const g of alle) g.deleteAttribute("uv");
+  return mergeGeometries(alle)!;
+}
+
 /** Einheitswürfel (Boden in der Mitte bei y = 0) ohne Vorderseite (+z) und Decke (+y): Seiten, Rückwand und Boden bleiben. */
 export function offenerKasten(): THREE.BufferGeometry {
   const box = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);

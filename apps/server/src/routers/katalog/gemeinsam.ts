@@ -70,9 +70,9 @@ export const HALLE_EINGABE = z.object({
     .array(
       z.object({
         id: z.string().min(1).max(40),
-        art: z.enum(["voliere", "kaefigblock", "tisch", "bank", "garnitur"]),
+        art: z.enum(["voliere", "kaefigblock", "tisch", "bank", "garnitur", "pokaltisch"]),
         typ: z.enum(KAEFIG_TYPEN).optional(),
-        /** Tisch, Bank, Garnitur: Länge, Tiefe (Tisch bzw. Bank) und Tiefe der Bänke einer Garnitur (cm). */
+        /** Tisch, Bank, Garnitur, Pokaltisch: Länge, Tiefe (Tisch bzw. Bank) und Tiefe der Bänke einer Garnitur (cm). */
         laenge: z.number().min(30).max(2000).optional(),
         tiefe: z.number().min(10).max(500).optional(),
         bankTiefe: z.number().min(10).max(200).optional(),

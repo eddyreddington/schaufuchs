@@ -1,26 +1,28 @@
 /**
- * Hallenplan – Tisch, Bank und Garnitur: Arten, Namen, Standardmaße und Höhen, Maße mit Vorgaben und die Körper einer
- * Garnitur (Bank, Tisch, Bank).
+ * Hallenplan – Tisch, Bank, Garnitur und Pokaltisch: Arten, Namen, Standardmaße und Höhen, Maße mit Vorgaben, die Körper
+ * einer Garnitur (Bank, Tisch, Bank) und die Stellen der Pokale auf einem Pokaltisch.
  */
 import type { Rechteck } from "./hallenplan-typen";
 
-/** Tisch, Bank und Garnitur (Biertisch mit zwei Bänken): eingesetzte Teile ohne Käfigplatz. */
-export type MoebelArt = "tisch" | "bank" | "garnitur";
-export const MOEBEL_ARTEN: readonly MoebelArt[] = ["tisch", "bank", "garnitur"];
-export const MOEBEL_NAME: Record<MoebelArt, string> = { tisch: "Tisch", bank: "Bank", garnitur: "Garnitur" };
+/** Tisch, Bank, Garnitur (Biertisch mit zwei Bänken) und Pokaltisch (Ehrenpreise): eingesetzte Teile ohne Käfigplatz. */
+export type MoebelArt = "tisch" | "bank" | "garnitur" | "pokaltisch";
+export const MOEBEL_ARTEN: readonly MoebelArt[] = ["tisch", "bank", "garnitur", "pokaltisch"];
+export const MOEBEL_NAME: Record<MoebelArt, string> = { tisch: "Tisch", bank: "Bank", garnitur: "Garnitur", pokaltisch: "Pokaltisch" };
 /** Biertisch 220 × 50 cm, Bierbank 220 × 25 cm; in der Garnitur je eine Bank an jeder langen Seite, 15 cm vom Tisch. */
 export const TISCH_STANDARD = { laenge: 220, tiefe: 50 } as const;
 export const BANK_STANDARD = { laenge: 220, tiefe: 25 } as const;
 export const GARNITUR_ABSTAND = 15;
+/** Pokaltisch: ein breiterer Tisch für die Ehrenpreise, 200 × 80 cm. */
+export const POKALTISCH_STANDARD = { laenge: 200, tiefe: 80 } as const;
 /** Höhen (cm) für die 3D-Ansicht. */
 export const TISCH_HOEHE = 77;
 export const BANK_HOEHE = 47;
 
-export const istMoebel = (o: { art: string }): o is { art: MoebelArt } => o.art === "tisch" || o.art === "bank" || o.art === "garnitur";
+export const istMoebel = (o: { art: string }): o is { art: MoebelArt } => (MOEBEL_ARTEN as readonly string[]).includes(o.art);
 
 /** Maße eines Möbelstücks mit Vorgaben: Länge, Tiefe (Tisch bzw. Bank) und bei der Garnitur die Tiefe der Bänke. */
 export function moebelMass(o: { art: MoebelArt; laenge?: number; tiefe?: number; bankTiefe?: number }): { laenge: number; tiefe: number; bankTiefe: number; gesamt: number } {
-  const std = o.art === "bank" ? BANK_STANDARD : TISCH_STANDARD;
+  const std = o.art === "bank" ? BANK_STANDARD : o.art === "pokaltisch" ? POKALTISCH_STANDARD : TISCH_STANDARD;
   const laenge = o.laenge && o.laenge > 0 ? o.laenge : std.laenge;
   const tiefe = o.tiefe && o.tiefe > 0 ? o.tiefe : std.tiefe;
   const bankTiefe = o.bankTiefe && o.bankTiefe > 0 ? o.bankTiefe : BANK_STANDARD.tiefe;
@@ -28,10 +30,10 @@ export function moebelMass(o: { art: MoebelArt; laenge?: number; tiefe?: number;
 }
 
 /**
- * Tisch, Bank oder Garnitur in der Lage `q` (Hallenkoordinaten): die Körper darin – eine Garnitur als Bank, Tisch, Bank quer
- * zur Länge. Grundlage für Plan, Druck und 3D.
+ * Tisch, Bank, Garnitur oder Pokaltisch in der Lage `q` (Hallenkoordinaten): die Körper darin – eine Garnitur als Bank,
+ * Tisch, Bank quer zur Länge. Grundlage für Plan, Druck und 3D.
  */
-export function moebelStuecke(o: { art: MoebelArt; laenge?: number; tiefe?: number; bankTiefe?: number }, q: Rechteck): { art: "tisch" | "bank"; q: Rechteck }[] {
+export function moebelStuecke(o: { art: MoebelArt; laenge?: number; tiefe?: number; bankTiefe?: number }, q: Rechteck): { art: "tisch" | "bank" | "pokaltisch"; q: Rechteck }[] {
   if (o.art !== "garnitur") return [{ art: o.art, q }];
   const m = moebelMass(o);
   const xLang = Math.abs(q.b - m.laenge) <= Math.abs(q.h - m.laenge);
@@ -41,4 +43,21 @@ export function moebelStuecke(o: { art: MoebelArt; laenge?: number; tiefe?: numb
     { art: "tisch", q: stueck(m.bankTiefe + GARNITUR_ABSTAND, m.tiefe) },
     { art: "bank", q: stueck(m.gesamt - m.bankTiefe, m.bankTiefe) },
   ];
+}
+
+/** Höhen der Pokale (cm) im Wechsel, damit die Reihe nach Ehrenpreisen aussieht und nicht nach Flaschen. */
+const POKAL_HOEHEN = [30, 38, 26, 34, 28, 36] as const;
+
+/**
+ * Pokale auf einem Pokaltisch in der Lage `q`: eine Reihe mittig längs der langen Seite, je etwa 50 cm einer (zwei bis
+ * sechs), mit Mittelpunkt (x, y in Hallenkoordinaten) und Höhe. Für die 3D-Ansicht.
+ */
+export function pokalStellen(q: Rechteck): { x: number; y: number; h: number }[] {
+  const laengsX = q.b >= q.h;
+  const lang = laengsX ? q.b : q.h;
+  const n = Math.max(2, Math.min(POKAL_HOEHEN.length, Math.round(lang / 50)));
+  return Array.from({ length: n }, (_, i) => {
+    const a = ((i + 0.5) * lang) / n;
+    return { x: laengsX ? q.x + a : q.x + q.b / 2, y: laengsX ? q.y + q.h / 2 : q.y + a, h: POKAL_HOEHEN[i]! };
+  });
 }

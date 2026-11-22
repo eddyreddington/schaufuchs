@@ -5,11 +5,12 @@ import { type Halle, istMoebel, type KaefigMasse, type KaefigTyp, nummernBereich
 import { useOberflaeche } from "../sprache";
 import { Abschnitt, Marke, TabellenRahmen } from "../ui";
 import { alsNummer, BAU, type Daten, lage, meter, type Plan, plattenJeArt, richterNamen, zusammenfassen } from "./hallenplan-geometrie";
-import { kaefigNameT, LegendenFeld, OhnePlatz } from "./hallenplan-teile";
+import { kaefigNameT, LegendenFeld, OhnePlatz, PokalZeichen } from "./hallenplan-teile";
 
 /** Legende: Preisrichterfarben in Katalogfolge, Grundplatte, Flächen, Eingang, Volieren, Käfigblock, Möbel, Rückwand. */
 export function PlanLegende({ plan, richterReihe, richterIndex }: { plan: Plan; richterReihe: { id: number; name: string }[]; richterIndex: Map<number, number> }) {
   const t = useOberflaeche().halleWerkzeuge;
+  const moebelName = useOberflaeche().fach.MOEBEL_NAME;
   const tu = t.uebersicht;
   return (
     <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-grau">
@@ -61,10 +62,19 @@ export function PlanLegende({ plan, richterReihe, richterIndex }: { plan: Plan; 
         </svg>
         {tu.leererBlock}
       </span>
-      {plan.objekte.some(istMoebel) && (
+      {plan.objekte.some((o) => istMoebel(o) && o.art !== "pokaltisch") && (
         <span className="flex items-center gap-2">
           <LegendenFeld fill={BAU.tisch.fill} stroke={BAU.tisch.stroke} />
           {tu.tischBank}
+        </span>
+      )}
+      {plan.objekte.some((o) => o.art === "pokaltisch") && (
+        <span className="flex items-center gap-2">
+          <svg width="22" height="16" aria-hidden="true">
+            <rect x="1" y="1" width="20" height="14" fill={BAU.tisch.fill} stroke={BAU.tisch.stroke} strokeWidth="0.75" />
+            <PokalZeichen cx={11} cy={8} gr={12} />
+          </svg>
+          {moebelName.pokaltisch}
         </span>
       )}
       <span className="flex items-center gap-2">

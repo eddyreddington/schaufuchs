@@ -112,6 +112,7 @@ export const halleWerkzeuge: OberflaecheTexte["halleWerkzeuge"] = {
     voliere: "Woliera",
     tischeBaenke: "Stoły i ławki",
     garnitur: "Zestaw (stół z dwiema ławkami)",
+    pokaltisch: "Stół z pucharami (nagrody honorowe)",
     tisch: "Stół",
     bank: "Ławka",
     bearbeiten: "Edycja",

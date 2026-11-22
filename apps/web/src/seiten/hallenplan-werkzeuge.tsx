@@ -96,6 +96,7 @@ const PFADE = {
   ),
   einpassen: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
   tisch: <path d="M3 9h18M6 9v9M18 9v9M3 14h4M17 14h4" />,
+  pokal: <path d="M7 4h10v4a5 5 0 01-10 0V4zM7 6H4a3 3 0 003 4M17 6h3a3 3 0 01-3 4M12 13v4M9 17h6l1 4H8z" />,
   dreiD: <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM4 7.5l8 4.5 8-4.5M12 12v9" />,
   vollansicht: <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" />,
   vollansichtAus: <path d="M20 10h-6V4M4 14h6v6M14 10l7-7M10 14l-7 7" />,

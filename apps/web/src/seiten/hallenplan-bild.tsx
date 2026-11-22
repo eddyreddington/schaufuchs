@@ -6,7 +6,7 @@ import { useLayoutEffect, useRef } from "react";
 import { useOberflaeche } from "../sprache";
 import { type Aendern, BAU, type Daten, huelle, kaefigBezeichnung, meter, objektLage, platzWeg, RAND_CM, RASTER, type Ziel, zielPlaetze, zuTeilen } from "./hallenplan-geometrie";
 import { usePlanBedienung } from "./hallenplan-bild-bedienung";
-import { Muster } from "./hallenplan-teile";
+import { Muster, PokalZeichen } from "./hallenplan-teile";
 
 export function PlanBild({
   halle,
@@ -393,7 +393,12 @@ export function PlanBild({
                 <>
                   {moebelStuecke(((halle.objekte ?? []).find((x) => x.id === o.id) ?? o) as HallenObjekt & { art: MoebelArt }, lage).map((m, i) => {
                     const f = rr(verschoben(m.q, z));
-                    return <rect key={i} {...f} fill={m.art === "tisch" ? BAU.tisch.fill : BAU.bank.fill} stroke={BAU.tisch.stroke} {...strich(0.8)} />;
+                    return (
+                      <g key={i}>
+                        <rect {...f} fill={m.art === "bank" ? BAU.bank.fill : BAU.tisch.fill} stroke={BAU.tisch.stroke} {...strich(0.8)} />
+                        {m.art === "pokaltisch" && <PokalZeichen cx={f.x + f.width / 2} cy={f.y + f.height / 2} gr={Math.min(f.width, f.height) * 0.8} />}
+                      </g>
+                    );
                   })}
                   <title>{o.name}</title>
                 </>

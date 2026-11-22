@@ -67,7 +67,7 @@ export const halleBild = {
     grundplattenZeile: "Grundplatten",
     reihe: "Reihe",
     reiheR: (nr: number) => `Reihe R${nr}`,
-    neuesMoebel: (art: string, name: string) => `Neue${art === "tisch" ? "r" : ""} ${name}`,
+    neuesMoebel: (art: string, name: string) => `Neue${art === "tisch" || art === "pokaltisch" ? "r" : ""} ${name}`,
     neu: "neu",
     kaefigblock: "Käfigblock",
     neueVoliere: "Neue Voliere",

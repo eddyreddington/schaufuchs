@@ -104,7 +104,7 @@ export const fach: OberflaecheTexte["fach"] = {
   KATALOG_TITELBILD_INFO: { eingepasst: "Ajusté", randlos: "Pleine page" },
   KATALOG_TITELHINTERGRUND_INFO: { weiss: "Blanc", getoent: "Teinte légère du club", papier: "Ton papier" },
   MELDEART_LABEL: { einzeltier: "Sujet seul", stamm: "Parquet", voliere: "Volière", bruteier: "Œufs à couver (lot)" },
-  MOEBEL_NAME: { tisch: "Table", bank: "Banc", garnitur: "Ensemble table et bancs" },
+  MOEBEL_NAME: { tisch: "Table", bank: "Banc", garnitur: "Ensemble table et bancs", pokaltisch: "Table des trophées" },
   NACHWEIS_LABEL: {
     nd: "Vaccination ND (poules, dindes)",
     pmv: "Vaccination PMV (pigeons)",

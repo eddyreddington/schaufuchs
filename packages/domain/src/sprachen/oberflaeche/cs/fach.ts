@@ -104,7 +104,7 @@ export const fach: OberflaecheTexte["fach"] = {
   KATALOG_TITELBILD_INFO: { eingepasst: "Vložené", randlos: "Bez okrajů" },
   KATALOG_TITELHINTERGRUND_INFO: { weiss: "Bílá", getoent: "Jemně v barvě spolku", papier: "Odstín papíru" },
   MELDEART_LABEL: { einzeltier: "Jednotlivé zvíře", stamm: "Kmen", voliere: "Voliéra", bruteier: "Násadová vejce (sada)" },
-  MOEBEL_NAME: { tisch: "Stůl", bank: "Lavice", garnitur: "Pivní set" },
+  MOEBEL_NAME: { tisch: "Stůl", bank: "Lavice", garnitur: "Pivní set", pokaltisch: "Stůl s poháry" },
   NACHWEIS_LABEL: {
     nd: "Očkování ND (slepice, krůty)",
     pmv: "Očkování PMV (holubi)",

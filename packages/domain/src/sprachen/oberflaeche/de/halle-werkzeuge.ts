@@ -113,6 +113,7 @@ export const halleWerkzeuge = {
     voliere: "Voliere",
     tischeBaenke: "Tische und Bänke",
     garnitur: "Garnitur (Tisch mit zwei Bänken)",
+    pokaltisch: "Pokaltisch (Ehrenpreise)",
     tisch: "Tisch",
     bank: "Bank",
     bearbeiten: "Bearbeiten",

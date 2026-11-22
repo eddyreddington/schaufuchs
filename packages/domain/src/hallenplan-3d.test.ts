@@ -187,6 +187,26 @@ describe("3D-Szene: Tische und Bänke", () => {
     expect(s.aufsteller).toEqual([]);
     expect(s.kaefige).toEqual([]);
   });
+
+  test("Pokaltisch: Tisch in Tischhöhe mit Pokalen auf der Platte", () => {
+    const h: Halle = { ...halle, objekte: [{ id: "p", art: "pokaltisch", x: 100, y: 2600, drehung: 0 }, { id: "q", art: "pokaltisch", x: 600, y: 2400, drehung: 90, laenge: 300 }] };
+    const s = hallenSzene(h, planeHalle(h, [], masse), masse);
+    expect(s.moebel.map((m) => [m.name, m.art, m.q.x, m.q.z, m.q.b, m.q.t, m.q.h])).toEqual([
+      ["Pokaltisch 1", "pokaltisch", 100, 2600, 200, 80, 77],
+      ["Pokaltisch 2", "pokaltisch", 600, 2400, 80, 300, 77],
+    ]);
+    const [a, b] = s.moebel;
+    expect(a!.pokale!.map((p) => [p.x, p.z])).toEqual([[125, 2640], [175, 2640], [225, 2640], [275, 2640]]);
+    expect(b!.pokale).toHaveLength(6);
+    // Jeder Pokal steht auf seinem Tisch.
+    for (const m of s.moebel) for (const p of m.pokale!) expect(p.x > m.q.x && p.x < m.q.x + m.q.b && p.z > m.q.z && p.z < m.q.z + m.q.t).toBe(true);
+    // Tisch und Bank haben keine Pokale.
+    const ohne = hallenSzene({ ...halle, objekte: [{ id: "t", art: "tisch", x: 100, y: 2600, drehung: 0 }] }, planeHalle({ ...halle, objekte: [{ id: "t", art: "tisch", x: 100, y: 2600, drehung: 0 }] }, [], masse), masse);
+    expect(ohne.moebel[0]!.pokale).toBeUndefined();
+    // Vertauschte Achsen (Halle quer gezeichnet): die Pokale wandern mit.
+    const v = vertauscht(s).moebel[0]!;
+    expect(v.pokale!.map((p) => [p.x, p.z])).toEqual(a!.pokale!.map((p) => [p.z, p.x]));
+  });
 });
 
 

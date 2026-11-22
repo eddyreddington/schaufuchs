@@ -45,6 +45,7 @@ export const halle = {
     tisch: "Ein Tisch liegt außerhalb des Grundrisses – bitte erst verschieben oder entfernen.",
     bank: "Eine Bank liegt außerhalb des Grundrisses – bitte erst verschieben oder entfernen.",
     garnitur: "Eine Garnitur liegt außerhalb des Grundrisses – bitte erst verschieben oder entfernen.",
+    pokaltisch: "Ein Pokaltisch liegt außerhalb des Grundrisses – bitte erst verschieben oder entfernen.",
   },
   /** Leere Plätze und Teile entfernen: pruefeEntfernt und pruefeTeileEntfernt in der Domain. */
   entfernen: {

@@ -52,7 +52,7 @@ export function planeHalle(eingabe: Halle, tiere: PlanTier[], masse: KaefigMasse
     if (i >= 0 && (halle.objekte ?? []).some((o) => o.id === z.objektId && o.art === "voliere")) festeObjektVoliere.set(z.objektId, freieVolieren.splice(i, 1)[0]!);
   }
   let vNr = 0;
-  const moebelNr: Record<MoebelArt, number> = { tisch: 0, bank: 0, garnitur: 0 };
+  const moebelNr: Record<MoebelArt, number> = { tisch: 0, bank: 0, garnitur: 0, pokaltisch: 0 };
   const objekte: PlanObjekt[] = (halle.objekte ?? []).map((o) => {
     const istVoliere = o.art === "voliere";
     const typ = o.typ ?? "huehner";
