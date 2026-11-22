@@ -31,3 +31,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [025](025-lesemodus.md) | Lesemodus per `NUR_LESEN`: keine Änderungen, Lesen und Anmelden gehen weiter |
 | [026](026-einrichten-per-befehl.md) | Ersteinrichtung über die Kommandozeile mit Link „Passwort setzen“ |
 | [027](027-bdrg-daten-nutzung.md) | BDRG-Daten: Nutzung im Verein, kein Verzeichnis im Repo |
+| [028](028-aussehen-der-halle.md) | Aussehen der Halle in 3D: einstellbar, ändert nie den Plan |

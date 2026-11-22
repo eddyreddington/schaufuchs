@@ -15,6 +15,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 | Front, Wand | `hallenplan-wandfront.ts`, `hallenplan-wand.ts` | `wandAusrichtung()` (Rückwand an die Wand), `mitWandreihe()` |
 | Folge | `hallenplan-folge.ts` | `planFolge()` („Nach Plan nummerieren“, nur Nummern, kein Tier wechselt den Käfig; Einstellung `Halle.nummerFolge`, Oberfläche `hallenplan-nummerfolge.tsx`), `planUnordnung()` |
 | Druck, 3D | `hallenplan-druck.ts`, `hallenplan-3d.ts`, `hallenplan-3d-waende.ts`, `hallenplan-3d-rundgang.ts`, `stellvorschlaege.ts`, `kaefige.ts` | `zeichnungDerHalle()`, `richterFarbe()`, `hallenSzene()`, `waendeImGrundriss()`, `rundgang()` (Wegpunkte des Rundgangs), `stellVorschlaege()`, `kaefigTyp()`, `kaefigMass()` |
+| Aussehen (3D) | `hallenplan-aussehen.ts`, `hallenplan-3d-ausstattung.ts` | `Halle.aussehen` ([ADR 028](../entscheidungen/028-aussehen-der-halle.md)): `aussehenVon()` (Vorgaben, Grenzen), `aussehenBereinigt()` (nur Abweichungen speichern), `deckeSichtbar()`; `fensterInWaenden()`, `geraeteAnWaenden()`, `spielfeldLinien()`, `deckenTeile()`. Web: `hallenplan-aussehen.tsx` (Abschnitt „Aussehen (3D)“), `hallenplan-3d-raum.ts` (Boden, Linien, Innenwände, Fenster, Geräte, Decke), `hallenplan-3d-texturen.ts` (Canvas-Texturen) |
 | Server | `apps/server/src/routers/katalog/kaefige.ts`, `hallenplan.ts`, `gemeinsam.ts` (`planNeuSetzenIn`), `einlieferung.ts` | `katalog.hallenplan`, `halleSetzen`, `planFestschreiben`, `planNeuSetzen`, `stellVorschlaege` (`hallenplan.ts`); `plattenSetzen`, `kaefigMassSetzen` (`kaefige.ts`); `halle.kaefigSetzen` (einzelnes Tier, `einlieferung.ts`) |
 | PDF | `apps/server/src/pdf/hallenplan.ts` | `hallenplanPdf()`, `aufbaulistePdf()` |
 | Web | `apps/web/src/seiten/hallenplan.tsx` (Seite, `NeueHalle`, Editor `Plan`: Zustand der Auswahl, Tastatur, Aufbau der Seite), `hallenplan-entwurf.ts` (`useHallenEntwurf`: Entwurf, Speicherkette, Verlauf, Festschreiben, Plan neu setzen), `hallenplan-laden.ts` (`hallenplanAnsicht`: Fehlerseite nur ohne geladenen Plan; `serverStandUebernehmen`: wann der Entwurf nach dem Speichern den Serverstand übernimmt), `hallenplan-speichern.ts` (`speicherBericht`: Meldung des Knopfs „Speichern“, der nach dem sofortigen Speichern den Stand am Server nachprüft; `speicherAnzeige`: Anzeige oben rechts), `hallenplan-wiederholen.ts` (`mitWiederholen`, `fehlerArt`, `istVerbindungsfehler`, `wartezeit`, `wartenOderOnline`: Speichern ohne Verbindung von selbst wiederholen; `festEinreihen`, `festSchonAngekommen`: Festschreiben in der Reihe), `hallenplan-befehle.ts` (`usePlanBefehle`: Rückgängig/Wiederholen, Tier versetzen, nach Plan nummerieren, Einstellungen der Halle, Automatik, an den Wänden ausrichten, Einzelreihe), `hallenplan-aktionen.ts` (`useEditorAktionen`: Ausrichten, Drehen, Entfernen, Einsetzen, fehlende Käfige, Fläche aufziehen), `hallenplan-bild.tsx` (Zeichnung `PlanBild`) mit `hallenplan-bild-bedienung.ts` (`usePlanBedienung`: Greifen, Ziehen, Rahmen, Pfeiltasten, an die Wand ziehen), `hallenplan-grundriss.tsx` (Grundriss bearbeiten, Entscheidung 019), `hallenplan-geometrie.ts` (reine Rechnungen des Editors), `hallenplan-eigenschaften.tsx`, `hallenplan-werkzeugleiste.tsx`, `hallenplan-vorschlaege.tsx`, `hallenplan-uebersicht.tsx` (Legende, Platz, Aufbauliste), `hallenplan-teile.tsx`, `hallenplan-werkzeuge.tsx` (Bausteine der Werkzeugleiste), `hallenplan-entwuerfe.tsx`, `hallenplan-3d.tsx` (Seite der 3D-Ansicht, three.js nur dynamisch geladen) mit `hallenplan-3d-welt.ts` (Szene, Kamera, Zeichenschleife), `hallenplan-3d-bausteine.ts` (Texturen, Geometrien, Figuren), `hallenplan-3d-landschaft.ts` (Umgebung), `hallenplan-3d-steuerung.ts` (Tasten, Doppelklick, Rundgang) und `hallenplan-3d-steuerkreuz.tsx`, `hallenplan-3d-seite.tsx`, `kaefige.tsx` | Editor = Seite; rechnet über `@schau/domain` selbst mit, speichert über `katalog.halleSetzen` |
@@ -39,15 +40,18 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 - Das automatische Festschreiben steht immer in der Reihe der Speicherungen (`festEinreihen`): Verschieben, „Leeres
   entfernen“ und „Tier versetzen“ hängen sich an ein laufendes an – so erreicht keine Verschiebung den Server vor dem
   Festschreiben, auch nicht nach langem Warten auf die Verbindung.
+- Aussehen der Halle (3D) ändert nie Plan, Plätze oder Nummern: `festGeometrie` kennt es nicht, ein fester Plan bleibt fest
+  ([ADR 028](../entscheidungen/028-aussehen-der-halle.md)). Gespeichert über `halleSetzen` (zod in `HALLE_EINGABE`), nur
+  Abweichungen von der Vorgabe; kommt als Teil der Halle mit Entwürfen und Vorlagen mit.
 - Domain-Funktionen sind rein; Zufallshallen-Tests prüfen Invarianten über viele Hallen.
 
 ## Tests
 
 - Web: `apps/web/src/seiten/hallenplan-*.test.ts` (Laden, Speichern, Wiederholen ohne Verbindung).
-- Domain: `packages/domain/src/hallenplan*.test.ts`, `stellvorschlaege.test.ts` (u. a. Zufallshallen, Möbel ohne Einfluss).
+- Domain: `packages/domain/src/hallenplan*.test.ts`, `stellvorschlaege.test.ts` (u. a. Zufallshallen, Möbel ohne Einfluss, Aussehen ohne Einfluss).
 - Server (`apps/server/src/tests`): `17-kaefige`, `19-hallenplan`, `24-plan-fest`, `31-stellvorschlaege`, `36-nach-plan-nummerieren`,
   `38-hallenplan-entfernen`, `39-hallenplan-druck`, `40-hallenplan-neu-setzen`, `41-hallenplan-3d`, `42-hallenplan-moebel-etagen`,
-  `44-pruefliste-hallenplan`, `67-pokaltisch`.
+  `44-pruefliste-hallenplan`, `67-pokaltisch`, `75-halle-aussehen`.
 
 ## Datenbank
 
@@ -58,4 +62,4 @@ Tabelle `katalogeintrag`: `kaefig`, `kaefig_wahl`, `kaefig_block`. Sockelbild in
 ## Handbuch
 
 `docs/handbuch/ausstellungsleitung.md`, Abschnitt 5.5: [Käfige](/hilfe/ausstellungsleitung#käfige-käfigbedarf),
-[Hallenplan](/hilfe/ausstellungsleitung#hallenplan), „Hallenplan bearbeiten“, [Hallenplan in 3D](/hilfe/ausstellungsleitung#hallenplan-3d).
+[Hallenplan](/hilfe/ausstellungsleitung#hallenplan), „Hallenplan bearbeiten“, [Hallenplan in 3D](/hilfe/ausstellungsleitung#hallenplan-3d), [Aussehen der Halle in 3D](/hilfe/ausstellungsleitung#hallenplan-3d-aussehen).
