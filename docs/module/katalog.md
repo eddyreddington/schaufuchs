@@ -11,6 +11,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 | Nummern, Folge | `packages/domain/src/katalog.ts` | `vergebeKatalognummern()` (alle neu, lückenlos ab Start), `nachmeldungsNummern()` / `nachmeldungsNummer()`, `vergleicheFolge()`, `formatKatalognummer()`, `gruppenAbteilung()` |
 | Sortierung | `katalog.ts` | `SORTIER_KRITERIEN`, `SORTIER_FEST` (Sparte, Rasse, Farbenschlag immer vorn), `SORTIERUNG_STANDARD`, `sortierungNormal()`, `istStandardSortierung()` |
 | Gliederung, Schriften | `schriften.ts`, `kaefige.ts` | `KATALOG_GLIEDERUNG`, `KATALOG_TEILE`, `seitenbereiche()`, `KATALOG_SCHRIFTEN`; `nummernBereiche()`, Käfigblöcke (`kaefigFolge`) |
+| Typografie | `katalog-typografie.ts`, Server `pdf/katalog-schrift.ts` | `KATALOG_SCHRIFT_FAMILIE` (eine Familie je Wahl), `katalogSchriftsatz()`, `schnittDatei()`, `KATALOG_GROESSEN` / `katalogGroessen()`; `registriereKatalogSchrift()`, `NORMAL`/`FETT`/`KURSIV`/`AUSZEICHNUNG` |
 | Server, Nummern | `apps/server/src/routers/katalog/nummern.ts` | `katalog.liste`, `katalog.nummernVergeben` (vor dem Festschreiben alle neu, danach nur Nachmeldungen), `katalog.nummernNachPlan` (Folge aus dem Hallenplan), `katalog.gedrucktSetzen` (festschreiben) |
 | Server, Sortierung | `apps/server/src/routers/schau/einstellungen.ts` | `schau.katalogSortierungSetzen` (nur Ausstellungsleitung, gesperrt nach Festschreiben, Protokoll) |
 | Server, Gestaltung | `apps/server/src/routers/katalog-gestaltung.ts` | `katalogGestaltung.laden/speichern`, Bilder, Beiträge (`beitragSpeichern`, `beitraegeOrdnen`) |
@@ -43,11 +44,16 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 - Änderungen mit `protokolliere()`; öffentlich sichtbare Gestaltung über `oeffentlichSichtbarProcedure` (erneuert Zwischenspeicher).
 - Namen im gedruckten Katalog nur mit unterschriebenem Meldebogen, im Internet zusätzlich mit Online-Einwilligung; online keine Wohnanschrift.
 - Bilder nur mit Bildnachweis (Urheber, Lizenz, Quelle).
+- Schrift ([ADR 032](../entscheidungen/032-eine-schriftfamilie-im-katalog.md)): ein Katalog, eine Familie – die gewählte –
+  in normal, fett, kursiv; Größen nur aus `KATALOG_GROESSEN` (im Kontext `G`, im Tierteil `GT`). Auszeichnung nur für den
+  Schaunamen auf der Titelseite bei „Buch, schmal“ und „Ausgewogen“. Fehlt ein Schnitt, die Regular derselben Familie.
+  Katalog-Teile nehmen nie `SANS`/`SERIF` aus `basis.ts` (die gehören Briefen und Belegen), sondern die Schnitte aus
+  `pdf/katalog-schrift.ts`. Nichts mit „…“ kürzen: lieber eine Kurzform („nicht veröff.“).
 
 ## Tests
 
-- Domain: `domain.test.ts` (Nummern, Nachmeldungen), `einteilung-jugend.test.ts` (Jugendblock, Kennzeichen), `katalog-sortierung.test.ts` (Vorgabe = alte Folge in Zufallsschauen), `katalog-gliederung.test.ts`.
-- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog), `79-ablauf-halle` (Stand für „Nach Hallenplan vergeben“), `81-jugend-kennzeichen` („Jgd.“ in Druck, Online-Katalog, Ergebnissen).
+- Domain: `domain.test.ts` (Nummern, Nachmeldungen), `katalog-typografie.test.ts` (eine Familie je Wahl, Ersatzschnitt, Größenstufen), `einteilung-jugend.test.ts` (Jugendblock, Kennzeichen), `katalog-sortierung.test.ts` (Vorgabe = alte Folge in Zufallsschauen), `katalog-gliederung.test.ts`.
+- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `82-katalog-schriften` (pdffonts: nur die gewählte Familie, pdftotext: Text vollständig), `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog), `79-ablauf-halle` (Stand für „Nach Hallenplan vergeben“), `81-jugend-kennzeichen` („Jgd.“ in Druck, Online-Katalog, Ergebnissen).
 
 ## Datenbank
 
