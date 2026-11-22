@@ -35,6 +35,8 @@ export const schau = pgTable("schau", {
   provisionBp: integer("provision_bp").notNull().default(1500),
   katalogStart: integer("katalog_start").notNull().default(1),
   jugendSeparat: boolean("jugend_separat").notNull().default(true),
+  /** Preisrichter-Einteilung nach Rassen: die Jugend je Rasse eigens einteilen (false = mit ihrer Rasse). */
+  einteilungJugendSeparat: boolean("einteilung_jugend_separat").notNull().default(false),
   /** Volieren und Stämme als eigene Abteilungen vor den Einzeltieren. */
   staemmeVorn: boolean("staemme_vorn").notNull().default(true),
   kontingentJe: kontingentBasisEnum("kontingent_je").notNull().default("preisrichter"),

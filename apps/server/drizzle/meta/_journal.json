@@ -484,6 +484,13 @@
       "when": 1795306441521,
       "tag": "0068_preisrichter_gruppen",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1795344615345,
+      "tag": "0069_jugend_einteilung",
+      "breakpoints": true
     }
   ]
 }

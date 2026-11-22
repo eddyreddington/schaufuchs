@@ -151,7 +151,7 @@ describe("Einteilung nach Rassen (Gegenprüfung)", () => {
     await al().preisrichter.zuteilungSetzen({ schauId: id, regeln: [{ preisrichterId: X.id, sparte: r[0]!.sparte, rasse: r[0]!.rasse, farbenschlag: "" }] });
     const ds = await import("../services/datenschutz");
     const a = await ds.ladeAuskunftPerson(adminKontext.benutzer!.organisationId, "Auskunft Einteilerin");
-    expect(a.preisrichter.find((p) => p.name === "Auskunft Einteilerin")!.einteilungNachRassen).toEqual([{ sparte: r[0]!.sparte, rasse: r[0]!.rasse, farbenschlag: "" }]);
+    expect(a.preisrichter.find((p) => p.name === "Auskunft Einteilerin")!.einteilungNachRassen).toEqual([{ sparte: r[0]!.sparte, rasse: r[0]!.rasse, farbenschlag: "", jugend: false }]);
     const { zuruecksetzen } = await import("../testschau");
     await zuruecksetzen(s.slug, { leise: true });
     expect((await m.sql`select count(*)::int n from pr_zuteilung where schau_id = ${id}`)[0]!.n).toBe(0);

@@ -1,9 +1,9 @@
-import { bdrgGruppe, bewertetGruppe, bewertetSparte, formatKatalognummer, regelnAusZuteilung, ZUSAGEN, type RassenRegel } from "@schau/domain";
+import { bdrgGruppe, bewertetGruppe, bewertetSparte, formatKatalognummer, regelnAusZuteilung, vergleicheEinteilFolge, ZUSAGEN, type RassenRegel } from "@schau/domain";
 import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { hashPasswort } from "../auth";
 import { db } from "../db/client";
-import { preisrichter, prEinteilung, prZuteilung, sitzung } from "../db/schema";
+import { preisrichter, prEinteilung, prZuteilung, schau, sitzung } from "../db/schema";
 import { ladeEintraege } from "../services/eintraege";
 import { bereicheDerSchau, einteilSchluessel, einteilTier, ladeRegeln, sperreEinteilung } from "../services/einteilung";
 import type { Akteur } from "../services/protokoll";
@@ -242,36 +242,41 @@ export const preisrichterRouter = router({
    * und Farbenschlägen, dazu die gespeicherten Regeln.
    */
   zuteilung: benutzerProcedure.input(z.object({ schauId: dbId })).query(async ({ ctx, input }) => {
-    await ladeSchau(ctx.benutzer.organisationId, input.schauId);
+    const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
+    const separat = s.einteilungJugendSeparat;
     const [eintraege, regeln] = await Promise.all([gemeldet(input.schauId), ladeRegeln(db, input.schauId)]);
     // Gruppiert mit demselben Schlüssel, mit dem gespeichert und angewendet wird (ohne Rücksicht auf Schreibweise); es
     // gilt die erste Schreibweise. Gespeicherte Regeln kommen in der Schreibweise der Anzeige zurück.
     // `gruppe`: BDRG-Gruppe der Rasse (leer = nicht gepflegt) – die Auswahl zeigt nur Preisrichter, die sie bewerten.
-    const gruppen: { sparte: string; rasse: string; gruppe: string; anzahl: number; farben: { farbenschlag: string; anzahl: number }[] }[] = [];
+    // `jugend`: die Jugend der Rasse als eigene Zeile (nur bei „Jugend separat“).
+    const gruppen: { sparte: string; rasse: string; jugend: boolean; gruppe: string; anzahl: number; farben: { farbenschlag: string; anzahl: number }[] }[] = [];
     const jeRasse = new Map<string, (typeof gruppen)[number]>();
     const schreibweise = new Map<string, { sparte: string; rasse: string; farbenschlag: string }>();
-    for (const e of [...eintraege].sort(nachFolge)) {
-      const t = einteilTier(e);
+    for (const e of nachFolge(eintraege, s)) {
+      const t = einteilTier(e, separat);
       const sparte = t.sparte ?? "";
-      const k = einteilSchluessel(sparte, t.rasse);
+      const k = einteilSchluessel(sparte, t.rasse, "", t.istJugend);
       let g = jeRasse.get(k);
       if (!g) {
-        g = { sparte, rasse: t.rasse, gruppe: bdrgGruppe(e.gruppe), anzahl: 0, farben: [] };
+        const rk = einteilSchluessel(sparte, t.rasse);
+        const sw = schreibweise.get(rk);
+        g = { sparte: sw?.sparte ?? sparte, rasse: sw?.rasse ?? t.rasse, jugend: !!t.istJugend, gruppe: bdrgGruppe(e.gruppe), anzahl: 0, farben: [] };
         jeRasse.set(k, g);
         gruppen.push(g);
-        schreibweise.set(k, { sparte, rasse: t.rasse, farbenschlag: "" });
+        if (!sw) schreibweise.set(rk, { sparte, rasse: t.rasse, farbenschlag: "" });
       }
       g.anzahl++;
       const fk = einteilSchluessel(sparte, t.rasse, t.farbenschlag);
       const f = g.farben.find((x) => einteilSchluessel(g.sparte, g.rasse, x.farbenschlag) === fk);
       if (f) f.anzahl++;
       else {
-        g.farben.push({ farbenschlag: t.farbenschlag ?? "", anzahl: 1 });
-        schreibweise.set(fk, { sparte: g.sparte, rasse: g.rasse, farbenschlag: t.farbenschlag ?? "" });
+        const sw = schreibweise.get(fk);
+        g.farben.push({ farbenschlag: sw?.farbenschlag ?? t.farbenschlag ?? "", anzahl: 1 });
+        if (!sw) schreibweise.set(fk, { sparte: g.sparte, rasse: g.rasse, farbenschlag: t.farbenschlag ?? "" });
       }
     }
     const angezeigt = regeln.map((r) => ({ ...r, ...(schreibweise.get(einteilSchluessel(r.sparte, r.rasse, r.farbenschlag)) ?? {}) }));
-    return { gruppen, regeln: angezeigt, nummeriert: eintraege.some((e) => e.katalogNr != null) };
+    return { gruppen, regeln: angezeigt, nummeriert: eintraege.some((e) => e.katalogNr != null), jugendSeparat: separat };
   }),
 
   /**
@@ -283,7 +288,16 @@ export const preisrichterRouter = router({
       z.object({
         schauId: dbId,
         regeln: z
-          .array(z.object({ preisrichterId: dbId, sparte: z.string().trim().max(100), rasse: z.string().trim().min(1).max(300), farbenschlag: z.string().trim().max(300) }))
+          .array(
+            z.object({
+              preisrichterId: dbId,
+              sparte: z.string().trim().max(100),
+              rasse: z.string().trim().min(1).max(300),
+              farbenschlag: z.string().trim().max(300),
+              /** Nur für die Jugend der Rasse (bei „Jugend separat“); fehlt = für alle Tiere der Rasse. */
+              jugend: z.boolean().optional(),
+            }),
+          )
           .max(3000),
         bestaetigt: z.boolean().optional(),
       }),
@@ -297,8 +311,8 @@ export const preisrichterRouter = router({
       // BDRG-Gruppe je gemeldeter Rasse (ein Farbenschlag zählt mit der Gruppe seiner Rasse).
       const gruppeVon = new Map(tiere.map((e) => { const t = einteilTier(e); return [einteilSchluessel(t.sparte, t.rasse), e.gruppe] as const; }));
       // Doppelte (gleiche Sparte, Rasse, Farbenschlag ohne Rücksicht auf Schreibweise): die letzte gilt.
-      const eindeutig = new Map<string, RassenRegel>();
-      for (const r of input.regeln) eindeutig.set(einteilSchluessel(r.sparte, r.rasse, r.farbenschlag), r);
+      const eindeutig = new Map<string, RassenRegel & { jugend: boolean }>();
+      for (const r of input.regeln) eindeutig.set(einteilSchluessel(r.sparte, r.rasse, r.farbenschlag, r.jugend), { ...r, jugend: !!r.jugend });
       const regeln = [...eindeutig.values()];
       for (const r of regeln) {
         const pr = richter.find((x) => x.id === r.preisrichterId);
@@ -315,7 +329,7 @@ export const preisrichterRouter = router({
           tabelle: "pr_zuteilung",
           datensatzId: null,
           aktion: "Einteilung nach Rassen",
-          neu: regeln.map((r) => ({ preisrichter: richter.find((x) => x.id === r.preisrichterId)!.name, sparte: r.sparte, rasse: r.rasse, ...(r.farbenschlag ? { farbenschlag: r.farbenschlag } : {}) })),
+          neu: regeln.map((r) => ({ preisrichter: richter.find((x) => x.id === r.preisrichterId)!.name, sparte: r.sparte, rasse: r.rasse, ...(r.farbenschlag ? { farbenschlag: r.farbenschlag } : {}), ...(r.jugend ? { jugend: true } : {}) })),
           akteur: ctx,
         });
       };
@@ -333,8 +347,9 @@ export const preisrichterRouter = router({
     }),
 
   /**
-   * Vorschlag: gleichmäßig verteilen in der Folge Sparte, Rasse, Farbenschlag (ohne die Blöcke für Stämme und Jugend – so
-   * liegt jede Rasse beisammen und wird nur geteilt, wenn es nicht anders geht), dann je Rasse bzw. Farbenschlag.
+   * Vorschlag: gleichmäßig verteilen in der Folge Sparte, Rasse, Farbenschlag (ohne die Blöcke für Stämme – so liegt jede
+   * Rasse beisammen und wird nur geteilt, wenn es nicht anders geht), dann je Rasse bzw. Farbenschlag. Bei „Jugend
+   * separat“ ist die Jugend jeder Rasse eine eigene Einheit (am Ende bzw. hinter ihrer Rasse wie im Katalog).
    */
   zuteilungVorschlagen: oeffentlichSichtbarProcedure.input(z.object({ schauId: dbId })).query(async ({ ctx, input }) => {
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
@@ -343,24 +358,52 @@ export const preisrichterRouter = router({
       gemeldet(input.schauId),
     ]);
     if (!eintraege.length) return { regeln: [] as RassenRegel[], fehlend: [] as string[] };
-    const folge = [...eintraege].sort(nachFolge);
+    const folge = nachFolge(eintraege, s);
     // Je Farbenschlag eine „Nummer“: geschnitten wird nie mitten in einem Farbenschlag.
     const nrVon = new Map<string, number>();
     const nummern = folge.map((e) => {
-      const t = einteilTier(e);
-      const k = einteilSchluessel(t.sparte, t.rasse, t.farbenschlag);
+      const t = einteilTier(e, s.einteilungJugendSeparat);
+      const k = einteilSchluessel(t.sparte, t.rasse, t.farbenschlag, t.istJugend);
       if (!nrVon.has(k)) nrVon.set(k, nrVon.size + 1);
-      return { nr: nrVon.get(k)!, rasse: einteilSchluessel(t.sparte, t.rasse), sparte: t.sparte, gruppe: e.gruppe };
+      return { nr: nrVon.get(k)!, rasse: einteilSchluessel(t.sparte, t.rasse, "", t.istJugend), sparte: t.sparte, gruppe: e.gruppe };
     });
     const v = schlageEinteilungVor(nummern, richter);
     const regeln = regelnAusZuteilung(
       folge.map((e, i) => {
         const n = nummern[i]!.nr;
-        return { ...einteilTier(e), preisrichterId: v.find((x) => n >= x.vonNr && n <= x.bisNr)?.preisrichterId ?? null };
+        return { ...einteilTier(e, s.einteilungJugendSeparat), preisrichterId: v.find((x) => n >= x.vonNr && n <= x.bisNr)?.preisrichterId ?? null };
       }),
     );
     return { regeln, fehlend: v.fehlend ?? [] };
   }),
+
+  /**
+   * Jugend in der Einteilung nach Rassen: mit ihrer Rasse (Vorgabe) oder separat mit eigenen Zeilen und Preisrichtern.
+   * Mit Katalognummern und Regeln rechnet die Software die Bereiche gleich neu (Rückfrage, wenn bewertete Tiere den
+   * Preisrichter wechseln). Jugendregeln bleiben beim Zurückschalten gespeichert, gelten aber erst wieder bei „separat“.
+   */
+  einteilungJugendSetzen: oeffentlichSichtbarProcedure
+    .input(z.object({ schauId: dbId, separat: z.boolean(), bestaetigt: z.boolean().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const s = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.schauId));
+      return db.transaction(async (tx) => {
+        await sperreEinteilung(tx, input.schauId);
+        const [{ alt }] = (await tx.select({ alt: schau.einteilungJugendSeparat }).from(schau).where(eq(schau.id, s.id)).for("update")) as [{ alt: boolean }];
+        if (alt === input.separat) return { bereiche: null };
+        const setzen = async (t: Tx) => {
+          await t.update(schau).set({ einteilungJugendSeparat: input.separat }).where(eq(schau.id, s.id));
+          await protokolliere(t, { schauId: s.id, tabelle: "schau", datensatzId: s.id, aktion: "Jugend in der Einteilung", alt: { einteilungJugendSeparat: alt }, neu: { einteilungJugendSeparat: input.separat }, akteur: ctx });
+        };
+        const regeln = await ladeRegeln(tx, s.id);
+        const b = regeln.length ? await bereicheDerSchau(tx, s.id, regeln, input.separat) : null;
+        if (!b || b.nummeriert === 0) {
+          await setzen(tx);
+          return { bereiche: null };
+        }
+        await schreibeEinteilung(tx, ctx, s.id, b.bereiche, input.bestaetigt, { zusatz: setzen, aktion: "aus Einteilung nach Rassen", ausnahmen: new Set(b.abweichend.map((x) => x.id)) });
+        return { bereiche: b.bereiche };
+      });
+    }),
 });
 
 /** Preisrichter für die Vorschläge, mit der Höchstzahl als Gewicht: ein Obmann bekommt im Verhältnis weniger Tiere. */
@@ -378,15 +421,8 @@ async function gemeldet(schauId: number) {
   return (await ladeEintraege(schauId)).filter((e) => e.meldungStatus === "offen" || e.meldungStatus === "bestaetigt");
 }
 
-/** Ausstellungsfolge: Sparte, Rasse, Farbenschlag (Einträge ohne Verzeichnis-Folge ans Ende, nach Namen). */
-function nachFolge(a: Awaited<ReturnType<typeof gemeldet>>[number], b: Awaited<ReturnType<typeof gemeldet>>[number]) {
-  const ta = einteilTier(a), tb = einteilTier(b);
-  return (
-    (a.sparteFolge ?? 1e9) - (b.sparteFolge ?? 1e9) ||
-    (ta.sparte ?? "").localeCompare(tb.sparte ?? "") ||
-    (a.rasseFolge ?? 1e9) - (b.rasseFolge ?? 1e9) ||
-    ta.rasse.localeCompare(tb.rasse) ||
-    (a.farbFolge ?? 1e9) - (b.farbFolge ?? 1e9) ||
-    (ta.farbenschlag ?? "").localeCompare(tb.farbenschlag ?? "")
-  );
+/** Folge der Einteilung (siehe vergleicheEinteilFolge): Sparte, Rasse, Farbenschlag; die Jugend separat wie im Katalog. */
+function nachFolge(eintraege: Awaited<ReturnType<typeof gemeldet>>, s: { einteilungJugendSeparat: boolean; jugendSeparat: boolean }) {
+  const mit = eintraege.map((e) => ({ e, t: { ...einteilTier(e, s.einteilungJugendSeparat), sparteFolge: e.sparteFolge, rasseFolge: e.rasseFolge, farbFolge: e.farbFolge } }));
+  return mit.sort((a, b) => vergleicheEinteilFolge(a.t, b.t, { jugendAmEnde: s.jugendSeparat })).map((x) => x.e);
 }

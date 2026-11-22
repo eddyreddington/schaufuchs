@@ -1,7 +1,7 @@
 import { bereicheAusRassen, formatKatalognummer, type EinteilTier, type RassenRegel } from "@schau/domain";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 import type { Tx } from "../db/client";
-import { katalogeintrag, prEinteilung, prZuteilung } from "../db/schema";
+import { katalogeintrag, prEinteilung, prZuteilung, schau } from "../db/schema";
 import { ladeEintraege, type Eintrag } from "./eintraege";
 import { protokolliere, type Akteur } from "./protokoll";
 import { zuteilung } from "./pruefung";
@@ -16,34 +16,45 @@ export async function sperreEinteilung(tx: Tx, schauId: number) {
 
 /**
  * Sparte, Rasse und Farbenschlag eines Tieres für die Einteilung. Ein Farbenschlag außerhalb des Verzeichnisses (freie
- * Angabe mit gewählter Rasse) zählt mit seinem Text; ohne Rasse steht der freie Text als Rasse.
+ * Angabe mit gewählter Rasse) zählt mit seinem Text; ohne Rasse steht der freie Text als Rasse. Jugend nur, wenn die Schau
+ * die Jugend separat einteilt (`jugendSeparat`) – sonst geht sie mit ihrer Rasse.
  */
-export function einteilTier(e: Pick<Eintrag, "sparte" | "rasse" | "farbenschlag" | "einordnungRasse" | "freitext">): EinteilTier {
+export function einteilTier(e: Pick<Eintrag, "sparte" | "rasse" | "farbenschlag" | "einordnungRasse" | "freitext"> & { istJugend?: boolean }, jugendSeparat = false): EinteilTier {
   const rasse = (e.rasse ?? e.einordnungRasse ?? e.freitext ?? "").trim();
   const farbenschlag = e.rasse ? e.farbenschlag : e.einordnungRasse ? e.freitext : null;
-  return { sparte: e.sparte ?? null, rasse, farbenschlag: farbenschlag?.trim() || null };
+  return { sparte: e.sparte ?? null, rasse, farbenschlag: farbenschlag?.trim() || null, istJugend: jugendSeparat && !!e.istJugend };
 }
 
-/** Gleicher Schlüssel für Anzeige, Speichern und Anwenden: ohne Rücksicht auf Groß-/Kleinschreibung und Leerzeichen. */
-export const einteilSchluessel = (sparte: string | null | undefined, rasse: string, farbenschlag?: string | null) =>
-  JSON.stringify([sparte ?? "", rasse, farbenschlag ?? ""].map((x) => x.trim().replace(/\s+/g, " ").toLowerCase()));
+/**
+ * Gleicher Schlüssel für Anzeige, Speichern und Anwenden: ohne Rücksicht auf Groß-/Kleinschreibung und Leerzeichen. Die
+ * Jugend einer Rasse (Regel mit Merkmal) hat einen eigenen Schlüssel.
+ */
+export const einteilSchluessel = (sparte: string | null | undefined, rasse: string, farbenschlag?: string | null, jugend?: boolean) =>
+  JSON.stringify([...[sparte ?? "", rasse, farbenschlag ?? ""].map((x) => x.trim().replace(/\s+/g, " ").toLowerCase()), ...(jugend ? ["jugend"] : [])]);
 
 export async function ladeRegeln(ex: Tx, schauId: number): Promise<RassenRegel[]> {
   return ex
-    .select({ preisrichterId: prZuteilung.preisrichterId, sparte: prZuteilung.sparte, rasse: prZuteilung.rasse, farbenschlag: prZuteilung.farbenschlag })
+    .select({ preisrichterId: prZuteilung.preisrichterId, sparte: prZuteilung.sparte, rasse: prZuteilung.rasse, farbenschlag: prZuteilung.farbenschlag, jugend: prZuteilung.jugend })
     .from(prZuteilung)
     .where(eq(prZuteilung.schauId, schauId));
 }
 
+/** Teilt die Schau die Jugend in der Einteilung nach Rassen separat ein (Einstellung im Reiter „Einteilung nach Rassen“)? */
+export async function jugendSeparatEingeteilt(ex: Tx, schauId: number): Promise<boolean> {
+  const [s] = await ex.select({ separat: schau.einteilungJugendSeparat }).from(schau).where(eq(schau.id, schauId));
+  return !!s?.separat;
+}
+
 /**
  * Nummernbereiche aus der Einteilung nach Rassen. Es zählen die bestätigten Tiere; Nummern nicht bestätigter (nach dem
- * Festschreiben behalten sie ihre Nummer) trennen die Bereiche.
+ * Festschreiben behalten sie ihre Nummer) trennen die Bereiche. `jugendSeparat` fehlt: die Einstellung der Schau.
  */
-export async function bereicheDerSchau(ex: Tx, schauId: number, regeln: RassenRegel[]) {
+export async function bereicheDerSchau(ex: Tx, schauId: number, regeln: RassenRegel[], jugendSeparat?: boolean) {
+  const separat = jugendSeparat ?? (await jugendSeparatEingeteilt(ex, schauId));
   const eintraege = (await ladeEintraege(schauId, { ex })).filter((e) => e.katalogNr != null);
   const zaehlt = eintraege.filter((e) => e.meldungStatus === "bestaetigt");
   const b = bereicheAusRassen(
-    eintraege.map((e) => ({ ...einteilTier(e), id: e.id, nr: e.katalogNr!, suffix: e.suffix, zaehlt: e.meldungStatus === "bestaetigt" })),
+    eintraege.map((e) => ({ ...einteilTier(e, separat), id: e.id, nr: e.katalogNr!, suffix: e.suffix, zaehlt: e.meldungStatus === "bestaetigt" })),
     regeln,
   );
   return { nummeriert: zaehlt.length, ...b };

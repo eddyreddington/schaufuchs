@@ -74,8 +74,10 @@ export const prZuteilung = pgTable(
     rasse: text("rasse").notNull(),
     /** Leer = ganze Rasse. */
     farbenschlag: text("farbenschlag").notNull().default(""),
+    /** Nur für die Jugend der Rasse (Einteilung „Jugend separat“); false = für alle Tiere der Rasse. */
+    jugend: boolean("jugend").notNull().default(false),
   },
-  (t) => [uniqueIndex("pr_zuteilung_eindeutig").on(t.schauId, t.sparte, t.rasse, t.farbenschlag)],
+  (t) => [uniqueIndex("pr_zuteilung_eindeutig_jugend").on(t.schauId, t.sparte, t.rasse, t.farbenschlag, t.jugend)],
 );
 
 export const bewertung = pgTable("bewertung", {

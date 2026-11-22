@@ -208,7 +208,7 @@ export async function ladeAuskunftPerson(organisationId: number, name: string) {
     richter.map(async ({ id, ...r }) => {
       const [einteilung, rassen, bewertet, bestaetigt, protokoll] = await Promise.all([
         db.select({ vonNr: prEinteilung.vonNr, bisNr: prEinteilung.bisNr }).from(prEinteilung).where(eq(prEinteilung.preisrichterId, id)),
-        db.select({ sparte: prZuteilung.sparte, rasse: prZuteilung.rasse, farbenschlag: prZuteilung.farbenschlag }).from(prZuteilung).where(eq(prZuteilung.preisrichterId, id)),
+        db.select({ sparte: prZuteilung.sparte, rasse: prZuteilung.rasse, farbenschlag: prZuteilung.farbenschlag, jugend: prZuteilung.jugend }).from(prZuteilung).where(eq(prZuteilung.preisrichterId, id)),
         db.select({ n: count() }).from(bewertung).where(eq(bewertung.preisrichterId, id)),
         db.select({ n: count() }).from(bewertung).where(eq(bewertung.obmannBestaetigtVon, id)),
         db.select({ zeitpunkt: aenderung.zeitpunkt, tabelle: aenderung.tabelle, aktion: aenderung.aktion }).from(aenderung).where(eq(aenderung.preisrichterId, id)).orderBy(aenderung.id).limit(1000),

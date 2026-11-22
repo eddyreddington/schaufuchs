@@ -91,6 +91,7 @@ export const schauAnlegen = {
               provisionBp: vorlage.provisionBp,
               katalogStart: vorlage.katalogStart,
               jugendSeparat: vorlage.jugendSeparat,
+              einteilungJugendSeparat: vorlage.einteilungJugendSeparat,
               staemmeVorn: vorlage.staemmeVorn,
               teilschauen: vorlage.teilschauen,
               kontingentJe: vorlage.kontingentJe,
