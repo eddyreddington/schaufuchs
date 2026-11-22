@@ -6,6 +6,7 @@ import type { KaefigTyp } from "./kaefige";
 import type { Punkt } from "./hallenplan-umriss";
 import type { MoebelArt } from "./hallenplan-moebel";
 import type { HallenAussehen } from "./hallenplan-aussehen";
+import type { TuerArt } from "./hallenplan-tueren";
 
 export interface HallenFlaeche {
   name: string;
@@ -26,6 +27,8 @@ export interface HallenFlaeche {
   teil?: boolean;
   /** Nur intern: eingesetzter Tisch, Bank oder Garnitur – für die Reihen wie eine Freifläche. */
   moebel?: boolean;
+  /** Eingang: Tür in 3D (wie Wand, Glas, Holz oder offen); fehlt: `TUER_VORGABE`. Nur Darstellung, nie Plan. */
+  tuer?: TuerArt;
 }
 
 export interface Halle {

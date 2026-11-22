@@ -40,6 +40,7 @@ export * from "./lizenz";
 export * from "./version";
 export * from "./hallenplan-3d";
 export * from "./hallenplan-aussehen";
+export * from "./hallenplan-tueren";
 export * from "./hallenplan-3d-ausstattung";
 export * from "./hallenplan-3d-dach";
 export * from "./hallenplan-wandfront";

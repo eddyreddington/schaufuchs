@@ -12,6 +12,7 @@ import { artenDerSparte } from "./textbausteine";
 import { zeichnungDerHalle } from "./hallenplan-druck";
 import { rundgang, type RundgangPunkt } from "./hallenplan-3d-rundgang";
 import { ohneSeite, waendeImGrundriss } from "./hallenplan-3d-waende";
+import { type TuerArt, tuerArtVon, tuerFluegel } from "./hallenplan-tueren";
 import { aussehenVon, type VollesAussehen, wirksamerFirst } from "./hallenplan-aussehen";
 import { deckenHoehe } from "./hallenplan-3d-dach";
 import { istRechteckUmriss, type Punkt, umrissNormal } from "./hallenplan-umriss";
@@ -138,6 +139,11 @@ export interface SzeneTuer {
   q: Quader;
   name: string;
   notausgang: boolean;
+  /** Türart (siehe hallenplan-tueren.ts) und Flügel aus der Breite der Öffnung. */
+  art: TuerArt;
+  fluegel: 1 | 2;
+  /** Sturz über der Tür (Index in `waende`): mit dieser Wand blendet die Tür aus. */
+  wand: number;
 }
 
 export interface SzeneFlaeche {
@@ -255,7 +261,7 @@ function tuerWand(halle: Pick<Halle, "breite" | "laenge">, f: Pick<HallenFlaeche
 function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen" | "umriss">, H: number): { waende: Quader[]; tueren: SzeneTuer[] } {
   if (!istRechteckUmriss(halle.umriss)) return waendeImGrundriss(umrissNormal(halle.umriss!), halle.flaechen.filter((f) => !f.aussen), { dicke: WAND_DICKE, hoehe: H, tuerHoehe: TUER_HOEHE });
   const B = halle.breite, L = halle.laenge, d = WAND_DICKE;
-  const oeffnungen: Record<"x0" | "x1" | "z0" | "z1", { von: number; bis: number; name: string }[]> = { x0: [], x1: [], z0: [], z1: [] };
+  const oeffnungen: Record<"x0" | "x1" | "z0" | "z1", { von: number; bis: number; name: string; art: TuerArt }[]> = { x0: [], x1: [], z0: [], z1: [] };
   for (const f of halle.flaechen) {
     if (f.art !== "eingang") continue;
     const w = tuerWand(halle, f);
@@ -263,7 +269,7 @@ function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen" | "
     const entlangX = w === "z0" || w === "z1";
     const von = Math.max(0, entlangX ? f.x : f.y);
     const bis = Math.min(entlangX ? B : L, entlangX ? f.x + f.breite : f.y + f.tiefe);
-    if (bis - von > 1) oeffnungen[w].push({ von, bis, name: f.name });
+    if (bis - von > 1) oeffnungen[w].push({ von, bis, name: f.name, art: tuerArtVon(f) });
   }
   const waende: Quader[] = [];
   const tueren: SzeneTuer[] = [];
@@ -282,7 +288,7 @@ function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen" | "
       const von = Math.max(pos, x.von);
       if (x.bis > von + 0.5) {
         waende.push(s.q(von, x.bis, TUER_HOEHE, H - TUER_HOEHE));
-        tueren.push({ q: ohneSeite(s.q(von, x.bis, 0, TUER_HOEHE)), name: x.name, notausgang: /not/.test(klein(x.name)) });
+        tueren.push({ q: ohneSeite(s.q(von, x.bis, 0, TUER_HOEHE)), name: x.name, notausgang: /not/.test(klein(x.name)), art: x.art, fluegel: tuerFluegel(x.bis - von), wand: waende.length - 1 });
       }
       pos = Math.max(pos, x.bis);
     }

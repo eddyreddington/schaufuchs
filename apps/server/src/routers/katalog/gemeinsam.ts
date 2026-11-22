@@ -1,5 +1,5 @@
 /** Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan. */
-import { aussehenBereinigt, FIRST_HOEHE_MAX, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt } from "@schau/domain";
+import { aussehenBereinigt, flaecheBereinigt, TUER_ARTEN, FIRST_HOEHE_MAX, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt } from "@schau/domain";
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
@@ -63,7 +63,9 @@ export const HALLE_EINGABE = z.object({
         y: z.number().min(0).max(50000),
         breite: z.number().min(10).max(50000),
         tiefe: z.number().min(10).max(50000),
-      }),
+        /** Eingang: Tür in 3D (Entscheidung 028) – nur an Eingängen und nur abweichend von der Vorgabe gespeichert. */
+        tuer: z.enum(TUER_ARTEN).optional(),
+      }).transform(flaecheBereinigt),
     )
     .max(50),
   objekte: z

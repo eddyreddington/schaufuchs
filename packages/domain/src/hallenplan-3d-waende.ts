@@ -5,6 +5,7 @@
 import type { HallenFlaeche } from "./hallenplan";
 import type { Quader, SzeneSeite, SzeneTuer } from "./hallenplan-3d";
 import { type Punkt, tuerOeffnung, umrissKanten, umrissVersetzt, type WandAussen } from "./hallenplan-umriss";
+import { tuerArtVon, tuerFluegel } from "./hallenplan-tueren";
 
 /** Die Seite gehört nur zu Wänden, nicht zur Türöffnung. */
 export const ohneSeite = ({ seite: _s, ...q }: Quader): Quader => q;
@@ -23,7 +24,7 @@ export function waendeImGrundriss(u: Punkt[], flaechen: HallenFlaeche[], m: { di
     .filter((f) => f.art === "eingang")
     .flatMap((f) => {
       const o = tuerOeffnung(u, { x: f.x, y: f.y, b: f.breite, h: f.tiefe }, d);
-      return o ? [{ o, name: f.name }] : [];
+      return o ? [{ o, name: f.name, art: tuerArtVon(f) }] : [];
     });
   const waende: Quader[] = [];
   const tueren: SzeneTuer[] = [];
@@ -39,7 +40,7 @@ export function waendeImGrundriss(u: Punkt[], flaechen: HallenFlaeche[], m: { di
       waagrecht ? { x: von, z: quer, y, b: bis - von, t: d, h, seite } : { x: quer, z: von, y, b: d, t: bis - von, h, seite };
     const hier = oeffnungen
       .filter(({ o }) => (waagrecht ? o.h === d && o.y === quer && o.x >= a - 0.5 && o.x + o.b <= b + 0.5 : o.b === d && o.x === quer && o.y >= a - 0.5 && o.y + o.h <= b + 0.5))
-      .map(({ o, name }) => ({ von: waagrecht ? o.x : o.y, bis: waagrecht ? o.x + o.b : o.y + o.h, name }))
+      .map(({ o, name, art }) => ({ von: waagrecht ? o.x : o.y, bis: waagrecht ? o.x + o.b : o.y + o.h, name, art }))
       .sort((x, y) => x.von - y.von);
     let pos = a;
     for (const x of hier) {
@@ -47,7 +48,7 @@ export function waendeImGrundriss(u: Punkt[], flaechen: HallenFlaeche[], m: { di
       const von = Math.max(pos, x.von);
       if (x.bis > von + 0.5) {
         waende.push(stueck(von, x.bis, TUER_HOEHE, WAND_HOEHE - TUER_HOEHE));
-        tueren.push({ q: ohneSeite(stueck(von, x.bis, 0, TUER_HOEHE)), name: x.name, notausgang: /not/.test(x.name.toLowerCase()) });
+        tueren.push({ q: ohneSeite(stueck(von, x.bis, 0, TUER_HOEHE)), name: x.name, notausgang: /not/.test(x.name.toLowerCase()), art: x.art, fluegel: tuerFluegel(x.bis - von), wand: waende.length - 1 });
       }
       pos = Math.max(pos, x.bis);
     }
