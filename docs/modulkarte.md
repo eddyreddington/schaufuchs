@@ -218,13 +218,13 @@ Tests: `hallenplan-3d-rundgang.test.ts`
 - `rundgang()` – Wegpunkte des Rundgangs in Szene-Koordinaten (cm; x entlang der Breite, z entlang der Länge, y Höhe), vor dem Drehen der Szene.
 - Typen: `RundgangPunkt`
 
-### hallenplan-3d-waende.ts (57 Z.)
+### hallenplan-3d-waende.ts (58 Z.)
 3D-Wände entlang eines freien Grundrisses (Entscheidung 019).
 
 - `ohneSeite()` – Die Seite gehört nur zu Wänden, nicht zur Türöffnung.
 - `waendeImGrundriss()` – Wände entlang eines freien Grundrisses (Entscheidung 019): je Kante ein Wandstück außen an der Kante, bis zum um die Wanddicke versetzten Umriss – …
 
-### hallenplan-3d.ts (578 Z.)
+### hallenplan-3d.ts (584 Z.)
 Hallenplan räumlich: aus dem gerechneten Plan (`planeHalle`) die Körper für die 3D-Ansicht – Wände mit Türen, Aufsteller unter den Grundplatten, Kä …
 Tests: `hallenplan-3d.test.ts`
 
@@ -415,7 +415,25 @@ Hallenplan – Stellen im Reihensystem: Reihen und ihre Abschnitte, Grundplatten
 - `planeAusgeglichen()` – Automatische Aufstellung mit ruhigem Bild (Rückmeldung 14.11.2026): Die Tiere stehen streng in Katalogfolge Reihe für Reihe, lückenlos – auch über …
 - `planeImReihensystem()` – Stellen im Reihensystem.
 
-### hallenplan-typen.ts (357 Z.)
+### hallenplan-tueren.ts (98 Z.)
+Türen in den Eingängen (3D, Entscheidung 028): Art der Tür je Eingang oder Ausgang – bündig wie die Wand, Glastür, Holztür oder offen (nur die Öffn …
+Tests: `hallenplan-tueren.test.ts`
+
+- `TUER_ARTEN`
+- `TUER_VORGABE` – Vorgabe ohne Angabe: Tür bündig in der Wand (wie in Sporthallen üblich, Rückmeldung 22.11.2026).
+- `ZWEIFLUEGELIG_AB` – Breiter als das (cm entlang der Wand): zweiflügelige Tür.
+- `GRIFF_HOEHE` – Höhe des Drückers bzw. der Panikstange über dem Boden (cm).
+- `istTuerArt()`
+- `tuerArtVon()` – Türart eines Eingangs: die gültige Angabe, sonst die Vorgabe.
+- `tuerFluegel()` – Flügel einer Tür aus ihrer Breite entlang der Wand (cm).
+- `flaecheBereinigt()` – Zum Speichern: die Türart nur an Eingängen, nur gültig und nur, wenn sie von der Vorgabe abweicht – sonst fällt das Feld weg (die Halle bleibt wie …
+- `TuerBlatt` (Typ) – Ein Türblatt: Strecke entlang der Wand (cm, ab der Mitte der Öffnung) und wo der Griff sitzt.
+- `TuerAufbau` (Typ) – Aufbau einer geschlossenen Tür in ihrer Öffnung (cm): Zarge an den Seiten und oben, Blätter, Griffe, Panikstange.
+- `tuerAufbau()` – Tür in einer Öffnung `breite` × `hoehe` (cm): ab `ZWEIFLUEGELIG_AB` zwei gleiche Flügel mit den Griffen zur Mitte, sonst einer mit dem Griff rechts.
+- `tuerLage()` – Lage einer Tür in der Szene (cm): Seite ihrer Wand, Ebene der Innenfläche (x bei x0/x1, z bei z0/z1), Mitte und Breite entlang der Wand, Wandstärke.
+- Typen: `TuerArt`
+
+### hallenplan-typen.ts (360 Z.)
 Hallenplan – Datentypen: Halle mit Flächen und eingesetzten Teilen, Rechteck und Blickrichtung, gerechneter Plan (Reihen, Platten, Käfige, freie Pl …
 
 - `NummerFolge` (Typ) – Einstellung „Nach Plan nummerieren“ (Rückmeldung 22.11.2026).
@@ -543,7 +561,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (63 Z.)
+### index.ts (64 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -852,7 +870,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (227 Z.)
+### halle.ts (230 Z.)
 
 - `halle`
 
@@ -1041,7 +1059,7 @@ Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt
 
 - `halleWerkzeuge` – Texte der Oberfläche: halleWerkzeuge (Entscheidung 022) – Werkzeugleiste, Befehle und Aktionen des Hallenplan-Editors, kleine Teile (Tiere ohne Pla …
 
-### halle.ts (226 Z.)
+### halle.ts (229 Z.)
 
 - `halle` – Texte der Oberfläche: halle – Seiten „Käfige“ und „Hallenplan“ mit den Eigenschaften im Editor (Entscheidung 022).
 
@@ -1242,7 +1260,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `halleWerkzeuge`
 
-### halle.ts (226 Z.)
+### halle.ts (229 Z.)
 
 - `halle`
 
@@ -1427,7 +1445,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (226 Z.)
+### halle.ts (229 Z.)
 
 - `halle`
 
@@ -1616,7 +1634,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (226 Z.)
+### halle.ts (229 Z.)
 
 - `halle`
 
@@ -1801,7 +1819,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (228 Z.)
+### halle.ts (231 Z.)
 
 - `halle`
 
@@ -2278,7 +2296,7 @@ Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferu
 - `halle.statusSetzen` mutation · angemeldet
 - `halle.vetSetzen` mutation · angemeldet – Nachweise bei der Einlieferung: ND-Impfung (Hühner, Puten), PMV-Impfung (Tauben), Untersuchung Wassergeflügel.
 
-### routers/katalog/gemeinsam.ts (241 Z.)
+### routers/katalog/gemeinsam.ts (243 Z.)
 Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan.
 
 Keine Prozeduren (Hilfen für die Router).
@@ -2639,10 +2657,13 @@ Steuerkreuz unten rechts in der 3D-Ansicht – für Tablet und Maus, was am Rech
 ### hallenplan-3d-steuerung.ts (271 Z.)
 Bewegung der Kamera in der 3D-Ansicht über das Ziehen mit Maus oder Finger hinaus: weiches Auslaufen, Zoom zum Mauszeiger, per Doppelklick sanft hi …
 
-### hallenplan-3d-texturen.ts (304 Z.)
+### hallenplan-3d-texturen.ts (323 Z.)
 Texturen der 3D-Halle, aus kleinen Canvas-Bildern gerechnet (keine Bilddateien): Bodenbeläge (Mosaikparkett, Sportboden, Estrich), Innenwand mit Pr …
 
-### hallenplan-3d-welt.ts (553 Z.)
+### hallenplan-3d-tueren.ts (154 Z.)
+Türen in den Eingängen der 3D-Halle (Entscheidung 028): geschlossen in der Öffnung, leicht zurückgesetzt in der Wand, von beiden Seiten zu sehen – …
+
+### hallenplan-3d-welt.ts (560 Z.)
 Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und Steuerung.
 
 ### hallenplan-3d.tsx (231 Z.)
@@ -2664,7 +2685,7 @@ Bedienung der Hallenplan-Zeichnung: Teile greifen, ziehen und loslassen (mit Pr�
 ### hallenplan-bild.tsx (486 Z.)
 Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
 
-### hallenplan-eigenschaften.tsx (518 Z.)
+### hallenplan-eigenschaften.tsx (520 Z.)
 Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle (`HalleEigenschaften`) mit ihren Eingabefe …
 
 ### hallenplan-entwuerfe.tsx (177 Z.)
@@ -2698,6 +2719,9 @@ Knopf „Speichern“ und Speicheranzeige im Hallenplan (Seite hallenplan.tsx).
 ### hallenplan-teile.tsx (265 Z.)
 Kleine Teile des Hallenplans: Muster und Legende, Tiere ohne Platz, Sparten in den Reihen, Angaben zu einem Käfig, Schalter „Automatisch planen“.
 Prozeduren: katalog.kaefigInfo
+
+### hallenplan-tuer.tsx (29 Z.)
+Auswahl „Tür“ eines gewählten Eingangs oder Ausgangs (3D, Entscheidung 028): wie Wand, Glastür, Holztür oder offen.
 
 ### hallenplan-uebersicht.tsx (219 Z.)
 Anzeige unter dem Hallenplan: Legende der Zeichnung, „Platz“ (gestellt, ohne Platz, frei) und die Aufbauliste je Reihe.
@@ -3101,5 +3125,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `74-zusatzpreise-je-pr.ts` (156 Z.) – Gestiftete Preisarten mit „zusätzlich je Preisrichter“: Die Zusatzpreise ohne Stiftung zählen je Preisrichter (bei Kontingent „je Schau“ für die ga …
 - `75-halle-aussehen.ts` (88 Z.) – Aussehen der Halle in 3D (Entscheidung 028): gespeichert mit der Halle (begrenzt, nur Abweichungen, mit Protokoll), ändert im festen Plan weder Pla …
 - `76-verpflichtung-zusage.ts` (124 Z.) – Preisrichterverpflichtung, Nachbesserung: Termin „Rückmeldung der Preisrichter bis“ in den Einstellungen der Schau (Prüfung, Protokoll, nicht aus d …
+- `78-tueren.ts` (72 Z.) – Türen in den Eingängen (3D, Entscheidung 028): Türart je Eingang gespeichert mit der Halle (nur gültig, nur Abweichung von der Vorgabe, mit Protoko …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

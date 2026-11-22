@@ -39,6 +39,16 @@ Holz-Prallwand bis 2 m, 3,50 m hoch).
   (`BODEN_LAGEN`): Linien unter der Folie, darüber die Flächen, oben das Meterraster – mit Höhe und Tiefenvorzug.
 - Im heruntergeladenen Modell (glTF): Boden, Folie wie gezeigt, Linien, Wände, Fenster, Geräte und die Decke (immer, auch
   wenn sie in der Ansicht gerade verborgen ist); das Meterraster nicht (nur Hilfe zum Abschätzen in der Ansicht).
+- Türen in den Eingängen (Rückmeldung 22.11.2026: „sonst sind das nur Löcher“): je Eingang `tuer` („wand“, „glas“,
+  „holz“, „offen“), Vorgabe „wand“ (bündig in der Prallwand wie in Sporthallen); „offen“ ist die bisherige Öffnung. Die
+  Türart liegt an der Fläche, nicht in `aussehen`, weil sie je Eingang verschieden ist; gespeichert nur an Eingängen, nur
+  gültig und nur abweichend von der Vorgabe (`flaecheBereinigt`, zod lehnt Unbekanntes ab). Wie das übrige Aussehen nie
+  Plan: `festGeometrie` kennt keine Flächen, nur `halleSchluessel` ändert sich. Ab 1,30 m zweiflügelig (`tuerFluegel`),
+  Aufbau und Lage rein in `hallenplan-tueren.ts` (`tuerAufbau`, `tuerLage`). In 3D blendet die Tür mit dem Sturz darüber
+  aus (`SzeneTuer.wand`), Glas behält dabei seine eigene Deckkraft als Obergrenze; die bündige Tür trägt dieselbe Textur
+  wie die Innenwand an derselben Stelle. Eine geschlossene Tür ist wie die Wand ein Hindernis für den Doppelklick, solange
+  sie zu sehen ist; Rundgang und Gehen kennen keine Wände und bleiben unverändert. Im 2D-Plan und im Druck bleibt der
+  Eingang eine Öffnung; im heruntergeladenen Modell sind die Türen dabei.
 - Käfige (Preisrichterfarben) und Sockelverkleidung ohne Tonemapping, damit ihre Farben der Legende entsprechen.
 
 **Folgen:** Als Teil der Halle kommt das Aussehen mit Entwürfen, dem Archiv (017) und einer neuen Schau aus der Vorlage
