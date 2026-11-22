@@ -1,30 +1,42 @@
-# 029 Käfige beim Verschieben ausrichten: Rückwand an die Wand, Rückwand an Rückwand
+# 029 Käfige beim Stellen ausrichten: Rückwand an die Wand, Rückwand an Rückwand
 
 **Stand:** gilt (22.11.2026)
 
 **Kontext:** Ein Käfig hat vorn die offene Gitterfront, Rück- und Seitenwände sind dicht. Schon bisher drehte der Editor ein
 an die Wand geschobenes Teil so, dass die Rückwand an der Wand liegt (`wandAusrichtung`, Rückmeldung 14.11.2026). Wunsch des
 Vereins: „Wenn Käfige aneinander gestellt werden, richte sie automatisch so aus, dass die Rückwände aneinander stehen und nicht
-die Front verdecken.“
+die Front verdecken.“ Dazu entschieden: auch beim T-Stoß drehen, und immer ausrichten (auch beim Einsetzen und Drehen).
 
 **Entscheidung:**
-- Eine Stelle für beides: `ausrichtungBeimStellen()` (`hallenplan-rueckwand.ts`), aufgerufen beim Loslassen nach dem
-  Verschieben und bei den Pfeiltasten (`verschiebenUndAusrichten` im Web). Kandidaten wie bei der Wand: Grundplatten,
-  Käfigblöcke, eingesetzte Volieren mit Lage samt Versatz und Drehung.
-- Aneinander heißt: Front- oder Rückseite des einen steht einer Front- oder Rückseite des anderen gegenüber, bündig oder bis
-  `WAND_FANG` (30 cm), und beide überlappen sich entlang der Seite. Ecke an Ecke und Seitenwand an Seitenwand zählen nicht.
-- Zeigt die Front eines bewegten Teils auf ein anliegendes, dreht es an Ort und Stelle um 180° (gleiche Fläche, keine
-  Prüfung auf Anstoßen nötig). Es dreht nur, was bewegt wurde – der ruhende Nachbar nie, auch wenn beide Fronten zueinander
-  zeigen (dann meldet die Prüfliste dessen Front weiter über `frontFehler`). Zusammen verschobene Teile drehen beide.
-- Gedreht wird nur, wenn die Front danach weder an einer Wand noch an einem anderen Teil liegt. Reihenfolge: erst die Wand,
-  dann die Nachbarn – ein an der Wand gedrehtes Teil dreht nicht zurück.
-- Die Reihen der Planung (Doppelreihen stehen schon Rücken an Rücken, dazwischen Gänge) dreht das nie, solange sie nicht
-  bewegt werden; der Knopf „Käfige an den Wänden ausrichten …“ bleibt bei der Wand.
+- Eine Stelle für alles: `ausrichtungBeimStellen()` (`hallenplan-rueckwand.ts`), im Editor nach Verschieben (Ziehen,
+  Pfeiltasten), Drehen (R, Doppelklick, Knopf) und Einsetzen (Block, Voliere, „Fehlende Käfige einsetzen“) –
+  `hallenplan-ausrichten.ts`. Kandidaten wie bei der Wand: Grundplatten, Käfigblöcke, eingesetzte Volieren (Lage samt Versatz
+  und Drehung, auch eben eingesetzte); Volieren im Volierenbereich sind ruhende Nachbarn.
+- **Verdeckt** ist die Front eines gestellten Teils, wenn sie zu einer Wand zeigt (lange Seite bis `WAND_FANG` = 30 cm an der
+  Hallenwand oder einer Innenwand des freien Grundrisses, ADR 019) oder ein anderes Teil an ihr liegt: bis 30 cm davor, mit
+  Front, Rück- oder Seitenwand (T-Stoß), entlang der Front mindestens `UEBERLAPP_MIN` = 30 cm überlappend (ist eine Seite
+  kürzer, ganz) – etwa eine Taubenkäfigbreite; Ecke an Ecke und ein Streifen von wenigen Zentimetern zählen nicht. Die
+  Seitenwand des gestellten Teils zählt nie (Seitenwand an Seitenwand ist kein Fall).
+- **Gedreht** wird dann um 180° an Ort und Stelle (gleiche Fläche), aber **nur, wenn die Gegenseite frei ist**: nach einer
+  Wand darf die neue Front nicht direkt (bis 30 cm) an einem Teil oder einer Wand stehen; nach einem Nachbarn muss vor ihr ein
+  ganzer Gang frei sein (Gangbreite der Halle, wie `frontFehler`). Sonst bleibt alles, wie es ist; die Prüfliste meldet die
+  Front weiter. Die Gangbreite verhindert das Hin- und Herdrehen bei Pfeilschritten zwischen Wand und Nachbar.
+- Erst die Wand, dann die Nachbarn. Es dreht nur, was gestellt wurde – der ruhende Nachbar nie, auch wenn beide Fronten
+  zueinander zeigen. Beim Drehen gilt dieselbe Regel: Die gewählte Drehung bleibt, solange ihre Front frei ist; nur wenn sie
+  verdeckt wäre und die Gegenseite frei ist, dreht es um 180° weiter.
+- Eine Gruppe (oder ganze Reihe) richtet jedes ihrer Teile einzeln aus: Fehlstellungen, die sie schon vorher hatte, werden
+  dabei mit gedreht; von einer Reihe drehen nur die Platten, deren Front verdeckt ist – sie steht danach teilweise gedreht.
+- Die Reihen der Planung (Doppelreihen Rücken an Rücken, dazwischen Gänge) dreht das nie, solange sie nicht bewegt werden.
+  Der Knopf „Käfige an den Wänden ausrichten …“ bleibt bei der Wand (jetzt auch an Innenwänden), ohne Prüfung der Gegenseite.
+- Innenwände des Grundrisses gelten auch in der Prüfliste (`frontFehler`: „Front zur Wand“), auch wenn die Halle die
+  Sperrflächen des Grundrisses nicht mitbringt.
 
-**Folgen:** Gespeichert wie jede Verschiebung über `halleSetzen` (ein Schritt, ein Rückgängig, Protokoll wie jede Verschiebung).
-Grundplatten drehen über `plattenVersatz.drehung` (ADR 001: nie gekürzt), Blöcke und Volieren über ihre Front. Im festen Plan
-(ADR 006) behalten die Käfige ihre Tiere; auf einer gedrehten belegten Platte läuft die Folge andersherum, „Nummern nicht in
-Planfolge“ bietet „Nach Plan nummerieren“ an – wie bei der Wand. Möbel zählen nicht (ADR 002).
+**Folgen:** Gespeichert wie die auslösende Änderung über `halleSetzen` (ein Schritt, ein Rückgängig, Protokoll wie bisher),
+Hinweis „An der Wand gedreht …“ bzw. „Am Nachbarn gedreht …“. Grundplatten drehen über `plattenVersatz.drehung` (ADR 001: nie
+gekürzt), Blöcke und Volieren über ihre Front. Im festen Plan (ADR 006) behalten die Käfige ihre Tiere; auf einer gedrehten
+belegten Platte läuft die Folge andersherum, „Nummern nicht in Planfolge“ bietet „Nach Plan nummerieren“ an. Möbel zählen
+nicht (ADR 002).
 
-**Wo:** `packages/domain/src/hallenplan-rueckwand.ts` (mit Test), `hallenplan-wandfront.ts` (`kandidatGewaehlt`),
-`apps/web/src/seiten/hallenplan-ausrichten.ts`, `hallenplan-bild-bedienung.ts` (`verschiebeAuswahl`).
+**Wo:** `packages/domain/src/hallenplan-rueckwand.ts`, `hallenplan-wandfront.ts` (`liegtAn`, `wandSoll`, `innenWaende`),
+`hallenplan.ts` (`frontFehler`); `apps/web/src/seiten/hallenplan-ausrichten.ts`, aufgerufen in `hallenplan-bild-bedienung.ts`
+und `hallenplan-aktionen.ts`.

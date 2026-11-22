@@ -607,7 +607,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (66 Z.)
+### index.ts (67 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -982,7 +982,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `druckFormate`
 
-### schau-einstellungen.ts (191 Z.)
+### schau-einstellungen.ts (188 Z.)
 
 - `schauEinstellungen`
 
@@ -1180,7 +1180,7 @@ Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mi
 
 - `druckFormate` – Texte der Oberfläche: schau.einstellungen.druck.formate (Entscheidung 022, 029) – Übersicht der Drucke im Reiter „Druck“.
 
-### schau-einstellungen.ts (199 Z.)
+### schau-einstellungen.ts (196 Z.)
 Texte der Oberfläche: schau.einstellungen (Entscheidung 022) – Seite „Einstellungen“ der Schau und ihre Abschnitte.
 
 - `schauEinstellungen`
@@ -1380,7 +1380,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `druckFormate`
 
-### schau-einstellungen.ts (191 Z.)
+### schau-einstellungen.ts (188 Z.)
 
 - `schauEinstellungen`
 
@@ -1569,7 +1569,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `druckFormate`
 
-### schau-einstellungen.ts (191 Z.)
+### schau-einstellungen.ts (188 Z.)
 
 - `schauEinstellungen`
 
@@ -1762,7 +1762,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `druckFormate`
 
-### schau-einstellungen.ts (191 Z.)
+### schau-einstellungen.ts (188 Z.)
 
 - `schauEinstellungen`
 
@@ -1952,7 +1952,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `druckFormate`
 
-### schau-einstellungen.ts (191 Z.)
+### schau-einstellungen.ts (188 Z.)
 
 - `schauEinstellungen`
 
