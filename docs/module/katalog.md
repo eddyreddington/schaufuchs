@@ -24,6 +24,10 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 - Gliederung: Jugend (`schau.jugend_separat`: „eigener Block am Ende“, sonst „in der Rasse eingereiht“; `istJugendBlock()`
   für Nummern, Katalog-PDF, Kurzkatalog und Ergebnisse), Käfigblöcke, Volieren und Stämme vorn (wenn gewählt); darin Sparte, Rasse, Farbenschlag
   fest, dann die gewählten Kriterien. Vorgabe = bisherige Folge; gespeicherte Listen ohne neue Kriterien sortieren unverändert.
+- Jugend-Kennzeichen: Bei „in der Rasse eingereiht“ bekommt jedes Jugendtier „Jgd.“ (`jugendKennzeichen()`, `JUGEND_KUERZEL`)
+  – im Katalog-PDF (auch online und im Kurzkatalog) hinter dem Aussteller, in der Legende erklärt; in den öffentlichen Ergebnissen
+  in der Spalte Klasse (Text `ergebnisse.jugendKuerzel` der Sprache). Beim eigenen Block nie, dort steht die Überschrift.
+  Das Kürzel steht nur an Zeilen, die ohnehin erscheinen; ohne Einwilligung bleibt der Name verdeckt (wie beim Block).
 - Nach dem Festschreiben gesperrt: Sortierung, Verzeichnisversion, „Jugend im Katalog“, Reihenfolge der Stämme, Rasse/Art/Geschlecht/Alter nummerierter Tiere.
 - Sind die Preisrichter nach Rassen eingeteilt, folgen die Nummernbereiche den neuen Nummern.
 - Die Katalognummern kommen nach dem Hallenplan ([ADR 031](../entscheidungen/031-hallenplan-vor-katalognummern.md)):
@@ -36,8 +40,8 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 
 ## Tests
 
-- Domain: `domain.test.ts` (Nummern, Nachmeldungen), `katalog-sortierung.test.ts` (Vorgabe = alte Folge in Zufallsschauen), `katalog-gliederung.test.ts`.
-- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog), `79-ablauf-halle` (Stand für „Nach Hallenplan vergeben“).
+- Domain: `domain.test.ts` (Nummern, Nachmeldungen), `einteilung-jugend.test.ts` (Jugendblock, Kennzeichen), `katalog-sortierung.test.ts` (Vorgabe = alte Folge in Zufallsschauen), `katalog-gliederung.test.ts`.
+- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog), `79-ablauf-halle` (Stand für „Nach Hallenplan vergeben“), `81-jugend-kennzeichen` („Jgd.“ in Druck, Online-Katalog, Ergebnissen).
 
 ## Datenbank
 

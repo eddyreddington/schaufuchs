@@ -2,7 +2,7 @@
  * Katalog-PDF, Tierteil: zwei oder drei Spalten bzw. Tabelle, Spartenköpfe mit Stich, Rassenköpfe mit Rassebild,
  * Preisrichter-, Klassen- und Tierzeilen; Teilschauen und Jugend nacheinander. Liefert das Register der Rassen.
  */
-import { formatEuro, formatKatalognummer, gruppenAbteilung, istJugendBlock, MELDEART_LABEL } from "@schau/domain";
+import { formatEuro, formatKatalognummer, gruppenAbteilung, istJugendBlock, JUGEND_KUERZEL, jugendKennzeichen, MELDEART_LABEL } from "@schau/domain";
 import { oeffneBild } from "../services/rassebild";
 import { ausstellerAnzeige, type Eintrag } from "../services/eintraege";
 import { GRAU, HAARLINIE, MM, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, SERIF_KURSIV, textImFeld, TINTE } from "./basis";
@@ -373,6 +373,22 @@ export function tierteilSetzen(K: KatalogKontext) {
     doc.fillColor(TINTE);
   }
 
+  /**
+   * Aussteller in seinem Feld; steht die Jugend in der Rasse eingereiht, folgt dem Namen das Kürzel „Jgd.“ in derselben
+   * Zeile – der Platz dafür ist vorab abgezogen, der Name wird notfalls kleiner, nichts bricht um.
+   */
+  function ausstellerFeld(e: Eintrag, x: number, y: number, breite: number) {
+    const kennzeichen = jugendKennzeichen(e, s);
+    doc.font(SANS_KURSIV).fontSize(GR);
+    const kw = kennzeichen ? doc.widthOfString(JUGEND_KUERZEL) + 1.2 * MM : 0;
+    const name = ausstellerAnzeige(e);
+    const gr = textImFeld(doc, name, x, y, { breite: breite - kw, groesse: GR, min: 6.8 * kt, schrift: SANS, farbe: TINTE });
+    if (!kennzeichen) return;
+    const nw = Math.min(breite - kw, doc.font(SANS).fontSize(gr).widthOfString(name));
+    doc.font(SANS_KURSIV).fontSize(GR).fillColor(GRAU).text(JUGEND_KUERZEL, x + nw + 1.2 * MM, y, { width: kw, lineBreak: false });
+    doc.fillColor(TINTE);
+  }
+
   function tierZeile(e: Eintrag) {
     if (tabelle) return tabellenZeile(e);
     const c = col();
@@ -392,7 +408,7 @@ export function tierteilSetzen(K: KatalogKontext) {
       doc.moveTo(nx, y + 8 * kt).lineTo(nx + c.note + c.preis - 2 * MM, y + 8 * kt).stroke();
       doc.undash().restore();
     }
-    textImFeld(doc, ausstellerAnzeige(e), nx + c.note + c.preis, y, { breite: c.aussteller - 1.5 * MM, groesse: GR, min: 6.8 * kt, schrift: SANS, farbe: TINTE });
+    ausstellerFeld(e, nx + c.note + c.preis, y, c.aussteller - 1.5 * MM);
     // Nicht verkäuflich: fehlende Tiere und gesperrte (Gesundheitsjournal) – kein Preis im Katalog.
     if (e.verkaufspreisCent && e.status !== "fehlt" && !e.gesperrt) {
       const verkauft = mitErgebnis && e.verkauftAn;
@@ -420,7 +436,7 @@ export function tierteilSetzen(K: KatalogKontext) {
     doc.font(SANS_FETT).fontSize(GR).fillColor(TINTE).text(formatKatalognummer(e), x, y, { width: c.nr, align: "right", lineBreak: false });
     textImFeld(doc, `${art}${e.geschlecht} ${e.alter}`, t.klasse, y, { breite: c.klasse - 1.5 * MM, groesse: GR, min: 6.5, schrift: SANS_FETT, farbe });
     textImFeld(doc, `${farbschlag || "–"}${zusatz ? ` (${zusatz})` : ""}`, t.farbenschlag, aufLinie(SERIF_KURSIV, GR * 1.08, grund), { breite: c.farbenschlag, groesse: GR * 1.08, min: 6.5, schrift: SERIF_KURSIV, farbe: TINTE });
-    textImFeld(doc, ausstellerAnzeige(e), t.aussteller, y, { breite: c.aussteller - 1.5 * MM, groesse: GR, min: 6.8 * kt, schrift: SANS, farbe: TINTE });
+    ausstellerFeld(e, t.aussteller, y, c.aussteller - 1.5 * MM);
     if (mitErgebnis) {
       doc.font(e.punkte != null && e.punkte >= spitzePunkte ? SANS_FETT : SANS).fontSize(GR).fillColor(TINTE).text(note(e), t.note, y, { width: c.note, lineBreak: false });
       const preise = e.preise.map((p) => p.kuerzel).join(" ");

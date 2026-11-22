@@ -200,6 +200,17 @@ export function istJugendBlock(e: { istJugend: boolean }, opts: { jugendSeparat:
   return opts.jugendSeparat && e.istJugend;
 }
 
+/** Kürzel für ein Jugendtier an der Tierzeile des gedruckten Katalogs (Online-Ansichten: Text der Sprache). */
+export const JUGEND_KUERZEL = "Jgd.";
+
+/**
+ * Bekommt das Tier das Kennzeichen „Jgd.“? Nur bei „Jugend im Katalog: in der Rasse eingereiht“ – im eigenen Block steht
+ * die Jugend unter ihrer Überschrift und braucht kein Kürzel. Gilt für gedruckten und Online-Katalog und die Ergebnisse.
+ */
+export function jugendKennzeichen(e: { istJugend: boolean }, opts: { jugendSeparat: boolean }): boolean {
+  return e.istJugend && !opts.jugendSeparat;
+}
+
 export function vergleicheFolge(a: FolgeEintrag, b: FolgeEintrag, opts: FolgeOptionen): number {
   const schritte = sortierungNormal(opts.sortierung).filter((s) => !s.aus);
   // Stehen die Tiere eines Ausstellers nicht zusammen, gilt bei sonst Gleichem der Meldeeingang.

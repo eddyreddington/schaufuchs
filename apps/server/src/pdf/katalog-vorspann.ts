@@ -2,7 +2,7 @@
  * Katalog-PDF, Inhaltsteile vor dem Tierteil: Grußworte, Ausstellungsleitung und Termine, Preisrichter, Kennzahlen,
  * Preise und Stifter, Bestimmungen, freie Seiten, Legende und Ehrentafel.
  */
-import { bindungText, formatEuro, formatKatalognummer, oeffnungszeitenZeilen, SONDERNOTE_LABEL, STANDARD_NOTENSKALA } from "@schau/domain";
+import { bindungText, formatEuro, formatKatalognummer, JUGEND_KUERZEL, jugendKennzeichen, oeffnungszeitenZeilen, SONDERNOTE_LABEL, STANDARD_NOTENSKALA } from "@schau/domain";
 import { ausstellerAnzeige, type Eintrag } from "../services/eintraege";
 import { datumDe, GRAU, HAARLINIE, MM, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, SERIF_KURSIV, TINTE } from "./basis";
 import type { Beitrag, KatalogKontext } from "./katalog-kontext";
@@ -244,6 +244,8 @@ export function vorspann(K: KatalogKontext) {
     ["AOC", "anerkannte Rasse in einem nicht anerkannten Farbenschlag"],
     ["Neuzüchtung", "Rasse oder Farbenschlag im Anerkennungsverfahren"],
     ["Vkpr.", "Verkaufspreis in Euro – Kauf nur über die Verkaufsstelle"],
+    // Jugend in der Rasse eingereiht: das Kürzel hinter dem Aussteller (beim eigenen Block steht die Überschrift „Jugend“).
+    ...(eintraege.some((e) => jugendKennzeichen(e, s)) ? [[JUGEND_KUERZEL, "Tier der Jugend, in der Rasse eingereiht"] as [string, string]] : []),
   ]);
   doc.y += 10 * k;
   zwischentitel("Bewertung");

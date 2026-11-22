@@ -553,7 +553,10 @@ export function Ergebnisse() {
                     {tiere.map((x) => (
                       <tr key={`${x.katalogNr}${x.suffix}`}>
                         <td className="nummer w-20 text-right text-lg">{formatKatalognummer(x)}</td>
-                        <td className="w-32">{x.geschlecht} {tx.alter[x.alter]}</td>
+                        <td className="w-32">
+                          {x.geschlecht} {tx.alter[x.alter]}
+                          {x.jugendKennzeichen && <abbr title={t.jugend} className="ml-1 whitespace-nowrap text-sm text-grau no-underline">{t.jugendKuerzel}</abbr>}
+                        </td>
                         <td>{x.verdeckt ? <span className="italic text-grau">{t.nichtVeroeffentlicht}</span> : x.aussteller}<span className="block text-sm text-grau">{x.verein}</span></td>
                         <td className="w-24 text-lg font-semibold">{x.ergebnis === "fehlt" ? t.fehlt : x.ergebnis}</td>
                         <td className="w-32">

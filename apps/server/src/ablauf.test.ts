@@ -112,3 +112,4 @@ import "./tests/76-verpflichtung-zusage";
 import "./tests/78-tueren";
 import "./tests/79-ablauf-halle";
 import "./tests/80-druck-formate";
+import "./tests/81-jugend-kennzeichen";

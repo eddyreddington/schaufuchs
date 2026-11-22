@@ -220,6 +220,7 @@ export const pl: Texte = {
     nichtVeroeffentlicht: "nieopublikowane",
     fehlt: "nieobecne",
     jugend: "Młodzież",
+    jugendKuerzel: "Młodz.",
   },
   fehler: {
     seiteFehlt: "Ta strona nie istnieje",

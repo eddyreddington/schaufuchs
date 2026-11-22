@@ -1,5 +1,5 @@
 import { verzeichnisVorschlaegeZwischengespeichert } from "../services/vereinsverzeichnis";
-import { adressVorschlaege, bewertungsText, datenschutzAbschnitte, datenschutzKurz, datumIn, fehlendeVereinsangaben, heuteBerlin, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, mitVerzeichnis, NUR_LESEN_MELDUNG, onlineAbgelaufen, SPRACHEN, teilschauenLesen, texte, type Sprache } from "@schau/domain";
+import { adressVorschlaege, bewertungsText, datenschutzAbschnitte, datenschutzKurz, datumIn, fehlendeVereinsangaben, heuteBerlin, impressumAbschnitte, istJugendlich, JUGEND_ALTERSGRENZE, jugendKennzeichen, MELDEARTEN, mitVerzeichnis, NUR_LESEN_MELDUNG, onlineAbgelaufen, SPRACHEN, teilschauenLesen, texte, type Sprache } from "@schau/domain";
 import { heuteDe } from "../services/tiergesundheit";
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -340,6 +340,8 @@ async function berechneErgebnisse(s: typeof schau.$inferSelect) {
         verdeckt: e.verdeckt,
         verein: e.verein,
         istJugend: e.istJugend,
+        /** „Jgd.“ an der Zeile: nur bei Jugend in der Rasse eingereiht (beim eigenen Block steht die Überschrift). */
+        jugendKennzeichen: jugendKennzeichen(e, s),
       })),
   };
 }

@@ -645,7 +645,7 @@ Käfige: Welche Käfiggröße braucht ein gemeldetes Tier, und welche Käfignumm
 - `kaefigVorschlag()` – Vorschlag für eine Rasse, wenn er von der automatischen Größe abweicht – sonst null.
 - Typen: `KaefigTyp`, `KaefigVorschlag`
 
-### katalog.ts (324 Z.)
+### katalog.ts (335 Z.)
 
 - `FolgeEintrag` (Typ) – Ein Katalogeintrag mit allem, was für die Ausstellungsfolge zählt.
 - `SORTIER_KRITERIEN` – Kriterien, nach denen die Katalognummern innerhalb der Gliederung (Jugend, Käfigblöcke, Volieren und Stämme vorn) laufen.
@@ -658,6 +658,8 @@ Käfige: Welche Käfiggröße braucht ein gemeldetes Tier, und welche Käfignumm
 - `sortierungText()` – Kurztext: „Sparte, Rasse, Farbenschlag, Meldeart, Aussteller, Geschlecht (1,0 vor 0,1), Alter (jung vor alt)“.
 - `gruppenAbteilung()` – Eigene Abteilung im Katalog, wenn Stämme und Volieren vorn stehen – sonst null (Tier steht in seiner Sparte).
 - `istJugendBlock()` – Steht das Tier im eigenen Jugendblock (Einstellung „Jugend im Katalog: eigener Block am Ende“)?
+- `JUGEND_KUERZEL` – Kürzel für ein Jugendtier an der Tierzeile des gedruckten Katalogs (Online-Ansichten: Text der Sprache).
+- `jugendKennzeichen()` – Bekommt das Tier das Kennzeichen „Jgd.“?
 - `vergleicheFolge()`
 - `vergebeKatalognummern()` – Vergibt alle Katalognummern neu, lückenlos ab `start`.
 - `nachmeldungsNummer()` – Nummer für eine Nachmeldung, ohne bestehende Nummern zu ändern: Sie bekommt die Nummer ihres Vorgängers in der Ausstellungsfolge plus Unternummer ( …
@@ -883,26 +885,26 @@ Tests: `spenden.test.ts`
 - `sammelbestaetigung()` – Sammelbestätigung eines Kalenderjahres: alle Geldzuwendungen des Spenders aus diesem Jahr, die bestätigt werden dürfen (Sachzuwendungen nie – sie b …
 - Typen: `SpendeArt`, `SpendeWeg`, `SachHerkunft`, `Sachangaben`, `SpendeFuerBestaetigung`, `SpenderAnschrift`
 
-### cs.ts (284 Z.)
+### cs.ts (285 Z.)
 
 - `cs`
 
-### de.ts (290 Z.)
+### de.ts (291 Z.)
 
 - `de` – Texte der Seiten für Aussteller (öffentliche Schauseite, Online-Meldung, Meine Meldung, Ergebnisse) und der Mails an Aussteller – Deutsch ist die G …
 
-### en.ts (278 Z.)
+### en.ts (279 Z.)
 
 - `en`
 
-### fr.ts (278 Z.)
+### fr.ts (279 Z.)
 
 - `fr`
 
 ### index.ts (79 Z.)
 Sammelt alle Exporte (`export * from …`).
 
-### nl.ts (278 Z.)
+### nl.ts (279 Z.)
 
 - `nl`
 
@@ -2072,7 +2074,7 @@ Meldungen des Servers (Fehler, Prüfungen, Hinweise) in der Sprache der Oberflä
 
 - `serverText()` – Meldung des Servers in der Sprache der Oberfläche.
 
-### pl.ts (286 Z.)
+### pl.ts (287 Z.)
 
 - `pl`
 
@@ -2493,7 +2495,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `meldung.bestaetigungSenden` mutation · angemeldet
 - `meldung.zuletzt` query · angemeldet
 
-### routers/oeffentlich.ts (448 Z.) → `oeffentlich`
+### routers/oeffentlich.ts (450 Z.) → `oeffentlich`
 
 - `oeffentlich.schau` query · öffentlich
 - `oeffentlich.rechtstexte` query · öffentlich – Impressum (§ 5 DDG) und Datenschutzhinweise (Art. 13 DSGVO) des ausrichtenden Vereins.
@@ -2905,7 +2907,7 @@ Prozeduren: meldung.adressVorschlaege, meldung.ausstellerSuche, meldung.bestaeti
 ### meldungen.tsx (129 Z.) – `/schau/:schauId/meldungen`
 Prozeduren: meldung.liste, schau.get
 
-### oeffentlich.tsx (573 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
+### oeffentlich.tsx (576 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
 Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.meineMeldung, oeffentlich.melden, oeffentlich.onlineVeroeffentlichung, oeffentlich.rechtstexte, oeffentlich.schau
 
 ### preise.tsx (490 Z.) – `/schau/:schauId/preise`
@@ -3055,10 +3057,10 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `katalog-anhang.ts` (147 Z.) – Katalog-PDF, Anhang: kommende Schauen, Anzeigen der Förderer und Notizseiten bis zur vollen Heftlage. · kommendeSchauenSeite, anzeigenSeiten, notizSeiten
 - `katalog-hilfen.ts` (65 Z.) – Katalog-PDF, gemeinsame Hilfen ohne PDF: Kurzvorschau-Auswahl, Anzahltexte („3 Stämme“) und der Bildnachweis (Adressen kürzen, Urheber bereinigen, … · KURZ_JE_ABTEILUNG, kurzauswahl, anzahlText, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis
 - `katalog-kontext.ts` (242 Z.) – Katalog-PDF, Grundlage für alle Teile: lädt die Daten der Schau, legt das PDF an und stellt die gemeinsamen Satzhilfen bereit (Seiten, Inhaltsverze … · katalogKontext
-- `katalog-tierteil.ts` (450 Z.) – Katalog-PDF, Tierteil: zwei oder drei Spalten bzw. Tabelle, Spartenköpfe mit Stich, Rassenköpfe mit Rassebild, Preisrichter-, Klassen- und Tierzeil … · nrVergleich, nrBereich, tierteilSetzen
+- `katalog-tierteil.ts` (466 Z.) – Katalog-PDF, Tierteil: zwei oder drei Spalten bzw. Tabelle, Spartenköpfe mit Stich, Rassenköpfe mit Rassebild, Preisrichter-, Klassen- und Tierzeil … · nrVergleich, nrBereich, tierteilSetzen
 - `katalog-titel.ts` (178 Z.) – Katalog-PDF, Titelseite: Hintergrund, Titel, Logo, Titelbild bzw. Stich und Termine je Stil. · titelseite
 - `katalog-verzeichnisse.ts` (177 Z.) – Katalog-PDF, Verzeichnisse: Rassenverzeichnis, Bildnachweis, Ausstellerverzeichnis und das am Ende nachgetragene Inhaltsverzeichnis mit Impressum. · rassenverzeichnis, bildnachweisSeite, ausstellerverzeichnis, inhaltsverzeichnis
-- `katalog-vorspann.ts` (310 Z.) – Katalog-PDF, Inhaltsteile vor dem Tierteil: Grußworte, Ausstellungsleitung und Termine, Preisrichter, Kennzahlen, Preise und Stifter, Bestimmungen, … · vorspann, ehrentafel
+- `katalog-vorspann.ts` (312 Z.) – Katalog-PDF, Inhaltsteile vor dem Tierteil: Grußworte, Ausstellungsleitung und Termine, Preisrichter, Kennzahlen, Preise und Stifter, Bestimmungen, … · vorspann, ehrentafel
 - `katalog.ts` (89 Z.) – Katalog-PDF, Einstieg: lädt die Grundlage (katalog-kontext.ts) und setzt die Teile der Reihe nach – Titelseite (katalog-titel.ts), Vorspann und Ehr … · katalogPdf
 - `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
 - `preisverteilung.ts` (114 Z.) – Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und leeren Zeilen zum Eintragen in der … · preisverteilungPdf
@@ -3233,5 +3235,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `78-tueren.ts` (86 Z.) – Türen in den Eingängen (3D, Entscheidung 028): Türart je Eingang gespeichert mit der Halle (nur gültig, nur Abweichung von der Vorgabe, mit Protoko …
 - `79-ablauf-halle.ts` (137 Z.) – Ablauf nach dem Meldeschluss (Rückmeldung eines Vereins): Einteilung nach Rassen → Käfige → Hallenplan → Katalognummern (nach dem Plan) → Katalog.
 - `80-druck-formate.ts` (310 Z.) – Formatvorgaben der Drucke (Entscheidung 029, Rückmeldung „Bei den Druckeinstellungen fehlen die Formatvorgaben“): speichern, ablehnen, Protokoll, R …
+- `81-jugend-kennzeichen.ts` (95 Z.) – Kennzeichen „Jgd.“ für Jugendtiere, wenn die Jugend in der Rasse eingereiht steht: im gedruckten Katalog (zwei Spalten, Tabelle, Kurzkatalog, Legen …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

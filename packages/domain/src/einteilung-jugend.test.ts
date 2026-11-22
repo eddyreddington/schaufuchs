@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { bereicheAusRassen, regelnAusZuteilung, richterNachRasse, vergleicheEinteilFolge, type RassenRegel } from "./einteilung";
-import { istJugendBlock, vergleicheFolge, type FolgeEintrag } from "./katalog";
+import { istJugendBlock, JUGEND_KUERZEL, jugendKennzeichen, vergleicheFolge, type FolgeEintrag } from "./katalog";
 
 let lfd = 0;
 const tier = (nr: number, rasse: string, farbenschlag: string, istJugend = false) => ({ id: ++lfd, nr, suffix: "", sparte: "Hühner", rasse, farbenschlag, istJugend });
@@ -76,5 +76,16 @@ describe("Katalog: Jugend eigener Block oder eingereiht", () => {
     expect(istJugendBlock({ istJugend: true }, { jugendSeparat: true })).toBe(true);
     expect(istJugendBlock({ istJugend: true }, { jugendSeparat: false })).toBe(false);
     expect(istJugendBlock({ istJugend: false }, { jugendSeparat: true })).toBe(false);
+  });
+
+  test("Kennzeichen „Jgd.“ genau dann, wenn die Jugend in der Rasse eingereiht steht", () => {
+    expect(jugendKennzeichen({ istJugend: true }, { jugendSeparat: false })).toBe(true);
+    // Eigener Block: die Überschrift „Jugend“ kennzeichnet, kein Kürzel an der Zeile.
+    expect(jugendKennzeichen({ istJugend: true }, { jugendSeparat: true })).toBe(false);
+    expect(jugendKennzeichen({ istJugend: false }, { jugendSeparat: false })).toBe(false);
+    expect(jugendKennzeichen({ istJugend: false }, { jugendSeparat: true })).toBe(false);
+    // Nie beides: Block und Kürzel schließen sich aus.
+    for (const istJugend of [true, false]) for (const jugendSeparat of [true, false]) expect(istJugendBlock({ istJugend }, { jugendSeparat }) && jugendKennzeichen({ istJugend }, { jugendSeparat })).toBe(false);
+    expect(JUGEND_KUERZEL).toBe("Jgd.");
   });
 });

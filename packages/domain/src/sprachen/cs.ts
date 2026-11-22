@@ -218,6 +218,7 @@ export const cs: Texte = {
     nichtVeroeffentlicht: "nezveřejněno",
     fehlt: "chybí",
     jugend: "Mládež",
+    jugendKuerzel: "Ml.",
   },
   fehler: {
     seiteFehlt: "Tato stránka neexistuje",
