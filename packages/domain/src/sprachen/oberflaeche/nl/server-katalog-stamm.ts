@@ -40,6 +40,10 @@ export const stamm: OberflaecheTexte["serverKatalog"]["stamm"] = {
     dreiSpalten: (zeile: string) => `Regel ${zeile}: drie kolommen verwacht (Sparte;Rasse;Farbenschlag).`,
     mehrSpalten: (zeile: string) => `Regel ${zeile}: meer dan drie kolommen – scheidingsteken in een veld? Zet het veld tussen aanhalingstekens.`,
     doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Regel ${zeile}: dubbel (${rasse}, ${farbenschlag}).`,
+    mehrSpaltenGruppe: (zeile: string) => `Regel ${zeile}: meer dan vier kolommen – scheidingsteken in een veld? Zet het veld tussen aanhalingstekens.`,
+    gruppeZeile: (zeile: string, gruppe: string) => `Regel ${zeile}: ongeldige groep (${gruppe}) – korte tekst zoals A, Z1 of BV.`,
+    gruppeAbweichend: (zeile: string, rasse: string, gruppe: string, gilt: string) => `Regel ${zeile}: andere groep voor ${rasse} (${gruppe}) – ${gilt} geldt.`,
+    rasseFehlt: "Ras niet gevonden.",
   },
   druckvorlage: {
     fehlt: "Sjabloon niet gevonden.",

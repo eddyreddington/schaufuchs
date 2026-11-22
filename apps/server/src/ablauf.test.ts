@@ -101,3 +101,4 @@ import "./tests/65-a-bogen-mitglieder";
 import "./tests/66-preisverteilung";
 import "./tests/67-pokaltisch";
 import "./tests/68-kleinkram";
+import "./tests/69-preisrichter-gruppen";

@@ -1,5 +1,5 @@
-import { parseStammdatenCsv } from "@schau/domain";
-import { and, asc, count, desc, eq, ilike, isNull, max, or, sql } from "drizzle-orm";
+import { bdrgGruppe, bdrgGruppeGueltig, parseStammdatenCsv } from "@schau/domain";
+import { and, asc, count, desc, eq, ilike, inArray, isNull, max, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/client";
 import { farbenschlag, katalogeintrag, rasse, schau, sparte, stammdatenVersion } from "../db/schema";
@@ -75,7 +75,7 @@ export async function importiereStammdaten(input: { name: string; jahr: number; 
     for (const s of baum.sparten) {
       const [sp] = await tx.insert(sparte).values({ versionId: v!.id, name: s.name, folge: ++folgeS }).returning();
       for (const r of s.rassen) {
-        const [ra] = await tx.insert(rasse).values({ versionId: v!.id, sparteId: sp!.id, name: r.name, folge: ++folgeR }).returning();
+        const [ra] = await tx.insert(rasse).values({ versionId: v!.id, sparteId: sp!.id, name: r.name, folge: ++folgeR, gruppe: r.gruppe }).returning();
         await tx.insert(farbenschlag).values(
           r.farbenschlaege.map((f) => ({ versionId: v!.id, rasseId: ra!.id, name: f, folge: ++folgeF })),
         );
@@ -95,7 +95,7 @@ export const stammdatenRouter = router({
     await pruefeVersion(ctx.benutzer.organisationId, input.versionId);
     const [sparten, rassen] = await Promise.all([
       db.select({ id: sparte.id, name: sparte.name }).from(sparte).where(eq(sparte.versionId, input.versionId)).orderBy(asc(sparte.folge)),
-      db.select({ id: rasse.id, name: rasse.name, sparteId: rasse.sparteId }).from(rasse).where(eq(rasse.versionId, input.versionId)).orderBy(asc(rasse.folge)),
+      db.select({ id: rasse.id, name: rasse.name, sparteId: rasse.sparteId, gruppe: rasse.gruppe }).from(rasse).where(eq(rasse.versionId, input.versionId)).orderBy(asc(rasse.folge)),
     ]);
     return { sparten, rassen };
   }),
@@ -155,6 +155,42 @@ export const stammdatenRouter = router({
         return { sparte: sp!.name, rasse: ra!.name, neueSparte, neueRasse, angelegt: anlegen, schonDa };
       });
     }),
+  /**
+   * BDRG-Gruppen je Rasse pflegen (A, Z1, BV …; leer = keine). Nur für Versionen des eigenen Vereins; jede Änderung mit
+   * altem und neuem Wert im Protokoll.
+   */
+  gruppenSetzen: adminProcedure
+    .input(z.object({ versionId: dbId, gruppen: z.array(z.object({ rasseId: dbId, gruppe: z.string().max(20) })).min(1).max(5000) }))
+    .mutation(async ({ ctx, input }) => {
+      const neu = input.gruppen.map((g) => ({ rasseId: g.rasseId, gruppe: bdrgGruppe(g.gruppe) }));
+      if (neu.some((g) => g.gruppe && !bdrgGruppeGueltig(g.gruppe))) throw fehler("BAD_REQUEST", "Gruppe ungültig – kurzer Text wie A, Z1 oder BV.");
+      return db.transaction(async (tx) => {
+        const [v] = await tx
+          .select({ id: stammdatenVersion.id, organisationId: stammdatenVersion.organisationId })
+          .from(stammdatenVersion)
+          .where(and(eq(stammdatenVersion.id, input.versionId), versionSichtbar(ctx.benutzer.organisationId)))
+          .for("update");
+        if (!v) throw fehler("NOT_FOUND", "Version nicht gefunden.");
+        if (v.organisationId !== ctx.benutzer.organisationId) {
+          throw fehler("FORBIDDEN", "Diese Version ist für alle Vereine bereitgestellt und lässt sich nicht ergänzen. Bitte ein eigenes Verzeichnis einspielen.");
+        }
+        const ids = [...new Set(neu.map((g) => g.rasseId))];
+        const rassen = await tx.select({ id: rasse.id, name: rasse.name, gruppe: rasse.gruppe }).from(rasse).where(and(eq(rasse.versionId, v.id), inArray(rasse.id, ids)));
+        if (rassen.length !== ids.length) throw fehler("NOT_FOUND", "Rasse nicht gefunden.");
+        const aenderungen: { rasse: string; alt: string; neu: string }[] = [];
+        for (const g of neu) {
+          const r = rassen.find((x) => x.id === g.rasseId)!;
+          if (r.gruppe === g.gruppe) continue;
+          await tx.update(rasse).set({ gruppe: g.gruppe }).where(eq(rasse.id, r.id));
+          aenderungen.push({ rasse: r.name, alt: r.gruppe, neu: g.gruppe });
+          r.gruppe = g.gruppe;
+        }
+        if (aenderungen.length)
+          await protokolliere(tx, { schauId: null, tabelle: "stammdaten_version", datensatzId: v.id, aktion: "Gruppen geändert", neu: aenderungen, akteur: ctx });
+        return { geaendert: aenderungen.length };
+      });
+    }),
+
   versionen: benutzerProcedure.query(async ({ ctx }) => {
     const zeilen = await db
       .select({
@@ -221,7 +257,7 @@ export const stammdatenRouter = router({
   baum: benutzerProcedure.input(z.object({ versionId: dbId })).query(async ({ ctx, input }) => {
     await pruefeVersion(ctx.benutzer.organisationId, input.versionId);
     const rows = await db
-      .select({ sparte: sparte.name, rasse: rasse.name, farbenschlag: farbenschlag.name })
+      .select({ sparte: sparte.name, rasse: rasse.name, farbenschlag: farbenschlag.name, gruppe: rasse.gruppe })
       .from(farbenschlag)
       .innerJoin(rasse, eq(rasse.id, farbenschlag.rasseId))
       .innerJoin(sparte, eq(sparte.id, rasse.sparteId))

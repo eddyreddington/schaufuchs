@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { schlageEinteilungVor } from "./routers/preisrichter";
+import { schlageEinteilungVor } from "./services/einteilung-vorschlag";
 
 describe("Preisrichter-Einteilung", () => {
   test("verteilt gleichmäßig und schneidet an Rassengrenzen", () => {

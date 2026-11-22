@@ -44,6 +44,10 @@ export const stamm = {
     dreiSpalten: (zeile: string) => `Zeile ${zeile}: drei Spalten erwartet (Sparte;Rasse;Farbenschlag).`,
     mehrSpalten: (zeile: string) => `Zeile ${zeile}: mehr als drei Spalten – Trennzeichen im Feld? Feld in Anführungszeichen setzen.`,
     doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Zeile ${zeile}: doppelt (${rasse}, ${farbenschlag}).`,
+    mehrSpaltenGruppe: (zeile: string) => `Zeile ${zeile}: mehr als vier Spalten – Trennzeichen im Feld? Feld in Anführungszeichen setzen.`,
+    gruppeZeile: (zeile: string, gruppe: string) => `Zeile ${zeile}: Gruppe ungültig (${gruppe}) – kurzer Text wie A, Z1 oder BV.`,
+    gruppeAbweichend: (zeile: string, rasse: string, gruppe: string, gilt: string) => `Zeile ${zeile}: andere Gruppe für ${rasse} (${gruppe}) – es gilt ${gilt}.`,
+    rasseFehlt: "Rasse nicht gefunden.",
   },
   druckvorlage: {
     fehlt: "Vorlage nicht gefunden.",

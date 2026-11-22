@@ -99,6 +99,16 @@ export const preisrichter: T["preisrichter"] = {
   schonBewertet: "The judge has already judged and cannot be deleted.",
   sparteRasse: (name: string, sparte: string, rasse: string) =>
     `${name} does not judge ${sparte} (${rasse}). Please choose another judge or add the section to the judge.`,
+  /** BDRG-Gruppen und Obmann-Zuordnung (routers/preisrichter.ts, services/preisrichter-speichern.ts). */
+  gruppeFalsch: (name: string, gruppe: string, nummern: string) => `${name} does not judge group ${gruppe} (no. ${nummern})`,
+  gruppeVerteilen: (text: string) => `${text}. Please distribute the ranges differently or add the group to the judge.`,
+  gruppeRasse: (name: string, gruppe: string, rasse: string) =>
+    `${name} does not judge group ${gruppe} (${rasse}). Please choose another judge or add the group to the judge.`,
+  gruppeName: (gruppe: string) => `group ${gruppe}`,
+  gruppeUngueltig: "Invalid group – short text such as A, Z1 or BV.",
+  obmannSelbst: "A judge cannot be their own chief judge.",
+  obmannFehlt: "Chief judge not found.",
+  keinObmann: "The selected judge is not a chief judge.",
 };
 
 export const meisterschaft: T["meisterschaft"] = {

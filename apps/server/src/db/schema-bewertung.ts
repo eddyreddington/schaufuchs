@@ -1,6 +1,6 @@
 /** Preisrichter und Bewertung: Vereinsverzeichnis, Preisrichter, Einteilung, Bewertung, Textbausteine. Über schema.ts exportiert. */
-import { boolean, integer, jsonb, pgTable, serial, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { erfasstAufEnum, sondernoteEnum } from "./schema-aufzaehlungen";
+import { boolean, integer, jsonb, pgTable, serial, text, uniqueIndex, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { erfasstAufEnum, sondernoteEnum, zusageEnum } from "./schema-aufzaehlungen";
 import { organisation } from "./schema-mandant";
 import { katalogeintrag } from "./schema-meldung";
 import { schau } from "./schema-schau";
@@ -41,6 +41,14 @@ export const preisrichter = pgTable("preisrichter", {
   istObmann: boolean("ist_obmann").notNull().default(false),
   /** Sparten, die dieser Preisrichter bewertet (Namen aus dem Verzeichnis); leer = alle. Grundlage der Einteilung. */
   sparten: jsonb("sparten").$type<string[]>().notNull().default([]),
+  /** BDRG-Gruppen, für die er zugelassen ist (A, Z1, BV …); leer = keine Einschränkung über Gruppen. */
+  gruppen: jsonb("gruppen").$type<string[]>().notNull().default([]),
+  /** Obmann (Preisrichter derselben Schau mit istObmann), dem dieser Preisrichter zugeordnet ist. */
+  obmannId: integer("obmann_id").references((): AnyPgColumn => preisrichter.id, { onDelete: "set null" }),
+  /** Stand der Zusage; dazu, wofür er zugesagt hat (z. B. Jahre), und ein Vorbehalt als freier Text. */
+  zusage: zusageEnum("zusage").notNull().default("offen"),
+  zugesagtFuer: text("zugesagt_fuer").notNull().default(""),
+  vorbehalt: text("vorbehalt").notNull().default(""),
   createdAt: created(),
 });
 

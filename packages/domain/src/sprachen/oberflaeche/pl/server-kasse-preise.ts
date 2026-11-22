@@ -99,6 +99,16 @@ export const preisrichter: T["preisrichter"] = {
   schonBewertet: "Sędzia już oceniał i nie może zostać usunięty.",
   sparteRasse: (name: string, sparte: string, rasse: string) =>
     `${name} nie ocenia: ${sparte} (${rasse}). Prosimy wybrać innego sędziego lub uzupełnić sekcję u sędziego.`,
+  /** BDRG-Gruppen und Obmann-Zuordnung (routers/preisrichter.ts, services/preisrichter-speichern.ts). */
+  gruppeFalsch: (name: string, gruppe: string, nummern: string) => `${name} nie ocenia grupy ${gruppe} (nr ${nummern})`,
+  gruppeVerteilen: (text: string) => `${text}. Prosimy inaczej rozdzielić zakresy lub uzupełnić grupę u sędziego.`,
+  gruppeRasse: (name: string, gruppe: string, rasse: string) =>
+    `${name} nie ocenia grupy ${gruppe} (${rasse}). Prosimy wybrać innego sędziego lub uzupełnić grupę u sędziego.`,
+  gruppeName: (gruppe: string) => `grupa ${gruppe}`,
+  gruppeUngueltig: "Nieprawidłowa grupa – krótki tekst, np. A, Z1 lub BV.",
+  obmannSelbst: "Sędzia nie może być swoim własnym sędzią głównym.",
+  obmannFehlt: "Nie znaleziono sędziego głównego.",
+  keinObmann: "Wybrany sędzia nie jest sędzią głównym.",
 };
 
 export const meisterschaft: T["meisterschaft"] = {

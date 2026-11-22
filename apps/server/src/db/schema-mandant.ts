@@ -116,6 +116,8 @@ export const rasse = pgTable(
     sparteId: integer("sparte_id").notNull().references(() => sparte.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     folge: integer("folge").notNull(),
+    /** BDRG-Gruppe der Rasse (A–M, Z1–Z3, BV o. ä.); leer = nicht gepflegt. Gepflegt im Verzeichnis oder per CSV. */
+    gruppe: text("gruppe").notNull().default(""),
   },
   (t) => [index("rasse_version_idx").on(t.versionId)],
 );

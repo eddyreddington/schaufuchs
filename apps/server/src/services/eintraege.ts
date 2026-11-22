@@ -64,6 +64,8 @@ export async function ladeEintraege(schauId: number, opts: { nurMeldungId?: numb
       einordnungRasseFolge: rasseFrei.folge,
       einordnungSparte: sparteFrei.name,
       einordnungSparteFolge: sparteFrei.folge,
+      /** BDRG-Gruppe der Rasse (bei freier Bezeichnung die der gewählten Rasse); leer = nicht gepflegt. */
+      gruppe: sql<string>`coalesce(${rasse.gruppe}, ${rasseFrei.gruppe}, '')`,
       ausstellerId: aussteller.id,
       vorname: aussteller.vorname,
       nachname: aussteller.nachname,

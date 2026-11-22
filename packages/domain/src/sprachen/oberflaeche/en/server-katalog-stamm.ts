@@ -40,6 +40,10 @@ export const stamm: OberflaecheTexte["serverKatalog"]["stamm"] = {
     dreiSpalten: (zeile: string) => `Line ${zeile}: three columns expected (Sparte;Rasse;Farbenschlag).`,
     mehrSpalten: (zeile: string) => `Line ${zeile}: more than three columns – separator in a field? Put the field in quotation marks.`,
     doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Line ${zeile}: duplicate (${rasse}, ${farbenschlag}).`,
+    mehrSpaltenGruppe: (zeile: string) => `Line ${zeile}: more than four columns – separator in a field? Put the field in quotation marks.`,
+    gruppeZeile: (zeile: string, gruppe: string) => `Line ${zeile}: invalid group (${gruppe}) – short text such as A, Z1 or BV.`,
+    gruppeAbweichend: (zeile: string, rasse: string, gruppe: string, gilt: string) => `Line ${zeile}: different group for ${rasse} (${gruppe}) – ${gilt} applies.`,
+    rasseFehlt: "Breed not found.",
   },
   druckvorlage: {
     fehlt: "Template not found.",

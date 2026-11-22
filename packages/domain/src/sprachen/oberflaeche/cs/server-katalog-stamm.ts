@@ -40,6 +40,10 @@ export const stamm: OberflaecheTexte["serverKatalog"]["stamm"] = {
     dreiSpalten: (zeile: string) => `Řádek ${zeile}: očekávány tři sloupce (Sparte;Rasse;Farbenschlag).`,
     mehrSpalten: (zeile: string) => `Řádek ${zeile}: více než tři sloupce – oddělovač v poli? Dejte pole do uvozovek.`,
     doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Řádek ${zeile}: duplicitní (${rasse}, ${farbenschlag}).`,
+    mehrSpaltenGruppe: (zeile: string) => `Řádek ${zeile}: více než čtyři sloupce – oddělovač v poli? Dejte pole do uvozovek.`,
+    gruppeZeile: (zeile: string, gruppe: string) => `Řádek ${zeile}: neplatná skupina (${gruppe}) – krátký text jako A, Z1 nebo BV.`,
+    gruppeAbweichend: (zeile: string, rasse: string, gruppe: string, gilt: string) => `Řádek ${zeile}: jiná skupina pro ${rasse} (${gruppe}) – platí ${gilt}.`,
+    rasseFehlt: "Plemeno nenalezeno.",
   },
   druckvorlage: {
     fehlt: "Šablona nenalezena.",

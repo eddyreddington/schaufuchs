@@ -40,6 +40,10 @@ export const stamm: OberflaecheTexte["serverKatalog"]["stamm"] = {
     dreiSpalten: (zeile: string) => `Ligne ${zeile} : trois colonnes attendues (Sparte;Rasse;Farbenschlag).`,
     mehrSpalten: (zeile: string) => `Ligne ${zeile} : plus de trois colonnes – séparateur dans un champ ? Mettez le champ entre guillemets.`,
     doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Ligne ${zeile} : doublon (${rasse}, ${farbenschlag}).`,
+    mehrSpaltenGruppe: (zeile: string) => `Ligne ${zeile} : plus de quatre colonnes – séparateur dans un champ ? Mettez le champ entre guillemets.`,
+    gruppeZeile: (zeile: string, gruppe: string) => `Ligne ${zeile} : groupe non valable (${gruppe}) – texte court comme A, Z1 ou BV.`,
+    gruppeAbweichend: (zeile: string, rasse: string, gruppe: string, gilt: string) => `Ligne ${zeile} : autre groupe pour ${rasse} (${gruppe}) – ${gilt} s'applique.`,
+    rasseFehlt: "Race introuvable.",
   },
   druckvorlage: {
     fehlt: "Modèle introuvable.",

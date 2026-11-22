@@ -270,7 +270,14 @@ async function kopiereAusVorlage(tx: Tx, von: number, nach: number) {
   if (gebuehren.length) await tx.insert(gebuehr).values(gebuehren.map(({ id: _, ...g }) => ({ ...g, schauId: nach })));
   if (preisarten.length) await tx.insert(preisart).values(preisarten.map(({ id: _, ...p }) => ({ ...p, schauId: nach })));
   // Preisrichter ohne PIN: die neue Schau bekommt neue PINs (alte Tablets melden sich nicht an der neuen Schau an).
-  if (richter.length) await tx.insert(preisrichter).values(richter.map(({ id: _, createdAt: __, pinHash: ___, ...r }) => ({ ...r, schauId: nach })));
+  // Einzeln, damit die neuen Nummern sicher zugeordnet sind: die Zuordnung zum Obmann zeigt danach auf den Obmann der neuen Schau.
+  const neueId = new Map<number, number>();
+  for (const { id, createdAt: _, pinHash: __, obmannId: ___, ...r } of richter) {
+    const [neu] = await tx.insert(preisrichter).values({ ...r, schauId: nach }).returning({ id: preisrichter.id });
+    neueId.set(id, neu!.id);
+  }
+  for (const r of richter)
+    if (r.obmannId != null && neueId.has(r.obmannId)) await tx.update(preisrichter).set({ obmannId: neueId.get(r.obmannId)! }).where(eq(preisrichter.id, neueId.get(r.id)!));
   if (gestaltung[0]) await tx.insert(katalogGestaltung).values({ ...gestaltung[0], schauId: nach });
   const neueBildId = new Map<number, number>();
   for (const { id, createdAt: _, ...b } of bilder) {

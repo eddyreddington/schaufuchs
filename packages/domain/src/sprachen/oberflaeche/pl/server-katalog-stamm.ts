@@ -40,6 +40,10 @@ export const stamm: OberflaecheTexte["serverKatalog"]["stamm"] = {
     dreiSpalten: (zeile: string) => `Wiersz ${zeile}: oczekiwano trzech kolumn (Sparte;Rasse;Farbenschlag).`,
     mehrSpalten: (zeile: string) => `Wiersz ${zeile}: więcej niż trzy kolumny – separator w polu? Pole należy ująć w cudzysłów.`,
     doppelt: (zeile: string, rasse: string, farbenschlag: string) => `Wiersz ${zeile}: duplikat (${rasse}, ${farbenschlag}).`,
+    mehrSpaltenGruppe: (zeile: string) => `Wiersz ${zeile}: więcej niż cztery kolumny – separator w polu? Pole należy ująć w cudzysłów.`,
+    gruppeZeile: (zeile: string, gruppe: string) => `Wiersz ${zeile}: nieprawidłowa grupa (${gruppe}) – krótki tekst, np. A, Z1 lub BV.`,
+    gruppeAbweichend: (zeile: string, rasse: string, gruppe: string, gilt: string) => `Wiersz ${zeile}: inna grupa dla ${rasse} (${gruppe}) – obowiązuje ${gilt}.`,
+    rasseFehlt: "Nie znaleziono rasy.",
   },
   druckvorlage: {
     fehlt: "Nie znaleziono szablonu.",

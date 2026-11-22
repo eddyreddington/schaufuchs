@@ -102,6 +102,16 @@ export const preisrichter: T["preisrichter"] = {
   schonBewertet: "Le juge a déjà jugé et ne peut pas être supprimé.",
   sparteRasse: (name: string, sparte: string, rasse: string) =>
     `${name} ne juge pas les ${sparte} (${rasse}). Veuillez choisir un autre juge ou ajouter la section au juge.`,
+  /** BDRG-Gruppen und Obmann-Zuordnung (routers/preisrichter.ts, services/preisrichter-speichern.ts). */
+  gruppeFalsch: (name: string, gruppe: string, nummern: string) => `${name} ne juge pas le groupe ${gruppe} (n° ${nummern})`,
+  gruppeVerteilen: (text: string) => `${text}. Veuillez répartir les plages autrement ou ajouter le groupe au juge.`,
+  gruppeRasse: (name: string, gruppe: string, rasse: string) =>
+    `${name} ne juge pas le groupe ${gruppe} (${rasse}). Veuillez choisir un autre juge ou ajouter le groupe au juge.`,
+  gruppeName: (gruppe: string) => `groupe ${gruppe}`,
+  gruppeUngueltig: "Groupe non valable – texte court comme A, Z1 ou BV.",
+  obmannSelbst: "Un juge ne peut pas être son propre juge en chef.",
+  obmannFehlt: "Juge en chef introuvable.",
+  keinObmann: "Le juge choisi n'est pas juge en chef.",
 };
 
 export const meisterschaft: T["meisterschaft"] = {

@@ -1,5 +1,5 @@
 /** Aufzählungstypen der Datenbank (pgEnum) – Phasen, Meldearten, Status, Zahlarten u. a. Über schema.ts exportiert. */
-import { ALTER, EINGANG, EINTRAG_STATUS, GEBUEHR_ARTEN, KONTINGENT_BASEN, MELDEARTEN, MELDUNG_STATUS, PHASEN, PREIS_QUELLEN, RUNDUNGEN, SONDERNOTEN, ZAHLARTEN } from "@schau/domain";
+import { ALTER, EINGANG, EINTRAG_STATUS, GEBUEHR_ARTEN, KONTINGENT_BASEN, MELDEARTEN, MELDUNG_STATUS, PHASEN, PREIS_QUELLEN, RUNDUNGEN, SONDERNOTEN, ZAHLARTEN, ZUSAGEN } from "@schau/domain";
 import { pgEnum } from "drizzle-orm/pg-core";
 
 export const phaseEnum = pgEnum("phase", PHASEN);
@@ -16,3 +16,5 @@ export const zahlartEnum = pgEnum("zahlart", ZAHLARTEN);
 export const erfasstAufEnum = pgEnum("erfasst_auf", ["tablet", "pc"]);
 export const rundungEnum = pgEnum("rundung", RUNDUNGEN);
 export const kontingentBasisEnum = pgEnum("kontingent_basis", KONTINGENT_BASEN);
+/** Zusage eines Preisrichters für die Schau (offen, zugesagt, abgesagt). */
+export const zusageEnum = pgEnum("pr_zusage", ZUSAGEN);

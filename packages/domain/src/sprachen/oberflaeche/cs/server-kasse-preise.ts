@@ -99,6 +99,16 @@ export const preisrichter: T["preisrichter"] = {
   schonBewertet: "Posuzovatel už posuzoval a nelze ho smazat.",
   sparteRasse: (name: string, sparte: string, rasse: string) =>
     `${name} neposuzuje: ${sparte} (${rasse}). Vyberte prosím jiného posuzovatele nebo posuzovateli doplňte sekci.`,
+  /** BDRG-Gruppen und Obmann-Zuordnung (routers/preisrichter.ts, services/preisrichter-speichern.ts). */
+  gruppeFalsch: (name: string, gruppe: string, nummern: string) => `${name} neposuzuje skupinu ${gruppe} (č. ${nummern})`,
+  gruppeVerteilen: (text: string) => `${text}. Rozdělte prosím rozsahy jinak nebo posuzovateli doplňte skupinu.`,
+  gruppeRasse: (name: string, gruppe: string, rasse: string) =>
+    `${name} neposuzuje skupinu ${gruppe} (${rasse}). Zvolte prosím jiného posuzovatele nebo mu doplňte skupinu.`,
+  gruppeName: (gruppe: string) => `skupina ${gruppe}`,
+  gruppeUngueltig: "Neplatná skupina – krátký text jako A, Z1 nebo BV.",
+  obmannSelbst: "Posuzovatel nemůže být svým vlastním hlavním posuzovatelem.",
+  obmannFehlt: "Hlavní posuzovatel nenalezen.",
+  keinObmann: "Zvolený posuzovatel není hlavní posuzovatel.",
 };
 
 export const meisterschaft: T["meisterschaft"] = {

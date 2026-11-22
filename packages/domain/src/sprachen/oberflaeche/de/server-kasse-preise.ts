@@ -112,6 +112,16 @@ export const preisrichter = {
   schonBewertet: "Der Preisrichter hat schon bewertet und kann nicht gelöscht werden.",
   sparteRasse: (name: string, sparte: string, rasse: string) =>
     `${name} bewertet keine ${sparte} (${rasse}). Bitte einen anderen Preisrichter wählen oder beim Preisrichter die Sparte ergänzen.`,
+  /** BDRG-Gruppen und Obmann-Zuordnung (routers/preisrichter.ts, services/preisrichter-speichern.ts). */
+  gruppeFalsch: (name: string, gruppe: string, nummern: string) => `${name} bewertet keine Gruppe ${gruppe} (Nr. ${nummern})`,
+  gruppeVerteilen: (text: string) => `${text}. Bitte die Bereiche anders verteilen oder beim Preisrichter die Gruppe ergänzen.`,
+  gruppeRasse: (name: string, gruppe: string, rasse: string) =>
+    `${name} bewertet keine Gruppe ${gruppe} (${rasse}). Bitte einen anderen Preisrichter wählen oder beim Preisrichter die Gruppe ergänzen.`,
+  gruppeName: (gruppe: string) => `Gruppe ${gruppe}`,
+  gruppeUngueltig: "Gruppe ungültig – kurzer Text wie A, Z1 oder BV.",
+  obmannSelbst: "Ein Preisrichter kann nicht sein eigener Obmann sein.",
+  obmannFehlt: "Obmann nicht gefunden.",
+  keinObmann: "Der gewählte Preisrichter ist kein Obmann.",
 };
 
 /** Gründe und Hinweise der Meisterschaftswertung (domain meisterschaft.ts). */

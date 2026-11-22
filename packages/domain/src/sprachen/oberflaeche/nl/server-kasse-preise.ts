@@ -99,6 +99,16 @@ export const preisrichter: T["preisrichter"] = {
   schonBewertet: "De keurmeester heeft al gekeurd en kan niet worden verwijderd.",
   sparteRasse: (name: string, sparte: string, rasse: string) =>
     `${name} keurt geen ${sparte} (${rasse}). Kies een andere keurmeester of vul bij de keurmeester de afdeling aan.`,
+  /** BDRG-Gruppen und Obmann-Zuordnung (routers/preisrichter.ts, services/preisrichter-speichern.ts). */
+  gruppeFalsch: (name: string, gruppe: string, nummern: string) => `${name} keurt groep ${gruppe} niet (nr. ${nummern})`,
+  gruppeVerteilen: (text: string) => `${text}. Verdeel de bereiken anders of vul bij de keurmeester de groep aan.`,
+  gruppeRasse: (name: string, gruppe: string, rasse: string) =>
+    `${name} keurt groep ${gruppe} niet (${rasse}). Kies een andere keurmeester of vul bij de keurmeester de groep aan.`,
+  gruppeName: (gruppe: string) => `groep ${gruppe}`,
+  gruppeUngueltig: "Ongeldige groep – korte tekst zoals A, Z1 of BV.",
+  obmannSelbst: "Een keurmeester kan niet zijn eigen hoofdkeurmeester zijn.",
+  obmannFehlt: "Hoofdkeurmeester niet gevonden.",
+  keinObmann: "De gekozen keurmeester is geen hoofdkeurmeester.",
 };
 
 export const meisterschaft: T["meisterschaft"] = {

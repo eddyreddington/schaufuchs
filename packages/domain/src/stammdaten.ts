@@ -1,3 +1,5 @@
+import { bdrgGruppe, bdrgGruppeGueltig } from "./preisrichter-zulassung";
+
 export interface StammdatenZeile {
   sparte: string;
   rasse: string;
@@ -7,7 +9,8 @@ export interface StammdatenZeile {
 export interface StammdatenBaum {
   sparten: {
     name: string;
-    rassen: { name: string; farbenschlaege: string[] }[];
+    /** `gruppe`: BDRG-Gruppe der Rasse aus der freiwilligen vierten Spalte (leer = nicht angegeben). */
+    rassen: { name: string; farbenschlaege: string[]; gruppe: string }[];
   }[];
 }
 
@@ -52,10 +55,15 @@ function erkenneTrennzeichen(line: string): string {
   return TRENNZEICHEN.find((sep) => anzahl(sep) >= 2) ?? TRENNZEICHEN.find((sep) => anzahl(sep) >= 1) ?? ";";
 }
 
+/** Vierte Spalte ohne Kopfzeile: nur, wenn sie wie eine Gruppe aussieht (A, Z1, BV) – sonst ist es eher ein Trennzeichen im Feld. */
+const SIEHT_AUS_WIE_GRUPPE = /^[A-Z][A-Z0-9]{0,3}$/;
+
 /**
- * Liest eine CSV mit den Spalten Sparte;Rasse;Farbenschlag.
+ * Liest eine CSV mit den Spalten Sparte;Rasse;Farbenschlag, freiwillig dazu Gruppe (BDRG-Gruppe der Rasse).
  * Die Reihenfolge der Zeilen ist die Ausstellungsfolge. Trennzeichen ; oder , oder Tab –
  * einmal aus der ersten Datenzeile bestimmt. Felder mit Trennzeichen in Anführungszeichen setzen.
+ * Die Gruppe gilt je Rasse (die erste angegebene); steht sie in der Kopfzeile, ist jeder kurze Text erlaubt, sonst nur
+ * eine Angabe wie A, Z1 oder BV.
  */
 export function parseStammdatenCsv(text: string): { baum: StammdatenBaum; fehler: string[] } {
   const fehler: string[] = [];
@@ -63,6 +71,7 @@ export function parseStammdatenCsv(text: string): { baum: StammdatenBaum; fehler
   const sparten: StammdatenBaum["sparten"] = [];
   const seen = new Set<string>();
   let sep: string | null = null;
+  let mitGruppe = false;
 
   zeilen.forEach((roh, i) => {
     const line = roh.trim();
@@ -73,15 +82,29 @@ export function parseStammdatenCsv(text: string): { baum: StammdatenBaum; fehler
       fehler.push(`Zeile ${i + 1}: Anführungszeichen nicht geschlossen.`);
       return;
     }
-    const [sparte, rasse, farbenschlag] = teile;
-    if (/^sparte$/i.test(sparte ?? "") && /^rasse$/i.test(rasse ?? "")) return; // Kopfzeile, auch nach Kommentaren
+    const [sparte, rasse, farbenschlag, gruppeRoh = ""] = teile;
+    if (/^sparte$/i.test(sparte ?? "") && /^rasse$/i.test(rasse ?? "")) {
+      mitGruppe = /^gruppe$/i.test(gruppeRoh);
+      return; // Kopfzeile, auch nach Kommentaren
+    }
     if (!sparte || !rasse || !farbenschlag) {
       fehler.push(`Zeile ${i + 1}: drei Spalten erwartet (Sparte;Rasse;Farbenschlag).`);
       return;
     }
     // Leere Spalten am Ende (z. B. aus Excel) sind harmlos, Inhalt dort deutet auf ein Trennzeichen im Feld.
-    if (teile.slice(3).some((t) => t !== "")) {
-      fehler.push(`Zeile ${i + 1}: mehr als drei Spalten – Trennzeichen im Feld? Feld in Anführungszeichen setzen.`);
+    // Ohne Kopfzeile „Gruppe“ zählt eine vierte Spalte nur, wenn sie wie eine Gruppe aussieht.
+    const zuViel = teile.slice(4).some((t) => t !== "") || (!mitGruppe && gruppeRoh !== "" && !SIEHT_AUS_WIE_GRUPPE.test(gruppeRoh));
+    if (zuViel) {
+      fehler.push(
+        mitGruppe
+          ? `Zeile ${i + 1}: mehr als vier Spalten – Trennzeichen im Feld? Feld in Anführungszeichen setzen.`
+          : `Zeile ${i + 1}: mehr als drei Spalten – Trennzeichen im Feld? Feld in Anführungszeichen setzen.`,
+      );
+      return;
+    }
+    const gruppe = bdrgGruppe(gruppeRoh);
+    if (gruppe && !bdrgGruppeGueltig(gruppe)) {
+      fehler.push(`Zeile ${i + 1}: Gruppe ungültig (${gruppeRoh}) – kurzer Text wie A, Z1 oder BV.`);
       return;
     }
     const key = `${sparte}|${rasse}|${farbenschlag}`.toLowerCase();
@@ -93,7 +116,9 @@ export function parseStammdatenCsv(text: string): { baum: StammdatenBaum; fehler
     let s = sparten.find((x) => x.name === sparte);
     if (!s) sparten.push((s = { name: sparte, rassen: [] }));
     let r = s.rassen.find((x) => x.name === rasse);
-    if (!r) s.rassen.push((r = { name: rasse, farbenschlaege: [] }));
+    if (!r) s.rassen.push((r = { name: rasse, farbenschlaege: [], gruppe }));
+    else if (gruppe && !r.gruppe) r.gruppe = gruppe;
+    else if (gruppe && r.gruppe !== gruppe) fehler.push(`Zeile ${i + 1}: andere Gruppe für ${rasse} (${gruppe}) – es gilt ${r.gruppe}.`);
     r.farbenschlaege.push(farbenschlag);
   });
 

@@ -392,7 +392,7 @@ describe("Audit Paket f", () => {
   test("CSV: Semikolon-Datei mit Kommas in der ersten Zeile", () => {
     const { baum, fehler } = parseStammdatenCsv("Tauben;Modeneser, Gazzi;blau, gesäumt, mit Binden\nHühner;Brahma;hell");
     expect(fehler).toEqual([]);
-    expect(baum.sparten[0]!.rassen[0]).toEqual({ name: "Modeneser, Gazzi", farbenschlaege: ["blau, gesäumt, mit Binden"] });
+    expect(baum.sparten[0]!.rassen[0]).toEqual({ name: "Modeneser, Gazzi", farbenschlaege: ["blau, gesäumt, mit Binden"], gruppe: "" });
   });
 
   test("Jugend: Alter am Stichtag", () => {
