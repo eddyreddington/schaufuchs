@@ -12,7 +12,6 @@ export const halleWerkzeuge = {
     volierenbereich: "Volierenbereich",
     alleHabenPlatz: "Alle haben Platz",
     ohnePlatz: (n: number) => `${n} ohne Platz`,
-    festGerade: "Der Plan wird gerade festgeschrieben – bitte gleich noch einmal.",
     bloecke: (n: number) => `${n} ${n === 1 ? "Block" : "Blöcke"}`,
     volieren: (n: number) => `${n} ${n === 1 ? "Voliere" : "Volieren"}`,
   },

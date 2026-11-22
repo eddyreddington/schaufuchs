@@ -37,6 +37,8 @@ describe("Hallenplan: Leeres entfernen", () => {
     // Automatisches Festschreiben aus dem Editor: nur mit den Platten, die der Editor zeigt, und nur, solange lose.
     await expect(al().katalog.planFestschreiben({ schauId: id, nurWennLose: true, plattenStand: "anders" })).rejects.toThrow(/inzwischen geändert/);
     await al().katalog.planFestschreiben({ schauId: id, nurWennLose: true, plattenStand: plattenStand(ohneFest) });
+    // Der feste Plan hat dieselben Grundplatten (darauf prüft der Editor, ob eine wiederholte Anfrage schon ankam).
+    expect(plattenStand((await laden()).plan!)).toBe(plattenStand(ohneFest));
     await expect(al().katalog.planFestschreiben({ schauId: id, nurWennLose: true, plattenStand: plattenStand(ohneFest) })).rejects.toThrow(/inzwischen festgeschrieben/);
     await al().meldung.statusSetzen({ id: geht, status: "storniert", grund: "Absage (Test)" });
     let d = await laden();

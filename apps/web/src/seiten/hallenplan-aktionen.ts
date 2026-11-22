@@ -28,7 +28,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
   const ta = t.halleWerkzeuge.aktionen;
   const tg = t.halleWerkzeuge.gemeinsam;
   const sprache = useSprache();
-  const { entwurf, entwurfRef, aendern, kette, festUnterwegs, festMachen } = e;
+  const { entwurf, entwurfRef, aendern, festMachen } = e;
   /** Gewählte Teile zum Verschieben, Drehen und Ausrichten: ein freier Platz steht für seine Grundplatte. */
   const teile = zuTeilen(auswahl, plan);
   const ausrichten = () => {
@@ -99,9 +99,7 @@ export function useEditorAktionen({ d, plan, schauId, e, auswahl, setAuswahl, ze
       return;
     let p = plan;
     if (mussFest) {
-      await kette.current;
-      if (festUnterwegs.current) return meldung(tg.festGerade, "warnung");
-      festUnterwegs.current = true;
+      // In der Reihe nach dem, was noch gespeichert wird; läuft das Festschreiben schon, wartet es darauf.
       try {
         await festMachen();
       } catch {

@@ -12,7 +12,6 @@ export const halleWerkzeuge: OberflaecheTexte["halleWerkzeuge"] = {
     volierenbereich: "Prostor voliér",
     alleHabenPlatz: "Všechna mají místo",
     ohnePlatz: (n: number) => `${n} bez místa`,
-    festGerade: "Plán se právě pevně ukládá – zkuste to prosím za chvíli znovu.",
     bloecke: (n: number) => `${n} ${tvar(n, "blok", "bloky", "bloků")}`,
     volieren: (n: number) => `${n} ${tvar(n, "voliéra", "voliéry", "voliér")}`,
   },

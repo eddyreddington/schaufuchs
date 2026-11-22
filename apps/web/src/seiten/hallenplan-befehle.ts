@@ -121,14 +121,10 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     const da = belegungImPlan(plan, ziel);
     const nrVon = (id: number) => plan.reihen.flatMap((r) => r.kaefige).concat(plan.objekte.flatMap((o) => o.kaefige ?? [])).find((k) => k.id === id)?.nr ?? tb.ohneNummer;
     if (!plan.fest) {
-      if (festUnterwegs.current) return meldung(t.halleWerkzeuge.gemeinsam.festGerade, "warnung");
-      festUnterwegs.current = true;
       try {
         await festMachen();
       } catch {
         return;
-      } finally {
-        festUnterwegs.current = false;
       }
     }
     const r = await tierZug(v.tierId, von, ziel, da?.tierId ?? null);
@@ -238,8 +234,7 @@ export function usePlanBefehle({ d, plan, schauId, e, setAuswahl, versetzen, set
     await kette.current.catch(() => {});
     const fest = utils.katalog.hallenplan.getData({ schauId })?.plan?.fest ?? plan.fest;
     if (!fest) {
-      festUnterwegs.current = true;
-      kette.current = kette.current.then(() => festMachen({ ohnePlattenStand: true })).catch(() => {});
+      festMachen({ ohnePlattenStand: true }).catch(() => {});
       return;
     }
     if (

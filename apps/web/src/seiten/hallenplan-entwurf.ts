@@ -13,7 +13,7 @@ import { useMeldung } from "../ui";
 import { useUngespeichertWarnung } from "../ui-ungespeichert";
 import { type Aendern, type Plan, type Schritt, vollstaendig, vonHandBewegt, zahlWort } from "./hallenplan-geometrie";
 import { serverStandUebernehmen } from "./hallenplan-laden";
-import { mitWiederholen, wartenOderOnline } from "./hallenplan-wiederholen";
+import { festEinreihen, festSchonAngekommen, mitWiederholen, wartenOderOnline } from "./hallenplan-wiederholen";
 
 /** Zustand und Speicherwege des Entwurfs (Rückgabe von `useHallenEntwurf`). */
 export type HallenEntwurf = ReturnType<typeof useHallenEntwurf>;
@@ -24,8 +24,14 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const t = useOberflaeche().halleBild.entwurf;
-  /** Festschreiben ist unterwegs (automatisch vor dem ersten Verschieben). */
-  const festUnterwegs = useRef(false);
+  /** Das laufende Festschreiben (in der Reihe oder unterwegs), siehe `festMachen`. */
+  const festLaeuft = useRef<Promise<unknown> | null>(null);
+  /** Festschreiben ist unterwegs (automatisch vor dem ersten Verschieben) – nur lesen, gesetzt wird es über `festMachen`. */
+  const festUnterwegs: { readonly current: boolean } = {
+    get current() {
+      return festLaeuft.current != null;
+    },
+  };
   // Fehler meldet `wiederholt` erst, wenn das Wiederholen aufgibt. networkMode "always": ohne Netz scheitert die Anfrage
   // gleich und wird wiederholt, statt still zu pausieren.
   const setzen = trpc.katalog.halleSetzen.useMutation({ networkMode: "always" });
@@ -129,12 +135,13 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
     offen.current++;
     setOffenZahl(offen.current);
     // Erstes Verschieben, Drehen oder Ausrichten von Reihen und Platten: vorher den gerechneten Plan festschreiben (sonst
-    // stellte die Software die Käfige gleich wieder um). Die Nummern der Platten sind dabei dieselben.
-    const vorher_fest = opt.festschreiben && !plan.fest && !festUnterwegs.current;
-    if (vorher_fest) festUnterwegs.current = true;
+    // stellte die Software die Käfige gleich wieder um). Die Nummern der Platten sind dabei dieselben. Läuft das
+    // Festschreiben schon (auch von „Leeres entfernen“ oder „Tier versetzen“), wartet die Änderung darauf.
+    const istFest = utils.katalog.hallenplan.getData({ schauId })?.plan?.fest ?? plan.fest;
+    const fest = opt.festschreiben && !istFest ? festMachen() : null;
     let gespeichert = true;
     kette.current = kette.current
-      .then(() => (vorher_fest ? festMachen() : undefined))
+      .then(() => fest)
       .then(() =>
         wiederholt(
           () => setzen.mutateAsync({ schauId, halle: neu, basis, ...(opt.grund ? { grund: opt.grund } : {}) }),
@@ -169,20 +176,23 @@ export function useHallenEntwurf({ schauId, halle, plan, auswahlAufheben }: { sc
   /**
    * Automatisch festschreiben (vor dem ersten Verschieben bzw. Entfernen): nur, solange der Plan nicht inzwischen anderswo
    * festgeschrieben ist, und nur, wenn die Grundplatten noch dieselben sind wie im Editor – sonst lehnt der Server ab.
-   * Ohne Verbindung wird wiederholt; danach ist `festUnterwegs` wieder frei. `ohnePlattenStand`: „Automatisch planen“ aus.
+   * Steht in der Reihe der Speicherungen (`kette`); läuft schon eins, kommt dasselbe zurück (`festEinreihen`). Ohne
+   * Verbindung wird wiederholt. `ohnePlattenStand`: „Automatisch planen“ aus.
    */
-  const festMachen = (o: { ohnePlattenStand?: boolean } = {}) =>
-    wiederholt(
-      () => festschreiben.mutateAsync({ schauId, nurWennLose: true, ...(o.ohnePlattenStand ? {} : { plattenStand: plattenStand(plan) }) }),
-      // Wiederholung abgelehnt, weil schon festgeschrieben: dann kam die erste Anfrage an.
-      async () => !!(await serverHolen()).plan?.fest,
-      async () => {
-        await utils.katalog.hallenplan.invalidate({ schauId });
-        meldung(t.automatischAus);
-      },
-    ).finally(() => {
-      festUnterwegs.current = false;
-    });
+  const festMachen = (o: { ohnePlattenStand?: boolean } = {}) => {
+    const stand = o.ohnePlattenStand ? null : plattenStand(plan);
+    return festEinreihen(kette, festLaeuft, () =>
+      wiederholt(
+        () => festschreiben.mutateAsync({ schauId, nurWennLose: true, ...(stand ? { plattenStand: stand } : {}) }),
+        // Wiederholung abgelehnt, weil schon festgeschrieben: kam die erste an (fest mit den Grundplatten des Editors)?
+        async () => festSchonAngekommen((await serverHolen()).plan, stand),
+        async () => {
+          await utils.katalog.hallenplan.invalidate({ schauId });
+          meldung(t.automatischAus);
+        },
+      ),
+    );
+  };
   /**
    * Plan neu setzen (Server `planNeuSetzen`): die Software stellt alle Käfige neu; Verschobenes und eingesetzte Teile der
    * bisherigen Aufstellung fallen weg, was nicht in die Reihen passt, bekommt Käfigblöcke. Mit `ziel` zugleich neue
