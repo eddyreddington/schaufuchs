@@ -1,5 +1,5 @@
 /** Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan. */
-import { aussehenBereinigt, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt } from "@schau/domain";
+import { aussehenBereinigt, FIRST_HOEHE_MAX, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt } from "@schau/domain";
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
@@ -133,9 +133,11 @@ export const HALLE_EINGABE = z.object({
   aussehen: z
     .object({
       boden: z.enum(HALLEN_BOEDEN).optional(),
+      abdeckung: z.boolean().optional(),
       prallwand: z.union([z.literal("holz"), z.string().regex(/^#[0-9a-fA-F]{6}$/)]).optional(),
       prallwandHoehe: z.number().int().min(0).max(PRALLWAND_HOEHE_MAX).optional(),
       wandHoehe: z.number().int().min(WAND_HOEHE_MIN).max(WAND_HOEHE_MAX).optional(),
+      firstHoehe: z.number().int().min(WAND_HOEHE_MIN).max(FIRST_HOEHE_MAX).optional(),
       fenster: z.boolean().optional(),
       decke: z.boolean().optional(),
       linien: z.boolean().optional(),

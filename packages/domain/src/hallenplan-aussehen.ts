@@ -1,9 +1,8 @@
 /**
- * Aussehen der Halle in der 3D-Ansicht (Entscheidung 028): Boden, Prallwand, Wandhöhe, Fenster, Decke, Spielfeldlinien und
- * Geräte. Reine Anschauung – das Aussehen ändert nie Plan, Nummern oder den festen Plan (`festGeometrie` kennt es nicht).
+ * Aussehen der Halle in der 3D-Ansicht (Entscheidung 028): Boden und Folie, Prallwand, Wand- und Firsthöhe, Fenster, Decke,
+ * Spielfeldlinien und Geräte. Reine Anschauung – das Aussehen ändert nie Plan, Nummern oder den festen Plan (`festGeometrie` kennt es nicht).
  * Fehlt es (ältere Hallen), gilt die Vorgabe; gespeichert wird nur, was davon abweicht (`aussehenBereinigt`).
  */
-import { type Punkt, punktInUmriss } from "./hallenplan-umriss";
 
 export const HALLEN_BOEDEN = ["parkett", "sportboden", "estrich"] as const;
 export type HallenBoden = (typeof HALLEN_BOEDEN)[number];
@@ -11,12 +10,16 @@ export type HallenBoden = (typeof HALLEN_BOEDEN)[number];
 export interface HallenAussehen {
   /** Bodenbelag: Mosaikparkett (Vorgabe), Sportboden (Kunststoff) oder Estrich. */
   boden?: HallenBoden;
+  /** Boden mit grauer Schutzfolie abgedeckt (Parkett und Linien darunter unsichtbar). */
+  abdeckung?: boolean;
   /** Farbe der Prallwand unten an der Wand: „holz“ (helles Holz, Vorgabe) oder #rrggbb. */
   prallwand?: string;
   /** Höhe der Prallwand (cm). */
   prallwandHoehe?: number;
-  /** Höhe der Wände bis zur Decke (cm). */
+  /** Höhe der Wände bis zur Decke bzw. Traufe (cm). */
   wandHoehe?: number;
+  /** Höhe des Firsts (cm): höher als die Wand = Satteldach (mit Decke); fehlt oder gleich: flache Decke. */
+  firstHoehe?: number;
   /** Fensterband oben an den Längsseiten. */
   fenster?: boolean;
   /** Holzdecke mit Bindern und Leuchtbändern (nur von innen zu sehen). */
@@ -29,13 +32,20 @@ export interface HallenAussehen {
 
 export type VollesAussehen = Required<HallenAussehen>;
 
-/** Vorgabe: wie die Halle bis 1.19 aussah (Holz-Prallwand bis 2 m, 3,50 m hoch, Lichtband bzw. Fenster oben). */
-export const AUSSEHEN_STANDARD: VollesAussehen = { boden: "parkett", prallwand: "holz", prallwandHoehe: 200, wandHoehe: 350, fenster: true, decke: false, linien: false, geraete: false };
+/**
+ * Vorgabe: Daten und Plan wie bis 1.19 (Holz-Prallwand bis 2 m, 3,50 m hoch, flach, oben Fenster statt des früheren
+ * Lichtbands); die Darstellung ist überarbeitet (Parkett statt einfarbigem Boden, Texturen, Licht).
+ */
+export const AUSSEHEN_STANDARD: VollesAussehen = { boden: "parkett", abdeckung: false, prallwand: "holz", prallwandHoehe: 200, wandHoehe: 350, firstHoehe: 350, fenster: true, decke: false, linien: false, geraete: false };
 
 /** Grenzen (cm): Die Wand reicht über die Türen (2,50 m), die Prallwand bleibt mindestens 30 cm unter der Decke. */
 export const WAND_HOEHE_MIN = 280;
 export const WAND_HOEHE_MAX = 1500;
 export const PRALLWAND_HOEHE_MAX = 400;
+export const FIRST_HOEHE_MAX = 2000;
+
+/** Vorschlag beim Einschalten der Decke, solange Wand und First nie eingestellt waren: übliche Sporthalle. */
+export const DECKE_VORSCHLAG = { wandHoehe: 700, firstHoehe: 900 } as const;
 
 /** Farben der Prallwand zur Auswahl (wie in Sporthallen üblich); daneben jede Farbe frei. */
 export const PRALLWAND_VORGABEN = [
@@ -60,9 +70,11 @@ export function aussehenVon(a: HallenAussehen | null | undefined): VollesAussehe
   const ja = (v: unknown, vorgabe: boolean) => (typeof v === "boolean" ? v : vorgabe);
   return {
     boden: (HALLEN_BOEDEN as readonly string[]).includes(x.boden as string) ? x.boden! : s.boden,
+    abdeckung: ja(x.abdeckung, s.abdeckung),
     prallwand: istPrallwandFarbe(x.prallwand) ? x.prallwand.toLowerCase() : s.prallwand,
     prallwandHoehe: grenze(zahl(x.prallwandHoehe) ? x.prallwandHoehe : s.prallwandHoehe, 0, prallMax),
     wandHoehe,
+    firstHoehe: zahl(x.firstHoehe) ? grenze(x.firstHoehe, wandHoehe, FIRST_HOEHE_MAX) : wandHoehe,
     fenster: ja(x.fenster, s.fenster),
     decke: ja(x.decke, s.decke),
     linien: ja(x.linien, s.linien),
@@ -70,20 +82,23 @@ export function aussehenVon(a: HallenAussehen | null | undefined): VollesAussehe
   };
 }
 
-/** Zum Speichern: nur, was von der Vorgabe abweicht; ohne Abweichung nichts (die Halle bleibt wie ohne Aussehen). */
+/**
+ * Zum Speichern: nur, was von der Vorgabe abweicht (der First nur, wenn er höher ist als die Wand); ohne Abweichung nichts
+ * (die Halle bleibt wie ohne Aussehen).
+ */
 export function aussehenBereinigt(a: HallenAussehen | null | undefined): HallenAussehen | undefined {
   if (!a) return undefined;
   const v = aussehenVon(a);
-  const aus = Object.fromEntries((Object.keys(AUSSEHEN_STANDARD) as (keyof VollesAussehen)[]).filter((k) => v[k] !== AUSSEHEN_STANDARD[k]).map((k) => [k, v[k]]));
+  const weicht = (k: keyof VollesAussehen) => (k === "firstHoehe" ? v.firstHoehe > v.wandHoehe : v[k] !== AUSSEHEN_STANDARD[k]);
+  const aus = Object.fromEntries((Object.keys(AUSSEHEN_STANDARD) as (keyof VollesAussehen)[]).filter(weicht).map((k) => [k, v[k]]));
   return Object.keys(aus).length ? (aus as HallenAussehen) : undefined;
 }
 
-/**
- * Ist die Decke zu sehen? Nur von innen: Kamera unter der Decke und über der Grundfläche der Halle (cm, Szene). Von oben
- * oder außen versperrte sie den Blick auf die Käfige.
- */
-export function deckeSichtbar(s: { breite: number; laenge: number; wandHoehe: number; umriss?: Punkt[] }, kamera: { x: number; y: number; z: number }): boolean {
-  if (kamera.y >= s.wandHoehe - 5) return false;
-  if (s.umriss) return punktInUmriss({ x: kamera.x, y: kamera.z }, s.umriss);
-  return kamera.x > 0 && kamera.x < s.breite && kamera.z > 0 && kamera.z < s.laenge;
+/** Decke ein- oder ausschalten; beim Einschalten ohne je eingestellte Wand- und Firsthöhe mit `DECKE_VORSCHLAG`. */
+export function deckeSchalten(a: HallenAussehen | null | undefined, an: boolean): HallenAussehen | undefined {
+  const vorschlag = an && a?.wandHoehe == null && a?.firstHoehe == null ? DECKE_VORSCHLAG : {};
+  return aussehenBereinigt({ ...(a ?? {}), decke: an, ...vorschlag });
 }
+
+/** Firsthöhe, die in 3D gilt: das Satteldach nur mit Decke und rechteckigem Grundriss, sonst flach in Wandhöhe. */
+export const wirksamerFirst = (a: VollesAussehen, rechteck: boolean): number => (a.decke && rechteck ? a.firstHoehe : a.wandHoehe);

@@ -1,6 +1,6 @@
 /** Ausstattung der 3D-Halle aus dem Aussehen: Fenster, Geräte an den Wänden, Spielfeldlinien, Decke mit Bindern und Leuchten. */
 import { describe, expect, test } from "bun:test";
-import { deckenTeile, fensterInWaenden, geraeteAnWaenden, spielfeldLinien } from "./hallenplan-3d-ausstattung";
+import { fensterInWaenden, geraeteAnWaenden, spielfeldLinien } from "./hallenplan-3d-ausstattung";
 import { aussehenVon } from "./hallenplan-aussehen";
 import { hallenSzene, vertauscht, wandInnenseiten, type HallenSzene } from "./hallenplan-3d";
 import { zeichnungDerHalle } from "./hallenplan-druck";
@@ -161,38 +161,5 @@ describe("Spielfeldlinien", () => {
     // L-Halle: das Feld schnitte die Innenecke – keine Linien.
     const lHalle = [{ x: 0, y: 0 }, { x: 2700, y: 0 }, { x: 2700, y: 2000 }, { x: 1500, y: 2000 }, { x: 1500, y: 4500 }, { x: 0, y: 4500 }];
     expect(spielfeldLinien({ breite: 2700, laenge: 4500, umriss: lHalle, aussehen: aussehenVon({ linien: true }) })).toEqual([]);
-  });
-});
-
-describe("Decke", () => {
-  test("Binder quer zur langen Seite in gleichem Abstand, Leuchten zwischen den Bindern, alles unter der Decke in der Halle", () => {
-    const s = { breite: 1500, laenge: 3000, wandHoehe: 600 };
-    const d = deckenTeile(s);
-    expect(d.binder.length).toBeGreaterThanOrEqual(4);
-    for (const b of d.binder) {
-      expect(b.b).toBe(1500);
-      expect(b.y + b.h).toBe(600);
-    }
-    const z = d.binder.map((b) => b.z + b.t / 2);
-    const abst = z.slice(1).map((v, i) => v - z[i]!);
-    for (const a of abst) expect(Math.abs(a - abst[0]!)).toBeLessThan(1);
-    expect(d.leuchten.length).toBeGreaterThan(0);
-    for (const l of d.leuchten) {
-      expect(l.y + l.h).toBeLessThan(600);
-      expect(l.x).toBeGreaterThanOrEqual(0);
-      expect(l.x + l.b).toBeLessThanOrEqual(1500);
-      expect(d.binder.some((b) => l.z < b.z + b.t && l.z + l.t > b.z)).toBe(false);
-    }
-  });
-
-  test("freier Grundriss: Binder nur über der Halle", () => {
-    const umriss = [{ x: 0, y: 0 }, { x: 1500, y: 0 }, { x: 1500, y: 1000 }, { x: 800, y: 1000 }, { x: 800, y: 3000 }, { x: 0, y: 3000 }];
-    const d = deckenTeile({ breite: 1500, laenge: 3000, wandHoehe: 600, umriss });
-    for (const b of d.binder) {
-      expect(punktInUmriss({ x: b.x + 1, y: b.z + b.t / 2 }, umriss)).toBe(true);
-      expect(punktInUmriss({ x: b.x + b.b - 1, y: b.z + b.t / 2 }, umriss)).toBe(true);
-    }
-    for (const l of d.leuchten) expect(punktInUmriss({ x: l.x + l.b / 2, y: l.z + l.t / 2 }, umriss)).toBe(true);
-    expect(d.binder.some((b) => b.b === 800)).toBe(true);
   });
 });

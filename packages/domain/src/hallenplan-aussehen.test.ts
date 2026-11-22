@@ -1,6 +1,6 @@
 /** Aussehen der Halle in 3D: Vorgaben, Bereinigung, nie Einfluss auf Plan und Nummern, Wandhöhe in der Szene, Decke. */
 import { describe, expect, test } from "bun:test";
-import { AUSSEHEN_STANDARD, aussehenBereinigt, aussehenVon, deckeSichtbar, istPrallwandFarbe, PRALLWAND_VORGABEN } from "./hallenplan-aussehen";
+import { AUSSEHEN_STANDARD, aussehenBereinigt, aussehenVon, DECKE_VORSCHLAG, deckeSchalten, istPrallwandFarbe, PRALLWAND_VORGABEN } from "./hallenplan-aussehen";
 import { festGeometrie, festschreiben, HALLE_STANDARD, halleSchluessel, planeHalle, type Halle, type PlanTier } from "./hallenplan";
 import { hallenSzene, TUER_HOEHE, WAND_HOEHE } from "./hallenplan-3d";
 
@@ -11,7 +11,7 @@ describe("Aussehen der Halle: Vorgaben und Bereinigung", () => {
   test("fehlt das Aussehen, gilt die Vorgabe (heutige Halle: Parkett, Holz-Prallwand 2 m, Wandhöhe wie bisher, Fenster)", () => {
     expect(aussehenVon(undefined)).toEqual(AUSSEHEN_STANDARD);
     expect(aussehenVon({})).toEqual(AUSSEHEN_STANDARD);
-    expect(AUSSEHEN_STANDARD).toEqual({ boden: "parkett", prallwand: "holz", prallwandHoehe: 200, wandHoehe: WAND_HOEHE, fenster: true, decke: false, linien: false, geraete: false });
+    expect(AUSSEHEN_STANDARD).toEqual({ boden: "parkett", abdeckung: false, prallwand: "holz", prallwandHoehe: 200, wandHoehe: WAND_HOEHE, firstHoehe: WAND_HOEHE, fenster: true, decke: false, linien: false, geraete: false });
   });
 
   test("Werte werden begrenzt: Wandhöhe über der Türhöhe, Prallwand unter der Wandhöhe, Farbe nur #rrggbb oder Holz", () => {
@@ -85,6 +85,15 @@ describe("Aussehen in der 3D-Szene", () => {
     expect(s.aussehen).toEqual(AUSSEHEN_STANDARD);
   });
 
+  test("Firsthöhe der Szene: mit Decke das Satteldach, ohne Decke oder beim freien Grundriss flach in Wandhöhe", () => {
+    expect(hallenSzene({ ...halle, aussehen: { decke: true, wandHoehe: 700, firstHoehe: 900 } }, plan, masse).firstHoehe).toBe(900);
+    expect(hallenSzene({ ...halle, aussehen: { wandHoehe: 700, firstHoehe: 900 } }, plan, masse).firstHoehe).toBe(700);
+    expect(hallenSzene(halle, plan, masse).firstHoehe).toBe(WAND_HOEHE);
+    const umriss = [{ x: 0, y: 0 }, { x: 1500, y: 0 }, { x: 1500, y: 1000 }, { x: 800, y: 1000 }, { x: 800, y: 2000 }, { x: 0, y: 2000 }];
+    const h: Halle = { ...halle, umriss, flaechen: [], aussehen: { decke: true, wandHoehe: 700, firstHoehe: 900 } };
+    expect(hallenSzene(h, planeHalle(h, [], masse), masse).firstHoehe).toBe(700);
+  });
+
   test("auch beim freien Grundriss", () => {
     const umriss = [{ x: 0, y: 0 }, { x: 1500, y: 0 }, { x: 1500, y: 1000 }, { x: 800, y: 1000 }, { x: 800, y: 2000 }, { x: 0, y: 2000 }];
     const h: Halle = { ...halle, umriss, flaechen: [], aussehen: { wandHoehe: 500 } };
@@ -93,17 +102,26 @@ describe("Aussehen in der 3D-Szene", () => {
   });
 });
 
-describe("Decke nur von innen", () => {
-  const s = { breite: 1500, laenge: 2000, wandHoehe: 600 };
-  test("sichtbar in der Halle unter der Decke, sonst nicht (von oben, von außen)", () => {
-    expect(deckeSichtbar(s, { x: 700, y: 165, z: 900 })).toBe(true);
-    expect(deckeSichtbar(s, { x: 700, y: 800, z: 900 })).toBe(false);
-    expect(deckeSichtbar(s, { x: -300, y: 165, z: 900 })).toBe(false);
-    expect(deckeSichtbar(s, { x: 700, y: 165, z: 2100 })).toBe(false);
+describe("Firsthöhe und Decke", () => {
+  test("First mindestens so hoch wie die Wand, höchstens 20 m; gespeichert nur, wenn höher als die Wand", () => {
+    expect(aussehenVon({}).firstHoehe).toBe(WAND_HOEHE);
+    expect(aussehenVon({ wandHoehe: 700 }).firstHoehe).toBe(700);
+    expect(aussehenVon({ wandHoehe: 700, firstHoehe: 500 }).firstHoehe).toBe(700);
+    expect(aussehenVon({ firstHoehe: 99999 }).firstHoehe).toBe(2000);
+    expect(aussehenBereinigt({ wandHoehe: 700, firstHoehe: 700 })).toEqual({ wandHoehe: 700 });
+    expect(aussehenBereinigt({ wandHoehe: 700, firstHoehe: 650 })).toEqual({ wandHoehe: 700 });
+    expect(aussehenBereinigt({ wandHoehe: 700, firstHoehe: 900 })).toEqual({ wandHoehe: 700, firstHoehe: 900 });
+    expect(aussehenBereinigt({ abdeckung: true })).toEqual({ abdeckung: true });
   });
-  test("freier Grundriss: im ausgesparten Teil nicht", () => {
-    const umriss = [{ x: 0, y: 0 }, { x: 1500, y: 0 }, { x: 1500, y: 1000 }, { x: 800, y: 1000 }, { x: 800, y: 2000 }, { x: 0, y: 2000 }];
-    expect(deckeSichtbar({ ...s, umriss }, { x: 400, y: 165, z: 1500 })).toBe(true);
-    expect(deckeSichtbar({ ...s, umriss }, { x: 1200, y: 165, z: 1500 })).toBe(false);
+
+  test("Decke einschalten schlägt eine Sporthallenhöhe vor, solange Wand und First nie eingestellt waren", () => {
+    expect(DECKE_VORSCHLAG).toEqual({ wandHoehe: 700, firstHoehe: 900 });
+    expect(deckeSchalten(undefined, true)).toEqual({ decke: true, wandHoehe: 700, firstHoehe: 900 });
+    expect(deckeSchalten({ linien: true }, true)).toEqual({ linien: true, decke: true, wandHoehe: 700, firstHoehe: 900 });
+    // Selbst eingestellt: bleibt.
+    expect(deckeSchalten({ wandHoehe: 500 }, true)).toEqual({ decke: true, wandHoehe: 500 });
+    expect(deckeSchalten({ wandHoehe: 500, firstHoehe: 800 }, true)).toEqual({ decke: true, wandHoehe: 500, firstHoehe: 800 });
+    // Ausschalten ändert die Höhen nicht.
+    expect(deckeSchalten({ decke: true, wandHoehe: 700, firstHoehe: 900 }, false)).toEqual({ wandHoehe: 700, firstHoehe: 900 });
   });
 });

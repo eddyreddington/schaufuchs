@@ -12,7 +12,7 @@ import { artenDerSparte } from "./textbausteine";
 import { zeichnungDerHalle } from "./hallenplan-druck";
 import { rundgang, type RundgangPunkt } from "./hallenplan-3d-rundgang";
 import { ohneSeite, waendeImGrundriss } from "./hallenplan-3d-waende";
-import { aussehenVon, type VollesAussehen } from "./hallenplan-aussehen";
+import { aussehenVon, type VollesAussehen, wirksamerFirst } from "./hallenplan-aussehen";
 import { istRechteckUmriss, type Punkt, umrissNormal } from "./hallenplan-umriss";
 
 /** Aufsteller (Gestelle, auf denen die Grundplatten mit den Käfigen stehen). */
@@ -158,6 +158,8 @@ export interface HallenSzene {
   /** Freier Grundriss (Entscheidung 019) in Szene-Koordinaten (x, z als x, y); fehlt bei rechteckiger Halle. */
   umriss?: Punkt[];
   wandHoehe: number;
+  /** Höchster Punkt der Decke (First beim Satteldach, sonst die Wandhöhe), siehe hallenplan-3d-dach.ts. */
+  firstHoehe: number;
   wandDicke: number;
   /** Aussehen mit allen Vorgaben (Boden, Prallwand, Fenster …), siehe hallenplan-aussehen.ts. */
   aussehen: VollesAussehen;
@@ -413,6 +415,7 @@ export function hallenSzene(
     ...(istRechteckUmriss(halle.umriss) ? {} : { umriss: umrissNormal(halle.umriss!) }),
     laenge: halle.laenge,
     wandHoehe: aussehen.wandHoehe,
+    firstHoehe: wirksamerFirst(aussehen, istRechteckUmriss(halle.umriss)),
     wandDicke: WAND_DICKE,
     aussehen,
     waende,
@@ -486,10 +489,10 @@ export const WAND_DURCHSICHTIG = 0.08;
 /**
  * Deckkraft einer Wand (0–1) aus Kamera und Blickziel (cm, Szene-Koordinaten): Steht die Kamera außerhalb der Halle hinter
  * der Wand (die Wand steht zwischen Kamera und Halle), wird sie fast unsichtbar – weich auf dem ersten Meter. Schaut die
- * Kamera von über der Wandhöhe hinein, werden zusätzlich alle Wände durchsichtiger, je näher sie dem Blickziel ist (ab 20 m,
+ * Kamera von über dem Dach (First, sonst Wandhöhe) hinein, werden zusätzlich alle Wände durchsichtiger, je näher sie dem Blickziel ist (ab 20 m,
  * am stärksten unter 6 m). In Augenhöhe in der Halle („Im Gang“) bleiben die Wände stehen – sie verdecken dort nichts.
  */
-export function wandDeckkraft(w: Quader, s: Pick<HallenSzene, "breite" | "laenge" | "wandHoehe">, kamera: { x: number; y: number; z: number }, ziel: { x: number; y: number; z: number }): number {
+export function wandDeckkraft(w: Quader, s: Pick<HallenSzene, "breite" | "laenge" | "wandHoehe"> & { firstHoehe?: number }, kamera: { x: number; y: number; z: number }, ziel: { x: number; y: number; z: number }): number {
   let deck = 1;
   for (const seite of wandSeiten(w, s)) {
     // Abstand der Kamera vor der Innenfläche dieser Wand (nach außen positiv); ohne Seitenangabe der Hallenrand.
@@ -497,7 +500,7 @@ export function wandDeckkraft(w: Quader, s: Pick<HallenSzene, "breite" | "laenge
     const aussen = seite === "x0" ? innenX0 - kamera.x : seite === "x1" ? kamera.x - innenX1 : seite === "z0" ? innenZ0 - kamera.z : kamera.z - innenZ1;
     deck = Math.min(deck, 1 - (1 - WAND_DURCHSICHTIG) * weich(-20, 100, aussen));
   }
-  if (kamera.y > s.wandHoehe) {
+  if (kamera.y > (s.firstHoehe ?? s.wandHoehe)) {
     const abstand = Math.hypot(kamera.x - ziel.x, kamera.y - ziel.y, kamera.z - ziel.z);
     deck *= 1 - 0.65 * (1 - weich(600, 2000, abstand));
   }

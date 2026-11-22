@@ -1,6 +1,6 @@
 /**
  * Ausstattung der 3D-Halle aus dem Aussehen (Entscheidung 028): Fenster oben in den Längswänden, Geräte an den Wänden
- * (Basketballbretter, Sprossenwand), Spielfeldlinien am Boden, Decke mit Bindern und Leuchten. Alles in cm, in
+ * (Basketballbretter, Sprossenwand), Spielfeldlinien am Boden (Dach und Decke: hallenplan-3d-dach.ts). Alles in cm, in
  * Szene-Koordinaten (x entlang der Breite, z entlang der Länge). Reine Anschauung: nichts davon ist Hindernis im Plan.
  */
 import { type HallenSzene, type Quader, type SzeneSeite, wandInnenseiten, type WandInnenseite } from "./hallenplan-3d";
@@ -242,63 +242,4 @@ export function spielfeldLinien(s: Pick<HallenSzene, "breite" | "laenge" | "umri
     ]);
   }
   return aus;
-}
-
-/** Binder und Leuchten der Holzdecke (cm, Szene). */
-export interface DeckenTeile {
-  binder: Quader[];
-  leuchten: Quader[];
-}
-
-/** Leimbinder 16 × 45 cm etwa alle 5,50 m; Leuchten 2,40 m lang, abgehängt. */
-export const BINDER = { breite: 16, hoehe: 45, abstand: 550 };
-const LEUCHTE = { laenge: 240, breite: 14, hoehe: 8 };
-
-/** Strecken innerhalb des Grundrisses auf der Linie quer zur langen Seite (bei `laengsX` x = u, sonst z = u). */
-function innenStrecken(u: Punkt[], lage: number, laengsX: boolean): [number, number][] {
-  const schnitte: number[] = [];
-  for (let i = 0; i < u.length; i++) {
-    const a = u[i]!, b = u[(i + 1) % u.length]!;
-    // Kanten quer zur Linie: bei laengsX waagrechte Kanten (y fest) über x = lage, sonst senkrechte über y = lage.
-    const [p0, p1, quer] = laengsX ? [a.x, b.x, a.y] : [a.y, b.y, a.x];
-    if ((laengsX ? a.y !== b.y : a.x !== b.x) || Math.min(p0, p1) > lage || Math.max(p0, p1) <= lage) continue;
-    schnitte.push(quer);
-  }
-  schnitte.sort((a, b) => a - b);
-  const aus: [number, number][] = [];
-  for (let i = 0; i + 1 < schnitte.length; i += 2) aus.push([schnitte[i]!, schnitte[i + 1]!]);
-  return aus;
-}
-
-/**
- * Holzdecke: Leimbinder quer zur langen Seite in gleichem Abstand, bündig unter der Decke; in jedem Feld dazwischen
- * Leuchtbänder parallel zu den Bindern, abgehängt (bei niedriger Halle knapp unter der Decke). Beim freien Grundriss nur
- * über der Halle.
- */
-export function deckenTeile(s: { breite: number; laenge: number; wandHoehe: number; umriss?: Punkt[] }): DeckenTeile {
-  const laengsX = s.breite >= s.laenge;
-  const L = laengsX ? s.breite : s.laenge, B = laengsX ? s.laenge : s.breite;
-  const Q = (u: number, v: number, du: number, dv: number, y: number, h: number): Quader => (laengsX ? { x: u, z: v, b: du, t: dv, y, h } : { x: v, z: u, b: dv, t: du, y, h });
-  const strecken = (u: number): [number, number][] => (s.umriss ? innenStrecken(s.umriss, u, laengsX) : [[0, B]]);
-  const felder = Math.max(2, Math.round(L / BINDER.abstand));
-  const binder: Quader[] = [];
-  for (let i = 1; i < felder; i++) {
-    const u = (L * i) / felder;
-    for (const [a, b] of strecken(u)) binder.push(Q(u - BINDER.breite / 2, a, BINDER.breite, b - a, s.wandHoehe - BINDER.hoehe, BINDER.hoehe));
-  }
-  const abhang = Math.min(70, Math.max(10, Math.round((s.wandHoehe - 300) * 0.3)));
-  const y = s.wandHoehe - abhang - LEUCHTE.hoehe;
-  const m = Math.max(1, Math.round(B / 600));
-  const laenge = Math.min(LEUCHTE.laenge, B / m - 60);
-  const leuchten: Quader[] = [];
-  if (laenge > 60)
-    for (let j = 0; j < felder; j++) {
-      const u = (L * (j + 0.5)) / felder;
-      for (let i = 0; i < m; i++) {
-        const v = (B * (i + 0.5)) / m;
-        const drin = !s.umriss || [v - laenge / 2, v + laenge / 2].every((w) => punktInUmriss(laengsX ? { x: u, y: w } : { x: w, y: u }, s.umriss!));
-        if (drin) leuchten.push(Q(u - LEUCHTE.breite / 2, v - laenge / 2, LEUCHTE.breite, laenge, y, LEUCHTE.hoehe));
-      }
-    }
-  return { binder, leuchten };
 }

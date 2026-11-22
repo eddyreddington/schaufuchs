@@ -28,6 +28,12 @@ describe("Hallenplan: Aussehen der Halle (3D)", () => {
     // Prallwand höher als die Wand: begrenzt gespeichert.
     await al().katalog.halleSetzen({ schauId: id, halle: { ...halle, aussehen: { wandHoehe: 300, prallwandHoehe: 400 } } });
     expect((await zeile(id)).halle!.aussehen).toEqual({ wandHoehe: 300, prallwandHoehe: 270 });
+    // Folie und Firsthöhe: der First nur gespeichert, wenn er höher ist als die Wand; über 20 m abgelehnt.
+    await al().katalog.halleSetzen({ schauId: id, halle: { ...halle, aussehen: { abdeckung: true, decke: true, wandHoehe: 700, firstHoehe: 900 } } });
+    expect((await zeile(id)).halle!.aussehen).toEqual({ abdeckung: true, decke: true, wandHoehe: 700, firstHoehe: 900 });
+    await al().katalog.halleSetzen({ schauId: id, halle: { ...halle, aussehen: { wandHoehe: 700, firstHoehe: 600 } } });
+    expect((await zeile(id)).halle!.aussehen).toEqual({ wandHoehe: 700 });
+    await expect(al().katalog.halleSetzen({ schauId: id, halle: { ...halle, aussehen: { firstHoehe: 2500 } } })).rejects.toThrow();
     // Alles wie die Vorgabe: das Feld fällt weg (die Halle ist wie ohne Aussehen).
     await al().katalog.halleSetzen({ schauId: id, halle: { ...halle, aussehen: { boden: "parkett", fenster: true } } });
     expect("aussehen" in (await zeile(id)).halle!).toBe(false);
