@@ -116,8 +116,12 @@ export function anzeigenSeiten(K: KatalogKontext) {
     const hTitel = doc.heightOfString(a.titel, { width: ib });
     doc.font(NORMAL).fontSize(G.liste);
     const hUnter = a.unterzeile ? doc.heightOfString(a.unterzeile, { width: ib }) + 2 : 0;
-    doc.font(NORMAL).fontSize(G.text);
-    const hText = a.text ? Math.min(doc.heightOfString(a.text, { width: ib, lineGap: 1.5 * k }) + 8 * k, h - 2 * innen - hTitel - hUnter) : 0;
+    // Der Text der Anzeige wird nie gekürzt (Entscheidung 032): passt er nicht ins Feld, wird die Schrift kleiner.
+    const textPlatz = h - 2 * innen - hTitel - hUnter - 8 * k;
+    let textGr = G.text;
+    const textH = () => doc.font(NORMAL).fontSize(textGr).heightOfString(a.text, { width: ib, lineGap: 1.5 * k });
+    while (a.text && textGr > 3 && textH() > textPlatz) textGr -= 0.25;
+    const hText = a.text ? Math.min(textH() + 8 * k, h - 2 * innen - hTitel - hUnter) : 0;
     let ty = y + Math.max(innen, (h - hTitel - hUnter - hText) / 2);
     doc.font(FETT).fontSize(titelGr).fillColor(farbe).text(a.titel, x + innen, ty, { width: ib, align: "center" });
     ty = doc.y;
@@ -125,7 +129,7 @@ export function anzeigenSeiten(K: KatalogKontext) {
       doc.font(NORMAL).fontSize(G.liste).fillColor(GRAU).text(a.unterzeile, x + innen, ty + 2, { width: ib, align: "center" });
       ty = doc.y;
     }
-    if (a.text) doc.font(NORMAL).fontSize(G.text).fillColor(TINTE).text(a.text, x + innen, ty + 8 * k, { width: ib, height: Math.max(10, y + h - ty - innen - 8 * k), align: "center", lineGap: 1.5 * k, ellipsis: true });
+    if (a.text) doc.font(NORMAL).fontSize(textGr).fillColor(TINTE).text(a.text, x + innen, ty + 8 * k, { width: ib, align: "center", lineGap: 1.5 * k });
   }
 }
 

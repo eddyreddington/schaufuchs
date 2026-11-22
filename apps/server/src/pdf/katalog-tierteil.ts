@@ -5,7 +5,7 @@
 import { formatEuro, formatKatalognummer, gruppenAbteilung, istJugendBlock, JUGEND_KUERZEL, jugendKennzeichen, katalogGroessen, MELDEART_LABEL } from "@schau/domain";
 import { oeffneBild } from "../services/rassebild";
 import { ausstellerAnzeige, type Eintrag } from "../services/eintraege";
-import { GRAU, HAARLINIE, MM, textImFeld, TINTE } from "./basis";
+import { GRAU, HAARLINIE, MM, textUmbrochen, TINTE, zeilenUmbrechen } from "./basis";
 import { FETT, KURSIV, NORMAL, ZIFFERN } from "./katalog-schrift";
 import { stichFuer } from "./illustrationen";
 import type { Seite, KatalogKontext } from "./katalog-kontext";
@@ -116,11 +116,15 @@ export function tierteilSetzen(K: KatalogKontext) {
    * Platz in der Spalte, sonst nächste Spalte bzw. Seite – Überschriften wandern mit.
    * Läuft eine Rasse weiter, steht oben in der neuen Spalte „Rasse (Fortsetzung)“.
    */
+  /** „Rasse (Fortsetzung)“ – bricht bei langen Namen um wie alles im Katalog (Entscheidung 032). */
+  const fortsetzung = (y: number, zeichnen = true) =>
+    textUmbrochen(doc, `${laufendeRasse} (Fortsetzung)`, spX(), y, { breite: spB(), groesse: GT.liste, schrift: KURSIV, farbe, zeichnen });
   const raum = (hoehe: number, neueRasse = false): boolean => {
     if (doc.y + hoehe <= unten()) return false;
+    const fortH = !neueRasse && laufendeRasse ? fortsetzung(0, false).hoehe + 11 * kt : 0;
     // Die nächste Spalte beginnt auf derselben Höhe: passt der Block auch dort nicht, gleich auf die nächste Seite
     // (sonst stünde z. B. ein Rassenkopf mit Bild allein unten in der rechten Spalte und die linke bliebe leer).
-    if (spalte < SPALTEN - 1 && spaltenOben + 12 * kt + hoehe <= unten()) {
+    if (spalte < SPALTEN - 1 && spaltenOben + 12 * kt + fortH + hoehe <= unten()) {
       tiefste = Math.max(tiefste, doc.y);
       spalte++;
       doc.y = spaltenOben;
@@ -130,11 +134,10 @@ export function tierteilSetzen(K: KatalogKontext) {
     }
     zuletzt = "kopf";
     if (!neueRasse && laufendeRasse) {
-      doc.font(KURSIV).fontSize(GT.liste).fillColor(farbe);
       const yf = doc.y;
-      doc.text(`${laufendeRasse} (Fortsetzung)`, spX(), yf, { width: spB(), lineBreak: false, ellipsis: true });
+      const f = fortsetzung(yf);
       // In der Tabelle folgt gleich die Tierzeile (keine Klassenzeile dazwischen) – nur eine Zeile Abstand.
-      doc.y = tabelle ? yf + 12 * kt : doc.y + 11 * kt;
+      doc.y = tabelle ? yf + 12 * kt + f.hoehe - f.zeilenhoehe : yf + f.hoehe + 11 * kt;
       doc.fillColor(TINTE);
     }
     return true;
@@ -173,14 +176,14 @@ export function tierteilSetzen(K: KatalogKontext) {
       const sp = abteilungVon(e);
       if (sp !== sparte) {
         kopfBasis = `${zusatz ? `${zusatz} · ` : ""}${sp}`;
-        spartenKopf(sp, zusatz, kopfBasis, liste.filter((x) => abteilungVon(x) === sp), rasseBlock(e.rasse ?? e.einordnungRasse ?? e.freitext ?? ""));
+        spartenKopf(sp, zusatz, kopfBasis, liste.filter((x) => abteilungVon(x) === sp), rasseBlock(e.rasse ?? e.einordnungRasse ?? e.freitext ?? "", e));
         sparte = sp;
         rasse = null;
       }
       const ra = e.rasse ?? e.einordnungRasse ?? e.freitext ?? "";
       if (ra !== rasse) {
         // Rassenkopf nur mit Preisrichter, Bild, Klasse und mindestens zwei Tieren darunter.
-        raum(rasseBlock(ra), true);
+        raum(rasseBlock(ra, e), true);
         rasseKopf(ra);
         bildFolgt = ra;
         laufendeRasse = ra;
@@ -207,8 +210,9 @@ export function tierteilSetzen(K: KatalogKontext) {
       // Bewertete Tiere: wer tatsächlich bewertet hat (auch nach einer Umverteilung), sonst die Einteilung.
       const pr = e.bewertetVon ?? zu.get(e.id) ?? null;
       if (pr !== richterId) {
-        raum(10 * kt + 16 * kt + ZEILE);
-        if (pr != null) richterZeile(richterName.get(pr) ?? "");
+        const richter = pr != null ? (richterName.get(pr) ?? "") : null;
+        raum(10 * kt + (richter != null ? richterZeile(richter, false) : 0) + 16 * kt + klassenKopf(e, false) + zeilenHoehe(e));
+        if (richter != null) richterZeile(richter);
         richterId = pr;
         klasse = null;
       }
@@ -219,20 +223,20 @@ export function tierteilSetzen(K: KatalogKontext) {
       }
       const kl = `${e.bezeichnung}|${e.art}|${e.geschlecht}|${e.alter}`;
       if (kl !== klasse) {
-        raum(ABSTAND_KLASSE + 12 * kt + ZEILE);
+        raum(ABSTAND_KLASSE + 12 * kt + klassenKopf(e, false) + zeilenHoehe(e));
         klassenKopf(e);
         klasse = kl;
       }
       // Nach einem Spalten- oder Seitenwechsel steht die Klasse noch einmal über den Tieren.
-      if (raum(ZEILE)) klassenKopf(e);
+      if (raum(zeilenHoehe(e))) klassenKopf(e);
       tierZeile(e);
     }
   }
 
-  /** Höhe, die ein Rassenkopf mindestens braucht: Überschrift, Preisrichter, Bild, Klasse und zwei Tiere. */
-  function rasseBlock(ra: string) {
+  /** Höhe, die ein Rassenkopf mindestens braucht: Überschrift, Preisrichter, Bild, Klasse und zwei Tiere (wie `e`). */
+  function rasseBlock(ra: string, e: Eintrag) {
     const bm = bildMass(ra);
-    return ABSTAND_RASSE + 17 * kt + 10 * kt + 16 * kt + 2 * ZEILE + (bm ? bm.h + 6 * kt : 0);
+    return ABSTAND_RASSE + 17 * kt + rasseName(ra, 0, false).mehr + 10 * kt + 16 * kt + klassenKopf(e, false) + 2 * zeilenHoehe(e) + (bm ? bm.h + 6 * kt : 0);
   }
 
   function spartenKopf(sparte: string, zusatz: string, kopf: string, tiere: Eintrag[], ersterBlock: number) {
@@ -240,7 +244,12 @@ export function tierteilSetzen(K: KatalogKontext) {
     // darunter passen – sonst neue Seite (keine Spartenüberschrift allein unten auf der Seite).
     const darunter = Math.max(tiefste, doc.y) + 12 * k;
     // Höhe des Spartenkopfs samt Spaltenkopf je Stil (gemessen; mit Rahmen steht das Bild über dem Namen).
-    const kopfHoehe = 15 * MM * k + (gestaltung.stil === "rahmen" ? 88 * k : gestaltung.stil === "modern" ? 40 * k : 34 * k);
+    // Ein langer Name bricht um (nie „…“): jede weitere Zeile zählt mit.
+    const fw0 = 15 * MM * k * 1.6;
+    const nameB = gestaltung.stil === "rahmen" ? B() : gestaltung.stil === "modern" ? B() - fw0 - 4 * MM - 8 * MM * k : B() - fw0 - 6 * MM;
+    doc.font(NORMAL).fontSize(G.h1);
+    const nameMehr = Math.max(0, doc.heightOfString(sparte, { width: nameB, lineGap: -3 }) - doc.heightOfString("X", { width: nameB, lineGap: -3 }));
+    const kopfHoehe = 15 * MM * k + (gestaltung.stil === "rahmen" ? 88 * k : gestaltung.stil === "modern" ? 40 * k : 34 * k) + nameMehr;
     if (imTierteil && !gestaltung.sparteNeueSeite && unten() - darunter > Math.max((unten() - doc.page.margins.top) * 0.3, kopfHoehe + ersterBlock)) {
       doc.y = darunter; // Kolumnentitel bleibt bei der ersten Rasse der Seite
     } else neueSeite({ kopf });
@@ -271,12 +280,13 @@ export function tierteilSetzen(K: KatalogKontext) {
       doc.y = y + 12 * k;
     } else if (gestaltung.stil === "modern") {
       // Farbband mit Art und Name in Weiß, der Stich rechts neben dem Band; die Angaben darunter.
-      const bandH = g + 4 * k;
       const bandB = B() - fw - 4 * MM;
+      // Das Band wächst mit dem Namen der Sparte, statt ihn zu kürzen.
+      const bandH = Math.max(g + 4 * k, 4 * k + G.klein * 1.5 + doc.font(NORMAL).fontSize(G.h1).heightOfString(sparte, { width: bandB - 8 * MM * k, lineGap: -3 }) + 2 * k);
       doc.rect(L(), y0, bandB, bandH).fill(flaeche);
       figur(L() + B() - fw, y0 + 2 * k, "right");
       doc.font(FETT).fontSize(G.klein).fillColor(aufFlaeche).text(art.toLocaleUpperCase("de"), L() + 4 * MM * k, y0 + 4 * k, { width: bandB - 8 * MM * k, characterSpacing: 1.4 * k, lineBreak: false });
-      doc.font(NORMAL).fontSize(G.h1).fillColor(aufFlaeche).text(sparte, L() + 4 * MM * k, y0 + 4 * k + G.klein * 1.5, { width: bandB - 8 * MM * k, lineGap: -3, height: bandH, ellipsis: true });
+      doc.font(NORMAL).fontSize(G.h1).fillColor(aufFlaeche).text(sparte, L() + 4 * MM * k, y0 + 4 * k + G.klein * 1.5, { width: bandB - 8 * MM * k, lineGap: -3 });
       doc.font(NORMAL).fontSize(G.liste).fillColor(GRAU).text(angabe, L(), y0 + bandH + 3 * k, { width: B() });
       doc.y += 8 * k;
     } else {
@@ -323,14 +333,20 @@ export function tierteilSetzen(K: KatalogKontext) {
     return { bild: g.bild!, w, h: (w * g.hoehe) / g.breite };
   }
 
+  /** Name der Rasse im Kopf: bis 8 pt verkleinert, dann umbrochen; `mehr` ist die Höhe über eine Zeile hinaus. */
+  function rasseName(rasse: string, y: number, zeichnen = true) {
+    const t = textUmbrochen(doc, rasse, spX() + 6, aufLinie(FETT, GT.h3, y + 14 * kt * 0.71), { breite: spB() - 10, groesse: GT.h3, min: 8, schrift: FETT, farbe: TINTE, zeichnen });
+    return { ...t, mehr: t.hoehe - t.zeilenhoehe };
+  }
+
   function rasseKopf(rasse: string) {
     doc.y += zuletzt === "tier" ? ABSTAND_RASSE : 2 * kt;
     const y = doc.y;
-    const h = 14 * kt;
+    const h = 14 * kt + rasseName(rasse, y, false).mehr;
     // Heller Balken mit Farbkante statt Vollfläche: ruhiger und im Schwarz-Weiß-Druck gut lesbar.
     if (!schlicht) doc.save().fillOpacity(0.12).rect(spX(), y, spB(), h).fill(flaeche).restore();
     doc.save().rect(spX(), y, 2.2 * lk, h).fill(akzent).restore();
-    textImFeld(doc, rasse, spX() + 6, aufLinie(FETT, GT.h3, y + h * 0.71), { breite: spB() - 10, groesse: GT.h3, min: 8, schrift: FETT, farbe: TINTE });
+    rasseName(rasse, y);
     doc.y = y + h + 3.5 * kt;
     zuletzt = "kopf";
     doc.fillColor(TINTE);
@@ -350,82 +366,139 @@ export function tierteilSetzen(K: KatalogKontext) {
     zuletzt = "kopf";
   }
 
-  /** Eine Zeile je Klasse wie in den Verbandskatalogen: „1,0 jung · blau mit Binden“. */
-  function klassenKopf(e: Eintrag) {
-    // In der Tabelle stehen Klasse und Farbenschlag in jeder Zeile – zwischen den Klassen nur etwas Luft.
-    if (tabelle) return; // gleichmäßige Zeilen ohne Zwischenräume – die Klasse steht in jeder Zeile
+  /** Farbenschlag mit Zusatz (AOC, Neuzüchtung); bei freier Bezeichnung der freie Text. */
+  function farbText(e: Eintrag) {
     const farbschlag = e.rasse ? (e.farbenschlag ?? "") : e.freitext;
     const zusatz = [e.istAoc ? "AOC" : "", e.istNeuzuechtung ? "Neuzüchtung" : ""].filter(Boolean).join(", ");
-    // In der eigenen Abteilung „Stämme“ ist der Zusatz „Stamm“ überflüssig.
-    const art = e.art !== "einzeltier" && !gruppenAbteilung(e.art, s.staemmeVorn) ? `${MELDEART_LABEL[e.art]} ` : "";
+    return `${farbschlag || "–"}${zusatz ? ` (${zusatz})` : ""}`;
+  }
+  /** Zusatz „Stamm“/„Voliere“ vor der Klasse – in der eigenen Abteilung „Stämme“ überflüssig. */
+  function artText(e: Eintrag) {
+    return e.art !== "einzeltier" && !gruppenAbteilung(e.art, s.staemmeVorn) ? `${MELDEART_LABEL[e.art]} ` : "";
+  }
+
+  /**
+   * Eine Zeile je Klasse wie in den Verbandskatalogen: „1,0 jung · blau mit Binden“. Ein langer Farbenschlag bricht um.
+   * Gibt die Höhe über eine Zeile hinaus zurück; mit `zeichnen: false` nur gemessen.
+   */
+  function klassenKopf(e: Eintrag, zeichnen = true): number {
+    // In der Tabelle stehen Klasse und Farbenschlag in jeder Zeile – zwischen den Klassen nur etwas Luft.
+    if (tabelle) return 0;
+    const prefix = `${artText(e)}${e.geschlecht} ${e.alter}`;
+    const c = col();
+    const pw = Math.max(c.nr + 2 * MM, doc.font(FETT).fontSize(GT.klein).widthOfString(prefix) + 2 * MM);
+    const feld = (linie: number) =>
+      textUmbrochen(doc, farbText(e), spX() + pw, aufLinie(KURSIV, GT.text, linie), { breite: spB() - pw, groesse: GT.text, min: 7.5, schrift: KURSIV, farbe: TINTE, zeichnen });
+    if (!zeichnen) {
+      const t = feld(0);
+      return t.hoehe - t.zeilenhoehe;
+    }
     if (zuletzt === "tier") doc.y += ABSTAND_KLASSE;
     zuletzt = "kopf";
     const linie = doc.y + 9 * kt; // gemeinsame Grundlinie von Klasse und Farbenschlag
-    const prefix = `${art}${e.geschlecht} ${e.alter}`;
-    const c = col();
     // Klasse unter der Nummernspalte, Farbenschlag auf Höhe der Bewertung – alles fluchtet.
     doc.fillColor(farbe).text(prefix, spX(), aufLinie(FETT, GT.klein, linie), { lineBreak: false });
-    const pw = Math.max(c.nr + 2 * MM, doc.widthOfString(prefix) + 2 * MM);
-    textImFeld(doc, `${farbschlag || "–"}${zusatz ? ` (${zusatz})` : ""}`, spX() + pw, aufLinie(KURSIV, GT.text, linie), { breite: spB() - pw, groesse: GT.text, min: 7.5, schrift: KURSIV, farbe: TINTE });
-    doc.y = linie + 3.2 * kt;
+    const t = feld(linie);
+    doc.y = linie + 3.2 * kt + t.hoehe - t.zeilenhoehe;
+    return t.hoehe - t.zeilenhoehe;
   }
 
-  function richterZeile(name: string) {
+  /** „Preisrichter: Name“ – bricht bei langen Namen um. Gibt die Höhe über eine Zeile hinaus zurück. */
+  function richterZeile(name: string, zeichnen = true): number {
     const c = col();
-    doc.font(KURSIV).fontSize(GT.klein).fillColor(GRAU).text(`Preisrichter: ${name}`, spX() + c.nr + 2 * MM, doc.y - 1 * kt, { width: spB() - c.nr - 2 * MM, lineBreak: false, ellipsis: true });
-    doc.y += 8 * kt;
+    const y = doc.y - 1 * kt;
+    const t = textUmbrochen(doc, `Preisrichter: ${name}`, spX() + c.nr + 2 * MM, y, { breite: spB() - c.nr - 2 * MM, groesse: GT.klein, schrift: KURSIV, farbe: GRAU, zeichnen });
+    if (!zeichnen) return t.hoehe - t.zeilenhoehe;
+    doc.y = y + t.hoehe + 8 * kt;
     zuletzt = "kopf";
     doc.fillColor(TINTE);
+    return t.hoehe - t.zeilenhoehe;
   }
 
   /**
    * Aussteller in seinem Feld; steht die Jugend in der Rasse eingereiht, folgt dem Namen das Kürzel „Jgd.“ in derselben
-   * Zeile und Größe, auf derselben Grundlinie. Reicht der Platz nicht: erst die Schrift bis zur Mindestgröße, dann der
-   * Vorname als Initiale („Schmidt, W.“), dann das Kürzel kleiner, zuletzt nur der Nachname – abgeschnitten wird er
-   * erst, wenn auch das nicht passt. Nichts bricht um.
+   * Größe, auf derselben Grundlinie. Reicht der Platz nicht: erst die Schrift bis zur Mindestgröße, dann der Vorname als
+   * Initiale („Schmidt, W.“), mit Kürzel dann dieses kleiner und zuletzt nur der Nachname. Passt auch das nicht, bricht
+   * der ganze Name in der Mindestgröße um (das Kürzel hinter der letzten Zeile) – gekürzt wird nie (Entscheidung 032).
+   * Gibt die Höhe über eine Zeile hinaus zurück; mit `zeichnen: false` nur gemessen.
    */
-  function ausstellerFeld(e: Eintrag, x: number, y: number, breite: number) {
+  function ausstellerFeld(e: Eintrag, x: number, y: number, breite: number, zeichnen = true): number {
+    if (!(breite > 1)) return 0;
     const min = 6.8 * kt;
     const w = (t: string, schrift: string, g: number) => doc.font(schrift).fontSize(g).widthOfString(t);
-    // Breite Schrift in schmaler Spalte (Atkinson, dreispaltig): „nicht veröff.“ statt mit „…“ gekürzt.
+    // Breite Schrift in schmaler Spalte (Atkinson, dreispaltig): „nicht veröff.“ statt umbrochen.
     const voll = ausstellerAnzeige(e);
     const anzeige = e.verdeckt && w(voll, NORMAL, min) > breite ? NICHT_VEROEFFENTLICHT_KURZ : voll;
-    if (!jugendKennzeichen(e, s)) {
-      textImFeld(doc, anzeige, x, y, { breite, groesse: GR, min, schrift: NORMAL, farbe: TINTE });
-      return;
-    }
+    const jgd = jugendKennzeichen(e, s);
     const luft = 1 * MM;
+    const kuerzel = (kg: number) => (jgd ? luft + w(JUGEND_KUERZEL, KURSIV, kg) : 0);
     const stufen = (von: number, bis: number) => [...Array.from({ length: Math.max(0, Math.ceil((von - bis) / 0.5)) }, (_, i) => von - i * 0.5), bis];
-    const [ganz, initiale, nachname] = e.verdeckt || !e.vorname ? [anzeige] : [anzeige, `${e.nachname}, ${e.vorname.charAt(0)}.`, e.nachname];
+    const initiale = e.verdeckt || !e.vorname ? null : `${e.nachname}, ${e.vorname.charAt(0)}.`;
     const kMin = 5.5 * kt;
     const wahl = [
-      ...stufen(GR, min).map((g) => ({ name: ganz!, g, kg: g })),
+      ...stufen(GR, min).map((g) => ({ name: anzeige, g, kg: g })),
       ...(initiale ? stufen(GR, min).map((g) => ({ name: initiale, g, kg: g })) : []),
-      ...(initiale ? stufen(min, kMin).map((kg) => ({ name: initiale, g: min, kg })) : []),
-      ...(nachname ? stufen(min, kMin).map((kg) => ({ name: nachname, g: min, kg })) : []),
-    ].find((v) => w(v.name, NORMAL, v.g) + luft + w(JUGEND_KUERZEL, KURSIV, v.kg) <= breite) ?? { name: nachname ?? ganz!, g: min, kg: kMin };
-    const kw = w(JUGEND_KUERZEL, KURSIV, wahl.kg);
-    const frei = breite - luft - kw;
-    textImFeld(doc, wahl.name, x, y, { breite: frei, groesse: wahl.g, min: wahl.g, schrift: NORMAL, farbe: TINTE });
-    const grundlinie = y - aufLinie(NORMAL, wahl.g, 0);
-    const nw = Math.min(frei, w(wahl.name, NORMAL, wahl.g));
-    doc.font(KURSIV).fontSize(wahl.kg).fillColor(GRAU).text(JUGEND_KUERZEL, x + nw + luft, aufLinie(KURSIV, wahl.kg, grundlinie), { width: kw + 1, lineBreak: false });
+      ...(initiale && jgd ? stufen(min, kMin).map((kg) => ({ name: initiale, g: min, kg })) : []),
+      ...(initiale && jgd ? stufen(min, kMin).map((kg) => ({ name: e.nachname, g: min, kg })) : []),
+    ].find((v) => w(v.name, NORMAL, v.g) + kuerzel(v.kg) <= breite);
+    // Eine Zeile – oder der ganze Name umbrochen in der Mindestgröße.
+    const g = wahl?.g ?? min;
+    const kg = wahl?.kg ?? min;
+    doc.font(NORMAL).fontSize(g);
+    const zeilen = wahl ? [wahl.name] : zeilenUmbrechen(doc, anzeige, breite);
+    const lh = doc.currentLineHeight(true);
+    const letzte = w(zeilen.at(-1)!, NORMAL, g);
+    const kuerzelNeu = jgd && letzte + kuerzel(kg) > breite; // Kürzel in eigener Zeile
+    const mehr = (zeilen.length - 1 + (kuerzelNeu ? 1 : 0)) * lh;
+    if (!zeichnen) return mehr;
+    doc.font(NORMAL).fontSize(g).fillColor(TINTE);
+    zeilen.forEach((z, i) => doc.text(z, x, y + i * lh, { width: breite, lineBreak: false }));
+    if (jgd) {
+      const grundlinie = y + mehr - aufLinie(NORMAL, g, 0);
+      doc.font(KURSIV).fontSize(kg).fillColor(GRAU).text(JUGEND_KUERZEL, kuerzelNeu ? x : x + letzte + luft, aufLinie(KURSIV, kg, grundlinie), { width: w(JUGEND_KUERZEL, KURSIV, kg) + 1, lineBreak: false });
+    }
     doc.fillColor(TINTE);
+    return mehr;
+  }
+
+  /** Preiskürzel der Tierzeile („E SE“), bei vielen Preisen umbrochen. */
+  function preisFeld(e: Eintrag, x: number, y: number, breite: number, zeichnen = true) {
+    const preise = e.preise.map((p) => p.kuerzel).join(" ");
+    if (!preise) return 0;
+    const t = textUmbrochen(doc, preise, x, y, { breite, groesse: GR, min: 6.5, schrift: FETT, farbe, zeichnen });
+    return t.hoehe - t.zeilenhoehe;
+  }
+
+  /**
+   * Höhe der Tierzeile: eine Zeile, mehr nur, wenn ein Feld umbricht (Aussteller, Preise; in der Tabelle auch Klasse
+   * und Farbenschlag). Gemessen wie gesetzt, damit Spalten- und Seitenwechsel vorher feststehen.
+   */
+  function zeilenHoehe(e: Eintrag) {
+    return ZEILE + (tabelle ? tabellenZeile(e, false) : listenZeile(e, false));
   }
 
   function tierZeile(e: Eintrag) {
-    if (tabelle) return tabellenZeile(e);
+    const y0 = doc.y;
+    const mehr = tabelle ? tabellenZeile(e, true) : listenZeile(e, true);
+    doc.fillColor(TINTE);
+    doc.y = y0 + ZEILE + mehr;
+    zuletzt = "tier";
+    tiefste = Math.max(tiefste, doc.y);
+  }
+
+  /** Tierzeile in den Spalten: Nr. | Bewertung | Preis | Aussteller | Vkpr.; gibt die Höhe über eine Zeile hinaus zurück. */
+  function listenZeile(e: Eintrag, zeichnen: boolean): number {
     const c = col();
     const y = doc.y;
     const x = spX();
-    doc.font(FETT).fontSize(GR).fillColor(TINTE).text(formatKatalognummer(e), x, y, { ...ZIFFERN, width: c.nr, align: "right", lineBreak: false });
     const nx = x + c.nr + 2 * MM;
+    const mehr = Math.max(ausstellerFeld(e, nx + c.note + c.preis, y, c.aussteller - 1.5 * MM, false), mitErgebnis ? preisFeld(e, nx + c.note, y, c.preis - 1.5 * MM, false) : 0);
+    if (!zeichnen) return mehr;
+    doc.font(FETT).fontSize(GR).fillColor(TINTE).text(formatKatalognummer(e), x, y, { ...ZIFFERN, width: c.nr, align: "right", lineBreak: false });
     if (mitErgebnis) {
-      const n = note(e);
       // v und hv fett, damit Spitzentiere auch im Schwarz-Weiß-Druck auffallen.
-      doc.font(e.punkte != null && e.punkte >= spitzePunkte ? FETT : NORMAL).fontSize(GR).fillColor(TINTE).text(n, nx, y, { width: c.note, lineBreak: false });
-      const preise = e.preise.map((p) => p.kuerzel).join(" ");
-      if (preise) textImFeld(doc, preise, nx + c.note, y, { breite: c.preis - 1.5 * MM, groesse: GR, min: 6.5, schrift: FETT, farbe });
+      doc.font(e.punkte != null && e.punkte >= spitzePunkte ? FETT : NORMAL).fontSize(GR).fillColor(TINTE).text(note(e), nx, y, { width: c.note, lineBreak: false });
+      preisFeld(e, nx + c.note, y, c.preis - 1.5 * MM);
     } else {
       // Vorkatalog: feine Schreiblinie für eigene Notizen statt „kt. E.“ in jeder Zeile.
       doc.save().lineWidth(0.3).strokeColor(HAARLINIE).dash(0.8, { space: 1.6 });
@@ -433,20 +506,20 @@ export function tierteilSetzen(K: KatalogKontext) {
       doc.undash().restore();
     }
     ausstellerFeld(e, nx + c.note + c.preis, y, c.aussteller - 1.5 * MM);
-    // Nicht verkäuflich: fehlende Tiere und gesperrte (Gesundheitsjournal) – kein Preis im Katalog.
-    if (e.verkaufspreisCent && e.status !== "fehlt" && !e.gesperrt) {
-      const verkauft = mitErgebnis && e.verkauftAn;
-      const euro = e.verkaufspreisCent % 100 === 0 ? String(e.verkaufspreisCent / 100) : formatEuro(e.verkaufspreisCent).replace(/\s?€/, "");
-      doc.font(verkauft ? KURSIV : NORMAL).fontSize(GR).fillColor(verkauft ? GRAU : TINTE).text(verkauft ? "verk." : euro, x + spB() - c.vk, y, { width: c.vk, align: "right", lineBreak: false });
-    }
-    doc.fillColor(TINTE);
-    doc.y = y + ZEILE;
-    zuletzt = "tier";
-    tiefste = Math.max(tiefste, doc.y);
+    verkaufspreis(e, x + spB() - c.vk, y, c.vk);
+    return mehr;
   }
 
-  /** Eine Tabellenzeile: Nr. | Klasse | Farbenschlag | Aussteller | Bewertung | Preis | Vkpr. */
-  function tabellenZeile(e: Eintrag) {
+  /** Verkaufspreis rechts; nicht verkäuflich sind fehlende und gesperrte Tiere (Gesundheitsjournal) – kein Preis im Katalog. */
+  function verkaufspreis(e: Eintrag, x: number, y: number, breite: number) {
+    if (!e.verkaufspreisCent || e.status === "fehlt" || e.gesperrt) return;
+    const verkauft = mitErgebnis && e.verkauftAn;
+    const euro = e.verkaufspreisCent % 100 === 0 ? String(e.verkaufspreisCent / 100) : formatEuro(e.verkaufspreisCent).replace(/\s?€/, "");
+    doc.font(verkauft ? KURSIV : NORMAL).fontSize(GR).fillColor(verkauft ? GRAU : TINTE).text(verkauft ? "verk." : euro, x, y, { width: breite, align: "right", lineBreak: false });
+  }
+
+  /** Eine Tabellenzeile: Nr. | Klasse | Farbenschlag | Aussteller | Bewertung | Preis | Vkpr. Lange Felder brechen um. */
+  function tabellenZeile(e: Eintrag, zeichnen: boolean): number {
     const c = col();
     const t = tabX();
     const y0 = doc.y;
@@ -454,34 +527,33 @@ export function tierteilSetzen(K: KatalogKontext) {
     const x = spX();
     // Gemeinsame Grundlinie: der kursive Farbenschlag (Titelschrift) steht auf derselben Linie wie die übrigen Spalten.
     const grund = y - aufLinie(NORMAL, GR, 0);
-    const farbschlag = e.rasse ? (e.farbenschlag ?? "") : e.freitext;
-    const zusatz = [e.istAoc ? "AOC" : "", e.istNeuzuechtung ? "Neuzüchtung" : ""].filter(Boolean).join(", ");
-    const art = e.art !== "einzeltier" && !gruppenAbteilung(e.art, s.staemmeVorn) ? `${MELDEART_LABEL[e.art]} ` : "";
+    const feld = (text: string, fx: number, fy: number, breite: number, schrift: string, f: string, z: boolean) => {
+      const m = textUmbrochen(doc, text, fx, fy, { breite, groesse: GR, min: 6.5, schrift, farbe: f, zeichnen: z });
+      return m.hoehe - m.zeilenhoehe;
+    };
+    const setze = (z: boolean) =>
+      Math.max(
+        feld(`${artText(e)}${e.geschlecht} ${e.alter}`, t.klasse, y, c.klasse - 1.5 * MM, FETT, farbe, z),
+        feld(farbText(e), t.farbenschlag, aufLinie(KURSIV, GR, grund), c.farbenschlag, KURSIV, TINTE, z),
+        ausstellerFeld(e, t.aussteller, y, c.aussteller - 1.5 * MM, z),
+        mitErgebnis ? preisFeld(e, t.preis, y, c.preis - 1.5 * MM, z) : 0,
+      );
+    const mehr = setze(false);
+    if (!zeichnen) return mehr;
     doc.font(FETT).fontSize(GR).fillColor(TINTE).text(formatKatalognummer(e), x, y, { ...ZIFFERN, width: c.nr, align: "right", lineBreak: false });
-    textImFeld(doc, `${art}${e.geschlecht} ${e.alter}`, t.klasse, y, { breite: c.klasse - 1.5 * MM, groesse: GR, min: 6.5, schrift: FETT, farbe });
-    textImFeld(doc, `${farbschlag || "–"}${zusatz ? ` (${zusatz})` : ""}`, t.farbenschlag, aufLinie(KURSIV, GR, grund), { breite: c.farbenschlag, groesse: GR, min: 6.5, schrift: KURSIV, farbe: TINTE });
-    ausstellerFeld(e, t.aussteller, y, c.aussteller - 1.5 * MM);
+    setze(true);
     if (mitErgebnis) {
       doc.font(e.punkte != null && e.punkte >= spitzePunkte ? FETT : NORMAL).fontSize(GR).fillColor(TINTE).text(note(e), t.note, y, { width: c.note, lineBreak: false });
-      const preise = e.preise.map((p) => p.kuerzel).join(" ");
-      if (preise) textImFeld(doc, preise, t.preis, y, { breite: c.preis - 1.5 * MM, groesse: GR, min: 6.5, schrift: FETT, farbe });
     } else {
       doc.save().lineWidth(0.3).strokeColor(HAARLINIE).dash(0.8, { space: 1.6 });
       doc.moveTo(t.note, y + 8 * kt).lineTo(t.note + c.note - 2 * MM, y + 8 * kt).stroke();
       doc.undash().restore();
     }
-    // Nicht verkäuflich: fehlende Tiere und gesperrte (Gesundheitsjournal) – kein Preis im Katalog.
-    if (e.verkaufspreisCent && e.status !== "fehlt" && !e.gesperrt) {
-      const verkauft = mitErgebnis && e.verkauftAn;
-      const euro = e.verkaufspreisCent % 100 === 0 ? String(e.verkaufspreisCent / 100) : formatEuro(e.verkaufspreisCent).replace(/\s?€/, "");
-      doc.font(verkauft ? KURSIV : NORMAL).fontSize(GR).fillColor(verkauft ? GRAU : TINTE).text(verkauft ? "verk." : euro, x + spB() - c.vk, y, { width: c.vk, align: "right", lineBreak: false });
-    }
+    verkaufspreis(e, x + spB() - c.vk, y, c.vk);
     // Feine Linie unter jeder Zeile, damit das Auge in der breiten Tabelle die Zeile hält.
-    doc.save().lineWidth(0.25).strokeColor(HAARLINIE).moveTo(x, y0 + ZEILE - 0.4 * kt).lineTo(x + spB(), y0 + ZEILE - 0.4 * kt).stroke().restore();
-    doc.fillColor(TINTE);
-    doc.y = y0 + ZEILE;
-    zuletzt = "tier";
-    tiefste = Math.max(tiefste, doc.y);
+    const unterkante = y0 + ZEILE + mehr - 0.4 * kt;
+    doc.save().lineWidth(0.25).strokeColor(HAARLINIE).moveTo(x, unterkante).lineTo(x + spB(), unterkante).stroke().restore();
+    return mehr;
   }
 
   return register;

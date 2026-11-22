@@ -380,6 +380,61 @@ export function textImFeld(
   return gr;
 }
 
+/**
+ * Zerlegt Text in Zeilen der Breite `breite` (aktuelle Schrift und Größe): am Leerzeichen, nach einem Bindestrich,
+ * notfalls mitten im Wort mit Trennstrich. Nichts fällt weg (Entscheidung 032).
+ */
+export function zeilenUmbrechen(doc: Doc, text: string, breite: number): string[] {
+  const w = (t: string) => doc.widthOfString(t);
+  const zeilen: string[] = [];
+  let zeile = "";
+  for (const wort of text.split(/\s+/).filter(Boolean)) {
+    // Nach jedem Bindestrich darf umbrochen werden („Zwerg-“ | „Barthühner“).
+    (wort.match(/[^-–]+[-–]*|[-–]+/g) ?? [wort]).forEach((teil, i) => {
+      const fuge = i === 0 && zeile ? " " : "";
+      if (w(zeile + fuge + teil) <= breite) return void (zeile += fuge + teil);
+      if (zeile) zeilen.push(zeile);
+      let rest = teil;
+      // Teil allein zu breit: mitten im Wort mit Trennstrich.
+      while (rest.length > 1 && w(rest) > breite) {
+        let n = rest.length - 1;
+        while (n > 1 && w(`${rest.slice(0, n)}-`) > breite) n--;
+        zeilen.push(`${rest.slice(0, n)}-`);
+        rest = rest.slice(n);
+      }
+      zeile = rest;
+    });
+  }
+  if (zeile || !zeilen.length) zeilen.push(zeile);
+  return zeilen;
+}
+
+/**
+ * Text in einem Feld fester Breite, der nie gekürzt wird: erst bis `min` verkleinern, passt er dann nicht in eine
+ * Zeile, bricht er um (zeilenUmbrechen). Mit `zeichnen: false` nur messen – so stehen Höhe und Seitenumbruch fest,
+ * bevor gesetzt wird. `hoehe` ist die Höhe aller Zeilen (Zeilenabstand der Schrift), `zeilenhoehe` die einer Zeile.
+ */
+export function textUmbrochen(
+  doc: Doc,
+  text: string,
+  x: number,
+  y: number,
+  feld: { breite: number; groesse: number; min?: number; schrift?: string; farbe?: string; align?: "left" | "center" | "right"; zeichnen?: boolean; abstand?: number },
+): { groesse: number; zeilen: string[]; hoehe: number; zeilenhoehe: number } {
+  let gr = feld.groesse;
+  const min = Math.min(feld.min ?? gr, gr);
+  doc.font(feld.schrift ?? SANS).fontSize(gr);
+  if (!(feld.breite > 1)) return { groesse: gr, zeilen: [], hoehe: 0, zeilenhoehe: doc.currentLineHeight(true) };
+  while (gr > min && doc.widthOfString(text) > feld.breite) doc.fontSize((gr = Math.max(min, gr - 0.5)));
+  const zeilen = doc.widthOfString(text) <= feld.breite ? [text] : zeilenUmbrechen(doc, text, feld.breite);
+  const zeilenhoehe = doc.currentLineHeight(true) + (feld.abstand ?? 0);
+  if (feld.zeichnen !== false) {
+    if (feld.farbe) doc.fillColor(feld.farbe);
+    zeilen.forEach((z, i) => doc.text(z, x, y + i * zeilenhoehe, { width: feld.breite, align: feld.align ?? "left", lineBreak: false }));
+  }
+  return { groesse: gr, zeilen, hoehe: zeilen.length * zeilenhoehe, zeilenhoehe };
+}
+
 /** Zweispaltige Angaben („Bezeichnung  Wert“) mit feinen Linien. Gibt das untere y zurück. */
 export function angaben(doc: Doc, zeilen: [string, string][], x: number, y: number, w: number, labelAnteil = 0.38, groesse = 9): number {
   const lb = w * labelAnteil;

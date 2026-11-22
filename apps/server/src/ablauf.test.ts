@@ -114,3 +114,4 @@ import "./tests/79-ablauf-halle";
 import "./tests/80-druck-formate";
 import "./tests/81-jugend-kennzeichen";
 import "./tests/82-katalog-schriften";
+import "./tests/83-katalog-nicht-kuerzen";

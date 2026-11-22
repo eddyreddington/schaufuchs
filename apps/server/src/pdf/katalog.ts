@@ -5,7 +5,7 @@
  * Hilfen ohne PDF in katalog-hilfen.ts.
  */
 import { seitenbereiche } from "@schau/domain";
-import { GRAU, HAARLINIE, MM } from "./basis";
+import { GRAU, HAARLINIE, MM, textUmbrochen } from "./basis";
 import { FETT, NORMAL } from "./katalog-schrift";
 import { anzeigenSeiten, kommendeSchauenSeite, notizSeiten } from "./katalog-anhang";
 import { katalogKontext, type KatalogOptionen, type Schau } from "./katalog-kontext";
@@ -70,15 +70,18 @@ export async function katalogPdf(
       const my = yF - 1.6 * MM * k;
       doc.rect(mx, my, mb, mh).fill(flaeche);
       doc.font(FETT).fontSize(G.liste).fillColor(aufFlaeche).text(nr, mx, my + (mh - G.liste) / 2 + 0.5, { width: mb, align: "center", lineBreak: false });
-      doc.font(NORMAL).fontSize(G.klein).fillColor(GRAU).text(s.name, L() + (gerade ? mb + 3 * MM : 0), yF + 0.5, { width: B() - mb - 3 * MM, align: gerade ? "right" : "left", lineBreak: false });
+      textUmbrochen(doc, s.name, L() + (gerade ? mb + 3 * MM : 0), yF + 0.5, { breite: B() - mb - 3 * MM, groesse: G.klein, min: G.fein, schrift: NORMAL, farbe: GRAU, align: gerade ? "right" : "left" });
     } else {
       doc.save().lineWidth(0.4).strokeColor(HAARLINIE).moveTo(L(), yF - 4).lineTo(L() + B(), yF - 4).stroke().restore();
       doc.font(FETT).fontSize(G.liste).fillColor(akzentText).text(nr, L(), yF, { width: B(), align: gerade ? "left" : "right", lineBreak: false });
-      doc.font(NORMAL).fontSize(G.klein).fillColor(GRAU).text(s.name, L(), yF + 0.5, { width: B(), align: gerade ? "right" : "left", lineBreak: false });
+      // Name der Schau neben der Seitenzahl, lang: kleiner und umbrochen, nie über der Zahl.
+      const frei = 12 * MM * k;
+      textUmbrochen(doc, s.name, L() + (gerade ? frei : 0), yF + 0.5, { breite: B() - frei, groesse: G.klein, min: G.fein, schrift: NORMAL, farbe: GRAU, align: gerade ? "right" : "left" });
     }
     if (info.kopf) {
       const yK = doc.page.margins.top * 0.45;
-      doc.font(NORMAL).fontSize(G.klein).fillColor(GRAU).text(info.kopf, L(), yK, { width: B(), align: gerade ? "left" : "right", lineBreak: false, ellipsis: true });
+      // Kolumnentitel (Sparte · Rasse): lang erst kleiner, dann umbrochen – nie mit „…“ gekürzt (Entscheidung 032).
+      textUmbrochen(doc, info.kopf, L(), yK, { breite: B(), groesse: G.klein, min: G.fein, schrift: NORMAL, farbe: GRAU, align: gerade ? "left" : "right" });
     }
     doc.page.margins.bottom = unterRand;
   }

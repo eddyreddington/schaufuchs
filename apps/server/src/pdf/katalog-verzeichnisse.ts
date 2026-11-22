@@ -4,7 +4,7 @@
  */
 import { formatKatalognummer } from "@schau/domain";
 import { type Eintrag } from "../services/eintraege";
-import { GRAU, HAARLINIE, MM, textImFeld, TINTE } from "./basis";
+import { GRAU, HAARLINIE, MM, textUmbrochen, TINTE } from "./basis";
 import { FETT, KURSIV, NORMAL } from "./katalog-schrift";
 import type { KatalogKontext } from "./katalog-kontext";
 import { anzahlText, bildnachweisTeile } from "./katalog-hilfen";
@@ -21,21 +21,24 @@ export function rassenverzeichnis(K: KatalogKontext, register: Register) {
     seitentitel("Rassenverzeichnis", "von A bis Z, mit Katalognummern und Seite");
     const zeilen = [...register.values()].sort((a, b) => a.rasse.localeCompare(b.rasse, "de") || nrVergleich(a.von, b.von));
     for (const r of zeilen) {
-      platz(11 * k);
-      const y = doc.y;
-      doc.font(NORMAL).fontSize(G.liste).fillColor(TINTE);
       const name = `${r.rasse}${r.zusatz ? ` (${r.zusatz})` : ""}`;
-      const nrText = nrBereich(r.von, r.bis);
-      const w = doc.widthOfString(name);
-      doc.text(name, L(), y, { lineBreak: false });
+      // Lange Namen brechen in ihrer Spalte um (nie „…“, Entscheidung 032) – die Zeile wird höher.
       // Bei Stämmen und Volieren steht die Sparte des Tiers, die Abteilung steckt in „2 Stämme“.
-      textImFeld(doc, `${r.sparte} · ${anzahlText(r.abteilung, r.anzahl)}`, L() + B() * 0.5, y + 0.8, { breite: B() * 0.25, groesse: G.klein, min: 6, schrift: NORMAL, farbe: GRAU });
-      doc.font(NORMAL).fontSize(G.liste).fillColor(TINTE).text(`Nr. ${nrText}`, L() + B() * 0.76, y, { width: B() * 0.17, lineBreak: false });
-      doc.font(FETT).text(String(r.seite), L(), y, { width: B(), align: "right", lineBreak: false });
-      if (w < B() * 0.48) {
+      const felder = (y: number, zeichnen: boolean) => [
+        textUmbrochen(doc, name, L(), y, { breite: B() * 0.48, groesse: G.liste, schrift: NORMAL, farbe: TINTE, zeichnen }),
+        textUmbrochen(doc, `${r.sparte} · ${anzahlText(r.abteilung, r.anzahl)}`, L() + B() * 0.5, y + 0.8, { breite: B() * 0.25, groesse: G.klein, min: 6, schrift: NORMAL, farbe: GRAU, zeichnen }),
+        textUmbrochen(doc, `Nr. ${nrBereich(r.von, r.bis)}`, L() + B() * 0.76, y, { breite: B() * 0.17, groesse: G.liste, schrift: NORMAL, farbe: TINTE, zeichnen }),
+      ];
+      const mehr = (f: ReturnType<typeof felder>) => Math.max(...f.map((t) => t.hoehe - t.zeilenhoehe));
+      platz(11 * k + mehr(felder(0, false)));
+      const y = doc.y;
+      const f = felder(y, true);
+      doc.font(FETT).fontSize(G.liste).fillColor(TINTE).text(String(r.seite), L(), y, { width: B(), align: "right", lineBreak: false });
+      const w = doc.font(NORMAL).fontSize(G.liste).widthOfString(name);
+      if (f[0]!.zeilen.length === 1 && w < B() * 0.48) {
         doc.save().lineWidth(0.4).strokeColor(HAARLINIE).dash(0.5, { space: 2.5 }).moveTo(L() + w + 3, y + 7.5 * k).lineTo(L() + B() * 0.5 - 3, y + 7.5 * k).stroke().undash().restore();
       }
-      doc.y = y + 11 * k;
+      doc.y = y + 11 * k + mehr(f);
     }
   }
 }
@@ -105,7 +108,11 @@ export function ausstellerverzeichnis(K: KatalogKontext) {
       const b0 = a.nachname.charAt(0).toLocaleUpperCase("de");
       const nummern = t.map((e) => formatKatalognummer(e)).join(", ");
       doc.font(NORMAL).fontSize(G.liste);
-      const h = 11 * k + doc.heightOfString(nummern, { width: B() * 0.5 });
+      const hNummern = doc.heightOfString(nummern, { width: B() * 0.5 });
+      // Links Name und Ort/Verein (lange Doppelnamen brechen um), rechts die Nummern – die höhere Seite zählt.
+      const hName = doc.font(FETT).fontSize(G.liste).heightOfString(`${a.nachname}, ${a.vorname}`, { width: B() * 0.5 - 4 });
+      const hOrt = doc.font(NORMAL).fontSize(G.klein).heightOfString([a.ort, a.verein].filter(Boolean).join(" · ") || " ", { width: B() * 0.5 - 4 });
+      const h = Math.max(11 * k + hNummern, hName + hOrt + 3 * k);
       if (b0 !== buchstabe) {
         platz(h + 18 * k);
         doc.moveDown(0.3);
@@ -147,23 +154,32 @@ export function inhaltsverzeichnis(K: KatalogKontext, inhaltSeite: number) {
   doc.font(NORMAL).fontSize(G.klein);
   const impressumH = impressum.reduce((n, t) => n + doc.heightOfString(t, { width: B() }) + 1.5, 0) + 8;
   // Lange Verzeichnisse (viele Sparten, Jugend) enger setzen: Zeilenabstand bis auf die Hälfte, Schrift bis auf 75 %.
-  const benoetigt = inhalt.reduce((n, z) => n + (z.ebene ? 14 : 17) * k, 0);
+  /** Titel einer Zeile: lange (Sparten, Teilschauen) brechen vor der Seitenzahl um. */
+  const titelFeld = (z: (typeof inhalt)[number], x: number, y: number, groesse: number, zeichnen: boolean) => {
+    const nw = doc.font(NORMAL).fontSize(groesse).widthOfString(String(z.seite));
+    const einzug = z.ebene ? 8 * MM : 0;
+    return textUmbrochen(doc, z.titel, x + einzug, y, { breite: B() - einzug - nw - 8, groesse, schrift: NORMAL, farbe: z.ebene ? GRAU : TINTE, zeichnen });
+  };
+  const mehrVon = (t: { hoehe: number; zeilenhoehe: number }) => t.hoehe - t.zeilenhoehe;
+  const benoetigt = inhalt.reduce((n, z) => n + (z.ebene ? 14 : 17) * k + mehrVon(titelFeld(z, 0, 0, z.ebene ? G.liste : G.h3, false)), 0);
   const verfuegbar = unten() - impressumH - 6 - doc.y;
   const f = Math.max(0.5, Math.min(1, verfuegbar / Math.max(benoetigt, 1)));
   for (const z of inhalt) {
     const y = doc.y;
     const einzug = z.ebene ? 8 * MM : 0;
-    doc.font(NORMAL).fontSize((z.ebene ? G.liste : G.h3) * Math.max(0.75, f)).fillColor(z.ebene ? GRAU : TINTE);
-    const w = doc.widthOfString(z.titel);
-    doc.text(z.titel, L() + einzug, y, { lineBreak: false });
+    const groesse = (z.ebene ? G.liste : G.h3) * Math.max(0.75, f);
+    const t = titelFeld(z, L(), y, groesse, true);
+    const zy = y + mehrVon(t); // letzte Zeile des Titels: dort Punktführung und Seitenzahl
+    doc.font(NORMAL).fontSize(groesse).fillColor(z.ebene ? GRAU : TINTE);
+    const w = doc.widthOfString(t.zeilen.at(-1) ?? "");
     const nr = String(z.seite);
     const nw = doc.widthOfString(nr);
-    doc.text(nr, L() + B() - nw, y, { lineBreak: false });
+    doc.text(nr, L() + B() - nw, zy, { lineBreak: false });
     // Punktführung zwischen Titel und Seitenzahl.
     doc.save().lineWidth(0.5).strokeColor(HAARLINIE).dash(0.5, { space: 2.5 });
-    doc.moveTo(L() + einzug + w + 4, y + 9 * k * f).lineTo(L() + B() - nw - 4, y + 9 * k * f).stroke();
+    doc.moveTo(L() + einzug + w + 4, zy + 9 * k * f).lineTo(L() + B() - nw - 4, zy + 9 * k * f).stroke();
     doc.undash().restore();
-    doc.y = y + (z.ebene ? 14 : 17) * k * f;
+    doc.y = zy + (z.ebene ? 14 : 17) * k * f;
   }
   {
     // Fest am unteren Rand: weiter unten löste pdfkit eine neue Seite aus und verschöbe alle Seitenzahlen.
