@@ -383,8 +383,10 @@ export function hallenSzene(
     schuerzen: verkleidungVon(aufsteller).an ? schuerzenFuer(sockel, Math.max(0, ah - PLATTEN_STAERKE)) : [],
     beschriftungen,
     gang: gangStandpunkt(halle, plan),
-    rundgang: rundgang(halle, plan),
+    rundgang: [],
   };
+  // Rundgang aus den Körpern der Szene: nie durch Käfige, Volieren, Möbel oder Wände.
+  szene.rundgang = rundgang(szene, plan);
   // Wie der 2D-Plan: liegt die Halle dort quer (lange Seite waagrecht), sind x und y vertauscht – dieselbe Abbildung hier,
   // sonst wäre die Halle in 3D spiegelverkehrt.
   return zeichnungDerHalle(halle).quer ? vertauscht(szene) : szene;

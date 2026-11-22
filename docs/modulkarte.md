@@ -244,13 +244,12 @@ Tests: `hallenplan-3d-dach.test.ts`
 - `giebel()` – Giebel an beiden Stirnseiten beim Satteldach (geschlossen bis unter den First); flach: keine.
 - Typen: `Dach`, `DeckenTeile`
 
-### hallenplan-3d-rundgang.ts (65 Z.)
-Automatischer Rundgang durch die Halle (3D): die Gänge zwischen den Reihen in Schlangenlinie, in Augenhöhe.
+### hallenplan-3d-rundgang.ts (119 Z.)
+Automatischer Rundgang durch die Halle (3D): die Gänge zwischen den Reihen in Schlangenlinie, immer in Augenhöhe und mit Abstand zu allem (Hinderni …
 Tests: `hallenplan-3d-rundgang.test.ts`
 
-- `RUNDGANG_HOEHE` – Augenhöhe beim Rundgang (cm) und Höhe über einem Reihenende.
-- `RUNDGANG_UEBER`
-- `rundgang()` – Wegpunkte des Rundgangs in Szene-Koordinaten (cm; x entlang der Breite, z entlang der Länge, y Höhe), vor dem Drehen der Szene.
+- `RUNDGANG_HOEHE` – Augenhöhe beim Rundgang (cm), überall gleich.
+- `rundgang()` – Wegpunkte des Rundgangs in Szene-Koordinaten (cm; x entlang der Breite, z entlang der Länge, y Augenhöhe), vor dem Vertauschen der Achsen (`vertaus …
 - Typen: `RundgangPunkt`
 
 ### hallenplan-3d-waende.ts (150 Z.)
@@ -262,7 +261,26 @@ Tests: `hallenplan-3d-rundgang.test.ts`
 - `wandSeiten()` – An welchen Seiten ein Wandstück steht (eine Ecke an zweien).
 - `tuerLage()` – Lage einer Tür in der Szene (cm): Seite ihrer Wand, Ebene der Innenfläche (x bei x0/x1, z bei z0/z1), Mitte und Breite entlang der Wand, Wandstärke.
 
-### hallenplan-3d.ts (521 Z.)
+### hallenplan-3d-wege.ts (340 Z.)
+Wege durch die 3D-Halle ohne Anstoßen: eine Hinderniskarte aus der Szene (Grundplatten und Blöcke, Käfige samt Etagen, Volieren, Möbel, Sperrfläche …
+
+- `KOERPER_RADIUS` – Halber Platzbedarf eines Menschen (cm): so weit bleibt der Weg von Käfigen und Wänden.
+- `WegSzene` (Typ) – Was die Karte von der Szene braucht.
+- `hinderniskarte()` – Hinderniskarte der Szene mit dem Körperradius als Abstand.
+- `istFrei()` – Darf man hier stehen (mit Abstand zu allem)?
+- `streckeFrei()` – Ist die gerade Strecke von a nach b ganz frei?
+- `gleite()` – Schritt von `von` nach `nach`, an Hindernissen entlang gleitend; wer schon zu nah steht, darf heraus.
+- `rasterVon()` – Raster der Karte (einmal gerechnet): Zellen um 15 cm, in großen Hallen etwas gröber (höchstens rund 90 000 Zellen).
+- `zelleBei()` – Zelle an der Stelle (−1 außerhalb des Rasters).
+- `zellMitte()`
+- `freieZelleNahe()` – Nächste freie Zelle bis `weit` cm um die Stelle (−1: keine).
+- `suche()` – Kürzester Weg (A*) von Zelle zu Zelle; null, wenn es keinen gibt oder er länger als `grenze` (cm) wäre.
+- `abkuerzen()` – Abkürzen: von jedem Punkt so weit voraus, wie die gerade Strecke frei ist (erster und letzter Punkt bleiben).
+- `runden()` – Ecken runden (Bogen bis 1,5 m vor und nach der Ecke, geprüft; wo er anstößt, enger oder gar nicht) und den Weg dicht abtasten, sodass zwei Punkte h …
+- `wegZwischen()` – Freier, geglätteter Weg von Stelle zu Stelle (beide frei, im selben Bereich), sonst null.
+- Typen: `Stelle`, `Raster`, `Hinderniskarte`
+
+### hallenplan-3d.ts (523 Z.)
 Hallenplan räumlich: aus dem gerechneten Plan (`planeHalle`) die Körper für die 3D-Ansicht – Wände mit Türen, Aufsteller unter den Grundplatten, Kä …
 Tests: `hallenplan-3d.test.ts`
 
@@ -621,7 +639,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (69 Z.)
+### index.ts (70 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -2769,7 +2787,7 @@ Prozeduren: auth.status, katalog.hallenplan, schau.get
 ### hallenplan-3d-steuerkreuz.tsx (63 Z.)
 Steuerkreuz unten rechts in der 3D-Ansicht – für Tablet und Maus, was am Rechner die Tasten tun: gehen, drehen, zoomen (solange gedrückt) und die g …
 
-### hallenplan-3d-steuerung.ts (271 Z.)
+### hallenplan-3d-steuerung.ts (347 Z.)
 Bewegung der Kamera in der 3D-Ansicht über das Ziehen mit Maus oder Finger hinaus: weiches Auslaufen, Zoom zum Mauszeiger, per Doppelklick sanft hi …
 
 ### hallenplan-3d-texturen.ts (323 Z.)

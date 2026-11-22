@@ -62,6 +62,7 @@ export * from "./teilschau";
 export * from "./datum";
 export * from "./hallenplan-umriss";
 export * from "./hallenplan-3d-rundgang";
+export * from "./hallenplan-3d-wege";
 export * from "./hallenplan-umriss-pruefen";
 export * from "./zahlart";
 export * from "./lastschrift";
