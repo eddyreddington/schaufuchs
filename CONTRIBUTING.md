@@ -20,7 +20,7 @@ Danke, dass Sie SchauFUCHS verbessern wollen – ob als Verein mit einer Rückme
    - Änderungen an Bewertung, Preisen, Verkauf und Geld über `protokolliere()` ([003](docs/entscheidungen/003-protokoll-hash-kette.md)).
    - Preisrichter sehen keine Ausstellernamen ([005](docs/entscheidungen/005-anonyme-bewertung.md)).
    - Oberfläche ohne lange Erklärtexte; Erklärungen ins Handbuch `docs/handbuch/` ([008](docs/entscheidungen/008-handbuch-statt-erklaertexte.md)).
-   - Keine Daten des BDRG ([007](docs/entscheidungen/007-keine-bdrg-daten.md)), keine echten Personendaten in Tests und Demo.
+   - Keine Daten des BDRG im Repo ([027](docs/entscheidungen/027-bdrg-daten-nutzung.md)), keine echten Personendaten in Tests und Demo.
    - Fachbegriffe und Bezeichner auf Deutsch, wie im Bestand. Dateien unter 600 Zeilen (Ziel 400).
 4. Vor dem Pull Request: `bun run pruefen` (Typprüfung, Modulkarte, alle Tests) muss grün sein; neue öffentliche
    Funktionen, Prozeduren oder Seiten: `bun run modulkarte` und `docs/modulkarte.md` mit einchecken. Bei Fehlerbehebungen

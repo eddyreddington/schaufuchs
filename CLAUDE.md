@@ -22,7 +22,7 @@ Danach nur die genannten Dateien öffnen.
 - Jede Änderung an Bewertung, Preisen, Verkauf, Geld über `protokolliere()` – `003`.
 - Preisrichter sehen keine Ausstellernamen – `005`.
 - Keine langen Erklärtexte in der Oberfläche; „Hilfe zu …“ auf den Handbuchabschnitt (`/hilfe/ausstellungsleitung#abschnitt`) – `008`.
-- Keine echten BDRG-Daten ins Repo, solange die Nutzungsrechte nicht geklärt sind – `007`.
+- Keine echten BDRG-Daten ins Repo (Verzeichnis, Auszüge, Zuordnung Rasse → Gruppe); im Verein nur über Pflege und Import – `027`.
 - Hallenplan: Grundplatten nie kürzen (`001`), Möbel keine Sperrfläche (`002`), fester Plan (`006`).
 - Dateien unter 600 Zeilen halten (Ziel 400); `bun run pruefen` warnt.
 - Commit-Betreff kurz (≤ 50 Zeichen, „Bereich: was sich ändert“), ohne Versionsnummer; Version nur in Tag und

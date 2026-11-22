@@ -178,8 +178,8 @@ Geld wird durchgehend in Cent gespeichert, Provisionen in Basispunkten. Preisric
 
 ## Rassen- und Farbenschlagverzeichnis
 
-SchauFUCHS enthält **kein** Verzeichnis des BDRG – die Nutzungsrechte sind nicht geklärt
-([Entscheidung 007](docs/entscheidungen/007-keine-bdrg-daten.md)). Jeder Verein spielt seine Liste als CSV ein; die
+SchauFUCHS enthält **kein** Verzeichnis des BDRG und keine Zuordnung der Rassen zu Gruppen
+([Entscheidung 027](docs/entscheidungen/027-bdrg-daten-nutzung.md)). Jeder Verein spielt seine Liste als CSV ein; die
 Demo-Liste ist ein kleiner Auszug zum Ausprobieren.
 
 ## Noch nicht enthalten

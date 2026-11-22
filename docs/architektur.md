@@ -77,7 +77,7 @@ gegen dieselbe Datenbank (Einstieg `ablauf.test.ts`); neue Prüfungen als neuer 
 - Änderungen an Bewertung, Preisen, Verkauf, Geld über `protokolliere()` – [ADR 003](entscheidungen/003-protokoll-hash-kette.md)
 - Preisrichter sehen keine Ausstellernamen – [ADR 005](entscheidungen/005-anonyme-bewertung.md)
 - Keine Erklärtexte in der Oberfläche, „Hilfe zu …“ ins Handbuch – [ADR 008](entscheidungen/008-handbuch-statt-erklaertexte.md)
-- BDRG-Daten nur über Pflege und Import, nicht im Repo – [ADR 007](entscheidungen/007-keine-bdrg-daten.md)
+- BDRG-Daten nur über Pflege und Import, nicht im Repo – [ADR 027](entscheidungen/027-bdrg-daten-nutzung.md)
 - Deutsche Fachbegriffe in Oberfläche und Code-Bezeichnern
 - Dateien unter 600 Zeilen halten (Ziel 400); größere beim nächsten Anfassen teilen
 

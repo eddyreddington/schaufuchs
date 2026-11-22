@@ -39,7 +39,7 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
 - Bewertungsliste: zwei Listen nebeneinander je A4-Seite, laufend; Zwischenkopf je Rasse und Farbenschlag (läuft eine
   Rasse in die nächste Spalte, dort als „(Forts.)“), kein Kopf allein am Spaltenende; Spalten Nr., Klasse, Note, Pkt.,
   Preis; Obmann im Kopf (der zugeordnete, sonst leer); Seitenzählung; keine Ausstellernamen ([ADR 005](../entscheidungen/005-anonyme-bewertung.md)).
-- Keine erfundene Zuordnung Rasse → Gruppe im Repo; Tests nutzen erkennbar erfundene Gruppen (X1, X2) – [ADR 007](../entscheidungen/007-keine-bdrg-daten.md).
+- Keine erfundene Zuordnung Rasse → Gruppe im Repo; Tests nutzen erkennbar erfundene Gruppen (X1, X2); erlaubt ist nur die Liste der Bezeichnungen A–M, Z1–Z3 als Vorgabe zum Ankreuzen – [ADR 027](../entscheidungen/027-bdrg-daten-nutzung.md).
 
 ## Tests
 
