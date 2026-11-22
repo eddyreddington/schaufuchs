@@ -1,6 +1,6 @@
 <h1 id="handbuch-für-die-ausstellungsleitung">Handbuch für die
 Ausstellungsleitung</h1>
-<p>SchauFUCHS 1.18.0 · Stand 22. November 2026</p>
+<p>SchauFUCHS 1.19.0 · Stand 22. November 2026</p>
 <p>Dieses Handbuch richtet sich an die Ausstellungsleitung, also an
 alle, die in SchauFUCHS die Rolle <strong>Administrator</strong> haben.
 Es führt Sie von der Anmeldung über die Einrichtung des Vereins bis
@@ -39,12 +39,12 @@ Authenticator-App ein und klicken Sie erneut auf „Anmelden“.</li>
 <strong>Notfallcode</strong> (siehe 1.3).</p>
 <p>Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit
 dem Namen und darunter klein die Versionsnummer (z. B. „Version
-1.18.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“,
+1.19.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“,
 „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“
 („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen
 per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht
 ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein,
-Rolle mit der Versionsnummer („SchauFUCHS 1.18.0“), die Darstellung
+Rolle mit der Versionsnummer („SchauFUCHS 1.19.0“), die Darstellung
 (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt
 eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau
 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy)
@@ -655,9 +655,10 @@ Reiter „Auskunft“ (Auskunft für Käufer und Preisrichter): Namen
 eingeben, „Suchen“ (durchsucht die Verkaufslisten und die Preisrichter
 aller Schauen des Vereins), bei Treffern „Als JSON speichern“. Anschrift
 und Kontakt eines Preisrichters ändern oder leeren Sie auf der Seite
-„Preisrichter“ der jeweiligen Schau. Von selbst löscht die Bereinigung
-Kontakt und PIN 30 Tage nach dem Abschluss der Schau, die Anschrift nach
-3 Jahren.</p>
+„Preisrichter“ der jeweiligen Schau. Die Auskunft enthält auch Sparten,
+Gruppen, Obmann und Zusage mit Zeitraum und Vorbehalt. Von selbst löscht
+die Bereinigung Kontakt, PIN, „Zugesagt für“ und Vorbehalt 30 Tage nach
+dem Abschluss der Schau, die Anschrift nach 3 Jahren.</p>
 <h3 id="speicherfristen">3.6 Speicherfristen</h3>
 <p>Der Reiter „Speicherfristen“ nennt die Fristen, die der Server
 täglich von selbst anwendet:</p>
@@ -674,7 +675,8 @@ täglich von selbst anwendet:</p>
 <td>180 Tage</td>
 </tr>
 <tr>
-<td>Geburtsdatum, IBAN, Kontaktdaten und PIN der Preisrichter</td>
+<td>Geburtsdatum, IBAN, Kontaktdaten, PIN und Vorbehalt der
+Preisrichter</td>
 <td>30 Tage nach dem Abschluss der Schau; Geburtsdatum und IBAN
 frühestens 30 Tage nach dem Ende der Reklamationsfrist</td>
 </tr>
@@ -794,14 +796,14 @@ und schalten „Perforation überspringen“ aus. Drucken Sie mit
 „Tatsächliche Größe“ bzw. 100 %, ohne Anpassen an die Seite.</p>
 <h3 id="briefvorlage">3.9 Briefvorlage</h3>
 <p>Die Briefvorlage bestimmt, wie Briefe des Vereins aussehen:
-Meldebestätigung (B-Bogen), Abrechnung je Aussteller, Quittungen und
-Serienbriefe. Sie öffnen sie unter „Druckvorlagen“ → „Briefvorlage“ oder
-in den Einstellungen einer Schau im Reiter „Druck“. Briefbogen,
-Fußzeile, Meldebestätigung und Serienbrief stehen in eigenen Reitern;
-gespeichert wird alles zusammen. Rechts steht ein Beispielbrief, der
-sich bei jeder Änderung neu aufbaut. Gespeichert wird erst mit
-„Speichern“; jede Änderung steht im Protokoll. Die Vorlage gilt für alle
-Schauen des Vereins.</p>
+Meldebestätigung (B-Bogen), Abrechnung je Aussteller, Quittungen,
+Serienbriefe und die Preisrichterverpflichtung. Sie öffnen sie unter
+„Druckvorlagen“ → „Briefvorlage“ oder in den Einstellungen einer Schau
+im Reiter „Druck“. Briefbogen, Fußzeile, Meldebestätigung und
+Serienbrief stehen in eigenen Reitern; gespeichert wird alles zusammen.
+Rechts steht ein Beispielbrief, der sich bei jeder Änderung neu aufbaut.
+Gespeichert wird erst mit „Speichern“; jede Änderung steht im Protokoll.
+Die Vorlage gilt für alle Schauen des Vereins.</p>
 <ul>
 <li><strong>Briefbogen:</strong> „Form B“ (großer Briefkopf, üblich)
 oder „Form A“ (kleiner Briefkopf) nach DIN 5008. Die Anschrift sitzt so,
@@ -1124,8 +1126,9 @@ einfügen.</li>
 <li>„Einspielen“ klicken.</li>
 </ol>
 <p>Aufbau der Datei: drei Spalten
-<strong>Sparte;Rasse;Farbenschlag</strong>. Trennzeichen Semikolon,
-Komma oder Tabulator; eine Kopfzeile ist erlaubt. <strong>Die
+<strong>Sparte;Rasse;Farbenschlag</strong>, freiwillig als vierte Spalte
+die <strong>Gruppe</strong> der Rasse (siehe 4.5). Trennzeichen
+Semikolon, Komma oder Tabulator; eine Kopfzeile ist erlaubt. <strong>Die
 Reihenfolge der Zeilen ist die Ausstellungsfolge.</strong> Nach dem
 Einspielen meldet die Software, wie viele Farbenschläge übernommen und
 wie viele Zeilen übersprungen wurden.</p>
@@ -1181,13 +1184,15 @@ Verzeichnis-Version (zugeordnet über den Namen der Rasse).</p>
 <li>„Rassen und Farbenschläge“ → beim Verzeichnis „Bilder“.</li>
 <li>Oben nach Sparte oder Name filtern und den Stand wählen („Alle“,
 „mit Bild“, „ohne Bild“, „ungeprüft“, je mit Anzahl).</li>
-<li>„Bild hochladen“ bzw. „Ersetzen“ wählt ein Foto (JPEG oder PNG). Die
-Software verkleinert es auf Druckgröße, dreht hochkant aufgenommene
-Fotos richtig und speichert es als JPEG. Nach dem Hochladen öffnet sich
-gleich „Angaben“, denn die Angaben eines ersetzten Bilds gelten für das
-neue Foto nicht mehr. Erst mit „Speichern“ (Haken „geprüft“ ist gesetzt)
-kommt das Bild in den Katalog; schließen Sie den Dialog ohne Speichern,
-bleibt es „ungeprüft“.</li>
+<li>„Bild hochladen“ bzw. „Ersetzen“ wählt ein Foto (JPEG oder PNG); Sie
+können es auch aus dem Dateimanager auf die Bildfläche der Rasse ziehen;
+hat die Rasse schon ein Bild, fragt die Software vorher, ob es ersetzt
+werden soll. Die Software verkleinert es auf Druckgröße, dreht hochkant
+aufgenommene Fotos richtig und speichert es als JPEG. Nach dem Hochladen
+öffnet sich gleich „Angaben“, denn die Angaben eines ersetzten Bilds
+gelten für das neue Foto nicht mehr. Erst mit „Speichern“ (Haken
+„geprüft“ ist gesetzt) kommt das Bild in den Katalog; schließen Sie den
+Dialog ohne Speichern, bleibt es „ungeprüft“.</li>
 <li>„Angaben“: Urheber, Lizenz, Lizenz-Adresse und Quelle für den
 Bildnachweis. Bei fremden Fotos sind sie Pflicht (z. B. „Max Muster“,
 „CC BY-SA 4.0“,
@@ -1223,6 +1228,27 @@ oder löschen Sie es.</p>
 fehlt dort einfach; der Katalog entsteht trotzdem. Das gilt auch für
 Logo, Titelbild und Anzeigen; beschädigte PNG-Dateien nimmt schon das
 Hochladen nicht an.</p>
+<h3 id="rassen-gruppen">4.5 Gruppen der Rassen</h3>
+<p>Jede Rasse gehört zu einer Gruppe des Verzeichnisses (Buchstaben A–M,
+Z1–Z3, BV o. ä.). Preisrichter sind oft nur für bestimmte Gruppen
+zugelassen; die Einteilung prüft das (siehe 5.7 und 5.8).</p>
+<ul>
+<li><strong>Beim Einspielen:</strong> vierte Spalte „Gruppe“, z. B.
+<code>Sparte;Rasse;Farbenschlag;Gruppe</code>. Mit dieser Kopfzeile gilt
+jeder kurze Text; ohne Kopfzeile nur eine Angabe wie A, Z1 oder BV,
+klein geschrieben nur mit Ziffer oder als einzelner Buchstabe („z 1“,
+„a“; sonst meldet die Software ein Trennzeichen im Feld). Die Gruppe
+gilt für die ganze Rasse; steht bei derselben Rasse eine andere, gilt
+die erste und die Zeile wird gemeldet.</li>
+<li><strong>Von Hand:</strong> bei der eigenen Version „Gruppen“
+klicken, je Rasse die Gruppe eintragen (leer = keine), „Gruppen
+speichern“. Jede Änderung steht im Protokoll.</li>
+</ul>
+<p>Groß- und Kleinschreibung und Leerzeichen spielen keine Rolle („z 1“
+wird „Z1“). Erlaubt sind bis zu 10 Buchstaben und Ziffern. Unter
+„Ansehen“ erscheint die Spalte „Gruppe“, sobald Gruppen gepflegt sind.
+Bei einer Version „für alle Vereine bereitgestellt“ lassen sich die
+Gruppen nicht ändern.</p>
 <h2 id="eine-schau-von-anfang-bis-ende">5. Eine Schau von Anfang bis
 Ende</h2>
 <h3 id="die-phasen-im-überblick">5.1 Die Phasen im Überblick</h3>
@@ -1436,10 +1462,11 @@ Formulare einer Seite Ungespeichertes, steht für jedes ein eigener Knopf
 da (z. B. „Einstellungen speichern“ und „Gebühren speichern“). Wer die
 Seite mit Ungespeichertem verlässt, wird vorher gefragt.
 <strong>Ausnahme Hallenplan:</strong> Der Editor speichert jede Änderung
-sofort; dort steht oben rechts „Gespeichert“, „Wird gespeichert …“ oder
-in Rot „Nicht gespeichert“ (dann steht unten rechts der Grund, und der
-Plan zeigt wieder den gespeicherten Stand). Der Knopf „Speichern“ im
-Seitenkopf prüft das nur nach (siehe „Verschieben und drehen“).</p>
+sofort; dort steht oben rechts „Gespeichert“, „Wird gespeichert …“,
+„Keine Verbindung – wird erneut gesendet“ oder in Rot „Nicht
+gespeichert“ (dann steht unten rechts der Grund, und der Plan zeigt
+wieder den gespeicherten Stand). Der Knopf „Speichern“ im Seitenkopf
+prüft das nur nach (siehe „Verschieben und drehen“).</p>
 <h4 id="punkte-der-prüfliste">Punkte der Prüfliste</h4>
 <p>Die Prüfliste nennt jeden Punkt nur kurz. Hier steht, was
 dahintersteckt. In den Phasen „Katalog &amp; Halle“ und „Einlieferung“
@@ -3025,6 +3052,15 @@ weder durch die Planung noch durch „Fehlende Käfige einsetzen“ noch beim
 Verschieben oder Drehen von Hand („Nicht gedreht: … stünde dann auf
 „Bühne““). Im Plan und im Druck sind sie holzfarben, in 3D stehen sie
 mit ihren Beinen in der Halle.</li>
+<li><strong>Pokaltisch (Ehrenpreise)</strong> (ebenfalls unter „Tische
+und Bänke“) für die Ausstellung der Pokale und Ehrenpreise: ein Tisch,
+2,00 × 0,80 m vorgegeben; Länge und Tiefe stellen Sie rechts bei den
+Eigenschaften ein. Er ist ein Möbelstück wie Tisch und Bank – es gelten
+dieselben Regeln (steht frei, verschiebt nie einen Käfig, bleibt beim
+Neu-Setzen stehen). Im Plan und im Druck ist er holzfarben mit einem
+goldenen Pokal darauf, die Legende nennt ihn „Pokaltisch“; in 3D stehen
+einige Pokale auf der Platte, auf einem kleinen Tisch entsprechend
+kleiner.</li>
 <li><strong>Eingang / Ausgang, Freier Bereich, Volierenbereich</strong>
 (oben im Menü unter „Flächen“): Danach ziehen Sie im Plan ein Rechteck
 auf (oder klicken nur, dann in Vorgabegröße). Ein Eingang kommt an die
@@ -3056,7 +3092,20 @@ merkt sich ihre Nummer (R1, R2 …): Ändern Sie danach die Halle
 sich die Nummern verschieben – prüfen Sie dann die verschobenen Reihen.
 Alles wird sofort gespeichert und steht im Protokoll; oben rechts (in
 der Vollansicht unter dem Plan) steht „Gespeichert“, „Wird gespeichert
-…“ oder „Nicht gespeichert“. Der Knopf „Speichern“ im Seitenkopf ist
+…“ oder „Nicht gespeichert“. Ist die Verbindung zum Server weg (WLAN in
+der Halle, Server kurz nicht erreichbar), steht dort „Keine Verbindung –
+wird erneut gesendet“: Die Änderung bleibt im Plan, und die Software
+schickt sie von selbst noch einmal – erst nach 1, 2, 4 … Sekunden,
+höchstens alle 30 Sekunden, und sofort, sobald das Gerät wieder Netz
+hat. Sie können weiterarbeiten; weitere Änderungen werden der Reihe nach
+danach gespeichert – eine Verschiebung im automatisch gestellten Plan
+immer erst nach dem Festschreiben. Antwortet der Server zwar, aber
+unlesbar (etwa beim Neustart), versucht es die Software gut eine halbe
+Minute lang und meldet dann „Nicht gespeichert“. Wer die Seite in dieser
+Zeit verlassen will, wird vorher gefragt. Kam die Änderung schon beim
+ersten Mal an und ging nur die Antwort verloren, gilt sie als
+gespeichert. Lehnt der Server die Änderung ab, kommt wie sonst „Nicht
+gespeichert“ mit dem Grund. Der Knopf „Speichern“ im Seitenkopf ist
 gesperrt, solange noch etwas gespeichert wird; danach holt er den Stand
 vom Server und meldet „Alles gespeichert …“, „Die letzte Änderung wurde
 nicht gespeichert (Grund siehe Meldung).“ oder, wenn inzwischen jemand
@@ -3446,7 +3495,12 @@ frei. Ein Entwurf ohne festen Plan (automatisch geplant, oder vor
 Version 1.17 gespeichert) wird neu gesetzt wie mit „Plan neu setzen“.
 Die Katalognummern bleiben. Der ersetzte feste Plan steht vollständig im
 Protokoll; wer den aktuellen Plan behalten will, speichert ihn trotzdem
-besser vorher als Entwurf.</li>
+besser vorher als Entwurf. Ist der Katalog schon gedruckt oder sind
+schon Tiere eingeliefert, fragt die Software noch einmal nach: Sitzt ein
+eingeliefertes Tier nach dem Entwurf woanders, muss es in der Halle
+umgesetzt werden; nach dem Druck stimmen Käfigplätze und Karten erst
+wieder nach „Käfigplätze nach Plan“. Dieselbe Rückfrage kommt bei
+„Diesen nehmen“.</li>
 <li><strong>Diesen nehmen:</strong> Der Verein hat entschieden – der
 Entwurf wird geladen und gilt. Alle übrigen Entwürfe der Schau gehen ins
 <strong>Archiv</strong>. „Aktuellen Plan nehmen – Entwürfe ins Archiv“
@@ -3545,14 +3599,14 @@ weißen Planen, auf denen das Logo eines Sponsors wiederkehrt. Vorgabe
 ist Weiß; die Farbe können Sie ändern oder die Verkleidung ausschalten.
 Unter „Logo bzw. Banner der Verkleidung“ laden Sie das Logo hoch, das
 Sie vom Sponsor bekommen (z. B. vom Futtermittelhersteller, etwa
-Mifuma), als PNG oder JPEG bis 2 MB; ein PNG mit durchsichtigem
-Hintergrund liegt sauber auf der weißen Plane. In 3D kehrt das Logo an
-der Gangseite jeder Reihe etwa alle 1,25 m wieder, mittig und
-unverzerrt; ein breites Banner (mehr als dreimal so breit wie hoch)
-läuft in Bahnhöhe durch. Die Stirnseiten bleiben weiß, Rücken und Wand
-frei. Verwenden Sie nur Logos, die Sie nutzen dürfen. Das Logo gehört
-nicht zum Katalog; bei einer neuen Schau aus einer Vorlage kommt es
-mit.</p>
+Mifuma), als PNG oder JPEG bis 2 MB (auch auf die Zeile gezogen); ein
+PNG mit durchsichtigem Hintergrund liegt sauber auf der weißen Plane. In
+3D kehrt das Logo an der Gangseite jeder Reihe etwa alle 1,25 m wieder,
+mittig und unverzerrt; ein breites Banner (mehr als dreimal so breit wie
+hoch) läuft in Bahnhöhe durch. Die Stirnseiten bleiben weiß, Rücken und
+Wand frei. Verwenden Sie nur Logos, die Sie nutzen dürfen. Das Logo
+gehört nicht zum Katalog; bei einer neuen Schau aus einer Vorlage kommt
+es mit.</p>
 <p>Die 3D-Ansicht braucht einen Browser mit WebGL (alle aktuellen
 Browser und Tablets). Sie wird erst geladen, wenn Sie sie öffnen, und
 ist nicht Teil der Offline-Daten der Preisrichter-Tablets.</p>
@@ -3589,13 +3643,14 @@ unten). Abschnitt „Impressum“: „Druck (Impressum)“</td>
 </tr>
 <tr>
 <td>„Titelseite“</td>
-<td>„Vereinslogo“ und „Titelbild“ (JPEG oder PNG; große Bilder rechnet
-die Software vor dem Hochladen herunter, das Logo darf höchstens 600 KB
-groß sein, weil es auf jedem Beleg steht; darunter der Bildnachweis,
-siehe unten), „Gestaltung der Titelseite“ mit „Hintergrund“ und
-„Titelfoto“ (siehe unten), „Unterzeile auf dem Titel“, „Schirmherr /
-Schirmherrin“, „Eintritt“, „Ausstellungsleitung und Helfer“ (eine Zeile
-je Aufgabe)</td>
+<td>„Vereinslogo“ und „Titelbild“ (JPEG oder PNG, über „Bild wählen“
+oder aus dem Dateimanager auf das Feld gezogen; große Bilder rechnet die
+Software vor dem Hochladen herunter, das Logo darf höchstens 600 KB groß
+sein, weil es auf jedem Beleg steht; darunter der Bildnachweis, siehe
+unten), „Gestaltung der Titelseite“ mit „Hintergrund“ und „Titelfoto“
+(siehe unten), „Unterzeile auf dem Titel“, „Schirmherr / Schirmherrin“,
+„Eintritt“, „Ausstellungsleitung und Helfer“ (eine Zeile je
+Aufgabe)</td>
 </tr>
 <tr>
 <td>„Teile und Reihenfolge“</td>
@@ -3651,7 +3706,10 @@ Sie einen neuen Beitrag an, mit „Bearbeiten“ und „Löschen“ ändern Sie
 ihn. Die Reihenfolge ändern Sie, indem Sie einen Beitrag am Griff ⠿
 ziehen (mit Maus oder Finger), oder mit ↑ und ↓. Für Bilder und Texte
 einer Anzeige ist der Inserent verantwortlich – das steht so im
-Bildnachweis.</li>
+Bildnachweis. Das Bild eines Beitrags wählen Sie mit „Bild wählen“ oder
+ziehen es aus dem Dateimanager auf das Feld „Bild“ (es wird beim Ziehen
+umrandet); eine Datei, die daneben auf die Seite fällt, bleibt ohne
+Wirkung – die Seite wird nicht verlassen.</li>
 <li><strong>Tierteil:</strong> Darunter stehen „Rassebilder drucken“ und
 „Jede Sparte auf neuer Seite“ (siehe unten).</li>
 </ul>
@@ -3864,7 +3922,10 @@ Note „vorzüglich“ (und u.M.). Den Haken dürfen mehrere haben – bei
 großen Schauen zwei Obmänner, die sich gegenseitig bestätigen.</li>
 <li>Unter „Bewertet diese Sparten“ ankreuzen, was er bewertet – z. B.
 nur „Tauben“ oder „Hühner“ und „Zwerghühner“. Kein Haken heißt: alle
-Sparten. In der Liste steht darunter „bewertet: …“.</li>
+Sparten. In der Liste steht darunter „bewertet: …“. Unter „Zugelassen
+für Gruppen“ tragen Sie zusätzlich die Gruppen ein, für die er
+zugelassen ist, z. B. „A, C, Z1“ (leer = keine Einschränkung über
+Gruppen; siehe unten).</li>
 <li>„Anschrift im gedruckten Katalog nennen“ nur ankreuzen, wenn der
 Preisrichter einverstanden ist. Sonst stehen im Katalog Name, Obmann und
 Nummern; im Internet steht die Anschrift nie. Bei Preisrichtern, die
@@ -3885,6 +3946,49 @@ Prüfliste weist darauf hin.</p>
 </blockquote>
 <p>Ändern: „Bearbeiten“ oder ein Klick auf den Namen. Einen
 Preisrichter, der schon bewertet hat, können Sie nicht mehr löschen.</p>
+<h4 id="preisrichter-gruppen-zusage">Gruppen, Obmann und Zusage</h4>
+<ul>
+<li><strong>Zugelassen für Gruppen:</strong> Hat ein Preisrichter
+Gruppen eingetragen, bekommt er nur Rassen dieser Gruppen – genau wie
+bei den Sparten. Unter dem Feld stehen die Gruppen, die im Verzeichnis
+der Schau vorkommen (siehe 4.5). Rassen ohne Gruppe im Verzeichnis prüft
+die Software nicht über Gruppen. In der Liste steht „Gruppen: …“.</li>
+<li><strong>Obmann für diesen Preisrichter:</strong> Hier wählen Sie,
+welchem Obmann der Preisrichter zugeordnet ist (nur Preisrichter
+derselben Schau mit dem Haken „Obmann“, nicht er selbst). In der Liste
+steht „Obmann: …“. Nimmt man einem Obmann den Haken oder löscht ihn,
+verlieren die ihm zugeordneten Preisrichter die Zuordnung. Wer die Note
+„vorzüglich“ bestätigt, ändert sich dadurch nicht.</li>
+<li><strong>Zusage:</strong> „offen“ (Vorgabe), „zugesagt“ oder
+„abgesagt“, dazu „Zugesagt für“ (z. B. „2027 und 2028“) und ein
+„Vorbehalt“ (z. B. „klären wir, wenn der Termin bekannt ist“). In der
+Liste steht der Stand als Marke neben dem Namen, darunter
+Zusage-Zeitraum und Vorbehalt.</li>
+</ul>
+<p>Jede Änderung an einem Preisrichter steht im Protokoll, auch das
+Löschen; Anschrift, Telefon, E-Mail und Vorbehalt nur als „geändert“
+ohne die Werte. Legen Sie eine Schau mit einer Vorlage an, kommen
+Gruppen, „Zugesagt für“ und die Zuordnung zum Obmann mit; die Zusage
+steht dort wieder auf „offen“, ohne Vorbehalt – fragen Sie für die neue
+Schau neu an.</p>
+<h4 id="preisrichter-verpflichtung">Preisrichterverpflichtung</h4>
+<p>Mit der Preisrichterverpflichtung bitten Sie einen Preisrichter
+schriftlich, bei Ihrer Schau zu bewerten. „Verpflichtungen (PDF)“ oben
+auf der Seite „Preisrichter“ druckt den Brief für alle Preisrichter der
+Schau (nach Namen, jeder ab neuer Seite), „Verpflichtung“ in der Zeile
+eines Preisrichters nur seinen.</p>
+<p>Der Brief folgt Ihrer Briefvorlage (Briefkopf, Anschrift im Fenster,
+Fußzeile, Gruß wie im Serienbrief; siehe 3.9). Er nennt Schau, Ort und
+Bewertungstag aus den Einstellungen der Schau – tragen Sie den
+Bewertungstag vorher ein. Die Anschrift kommt aus dem Feld „Anschrift“
+des Preisrichters.</p>
+<p>Unten steht ein Abschnitt zum Abtrennen (gestrichelte Linie, „hier
+abtrennen“). Der Preisrichter kreuzt „Ich sage zu“ oder „Ich sage ab“
+an, dazu die Gruppen, die er bewerten möchte, trägt einen Vorbehalt ein
+und unterschreibt. Zum Ankreuzen stehen die Gruppen, die im Verzeichnis
+der Schau vorkommen (siehe 4.5); sind dort keine gepflegt, die Gruppen A
+bis M und Z1 bis Z3. Kommt der Abschnitt zurück, tragen Sie Zusage,
+Gruppen und Vorbehalt beim Preisrichter ein (siehe oben).</p>
 <h3 id="einteilung-und-pins">5.8 Einteilung und PINs</h3>
 <h4 id="einteilung-nach-rassen-vor-den-katalognummern">Einteilung nach
 Rassen (vor den Katalognummern)</h4>
@@ -3899,19 +4003,21 @@ bei Nachmeldungen.</p>
 (offene und bestätigte Meldungen) nach Sparten in Ausstellungsfolge, mit
 der Zahl der Tiere.</li>
 <li>Je Rasse einen Preisrichter wählen. Zur Auswahl stehen nur
-Preisrichter, die diese Sparte bewerten. Eine große Rasse teilen Sie mit
+Preisrichter, die diese Sparte und – wenn sie Gruppen eingetragen haben
+– die Gruppe der Rasse bewerten. Eine große Rasse teilen Sie mit
 „Farbenschläge“: Je Farbenschlag lässt sich ein anderer Preisrichter
 wählen, „wie die Rasse“ übernimmt den der Rasse.</li>
 <li>Oder „Gleichmäßig verteilen“: Die Software schlägt eine Einteilung
-vor. Sie trennt möglichst keine Rasse, beachtet die Sparten der
+vor. Sie trennt möglichst keine Rasse, beachtet Sparten und Gruppen der
 Preisrichter, lässt eine Sparte möglichst bei einem und teilt eine Rasse
 nur, wenn es nicht anders geht (dann je Farbenschlag). Ein Obmann
 bekommt weniger Tiere: Verteilt wird im Verhältnis der Höchstzahlen aus
 den Einstellungen (Vorgabe 60 je Obmann zu 80 je Preisrichter). Bewertet
-niemand eine Sparte, steht „Kein Preisrichter für: …“ da; diese Tiere
-bleiben ohne Preisrichter. Ergänzen Sie dann bei einem Preisrichter die
-Sparte (siehe 5.7) oder legen Sie einen weiteren an. Derselbe Hinweis
-erscheint bei der Einteilung nach Nummern.</li>
+niemand eine Sparte, steht „Kein Preisrichter für: …“ da (bei einer
+fehlenden Gruppe „Gruppe …“); diese Tiere bleiben ohne Preisrichter.
+Ergänzen Sie dann bei einem Preisrichter die Sparte bzw. Gruppe (siehe
+5.7) oder legen Sie einen weiteren an. Derselbe Hinweis erscheint bei
+der Einteilung nach Nummern.</li>
 <li>Über der Tabelle steht, wie viele Tiere jeder Preisrichter hätte und
 wie viele noch ohne Preisrichter sind. Hat ein Preisrichter mehr Tiere
 als die Höchstzahl aus den Einstellungen (Stamm zählt 2, Voliere und
@@ -3933,17 +4039,29 @@ ist, fragt die Software nach: Die Einteilung nach Rassen gilt danach
 nicht mehr, und die Bereiche folgen neuen Nummern nicht mehr von
 selbst.</p>
 <p>Bereiche dürfen sich nicht überschneiden. Gerät ein Bereich an einen
-Preisrichter, der eine der Sparten darin nicht bewertet, lehnt die
-Software das Speichern ab und nennt Preisrichter, Sparte und Nummern.
-Oben steht, wie viele Tiere „ohne Preisrichter“ sind – das muss vor der
-Bewertung 0 sein. Die Tabelle der Preisrichter zeigt je Person
-„Bereich“, „Tiere“ und „bewertet“.</p>
+Preisrichter, der eine der Sparten oder Gruppen darin nicht bewertet,
+lehnt die Software das Speichern ab und nennt Preisrichter, Sparte bzw.
+Gruppe und Nummern. Oben steht, wie viele Tiere „ohne Preisrichter“ sind
+– das muss vor der Bewertung 0 sein. Die Tabelle der Preisrichter zeigt
+je Person „Bereich“, „Tiere“ und „bewertet“.</p>
 <p>Wechseln schon bewertete Tiere den Preisrichter, fragt die Software
 nach: Kontingent und Preise dieser Tiere gehen auf den neuen
 Preisrichter über.</p>
 <p>Je Preisrichter gibt es die Links „Liste“ (Bewertungsliste als PDF),
-„Karten“ (seine Bewertungskarten) und „Preise“ (seine Preisverteilung
-als PDF, siehe „Preise vergeben“).</p>
+„Karten“ (seine Bewertungskarten), „Verpflichtung“ (siehe 5.7) und
+„Preise“ (seine Preisverteilung als PDF, siehe „Preise vergeben“).</p>
+<p><strong>Bewertungsliste:</strong> Zum Mitnehmen in die Käfigreihe,
+wie die bisherige Papierliste. Je A4-Seite stehen zwei Listen
+nebeneinander; die Nummern laufen links herunter, dann rechts, dann auf
+der nächsten Seite weiter. Über den Tieren steht ein Zwischenkopf je
+Rasse und darunter je Farbenschlag; läuft eine Rasse in die nächste
+Spalte weiter, steht ihr Name dort noch einmal mit „(Forts.)“. Je Tier
+gibt es Katalognummer und Klasse, dazu leere Kästchen für Note, Punkte
+und Preis zum Eintragen; „fehlt“ steht bei als fehlend gemeldeten
+Tieren. Im Kopf stehen Bewertungstag, Obmann (der zugeordnete Obmann,
+siehe 5.7; sonst leer zum Eintragen), Nummernbereich und Zahl der Tiere,
+unten die Seitenzahl. Ausstellernamen stehen nicht darauf. Maßgeblich
+bleibt die Bewertungskarte bzw. das Tablet.</p>
 <h4 id="pin-und-tablet-link">PIN und Tablet-Link</h4>
 <p>Preisrichter melden sich am Tablet mit ihrem Namen und einer
 <strong>8-stelligen PIN</strong> an.</p>
@@ -4146,8 +4264,12 @@ neuer Seite, ohne Ausstellernamen. Je Preisart aus dem Standgeld (auch
 Bänder und Sachpreise) stehen so viele Zeilen darauf, wie sein
 Kontingent erlaubt: vergebene mit Katalognummer und Wert, die übrigen
 leer zum Eintragen in der Halle. Gestiftete Preise erscheinen nur, wenn
-sie an seine Tiere vergeben sind, mit dem Stifter unter „Bemerkung“.
-Unten stehen der Gesamtwert und, wie viel davon vergeben ist. Ist das
+sie an seine Tiere vergeben sind, mit dem Stifter unter „Bemerkung“ –
+hat die gestiftete Preisart „Zusätzlich je Preisrichter“, stehen davon
+auf jedem Blatt so viele Zeilen für Preise ohne bestimmte Stiftung
+(vergebene und leere), wie dort eingetragen ist; Preise aus einer
+Stiftung stehen zusätzlich darin und belegen keine dieser Zeilen. Unten
+stehen der Gesamtwert und, wie viel davon vergeben ist. Ist das
 Kontingent für die ganze Schau eingestellt, zeigt das Blatt nur die
 vergebenen Preise. Preise an Tieren, die als fehlend gemeldet sind,
 tragen „Tier fehlt“. Wurde mehr vergeben, als das Kontingent heute
@@ -4766,8 +4888,8 @@ greifen die Speicherfristen.</p>
 Datenschutz-Fristen und Auskunft nach der Schau</h3>
 <ul>
 <li>30 Tage nach dem Abschluss löscht die Bereinigung IBAN, Geburtsdatum
-sowie Kontaktdaten und PIN der Preisrichter (siehe 3.6). IBAN und
-Geburtsdatum bleiben aber mindestens bis 30 Tage nach dem Ende der
+sowie Kontaktdaten, PIN und Vorbehalt der Preisrichter (siehe 3.6). IBAN
+und Geburtsdatum bleiben aber mindestens bis 30 Tage nach dem Ende der
 Reklamationsfrist – eine berechtigte Reklamation braucht noch die
 Bankverbindung.</li>
 <li>12 Monate nach der Schau sind Ergebnisse und Online-Katalog nicht
