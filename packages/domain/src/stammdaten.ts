@@ -55,8 +55,16 @@ function erkenneTrennzeichen(line: string): string {
   return TRENNZEICHEN.find((sep) => anzahl(sep) >= 2) ?? TRENNZEICHEN.find((sep) => anzahl(sep) >= 1) ?? ";";
 }
 
-/** Vierte Spalte ohne Kopfzeile: nur, wenn sie wie eine Gruppe aussieht (A, Z1, BV) – sonst ist es eher ein Trennzeichen im Feld. */
-const SIEHT_AUS_WIE_GRUPPE = /^[A-Z][A-Z0-9]{0,3}$/;
+/**
+ * Vierte Spalte ohne Kopfzeile: nur, wenn sie wie eine Gruppe aussieht (A, Z1, BV; Leerzeichen egal) – sonst ist es eher
+ * ein Trennzeichen im Feld. Klein geschrieben nur mit Ziffer oder als einzelner Buchstabe („z 1“, „a“): ein kleines Wort
+ * wie „rot“ ist eher der Rest eines Farbenschlags.
+ */
+function siehtAusWieGruppe(roh: string): boolean {
+  const g = bdrgGruppe(roh);
+  if (!/^[A-Z][A-Z0-9]{0,3}$/.test(g)) return false;
+  return g === roh.replace(/\s+/g, "") || /\d/.test(g) || g.length === 1;
+}
 
 /**
  * Liest eine CSV mit den Spalten Sparte;Rasse;Farbenschlag, freiwillig dazu Gruppe (BDRG-Gruppe der Rasse).
@@ -93,7 +101,7 @@ export function parseStammdatenCsv(text: string): { baum: StammdatenBaum; fehler
     }
     // Leere Spalten am Ende (z. B. aus Excel) sind harmlos, Inhalt dort deutet auf ein Trennzeichen im Feld.
     // Ohne Kopfzeile „Gruppe“ zählt eine vierte Spalte nur, wenn sie wie eine Gruppe aussieht.
-    const zuViel = teile.slice(4).some((t) => t !== "") || (!mitGruppe && gruppeRoh !== "" && !SIEHT_AUS_WIE_GRUPPE.test(gruppeRoh));
+    const zuViel = teile.slice(4).some((t) => t !== "") || (!mitGruppe && gruppeRoh !== "" && !siehtAusWieGruppe(gruppeRoh));
     if (zuViel) {
       fehler.push(
         mitGruppe

@@ -17,6 +17,16 @@ describe("Stammdaten-CSV mit Gruppe (vierte Spalte, freiwillig)", () => {
     expect(fehler[0]).toContain("mehr als drei Spalten");
   });
 
+  test("ohne Kopfzeile: klein oder mit Leerzeichen geschrieben, wenn eine Ziffer darin ist oder nur ein Buchstabe", () => {
+    const { baum, fehler } = parseStammdatenCsv("Hühner;Testhuhn;weiß;x1\nHühner;Probehuhn;rot;x 2\nHühner;Freihuhn;blau;y\nHühner;Leerhuhn;gelb;Q 1");
+    expect(fehler).toEqual([]);
+    expect(baum.sparten[0]!.rassen.map((r) => r.gruppe)).toEqual(["X1", "X2", "Y", "Q1"]);
+    // Ein kleines Wort ohne Ziffer ist eher ein Farbenschlag mit Trennzeichen: weiter gemeldet.
+    const wort = parseStammdatenCsv("Hühner,Testhuhn,blau,rot\nHühner,Testhuhn,blau, gelb gesäumt");
+    expect(wort.fehler).toHaveLength(2);
+    expect(wort.fehler.every((f) => f.includes("mehr als drei Spalten"))).toBe(true);
+  });
+
   test("ungültige Gruppe, abweichende Gruppe derselben Rasse und eine fünfte Spalte werden gemeldet", () => {
     const { baum, fehler } = parseStammdatenCsv("Sparte;Rasse;Farbenschlag;Gruppe\nHühner;Testhuhn;weiß;X1\nHühner;Testhuhn;rot;Y\nHühner;Testhuhn;gelb;viel zu lange Gruppe\nHühner;Testhuhn;blau;X1;mehr");
     expect(baum.sparten[0]!.rassen[0]!.gruppe).toBe("X1");

@@ -374,7 +374,8 @@ describe("Audit Paket f", () => {
   test("CSV: doppelte Anführungszeichen, Zusatzspalten und offene Anführung", () => {
     expect(zerlegeZeile('"x ""y"""', ";").teile).toEqual(['x "y"']);
     expect(zerlegeZeile('a;Zwerg "x";c', ";").teile).toEqual(["a", 'Zwerg "x"', "c"]);
-    const r = parseStammdatenCsv('a;b;c;d\nHühner;Brahma;hell;;\nHühner;Brahma;"gelb');
+    // Vierte Spalte ohne Kopfzeile: ein kleines Wort ist keine Gruppe (ein einzelner Buchstabe wäre eine).
+    const r = parseStammdatenCsv('a;b;c;mehr\nHühner;Brahma;hell;;\nHühner;Brahma;"gelb');
     expect(r.fehler).toHaveLength(2);
     expect(r.fehler[0]).toContain("mehr als drei Spalten");
     expect(r.fehler[1]).toContain("nicht geschlossen");
