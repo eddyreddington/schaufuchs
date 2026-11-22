@@ -1,6 +1,6 @@
 /** Aussehen der Halle in 3D: Vorgaben, Bereinigung, nie Einfluss auf Plan und Nummern, Wandhöhe in der Szene, Decke. */
 import { describe, expect, test } from "bun:test";
-import { AUSSEHEN_STANDARD, aussehenBereinigt, aussehenVon, DECKE_VORSCHLAG, deckeSchalten, istPrallwandFarbe, PRALLWAND_VORGABEN } from "./hallenplan-aussehen";
+import { AUSSEHEN_STANDARD, aussehenBereinigt, aussehenVon, DECKE_VORSCHLAG, deckeSchalten, wandHoeheSetzen, istPrallwandFarbe, PRALLWAND_VORGABEN } from "./hallenplan-aussehen";
 import { festGeometrie, festschreiben, HALLE_STANDARD, halleSchluessel, planeHalle, type Halle, type PlanTier } from "./hallenplan";
 import { hallenSzene, TUER_HOEHE, WAND_HOEHE } from "./hallenplan-3d";
 
@@ -103,6 +103,16 @@ describe("Aussehen in der 3D-Szene", () => {
 });
 
 describe("Firsthöhe und Decke", () => {
+  test("Wandhöhe ändern: ein gesetzter First zieht mit (Dachhöhe bleibt), höchstens bis 20 m; ohne First bleibt es flach", () => {
+    expect(wandHoeheSetzen({ wandHoehe: 700, firstHoehe: 900 }, 800)).toEqual({ wandHoehe: 800, firstHoehe: 1000 });
+    expect(wandHoeheSetzen({ wandHoehe: 700, firstHoehe: 900 }, 500)).toEqual({ wandHoehe: 500, firstHoehe: 700 });
+    expect(wandHoeheSetzen({ wandHoehe: 700, firstHoehe: 900 }, 1450)).toEqual({ wandHoehe: 1450, firstHoehe: 1650 });
+    expect(wandHoeheSetzen({ wandHoehe: 1400, firstHoehe: 2000 }, 1500)).toEqual({ wandHoehe: 1500, firstHoehe: 2000 });
+    expect(wandHoeheSetzen({ wandHoehe: 700, decke: true }, 900)).toEqual({ wandHoehe: 900, decke: true });
+    expect(wandHoeheSetzen(undefined, 600)).toEqual({ wandHoehe: 600 });
+    expect(wandHoeheSetzen({ wandHoehe: 600 }, 350)).toBeUndefined();
+  });
+
   test("First mindestens so hoch wie die Wand, höchstens 20 m; gespeichert nur, wenn höher als die Wand", () => {
     expect(aussehenVon({}).firstHoehe).toBe(WAND_HOEHE);
     expect(aussehenVon({ wandHoehe: 700 }).firstHoehe).toBe(700);

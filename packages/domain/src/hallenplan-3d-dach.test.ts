@@ -1,7 +1,7 @@
 /** Dach und Decke der 3D-Halle: flach oder Satteldach, Binder, Giebel, Leuchtenhöhe, Decke nur von innen. */
 import { describe, expect, test } from "bun:test";
 import { BINDER, dachVon, deckeSichtbar, deckenHoehe, deckenTeile, giebel, hoechstesInDerHalle, LEUCHTE } from "./hallenplan-3d-dach";
-import { hallenSzene, vertauscht, type HallenSzene } from "./hallenplan-3d";
+import { hallenSzene, vertauscht, wandDeckkraft, WAND_DURCHSICHTIG, type HallenSzene } from "./hallenplan-3d";
 import { zeichnungDerHalle } from "./hallenplan-druck";
 import { HALLE_STANDARD, planeHalle, type Halle, type PlanTier } from "./hallenplan";
 import { punktInUmriss } from "./hallenplan-umriss";
@@ -146,5 +146,22 @@ describe("Leuchten", () => {
     const s = szene({ ...HALLE_STANDARD, breite: 1500, laenge: 3000, flaechen: [] }, tiere);
     expect(hoechstesInDerHalle(s)).toBe(Math.max(...s.kaefige.map((k) => k.q.y + k.q.h)));
     expect(hoechstesInDerHalle({ ...s, kaefige: [], volieren: [] })).toBe(0);
+  });
+});
+
+describe("Wände beim Blick von oben", () => {
+  // Längswand x0 (innen bei x = 0), Blickziel in der Halle.
+  const wand = { x: -24, z: 0, y: 0, b: 24, t: 3000, h: 700, seite: "x0" as const };
+  const ziel = { x: 750, y: 0, z: 1500 };
+  test("Satteldach: über der örtlichen Decke (nahe der Traufe) werden die Wände durchsichtiger, unter dem First nicht", () => {
+    // 8 m: an der Wand (Decke 7,13 m) über der Decke, in der Mitte (9 m) darunter.
+    expect(wandDeckkraft(wand, sattel, { x: 50, y: 800, z: 1500 }, ziel)).toBeLessThan(1);
+    expect(wandDeckkraft(wand, sattel, { x: 750, y: 800, z: 1500 }, ziel)).toBe(1);
+    expect(wandDeckkraft(wand, sattel, { x: 750, y: 1000, z: 1500 }, ziel)).toBeLessThan(1);
+    expect(wandDeckkraft(wand, sattel, { x: 750, y: 1000, z: 1500 }, ziel)).toBeGreaterThanOrEqual(WAND_DURCHSICHTIG);
+  });
+  test("flach wie bisher: über der Wandhöhe", () => {
+    expect(wandDeckkraft(wand, flach, { x: 750, y: 590, z: 1500 }, ziel)).toBe(1);
+    expect(wandDeckkraft(wand, flach, { x: 750, y: 650, z: 1500 }, ziel)).toBeLessThan(1);
   });
 });

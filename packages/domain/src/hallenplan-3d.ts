@@ -13,6 +13,7 @@ import { zeichnungDerHalle } from "./hallenplan-druck";
 import { rundgang, type RundgangPunkt } from "./hallenplan-3d-rundgang";
 import { ohneSeite, waendeImGrundriss } from "./hallenplan-3d-waende";
 import { aussehenVon, type VollesAussehen, wirksamerFirst } from "./hallenplan-aussehen";
+import { deckenHoehe } from "./hallenplan-3d-dach";
 import { istRechteckUmriss, type Punkt, umrissNormal } from "./hallenplan-umriss";
 
 /** Aufsteller (Gestelle, auf denen die Grundplatten mit den Käfigen stehen). */
@@ -489,10 +490,10 @@ export const WAND_DURCHSICHTIG = 0.08;
 /**
  * Deckkraft einer Wand (0–1) aus Kamera und Blickziel (cm, Szene-Koordinaten): Steht die Kamera außerhalb der Halle hinter
  * der Wand (die Wand steht zwischen Kamera und Halle), wird sie fast unsichtbar – weich auf dem ersten Meter. Schaut die
- * Kamera von über dem Dach (First, sonst Wandhöhe) hinein, werden zusätzlich alle Wände durchsichtiger, je näher sie dem Blickziel ist (ab 20 m,
+ * Kamera von über der Decke an ihrer Stelle (Satteldach: zur Mitte höher) hinein, werden zusätzlich alle Wände durchsichtiger, je näher sie dem Blickziel ist (ab 20 m,
  * am stärksten unter 6 m). In Augenhöhe in der Halle („Im Gang“) bleiben die Wände stehen – sie verdecken dort nichts.
  */
-export function wandDeckkraft(w: Quader, s: Pick<HallenSzene, "breite" | "laenge" | "wandHoehe"> & { firstHoehe?: number }, kamera: { x: number; y: number; z: number }, ziel: { x: number; y: number; z: number }): number {
+export function wandDeckkraft(w: Quader, s: Pick<HallenSzene, "breite" | "laenge" | "wandHoehe"> & { firstHoehe?: number; umriss?: Punkt[] }, kamera: { x: number; y: number; z: number }, ziel: { x: number; y: number; z: number }): number {
   let deck = 1;
   for (const seite of wandSeiten(w, s)) {
     // Abstand der Kamera vor der Innenfläche dieser Wand (nach außen positiv); ohne Seitenangabe der Hallenrand.
@@ -500,7 +501,7 @@ export function wandDeckkraft(w: Quader, s: Pick<HallenSzene, "breite" | "laenge
     const aussen = seite === "x0" ? innenX0 - kamera.x : seite === "x1" ? kamera.x - innenX1 : seite === "z0" ? innenZ0 - kamera.z : kamera.z - innenZ1;
     deck = Math.min(deck, 1 - (1 - WAND_DURCHSICHTIG) * weich(-20, 100, aussen));
   }
-  if (kamera.y > (s.firstHoehe ?? s.wandHoehe)) {
+  if (kamera.y > deckenHoehe(s, kamera.x, kamera.z)) {
     const abstand = Math.hypot(kamera.x - ziel.x, kamera.y - ziel.y, kamera.z - ziel.z);
     deck *= 1 - 0.65 * (1 - weich(600, 2000, abstand));
   }

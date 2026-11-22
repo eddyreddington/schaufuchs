@@ -100,5 +100,16 @@ export function deckeSchalten(a: HallenAussehen | null | undefined, an: boolean)
   return aussehenBereinigt({ ...(a ?? {}), decke: an, ...vorschlag });
 }
 
+/**
+ * Wandhöhe ändern: War ein First über der Wand gesetzt, zieht er mit (die Dachhöhe First − Wand bleibt, höchstens bis
+ * `FIRST_HOEHE_MAX`); sonst bleibt die Decke flach. Ohne diese Regel verschwände der First still, sobald die Wand ihn erreicht.
+ */
+export function wandHoeheSetzen(a: HallenAussehen | null | undefined, cm: number): HallenAussehen | undefined {
+  const v = aussehenVon(a);
+  const { firstHoehe: _f, ...rest } = a ?? {};
+  const dach = v.firstHoehe - v.wandHoehe;
+  return aussehenBereinigt({ ...rest, wandHoehe: cm, ...(dach > 0 ? { firstHoehe: Math.min(FIRST_HOEHE_MAX, cm + dach) } : {}) });
+}
+
 /** Firsthöhe, die in 3D gilt: das Satteldach nur mit Decke und rechteckigem Grundriss, sonst flach in Wandhöhe. */
 export const wirksamerFirst = (a: VollesAussehen, rechteck: boolean): number => (a.decke && rechteck ? a.firstHoehe : a.wandHoehe);
