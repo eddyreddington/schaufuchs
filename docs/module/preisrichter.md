@@ -1,7 +1,7 @@
-# Modul Preisrichter (Zulassung, Obmann, Zusage, Einteilung)
+# Modul Preisrichter (Zulassung, Obmann, Zusage, Einteilung, Drucke)
 
 **Zweck:** Preisrichter einer Schau mit Sparten und BDRG-Gruppen, für die sie zugelassen sind, Zuordnung zu einem Obmann
-und Stand der Zusage; Einteilung nach Rassen (vor den Katalognummern) und nach Nummern, mit Vorschlag. Grundlage für
+und Stand der Zusage, Preisrichterverpflichtung und Bewertungsliste als PDF; Einteilung nach Rassen (vor den Katalognummern) und nach Nummern, mit Vorschlag. Grundlage für
 Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 
 ## Einstiegspunkte
@@ -16,6 +16,7 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
 | Server, Gruppen pflegen | `apps/server/src/routers/stammdaten.ts` | `stammdaten.gruppenSetzen` (nur eigene Version, Protokoll), `gliederung` und `baum` mit `gruppe` |
 | Server, Einträge | `apps/server/src/services/eintraege.ts` | `gruppe` je Eintrag (Rasse bzw. bei freier Bezeichnung die gewählte Rasse) |
 | Vorlage | `apps/server/src/routers/schau/anlegen.ts` | Preisrichter mit Gruppen und Zusage übernommen, Obmann-Zuordnung auf die neue Schau umgesetzt |
+| Drucke | `apps/server/src/pdf/verpflichtung.ts`, `pdf/bewertungsliste.ts`, Fachregeln `packages/domain/src/preisrichter-druck.ts` | `preisrichterVerpflichtungPdf()` (`/datei/:schauId/preisrichter-verpflichtung.pdf`, `?preisrichter=`), `preisrichterListePdf()` (`/datei/:schauId/preisrichter/:prId/liste.pdf`); `verpflichtungGruppen()`, `bewertungslisteZeilen()`, `bewertungslisteSpalten()` |
 | Web | `apps/web/src/seiten/preisrichter.tsx` (Liste, Einteilungen), `preisrichter-form.tsx` (Dialog), `stammdaten-gruppen.tsx` | Route `/schau/:schauId/preisrichter`, `/stammdaten` → „Gruppen“ |
 
 ## Regeln und Invarianten
@@ -31,12 +32,20 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
 - Zusage `offen` | `zugesagt` | `abgesagt` (Vorgabe offen), dazu „zugesagt für“ und Vorbehalt als freier Text.
 - Jede Änderung am Preisrichter mit `protokolliere()` (Tabelle `preisrichter`, alter und neuer Wert); Kontaktdaten nur als
   „geändert“ vermerkt, ohne Werte (das Protokoll lässt sich nicht löschen). Gruppen im Verzeichnis: Tabelle `stammdaten_version`.
+- Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins ([ADR 012](../entscheidungen/012-briefvorlage.md)),
+  alle Preisrichter (nach Namen, je Brief ab neuer Seite) oder einer; Abschnitt zum Abtrennen mit Name, Zusage/Absage,
+  Gruppen zum Ankreuzen (die im Verzeichnis der Schau vorkommenden, sonst A–M, Z1–Z3), Vorbehalt, Datum, Unterschrift.
+  Wer die Rückmeldung bekommt, trägt Zusage, Gruppen und Vorbehalt von Hand beim Preisrichter ein.
+- Bewertungsliste: zwei Listen nebeneinander je A4-Seite, laufend; Zwischenkopf je Rasse und Farbenschlag (läuft eine
+  Rasse in die nächste Spalte, dort als „(Forts.)“), kein Kopf allein am Spaltenende; Spalten Nr., Klasse, Note, Pkt.,
+  Preis; Obmann im Kopf (der zugeordnete, sonst leer); Seitenzählung; keine Ausstellernamen ([ADR 005](../entscheidungen/005-anonyme-bewertung.md)).
 - Keine erfundene Zuordnung Rasse → Gruppe im Repo; Tests nutzen erkennbar erfundene Gruppen (X1, X2) – [ADR 007](../entscheidungen/007-keine-bdrg-daten.md).
 
 ## Tests
 
-- Domain: `preisrichter-zulassung.test.ts`, `stammdaten-gruppe.test.ts`, `einteilung.test.ts`.
-- Server (`apps/server/src/tests`): `29-einteilung-rassen`, `30-einteilung-gegenpruefung`, `69-preisrichter-gruppen`; `src/einteilung.test.ts` (Vorschlag).
+- Domain: `preisrichter-zulassung.test.ts`, `preisrichter-druck.test.ts`, `stammdaten-gruppe.test.ts`, `einteilung.test.ts`.
+- Server (`apps/server/src/tests`): `03-tablet-halle-drucke` (Bewertungsliste nur eigene Schau), `29-einteilung-rassen`,
+  `30-einteilung-gegenpruefung`, `69-preisrichter-gruppen`, `70-preisrichter-drucke` (Verpflichtung, Bewertungsliste); `src/einteilung.test.ts` (Vorschlag).
 
 ## Datenbank
 

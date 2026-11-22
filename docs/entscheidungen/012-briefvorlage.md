@@ -24,4 +24,6 @@ schreiben können, ohne dass jede Schau neu eingerichtet werden muss.
 - Kaufbeleg und Ausgabeschein (Verkauf) bleiben ein eigenes Format ohne Briefbogen: Sie werden am Verkaufstisch
   gedruckt und müssen auf einen Blick lesbar sein.
 
-**Folgen:** Spendenquittung und Zuwendungsbestätigung (1.2.1) nutzen Briefkopf und Fußzeile dieser Vorlage.
+**Folgen:** Spendenquittung und Zuwendungsbestätigung (1.2.1) nutzen Briefkopf und Fußzeile dieser Vorlage. Die
+Preisrichterverpflichtung (`apps/server/src/pdf/verpflichtung.ts`) ist ebenfalls ein Brief nach dieser Vorlage, je
+Preisrichter ab neuer Seite; ihr Text ist fest (Schau, Ort, Bewertungstag), der Gruß kommt aus dem Serienbrief der Vorlage.

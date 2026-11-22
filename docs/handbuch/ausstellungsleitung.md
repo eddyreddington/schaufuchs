@@ -355,7 +355,7 @@ Unter „Druckvorlagen“ legen Sie fest, wie die Bewertungskarten gedruckt werd
 
 ### 3.9 Briefvorlage
 
-Die Briefvorlage bestimmt, wie Briefe des Vereins aussehen: Meldebestätigung (B-Bogen), Abrechnung je Aussteller, Quittungen und Serienbriefe. Sie öffnen sie unter „Druckvorlagen“ → „Briefvorlage“ oder in den Einstellungen einer Schau im Reiter „Druck“. Briefbogen, Fußzeile, Meldebestätigung und Serienbrief stehen in eigenen Reitern; gespeichert wird alles zusammen. Rechts steht ein Beispielbrief, der sich bei jeder Änderung neu aufbaut. Gespeichert wird erst mit „Speichern“; jede Änderung steht im Protokoll. Die Vorlage gilt für alle Schauen des Vereins.
+Die Briefvorlage bestimmt, wie Briefe des Vereins aussehen: Meldebestätigung (B-Bogen), Abrechnung je Aussteller, Quittungen, Serienbriefe und die Preisrichterverpflichtung. Sie öffnen sie unter „Druckvorlagen“ → „Briefvorlage“ oder in den Einstellungen einer Schau im Reiter „Druck“. Briefbogen, Fußzeile, Meldebestätigung und Serienbrief stehen in eigenen Reitern; gespeichert wird alles zusammen. Rechts steht ein Beispielbrief, der sich bei jeder Änderung neu aufbaut. Gespeichert wird erst mit „Speichern“; jede Änderung steht im Protokoll. Die Vorlage gilt für alle Schauen des Vereins.
 
 - **Briefbogen:** „Form B“ (großer Briefkopf, üblich) oder „Form A“ (kleiner Briefkopf) nach DIN 5008. Die Anschrift sitzt so, dass sie im Fenster eines DL- oder C6/5-Umschlags zu sehen ist. Der „Briefkopf“ hat bis zu drei Zeilen (bei Form A passen zwei), die erste fett; leer stehen dort Vereinsname und Schau. „Absender über der Anschrift“ ist die kleine Zeile im Fenster. „Logo der Schau“, „Farbig“ (aus: nur Schwarz und Grau) und „Falz- und Lochmarken“ schalten Sie ein und aus.
 - **Fußzeile:** drei Spalten, z. B. Anschrift, Bankverbindung und Vorstand. Sind alle leer, steht unten wie bisher der Vereinsname in einer Zeile.
@@ -1294,6 +1294,14 @@ Jede Änderung an Terminen und Kalendern steht im Protokoll. Ändern dürfen nur
 
 Jede Änderung an einem Preisrichter steht im Protokoll, Anschrift, Telefon und E-Mail nur als „geändert“ ohne die Werte. Legen Sie eine Schau mit einer Vorlage an, kommen Gruppen, Zusage und die Zuordnung zum Obmann mit.
 
+#### Preisrichterverpflichtung {#preisrichter-verpflichtung}
+
+Mit der Preisrichterverpflichtung bitten Sie einen Preisrichter schriftlich, bei Ihrer Schau zu bewerten. „Verpflichtungen (PDF)“ oben auf der Seite „Preisrichter“ druckt den Brief für alle Preisrichter der Schau (nach Namen, jeder ab neuer Seite), „Verpflichtung“ in der Zeile eines Preisrichters nur seinen.
+
+Der Brief folgt Ihrer Briefvorlage (Briefkopf, Anschrift im Fenster, Fußzeile, Gruß wie im Serienbrief; siehe 3.9). Er nennt Schau, Ort und Bewertungstag aus den Einstellungen der Schau – tragen Sie den Bewertungstag vorher ein. Die Anschrift kommt aus dem Feld „Anschrift“ des Preisrichters.
+
+Unten steht ein Abschnitt zum Abtrennen (gestrichelte Linie, „hier abtrennen“). Der Preisrichter kreuzt „Ich sage zu“ oder „Ich sage ab“ an, dazu die Gruppen, die er bewerten möchte, trägt einen Vorbehalt ein und unterschreibt. Zum Ankreuzen stehen die Gruppen, die im Verzeichnis der Schau vorkommen (siehe 4.5); sind dort keine gepflegt, die Gruppen A bis M und Z1 bis Z3. Kommt der Abschnitt zurück, tragen Sie Zusage, Gruppen und Vorbehalt beim Preisrichter ein (siehe oben).
+
 ### 5.8 Einteilung und PINs
 
 #### Einteilung nach Rassen (vor den Katalognummern)
@@ -1316,7 +1324,9 @@ Bereiche dürfen sich nicht überschneiden. Gerät ein Bereich an einen Preisric
 
 Wechseln schon bewertete Tiere den Preisrichter, fragt die Software nach: Kontingent und Preise dieser Tiere gehen auf den neuen Preisrichter über.
 
-Je Preisrichter gibt es die Links „Liste“ (Bewertungsliste als PDF), „Karten“ (seine Bewertungskarten) und „Preise“ (seine Preisverteilung als PDF, siehe „Preise vergeben“).
+Je Preisrichter gibt es die Links „Liste“ (Bewertungsliste als PDF), „Karten“ (seine Bewertungskarten), „Verpflichtung“ (siehe 5.7) und „Preise“ (seine Preisverteilung als PDF, siehe „Preise vergeben“).
+
+**Bewertungsliste:** Zum Mitnehmen in die Käfigreihe, wie die bisherige Papierliste. Je A4-Seite stehen zwei Listen nebeneinander; die Nummern laufen links herunter, dann rechts, dann auf der nächsten Seite weiter. Über den Tieren steht ein Zwischenkopf je Rasse und darunter je Farbenschlag; läuft eine Rasse in die nächste Spalte weiter, steht ihr Name dort noch einmal mit „(Forts.)“. Je Tier gibt es Katalognummer und Klasse, dazu leere Kästchen für Note, Punkte und Preis zum Eintragen; „fehlt“ steht bei als fehlend gemeldeten Tieren. Im Kopf stehen Bewertungstag, Obmann (der zugeordnete Obmann, siehe 5.7; sonst leer zum Eintragen), Nummernbereich und Zahl der Tiere, unten die Seitenzahl. Ausstellernamen stehen nicht darauf. Maßgeblich bleibt die Bewertungskarte bzw. das Tablet.
 
 #### PIN und Tablet-Link
 

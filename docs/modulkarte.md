@@ -645,6 +645,17 @@ Tests: `meldebogen.test.ts`
 - `stiftungsanteil()` – Anteil des nächsten gestifteten Preises: der noch nicht vergebene Rest der Stiftung, geteilt durch die freien Plätze (aufgerundet; der letzte Platz …
 - Typen: `Preisart`, `VergabePruefung`
 
+### preisrichter-druck.ts (96 Z.)
+Drucke für Preisrichter: Gruppen zum Ankreuzen in der Preisrichterverpflichtung und die Gliederung der Bewertungsliste (Zwischenköpfe je Rasse und …
+Tests: `preisrichter-druck.test.ts`
+
+- `GRUPPEN_VORGABE` – Gruppen zum Ankreuzen, wenn im Verzeichnis keine gepflegt sind: A bis M, Z1 bis Z3.
+- `verpflichtungGruppen()` – Gruppen zum Ankreuzen: die im Verzeichnis der Schau vorkommenden (einheitlich, ohne Doppelte, A … Z1 … Z10), sonst die Vorgabe.
+- `ListenZeile` (Typ) – Eine Zeile der Bewertungsliste: Zwischenkopf (Rasse, Farbenschlag; `fortsetzung` oben in einer neuen Spalte) oder ein Tier.
+- `OHNE_FARBENSCHLAG` – Text des Zwischenkopfs für ein Tier ohne Farbenschlag nach einem Farbenschlag derselben Rasse.
+- `bewertungslisteZeilen()` – Zwischenköpfe in die Tierfolge (Katalogfolge) einsetzen: ein Kopf, wo die Rasse wechselt, darunter einer, wo der Farbenschlag wechselt.
+- `bewertungslisteSpalten()` – Zeilen auf Spalten verteilen (zwei je Seite, laufend: links, rechts, nächste Seite links …).
+
 ### preisrichter-zulassung.ts (47 Z.)
 Zulassung der Preisrichter: welche Tiere ein Preisrichter bewerten darf (Sparten und BDRG-Gruppen), Zuordnung zu einem Obmann und Stand der Zusage.
 Tests: `preisrichter-zulassung.test.ts`
@@ -832,7 +843,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (115 Z.)
+### preisrichter.ts (118 Z.)
 
 - `preisrichter`
 
@@ -1025,7 +1036,7 @@ Texte der Oberfläche: preisrichter, Teil import – Import aus Altprogrammen (E
 
 - `preisrichterTermine` – Texte der Oberfläche: preisrichter, Teil termine – Katalogseite „Kommende Schauen“ (Entscheidung 022).
 
-### preisrichter.ts (113 Z.)
+### preisrichter.ts (116 Z.)
 Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mit Einteilung, dazu die Seiten „Kommende Schauen“ (`termine`) und Impor …
 
 - `preisrichter`
@@ -1221,7 +1232,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (112 Z.)
+### preisrichter.ts (115 Z.)
 
 - `preisrichter`
 
@@ -1406,7 +1417,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (112 Z.)
+### preisrichter.ts (115 Z.)
 
 - `preisrichter`
 
@@ -1595,7 +1606,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (112 Z.)
+### preisrichter.ts (115 Z.)
 
 - `preisrichter`
 
@@ -1781,7 +1792,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `preisrichterTermine`
 
-### preisrichter.ts (116 Z.)
+### preisrichter.ts (119 Z.)
 
 - `preisrichter`
 
@@ -2688,7 +2699,7 @@ Prozeduren: auth.status, preise.entfernen, preise.freigeben, preise.stiftungBarE
 Dialog „Preisrichter hinzufügen“ bzw. „Preisrichter bearbeiten“: Angaben, Sparten, BDRG-Gruppen, Obmann und Zusage.
 Prozeduren: preisrichter.speichern, stammdaten.gliederung
 
-### preisrichter.tsx (533 Z.) – `/schau/:schauId/preisrichter`
+### preisrichter.tsx (543 Z.) – `/schau/:schauId/preisrichter`
 Prozeduren: preisrichter.einteilungSetzen, preisrichter.einteilungVorschlagen, preisrichter.liste, preisrichter.loeschen, preisrichter.pinErzeugen, preisrichter.sperreAufheben, preisrichter.zuteilung, preisrichter.zuteilungSetzen, preisrichter.zuteilungVorschlagen, schau.get
 
 ### protokoll.tsx (138 Z.) – `/schau/:schauId/protokoll`
@@ -2812,11 +2823,12 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `auskunft.ts` (296 Z.) · auskunftPdf
 - `basis.ts` (425 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, teilSeite, seitenzahlen, tabelle, textImFeld, angaben, hinweisKastenHoehe, hinweisKasten, unterschrift, ueberschrift, datumDe
 - `bewertungskarte.ts` (325 Z.) – Bewertungskarten nach der Druckvorlage der Schau (Format, Bausteine oder Vordruck-Felder, Versatz) – dazu die Vorschau für den Designer und der Pro … · ladeKartenVorlage, kartenKopf, bewertungskartenPdf, BEISPIEL_KARTEN, zeichneKartenPdf, probedruckPdf
+- `bewertungsliste.ts` (142 Z.) – Bewertungsliste je Preisrichter (zum Mitnehmen in die Käfigreihe) wie die Papiervorlage: zwei Listen nebeneinander je A4-Seite, laufend; Zwischenkö … · preisrichterListePdf
 - `brief.ts` (136 Z.) – Briefe nach der Briefvorlage des Vereins (DIN 5008, Form A oder B): Briefkopf, Rücksendeangabe, Anschrift, Informationsblock, Falzmarken und Fußzeile. · BRIEF_RAENDER, ladeBriefVorlage, briefDesign, briefKopf, belegKopf, briefFuss, serienbriefPdf
 - `dokumente-amt.ts` (245 Z.) – Listen für das Veterinäramt: abgegebene Tiere (Verkaufsliste) und Aussteller- und Tierliste. · verkaufslistePdf, tierlistePdf
 - `dokumente-gemeinsam.ts` (35 Z.) – Gemeinsame Hilfen der Dokumente einer Schau (dokumente.ts, dokumente-kasse.ts, dokumente-amt.ts): Design aus der Katalog-Gestaltung, Vereinsname, K … · nr, klasse, tier, A4_RAENDER, ladeDesign, verein, kopfzeile, fusstext, breite, unten
 - `dokumente-kasse.ts` (344 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
-- `dokumente.ts` (553 Z.) · bewertungskartenPdf, preisrichterListePdf, ausstellerUnterlagenPdf, abrechnungPdf
+- `dokumente.ts` (500 Z.) · bewertungskartenPdf, ausstellerUnterlagenPdf, abrechnungPdf
 - `girocode.ts` (38 Z.) – GiroCode im PDF (Entscheidung 021): QR-Code als Vektorgrafik (scharf in jedem Druck), daneben Bankverbindung und Verwendungszweck. · GIROCODE_GROESSE, qrZeichnen, giroCodeBlock
 - `hallenplan.ts` (443 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 – der Plan füllt es (Querformat, wenn die Zeichnung breiter als hoch ist), darüber ein knapper Kopf (Sch … · hallenplanPdf, aufbaulistePdf
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
@@ -2831,6 +2843,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
 - `preisverteilung.ts` (113 Z.) – Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und leeren Zeilen zum Eintragen in der … · preisverteilungPdf
 - `spenden.ts` (257 Z.) – Spenden: Zuwendungsbestätigung nach amtlichem Muster (Geld, Sache, Sammelbestätigung mit Anlage) und die einfache Spendenquittung für die Kasse. · zuwendungsbestaetigungPdf, spendenquittungPdf
+- `verpflichtung.ts` (143 Z.) – Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins (Briefkopf, Anschrift im Fenster, Fußzeile wie der B-Bogen) mit der Bitte um Bew … · preisrichterVerpflichtungPdf
 
 ### Datenbank `apps/server/src/db`
 
@@ -2870,7 +2883,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datei-oeffentlich.ts` (141 Z.) – Öffentliche Dateien ohne Anmeldung, jeweils mit Bremse je Adresse: GET /o/:id/schauen.ics – eigene Schauen des Vereins als Kalender (iCal) GET /s/: … · katalogVerzeichnis, oeffentlicheDateien
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
 - `datei-sprache.ts` (37 Z.) – Fehlertexte der Datei-Adressen (/datei/…, /s/…, /o/…) in der Sprache der Oberfläche (Entscheidung 022). · DATEI_PFADE, dateiFehlerUebersetzen
-- `datei-unterlagen.ts` (149 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, Preisverteilung, B-Bogen und A-Bogen … · unterlagenDateien
+- `datei-unterlagen.ts` (163 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, Preisverteilung, Preisrichterverpflic … · unterlagenDateien
 - `einrichten.ts` (68 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026), im Container aufgerufen von `schaufuchs einrichten`: bun src/einrichten.ts --verein "GZV …
 - `index.ts` (278 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
 - `lesemodus.ts` (48 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an, z. B. während einer Wartung oder wenn der Betreiber eine Instal … · IM_LESEMODUS_ERLAUBT, trpcGesperrt, lesemodusSperre
@@ -2990,5 +3003,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `67-pokaltisch.ts` (38 Z.) – Hallenplan: Pokaltisch (Tisch für die Ehrenpreise) als eingesetztes Möbel – gespeichert mit Maßen, kein Käfigplatz, bleibt beim Neu-Setzen, im gedr …
 - `68-kleinkram.ts` (161 Z.) – Kleinere Ergänzungen: Rückfrage beim Laden und Entscheiden eines Hallenplan-Entwurfs, wenn der Katalog gedruckt ist oder schon Tiere eingeliefert s …
 - `69-preisrichter-gruppen.ts` (151 Z.) – Preisrichter, Stufe 1: BDRG-Gruppen je Rasse (Verzeichnis, CSV) und je Preisrichter mit Prüfung in der Einteilung, Zuordnung zu einem Obmann, Stand …
+- `70-preisrichter-drucke.ts` (132 Z.) – Preisrichter, Stufe 2: Preisrichterverpflichtung als Brief mit Abschnitt zum Abtrennen (/datei/:schauId/preisrichter-verpflichtung.pdf) und die Bew …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
