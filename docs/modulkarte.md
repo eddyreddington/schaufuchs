@@ -2622,6 +2622,10 @@ Schalter „Folie“ in der 3D-Ansicht (Entscheidung 028): nur die Ansicht, gesp
 ### hallenplan-3d-landschaft.ts (288 Z.)
 Umgebung der 3D-Halle (nur zur Anschauung, ohne Maße): Himmel mit Wolken, Wiese, ein heller Hof um die Halle, vor dem Haupteingang ein Parkplatz, g …
 
+### hallenplan-3d-licht.test.ts (26 Z.)
+
+### hallenplan-3d-licht.ts (23 Z.)
+
 ### hallenplan-3d-raum.ts (260 Z.)
 Der Raum der 3D-Halle nach ihrem Aussehen (Entscheidung 028): Boden mit Belag, Folie und Meterraster, Spielfeldlinien, Innenseiten der Wände mit Pr …
 
@@ -2638,7 +2642,7 @@ Bewegung der Kamera in der 3D-Ansicht über das Ziehen mit Maus oder Finger hina
 ### hallenplan-3d-texturen.ts (304 Z.)
 Texturen der 3D-Halle, aus kleinen Canvas-Bildern gerechnet (keine Bilddateien): Bodenbeläge (Mosaikparkett, Sportboden, Estrich), Innenwand mit Pr …
 
-### hallenplan-3d-welt.ts (548 Z.)
+### hallenplan-3d-welt.ts (553 Z.)
 Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und Steuerung.
 
 ### hallenplan-3d.tsx (231 Z.)

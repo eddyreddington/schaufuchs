@@ -8,6 +8,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { ot } from "../sprache-jetzt";
 import { figurTeile, gitterTextur, hell, ladeBild, offenerKasten, pokalGeometrie, schildSprite, schuerzenGeometrie, stoffKachel, type Teil, wackel } from "./hallenplan-3d-bausteine";
 import { baueLandschaft, type HallenSeite } from "./hallenplan-3d-landschaft";
+import { lichtWerte } from "./hallenplan-3d-licht";
 import { baueRaum, BODEN_LAGEN } from "./hallenplan-3d-raum";
 import { type Bewegung, bewegungFuer } from "./hallenplan-3d-steuerung";
 
@@ -58,7 +59,8 @@ export function baueWelt(
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // PCF mit Radius: weicher Schattenrand (PCFSoftShadowMap kennt keinen Radius).
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   // Filmisches Tonemapping: helle Flächen (weiße Wände, Fenster) laufen weich aus statt hart weiß.
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -81,11 +83,14 @@ export function baueWelt(
   const groesse = Math.max(B, L);
   const mitte = new THREE.Vector3(B / 2, 0, L / 2);
 
-  // Licht: Himmel (leicht blau) und warmes Licht vom Boden zurück (Holz), dazu eine warme, nicht zu harte Sonne mit
-  // weichen Schatten über der Halle.
-  scene.add(new THREE.HemisphereLight("#eaf0fb", "#c8b08a", 1.6));
-  const sonne = new THREE.DirectionalLight("#ffe8c8", 1.9);
-  sonne.position.set(mitte.x - groesse * 0.4, groesse * 0.9, mitte.z - groesse * 0.3);
+  // Licht (hallenplan-3d-licht.ts): Himmelslicht trägt die Helligkeit, die Sonne steht hoch und wirft nur helle, weiche
+  // Schatten – kurze Schatten geben Halt, dunkle Streifen über die Reihen wirkten unruhig.
+  const licht = lichtWerte(groesse, mitte);
+  scene.add(new THREE.HemisphereLight(licht.himmel.oben, licht.himmel.unten, licht.himmel.staerke));
+  const sonne = new THREE.DirectionalLight(licht.sonne.farbe, licht.sonne.staerke);
+  sonne.position.set(licht.sonne.position.x, licht.sonne.position.y, licht.sonne.position.z);
+  sonne.shadow.intensity = licht.schatten.intensitaet;
+  sonne.shadow.radius = licht.schatten.radius;
   sonne.target.position.copy(mitte);
   sonne.castShadow = true;
   sonne.shadow.mapSize.set(2048, 2048);
