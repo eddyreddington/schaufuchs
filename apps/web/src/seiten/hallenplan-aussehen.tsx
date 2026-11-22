@@ -1,31 +1,50 @@
-import { aussehenBereinigt, aussehenVon, HALLEN_BOEDEN, type HallenAussehen, type HallenBoden, PRALLWAND_HOEHE_MAX, PRALLWAND_VORGABEN, WAND_HOEHE_MAX, WAND_HOEHE_MIN } from "@schau/domain";
+/** Abschnitt „Aussehen (3D)“ in den Eigenschaften der Halle (Entscheidung 028). */
+import { aussehenBereinigt, aussehenVon, deckeSchalten, FIRST_HOEHE_MAX, HALLEN_BOEDEN, type HallenAussehen, type HallenBoden, PRALLWAND_HOEHE_MAX, PRALLWAND_VORGABEN, WAND_HOEHE_MAX, WAND_HOEHE_MIN } from "@schau/domain";
 import { useEffect, useRef, useState } from "react";
 import { useOberflaeche } from "../sprache";
 import { Auswahl, Feld, Haken, HilfeLink } from "../ui";
-import { MeterFeld } from "./hallenplan-eigenschaften";
+import { MeterFeld } from "./hallenplan-meterfeld";
 
 /** Farbe des Holzes im Farbfeld (wie die Holz-Prallwand in 3D). */
 const HOLZ = "#dcc29a";
 
+/** Änderung des Aussehens auf dem jeweils aktuellen Stand der Halle (nicht auf dem beim Zeichnen gesehenen). */
+export type AussehenAendern = (f: (alt: HallenAussehen | undefined) => HallenAussehen | undefined) => void;
+
 /**
- * Einstellung „Aussehen (3D)“ in den Eigenschaften der Halle (Entscheidung 028): Boden, Prallwand (Farbe und Höhe),
- * Wandhöhe, Fenster, Decke, Spielfeldlinien, Geräte. Gespeichert wird es in der Halle wie eine Änderung im Editor, ohne den
- * Plan neu zu setzen; die 3D-Ansicht zeigt es nach dem Neuladen. `setzen` fehlt: nur ansehen.
+ * Einstellung „Aussehen (3D)“: Boden und Folie, Prallwand (Farbe und Höhe), Wand- und Firsthöhe, Fenster, Decke,
+ * Spielfeldlinien, Geräte. Gespeichert in der Halle wie eine Änderung im Editor, ohne den Plan neu zu setzen; die 3D-Ansicht
+ * zeigt es nach dem Neuladen. `aendern` fehlt: nur ansehen.
  */
-export function AussehenEinstellung({ aussehen, setzen }: { aussehen: HallenAussehen | undefined; setzen?: (a: HallenAussehen | undefined) => void }) {
+export function AussehenEinstellung({ aussehen, aendern }: { aussehen: HallenAussehen | undefined; aendern?: AussehenAendern }) {
   const t = useOberflaeche().halle.aussehen;
   const a = aussehenVon(aussehen);
-  const neu = (patch: Partial<HallenAussehen>) => setzen?.(aussehenBereinigt({ ...a, ...patch }));
-  const aus = !setzen;
-  // Freie Farbe: beim Ziehen im Farbwähler erst nach einer kurzen Pause speichern (nicht bei jeder Bewegung).
+  const neu = (patch: Partial<HallenAussehen>) => aendern?.((alt) => aussehenBereinigt({ ...(alt ?? {}), ...patch }));
+  const aus = !aendern;
+  /** Höhe übernehmen, nur wenn sie so gespeichert würde (sonst springt das Feld zurück statt einen anderen Wert zu zeigen). */
+  const hoehe = (feld: "prallwandHoehe" | "wandHoehe" | "firstHoehe") => (cm: number) => {
+    if (aussehenVon({ ...(aussehen ?? {}), [feld]: cm })[feld] !== cm) return false;
+    neu({ [feld]: cm });
+    return true;
+  };
+  // Freie Farbe: beim Ziehen im Farbwähler erst nach einer kurzen Pause speichern, beim Verlassen der Eigenschaften sofort.
   const [farbe, setFarbe] = useState(a.prallwand === "holz" ? HOLZ : a.prallwand);
   useEffect(() => setFarbe(a.prallwand === "holz" ? HOLZ : a.prallwand), [a.prallwand]);
-  const warten = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => void (warten.current && clearTimeout(warten.current)), []);
+  const offen = useRef<{ farbe: string; zeit: ReturnType<typeof setTimeout> } | null>(null);
+  const aendernRef = useRef(aendern);
+  aendernRef.current = aendern;
+  const farbeSpeichern = () => {
+    const o = offen.current;
+    if (!o) return;
+    clearTimeout(o.zeit);
+    offen.current = null;
+    aendernRef.current?.((alt) => aussehenBereinigt({ ...(alt ?? {}), prallwand: o.farbe }));
+  };
+  useEffect(() => farbeSpeichern, []);
   const farbeWaehlen = (f: string) => {
     setFarbe(f);
-    if (warten.current) clearTimeout(warten.current);
-    warten.current = setTimeout(() => neu({ prallwand: f }), 400);
+    if (offen.current) clearTimeout(offen.current.zeit);
+    offen.current = { farbe: f, zeit: setTimeout(farbeSpeichern, 400) };
   };
   return (
     <details className="border-t border-linie pt-4">
@@ -42,6 +61,7 @@ export function AussehenEinstellung({ aussehen, setzen }: { aussehen: HallenAuss
             </Auswahl>
           )}
         </Feld>
+        <Haken label={t.abdeckung} checked={a.abdeckung} disabled={aus} onChange={(v) => neu({ abdeckung: v })} />
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium">{t.prallwand}</span>
           <div className="flex flex-wrap items-center gap-2">
@@ -65,11 +85,12 @@ export function AussehenEinstellung({ aussehen, setzen }: { aussehen: HallenAuss
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <MeterFeld label={t.prallwandHoehe} cm={a.prallwandHoehe} min={0} max={PRALLWAND_HOEHE_MAX} setzen={aus ? () => false : (v) => neu({ prallwandHoehe: v })} />
-          <MeterFeld label={t.wandHoehe} cm={a.wandHoehe} min={WAND_HOEHE_MIN} max={WAND_HOEHE_MAX} setzen={aus ? () => false : (v) => neu({ wandHoehe: v })} />
+          <MeterFeld label={t.prallwandHoehe} cm={a.prallwandHoehe} min={0} max={PRALLWAND_HOEHE_MAX} disabled={aus} setzen={hoehe("prallwandHoehe")} />
+          <MeterFeld label={t.wandHoehe} cm={a.wandHoehe} min={WAND_HOEHE_MIN} max={WAND_HOEHE_MAX} disabled={aus} setzen={hoehe("wandHoehe")} />
+          <MeterFeld label={t.firstHoehe} cm={a.firstHoehe} min={WAND_HOEHE_MIN} max={FIRST_HOEHE_MAX} disabled={aus} setzen={hoehe("firstHoehe")} />
         </div>
         <Haken label={t.fenster} checked={a.fenster} disabled={aus} onChange={(v) => neu({ fenster: v })} />
-        <Haken label={t.decke} checked={a.decke} disabled={aus} onChange={(v) => neu({ decke: v })} />
+        <Haken label={t.decke} checked={a.decke} disabled={aus} onChange={(v) => aendern?.((alt) => deckeSchalten(alt, v))} />
         <Haken label={t.linien} checked={a.linien} disabled={aus} onChange={(v) => neu({ linien: v })} />
         <Haken label={t.geraete} checked={a.geraete} disabled={aus} onChange={(v) => neu({ geraete: v })} />
         <HilfeLink abschnitt="hallenplan-3d-aussehen">{t.hilfe}</HilfeLink>

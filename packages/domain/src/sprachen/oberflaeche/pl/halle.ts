@@ -109,6 +109,8 @@ export const halle: OberflaecheTexte["halle"] = {
     eigeneFarbe: "Własny kolor",
     prallwandHoehe: "Wysokość ściany odbojowej",
     wandHoehe: "Wysokość ścian",
+    firstHoehe: "Wysokość kalenicy",
+    abdeckung: "Podłoga przykryta folią",
     fenster: "Okna",
     decke: "Drewniany sufit z oświetleniem",
     linien: "Linie boiska",

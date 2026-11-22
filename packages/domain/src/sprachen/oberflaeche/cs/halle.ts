@@ -108,6 +108,8 @@ export const halle: OberflaecheTexte["halle"] = {
     eigeneFarbe: "Vlastní barva",
     prallwandHoehe: "Výška ochranné stěny",
     wandHoehe: "Výška stěn",
+    firstHoehe: "Výška hřebene",
+    abdeckung: "Podlaha zakrytá fólií",
     fenster: "Okna",
     decke: "Dřevěný strop se světly",
     linien: "Čáry hřiště",

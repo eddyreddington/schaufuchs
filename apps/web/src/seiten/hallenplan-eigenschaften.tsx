@@ -2,17 +2,20 @@
  * Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle
  * (`HalleEigenschaften`) mit ihren Eingabefeldern.
  */
-import { type Punkt, type Halle, type HallenFlaeche, type NummerFolge, type HallenAussehen, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, type KaefigTyp, LOCALE, moebelMass, type OberflaecheTexte, type WandSeite } from "@schau/domain";
-import { type InputHTMLAttributes, type ReactNode, useEffect, useRef, useState } from "react";
+import { type Punkt, type Halle, type HallenFlaeche, type NummerFolge, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, type KaefigTyp, LOCALE, moebelMass, type OberflaecheTexte, type WandSeite } from "@schau/domain";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useOberflaeche, useSprache } from "../sprache";
 import { Auswahl, Eingabe, Feld, Haken, Knopf, Marke } from "../ui";
 import { WzSymbol } from "./hallenplan-werkzeuge";
-import { type Aendern, type Aktionen, BLOCK_TYPEN, type FehlendeSetzen, HAUPTGANG_LAGE, meter, type Plan, teilInfo, type TeilInfo, type Versetzen, wandText, type Ziel, zuCm, zweisprachig } from "./hallenplan-geometrie";
+import { type Aendern, type Aktionen, BLOCK_TYPEN, type FehlendeSetzen, HAUPTGANG_LAGE, meter, type Plan, teilInfo, type TeilInfo, type Versetzen, wandText, type Ziel, zweisprachig } from "./hallenplan-geometrie";
 import { AutomatikSchalter, OhnePlatz } from "./hallenplan-teile";
 import { GrundrissKnopf } from "./hallenplan-grundriss";
 import { NummerFolgeEinstellung } from "./hallenplan-nummerfolge";
-import { AussehenEinstellung } from "./hallenplan-aussehen";
+import { type AussehenAendern, AussehenEinstellung } from "./hallenplan-aussehen";
+import { enterUebernimmt, MeterFeld, MitEinheit } from "./hallenplan-meterfeld";
 import { kaefigNameIn } from "./kaefige";
+
+export { MitEinheit };
 
 /**
  * Eigenschaften der Auswahl: was gewählt ist, Belegung, Lage, Größe, Drehung und die passenden Aktionen. `kompakt`: als
@@ -234,60 +237,6 @@ export function PanelKopf({ ueber, titel, marke, className = "" }: { ueber: stri
   );
 }
 
-/** Eingabefeld mit Einheit am rechten Rand (z. B. „m“). */
-export function MitEinheit({ einheit, className = "", ...props }: InputHTMLAttributes<HTMLInputElement> & { einheit: string }) {
-  return (
-    <span className="relative block">
-      <Eingabe {...props} className={`pr-8 tabular-nums ${className}`} />
-      <span aria-hidden="true" className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-grau">
-        {einheit}
-      </span>
-    </span>
-  );
-}
-
-/**
- * Enter in einem Feld übernimmt den Wert – erst nach diesem Tastendruck: öffnet die Übernahme eine Rückfrage, darf derselbe
- * Tastendruck sie nicht gleich bestätigen.
- */
-export function enterUebernimmt(e: React.KeyboardEvent, uebernehmen: () => Promise<void> | void) {
-  if (e.key !== "Enter") return;
-  e.preventDefault();
-  setTimeout(() => void uebernehmen(), 0);
-}
-
-/**
- * Zahl in Metern, gespeichert in cm: übernommen beim Verlassen des Felds oder mit Enter. Ungültiges (oder eine abgelehnte
- * Rückfrage) springt auf den gespeicherten Wert zurück.
- */
-export function MeterFeld({ label, cm, setzen, min = 0, max = 50000 }: { label: string; cm: number; setzen: (cm: number) => boolean | Promise<boolean> | void; min?: number; max?: number }) {
-  const t = useOberflaeche().halle;
-  const [wert, setWert] = useState(meter(cm));
-  useEffect(() => setWert(meter(cm)), [cm]);
-  // Eine Übernahme zur Zeit (Enter und das Verlassen des Felds, wenn die Rückfrage aufgeht, kämen sonst doppelt).
-  const laeuft = useRef(false);
-  const wertRef = useRef(wert);
-  wertRef.current = wert;
-  const uebernehmen = async () => {
-    if (laeuft.current) return;
-    // Nur, was wirklich geändert wurde (krumme Werte nach dem Einrasten sollen beim bloßen Verlassen nicht rücken).
-    if (wertRef.current.trim() === meter(cm)) return;
-    const neu = zuCm(wertRef.current);
-    if (!wertRef.current.trim() || !Number.isFinite(neu) || neu < min || neu > max || neu === cm) return setWert(meter(cm));
-    laeuft.current = true;
-    try {
-      if ((await setzen(neu)) === false) setWert(meter(cm));
-    } finally {
-      laeuft.current = false;
-    }
-  };
-  return (
-    <Feld label={label}>
-      {(id) => <MitEinheit id={id} einheit="m" aria-label={t.inMetern(label)} inputMode="decimal" value={wert} onChange={(e) => setWert(e.target.value)} onBlur={() => void uebernehmen()} onKeyDown={(e) => enterUebernimmt(e, uebernehmen)} />}
-    </Feld>
-  );
-}
-
 /** Ein gewählter Tisch, Pokaltisch, eine Bank oder Garnitur: Maße (Länge, Tiefe, bei der Garnitur die Tiefe der Bänke), dazu die Lage. */
 export function MoebelFelder({ halle, id, aendern, zeilen }: { halle: Halle; id: string; aendern: Aendern; zeilen: [string, string][] }) {
   const t = useOberflaeche();
@@ -366,7 +315,7 @@ export function HalleEigenschaften({
   setzen,
   vorschlaege,
   nummerFolgeSetzen,
-  aussehenSetzen,
+  aussehenAendern,
 }: {
   halle: Halle;
   plan: Plan;
@@ -380,8 +329,8 @@ export function HalleEigenschaften({
   vorschlaege: () => void;
   /** Einstellung „Nach Plan nummerieren“ speichern (ohne den Plan neu zu setzen); fehlt: nur ansehen. */
   nummerFolgeSetzen?: (f: NummerFolge | undefined) => void;
-  /** Aussehen in 3D speichern (ändert nie den Plan); fehlt: nur ansehen. */
-  aussehenSetzen?: (a: HallenAussehen | undefined) => void;
+  /** Aussehen in 3D ändern und speichern (ändert nie den Plan); fehlt: nur ansehen. */
+  aussehenAendern?: AussehenAendern;
 }) {
   const t = useOberflaeche();
   const te = t.halle.eigenschaften;
@@ -474,7 +423,7 @@ export function HalleEigenschaften({
         <Haken label={te.buendig} checked={halle.wandBuendig ?? true} onChange={(v) => void aendernHalle({ wandBuendig: v }, (x) => x.halle.eigenschaften.buendigKurz)} />
       </div>
       <NummerFolgeEinstellung folge={halle.nummerFolge} reihen={plan.reihen.map((r) => r.nr)} setzen={nummerFolgeSetzen} />
-      <AussehenEinstellung aussehen={halle.aussehen} setzen={aussehenSetzen} />
+      <AussehenEinstellung aussehen={halle.aussehen} aendern={aussehenAendern} />
       <details className="border-t border-linie pt-4">
         <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-grau hover:text-tinte">{te.grundplattenJeArt}</summary>
         <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-3">

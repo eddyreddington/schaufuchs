@@ -107,6 +107,8 @@ export const halle: OberflaecheTexte["halle"] = {
     eigeneFarbe: "Couleur libre",
     prallwandHoehe: "Hauteur de la paroi",
     wandHoehe: "Hauteur des murs",
+    firstHoehe: "Hauteur du faîtage",
+    abdeckung: "Sol couvert d’une bâche",
     fenster: "Fenêtres",
     decke: "Plafond en bois avec éclairage",
     linien: "Lignes de terrain",

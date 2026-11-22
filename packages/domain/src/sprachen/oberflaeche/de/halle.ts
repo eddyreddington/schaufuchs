@@ -105,6 +105,8 @@ export const halle = {
     eigeneFarbe: "Eigene Farbe",
     prallwandHoehe: "Prallwand hoch",
     wandHoehe: "Wandhöhe",
+    firstHoehe: "Firsthöhe",
+    abdeckung: "Boden mit Folie abgedeckt",
     fenster: "Fenster",
     decke: "Holzdecke mit Leuchten",
     linien: "Spielfeldlinien",

@@ -291,12 +291,13 @@ function Plan({
               )
           : undefined
       }
-      aussehenSetzen={
+      aussehenAendern={
         kannPlanen && !d.abgeschlossen
-          ? (a) =>
+          ? (f) =>
               void aendern((h) => {
-                const { aussehen: _, ...rest } = h;
-                return a ? { ...rest, aussehen: a } : rest;
+                const { aussehen: alt, ...rest } = h;
+                const neu = f(alt);
+                return neu ? { ...rest, aussehen: neu } : rest;
               }, zweisprachig((x) => x.halle.aussehen.geaendert))
           : undefined
       }

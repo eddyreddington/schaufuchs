@@ -107,6 +107,8 @@ export const halle: OberflaecheTexte["halle"] = {
     eigeneFarbe: "Eigen kleur",
     prallwandHoehe: "Hoogte stootwand",
     wandHoehe: "Wandhoogte",
+    firstHoehe: "Nokhoogte",
+    abdeckung: "Vloer met folie afgedekt",
     fenster: "Ramen",
     decke: "Houten plafond met verlichting",
     linien: "Veldbelijning",
