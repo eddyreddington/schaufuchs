@@ -2343,7 +2343,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `preise.stiftungLoeschen` mutation · admin
 - `preise.freigeben` mutation · admin – Gibt die Ergebnisse frei (öffentlich sichtbar, Bewertung geschlossen).
 
-### routers/preisrichter.ts (428 Z.) → `preisrichter`
+### routers/preisrichter.ts (438 Z.) → `preisrichter`
 
 - `preisrichter.liste` query · angemeldet
 - `preisrichter.speichern` mutation · admin
@@ -2703,7 +2703,7 @@ Prozeduren: auth.status, preise.entfernen, preise.freigeben, preise.stiftungBarE
 Dialog „Preisrichter hinzufügen“ bzw. „Preisrichter bearbeiten“: Angaben, Sparten, BDRG-Gruppen, Obmann und Zusage.
 Prozeduren: preisrichter.speichern, stammdaten.gliederung
 
-### preisrichter-rassen.tsx (222 Z.)
+### preisrichter-rassen.tsx (231 Z.)
 Prozeduren: preisrichter.einteilungJugendSetzen, preisrichter.zuteilung, preisrichter.zuteilungSetzen, preisrichter.zuteilungVorschlagen
 
 ### preisrichter.tsx (352 Z.) – `/schau/:schauId/preisrichter`
@@ -3013,5 +3013,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `70-preisrichter-drucke.ts` (132 Z.) – Preisrichter, Stufe 2: Preisrichterverpflichtung als Brief mit Abschnitt zum Abtrennen (/datei/:schauId/preisrichter-verpflichtung.pdf) und die Bew …
 - `71-preisrichter-gegenpruefung.ts` (103 Z.) – Preisrichter, Gegenprüfung: Zusage, Vorbehalt, Gruppen und Obmann in Auskunft, Bereinigung und Protokoll (Vorbehalt nur als „geändert“), Vorlage oh …
 - `72-jugend-einteilung.ts` (155 Z.) – Jugend separat oder eingereiht: Katalognummern (eigener Block am Ende oder in der Rasse) und Preisrichter-Einteilung nach Rassen („mit der Rasse“ w …
+- `73-jugend-gegenpruefung.ts` (65 Z.) – Jugend in der Einteilung, Gegenprüfung: Umschalten meldet Tiere ohne Preisrichter und Nachmeldungen wie das Speichern der Einteilung; gespeicherte …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

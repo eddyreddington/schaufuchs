@@ -740,7 +740,7 @@ Klicken Sie auf „Einstellungen speichern“.
 Wie die Tiere der Jugend im Katalog stehen, wählen Sie im Reiter „Katalog und Preise“ unter „Jugend im Katalog“:
 
 - **„eigener Block am Ende“** (Vorgabe): Die Jugend bekommt hinter allen Senioren eigene Nummern, im Katalog eine eigene Abteilung „Jugend“ (mit Sparten und Rassen wie vorn), in den Ergebnissen eigene Überschriften „Jugend – …“. Mit Teilschauen gilt das je Teilschau.
-- **„in der Rasse eingereiht“**: Die Jugendtiere stehen bei ihrer Rasse und ihrem Farbenschlag zwischen den Senioren, nach der Reihenfolge der Nummern (siehe „Reihenfolge der Katalognummern“). Eine eigene Jugendabteilung gibt es dann weder im Katalog noch in den Ergebnissen; im Katalog steht beim Tier weiter „Jugend“.
+- **„in der Rasse eingereiht“**: Die Jugendtiere stehen bei ihrer Rasse und ihrem Farbenschlag zwischen den Senioren, nach der Reihenfolge der Nummern (siehe „Reihenfolge der Katalognummern“). Eine eigene Jugendabteilung gibt es dann weder im Katalog noch in den Ergebnissen. Auf der Seite „Katalognummern“ steht beim Tier weiter „Jugend“; im gedruckten und im Online-Katalog und in den Ergebnissen sind die Jugendtiere nicht eigens gekennzeichnet.
 
 Die Wahl gilt beim nächsten „Katalognummern vergeben“ für Nummern, Hallenplan, Bewertungskarten, Listen und Ergebnisse. Nach dem Festschreiben ist sie gesperrt („Festgeschrieben“). Wie die Preisrichter die Jugend bekommen, stellen Sie davon unabhängig unter „Preisrichter“ ein (siehe 5.8, „Jugend in der Einteilung“).
 
@@ -1330,11 +1330,11 @@ Eine Nachmeldung mit Unternummer (24a) geht an den Preisrichter der Nummer 24 �
 Oben im Reiter „Einteilung nach Rassen“ wählen Sie unter „Jugend in der Einteilung“, wie die Tiere der Jugend an die Preisrichter gehen:
 
 - **„mit der Rasse“** (Vorgabe): Die Jugend einer Rasse bewertet der Preisrichter dieser Rasse bzw. ihres Farbenschlags.
-- **„separat“**: Je Rasse mit Jugendtieren steht eine eigene Zeile „Jugend: Rasse“ mit der Zahl der Jugendtiere (und auf Wunsch „Farbenschläge“). Dort wählen Sie einen eigenen Preisrichter; „wie die Rasse“ lässt die Jugend beim Preisrichter der Rasse. Eine Wahl für einen Farbenschlag der Jugend geht vor der Wahl für die ganze Jugend der Rasse. Die Zeilen stehen wie im Katalog: mit „Jugend im Katalog: eigener Block am Ende“ hinter allen Senioren der Sparte, sonst gleich unter ihrer Rasse.
+- **„separat“**: Je Rasse mit Jugendtieren steht eine eigene Zeile „Jugend: Rasse“ mit der Zahl der Jugendtiere (und auf Wunsch „Farbenschläge“). Dort wählen Sie einen eigenen Preisrichter; „wie die Rasse“ lässt die Jugend beim Preisrichter der Rasse. Hat eine Rasse nur Jugendtiere, gibt es keine Zeile der Rasse; die leere Wahl heißt dann „– keiner –“. Eine Wahl für einen Farbenschlag der Jugend geht vor der Wahl für die ganze Jugend der Rasse. Die Zeilen stehen wie im Katalog: mit „Jugend im Katalog: eigener Block am Ende“ hinter allen Senioren der Sparte, sonst gleich unter ihrer Rasse.
 
 Bei „separat“ behandelt „Gleichmäßig verteilen“ die Jugend jeder Rasse als eigene Einheit; Sparten und Gruppen der Preisrichter gelten wie bei den Senioren. Die Bereiche nach Nummern ergeben sich wie gewohnt aus der Einteilung – steht die Jugend im Katalog eingereiht, kann ein Preisrichter so mehrere kleine Bereiche bekommen.
 
-Die Einstellung wirkt sofort und steht im Protokoll („Jugend in der Einteilung“). Sind schon Katalognummern vergeben, rechnet die Software die Bereiche gleich neu; wechseln dabei schon bewertete Tiere den Preisrichter, fragt sie vorher nach. Zurück auf „mit der Rasse“ bleiben die Preisrichter der Jugendzeilen gespeichert, gelten aber erst wieder bei „separat“. Eine neue Schau aus einer Vorlage übernimmt die Einstellung.
+Die Einstellung wirkt sofort und steht im Protokoll („Jugend in der Einteilung“). Sind schon Katalognummern vergeben, rechnet die Software die Bereiche gleich neu und nennt wie beim Speichern Tiere ohne Preisrichter – etwa die Jugend einer Rasse ohne Senioren nach dem Zurückschalten auf „mit der Rasse“; wechseln dabei schon bewertete Tiere den Preisrichter, fragt sie vorher nach. Zurück auf „mit der Rasse“ bleiben die Preisrichter der Jugendzeilen gespeichert, auch über „Gleichmäßig verteilen“ und Speichern hinweg, gelten aber erst wieder bei „separat“. Eine neue Schau aus einer Vorlage übernimmt die Einstellung.
 
 #### Einteilung nach Nummern
 

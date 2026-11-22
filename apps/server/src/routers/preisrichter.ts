@@ -5,7 +5,7 @@ import { hashPasswort } from "../auth";
 import { db } from "../db/client";
 import { preisrichter, prEinteilung, prZuteilung, schau, sitzung } from "../db/schema";
 import { ladeEintraege } from "../services/eintraege";
-import { bereicheDerSchau, einteilSchluessel, einteilTier, ladeRegeln, sperreEinteilung } from "../services/einteilung";
+import { bereicheDerSchau, einteilSchluessel, einteilTier, jugendSeparatEingeteilt, ladeRegeln, sperreEinteilung } from "../services/einteilung";
 import type { Akteur } from "../services/protokoll";
 import { protokolliere } from "../services/protokoll";
 import { pinBremse, pinWartezeitJeRichter } from "./bewertung";
@@ -281,7 +281,8 @@ export const preisrichterRouter = router({
 
   /**
    * Einteilung nach Rassen speichern. Sind schon Katalognummern vergeben, rechnet sie die Bereiche gleich neu (mit den
-   * Prüfungen der Einteilung nach Nummern); sonst geschieht das beim Vergeben der Nummern.
+   * Prüfungen der Einteilung nach Nummern); sonst geschieht das beim Vergeben der Nummern. Bei „Jugend mit der Rasse“
+   * bleiben die gespeicherten Jugendregeln, wie sie sind (sie sind dann nicht zu sehen und gelten erst wieder bei „separat“).
    */
   zuteilungSetzen: oeffentlichSichtbarProcedure
     .input(
@@ -313,16 +314,20 @@ export const preisrichterRouter = router({
       // Doppelte (gleiche Sparte, Rasse, Farbenschlag ohne Rücksicht auf Schreibweise): die letzte gilt.
       const eindeutig = new Map<string, RassenRegel & { jugend: boolean }>();
       for (const r of input.regeln) eindeutig.set(einteilSchluessel(r.sparte, r.rasse, r.farbenschlag, r.jugend), { ...r, jugend: !!r.jugend });
-      const regeln = [...eindeutig.values()];
-      for (const r of regeln) {
-        const pr = richter.find((x) => x.id === r.preisrichterId);
-        if (!pr) throw fehler("BAD_REQUEST", "Unbekannter Preisrichter.");
-        if (!bewertetSparte(pr, r.sparte)) throw fehler("BAD_REQUEST", `${pr.name} bewertet keine ${r.sparte || "Tiere ohne Sparte"} (${r.rasse}). Bitte einen anderen Preisrichter wählen oder beim Preisrichter die Sparte ergänzen.`);
-        const gruppe = gruppeVon.get(einteilSchluessel(r.sparte, r.rasse));
-        if (!bewertetGruppe(pr, gruppe)) throw fehler("BAD_REQUEST", `${pr.name} bewertet keine Gruppe ${bdrgGruppe(gruppe)} (${r.rasse}). Bitte einen anderen Preisrichter wählen oder beim Preisrichter die Gruppe ergänzen.`);
-      }
+      let regeln = [...eindeutig.values()];
+      const pruefe = () => {
+        for (const r of regeln) {
+          const pr = richter.find((x) => x.id === r.preisrichterId);
+          if (!pr) throw fehler("BAD_REQUEST", "Unbekannter Preisrichter.");
+          if (!bewertetSparte(pr, r.sparte)) throw fehler("BAD_REQUEST", `${pr.name} bewertet keine ${r.sparte || "Tiere ohne Sparte"} (${r.rasse}). Bitte einen anderen Preisrichter wählen oder beim Preisrichter die Sparte ergänzen.`);
+          const gruppe = gruppeVon.get(einteilSchluessel(r.sparte, r.rasse));
+          if (!bewertetGruppe(pr, gruppe)) throw fehler("BAD_REQUEST", `${pr.name} bewertet keine Gruppe ${bdrgGruppe(gruppe)} (${r.rasse}). Bitte einen anderen Preisrichter wählen oder beim Preisrichter die Gruppe ergänzen.`);
+        }
+      };
+      // „Jugend in der Einteilung“, gelesen unter der Sperre (siehe unten): ein gleichzeitiges Umschalten kommt nicht dazwischen.
+      let separat = false;
       const speichern = async (tx: Tx) => {
-        await tx.delete(prZuteilung).where(eq(prZuteilung.schauId, input.schauId));
+        await tx.delete(prZuteilung).where(separat ? eq(prZuteilung.schauId, input.schauId) : and(eq(prZuteilung.schauId, input.schauId), eq(prZuteilung.jugend, false)));
         if (regeln.length) await tx.insert(prZuteilung).values(regeln.map((r) => ({ ...r, schauId: input.schauId })));
         await protokolliere(tx, {
           schauId: input.schauId,
@@ -336,7 +341,11 @@ export const preisrichterRouter = router({
       // Unter der Sperre: Nummern und Einteilung ändern sich nicht, während hier gerechnet wird.
       return db.transaction(async (tx) => {
         await sperreEinteilung(tx, input.schauId);
-        const b = await bereicheDerSchau(tx, input.schauId, regeln);
+        separat = await jugendSeparatEingeteilt(tx, input.schauId);
+        // Bei „mit der Rasse“ zählen nur die Regeln ohne Merkmal; geprüft wird, was gespeichert wird.
+        if (!separat) regeln = regeln.filter((r) => !r.jugend);
+        pruefe();
+        const b = await bereicheDerSchau(tx, input.schauId, regeln, separat);
         if (b.nummeriert === 0) {
           await speichern(tx);
           return { bereiche: null, ohne: 0, abweichend: [] as string[] };
@@ -389,7 +398,8 @@ export const preisrichterRouter = router({
       return db.transaction(async (tx) => {
         await sperreEinteilung(tx, input.schauId);
         const [{ alt }] = (await tx.select({ alt: schau.einteilungJugendSeparat }).from(schau).where(eq(schau.id, s.id)).for("update")) as [{ alt: boolean }];
-        if (alt === input.separat) return { bereiche: null };
+        const nichts = { bereiche: null, ohne: 0, abweichend: [] as string[] };
+        if (alt === input.separat) return nichts;
         const setzen = async (t: Tx) => {
           await t.update(schau).set({ einteilungJugendSeparat: input.separat }).where(eq(schau.id, s.id));
           await protokolliere(t, { schauId: s.id, tabelle: "schau", datensatzId: s.id, aktion: "Jugend in der Einteilung", alt: { einteilungJugendSeparat: alt }, neu: { einteilungJugendSeparat: input.separat }, akteur: ctx });
@@ -398,10 +408,10 @@ export const preisrichterRouter = router({
         const b = regeln.length ? await bereicheDerSchau(tx, s.id, regeln, input.separat) : null;
         if (!b || b.nummeriert === 0) {
           await setzen(tx);
-          return { bereiche: null };
+          return nichts;
         }
         await schreibeEinteilung(tx, ctx, s.id, b.bereiche, input.bestaetigt, { zusatz: setzen, aktion: "aus Einteilung nach Rassen", ausnahmen: new Set(b.abweichend.map((x) => x.id)) });
-        return { bereiche: b.bereiche };
+        return { bereiche: b.bereiche, ohne: b.ohne, abweichend: b.abweichend.map((x) => x.nummer) };
       });
     }),
 });

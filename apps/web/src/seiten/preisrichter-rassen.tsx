@@ -55,24 +55,28 @@ export function EinteilungNachRassen({ schauId, richter }: { schauId: number; ri
     }
     meldung(fehlerText(e), "fehler");
   };
+  /** Tiere ohne Preisrichter und Nachmeldungen außer der Reihe nach neu berechneten Bereichen. */
+  const hinweise = (x: { ohne: number; abweichend: string[] }) => {
+    const zusatz = [x.ohne ? tx.tiereOhne(x.ohne) : "", x.abweichend.length ? tx.nachmeldungen(x.abweichend.join(", ")) : ""].filter(Boolean).join("; ");
+    return zusatz ? ` ${zusatz}.` : "";
+  };
   const speichern = trpc.preisrichter.zuteilungSetzen.useMutation({
     onSuccess: (x) => {
       setWahl(null);
       setOffen(null);
       utils.preisrichter.zuteilung.invalidate();
       utils.preisrichter.liste.invalidate();
-      const zusatz = [x.ohne ? tx.tiereOhne(x.ohne) : "", x.abweichend.length ? tx.nachmeldungen(x.abweichend.join(", ")) : ""].filter(Boolean).join("; ");
-      meldung(x.bereiche ? `${tx.gespeichertBereiche}${zusatz ? ` ${zusatz}.` : ""}` : tx.gespeichertOhneBereiche);
+      meldung(x.bereiche ? `${tx.gespeichertBereiche}${hinweise(x)}` : tx.gespeichertOhneBereiche);
     },
     onError: (e, eingabe) => rueckfrage(e, eingabe, (x) => speichern.mutate(x)),
   });
   const jugendSetzen = trpc.preisrichter.einteilungJugendSetzen.useMutation({
-    onSuccess: () => {
+    onSuccess: (x) => {
       setOffen(null);
       utils.preisrichter.zuteilung.invalidate();
       utils.preisrichter.liste.invalidate();
       utils.schau.get.invalidate({ id: schauId });
-      meldung(tx.jugendGespeichert);
+      meldung(`${tx.jugendGespeichert}${x.bereiche ? hinweise(x) : ""}`);
     },
     onError: (e, eingabe) => rueckfrage(e, eingabe, (x) => jugendSetzen.mutate(x)),
   });
@@ -94,6 +98,8 @@ export function EinteilungNachRassen({ schauId, richter }: { schauId: number; ri
       else last.set(r, (last.get(r) ?? 0) + f.anzahl);
     }
   const sparten = [...new Set(gruppen.map((g) => g.sparte))];
+  // Rassen mit Senioren: nur dort kann die leere Wahl der Jugendzeile „wie die Rasse“ heißen.
+  const mitSenioren = new Set(gruppen.filter((g) => !g.jugend).map((g) => schl(g.sparte, g.rasse)));
   const speichernRassen = () => speichern.mutate({ schauId, regeln });
   const verwerfen = () => {
     setWahl(null);
@@ -103,7 +109,9 @@ export function EinteilungNachRassen({ schauId, richter }: { schauId: number; ri
   const vorschlagen = async () => {
     const r = await vorschlag.refetch();
     if (!r.data) return;
-    setWahl(ausRegeln(r.data.regeln));
+    // Bei „mit der Rasse“ enthält der Vorschlag keine Jugendzeilen – die gespeicherten (nicht sichtbaren) bleiben.
+    const jugend = jugendSeparat ? {} : Object.fromEntries(Object.entries(aktuell).filter(([k]) => (JSON.parse(k) as unknown[])[3] === true));
+    setWahl({ ...jugend, ...ausRegeln(r.data.regeln) });
     setOffen(mitFarben(r.data.regeln));
     setFehlend(r.data.fehlend);
   };
@@ -181,12 +189,13 @@ export function EinteilungNachRassen({ schauId, richter }: { schauId: number; ri
                     .flatMap((g) => {
                       const k = schl(g.sparte, g.rasse, "", g.jugend);
                       const name = g.jugend ? tx.jugendZeile(g.rasse) : g.rasse;
+                      const leer = g.jugend && mitSenioren.has(schl(g.sparte, g.rasse)) ? tx.wieRasse : tx.keiner;
                       const istAuf = auf.has(k);
                       const zeilen = [
                         <tr key={k}>
                           <td className="font-semibold text-tinte">{name}</td>
                           <td className="text-right tabular-nums">{g.anzahl}</td>
-                          <td>{auswahl(g, aktuell[k] ?? "", (v) => setze(k, v), g.jugend ? tx.wieRasse : tx.keiner, tx.richterFuer(name))}</td>
+                          <td>{auswahl(g, aktuell[k] ?? "", (v) => setze(k, v), leer, tx.richterFuer(name))}</td>
                           <td className="text-right">
                             {g.farben.length > 1 && (
                               <Knopf variante="leise" className={ZEILE} onClick={() => setOffen(new Set(istAuf ? [...auf].filter((x) => x !== k) : [...auf, k]))} aria-expanded={istAuf}>

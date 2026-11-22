@@ -29,8 +29,10 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
   Rasse eine eigene Einheit (Zeile „Jugend: Rasse“, Regel mit `jugend: true`, auch je Farbenschlag), im Vorschlag eigene
   Einheit, in der Folge wie im Katalog (Jugendblock am Ende oder hinter ihrer Rasse). Regeln ohne Merkmal gelten für
   Senioren und Jugend; ein Jugendtier geht erst nach den Jugendregeln, dann wie die Senioren. Bei „mit der Rasse“ gelten
-  Jugendregeln nicht (bleiben gespeichert). Umschalten mit Protokoll (Tabelle `schau`), unter der Einteilungssperre, mit
-  Neuberechnung der Bereiche und Rückfrage bei bewerteten Tieren; aus der Vorlage übernommen.
+  Jugendregeln nicht und bleiben gespeichert: `zuteilungSetzen` ersetzt dann nur die Regeln ohne Merkmal (Jugendregeln
+  in der Eingabe zählen nicht, die Einstellung gilt unter der Sperre). Umschalten mit Protokoll (Tabelle `schau`), unter
+  der Einteilungssperre, mit Neuberechnung der Bereiche (`ohne`, `abweichend` wie beim Speichern) und Rückfrage bei
+  bewerteten Tieren; aus der Vorlage übernommen.
 - Gruppen werden einheitlich gespeichert (ohne Leerzeichen, groß, höchstens 10 Zeichen aus Buchstaben und Ziffern).
 - Obmann-Zuordnung: nur ein Obmann derselben Schau, nicht er selbst. Verliert ein Obmann den Haken, werden die ihm
   zugeordneten Preisrichter gelöst, ebenso beim Löschen (je mit Protokoll; `loeschePreisrichter()`). Die Prüfung liest die
@@ -58,7 +60,8 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
 - Server (`apps/server/src/tests`): `03-tablet-halle-drucke` (Bewertungsliste nur eigene Schau), `29-einteilung-rassen`,
   `30-einteilung-gegenpruefung`, `69-preisrichter-gruppen`, `70-preisrichter-drucke` (Verpflichtung, Bewertungsliste),
   `71-preisrichter-gegenpruefung` (Auskunft, Bereinigung, Vorlage, Löschen, Sperre), `72-jugend-einteilung` (Jugend separat
-  oder eingereiht, Katalog und Einteilung); `src/einteilung.test.ts` (Vorschlag).
+  oder eingereiht, Katalog und Einteilung), `73-jugend-gegenpruefung` (Umschalten meldet Tiere ohne Preisrichter,
+  Jugendregeln überstehen Speichern bei „mit der Rasse“); `src/einteilung.test.ts` (Vorschlag).
 
 ## Datenbank
 

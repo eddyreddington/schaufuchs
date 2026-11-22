@@ -105,3 +105,4 @@ import "./tests/69-preisrichter-gruppen";
 import "./tests/70-preisrichter-drucke";
 import "./tests/71-preisrichter-gegenpruefung";
 import "./tests/72-jugend-einteilung";
+import "./tests/73-jugend-gegenpruefung";
