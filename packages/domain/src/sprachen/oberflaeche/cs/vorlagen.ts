@@ -160,6 +160,8 @@ export const vorlagen: OberflaecheTexte["vorlagen"] = {
     ersetzen: "Nahradit",
     hochladen: "Nahrát obrázek",
     angaben: "Údaje",
+    ersetzenFrage: (rasse) => `Nahradit obrázek plemene „${rasse}“?`,
+    ersetzenGeprueft: "Obrázek je zkontrolovaný. Autora a licenci bude potřeba zadat znovu.",
     loeschenFrage: (rasse) => `Smazat obrázek plemene „${rasse}“?`,
     erste200: (anzahl) => `Zobrazeno prvních 200 z ${anzahl} – zužte prosím výběr.`,
     bildangaben: (rasse) => `Údaje o obrázku: ${rasse}`,

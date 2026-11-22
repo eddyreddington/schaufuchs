@@ -924,7 +924,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `verein`
 
-### vorlagen.ts (225 Z.)
+### vorlagen.ts (227 Z.)
 
 - `vorlagen`
 
@@ -1126,7 +1126,7 @@ Texte der Oberfläche: verein – Verein und Datenschutz, automatische Abmeldung
 
 - `verein`
 
-### vorlagen.ts (226 Z.)
+### vorlagen.ts (228 Z.)
 Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungskarte), Briefvorlage und Serienbrief, Rassen und Farbenschläge (Verzei …
 
 - `vorlagen`
@@ -1312,7 +1312,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `verein`
 
-### vorlagen.ts (224 Z.)
+### vorlagen.ts (226 Z.)
 
 - `vorlagen`
 
@@ -1497,7 +1497,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `verein`
 
-### vorlagen.ts (225 Z.)
+### vorlagen.ts (227 Z.)
 
 - `vorlagen`
 
@@ -1686,7 +1686,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `verein`
 
-### vorlagen.ts (224 Z.)
+### vorlagen.ts (226 Z.)
 
 - `vorlagen`
 
@@ -1873,7 +1873,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `verein`
 
-### vorlagen.ts (229 Z.)
+### vorlagen.ts (231 Z.)
 
 - `vorlagen`
 
@@ -2676,7 +2676,7 @@ Prozeduren: preisrichter.einteilungSetzen, preisrichter.einteilungVorschlagen, p
 ### protokoll.tsx (138 Z.) – `/schau/:schauId/protokoll`
 Prozeduren: schau.protokoll, schau.protokollPruefen
 
-### rassebilder.tsx (277 Z.)
+### rassebilder.tsx (282 Z.)
 Prozeduren: rassebild.angabenSetzen, rassebild.hochladen, rassebild.liste, rassebild.loeschen
 
 ### richter-anmeldung.tsx (170 Z.)

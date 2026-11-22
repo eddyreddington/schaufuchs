@@ -160,6 +160,8 @@ export const vorlagen: OberflaecheTexte["vorlagen"] = {
     ersetzen: "Remplacer",
     hochladen: "Téléverser une image",
     angaben: "Indications",
+    ersetzenFrage: (rasse) => `Remplacer l’image de « ${rasse} » ?`,
+    ersetzenGeprueft: "L’image est vérifiée. Auteur et licence seront à saisir de nouveau.",
     loeschenFrage: (rasse) => `Supprimer l’image de « ${rasse} » ?`,
     erste200: (anzahl) => `200 premiers sur ${anzahl} affichés – veuillez affiner la recherche.`,
     bildangaben: (rasse) => `Indications sur l’image : ${rasse}`,

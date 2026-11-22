@@ -164,6 +164,8 @@ export const vorlagen: OberflaecheTexte["vorlagen"] = {
     ersetzen: "Zastąp",
     hochladen: "Prześlij zdjęcie",
     angaben: "Dane",
+    ersetzenFrage: (rasse) => `Zastąpić zdjęcie rasy „${rasse}”?`,
+    ersetzenGeprueft: "Zdjęcie jest sprawdzone. Autora i licencję trzeba potem wpisać ponownie.",
     loeschenFrage: (rasse) => `Usunąć zdjęcie rasy „${rasse}”?`,
     erste200: (anzahl) => `Wyświetlono pierwsze 200 z ${anzahl} – proszę zawęzić wyszukiwanie.`,
     bildangaben: (rasse) => `Dane zdjęcia: ${rasse}`,

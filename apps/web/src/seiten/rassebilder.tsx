@@ -113,6 +113,11 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
       },
     );
   };
+  /** Abgelegtes Foto: auf einer Karte mit Bild erst nachfragen – im dichten Raster landet es leicht auf der Nachbarkarte. */
+  const abgelegt = async (z: Zeile, f: File) => {
+    if (z.bild && !(await bestaetige({ titel: t.ersetzenFrage(z.rasse), text: z.bild.geprueft ? t.ersetzenGeprueft : undefined, knopf: t.ersetzen }))) return;
+    await datei(z, f);
+  };
   const angabenVon = (b: NonNullable<Zeile["bild"]>): Angaben => ({ urheber: b.urheber, lizenz: b.lizenz, lizenzUrl: b.lizenzUrl, quelle: b.quelle });
 
   const ohneBild = liste.data.length - mitBild;
@@ -171,7 +176,7 @@ export function Rassebilder({ versionId, istAdmin }: { versionId: number; istAdm
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {angezeigt.map((z) => (
           <li key={z.rasse} className="flex flex-col overflow-hidden rounded-xl border border-linie bg-weiss shadow-[0_1px_2px_rgb(16_20_28/0.04)]">
-            <DateiAblage accept={BILD_TYPEN} onDatei={(f) => void datei(z, f)} deaktiviert={!istAdmin || hochladen.isPending} className="flex h-40 items-center justify-center border-b border-linie bg-papier">
+            <DateiAblage accept={BILD_TYPEN} onDatei={(f) => void abgelegt(z, f)} deaktiviert={!istAdmin || hochladen.isPending} className="flex h-40 items-center justify-center border-b border-linie bg-papier">
               {z.bild ? (
                 <img src={`/datei/rassebild/${z.bild.id}?v=${encodeURIComponent(String(z.bild.stand))}`} alt={t.bildVon(z.rasse)} loading="lazy" className="max-h-40 w-full object-contain" />
               ) : (

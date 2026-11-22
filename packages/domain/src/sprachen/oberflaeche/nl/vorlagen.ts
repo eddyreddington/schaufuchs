@@ -159,6 +159,8 @@ export const vorlagen: OberflaecheTexte["vorlagen"] = {
     ersetzen: "Vervangen",
     hochladen: "Afbeelding uploaden",
     angaben: "Gegevens",
+    ersetzenFrage: (rasse) => `Afbeelding van „${rasse}” vervangen?`,
+    ersetzenGeprueft: "De afbeelding is gecontroleerd. Maker en licentie moeten daarna opnieuw worden ingevuld.",
     loeschenFrage: (rasse) => `Afbeelding van „${rasse}” verwijderen?`,
     erste200: (anzahl) => `Eerste 200 van ${anzahl} getoond – verfijn de zoekopdracht.`,
     bildangaben: (rasse) => `Afbeeldingsgegevens: ${rasse}`,

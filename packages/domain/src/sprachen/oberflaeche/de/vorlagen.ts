@@ -159,6 +159,8 @@ export const vorlagen = {
     ersetzen: "Ersetzen",
     hochladen: "Bild hochladen",
     angaben: "Angaben",
+    ersetzenFrage: (rasse: string) => `Bild von „${rasse}“ ersetzen?`,
+    ersetzenGeprueft: "Das Bild ist geprüft. Urheber und Lizenz sind danach neu einzutragen.",
     loeschenFrage: (rasse: string) => `Bild von „${rasse}“ löschen?`,
     erste200: (anzahl: number) => `Erste 200 von ${anzahl} angezeigt – bitte eingrenzen.`,
     bildangaben: (rasse: string) => `Bildangaben: ${rasse}`,
