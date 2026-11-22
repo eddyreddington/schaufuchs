@@ -3,7 +3,7 @@
  * der Vorgabe, mit Protokoll), ändert im festen Plan weder Plan noch Nummern. Teil des Schau-Ablaufs.
  */
 import { describe, expect, test } from "bun:test";
-import { halleSchluessel, type Halle } from "@schau/domain";
+import { halleBereinigt, halleSchluessel, type Halle } from "@schau/domain";
 import { adminKontext, m } from "./kontext";
 
 describe("Hallenplan: Türen in den Eingängen", () => {
@@ -37,6 +37,20 @@ describe("Hallenplan: Türen in den Eingängen", () => {
     // Zurück auf die Vorgabe: die Halle ist wie ohne Angabe.
     await al().katalog.halleSetzen({ schauId: id, halle: { ...halle, flaechen: [{ ...eingang, tuer: "wand" }, { ...notausgang, tuer: "offen" }] } });
     expect((await zeile(id)).halle!.flaechen).toEqual([eingang, { ...notausgang, tuer: "offen" }]);
+  });
+
+  test("Editor und Server bereinigen gleich: derselbe Stand der Halle (sonst CONFLICT, kein Rückgängig)", async () => {
+    const { id } = await al().schau.anlegen({ name: "Türen bereinigt", ort: "Halle" });
+    const eingaben = [
+      { ...halle, flaechen: [{ ...eingang, art: "sperre" as const, tuer: "glas" as const }, notausgang] },
+      { ...halle, flaechen: [{ ...eingang, tuer: "wand" as const }, { ...notausgang, tuer: "holz" as const }] },
+      { ...halle, aussehen: { boden: "parkett" as const, fenster: true }, nummerFolge: { absteigend: false, schlange: false } },
+      { ...halle, aussehen: { boden: "estrich" as const, prallwand: "#6D8571" }, nummerFolge: { absteigend: true, vomEnde: false } },
+    ];
+    for (const e of eingaben) {
+      await al().katalog.halleSetzen({ schauId: id, halle: e });
+      expect(halleSchluessel((await zeile(id)).halle as Halle)).toBe(halleSchluessel(halleBereinigt(e as Halle)));
+    }
   });
 
   test("fester Plan: Türart ändern lässt ihn fest, Käfige und Nummern bleiben", async () => {

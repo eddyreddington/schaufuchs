@@ -1,5 +1,5 @@
 /** Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan. */
-import { aussehenBereinigt, flaecheBereinigt, TUER_ARTEN, FIRST_HOEHE_MAX, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt } from "@schau/domain";
+import { aussehenBereinigt, flaecheBereinigt, nummerFolgeBereinigt, TUER_ARTEN, FIRST_HOEHE_MAX, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt } from "@schau/domain";
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
@@ -125,11 +125,9 @@ export const HALLE_EINGABE = z.object({
       schlange: z.boolean().optional(),
       doppelAbwechselnd: z.boolean().optional(),
     })
-    // Nur gesetzte Werte; ohne Einstellung fällt das Feld weg (der Schlüssel der Halle bleibt wie ohne Einstellung).
-    .transform((f) => {
-      const aus = Object.fromEntries(Object.entries(f).filter(([, v]) => v !== undefined && v !== false));
-      return Object.keys(aus).length ? aus : undefined;
-    })
+    // Nur gesetzte Werte; ohne Einstellung fällt das Feld weg (der Schlüssel der Halle bleibt wie ohne Einstellung). Der
+    // Editor bereinigt seinen Entwurf genauso (`halleBereinigt`).
+    .transform(nummerFolgeBereinigt)
     .optional(),
   /** Aussehen in 3D (Entscheidung 028): begrenzt, nur Abweichungen von der Vorgabe; ohne fällt das Feld weg. */
   aussehen: z

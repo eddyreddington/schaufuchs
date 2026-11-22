@@ -2,7 +2,7 @@
  * Reine Rechnungen des Hallenplan-Editors (ohne React): Auswahl und Teile, Lage und Versatz von Reihen,
  * Platten und Objekten, Hindernisse (`planKoerper`), Texte zu Teilen. Die Fachregeln selbst stehen in packages/domain.
  */
-import { istRechteckUmriss, KAEFIG_TYP_LABEL, LOCALE, oberflaeche, type OberflaecheTexte, umrissNormal, umrissSperren, auswahlBereinigen, blockPlatz, dreheBlick, dreheRechteck, type Drehung, eingangsGang, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenTeil, istMoebel, type KaefigMasse, kaefigName, type KaefigPlatz, type KaefigTyp, mitteVon, nummernBereiche, objektFront, type PlanAuswahlTeil, type PlanKaefig, type PlanKoerper, pruefeLage, type Rechteck, type Reihe, teilGroesse, teilSchluessel, type VerschiebePruefung, type WandKandidat, type WandSeite } from "@schau/domain";
+import { halleBereinigt, istRechteckUmriss, KAEFIG_TYP_LABEL, LOCALE, oberflaeche, type OberflaecheTexte, umrissNormal, umrissSperren, auswahlBereinigen, blockPlatz, dreheBlick, dreheRechteck, type Drehung, eingangsGang, etagenStreifen, etagenVon, frontDerReihe, type Halle, type HallenFlaeche, type HallenTeil, istMoebel, type KaefigMasse, kaefigName, type KaefigPlatz, type KaefigTyp, mitteVon, nummernBereiche, objektFront, type PlanAuswahlTeil, type PlanKaefig, type PlanKoerper, pruefeLage, type Rechteck, type Reihe, teilGroesse, teilSchluessel, type VerschiebePruefung, type WandKandidat, type WandSeite } from "@schau/domain";
 import { aktuelleSprache, ot } from "../sprache-jetzt";
 import { type Ausgabe } from "../trpc";
 
@@ -189,7 +189,11 @@ export const vonHandBewegt = (vorher: Halle, neu: Halle): Halle => {
   if (!(neu.objekte ?? []).some((o) => o.auto && bewegt(o))) return neu;
   return { ...neu, objekte: neu.objekte!.map((o) => (o.auto && bewegt(o) ? (({ auto: _a, ...rest }) => rest)(o) : o)) };
 };
-export const vollstaendig = (h: Halle): Halle => ({ ...h, objekte: h.objekte ?? [], reihenVersatz: h.reihenVersatz ?? [], plattenVersatz: h.plattenVersatz ?? [], spartenStart: h.spartenStart ?? [] });
+/**
+ * Entwurf mit allen Listen und so bereinigt wie der Server (`halleBereinigt`): Tür, Aussehen, Nummernfolge – sonst wiche
+ * der Stand des Entwurfs vom gespeicherten ab (Rückgängig fiele aus, die nächste Änderung käme als Konflikt zurück).
+ */
+export const vollstaendig = (h: Halle): Halle => ({ ...halleBereinigt(h), objekte: h.objekte ?? [], reihenVersatz: h.reihenVersatz ?? [], plattenVersatz: h.plattenVersatz ?? [], spartenStart: h.spartenStart ?? [] });
 
 export type PlattenVersatz = NonNullable<Halle["plattenVersatz"]>[number];
 /** Versatz einer einzelnen Grundplatte setzen; ohne Verschiebung und Drehung fällt der Eintrag weg. */

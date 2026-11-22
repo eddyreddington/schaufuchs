@@ -2,7 +2,7 @@
  * Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle
  * (`HalleEigenschaften`) mit ihren Eingabefeldern.
  */
-import { type Punkt, type Halle, type HallenFlaeche, type NummerFolge, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, type KaefigTyp, LOCALE, moebelMass, type OberflaecheTexte, type WandSeite } from "@schau/domain";
+import { flaecheBereinigt, type Punkt, type Halle, type HallenFlaeche, type NummerFolge, type HallenObjekt, HAUPTGANG_STANDARD, istMoebel, kaefigeJePlatte, kaefigMass, type KaefigMasse, type KaefigTyp, LOCALE, moebelMass, type OberflaecheTexte, type WandSeite } from "@schau/domain";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useOberflaeche, useSprache } from "../sprache";
 import { Auswahl, Eingabe, Feld, Haken, Knopf, Marke } from "../ui";
@@ -284,7 +284,7 @@ export function FlaecheFelder({ halle, i, aendern }: { halle: Halle; i: number; 
       <NameFeld i={i} name={f.name} aendern={aendern} breit />
       <Feld label={te.art}>
         {(id) => (
-          <Auswahl id={id} value={f.art} onChange={(e) => aendern((h) => ({ ...h, flaechen: h.flaechen.map((x, j) => (j === i ? { ...x, art: e.target.value as HallenFlaeche["art"] } : x)) }), zweisprachig((x) => x.halle.eigenschaften.flaecheAendern))}>
+          <Auswahl id={id} value={f.art} onChange={(e) => aendern((h) => ({ ...h, flaechen: h.flaechen.map((x, j) => (j === i ? flaecheBereinigt({ ...x, art: e.target.value as HallenFlaeche["art"] }) : x)) }), zweisprachig((x) => x.halle.eigenschaften.flaecheAendern))}>
             <option value="eingang">{te.eingangAusgang}</option>
             <option value="sperre">{te.freierBereich}</option>
             <option value="volieren">{te.volierenbereich}</option>
