@@ -157,6 +157,7 @@ export const halleWerkzeuge: OberflaecheTexte["halleWerkzeuge"] = {
     zuechter: "Chovatel",
     loeschwunsch: "Žádost o výmaz – nezveřejňovat",
     nichtEingeteilt: "dosud nepřidělen",
+    vorgesehen: "(plánovaný)",
     meldungOffen: "Přihláška otevřená",
     verkauft: ", prodáno",
     bewertung: "Posouzení",

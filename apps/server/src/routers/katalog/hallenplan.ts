@@ -233,6 +233,8 @@ export const katalogHallenplan = {
       zuechter: { name: e.ausstellerName, ort: e.ort ?? "", verein: e.verein ?? "", gesperrt: !!e.ausstellerGesperrt },
       meldungId: e.meldungId,
       preisrichter: name(zugeteilt),
+      /** Ohne Katalognummer nur vorgesehen (aus der Einteilung nach Rassen); fest wird es erst mit dem Nummernbereich. */
+      preisrichterVorgesehen: e.katalogNr == null && zugeteilt != null,
       bewertung: e.bewertet ? bewertungsText({ punkte: e.punkte, sondernote: e.sondernote }, skalaVon(s)) : null,
       bewertetVon: name(e.bewertetVon),
       preise: e.preise.map((p) => `${p.kuerzel} ${p.name}`),

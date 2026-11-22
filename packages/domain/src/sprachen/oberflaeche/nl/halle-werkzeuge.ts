@@ -153,6 +153,7 @@ export const halleWerkzeuge: OberflaecheTexte["halleWerkzeuge"] = {
     zuechter: "Fokker",
     loeschwunsch: "Verzoek tot verwijdering – niet publiceren",
     nichtEingeteilt: "nog niet ingedeeld",
+    vorgesehen: "(voorzien)",
     meldungOffen: "Inschrijving open",
     verkauft: ", verkocht",
     bewertung: "Keuring",

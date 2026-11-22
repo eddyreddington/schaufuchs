@@ -216,7 +216,11 @@ export function KaefigInfo({ schauId, id, schliessen }: { schauId: number; id: n
             {d.zuechter.gesperrt && <span className="block text-kamm">{tt.loeschwunsch}</span>}
           </dd>
           <dt className="text-grau">{t.allgemein.preisrichter}</dt>
-          <dd>{d.preisrichter ?? tt.nichtEingeteilt}</dd>
+          <dd>
+            {d.preisrichter ?? tt.nichtEingeteilt}
+            {/* Ohne Katalognummer nur aus der Einteilung nach Rassen – fest erst mit dem Nummernbereich. */}
+            {d.preisrichter && d.preisrichterVorgesehen && <span className="text-grau"> {tt.vorgesehen}</span>}
+          </dd>
           <dt className="text-grau">{t.allgemein.status}</dt>
           <dd>
             {d.meldungStatus === "offen" ? tt.meldungOffen : (status[d.status] ?? d.status)}

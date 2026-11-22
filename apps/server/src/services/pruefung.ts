@@ -1,4 +1,4 @@
-import { type Phase, gefordertCent, frontFehler, halleNormal, planeHalle, planUnordnung, gewichteteTierzahl, passtZuPreisart, ringjahrPasst, brauchtObmann, fehlendeVereinsangaben, formatKatalognummer, MELDEART_LABEL, normalisiereRegistriernummer, kontingent, hatKontingent, zaehltZumKontingent, stiftungUngedeckt, type KontingentBasis, type Preisart, istAuslaendisch } from "@schau/domain";
+import { type Phase, type HallenStand, hallenStandVon, gefordertCent, frontFehler, halleNormal, planeHalle, planUnordnung, gewichteteTierzahl, passtZuPreisart, ringjahrPasst, brauchtObmann, fehlendeVereinsangaben, formatKatalognummer, MELDEART_LABEL, normalisiereRegistriernummer, kontingent, hatKontingent, zaehltZumKontingent, stiftungUngedeckt, type KontingentBasis, type Preisart, istAuslaendisch } from "@schau/domain";
 import { and, asc, count, eq, ne, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { aussteller, auszahlung, gebuehr, katalogeintrag, meldung, preisart, preisrichter, prEinteilung, schau, stiftung } from "../db/schema";
@@ -118,8 +118,16 @@ export function kontingente(
 }
 
 export async function checkliste(schauId: number): Promise<Punkt[]> {
+  return (await pruefliste(schauId)).punkte;
+}
+
+/**
+ * Prüfliste samt dem, was die Übersicht sonst noch einmal rechnen müsste: die geladenen Einträge und – in „Halle & Katalog“
+ * und der Einlieferung – den Stand des Hallenplans (`hallenStandVon`; null, wenn nicht gerechnet oder die Rechnung scheiterte).
+ */
+export async function pruefliste(schauId: number): Promise<{ punkte: Punkt[]; eintraege: Eintrag[]; stand: HallenStand | null }> {
   const [s] = await db.select().from(schau).where(eq(schau.id, schauId));
-  if (!s) return [];
+  if (!s) return { punkte: [], eintraege: [], stand: null };
   const [eintraege, meldungenRoh, gebuehren, arten, richter, einteilung, auszahlungen, stiftungen] = await Promise.all([
     ladeEintraege(schauId),
     db.select({ m: meldung, registriernummer: aussteller.registriernummer, geburtsdatum: aussteller.geburtsdatum }).from(meldung).innerJoin(aussteller, eq(aussteller.id, meldung.ausstellerId)).where(eq(meldung.schauId, schauId)),
@@ -268,18 +276,23 @@ export async function checkliste(schauId: number): Promise<Punkt[]> {
     if (zahl > grenze) add("hinweis", `${r.name}: ${zahl} Tiere, höchstens ${grenze}${r.istObmann ? " als Obmann" : ""}`, "preisrichter");
   }
   // Hallenplan – nach dem Meldeschluss, bis die Käfige stehen (Halle & Katalog, Einlieferung). Nur Hinweise: sie halten
-  // keinen Phasenwechsel auf. Gerechnet wie die Seite „Hallenplan“ (dieselben Tiere, derselbe Plan).
-  if (s.halle && (s.phase === "katalog" || s.phase === "einlieferung")) {
+  // keinen Phasenwechsel auf. Gerechnet wie die Seite „Hallenplan“ (dieselben Tiere, derselbe Plan). In „Halle & Katalog“
+  // auch ohne Halle: der Stand führt den Knopf der Übersicht (arbeitsZiel).
+  let stand: HallenStand | null = null;
+  if (s.phase === "katalog" || (s.halle && s.phase === "einlieferung")) {
     try {
       const { planTiere } = await import("../routers/katalog");
-      const { tiere } = await planTiere(s);
-      const plan = planeHalle(s.halle, tiere, s.kaefigMasse, s.hallenplanFest);
-      if (plan.nichtPlatziert.length) add("hinweis", `${anz(plan.nichtPlatziert.length, "Tier", "Tiere")} ohne Platz`, "hallenplan");
-      const front = frontFehler(halleNormal(s.halle), plan);
-      if (front.length) add("hinweis", "Käfigfront zur Wand oder zu einer Reihe", "hallenplan", undefined, `${front.slice(0, 3).join(", ")}${front.length > 3 ? " …" : ""}`);
-      if (s.hallenplanFest) {
-        if (planUnordnung(plan, s.halle.richtung ?? "quer", s.katalogGedruckt, s.halle.nummerFolge).nichtInFolge > 0) add("hinweis", `${s.katalogGedruckt ? "Käfignummern" : "Nummern"} nicht in Planfolge`, "hallenplan");
-      } else if (s.katalogGedruckt) add("hinweis", "Hallenplan nicht festgeschrieben", "hallenplan");
+      const { tiere } = await planTiere(s, eintraege);
+      const plan = s.halle ? planeHalle(s.halle, tiere, s.kaefigMasse, s.hallenplanFest) : null;
+      stand = hallenStandVon(plan, tiere, !!s.hallenplanFest);
+      if (s.halle && plan) {
+        if (plan.nichtPlatziert.length) add("hinweis", `${anz(plan.nichtPlatziert.length, "Tier", "Tiere")} ohne Platz`, "hallenplan");
+        const front = frontFehler(halleNormal(s.halle), plan);
+        if (front.length) add("hinweis", "Käfigfront zur Wand oder zu einer Reihe", "hallenplan", undefined, `${front.slice(0, 3).join(", ")}${front.length > 3 ? " …" : ""}`);
+        if (s.hallenplanFest) {
+          if (planUnordnung(plan, s.halle.richtung ?? "quer", s.katalogGedruckt, s.halle.nummerFolge).nichtInFolge > 0) add("hinweis", `${s.katalogGedruckt ? "Käfignummern" : "Nummern"} nicht in Planfolge`, "hallenplan");
+        } else if (s.katalogGedruckt) add("hinweis", "Hallenplan nicht festgeschrieben", "hallenplan");
+      }
     } catch (e) {
       // Die Prüfliste soll nie am Plan scheitern; der Hallenplan zeigt den Fehler selbst.
       console.error("[pruefung] Hallenplan nicht berechnet:", e);
@@ -373,5 +386,5 @@ export async function checkliste(schauId: number): Promise<Punkt[]> {
   }
 
   if (!punkte.some((p) => p.art !== "ok")) add("ok", "Alles erledigt für diese Phase");
-  return punkte;
+  return { punkte, eintraege, stand };
 }

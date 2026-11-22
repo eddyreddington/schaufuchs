@@ -153,6 +153,7 @@ export const halleWerkzeuge: OberflaecheTexte["halleWerkzeuge"] = {
     zuechter: "Breeder",
     loeschwunsch: "Deletion request – do not publish",
     nichtEingeteilt: "not yet assigned",
+    vorgesehen: "(planned)",
     meldungOffen: "Entry open",
     verkauft: ", sold",
     bewertung: "Judging",

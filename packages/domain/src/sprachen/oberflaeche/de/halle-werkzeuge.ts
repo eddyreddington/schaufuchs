@@ -160,6 +160,7 @@ export const halleWerkzeuge = {
     zuechter: "Züchter",
     loeschwunsch: "Löschwunsch – nicht veröffentlichen",
     nichtEingeteilt: "noch nicht eingeteilt",
+    vorgesehen: "(vorgesehen)",
     meldungOffen: "Meldung offen",
     verkauft: ", verkauft",
     bewertung: "Bewertung",

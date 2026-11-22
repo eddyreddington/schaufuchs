@@ -1,10 +1,10 @@
 /** Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan. */
-import { aussehenBereinigt, flaecheBereinigt, nummerFolgeBereinigt, TUER_ARTEN, FIRST_HOEHE_MAX, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt, planeHalle, richterImPlan } from "@schau/domain";
+import { aussehenBereinigt, flaecheBereinigt, nummerFolgeBereinigt, TUER_ARTEN, FIRST_HOEHE_MAX, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt, planeHalle, richterImPlan, hallenStandVon } from "@schau/domain";
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
 import { preisrichter, prEinteilung, schau } from "../../db/schema";
-import { alsFolge, ladeEintraege } from "../../services/eintraege";
+import { alsFolge, ladeEintraege, type Eintrag } from "../../services/eintraege";
 import { einteilTier, ladeRegeln } from "../../services/einteilung";
 import { protokolliere } from "../../services/protokoll";
 import { fehler, ladeSchau } from "../../trpc";
@@ -215,13 +215,14 @@ export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<type
 /**
  * Tiere für den Hallenplan: alle gemeldeten (offen und bestätigt) in Katalogfolge, mit Käfigart und Preisrichter – mit
  * Nummer aus den Nummernbereichen, ohne Nummer aus der Einteilung nach Rassen (`richterImPlan`; der Hallenplan kommt vor
- * den Katalognummern, die Farben stehen so schon vorher).
+ * den Katalognummern, die Farben stehen so schon vorher). `geladen`: schon geladene Einträge der Schau (`ladeEintraege(s.id)`),
+ * spart das zweite Laden (Prüfliste).
  */
-export async function planTiere(s: { id: number; kaefigRegeln: KaefigRegel[] | null; katalogStart: number; jugendSeparat: boolean; staemmeVorn: boolean; kaefigFolge: KaefigTyp[] | null; katalogSortierung?: SortierSchritt[] | null; einteilungJugendSeparat?: boolean }) {
+export async function planTiere(s: { id: number; kaefigRegeln: KaefigRegel[] | null; katalogStart: number; jugendSeparat: boolean; staemmeVorn: boolean; kaefigFolge: KaefigTyp[] | null; katalogSortierung?: SortierSchritt[] | null; einteilungJugendSeparat?: boolean }, geladen?: Eintrag[]) {
   const [alle, einteilung, richter, rassenRegeln] = await Promise.all([
     // Alle gemeldeten Tiere (offen und bestätigt) – der Plan dient dem Aufbau vor der Einlieferung. Ein als fehlend
     // gemeldetes Tier behält seinen Käfig (der steht schon); nur abgelehnte und stornierte Meldungen fallen heraus.
-    ladeEintraege(s.id).then((l) => l.filter((e) => e.meldungStatus === "offen" || e.meldungStatus === "bestaetigt")),
+    (geladen ? Promise.resolve(geladen) : ladeEintraege(s.id)).then((l) => l.filter((e) => e.meldungStatus === "offen" || e.meldungStatus === "bestaetigt")),
     db.select().from(prEinteilung).where(eq(prEinteilung.schauId, s.id)),
     db.select({ id: preisrichter.id, name: preisrichter.name }).from(preisrichter).where(eq(preisrichter.schauId, s.id)).orderBy(asc(preisrichter.name)),
     ladeRegeln(db, s.id),
@@ -247,12 +248,10 @@ export async function planTiere(s: { id: number; kaefigRegeln: KaefigRegel[] | n
 }
 
 /**
- * Stand des Hallenplans für den Ablauf (Übersicht, Seite „Katalognummern“): Halle angelegt, Plan fest, Tiere mit und ohne
- * Platz – gerechnet wie die Seite „Hallenplan“ (dieselben Tiere, derselbe Plan).
+ * Stand des Hallenplans für die Seite „Katalognummern“ (`hallenStandVon`): Halle, fester Plan, veraltet, Tiere mit und ohne
+ * Platz, schon nummeriert – gerechnet wie die Seite „Hallenplan“ (dieselben Tiere, derselbe Plan).
  */
 export async function hallenStand(s: Parameters<typeof planTiere>[0] & { halle: Halle | null; hallenplanFest: Parameters<typeof planeHalle>[3]; kaefigMasse: Parameters<typeof planeHalle>[2] }) {
-  if (!s.halle) return { halle: false, planFest: false, ohnePlatz: 0, mitPlatz: 0 };
   const { tiere } = await planTiere(s);
-  const plan = planeHalle(s.halle, tiere, s.kaefigMasse, s.hallenplanFest);
-  return { halle: true, planFest: !!s.hallenplanFest, ohnePlatz: plan.nichtPlatziert.length, mitPlatz: tiere.length - plan.nichtPlatziert.length };
+  return hallenStandVon(s.halle ? planeHalle(s.halle, tiere, s.kaefigMasse, s.hallenplanFest) : null, tiere, !!s.hallenplanFest);
 }

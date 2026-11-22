@@ -158,6 +158,7 @@ export const halleWerkzeuge: OberflaecheTexte["halleWerkzeuge"] = {
     zuechter: "Hodowca",
     loeschwunsch: "Prośba o usunięcie – nie publikować",
     nichtEingeteilt: "jeszcze nieprzydzielony",
+    vorgesehen: "(planowany)",
     meldungOffen: "Zgłoszenie otwarte",
     verkauft: ", sprzedane",
     bewertung: "Ocena",

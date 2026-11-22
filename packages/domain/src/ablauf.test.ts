@@ -1,30 +1,71 @@
 import { beforeAll, describe, expect, test } from "bun:test";
-import { arbeitsZiel, nachPlanVergeben, PRUEFLISTE_FOLGE, prueflistenGruppen } from "./ablauf";
+import { arbeitsZiel, hallenplanOffen, hallenStandVon, nachPlanVergeben, PRUEFLISTE_FOLGE, prueflistenGruppen } from "./ablauf";
+import { HALLE_STANDARD, planeHalle, type PlanTier } from "./hallenplan";
 import { ladeAlleOberflaechen, oberflaeche, type Sprache } from "./sprachen";
 import { PHASEN } from "./types";
 
 beforeAll(ladeAlleOberflaechen);
 
 describe("Ablauf nach dem Meldeschluss: Hallenplan vor Katalognummern", () => {
-  const stand = (s: Partial<{ halle: boolean; planFest: boolean; ohnePlatz: number; mitPlatz: number }> = {}) => ({ halle: true, planFest: true, ohnePlatz: 0, mitPlatz: 12, ...s });
+  type St = { halle: boolean; planFest: boolean; veraltet: boolean; ohnePlatz: number; mitPlatz: number; nummeriert: boolean };
+  const stand = (s: Partial<St> = {}): St => ({ halle: true, planFest: true, veraltet: false, ohnePlatz: 0, mitPlatz: 12, nummeriert: false, ...s });
 
-  test("Phase „Halle & Katalog“: zum Hallenplan, solange keine Halle, Tiere ohne Platz oder Plan nicht fest", () => {
+  test("Phase „Halle & Katalog“: zum Hallenplan, solange dort noch etwas zu tun ist", () => {
+    // Unbekannter Stand (Rechnung gescheitert): der Hallenplan zeigt den Fehler.
     expect(arbeitsZiel("katalog", null)).toBe("hallenplan");
-    expect(arbeitsZiel("katalog", stand({ halle: false }))).toBe("hallenplan");
+    // Halle angelegt, Tiere ohne Platz – fest oder automatisch.
     expect(arbeitsZiel("katalog", stand({ ohnePlatz: 3 }))).toBe("hallenplan");
-    expect(arbeitsZiel("katalog", stand({ planFest: false }))).toBe("hallenplan");
-    // Plan steht (alle Tiere mit Platz, fest): jetzt die Katalognummern (nach dem Plan).
-    expect(arbeitsZiel("katalog", stand())).toBe("katalog");
+    expect(arbeitsZiel("katalog", stand({ planFest: false, ohnePlatz: 3 }))).toBe("hallenplan");
+    // Fester Plan veraltet (Halle oder Käfigmaße danach geändert).
+    expect(arbeitsZiel("katalog", stand({ veraltet: true }))).toBe("hallenplan");
+    // Noch keine Halle und noch keine Nummern.
+    expect(arbeitsZiel("katalog", stand({ halle: false, planFest: false, mitPlatz: 0 }))).toBe("hallenplan");
   });
 
-  test("Seite „Katalognummern“: nach Hallenplan nur mit festem Plan und Tieren darin", () => {
+  test("danach zu den Katalognummern: auch der automatische Plan mit allen Tieren und die Schau ohne Halle mit Nummern", () => {
+    expect(arbeitsZiel("katalog", stand())).toBe("katalog");
+    expect(arbeitsZiel("katalog", stand({ planFest: false }))).toBe("katalog");
+    expect(arbeitsZiel("katalog", stand({ planFest: false, nummeriert: true }))).toBe("katalog");
+    expect(arbeitsZiel("katalog", stand({ halle: false, planFest: false, mitPlatz: 0, nummeriert: true }))).toBe("katalog");
+    // „veraltet“ zählt nur beim festen Plan.
+    expect(arbeitsZiel("katalog", stand({ planFest: false, veraltet: true }))).toBe("katalog");
+  });
+
+  test("was am Hallenplan fehlt (hallenplanOffen) passt zum Knopf, in allen Fällen", () => {
+    expect(hallenplanOffen(stand({ veraltet: true, ohnePlatz: 2 }))).toBe("veraltet");
+    expect(hallenplanOffen(stand({ ohnePlatz: 2 }))).toBe("ohnePlatz");
+    expect(hallenplanOffen(stand({ halle: false, planFest: false }))).toBe("keineHalle");
+    expect(hallenplanOffen(stand())).toBeNull();
+    const ja = [false, true];
+    for (const halle of ja) for (const planFest of ja) for (const veraltet of ja) for (const nummeriert of ja) for (const ohnePlatz of [0, 1]) for (const mitPlatz of [0, 3]) {
+      const st = stand({ halle, planFest: halle && planFest, veraltet, nummeriert, ohnePlatz: halle ? ohnePlatz : 0, mitPlatz: halle ? mitPlatz : 0 });
+      expect(arbeitsZiel("katalog", st)).toBe(hallenplanOffen(st) ? "hallenplan" : "katalog");
+      // „Nach Hallenplan vergeben“ nie mit veraltetem festem Plan, nie ohne festen Plan.
+      if (nachPlanVergeben(st)) expect([st.halle, st.planFest, st.veraltet, st.mitPlatz > 0]).toEqual([true, true, false, true]);
+    }
+  });
+
+  test("Seite „Katalognummern“: nach Hallenplan nur mit festem, aktuellem Plan und Tieren darin", () => {
     expect(nachPlanVergeben(stand())).toBe(true);
-    // Mit Tieren ohne Platz trotzdem (sie kommen ans Ende, siehe nummernNachPlan).
+    // Mit Tieren ohne Platz trotzdem (sie kommen ans Ende); die Seite nennt dann, was am Plan fehlt (hallenplanOffen).
     expect(nachPlanVergeben(stand({ ohnePlatz: 2 }))).toBe(true);
+    expect(nachPlanVergeben(stand({ veraltet: true }))).toBe(false);
     expect(nachPlanVergeben(stand({ planFest: false }))).toBe(false);
     expect(nachPlanVergeben(stand({ mitPlatz: 0 }))).toBe(false);
     expect(nachPlanVergeben(stand({ halle: false }))).toBe(false);
     expect(nachPlanVergeben(null)).toBe(false);
+  });
+
+  test("Stand aus dem gerechneten Plan", () => {
+    const tier = (id: number, nr: string | null): PlanTier => ({ id, typ: "huehner", nr, rasse: "R", preisrichterId: null });
+    const masse = { huehner: { breite: 70, tiefe: 70, hoehe: 70 } };
+    const tiere = [tier(1, null), tier(2, null)];
+    expect(hallenStandVon(null, tiere, false)).toEqual({ halle: false, planFest: false, veraltet: false, ohnePlatz: 0, mitPlatz: 0, nummeriert: false });
+    const plan = planeHalle({ ...HALLE_STANDARD, flaechen: [] }, tiere, masse);
+    expect(hallenStandVon(plan, tiere, false)).toEqual({ halle: true, planFest: false, veraltet: false, ohnePlatz: 0, mitPlatz: 2, nummeriert: false });
+    const klein = planeHalle({ ...HALLE_STANDARD, breite: 100, laenge: 100, flaechen: [] }, tiere, masse);
+    expect(hallenStandVon(klein, [tier(1, "1"), tier(2, null)], false)).toMatchObject({ ohnePlatz: 2, mitPlatz: 0, nummeriert: true });
+    expect(hallenStandVon({ ...plan, fest: { am: "x", veraltet: true } }, tiere, true)).toMatchObject({ planFest: true, veraltet: true });
   });
 
   test("andere Phasen wie bisher, der Hallenplan zählt dort nicht", () => {

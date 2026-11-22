@@ -1,11 +1,12 @@
-import { nachPlanVergeben } from "@schau/domain";
+import { hallenplanOffen, nachPlanVergeben } from "@schau/domain";
+import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { fehlerText, formatEuro, formatKatalognummer, alterLabel } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useOberflaeche } from "../sprache";
 import { KatalogReihenfolge } from "./katalog-reihenfolge";
 import { trpc } from "../trpc";
-import { Abschnitt, FehlerAnzeige, HilfeLink, Knopf, KnopfLink, Laden, Leer, Marke, SEITE, Seitenkopf, Suchfeld, TabellenRahmen, useFrage, useMeldung } from "../ui";
+import { Abschnitt, FehlerAnzeige, HilfeLink, Hinweis, Knopf, KnopfLink, Laden, Leer, Marke, SEITE, Seitenkopf, Suchfeld, TabellenRahmen, useFrage, useMeldung } from "../ui";
 
 export function Katalog() {
   const t = useOberflaeche();
@@ -20,6 +21,15 @@ export function Katalog() {
   const { bestaetige } = useFrage();
   const [filter, setFilter] = useState("");
   const neu = () => utils.invalidate();
+  /** Einteilung nach Rassen: was beim Übertragen auf die Nummern auffiel (beide Wege der Vergabe). */
+  const einteilungMelden = (e: { ohne: number; abweichend: string[]; nichtUebernommen: string[] } | null) => {
+    if (e?.nichtUebernommen.length) {
+      meldung(tk.bereicheNichtNeu(e.nichtUebernommen.slice(0, 10).join(", ")), "fehler");
+    } else if (e && (e.ohne > 0 || e.abweichend.length)) {
+      const teile = [e.ohne > 0 ? tk.ohnePreisrichter(e.ohne) : "", e.abweichend.length ? tk.unternummernAbweichend(e.abweichend.join(", ")) : ""];
+      meldung(tk.preisrichterPruefen(teile.filter(Boolean).join("; ")), "fehler");
+    }
+  };
   const vergeben = trpc.katalog.nummernVergeben.useMutation({
     onSuccess: (r) => {
       neu();
@@ -27,14 +37,7 @@ export function Katalog() {
       if (r.ausserhalbDerFolge.length) {
         meldung(tk.ausserhalbFolge(r.ausserhalbDerFolge.join(", ")), "fehler");
       }
-      // Einteilung nach Rassen: was beim Übertragen auf die Nummern auffiel.
-      const e = r.einteilung;
-      if (e?.nichtUebernommen.length) {
-        meldung(tk.bereicheNichtNeu(e.nichtUebernommen.slice(0, 10).join(", ")), "fehler");
-      } else if (e && (e.ohne > 0 || e.abweichend.length)) {
-        const teile = [e.ohne > 0 ? tk.ohnePreisrichter(e.ohne) : "", e.abweichend.length ? tk.unternummernAbweichend(e.abweichend.join(", ")) : ""];
-        meldung(tk.preisrichterPruefen(teile.filter(Boolean).join("; ")), "fehler");
-      }
+      einteilungMelden(r.einteilung);
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
@@ -46,7 +49,7 @@ export function Katalog() {
     onSuccess: (r) => {
       neu();
       meldung(!r.geaendert ? tb.nummernFolgenSchon : tb.nummernNeu(r.geaendert, r.ohnePlatz ?? 0));
-      if (r.ohnePreisrichter) meldung(tb.ohnePreisrichter(r.ohnePreisrichter), "warnung");
+      einteilungMelden(r.einteilung);
       if (r.einteilungVonHand) meldung(tb.einteilungVonHand, "fehler");
     },
     onError: (e) => meldung(fehlerText(e), "fehler"),
@@ -75,6 +78,12 @@ export function Katalog() {
   const ohneNrMarke = ohneNr > 0 && ohneNr < eintraege.length;
   // Nur vor dem Festschreiben der Nummern (danach nummeriert die Seite Nachmeldungen) und nicht in der abgeschlossenen Schau.
   const nachPlanEmpfohlen = !s.katalogGedruckt && s.phase !== "abgeschlossen" && nachPlanVergeben(stand.data);
+  // Bis der Stand da ist, kein Knopf, der gleich wieder wechselt.
+  const standLaedt = istAdmin && !s.katalogGedruckt && stand.isPending;
+  // Was am Hallenplan noch fehlt (Tiere ohne Platz, veralteter fester Plan): kurz nennen, mit Weg dorthin.
+  const offen = !s.katalogGedruckt && stand.data ? hallenplanOffen(stand.data) : null;
+  const ohnePlanFragen = async () =>
+    (await bestaetige({ titel: tk.ohnePlanTitel, text: tk.ohnePlanText, knopf: tk.ohnePlanVergeben })) && vergeben.mutate({ schauId });
 
   return (
     <div className={SEITE}>
@@ -115,7 +124,7 @@ export function Katalog() {
                 <>
                   {/* bleibt deutsch: Anker im Handbuch */}
                   <HilfeLink abschnitt="hallenplan-nummerieren">{tk.hilfeNachPlan}</HilfeLink>
-                  <Knopf laedt={vergeben.isPending} disabled={nachPlan.isPending} onClick={() => vergeben.mutate({ schauId })}>
+                  <Knopf laedt={vergeben.isPending} disabled={nachPlan.isPending} onClick={ohnePlanFragen}>
                     {tk.ohnePlanVergeben}
                   </Knopf>
                   <Knopf
@@ -129,6 +138,10 @@ export function Katalog() {
                     {tk.nachPlanVergeben}
                   </Knopf>
                 </>
+              ) : standLaedt ? (
+                <Knopf variante="primaer" laedt disabled>
+                  {t.allgemein.laden}
+                </Knopf>
               ) : (
                 <Knopf variante="primaer" laedt={vergeben.isPending} onClick={() => vergeben.mutate({ schauId })} disabled={!s.katalogGedruckt ? false : ohneNr === 0}>
                   {s.katalogGedruckt ? tk.nachmeldungenNummerieren : tk.nummernVergeben}
@@ -138,6 +151,13 @@ export function Katalog() {
           )
         }
       />
+
+      {istAdmin && (offen === "ohnePlatz" || offen === "veraltet") && (
+        <Hinweis ton="warnung">
+          {offen === "veraltet" ? tk.planVeraltet : tk.planOhnePlatz(stand.data!.ohnePlatz)}{" "}
+          <Link to={`/schau/${schauId}/hallenplan`}>{tk.zumHallenplan}</Link>
+        </Hinweis>
+      )}
 
       <KatalogReihenfolge schau={s} istAdmin={istAdmin} />
 

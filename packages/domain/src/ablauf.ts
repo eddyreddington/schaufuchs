@@ -3,6 +3,7 @@
  * ist“ ihre Gruppen zeigt. Nach dem Meldeschluss gilt (Rückmeldung eines Vereins, 22.11.2026): Preisrichter nach Rassen
  * einteilen → Käfige → Hallenplan → Katalognummern (nach dem Plan) → Katalog gestalten → festschreiben.
  */
+import type { Hallenplan, PlanTier } from "./hallenplan";
 import type { Phase } from "./types";
 
 /** Wo in welcher Phase die Arbeit liegt (Unterseite der Schau; Text des Knopfs: t.schau.uebersicht.arbeit). */
@@ -18,31 +19,58 @@ export const ARBEIT: Record<Phase, string> = {
   abgeschlossen: "protokoll",
 };
 
-/** Stand des Hallenplans: Halle angelegt, Plan festgeschrieben, Tiere ohne und mit Platz. */
+/** Stand des Hallenplans für den Ablauf (Übersicht, Seite „Katalognummern“). */
 export interface HallenStand {
+  /** Halle angelegt. */
   halle: boolean;
+  /** Plan festgeschrieben. */
   planFest: boolean;
+  /** Fester Plan passt nicht mehr zu Halle oder Käfigmaßen (erst „Plan neu setzen“). */
+  veraltet: boolean;
+  /** Tiere ohne Platz bzw. mit Platz im Plan (gemeldete Tiere, offen und bestätigt). */
   ohnePlatz: number;
   mitPlatz: number;
+  /** Es gibt schon Katalognummern. */
+  nummeriert: boolean;
+}
+
+/** Stand aus dem gerechneten Plan (`plan` null: keine Halle) und den Tieren des Plans (`planTiere`). */
+export function hallenStandVon(plan: Pick<Hallenplan, "nichtPlatziert" | "fest"> | null, tiere: Pick<PlanTier, "nr">[], planFest: boolean): HallenStand {
+  const nummeriert = tiere.some((t) => t.nr != null);
+  if (!plan) return { halle: false, planFest: false, veraltet: false, ohnePlatz: 0, mitPlatz: 0, nummeriert };
+  const ohnePlatz = plan.nichtPlatziert.length;
+  return { halle: true, planFest, veraltet: planFest && !!plan.fest?.veraltet, ohnePlatz, mitPlatz: tiere.length - ohnePlatz, nummeriert };
 }
 
 /**
- * Seite „Katalognummern“: Steht ein Hallenplan – Halle angelegt, Plan fest, Tiere mit Platz –, ist „Nach Hallenplan
- * vergeben“ der empfohlene Weg (die Nummern folgen den Käfigen). Im automatischen Plan folgen umgekehrt die Käfige den
- * Nummern; dort und ohne Halle wird wie bisher in Ausstellungsfolge vergeben.
+ * Was am Hallenplan noch zu tun ist, bevor die Katalognummern dran sind: der feste Plan ist veraltet, Tiere haben keinen
+ * Platz (fester oder automatischer Plan), oder es gibt noch keine Halle und noch keine Nummern. null: der Plan steht – auch
+ * ein automatischer Plan mit allen Tieren, und eine Schau ohne Halle, die schon nummeriert hat.
  */
-export function nachPlanVergeben(halle?: HallenStand | null): boolean {
-  return !!halle && halle.halle && halle.planFest && halle.mitPlatz > 0;
+export function hallenplanOffen(st: HallenStand): "veraltet" | "ohnePlatz" | "keineHalle" | null {
+  if (!st.halle) return st.nummeriert ? null : "keineHalle";
+  if (st.planFest && st.veraltet) return "veraltet";
+  if (st.ohnePlatz > 0) return "ohnePlatz";
+  return null;
 }
 
 /**
- * Ziel des Knopfs in der Übersicht. In der Phase „Halle & Katalog“ erst der Hallenplan – solange keine Halle angelegt ist,
- * Tiere ohne Platz sind oder der Plan nicht fest ist –, danach die Katalognummern (nach dem Plan). Ohne bekannten Stand
- * (`null`) der Hallenplan. Die übrigen Phasen wie in `ARBEIT`.
+ * Seite „Katalognummern“: Steht ein fester, aktueller Plan mit Tieren, ist „Nach Hallenplan vergeben“ der empfohlene Weg
+ * (die Nummern folgen den Käfigen; Tiere ohne Platz kommen ans Ende – die Seite nennt sie über `hallenplanOffen`). Im
+ * automatischen Plan folgen umgekehrt die Käfige den Nummern; dort und ohne Halle wird in Ausstellungsfolge vergeben.
  */
-export function arbeitsZiel(phase: Phase, halle?: HallenStand | null): string {
+export function nachPlanVergeben(st?: HallenStand | null): boolean {
+  return !!st && st.halle && st.planFest && !st.veraltet && st.mitPlatz > 0;
+}
+
+/**
+ * Ziel des Knopfs in der Übersicht. In der Phase „Halle & Katalog“ der Hallenplan, solange dort etwas zu tun ist
+ * (`hallenplanOffen`), danach die Katalognummern. Ohne bekannten Stand (`null`, Rechnung gescheitert) der Hallenplan, der
+ * den Fehler zeigt. Die übrigen Phasen wie in `ARBEIT`.
+ */
+export function arbeitsZiel(phase: Phase, st?: HallenStand | null): string {
   if (phase !== "katalog") return ARBEIT[phase];
-  return !halle || !halle.halle || halle.ohnePlatz > 0 || !halle.planFest ? "hallenplan" : "katalog";
+  return !st || hallenplanOffen(st) ? "hallenplan" : "katalog";
 }
 
 /**

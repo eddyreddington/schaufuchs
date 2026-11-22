@@ -5,7 +5,7 @@
  * Katalognummern. Teil des Schau-Ablaufs.
  */
 import { describe, expect, test } from "bun:test";
-import { PHASEN_LABEL, prueflistenGruppen } from "@schau/domain";
+import { PHASEN_LABEL, prueflistenGruppen, richterFolge } from "@schau/domain";
 import { adminKontext, m } from "./kontext";
 
 const al = () => m.appRouter.createCaller(adminKontext);
@@ -30,8 +30,9 @@ describe("Ablauf: Hallenplan vor Katalognummern", () => {
     const b = zeilen.find((z) => z.sparte === a.sparte && z.rasse !== a.rasse)!;
     await melde(id, "Senior", [a.fid, a.fid, b.fid]);
     await melde(id, "Junior", [a.fid], true);
-    const X = await al().preisrichter.speichern({ schauId: id, name: "AX", anschrift: "", email: "", telefon: "", istObmann: false, sparten: [] });
-    const Y = await al().preisrichter.speichern({ schauId: id, name: "AY", anschrift: "", email: "", telefon: "", istObmann: false, sparten: [] });
+    // Namensfolge ≠ Planfolge: X (Rasse A, vorn im Plan) heißt „Zacharias“, Y (hinten) „Anton“.
+    const X = await al().preisrichter.speichern({ schauId: id, name: "Zacharias Ablauf", anschrift: "", email: "", telefon: "", istObmann: false, sparten: [] });
+    const Y = await al().preisrichter.speichern({ schauId: id, name: "Anton Ablauf", anschrift: "", email: "", telefon: "", istObmann: false, sparten: [] });
     // Einteilung nach Rassen vor allem anderen; die Jugend der Rasse A separat bei Y.
     await al().preisrichter.einteilungJugendSetzen({ schauId: id, separat: true });
     await al().preisrichter.zuteilungSetzen({
@@ -48,7 +49,7 @@ describe("Ablauf: Hallenplan vor Katalognummern", () => {
     // Ohne Halle (eine neue Schau übernimmt sonst die Halle der vorigen): der Knopf der Phase führt zum Hallenplan.
     await m.db.update(m.schema.schau).set({ halle: null, hallenplanFest: null }).where(m.eq(m.schema.schau.id, id));
     expect((await uebersicht()).arbeit).toBe("hallenplan");
-    expect(await al().katalog.nummernStand({ schauId: id })).toEqual({ halle: false, planFest: false, ohnePlatz: 0, mitPlatz: 0 });
+    expect(await al().katalog.nummernStand({ schauId: id })).toEqual({ halle: false, planFest: false, veraltet: false, ohnePlatz: 0, mitPlatz: 0, nummeriert: false });
 
     // Zu kleine Halle: Tiere ohne Platz – die Prüfliste nennt den Hallenplan vor den Katalognummern.
     await al().katalog.halleSetzen({ schauId: id, halle: { ...HALLE, breite: 100, laenge: 100 } });
@@ -59,9 +60,10 @@ describe("Ablauf: Hallenplan vor Katalognummern", () => {
     expect(gruppen.indexOf("hallenplan")).toBeLessThan(gruppen.indexOf("katalog"));
     expect(gruppen.indexOf("preisrichter") < 0 || gruppen.indexOf("preisrichter") < gruppen.indexOf("hallenplan")).toBe(true);
 
-    // Halle groß genug, Plan automatisch: noch zum Hallenplan (der Plan ist nicht fest).
+    // Halle groß genug, Plan automatisch mit allen Tieren: der Plan steht, weiter zu den Katalognummern.
     await al().katalog.halleSetzen({ schauId: id, halle: HALLE });
-    expect((await uebersicht()).arbeit).toBe("hallenplan");
+    expect((await uebersicht()).arbeit).toBe("katalog");
+    expect(await al().katalog.nummernStand({ schauId: id })).toMatchObject({ halle: true, planFest: false, ohnePlatz: 0, mitPlatz: 4 });
 
     // Vor den Nummern: jeder Käfig trägt den Preisrichter aus der Einteilung nach Rassen, die Jugend separat.
     const liste = await al().katalog.liste({ schauId: id });
@@ -73,12 +75,28 @@ describe("Ablauf: Hallenplan vor Katalognummern", () => {
     };
     expect(await richterJeTier()).toEqual(["A:AX", "A:AX", "B:AY", "J A:AY"]);
     const jung = liste.find((e) => e.istJugend)!;
-    expect((await al().katalog.kaefigInfo({ schauId: id, id: jung.id })).preisrichter).toBe("AY");
+    // Ohne Nummer nur vorgesehen (die Bereiche entstehen erst mit den Nummern).
+    expect(await al().katalog.kaefigInfo({ schauId: id, id: jung.id })).toMatchObject({ preisrichter: "Anton Ablauf", preisrichterVorgesehen: true });
+    // Farben in der Folge des Plans, nicht nach Namen: Zacharias vorn.
+    const farben = async () => {
+      const h = await al().katalog.hallenplan({ schauId: id });
+      return richterFolge(h.plan!, h.richter).map((x) => x.name);
+    };
+    expect(await farben()).toEqual(["Zacharias Ablauf", "Anton Ablauf"]);
 
     // Plan fest: jetzt zu den Katalognummern, und dort ist „Nach Hallenplan vergeben“ möglich.
     await al().katalog.planFestschreiben({ schauId: id });
     expect((await uebersicht()).arbeit).toBe("katalog");
-    expect(await al().katalog.nummernStand({ schauId: id })).toEqual({ halle: true, planFest: true, ohnePlatz: 0, mitPlatz: 4 });
+    expect(await al().katalog.nummernStand({ schauId: id })).toEqual({ halle: true, planFest: true, veraltet: false, ohnePlatz: 0, mitPlatz: 4, nummeriert: false });
+
+    // Käfigmaße danach geändert: der feste Plan ist veraltet – zurück zum Hallenplan, nicht „Nach Hallenplan vergeben“.
+    const [{ masse }] = (await m.db.select({ masse: m.schema.schau.kaefigMasse }).from(m.schema.schau).where(m.eq(m.schema.schau.id, id))) as [{ masse: unknown }];
+    await al().katalog.kaefigMassSetzen({ schauId: id, typ: "huehner", mass: { breite: 91, tiefe: 91, hoehe: 91 } });
+    expect(await al().katalog.nummernStand({ schauId: id })).toMatchObject({ planFest: true, veraltet: true });
+    expect((await uebersicht()).arbeit).toBe("hallenplan");
+    // Zurück auf die Maße von vorher (direkt, wie beim Festschreiben): der Plan passt wieder.
+    await m.db.update(m.schema.schau).set({ kaefigMasse: masse as never }).where(m.eq(m.schema.schau.id, id));
+    expect(await al().katalog.nummernStand({ schauId: id })).toMatchObject({ veraltet: false });
 
     // Andere Phasen wie bisher.
     await phase(id, "meldung");
@@ -89,11 +107,31 @@ describe("Ablauf: Hallenplan vor Katalognummern", () => {
     const r = await al().katalog.nummernNachPlan({ schauId: id });
     expect([r.modus, r.geaendert, r.ohnePlatz]).toEqual(["nummern", 4, 0]);
     expect(await richterJeTier()).toEqual(["A:AX", "A:AX", "B:AY", "J A:AY"]);
+    expect(await farben()).toEqual(["Zacharias Ablauf", "Anton Ablauf"]);
+    expect((await al().katalog.kaefigInfo({ schauId: id, id: jung.id })).preisrichterVorgesehen).toBe(false);
+    // Was beim Übertragen auf die Nummern auffiel, kommt mit (wie bei „Katalognummern vergeben“).
+    expect(r.einteilung).toMatchObject({ ohne: 0, abweichend: [], nichtUebernommen: [] });
     const protokoll = (await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, id))).sort((x, y) => x.id - y.id);
     expect(protokoll.filter((p) => p.tabelle === "katalogeintrag").map((p) => p.aktion).at(-1)).toBe("Katalognummern nach Hallenplan vergeben");
 
     // Mit Nummern zählen nur die Bereiche (wie bisher): ohne Bereiche kein Preisrichter, auch wenn die Rasse eingeteilt ist.
     await m.db.delete(m.schema.prEinteilung).where(m.eq(m.schema.prEinteilung.schauId, id));
     expect(await richterJeTier()).toEqual(["A:null", "A:null", "B:null", "J A:null"]);
+
+    // Ohne Halle, aber schon nummeriert: der Knopf führt zu den Katalognummern.
+    await m.db.update(m.schema.schau).set({ halle: null, hallenplanFest: null }).where(m.eq(m.schema.schau.id, id));
+    expect((await uebersicht()).arbeit).toBe("katalog");
+  });
+
+  test("Nach Plan nur mit bestätigten Meldungen: sonst die Meldung dazu, nicht „folgen schon dem Plan“", async () => {
+    const { id } = await al().schau.anlegen({ name: "Ablauf offen", ort: "Halle" });
+    const s = await al().schau.get({ id });
+    const [f] = (await m.sql`select f.id from farbenschlag f join rasse r on r.id = f.rasse_id where r.version_id = ${s.stammdatenVersionId!} limit 1`) as unknown as { id: number }[];
+    // Nur eine offene Meldung: sie steht im Plan, bekommt aber keine Nummer.
+    await al().meldung.speichern({ schauId: id, aussteller: aussteller("Offen"), eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, positionen: [pos(f!.id)] });
+    await al().katalog.halleSetzen({ schauId: id, halle: HALLE });
+    await al().katalog.planFestschreiben({ schauId: id });
+    expect(await al().katalog.nummernStand({ schauId: id })).toMatchObject({ planFest: true, mitPlatz: 1 });
+    await expect(al().katalog.nummernNachPlan({ schauId: id })).rejects.toThrow("Es gibt keine bestätigten Meldungen.");
   });
 });

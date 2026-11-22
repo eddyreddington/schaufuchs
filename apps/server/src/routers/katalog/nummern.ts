@@ -135,6 +135,8 @@ export const katalogNummern = {
       // Nummern: nur bestätigte Tiere (wie „Katalognummern vergeben“). Käfigplätze: jedes Tier, das im Plan einen Käfig
       // belegt – auch eine offene Meldung (wie im Plan).
       const alle = (await ladeEintraege(s.id, { ex: tx })).filter((e) => (s.katalogGedruckt ? e.meldungStatus === "offen" || e.meldungStatus === "bestaetigt" : e.meldungStatus === "bestaetigt"));
+      // Vor dem Festschreiben zählen nur bestätigte Tiere – stehen im Plan nur offene Meldungen, gibt es nichts zu nummerieren.
+      if (!s.katalogGedruckt && alle.length === 0) throw fehler("BAD_REQUEST", "Es gibt keine bestätigten Meldungen.");
       const nachId = new Map(alle.map((e) => [e.id, e]));
       const imPlan = folge.filter((x) => nachId.has(x)).map((x) => nachId.get(x)!);
       const drin = new Set(imPlan.map((e) => e.id));
@@ -188,6 +190,8 @@ export const katalogNummern = {
         geaendert: aenderungen.length,
         ohnePlatz: ohnePlatz.length,
         ohnePreisrichter: einteilung?.ohne ?? null,
+        /** Wie bei `nummernVergeben`: was beim Übertragen der Einteilung nach Rassen auf die Nummern auffiel (null: keine). */
+        einteilung,
         einteilungVonHand,
       };
     });

@@ -9,13 +9,15 @@ Inhalt: [Fachlogik](#fachlogik-packagesdomainsrc) · [tRPC-Prozeduren](#trpc-pro
 
 Reine Funktionen ohne Datenbank und Oberfläche. Server und Web importieren aus `@schau/domain` (`index.ts`).
 
-### ablauf.ts (75 Z.)
+### ablauf.ts (103 Z.)
 Ablauf einer Schau für die Übersicht: wohin der Knopf der Phase führt und in welcher Folge die Prüfliste „Was noch zu tun ist“ ihre Gruppen zeigt.
 Tests: `ablauf.test.ts`
 
 - `ARBEIT` – Wo in welcher Phase die Arbeit liegt (Unterseite der Schau; Text des Knopfs: t.schau.uebersicht.arbeit).
-- `HallenStand` (Typ) – Stand des Hallenplans: Halle angelegt, Plan festgeschrieben, Tiere ohne und mit Platz.
-- `nachPlanVergeben()` – Seite „Katalognummern“: Steht ein Hallenplan – Halle angelegt, Plan fest, Tiere mit Platz –, ist „Nach Hallenplan vergeben“ der empfohlene Weg (die …
+- `HallenStand` (Typ) – Stand des Hallenplans für den Ablauf (Übersicht, Seite „Katalognummern“).
+- `hallenStandVon()` – Stand aus dem gerechneten Plan (`plan` null: keine Halle) und den Tieren des Plans (`planTiere`).
+- `hallenplanOffen()` – Was am Hallenplan noch zu tun ist, bevor die Katalognummern dran sind: der feste Plan ist veraltet, Tiere haben keinen Platz (fester oder automatis …
+- `nachPlanVergeben()` – Seite „Katalognummern“: Steht ein fester, aktueller Plan mit Tieren, ist „Nach Hallenplan vergeben“ der empfohlene Weg (die Nummern folgen den Käfi …
 - `arbeitsZiel()` – Ziel des Knopfs in der Übersicht.
 - `PRUEFLISTE_FOLGE` – Folge der Gruppen in der Prüfliste (je Unterseite, auf der man es erledigt) – wie der Ablauf der Schau: Hallenplan vor Katalognummern, diese vor de …
 - `prueflistenGruppen()` – Punkte der Prüfliste nach Unterseite gruppiert, ohne „ok“: Gruppen in der Folge `PRUEFLISTE_FOLGE`, unbekannte Ziele dahinter (in der Folge ihres e …
@@ -318,13 +320,13 @@ Halle so bereinigt, wie der Server sie ablegt (`HALLE_EINGABE`): Türart nur an 
 - `halleBereinigt()`
 
 ### hallenplan-druck.ts (102 Z.)
-Hallenplan drucken und zeichnen: gemeinsame Regeln für Bildschirm und PDF – Farben der Preisrichter in der Folge der Katalognummern, Lage der Zeich …
+Hallenplan drucken und zeichnen: gemeinsame Regeln für Bildschirm und PDF – Farben der Preisrichter in der Folge des Plans, Lage der Zeichnung (lan …
 Tests: `hallenplan-druck.test.ts`
 
-- `RICHTER_FARBE` – Preisrichter: geprüfte Kategorien-Palette in fester Reihenfolge nach Katalognummern – Nachbarn im Katalog bekommen Nachbarfarben.
+- `RICHTER_FARBE` – Preisrichter: geprüfte Kategorien-Palette in fester Reihenfolge (siehe `richterFolge`) – Nachbarn in der Halle bekommen Nachbarfarben.
 - `richterFarbe()`
 - `richterSchraffur()` – Schraffiert, damit einzelne Paare (Rot/Orange, Grün/Orange) auch bei Farbschwäche und im Schwarzweiß-Druck zu unterscheiden sind.
-- `richterFolge()` – Preisrichter in der Folge ihrer kleinsten Katalognummer im Plan (gleich: nach Namen).
+- `richterFolge()` – Preisrichter in der Folge ihres ersten Käfigs im Plan (Reihen mit ihren Käfigen, dann Volieren, dann eingesetzte Teile; ohne Käfig nach Namen).
 - `zeichnungDerHalle()` – Zeichnung der Halle: die lange Seite waagrecht (ist die Halle länger als breit, liegt sie quer).
 - `druckMassstab()` – Blatt für den Plan: Querformat, wenn die Zeichnung breiter als hoch ist, sonst Hochformat; der Maßstab (Punkte je cm) so groß, dass die Zeichnung s …
 - `Schild` (Typ) – Lage einer Reihenbezeichnung „R…“ am Rand der Zeichnung: über der oberen Wand (Reihe senkrecht) oder links davor.
@@ -924,7 +926,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (237 Z.)
+### halle-werkzeuge.ts (238 Z.)
 
 - `halleWerkzeuge`
 
@@ -961,7 +963,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (183 Z.)
+### katalog.ts (188 Z.)
 
 - `katalog`
 
@@ -1117,7 +1119,7 @@ Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt
 
 - `halleBild` – Texte der Oberfläche: halleBild (Entscheidung 022) – Zeichnung des Hallenplans, Entwürfe, Grundriss, 3D-Ansicht.
 
-### halle-werkzeuge.ts (243 Z.)
+### halle-werkzeuge.ts (244 Z.)
 
 - `halleWerkzeuge` – Texte der Oberfläche: halleWerkzeuge (Entscheidung 022) – Werkzeugleiste, Befehle und Aktionen des Hallenplan-Editors, kleine Teile (Tiere ohne Pla …
 
@@ -1155,7 +1157,7 @@ Texte der Oberfläche: kasse – Tierverkauf, Abrechnung, Kassenbuch, Kontoauszu
 - `teile` – Texte der Oberfläche: katalog.teile und katalog.gliederung – Reiter „Teile und Reihenfolge“ mit Beiträgen (Entscheidung 022).
 - `gliederung` – Namen der Teile in der Gliederung (Schlüssel wie `KATALOG_GLIEDERUNG` der Domain; dort stehen die Namen für das PDF).
 
-### katalog.ts (190 Z.)
+### katalog.ts (195 Z.)
 Texte der Oberfläche: katalog – Katalognummern, Reihenfolge, Katalog gestalten mit Vorschau (Entscheidung 022).
 
 - `katalog`
@@ -1323,7 +1325,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `halleBild`
 
-### halle-werkzeuge.ts (233 Z.)
+### halle-werkzeuge.ts (234 Z.)
 
 - `halleWerkzeuge`
 
@@ -1359,7 +1361,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (181 Z.)
+### katalog.ts (186 Z.)
 
 - `katalog`
 
@@ -1512,7 +1514,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (233 Z.)
+### halle-werkzeuge.ts (234 Z.)
 
 - `halleWerkzeuge`
 
@@ -1548,7 +1550,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (181 Z.)
+### katalog.ts (186 Z.)
 
 - `katalog`
 
@@ -1705,7 +1707,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (233 Z.)
+### halle-werkzeuge.ts (234 Z.)
 
 - `halleWerkzeuge`
 
@@ -1741,7 +1743,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (181 Z.)
+### katalog.ts (186 Z.)
 
 - `katalog`
 
@@ -1894,7 +1896,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleBild`
 
-### halle-werkzeuge.ts (238 Z.)
+### halle-werkzeuge.ts (239 Z.)
 
 - `halleWerkzeuge`
 
@@ -1931,7 +1933,7 @@ Sammelt alle Exporte (`export * from …`).
 - `teile`
 - `gliederung`
 
-### katalog.ts (185 Z.)
+### katalog.ts (190 Z.)
 
 - `katalog`
 
@@ -2385,7 +2387,7 @@ Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferu
 - `halle.statusSetzen` mutation · angemeldet
 - `halle.vetSetzen` mutation · angemeldet – Nachweise bei der Einlieferung: ND-Impfung (Hühner, Puten), PMV-Impfung (Tauben), Untersuchung Wassergeflügel.
 
-### routers/katalog/gemeinsam.ts (258 Z.)
+### routers/katalog/gemeinsam.ts (257 Z.)
 Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan.
 
 Keine Prozeduren (Hilfen für die Router).
@@ -2397,7 +2399,7 @@ Gesundheitsjournal in der Halle: Liste, Eintrag erfassen, Sperre aufheben.
 - `halle.gesundheitErfassen` mutation · angemeldet
 - `halle.gesundheitFreigeben` mutation · admin – Sperre aufheben (z. B. Tierarzt gibt Entwarnung) – nur die Ausstellungsleitung; der Eintrag bleibt im Journal.
 
-### routers/katalog/hallenplan.ts (341 Z.) → `katalog`
+### routers/katalog/hallenplan.ts (343 Z.) → `katalog`
 Hallenplan: Plan und Stellvorschläge, festschreiben, neu setzen, Tier versetzen, Käfiginfo, Halle speichern, Wandreihe.
 
 - `katalog.hallenplan` query · angemeldet – Hallenplan: alle gemeldeten Tiere (offen und bestätigt) mit Käfig in Katalogfolge (Käfignummern) auf die Reihen der Halle verteilt; dazu die Preisr …
@@ -2422,7 +2424,7 @@ Käfige und Grundplatten: Käfigbedarf, Aufsteller und Sockelbild, Grundplatten,
 - `katalog.kaefigRegelSetzen` mutation · admin – Abweichende Käfiggröße für eine Rasse festlegen (typ null = wieder automatisch).
 - `katalog.kaefigMassSetzen` mutation · admin – Maße der eigenen Käfige je Käfigart (cm); null = wieder Richtwert.
 
-### routers/katalog/nummern.ts (220 Z.) → `katalog`
+### routers/katalog/nummern.ts (224 Z.) → `katalog`
 Katalognummern: Liste, Stand des Hallenplans, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern.
 
 - `katalog.liste` query · angemeldet
@@ -2571,7 +2573,7 @@ Protokoll der Schau (Suche, Prüfung der Hash-Kette) und Postausgang des Vereins
 - `schau.postausgang` query · admin – Postausgang des Vereins: nicht versandte Mails zuerst, damit ein gestörter Mailserver auffällt.
 - `schau.postErneutSenden` mutation · admin – Nicht versandte Mail erneut senden (z. B. nach Korrektur der Mailserver-Einstellungen).
 
-### routers/schau/uebersicht.ts (94 Z.) → `schau`
+### routers/schau/uebersicht.ts (82 Z.) → `schau`
 Schauen lesen: Verzeichnis der Veterinärämter, Liste der Schauen, eine Schau mit Gebühren und Preisarten, Übersicht.
 
 - `schau.veterinaeraemter` query · angemeldet – Verzeichnis der zuständigen Veterinärämter (öffentliche Behördenangaben mit Quelle, siehe daten/veterinaeraemter.json) für die Vorschläge im Feld „ …
@@ -2818,7 +2820,7 @@ Eingabefelder der Hallen-Eigenschaften: Zahl mit Einheit, Übernahme mit Enter, 
 ### hallenplan-speichern.ts (24 Z.)
 Knopf „Speichern“ und Speicheranzeige im Hallenplan (Seite hallenplan.tsx).
 
-### hallenplan-teile.tsx (265 Z.)
+### hallenplan-teile.tsx (269 Z.)
 Kleine Teile des Hallenplans: Muster und Legende, Tiere ohne Platz, Sparten in den Reihen, Angaben zu einem Käfig, Schalter „Automatisch planen“.
 Prozeduren: katalog.kaefigInfo
 
@@ -2882,7 +2884,7 @@ Prozeduren: schau.katalogSortierungSetzen
 
 ### katalog-vorschau.tsx (145 Z.)
 
-### katalog.tsx (212 Z.) – `/schau/:schauId/katalog`
+### katalog.tsx (232 Z.) – `/schau/:schauId/katalog`
 Prozeduren: auth.status, katalog.gedrucktSetzen, katalog.liste, katalog.nummernNachPlan, katalog.nummernStand, katalog.nummernVergeben, schau.get
 
 ### kommende-schauen.tsx (563 Z.)
@@ -3012,7 +3014,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `preisrichter-speichern.ts` (128 Z.) – Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter Sperre der Preisrichter der S … · gruppenAusEingabe, speicherePreisrichter, loeschePreisrichter
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
 - `protokoll.ts` (37 Z.) · protokolliere
-- `pruefung.ts` (377 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste
+- `pruefung.ts` (390 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste, pruefliste
 - `rassebild.ts` (86 Z.) – Rassebilder für den Katalog: prüfen und speichern (Oberfläche und Einspielen aus dem Netz). · RASSEBILD_MAX_BYTES, jpegAnzeige, oeffneBild, pruefeRassebild, speichereRassebild
 - `serienbrief.ts` (34 Z.) – Empfänger eines Serienbriefs: Vereinsmitglieder, alle Aussteller des Vereins oder die Aussteller mit bestätigter Meldung zu einer Schau. · SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger
 - `spenden-quittung.ts` (34 Z.) – Spendenquittung einer Spende erzeugen (für das Belegarchiv, services/kassenbuch.ts): Briefkopf und Farbe aus der Briefvorlage des Vereins, Hinweis … · spendenquittung
@@ -3229,7 +3231,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `75-halle-aussehen.ts` (88 Z.) – Aussehen der Halle in 3D (Entscheidung 028): gespeichert mit der Halle (begrenzt, nur Abweichungen, mit Protokoll), ändert im festen Plan weder Pla …
 - `76-verpflichtung-zusage.ts` (124 Z.) – Preisrichterverpflichtung, Nachbesserung: Termin „Rückmeldung der Preisrichter bis“ in den Einstellungen der Schau (Prüfung, Protokoll, nicht aus d …
 - `78-tueren.ts` (86 Z.) – Türen in den Eingängen (3D, Entscheidung 028): Türart je Eingang gespeichert mit der Halle (nur gültig, nur Abweichung von der Vorgabe, mit Protoko …
-- `79-ablauf-halle.ts` (99 Z.) – Ablauf nach dem Meldeschluss (Rückmeldung eines Vereins): Einteilung nach Rassen → Käfige → Hallenplan → Katalognummern (nach dem Plan) → Katalog.
+- `79-ablauf-halle.ts` (137 Z.) – Ablauf nach dem Meldeschluss (Rückmeldung eines Vereins): Einteilung nach Rassen → Käfige → Hallenplan → Katalognummern (nach dem Plan) → Katalog.
 - `80-druck-formate.ts` (310 Z.) – Formatvorgaben der Drucke (Entscheidung 029, Rückmeldung „Bei den Druckeinstellungen fehlen die Formatvorgaben“): speichern, ablehnen, Protokoll, R …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
