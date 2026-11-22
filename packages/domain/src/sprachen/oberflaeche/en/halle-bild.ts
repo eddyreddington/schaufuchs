@@ -136,6 +136,8 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     drehen: "Rotate",
     anWandGedrehtEins: "Rotated at the wall: back panel to the wall (1 item).",
     anWandGedreht: (teile) => `Rotated at the wall: back panel to the wall (${teile}).`,
+    rueckenGedrehtEins: "Rotated at the neighbouring item: back to back (1 item).",
+    rueckenGedreht: (teile) => `Rotated at the neighbouring item: back to back (${teile}).`,
     teile: { eins: "item", wenige: "items", viele: "items" },
     bedienen: (name) => `${name} – arrow keys move, R rotates, Del removes`,
   },

@@ -444,6 +444,13 @@ Hallenplan – Stellen im Reihensystem: Reihen und ihre Abschnitte, Grundplatten
 - `planeAusgeglichen()` – Automatische Aufstellung mit ruhigem Bild (Rückmeldung 14.11.2026): Die Tiere stehen streng in Katalogfolge Reihe für Reihe, lückenlos – auch über …
 - `planeImReihensystem()` – Stellen im Reihensystem.
 
+### hallenplan-rueckwand.ts (72 Z.)
+Käfige aneinander mit der Rückwand an die Rückwand (Wunsch des Vereins: „Wenn Käfige aneinander gestellt werden, richte sie automatisch so aus, das …
+Tests: `hallenplan-rueckwand.test.ts`
+
+- `anliegend()` – Teil, das an der Seite `blick` von k anliegt: mit seiner Front- oder Rückseite (Front parallel zu `blick`) – nur dann stehen zwei Teile Front bzw. …
+- `ausrichtungBeimStellen()` – Was nach dem Stellen (Verschieben, Pfeiltasten) zu drehen ist, je um 180° an Ort und Stelle: `wand` – Front zur Wand (`wandAusrichtung`), `ruecken` …
+
 ### hallenplan-tueren.ts (84 Z.)
 Türen in den Eingängen (3D, Entscheidung 028): Art der Tür je Eingang oder Ausgang – bündig wie die Wand, Glastür, Holztür oder offen (nur die Öffn …
 Tests: `hallenplan-tueren.test.ts`
@@ -556,7 +563,7 @@ Tests: `hallenplan-wand.test.ts`
 - `reihenVersatzNachUmbau()` – Versatz der von Hand verschobenen Reihen nach dem Umbau (neue Einzelreihe, andere Abstände): jede bleibt, wo sie steht.
 - Typen: `WandSeite`
 
-### hallenplan-wandfront.ts (108 Z.)
+### hallenplan-wandfront.ts (114 Z.)
 Käfige an den Wänden mit der Rückwand an die Wand (Rückmeldung 14.11.2026): Ein Käfig hat vorn die offene Gitterfront, Rück- und Seitenwände sind d …
 Tests: `hallenplan-wandfront.test.ts`
 
@@ -565,6 +572,7 @@ Tests: `hallenplan-wandfront.test.ts`
 - `WandDrehung` (Typ) – Eine nötige Drehung: um 180° an Ort und Stelle, danach Front `front`.
 - `wandRichtung()` – Wand, an der die lange Seite eines Teils liegt (bündig oder bis `fang`), als Richtung von dort in die Halle (= Front, die es haben soll); null, wen …
 - `wandAusrichtung()` – Was zu drehen ist: Teile an einer Wand, deren Front zur Wand zeigt.
+- `kandidatGewaehlt()` – Gehört das Teil zu `nur` (eine Reihe steht für alle ihre Platten)?
 - `wandKandidaten()` – Kandidaten aus einem gerechneten Plan (Lage samt Versatz und Drehung): alle Grundplatten, Käfigblöcke und eingesetzten Volieren.
 - `wandDrehungenAnwenden()` – Drehungen in die Halle übernehmen: Grundplatten über ihre Drehung (um die eigene Mitte), Teile über ihre Front.
 
@@ -894,7 +902,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `fach`
 
-### halle-bild.ts (180 Z.)
+### halle-bild.ts (182 Z.)
 
 - `halleBild`
 
@@ -1087,7 +1095,7 @@ Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt
 
 - `fach`
 
-### halle-bild.ts (178 Z.)
+### halle-bild.ts (180 Z.)
 
 - `halleBild` – Texte der Oberfläche: halleBild (Entscheidung 022) – Zeichnung des Hallenplans, Entwürfe, Grundriss, 3D-Ansicht.
 
@@ -1293,7 +1301,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `fach`
 
-### halle-bild.ts (176 Z.)
+### halle-bild.ts (178 Z.)
 
 - `halleBild`
 
@@ -1482,7 +1490,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `fach`
 
-### halle-bild.ts (176 Z.)
+### halle-bild.ts (178 Z.)
 
 - `halleBild`
 
@@ -1675,7 +1683,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `fach`
 
-### halle-bild.ts (176 Z.)
+### halle-bild.ts (178 Z.)
 
 - `halleBild`
 
@@ -1864,7 +1872,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `fach`
 
-### halle-bild.ts (181 Z.)
+### halle-bild.ts (183 Z.)
 
 - `halleBild`
 
@@ -2740,6 +2748,11 @@ Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben 
 ### hallenplan-aktionen.ts (214 Z.)
 Werkzeuge des Hallenplan-Editors für die Auswahl und für neue Teile: am Raster ausrichten, drehen, an den Platz zurück, Leeres entfernen, Teile und …
 
+### hallenplan-ausrichten.test.ts (43 Z.)
+
+### hallenplan-ausrichten.ts (19 Z.)
+Verschieben im Editor samt Ausrichtung (ohne React): Die Auswahl rückt um dx/dy; landet ein Käfig mit der Front an einer Wand oder an einem anderen …
+
 ### hallenplan-aussehen.tsx (107 Z.)
 Abschnitt „Aussehen (3D)“ in den Eigenschaften der Halle (Entscheidung 028).
 
@@ -2749,7 +2762,7 @@ Prozeduren: katalog.nummernNachPlan, katalog.tierVersetzen, katalog.wandreiheSte
 
 ### hallenplan-bereinigt.test.ts (26 Z.)
 
-### hallenplan-bild-bedienung.ts (312 Z.)
+### hallenplan-bild-bedienung.ts (318 Z.)
 Bedienung der Hallenplan-Zeichnung: Teile greifen, ziehen und loslassen (mit Prüfung gegen Wände und andere Teile), Auswahlrahmen, Fläche aufziehen …
 
 ### hallenplan-bild.tsx (486 Z.)

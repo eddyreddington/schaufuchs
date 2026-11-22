@@ -57,14 +57,20 @@ export function wandAusrichtung(halle: Pick<Halle, "breite" | "laenge">, kandida
   return aus;
 }
 
+/** Gehört das Teil zu `nur` (eine Reihe steht für alle ihre Platten)? null/undefined: alle. */
+export function kandidatGewaehlt(t: WandKandidat["teil"], nur?: HallenTeil[] | null): boolean {
+  return (
+    !nur ||
+    nur.some((n) => (t.art === "platte" ? (n.art === "platte" && n.reihe === t.reihe && n.i === t.i) || (n.art === "reihe" && n.nr === t.reihe) : n.art === "objekt" && n.id === t.id))
+  );
+}
+
 /**
  * Kandidaten aus einem gerechneten Plan (Lage samt Versatz und Drehung): alle Grundplatten, Käfigblöcke und eingesetzten
  * Volieren. `nur`: nur diese Teile (eine Reihe steht für alle ihre Platten).
  */
 export function wandKandidaten(plan: Pick<Hallenplan, "quer" | "reihen" | "objekte">, nur?: HallenTeil[] | null): WandKandidat[] {
-  const gewaehlt = (t: WandKandidat["teil"]) =>
-    !nur ||
-    nur.some((n) => (t.art === "platte" ? (n.art === "platte" && n.reihe === t.reihe && n.i === t.i) || (n.art === "reihe" && n.nr === t.reihe) : n.art === "objekt" && n.id === t.id));
+  const gewaehlt = (t: WandKandidat["teil"]) => kandidatGewaehlt(t, nur);
   const aus: WandKandidat[] = [];
   for (const r of plan.reihen)
     r.platten.forEach((pl, i) => {

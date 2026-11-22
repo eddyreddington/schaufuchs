@@ -138,6 +138,8 @@ export const halleBild = {
     drehen: "Drehen",
     anWandGedrehtEins: "An der Wand gedreht: Rückwand zur Wand (1 Teil).",
     anWandGedreht: (teile: string) => `An der Wand gedreht: Rückwand zur Wand (${teile}).`,
+    rueckenGedrehtEins: "Am Nachbarn gedreht: Rückwand an Rückwand (1 Teil).",
+    rueckenGedreht: (teile: string) => `Am Nachbarn gedreht: Rückwand an Rückwand (${teile}).`,
     teile: { eins: "Teil", wenige: "Teile", viele: "Teile" },
     bedienen: (name: string) => `${name} – Pfeiltasten verschieben, R dreht, Entf entfernt`,
   },

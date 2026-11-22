@@ -140,6 +140,8 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     drehen: "Obróć",
     anWandGedrehtEins: "Obrócono przy ścianie: tylna ścianka do ściany (1 element).",
     anWandGedreht: (teile) => `Obrócono przy ścianie: tylna ścianka do ściany (${teile}).`,
+    rueckenGedrehtEins: "Obrócono przy sąsiednim elemencie: tylna ścianka do tylnej ścianki (1 element).",
+    rueckenGedreht: (teile) => `Obrócono przy sąsiednim elemencie: tylna ścianka do tylnej ścianki (${teile}).`,
     teile: { eins: "element", wenige: "elementy", viele: "elementów" },
     bedienen: (name) => `${name} – strzałki przesuwają, R obraca, Del usuwa`,
   },

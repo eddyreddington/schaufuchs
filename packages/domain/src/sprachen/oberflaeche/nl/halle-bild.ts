@@ -136,6 +136,8 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     drehen: "Draaien",
     anWandGedrehtEins: "Aan de wand gedraaid: achterwand naar de wand (1 onderdeel).",
     anWandGedreht: (teile) => `Aan de wand gedraaid: achterwand naar de wand (${teile}).`,
+    rueckenGedrehtEins: "Bij het buuronderdeel gedraaid: achterwand tegen achterwand (1 onderdeel).",
+    rueckenGedreht: (teile) => `Bij het buuronderdeel gedraaid: achterwand tegen achterwand (${teile}).`,
     teile: { eins: "onderdeel", wenige: "onderdelen", viele: "onderdelen" },
     bedienen: (name) => `${name} – pijltjestoetsen verschuiven, R draait, Del verwijdert`,
   },

@@ -136,6 +136,8 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     drehen: "Pivoter",
     anWandGedrehtEins: "Pivoté contre le mur : paroi arrière contre le mur (1 élément).",
     anWandGedreht: (teile) => `Pivotés contre le mur : paroi arrière contre le mur (${teile}).`,
+    rueckenGedrehtEins: "Pivoté contre l’élément voisin : dos à dos (1 élément).",
+    rueckenGedreht: (teile) => `Pivotés contre l’élément voisin : dos à dos (${teile}).`,
     teile: { eins: "élément", wenige: "éléments", viele: "éléments" },
     bedienen: (name) => `${name} – les flèches déplacent, R fait pivoter, Suppr supprime`,
   },

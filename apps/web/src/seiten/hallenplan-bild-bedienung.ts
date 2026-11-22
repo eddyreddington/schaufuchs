@@ -3,10 +3,11 @@
  * Auswahlrahmen, Fläche aufziehen, Pfeiltasten, Drehen, eine Doppelreihe an die Wand ziehen und die Vorschau während
  * des Ziehens (`versatz`, `verschoben`, `reiheImEntwurf`). Die Zeichnung selbst steht in hallenplan-bild.tsx.
  */
-import { anKantenEinrasten, serverText, type Halle, type HallenFlaeche, type HallenTeil, pruefeVerschiebung, type Rechteck, type Reihe, type VerschiebePruefung, verschiebeTeile, wandAusrichtung, wandDrehungenAnwenden, type WandSeite, wandSeiteVon } from "@schau/domain";
+import { anKantenEinrasten, serverText, type Halle, type HallenFlaeche, type HallenTeil, pruefeVerschiebung, type Rechteck, type Reihe, type VerschiebePruefung, type WandSeite, wandSeiteVon } from "@schau/domain";
+import { verschiebenUndAusrichten } from "./hallenplan-ausrichten";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOberflaeche, useSprache } from "../sprache";
-import { type Aendern, drehPruefung, freierPlatz, gedreht, gleich, groesseAendern, innen, type Plan, planKoerper, plattenDa, type Rahmen, RASTER, raster, reihenLage, vollstaendig, wandKandidatenImEntwurf, type Ziel, type Zug, zahlWort, zuTeilen, zweisprachig } from "./hallenplan-geometrie";
+import { type Aendern, drehPruefung, freierPlatz, gedreht, gleich, groesseAendern, innen, type Plan, planKoerper, plattenDa, type Rahmen, RASTER, raster, reihenLage, type Ziel, type Zug, zahlWort, zuTeilen, zweisprachig } from "./hallenplan-geometrie";
 
 export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, aendern, mehrfach, melden, pfeilRef, zeichnen, gezeichnet, anWand, quer, svgRef }: {
   halle: Halle;
@@ -228,18 +229,23 @@ export function usePlanBedienung({ halle, plan, bearbeiten, auswahl, waehlen, ae
     }
     if (!pr.ok) return meldeFach(pr.meldung);
     // Der Entwurf übernimmt die neue Lage sofort; gespeichert wird im Hintergrund – eine Änderung für die ganze Gruppe.
-    // Landet ein Käfig an einer Wand, dreht ihn die Software so, dass die Rückwand an der Wand liegt (ein Schritt).
-    let gedreht = 0;
+    // Landet ein Käfig mit der Front an einer Wand oder an einem anderen Teil, dreht ihn die Software so, dass die Rückwand an
+    // der Wand bzw. an der Rückwand des anderen liegt (ein Schritt, ein Rückgängig).
+    let dreh = { wand: 0, ruecken: 0 };
     aendern(
       (h) => {
-        const v = verschiebeTeile(vollstaendig(h), ziele, dx, dy);
-        const d = wandAusrichtung(v, wandKandidatenImEntwurf(v, plan, ziele));
-        gedreht = d.length;
-        return wandDrehungenAnwenden(v, d);
+        const r = verschiebenUndAusrichten(h, plan, ziele, dx, dy);
+        dreh = r;
+        return r.halle;
       },
       { ...zweisprachig((x) => x.halleBild.bedienung.verschieben), festschreiben: ziele.some((t) => t.art === "reihe" || t.art === "platte") },
     );
-    if (gedreht) melden?.(gedreht === 1 ? tb.anWandGedrehtEins : tb.anWandGedreht(zahlWort(gedreht, tb.teile)));
+    const { wand, ruecken } = dreh;
+    const hinweis = [
+      wand ? (wand === 1 ? tb.anWandGedrehtEins : tb.anWandGedreht(zahlWort(wand, tb.teile))) : "",
+      ruecken ? (ruecken === 1 ? tb.rueckenGedrehtEins : tb.rueckenGedreht(zahlWort(ruecken, tb.teile))) : "",
+    ].filter(Boolean);
+    if (hinweis.length) melden?.(hinweis.join(" "));
   };
   /**
    * Gehört schon zur Auswahl, ohne selbst gewählt zu sein: Grundplatte einer gewählten Reihe, freier Platz auf einer

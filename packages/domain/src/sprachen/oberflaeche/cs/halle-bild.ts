@@ -139,6 +139,8 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     drehen: "Otočit",
     anWandGedrehtEins: "Otočeno u stěny: zadní stěnou ke stěně (1 prvek).",
     anWandGedreht: (teile) => `Otočeno u stěny: zadní stěnou ke stěně (${teile}).`,
+    rueckenGedrehtEins: "Otočeno u sousedního prvku: zadní stěnou k zadní stěně (1 prvek).",
+    rueckenGedreht: (teile) => `Otočeno u sousedního prvku: zadní stěnou k zadní stěně (${teile}).`,
     teile: { eins: "prvek", wenige: "prvky", viele: "prvků" },
     bedienen: (name) => `${name} – šipky posouvají, R otáčí, Del odstraní`,
   },

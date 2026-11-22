@@ -45,6 +45,7 @@ export * from "./hallenplan-bereinigen";
 export * from "./hallenplan-3d-ausstattung";
 export * from "./hallenplan-3d-dach";
 export * from "./hallenplan-wandfront";
+export * from "./hallenplan-rueckwand";
 export * from "./hallenplan-versetzen";
 export * from "./ruecksprung";
 export * from "./abmeldung";
