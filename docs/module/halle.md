@@ -49,7 +49,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
   ([ADR 028](../entscheidungen/028-aussehen-der-halle.md)). Gespeichert über `halleSetzen` (zod in `HALLE_EINGABE`), nur
   Abweichungen von der Vorgabe; kommt als Teil der Halle mit Entwürfen und Vorlagen mit. Ebenso die Tür je Eingang
   (`tuer`, Vorgabe „wie Wand“): nur Darstellung, im Editor über den gewöhnlichen Speicherweg (`aendern`), nie „Plan neu setzen“.
-- Hallenplan vor den Katalognummern ([ADR 029](../entscheidungen/029-hallenplan-vor-katalognummern.md)): `planTiere`
+- Hallenplan vor den Katalognummern ([ADR 031](../entscheidungen/031-hallenplan-vor-katalognummern.md)): `planTiere`
   setzt den Preisrichter mit `richterImPlan` – mit Nummer aus den Nummernbereichen, ohne Nummer aus der Einteilung nach
   Rassen (Jugend separat beachtet, in `kaefigInfo` als `preisrichterVorgesehen`); gilt für Plan, Druck, 3D und `kaefigInfo`.
   Farben (`richterFolge`) in der Folge des ersten Käfigs im Plan, nicht nach Nummern – beim Nummerieren wechselt keine.

@@ -26,7 +26,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
   fest, dann die gewählten Kriterien. Vorgabe = bisherige Folge; gespeicherte Listen ohne neue Kriterien sortieren unverändert.
 - Nach dem Festschreiben gesperrt: Sortierung, Verzeichnisversion, „Jugend im Katalog“, Reihenfolge der Stämme, Rasse/Art/Geschlecht/Alter nummerierter Tiere.
 - Sind die Preisrichter nach Rassen eingeteilt, folgen die Nummernbereiche den neuen Nummern.
-- Die Katalognummern kommen nach dem Hallenplan ([ADR 029](../entscheidungen/029-hallenplan-vor-katalognummern.md)):
+- Die Katalognummern kommen nach dem Hallenplan ([ADR 031](../entscheidungen/031-hallenplan-vor-katalognummern.md)):
   Steht ein fester Plan mit Tieren (`nachPlanVergeben`, Stand aus `katalog.nummernStand`), zeigt die Seite „Nach Hallenplan
   vergeben“ (`katalog.nummernNachPlan`, Rückfrage wie im Editor) als ersten Knopf und „Ohne Hallenplan vergeben“
   (`katalog.nummernVergeben`) daneben; sonst wie bisher „Katalognummern vergeben“. Nach dem Festschreiben „Nachmeldungen nummerieren“.
