@@ -7,9 +7,10 @@ Spielfeldlinien, farbiger Prallwand, Fensterband und Holzdecke. Bisher war die H
 Holz-Prallwand bis 2 m, 3,50 m hoch).
 
 **Entscheidung:**
-- Neues optionales Feld `halle.aussehen` (`HallenAussehen`): Boden (Parkett, Sportboden, Estrich), Prallwand (Holz oder
-  #rrggbb) und ihre Höhe, Wandhöhe, Schalter für Fenster, Decke, Spielfeldlinien und Geräte. Fehlt es, gilt die Vorgabe
-  (`AUSSEHEN_STANDARD`, wie die Halle bisher aussah); vorhandene Hallen bleiben unverändert.
+- Neues optionales Feld `halle.aussehen` (`HallenAussehen`): Boden (Parkett, Sportboden, Estrich) und Folie darüber,
+  Prallwand (Holz oder #rrggbb) und ihre Höhe, Wand- und Firsthöhe, Schalter für Fenster, Decke, Spielfeldlinien und Geräte.
+  Fehlt es, gilt die Vorgabe (`AUSSEHEN_STANDARD`): Daten und Plan sind unverändert, die Darstellung ist überarbeitet
+  (Parkett statt einfarbigem Boden, Texturen, Licht).
 - **Das Aussehen ändert nie den Plan.** `festGeometrie` kennt es nicht: Ein fester Plan bleibt fest, kein Käfig, keine
   Nummer und kein Platz ändert sich; `planeHalle` rechnet mit und ohne Aussehen dasselbe. Nur der Stand der Halle
   (`halleSchluessel`) ändert sich wie bei jeder gespeicherten Änderung.
@@ -21,6 +22,15 @@ Holz-Prallwand bis 2 m, 3,50 m hoch).
   Decke mit Bindern und Leuchten. Nichts davon ist ein Hindernis für den Plan.
 - Die Decke ist nur von innen zu sehen (`deckeSichtbar`: Kamera unter der Decke über der Grundfläche); von oben und außen
   verdeckte sie die Käfige.
+- Dach (`hallenplan-3d-dach.ts`): Firsthöhe über der Wandhöhe ergibt mit Decke ein Satteldach (First parallel zur langen
+  Seite in der Mitte, geschlossene Giebel, Binder entlang der Neigung); beim freien Grundriss bleibt es flach, weil ein
+  Satteldach dort selten passt. Leuchten hängen unter den Bindern, mindestens 1,50 m über dem höchsten Käfig und nie unter
+  3 m, sonst direkt an der Decke. Das Einschalten der Decke schlägt Wand 7 m und First 9 m vor, solange beide nie
+  eingestellt waren – als gespeicherter Wert im Panel, nicht still in der Darstellung.
+- Folie: Startwert aus dem Aussehen; der Schalter „Folie“ in der 3D-Ansicht wirkt nur auf die Ansicht und speichert nicht.
+- Im heruntergeladenen Modell (glTF): Boden, Folie wie gezeigt, Linien, Wände, Fenster, Geräte und die Decke (immer, auch
+  wenn sie in der Ansicht gerade verborgen ist); das Meterraster nicht (nur Hilfe zum Abschätzen in der Ansicht).
+- Käfige (Preisrichterfarben) und Sockelverkleidung ohne Tonemapping, damit ihre Farben der Legende entsprechen.
 
 **Folgen:** Als Teil der Halle kommt das Aussehen mit Entwürfen, dem Archiv (017) und einer neuen Schau aus der Vorlage
 mit. Die Texturen werden im Browser aus kleinen Canvas-Bildern gerechnet (keine Bilddateien, auch keine Fotos von Hallen

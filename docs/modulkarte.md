@@ -177,7 +177,7 @@ Tests: `hallenentwurf.test.ts`
 - `IN_DER_HALLE` – Status eines Tiers, das schon in der Halle war: zählt für die Rückfrage.
 - `entwurfRueckfrage()` – Text der Rückfrage oder `null`, wenn ohne Rückfrage geladen werden kann.
 
-### hallenplan-3d-ausstattung.ts (304 Z.)
+### hallenplan-3d-ausstattung.ts (245 Z.)
 Ausstattung der 3D-Halle aus dem Aussehen (Entscheidung 028): Fenster oben in den Längswänden, Geräte an den Wänden (Basketballbretter, Sprossenwan …
 Tests: `hallenplan-3d-ausstattung.test.ts`
 
@@ -191,9 +191,23 @@ Tests: `hallenplan-3d-ausstattung.test.ts`
 - `SpielfeldLinie` (Typ) – Linie am Boden (Strichmitte, cm); `punkte` als Linienzug.
 - `LINIEN_BREITE` – Strichbreite der Spielfeldlinien (cm).
 - `spielfeldLinien()` – Spielfeldlinien wie in einer Sporthalle, maßstäblich zur Halle: Handballfeld (40 × 20 m, mit 1 m Rand) mittig längs der langen Seite, in kleineren …
-- `DeckenTeile` (Typ) – Binder und Leuchten der Holzdecke (cm, Szene).
-- `BINDER` – Leimbinder 16 × 45 cm etwa alle 5,50 m; Leuchten 2,40 m lang, abgehängt.
-- `deckenTeile()` – Holzdecke: Leimbinder quer zur langen Seite in gleichem Abstand, bündig unter der Decke; in jedem Feld dazwischen Leuchtbänder parallel zu den Bind …
+
+### hallenplan-3d-dach.ts (156 Z.)
+Dach und Decke der 3D-Halle (Entscheidung 028): flache Decke in Wandhöhe oder Satteldach (First parallel zur langen Seite in der Mitte, nur beim re …
+Tests: `hallenplan-3d-dach.test.ts`
+
+- `DachLage` (Typ) – Was die Dachrechnung von der Szene braucht; `firstHoehe` fehlt: flach.
+- `dachVon()`
+- `deckenHoehe()` – Unterseite der Decke an der Stelle (x, z): an den Längswänden die Traufe, zur Mitte gerade bis zum First.
+- `deckeSichtbar()` – Ist die Decke zu sehen?
+- `BINDER` – Leimbinder 16 × 45 cm etwa alle 5,50 m; Leuchten 2,40 m lang.
+- `LEUCHTE`
+- `Binder` (Typ) – Ein Binder (bzw. eine Hälfte beim Satteldach): Oberkante an der Decke von a nach b, Querschnitt `BINDER`.
+- `hoechstesInDerHalle()` – Höchster Käfig bzw. höchste Voliere der Szene (Oberkante, cm); 0 ohne.
+- `deckenTeile()` – Holzdecke: Leimbinder quer zur langen Seite in gleichem Abstand, bündig unter der Decke (beim Satteldach zwei Hälften von der Traufe zum First); in …
+- `Giebel` (Typ) – Giebeldreieck über einer Stirnwand: entlang der Wand von–bis (über die Ecken), Unterkante y, Spitze in der Mitte.
+- `giebel()` – Giebel an beiden Stirnseiten beim Satteldach (geschlossen bis unter den First); flach: keine.
+- Typen: `Dach`, `DeckenTeile`
 
 ### hallenplan-3d-rundgang.ts (65 Z.)
 Automatischer Rundgang durch die Halle (3D): die Gänge zwischen den Reihen in Schlangenlinie, in Augenhöhe.
@@ -210,7 +224,7 @@ Tests: `hallenplan-3d-rundgang.test.ts`
 - `ohneSeite()` – Die Seite gehört nur zu Wänden, nicht zur Türöffnung.
 - `waendeImGrundriss()` – Wände entlang eines freien Grundrisses (Entscheidung 019): je Kante ein Wandstück außen an der Kante, bis zum um die Wanddicke versetzten Umriss – …
 
-### hallenplan-3d.ts (574 Z.)
+### hallenplan-3d.ts (577 Z.)
 Hallenplan räumlich: aus dem gerechneten Plan (`planeHalle`) die Körper für die 3D-Ansicht – Wände mit Türen, Aufsteller unter den Grundplatten, Kä …
 Tests: `hallenplan-3d.test.ts`
 
@@ -243,20 +257,22 @@ Tests: `hallenplan-3d.test.ts`
 - `schuerzenFuer()` – Verkleidung der Sockel: Sockel mit derselben Front, die quer zur Reihe gleich liegen und aneinanderstoßen, bilden ein Stück Reihe.
 - Typen: `Verkleidung`, `Figur`, `SzeneKaefig`, `SzeneVoliere`, `SzeneTuer`, `SzeneFlaeche`, `SzeneBeschriftung`, `HallenSzene`
 
-### hallenplan-aussehen.ts (89 Z.)
-Aussehen der Halle in der 3D-Ansicht (Entscheidung 028): Boden, Prallwand, Wandhöhe, Fenster, Decke, Spielfeldlinien und Geräte.
+### hallenplan-aussehen.ts (104 Z.)
 Tests: `hallenplan-aussehen.test.ts`
 
-- `HALLEN_BOEDEN`
-- `AUSSEHEN_STANDARD` – Vorgabe: wie die Halle bis 1.19 aussah (Holz-Prallwand bis 2 m, 3,50 m hoch, Lichtband bzw. Fenster oben).
+- `HALLEN_BOEDEN` – Aussehen der Halle in der 3D-Ansicht (Entscheidung 028): Boden und Folie, Prallwand, Wand- und Firsthöhe, Fenster, Decke, Spielfeldlinien und Geräte.
+- `AUSSEHEN_STANDARD` – Vorgabe: Daten und Plan wie bis 1.19 (Holz-Prallwand bis 2 m, 3,50 m hoch, flach, oben Fenster statt des früheren Lichtbands); die Darstellung ist …
 - `WAND_HOEHE_MIN` – Grenzen (cm): Die Wand reicht über die Türen (2,50 m), die Prallwand bleibt mindestens 30 cm unter der Decke.
 - `WAND_HOEHE_MAX`
 - `PRALLWAND_HOEHE_MAX`
+- `FIRST_HOEHE_MAX`
+- `DECKE_VORSCHLAG` – Vorschlag beim Einschalten der Decke, solange Wand und First nie eingestellt waren: übliche Sporthalle.
 - `PRALLWAND_VORGABEN` – Farben der Prallwand zur Auswahl (wie in Sporthallen üblich); daneben jede Farbe frei.
 - `istPrallwandFarbe()` – Holz oder eine Farbe #rrggbb.
 - `aussehenVon()` – Aussehen mit allen Vorgaben, Werte begrenzt (ungültige Angaben gelten als nicht gesetzt).
-- `aussehenBereinigt()` – Zum Speichern: nur, was von der Vorgabe abweicht; ohne Abweichung nichts (die Halle bleibt wie ohne Aussehen).
-- `deckeSichtbar()` – Ist die Decke zu sehen?
+- `aussehenBereinigt()` – Zum Speichern: nur, was von der Vorgabe abweicht (der First nur, wenn er höher ist als die Wand); ohne Abweichung nichts (die Halle bleibt wie ohne …
+- `deckeSchalten()` – Decke ein- oder ausschalten; beim Einschalten ohne je eingestellte Wand- und Firsthöhe mit `DECKE_VORSCHLAG`.
+- `wirksamerFirst()` – Firsthöhe, die in 3D gilt: das Satteldach nur mit Decke und rechteckigem Grundriss, sonst flach in Wandhöhe.
 - Typen: `HallenBoden`, `HallenAussehen`, `VollesAussehen`
 
 ### hallenplan-druck.ts (102 Z.)
@@ -526,7 +542,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (62 Z.)
+### index.ts (63 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -827,7 +843,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `fach`
 
-### halle-bild.ts (179 Z.)
+### halle-bild.ts (180 Z.)
 
 - `halleBild`
 
@@ -835,7 +851,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (225 Z.)
+### halle.ts (227 Z.)
 
 - `halle`
 
@@ -1016,7 +1032,7 @@ Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt
 
 - `fach`
 
-### halle-bild.ts (177 Z.)
+### halle-bild.ts (178 Z.)
 
 - `halleBild` – Texte der Oberfläche: halleBild (Entscheidung 022) – Zeichnung des Hallenplans, Entwürfe, Grundriss, 3D-Ansicht.
 
@@ -1024,7 +1040,7 @@ Bezeichnungen aus der Fachlogik (`@schau/domain`), wie die Oberfläche sie zeigt
 
 - `halleWerkzeuge` – Texte der Oberfläche: halleWerkzeuge (Entscheidung 022) – Werkzeugleiste, Befehle und Aktionen des Hallenplan-Editors, kleine Teile (Tiere ohne Pla …
 
-### halle.ts (224 Z.)
+### halle.ts (226 Z.)
 
 - `halle` – Texte der Oberfläche: halle – Seiten „Käfige“ und „Hallenplan“ mit den Eigenschaften im Editor (Entscheidung 022).
 
@@ -1217,7 +1233,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `fach`
 
-### halle-bild.ts (175 Z.)
+### halle-bild.ts (176 Z.)
 
 - `halleBild`
 
@@ -1225,7 +1241,7 @@ Texte der Oberfläche: vorlagen (Entscheidung 022) – Druckvorlagen (Bewertungs
 
 - `halleWerkzeuge`
 
-### halle.ts (224 Z.)
+### halle.ts (226 Z.)
 
 - `halle`
 
@@ -1402,7 +1418,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `fach`
 
-### halle-bild.ts (175 Z.)
+### halle-bild.ts (176 Z.)
 
 - `halleBild`
 
@@ -1410,7 +1426,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (224 Z.)
+### halle.ts (226 Z.)
 
 - `halle`
 
@@ -1591,7 +1607,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `fach`
 
-### halle-bild.ts (175 Z.)
+### halle-bild.ts (176 Z.)
 
 - `halleBild`
 
@@ -1599,7 +1615,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (224 Z.)
+### halle.ts (226 Z.)
 
 - `halle`
 
@@ -1776,7 +1792,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `fach`
 
-### halle-bild.ts (180 Z.)
+### halle-bild.ts (181 Z.)
 
 - `halleBild`
 
@@ -1784,7 +1800,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `halleWerkzeuge`
 
-### halle.ts (226 Z.)
+### halle.ts (228 Z.)
 
 - `halle`
 
@@ -2261,7 +2277,7 @@ Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferu
 - `halle.statusSetzen` mutation · angemeldet
 - `halle.vetSetzen` mutation · angemeldet – Nachweise bei der Einlieferung: ND-Impfung (Hühner, Puten), PMV-Impfung (Tauben), Untersuchung Wassergeflügel.
 
-### routers/katalog/gemeinsam.ts (239 Z.)
+### routers/katalog/gemeinsam.ts (241 Z.)
 Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan.
 
 Keine Prozeduren (Hilfen für die Router).
@@ -2594,11 +2610,14 @@ Prozeduren: auth.status, schau.get, schau.protokoll
 ### hallenplan-3d-bausteine.ts (242 Z.)
 Bausteine der 3D-Halle: Texturen (Gitter, Stoff), Geometrien (Kasten, Schürzen, Innenseiten), Figuren, Schilder.
 
+### hallenplan-3d-decke.ts (127 Z.)
+Decke der 3D-Halle (Entscheidung 028): Holzdecke aus Profilbrettern – flach oder als Satteldach –, Leimbinder entlang der Decke, Giebel an den Stir …
+
 ### hallenplan-3d-landschaft.ts (288 Z.)
 Umgebung der 3D-Halle (nur zur Anschauung, ohne Maße): Himmel mit Wolken, Wiese, ein heller Hof um die Halle, vor dem Haupteingang ein Parkplatz, g …
 
-### hallenplan-3d-raum.ts (253 Z.)
-Der Raum der 3D-Halle nach ihrem Aussehen (Entscheidung 028): Boden mit Belag und Meterraster, Spielfeldlinien, Innenseiten der Wände mit Prallwand …
+### hallenplan-3d-raum.ts (247 Z.)
+Der Raum der 3D-Halle nach ihrem Aussehen (Entscheidung 028): Boden mit Belag, Folie und Meterraster, Spielfeldlinien, Innenseiten der Wände mit Pr …
 
 ### hallenplan-3d-seite.tsx (56 Z.) – `/schau/:schauId/hallenplan/3d`
 Hallenplan in 3D als eigene Seite (eigener Browser-Tab, ohne Seitenleiste): zeigt den gespeicherten Stand des Plans.
@@ -2610,19 +2629,20 @@ Steuerkreuz unten rechts in der 3D-Ansicht – für Tablet und Maus, was am Rech
 ### hallenplan-3d-steuerung.ts (271 Z.)
 Bewegung der Kamera in der 3D-Ansicht über das Ziehen mit Maus oder Finger hinaus: weiches Auslaufen, Zoom zum Mauszeiger, per Doppelklick sanft hi …
 
-### hallenplan-3d-texturen.ts (269 Z.)
+### hallenplan-3d-texturen.ts (304 Z.)
 Texturen der 3D-Halle, aus kleinen Canvas-Bildern gerechnet (keine Bilddateien): Bodenbeläge (Mosaikparkett, Sportboden, Estrich), Innenwand mit Pr …
 
-### hallenplan-3d-welt.ts (531 Z.)
+### hallenplan-3d-welt.ts (547 Z.)
 Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und Steuerung.
 
-### hallenplan-3d.tsx (216 Z.)
+### hallenplan-3d.tsx (233 Z.)
 Hallenplan in 3D: die Halle räumlich – drehen, zoomen, verschieben, von oben oder im Gang in Augenhöhe, mit Tasten oder Steuerkreuz gehen und als a …
 
 ### hallenplan-aktionen.ts (214 Z.)
 Werkzeuge des Hallenplan-Editors für die Auswahl und für neue Teile: am Raster ausrichten, drehen, an den Platz zurück, Leeres entfernen, Teile und …
 
-### hallenplan-aussehen.tsx (79 Z.)
+### hallenplan-aussehen.tsx (100 Z.)
+Abschnitt „Aussehen (3D)“ in den Eigenschaften der Halle (Entscheidung 028).
 
 ### hallenplan-befehle.ts (289 Z.)
 Befehle des Hallenplan-Editors, die über den Entwurf hinausgehen: Rückgängig/Wiederholen, Tier versetzen, nach Plan nummerieren, Einstellungen der …
@@ -2634,7 +2654,7 @@ Bedienung der Hallenplan-Zeichnung: Teile greifen, ziehen und loslassen (mit Pr�
 ### hallenplan-bild.tsx (486 Z.)
 Zeichnung des Hallenplans (`PlanBild`): Reihen, Käfige, Flächen und Objekte als SVG, Auswahl, Ziehen und Zoomen.
 
-### hallenplan-eigenschaften.tsx (569 Z.)
+### hallenplan-eigenschaften.tsx (518 Z.)
 Eigenschaften im Hallenplan: rechte Leiste zur Auswahl (`Eigenschaften`) und die Einstellungen der Halle (`HalleEigenschaften`) mit ihren Eingabefe …
 
 ### hallenplan-entwuerfe.tsx (177 Z.)
@@ -2654,6 +2674,9 @@ Grundriss der Halle bearbeiten (Entscheidung 019): Wände ziehen (rechtwinklig, 
 
 ### hallenplan-laden.ts (20 Z.)
 Was die Seite „Hallenplan“ beim Laden zeigt (Seite hallenplan.tsx).
+
+### hallenplan-meterfeld.tsx (59 Z.)
+Eingabefelder der Hallen-Eigenschaften: Zahl mit Einheit, Übernahme mit Enter, Meter-Feld (gespeichert in cm).
 
 ### hallenplan-nummerfolge.tsx (73 Z.)
 
@@ -2684,7 +2707,7 @@ Werkzeugleiste des Hallenplan-Editors (Auswählen, Einsetzen, Drehen, Entfernen,
 ### hallenplan-wiederholen.ts (122 Z.)
 Automatisches Wiederholen beim Speichern im Hallenplan-Editor (hallenplan-entwurf.ts): rein, mit eingesetztem Senden und Warten.
 
-### hallenplan.tsx (571 Z.) – `/schau/:schauId/hallenplan`
+### hallenplan.tsx (572 Z.) – `/schau/:schauId/hallenplan`
 Seite „Hallenplan“: neue Halle anlegen und der Editor (`Plan`) mit Speichern, Rückgängig, Auswahl und Tastatur.
 Prozeduren: katalog.halleSetzen, katalog.hallenplan
 
@@ -3066,7 +3089,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `72-jugend-einteilung.ts` (155 Z.) – Jugend separat oder eingereiht: Katalognummern (eigener Block am Ende oder in der Rasse) und Preisrichter-Einteilung nach Rassen („mit der Rasse“ w …
 - `73-jugend-gegenpruefung.ts` (65 Z.) – Jugend in der Einteilung, Gegenprüfung: Umschalten meldet Tiere ohne Preisrichter und Nachmeldungen wie das Speichern der Einteilung; gespeicherte …
 - `74-zusatzpreise-je-pr.ts` (156 Z.) – Gestiftete Preisarten mit „zusätzlich je Preisrichter“: Die Zusatzpreise ohne Stiftung zählen je Preisrichter (bei Kontingent „je Schau“ für die ga …
-- `75-halle-aussehen.ts` (81 Z.) – Aussehen der Halle in 3D (Entscheidung 028): gespeichert mit der Halle (begrenzt, nur Abweichungen, mit Protokoll), ändert im festen Plan weder Pla …
+- `75-halle-aussehen.ts` (87 Z.) – Aussehen der Halle in 3D (Entscheidung 028): gespeichert mit der Halle (begrenzt, nur Abweichungen, mit Protokoll), ändert im festen Plan weder Pla …
 - `76-verpflichtung-zusage.ts` (124 Z.) – Preisrichterverpflichtung, Nachbesserung: Termin „Rückmeldung der Preisrichter bis“ in den Einstellungen der Schau (Prüfung, Protokoll, nicht aus d …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
