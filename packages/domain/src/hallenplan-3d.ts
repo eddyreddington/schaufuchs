@@ -12,6 +12,7 @@ import { artenDerSparte } from "./textbausteine";
 import { zeichnungDerHalle } from "./hallenplan-druck";
 import { rundgang, type RundgangPunkt } from "./hallenplan-3d-rundgang";
 import { ohneSeite, waendeImGrundriss } from "./hallenplan-3d-waende";
+import { aussehenVon, type VollesAussehen } from "./hallenplan-aussehen";
 import { istRechteckUmriss, type Punkt, umrissNormal } from "./hallenplan-umriss";
 
 /** Aufsteller (Gestelle, auf denen die Grundplatten mit den Käfigen stehen). */
@@ -158,6 +159,8 @@ export interface HallenSzene {
   umriss?: Punkt[];
   wandHoehe: number;
   wandDicke: number;
+  /** Aussehen mit allen Vorgaben (Boden, Prallwand, Fenster …), siehe hallenplan-aussehen.ts. */
+  aussehen: VollesAussehen;
   waende: Quader[];
   tueren: SzeneTuer[];
   flaechen: SzeneFlaeche[];
@@ -246,8 +249,8 @@ function tuerWand(halle: Pick<Halle, "breite" | "laenge">, f: Pick<HallenFlaeche
 }
 
 /** Wände um die Halle (außen anliegend), mit Öffnungen an den Türen und einem Sturz darüber. */
-function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen" | "umriss">): { waende: Quader[]; tueren: SzeneTuer[] } {
-  if (!istRechteckUmriss(halle.umriss)) return waendeImGrundriss(umrissNormal(halle.umriss!), halle.flaechen.filter((f) => !f.aussen), { dicke: WAND_DICKE, hoehe: WAND_HOEHE, tuerHoehe: TUER_HOEHE });
+function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen" | "umriss">, H: number): { waende: Quader[]; tueren: SzeneTuer[] } {
+  if (!istRechteckUmriss(halle.umriss)) return waendeImGrundriss(umrissNormal(halle.umriss!), halle.flaechen.filter((f) => !f.aussen), { dicke: WAND_DICKE, hoehe: H, tuerHoehe: TUER_HOEHE });
   const B = halle.breite, L = halle.laenge, d = WAND_DICKE;
   const oeffnungen: Record<"x0" | "x1" | "z0" | "z1", { von: number; bis: number; name: string }[]> = { x0: [], x1: [], z0: [], z1: [] };
   for (const f of halle.flaechen) {
@@ -272,18 +275,18 @@ function waendeUndTueren(halle: Pick<Halle, "breite" | "laenge" | "flaechen" | "
     const o = [...oeffnungen[s.w]].sort((a, b) => a.von - b.von);
     let pos = 0;
     for (const x of o) {
-      if (x.von > pos + 0.5) waende.push(s.q(pos, x.von, 0, WAND_HOEHE));
+      if (x.von > pos + 0.5) waende.push(s.q(pos, x.von, 0, H));
       const von = Math.max(pos, x.von);
       if (x.bis > von + 0.5) {
-        waende.push(s.q(von, x.bis, TUER_HOEHE, WAND_HOEHE - TUER_HOEHE));
+        waende.push(s.q(von, x.bis, TUER_HOEHE, H - TUER_HOEHE));
         tueren.push({ q: ohneSeite(s.q(von, x.bis, 0, TUER_HOEHE)), name: x.name, notausgang: /not/.test(klein(x.name)) });
       }
       pos = Math.max(pos, x.bis);
     }
-    if (s.len > pos + 0.5) waende.push(s.q(pos, s.len, 0, WAND_HOEHE));
+    if (s.len > pos + 0.5) waende.push(s.q(pos, s.len, 0, H));
   }
   // Ecken außen schließen.
-  for (const [x, z] of [[-d, -d], [B, -d], [-d, L], [B, L]] as const) waende.push({ x, z, y: 0, b: d, t: d, h: WAND_HOEHE });
+  for (const [x, z] of [[-d, -d], [B, -d], [-d, L], [B, L]] as const) waende.push({ x, z, y: 0, b: d, t: d, h: H });
   return { waende, tueren };
 }
 
@@ -395,7 +398,8 @@ export function hallenSzene(
     volieren.push({ q: quader(v.rechteck, 0, vHoehe), name: v.nr ? `Voliere ${v.nr}` : "Voliere", tier, figuren: figurenIn(v.rechteck), ...(v.front ? { front: v.front } : {}) });
   }
 
-  const { waende, tueren } = waendeUndTueren(halle);
+  const aussehen = aussehenVon(halle.aussehen);
+  const { waende, tueren } = waendeUndTueren(halle, aussehen.wandHoehe);
   const flaechen: SzeneFlaeche[] = halle.flaechen.map((f) => ({ art: f.art, name: f.name, q: { x: f.x, y: f.y, b: f.breite, h: f.tiefe } }));
   for (const f of flaechen) if (f.art !== "eingang") beschriftungen.push({ text: f.name, x: f.q.x + f.q.b / 2, y: 40, z: f.q.y + f.q.h / 2 });
   // Türen beschriftet (auch wenn ihre Wand gerade ausgeblendet ist), knapp in der Halle über dem Boden.
@@ -408,8 +412,9 @@ export function hallenSzene(
     breite: halle.breite,
     ...(istRechteckUmriss(halle.umriss) ? {} : { umriss: umrissNormal(halle.umriss!) }),
     laenge: halle.laenge,
-    wandHoehe: WAND_HOEHE,
+    wandHoehe: aussehen.wandHoehe,
     wandDicke: WAND_DICKE,
+    aussehen,
     waende,
     tueren,
     flaechen,
@@ -503,6 +508,8 @@ export function wandDeckkraft(w: Quader, s: Pick<HallenSzene, "breite" | "laenge
 export interface WandInnenseite {
   wand: number;
   seite: SzeneSeite;
+  /** Lage der Innenfläche quer zur Wand (x bei x0/x1, z bei z0/z1) – beim freien Grundriss nicht immer am Hallenrand. */
+  ebene: number;
   von: number;
   bis: number;
   y: number;
@@ -521,7 +528,8 @@ export function wandInnenseiten(s: Pick<HallenSzene, "breite" | "laenge" | "waen
     const seite = seiten[0]!;
     const entlangX = seite === "z0" || seite === "z1";
     const von = Math.max(0, entlangX ? w.x : w.z), bis = Math.min(entlangX ? s.breite : s.laenge, entlangX ? w.x + w.b : w.z + w.t);
-    if (bis - von > 0.5) aus.push({ wand: i, seite, von, bis, y: w.y, h: w.h });
+    const ebene = seite === "x0" ? w.x + w.b : seite === "x1" ? w.x : seite === "z0" ? w.z + w.t : w.z;
+    if (bis - von > 0.5) aus.push({ wand: i, seite, ebene, von, bis, y: w.y, h: w.h });
   });
   return aus;
 }

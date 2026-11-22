@@ -5,6 +5,7 @@
 import type { KaefigTyp } from "./kaefige";
 import type { Punkt } from "./hallenplan-umriss";
 import type { MoebelArt } from "./hallenplan-moebel";
+import type { HallenAussehen } from "./hallenplan-aussehen";
 
 export interface HallenFlaeche {
   name: string;
@@ -91,6 +92,8 @@ export interface Halle {
   entfernt?: EntfernterPlatz[];
   /** Wie „Nach Plan nummerieren“ zählt (fehlt: Reihe für Reihe ab der ersten, jede Seite vom Anfang). */
   nummerFolge?: NummerFolge;
+  /** Aussehen in der 3D-Ansicht (Boden, Prallwand, Wandhöhe …); ändert nie den Plan. Fehlt: Vorgabe (`aussehenVon`). */
+  aussehen?: HallenAussehen;
 }
 
 /**

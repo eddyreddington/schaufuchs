@@ -107,4 +107,5 @@ import "./tests/71-preisrichter-gegenpruefung";
 import "./tests/72-jugend-einteilung";
 import "./tests/73-jugend-gegenpruefung";
 import "./tests/74-zusatzpreise-je-pr";
+import "./tests/75-halle-aussehen";
 import "./tests/76-verpflichtung-zusage";
