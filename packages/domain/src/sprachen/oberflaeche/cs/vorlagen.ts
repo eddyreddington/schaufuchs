@@ -223,5 +223,12 @@ export const vorlagen: OberflaecheTexte["vorlagen"] = {
     vonFarbenschlaegen: (treffer, alle) => `${treffer} z ${alle} barevných rázů`,
     keineTreffer: "Žádné výsledky.",
     folge: "Pořadí",
+    gruppen: "Skupiny",
+    gruppenTitel: (name: string) => `Skupiny: ${name}`,
+    gruppe: "Skupina",
+    gruppenGespeichert: (anzahl: number) => `Změněné skupiny: ${anzahl}.`,
+    gruppenUnveraendert: "Beze změny.",
+    gruppenSpeichern: "Uložit skupiny",
+    hilfeGruppen: "Nápověda ke skupinám",
   },
 };

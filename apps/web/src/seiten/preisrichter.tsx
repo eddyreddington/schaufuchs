@@ -1,13 +1,12 @@
-import { useState, type FormEvent } from "react";
-import { serverText } from "@schau/domain";
+import { useState } from "react";
+import { darfBewerten, serverText } from "@schau/domain";
 import { fehlerText } from "../lib";
 import { useOberflaeche, useSprache } from "../sprache";
 import { useSchauId } from "../rahmen";
 import { useIstAdmin } from "../rolle";
-import { trpc, type Ausgabe } from "../trpc";
-import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Feld, Haken, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, ReiterLeiste, ReiterTafel, SEITE, Seitenkopf, Speicherleiste, TabellenRahmen, useFrage, useMeldung, useReiter, useUngespeichertWarnung } from "../ui";
-
-type Richter = Ausgabe["preisrichter"]["liste"]["richter"][number];
+import { trpc } from "../trpc";
+import { RichterForm, type Richter } from "./preisrichter-form";
+import { Abschnitt, Auswahl, Dialog, Eingabe, FehlerAnzeige, Hinweis, Knopf, knopfKlasse, Laden, Leer, Marke, ReiterLeiste, ReiterTafel, SEITE, Seitenkopf, Speicherleiste, TabellenRahmen, useFrage, useMeldung, useReiter, useUngespeichertWarnung } from "../ui";
 
 /** Ruhige Textknöpfe für Aktionen in Tabellenzeilen. */
 const ZEILE = "min-h-8 px-2 text-sm";
@@ -112,8 +111,20 @@ export function Preisrichter() {
                           <span className="font-semibold text-tinte">{r.name}</span>
                         )}
                         {r.istObmann && <Marke ton="info">{tx.obmann}</Marke>}
+                        <Marke ton={r.zusage === "zugesagt" ? "ok" : r.zusage === "abgesagt" ? "warnung" : "neutral"}>{tx.zusage[r.zusage]}</Marke>
                       </span>
-                      <span className="block text-sm text-grau">{[r.sparten.length ? tx.bewertetSparten(r.sparten.join(", ")) : tx.alleSparten, r.telefon, r.email].filter(Boolean).join(" · ")}</span>
+                      <span className="block text-sm text-grau">
+                        {[
+                          r.sparten.length ? tx.bewertetSparten(r.sparten.join(", ")) : tx.alleSparten,
+                          r.gruppen.length ? tx.bewertetGruppen(r.gruppen.join(", ")) : "",
+                          r.obmannId != null ? tx.obmannIst(richter.find((o) => o.id === r.obmannId)?.name ?? "–") : "",
+                          r.telefon,
+                          r.email,
+                        ].filter(Boolean).join(" · ")}
+                      </span>
+                      {(r.zugesagtFuer || r.vorbehalt) && (
+                        <span className="block text-sm text-grau">{[r.zugesagtFuer ? tx.zugesagtFuer(r.zugesagtFuer) : "", r.vorbehalt ? tx.vorbehalt(r.vorbehalt) : ""].filter(Boolean).join(" · ")}</span>
+                      )}
                     </td>
                     <td className="nummer whitespace-nowrap">{r.einteilung.map((e) => `${e.vonNr}–${e.bisNr}`).join(", ") || <span className="font-sans font-normal text-grau">–</span>}</td>
                     <td className="text-right tabular-nums">{r.tiere}</td>
@@ -188,59 +199,13 @@ export function Preisrichter() {
       )}
 
       <Dialog offen={bearbeiten != null} onSchliessen={() => setBearbeiten(null)} titel={bearbeiten?.id ? tx.bearbeitenTitel : tx.hinzufuegen}>
-        {bearbeiten && <RichterForm schauId={schauId} versionId={schau.data?.stammdatenVersionId ?? null} start={bearbeiten} fertig={() => setBearbeiten(null)} />}
+        {bearbeiten && <RichterForm schauId={schauId} versionId={schau.data?.stammdatenVersionId ?? null} start={bearbeiten} richter={richter} fertig={() => setBearbeiten(null)} />}
       </Dialog>
       <Dialog offen={pin != null} onSchliessen={() => setPin(null)} titel={tx.pinFuer(pin?.name ?? "")}>
         <p className="nummer text-center text-6xl tracking-[0.2em]">{pin?.pin}</p>
         <p className="mt-4 text-center text-grau">{tx.pinNotieren}</p>
       </Dialog>
     </div>
-  );
-}
-
-function RichterForm({ schauId, versionId, start, fertig }: { schauId: number; versionId: number | null; start: Partial<Richter>; fertig: () => void }) {
-  const t = useOberflaeche();
-  const tx = t.preisrichter.form;
-  const [r, setR] = useState({ name: start.name ?? "", anschrift: start.anschrift ?? "", email: start.email ?? "", telefon: start.telefon ?? "", istObmann: start.istObmann ?? false, sparten: start.sparten ?? [], anschriftImKatalog: start.anschriftImKatalog ?? false });
-  // Sparten aus dem Verzeichnis der Schau; dazu gespeicherte, die es dort nicht (mehr) gibt, damit sie nicht still verschwinden.
-  const gliederung = trpc.stammdaten.gliederung.useQuery({ versionId: versionId ?? 0 }, { enabled: versionId != null });
-  const sparten = [...new Set([...(gliederung.data?.sparten.map((x) => x.name) ?? []), ...r.sparten])];
-  const utils = trpc.useUtils();
-  const speichern = trpc.preisrichter.speichern.useMutation({ onSuccess: () => { utils.preisrichter.liste.invalidate(); fertig(); } });
-  const senden = (e: FormEvent) => {
-    e.preventDefault();
-    speichern.mutate({ schauId, id: start.id, ...r });
-  };
-  return (
-    <form onSubmit={senden} className="flex flex-col gap-4">
-      <Feld label={t.allgemein.name}>{(id) => <Eingabe id={id} value={r.name} onChange={(e) => setR({ ...r, name: e.target.value })} required autoFocus />}</Feld>
-      <Feld label={tx.anschrift}>{(id) => <Eingabe id={id} value={r.anschrift} onChange={(e) => setR({ ...r, anschrift: e.target.value })} />}</Feld>
-      <Haken
-        label={tx.anschriftImKatalog}
-        hinweis={tx.anschriftHinweis}
-        checked={r.anschriftImKatalog}
-        onChange={(v) => setR({ ...r, anschriftImKatalog: v })}
-      />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Feld label={tx.telefon}>{(id) => <Eingabe id={id} value={r.telefon} onChange={(e) => setR({ ...r, telefon: e.target.value })} />}</Feld>
-        <Feld label={tx.email}>{(id) => <Eingabe id={id} type="email" value={r.email} onChange={(e) => setR({ ...r, email: e.target.value })} />}</Feld>
-      </div>
-      <Haken label={t.preisrichter.seite.obmann} hinweis={tx.obmannHinweis} checked={r.istObmann} onChange={(v) => setR({ ...r, istObmann: v })} />
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-semibold">
-          {tx.sparten} <span className="font-normal text-grau">{tx.spartenLeer}</span>
-        </legend>
-        <div className="grid gap-1 sm:grid-cols-2">
-          {sparten.map((sp) => (
-            <Haken key={sp} label={sp} checked={r.sparten.includes(sp)} onChange={(v) => setR({ ...r, sparten: v ? [...r.sparten, sp] : r.sparten.filter((x) => x !== sp) })} />
-          ))}
-        </div>
-      </fieldset>
-      {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
-      <div className="flex justify-end">
-        <Knopf type="submit" variante="primaer" laedt={speichern.isPending}>{t.allgemein.speichern}</Knopf>
-      </div>
-    </form>
   );
 }
 
@@ -464,11 +429,11 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
     setOffen(mitFarben(r.data.regeln));
     setFehlend(r.data.fehlend);
   };
-  const auswahl = (sparte: string, wert: Wahl, aendern: (v: Wahl) => void, leer: string, label: string) => (
+  const auswahl = (g: { sparte: string; gruppe: string }, wert: Wahl, aendern: (v: Wahl) => void, leer: string, label: string) => (
     <Auswahl kompakt aria-label={label} className="w-full" value={wert} onChange={(e) => aendern(e.target.value === "" ? "" : Number(e.target.value))}>
       <option value="">{leer}</option>
       {richter
-        .filter((r) => !r.sparten.length || r.sparten.includes(sparte) || r.id === wert)
+        .filter((r) => darfBewerten(r, g) || r.id === wert)
         .map((r) => (
           <option key={r.id} value={r.id}>
             {r.name}
@@ -532,7 +497,7 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
                         <tr key={k}>
                           <td className="font-semibold text-tinte">{g.rasse}</td>
                           <td className="text-right tabular-nums">{g.anzahl}</td>
-                          <td>{auswahl(g.sparte, aktuell[k] ?? "", (v) => setze(k, v), tx.keiner, tx.richterFuer(g.rasse))}</td>
+                          <td>{auswahl(g, aktuell[k] ?? "", (v) => setze(k, v), tx.keiner, tx.richterFuer(g.rasse))}</td>
                           <td className="text-right">
                             {g.farben.length > 1 && (
                               <Knopf variante="leise" className={ZEILE} onClick={() => setOffen(new Set(istAuf ? [...auf].filter((x) => x !== k) : [...auf, k]))} aria-expanded={istAuf}>
@@ -549,7 +514,7 @@ function EinteilungNachRassen({ schauId, richter }: { schauId: number; richter: 
                             <tr key={fk}>
                               <td className="pl-8 text-grau">{f.farbenschlag || tx.ohneFarbenschlag}</td>
                               <td className="text-right tabular-nums">{f.anzahl}</td>
-                              <td>{f.farbenschlag ? auswahl(g.sparte, aktuell[fk] ?? "", (v) => setze(fk, v), tx.wieRasse, tx.richterFuer(`${g.rasse} ${f.farbenschlag}`)) : <span className="text-grau">{tx.wieRasse}</span>}</td>
+                              <td>{f.farbenschlag ? auswahl(g, aktuell[fk] ?? "", (v) => setze(fk, v), tx.wieRasse, tx.richterFuer(`${g.rasse} ${f.farbenschlag}`)) : <span className="text-grau">{tx.wieRasse}</span>}</td>
                               <td />
                             </tr>,
                           );

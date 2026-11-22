@@ -222,5 +222,12 @@ export const vorlagen: OberflaecheTexte["vorlagen"] = {
     vonFarbenschlaegen: (treffer, alle) => `${treffer} of ${alle} colour varieties`,
     keineTreffer: "No results.",
     folge: "Order",
+    gruppen: "Groups",
+    gruppenTitel: (name: string) => `Groups: ${name}`,
+    gruppe: "Group",
+    gruppenGespeichert: (anzahl: number) => `${anzahl} ${anzahl === 1 ? "group" : "groups"} changed.`,
+    gruppenUnveraendert: "No change.",
+    gruppenSpeichern: "Save groups",
+    hilfeGruppen: "Help on groups",
   },
 };

@@ -3,6 +3,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { datum, fehlerText } from "../lib";
 import { useOberflaeche, useSprache } from "../sprache";
 import { Rassebilder } from "./rassebilder";
+import { Gruppen } from "./stammdaten-gruppen";
 import { trpc } from "../trpc";
 import { Dialog, Eingabe, FehlerAnzeige, Feld, HilfeLink, Hinweis, Knopf, Laden, Leer, Marke, SEITE, Seitenkopf, Suchfeld, TabellenRahmen, Textfeld, useFrage, useMeldung } from "../ui";
 
@@ -13,6 +14,7 @@ export function Stammdaten() {
   const [neu, setNeu] = useState(false);
   const [ergaenzen, setErgaenzen] = useState<{ id: number; name: string } | null>(null);
   const [bilder, setBilder] = useState<{ id: number; name: string } | null>(null);
+  const [gruppen, setGruppen] = useState<{ id: number; name: string } | null>(null);
   const utils = trpc.useUtils();
   const meldung = useMeldung();
   const { bestaetige } = useFrage();
@@ -96,6 +98,11 @@ export function Stammdaten() {
                         </Knopf>
                       )}
                       {istAdmin && v.eigene && (
+                        <Knopf variante="leise" className="min-h-8 px-2" onClick={() => setGruppen({ id: v.id, name: v.name })}>
+                          {t.gruppen}
+                        </Knopf>
+                      )}
+                      {istAdmin && v.eigene && (
                         <Knopf
                           variante="leise"
                           className="min-h-8 px-2 text-kamm hover:bg-kamm-hell"
@@ -117,6 +124,9 @@ export function Stammdaten() {
       </Dialog>
       <Dialog offen={ergaenzen != null} onSchliessen={() => setErgaenzen(null)} titel={t.ergaenzenTitel(ergaenzen?.name ?? "")} breit>
         {ergaenzen && <Ergaenzen versionId={ergaenzen.id} />}
+      </Dialog>
+      <Dialog offen={gruppen != null} onSchliessen={() => setGruppen(null)} titel={t.gruppenTitel(gruppen?.name ?? "")} breit>
+        {gruppen && <Gruppen versionId={gruppen.id} />}
       </Dialog>
       <Dialog offen={bilder != null} onSchliessen={() => setBilder(null)} titel={t.rassebilderTitel(bilder?.name ?? "")} breit>
         {bilder && <Rassebilder versionId={bilder.id} istAdmin={istAdmin} />}
@@ -261,7 +271,9 @@ function Baum({ versionId }: { versionId: number }) {
   if (baum.error) return <FehlerAnzeige fehler={baum.error} nochmal={() => baum.refetch()} />;
   if (baum.isLoading) return <Laden />;
   const f = filter.toLowerCase();
-  const zeilen = (baum.data ?? []).filter((z) => !f || `${z.sparte} ${z.rasse} ${z.farbenschlag}`.toLowerCase().includes(f));
+  const zeilen = (baum.data ?? []).filter((z) => !f || `${z.sparte} ${z.rasse} ${z.farbenschlag} ${z.gruppe}`.toLowerCase().includes(f));
+  // Spalte „Gruppe“ nur, wenn im Verzeichnis Gruppen gepflegt sind.
+  const mitGruppe = (baum.data ?? []).some((z) => z.gruppe);
   return (
     <TabellenRahmen
       kopf={<Suchfeld aria-label={t.durchsuchen} placeholder={t.suchPlatzhalter} value={filter} onChange={(e) => setFilter(e.target.value)} />}
@@ -282,6 +294,7 @@ function Baum({ versionId }: { versionId: number }) {
                 <th>{t.sparte}</th>
                 <th>{t.rasse}</th>
                 <th>{t.farbenschlag}</th>
+                {mitGruppe && <th>{t.gruppe}</th>}
               </tr>
             </thead>
             <tbody>
@@ -291,6 +304,7 @@ function Baum({ versionId }: { versionId: number }) {
                   <td>{z.sparte}</td>
                   <td>{z.rasse}</td>
                   <td>{z.farbenschlag}</td>
+                  {mitGruppe && <td>{z.gruppe}</td>}
                 </tr>
               ))}
             </tbody>

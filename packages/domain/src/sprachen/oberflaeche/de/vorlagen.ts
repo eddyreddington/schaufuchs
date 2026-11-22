@@ -224,5 +224,12 @@ export const vorlagen = {
     vonFarbenschlaegen: (treffer: number, alle: number) => `${treffer} von ${alle} Farbenschlägen`,
     keineTreffer: "Keine Treffer.",
     folge: "Folge",
+    gruppen: "Gruppen",
+    gruppenTitel: (name: string) => `Gruppen: ${name}`,
+    gruppe: "Gruppe",
+    gruppenGespeichert: (anzahl: number) => `${anzahl} ${anzahl === 1 ? "Gruppe" : "Gruppen"} geändert.`,
+    gruppenUnveraendert: "Keine Änderung.",
+    gruppenSpeichern: "Gruppen speichern",
+    hilfeGruppen: "Hilfe zu den Gruppen",
   },
 };
