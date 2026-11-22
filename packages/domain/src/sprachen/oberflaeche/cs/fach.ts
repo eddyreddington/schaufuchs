@@ -77,12 +77,12 @@ export const fach: OberflaecheTexte["fach"] = {
   KATALOG_FUSSZEILE_INFO: { linie: "Čára a název výstavy", mittig: "Číslo stránky uprostřed", marke: "Číslo stránky v barevném poli" },
   KATALOG_LINIEN_INFO: { fein: { name: "Jemné" }, normal: { name: "Normální" }, kraeftig: { name: "Silné" } },
   KATALOG_SCHRIFT_INFO: {
-    klassisch: { name: "Klasické", beschreibung: "Spectral pro nadpisy, IBM Plex Sans Condensed pro seznamy – úzké, na stránku se vejde hodně." },
-    traditionell: { name: "Tradiční", beschreibung: "EB Garamond pro nadpisy, Source Sans 3 pro seznamy – jako tištěná kniha." },
+    klassisch: { name: "Klasické", beschreibung: "IBM Plex Sans Condensed všude – úzké, na stránku se vejde hodně." },
+    traditionell: { name: "Tradiční", beschreibung: "EB Garamond všude – jako tištěná kniha." },
     lesbar: { name: "Dobře čitelné", beschreibung: "Atkinson Hyperlegible všude – navrženo pro nejlepší čitelnost, o něco širší." },
     modern: { name: "Moderní", beschreibung: "Source Sans 3 všude – jasné a věcné." },
-    buchschmal: { name: "Knižní, úzké", beschreibung: "EB Garamond pro nadpisy, IBM Plex Sans Condensed pro seznamy – klasické a úsporné." },
-    ausgewogen: { name: "Vyvážené", beschreibung: "Spectral pro nadpisy, Source Sans 3 pro seznamy – klidné a dobře čitelné." },
+    buchschmal: { name: "Knižní, úzké", beschreibung: "IBM Plex Sans Condensed všude, jen název výstavy na titulní straně v EB Garamond." },
+    ausgewogen: { name: "Vyvážené", beschreibung: "Source Sans 3 všude, jen název výstavy na titulní straně v Spectral." },
   },
   KATALOG_STIL_INFO: {
     klassisch: { name: "Klasický", beschreibung: "Na střed, barevný pruh nahoře a barevné pole s místem a otevírací dobou dole." },

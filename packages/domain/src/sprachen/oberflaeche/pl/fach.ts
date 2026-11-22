@@ -77,12 +77,12 @@ export const fach: OberflaecheTexte["fach"] = {
   KATALOG_FUSSZEILE_INFO: { linie: "Linia i nazwa wystawy", mittig: "Numer strony pośrodku", marke: "Numer strony w kolorowym polu" },
   KATALOG_LINIEN_INFO: { fein: { name: "Cienkie" }, normal: { name: "Normalne" }, kraeftig: { name: "Grube" } },
   KATALOG_SCHRIFT_INFO: {
-    klassisch: { name: "Klasyczna", beschreibung: "Spectral w nagłówkach, IBM Plex Sans Condensed w listach – wąska, dużo mieści się na stronie." },
-    traditionell: { name: "Tradycyjna", beschreibung: "EB Garamond w nagłówkach, Source Sans 3 w listach – jak drukowana książka." },
+    klassisch: { name: "Klasyczna", beschreibung: "IBM Plex Sans Condensed w całości – wąska, dużo mieści się na stronie." },
+    traditionell: { name: "Tradycyjna", beschreibung: "EB Garamond w całości – jak drukowana książka." },
     lesbar: { name: "Czytelna", beschreibung: "Atkinson Hyperlegible w całości – zaprojektowana dla najlepszej czytelności, nieco szersza." },
     modern: { name: "Nowoczesna", beschreibung: "Source Sans 3 w całości – jasna i rzeczowa." },
-    buchschmal: { name: "Książkowa, wąska", beschreibung: "EB Garamond w nagłówkach, IBM Plex Sans Condensed w listach – klasyczna i oszczędna." },
-    ausgewogen: { name: "Wyważona", beschreibung: "Spectral w nagłówkach, Source Sans 3 w listach – spokojna i czytelna." },
+    buchschmal: { name: "Książkowa, wąska", beschreibung: "IBM Plex Sans Condensed w całości, tylko nazwa wystawy na okładce w EB Garamond." },
+    ausgewogen: { name: "Wyważona", beschreibung: "Source Sans 3 w całości, tylko nazwa wystawy na okładce w Spectral." },
   },
   KATALOG_STIL_INFO: {
     klassisch: { name: "Klasyczny", beschreibung: "Wyśrodkowany, pas koloru u góry i kolorowe pole z miejscem i godzinami otwarcia na dole." },

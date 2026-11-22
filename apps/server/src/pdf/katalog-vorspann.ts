@@ -4,12 +4,13 @@
  */
 import { bindungText, formatEuro, formatKatalognummer, JUGEND_KUERZEL, jugendKennzeichen, oeffnungszeitenZeilen, SONDERNOTE_LABEL, STANDARD_NOTENSKALA } from "@schau/domain";
 import { ausstellerAnzeige, type Eintrag } from "../services/eintraege";
-import { datumDe, GRAU, HAARLINIE, MM, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, SERIF_KURSIV, TINTE } from "./basis";
+import { datumDe, GRAU, HAARLINIE, MM, TINTE } from "./basis";
+import { FETT, KURSIV, NORMAL, ZIFFERN } from "./katalog-schrift";
 import type { Beitrag, KatalogKontext } from "./katalog-kontext";
 
 /** Alles vor dem Tierteil: Grußworte, Leitung und Termine, Preisrichter, Kennzahlen, Preise, Bestimmungen, freie Seiten, Legende. */
 export function vorspann(K: KatalogKontext) {
-  const { s, opts, beitraege, richter, einteilung, preisarten, stiftungen, spender, alle, eintraege, bildVon, zu, skala, mitErgebnis, gestaltung, k, flaeche, farbe, akzent, lk, schlicht, ohne, doc, L, B, unten, neueSeite, platz, abschnitt, marke, kicker, seitentitel, zwischentitel, absatz, angaben } = K;
+  const { G, s, opts, beitraege, richter, einteilung, preisarten, stiftungen, spender, alle, eintraege, bildVon, zu, skala, mitErgebnis, gestaltung, k, flaeche, farbe, akzent, lk, schlicht, ohne, doc, L, B, unten, neueSeite, platz, abschnitt, marke, kicker, seitentitel, zwischentitel, absatz, angaben } = K;
   // ── Grußworte ──────────────────────────────────────────────────────────
   const grussworte = beitraege.filter((b) => b.art === "grusswort");
   for (const [i, g] of grussworte.entries()) {
@@ -37,14 +38,14 @@ export function vorspann(K: KatalogKontext) {
     }
     const ty = y0 + (foto && textX > L() ? 6 * k : 0);
     doc.save().rect(textX, ty, 10 * MM * k, 1.6 * lk).fill(akzent).restore();
-    doc.font(SERIF).fontSize(19 * k).fillColor(TINTE).text(g.titel || "Grußwort", textX, ty + 5 * k, { width: L() + B() - textX, lineGap: -2 });
-    if (g.unterzeile) doc.font(SANS_KURSIV).fontSize(8.5 * k).fillColor(GRAU).text(g.unterzeile, textX, doc.y + 2, { width: L() + B() - textX });
+    doc.font(NORMAL).fontSize(G.h1).fillColor(TINTE).text(g.titel || "Grußwort", textX, ty + 5 * k, { width: L() + B() - textX, lineGap: -2 });
+    if (g.unterzeile) doc.font(KURSIV).fontSize(G.liste).fillColor(GRAU).text(g.unterzeile, textX, doc.y + 2, { width: L() + B() - textX });
     doc.y = Math.max(doc.y + 12 * k, foto && textX > L() ? y0 + fotoH + 10 * k : 0);
     absatz(g.text);
     if (g.unterzeile) {
       platz(26 * k);
       doc.y += 6 * k;
-      doc.font(SERIF_KURSIV).fontSize(10 * k).fillColor(TINTE).text(g.unterzeile, L() + B() * 0.35, doc.y, { width: B() * 0.65, align: "right" });
+      doc.font(KURSIV).fontSize(G.text).fillColor(TINTE).text(g.unterzeile, L() + B() * 0.35, doc.y, { width: B() * 0.65, align: "right" });
     }
   }
 
@@ -83,12 +84,12 @@ export function vorspann(K: KatalogKontext) {
     ];
     const innen = 4 * MM * k;
     const textB = B() - 2 * innen - 8 * k;
-    const groesse = 8.6 * k;
+    const groesse = G.liste;
     const abstand = 3 * k;
     // Höhe genau so messen, wie gesetzt wird – sonst läuft der Text aus dem Kasten.
-    doc.font(SANS).fontSize(groesse);
+    doc.font(NORMAL).fontSize(groesse);
     const hoehen = hinweise.map((t) => doc.heightOfString(t, { width: textB, lineGap: 1.2 * k }));
-    const kopfH = 7 * k * 1.35 + 4 * k;
+    const kopfH = G.klein * 1.35 + 4 * k;
     const h = innen + kopfH + hoehen.reduce((n, x) => n + x + abstand, 0) - abstand + innen;
     doc.y += 12 * k;
     platz(h);
@@ -98,8 +99,8 @@ export function vorspann(K: KatalogKontext) {
     kicker("Zur besonderen Beachtung", L() + innen, y + innen, B() - 2 * innen);
     let ty = y + innen + kopfH;
     hinweise.forEach((t, i) => {
-      doc.font(SANS_FETT).fontSize(groesse).fillColor(farbe).text("•", L() + innen, ty, { lineBreak: false });
-      doc.font(SANS).fontSize(groesse).fillColor(TINTE).text(t, L() + innen + 8 * k, ty, { width: textB, lineGap: 1.2 * k });
+      doc.font(FETT).fontSize(groesse).fillColor(farbe).text("•", L() + innen, ty, { lineBreak: false });
+      doc.font(NORMAL).fontSize(groesse).fillColor(TINTE).text(t, L() + innen + 8 * k, ty, { width: textB, lineGap: 1.2 * k });
       ty += hoehen[i]! + abstand;
     });
     doc.y = y + h + 14 * k;
@@ -116,19 +117,19 @@ export function vorspann(K: KatalogKontext) {
       const nummern = bereiche.map((x) => (x.vonNr === x.bisNr ? `${x.vonNr}` : `${x.vonNr}–${x.bisNr}`)).join(", ");
       // Links Name und Nummern, rechts die Rassen – wie eine Karteikarte je Preisrichter.
       const lb = B() * 0.36;
-      doc.font(SANS).fontSize(8.4 * k);
+      doc.font(NORMAL).fontSize(G.liste);
       const rh = doc.heightOfString(rassen.join(", ") || " ", { width: B() - lb, lineGap: 1 * k });
       const h = Math.max(rh, 34 * k) + 12 * k;
       platz(h);
       const y = doc.y;
-      doc.font(SERIF_FETT).fontSize(11.5 * k).fillColor(TINTE).text(r.name, L(), y, { width: lb - 8 });
+      doc.font(FETT).fontSize(G.h3).fillColor(TINTE).text(r.name, L(), y, { width: lb - 8 });
       if (r.istObmann) kicker("Obmann", L(), doc.y + 1, lb - 8);
-      if (nummern) doc.font(SANS_FETT).fontSize(8.6 * k).fillColor(farbe).text(`Nr. ${nummern}`, L(), doc.y + 1, { width: lb - 8 });
+      if (nummern) doc.font(FETT).fontSize(G.liste).fillColor(farbe).text(`Nr. ${nummern}`, L(), doc.y + 1, { width: lb - 8 });
       // Anschrift nur im gedruckten Katalog – online keine Wohnanschrift ohne Einwilligung.
       // Anschrift nur mit Einverständnis des Preisrichters (Schalter an der Preisrichter-Seite).
-      if (r.anschrift && r.anschriftImKatalog && !opts.online) doc.font(SANS).fontSize(7.8 * k).fillColor(GRAU).text(r.anschrift.replace(/\n/g, ", "), L(), doc.y + 1, { width: lb - 8 });
+      if (r.anschrift && r.anschriftImKatalog && !opts.online) doc.font(NORMAL).fontSize(G.klein).fillColor(GRAU).text(r.anschrift.replace(/\n/g, ", "), L(), doc.y + 1, { width: lb - 8 });
       const yLinks = doc.y;
-      if (rassen.length) doc.font(SANS).fontSize(8.4 * k).fillColor(TINTE).text(rassen.join(", "), L() + lb, y + 2 * k, { width: B() - lb, lineGap: 1 * k });
+      if (rassen.length) doc.font(NORMAL).fontSize(G.liste).fillColor(TINTE).text(rassen.join(", "), L() + lb, y + 2 * k, { width: B() - lb, lineGap: 1 * k });
       const yl = Math.max(yLinks, doc.y) + 6 * k;
       doc.save().lineWidth(0.3).strokeColor(HAARLINIE).moveTo(L(), yl).lineTo(L() + B(), yl).stroke().restore();
       doc.y = yl + 7 * k;
@@ -151,8 +152,8 @@ export function vorspann(K: KatalogKontext) {
       const b = B() / kz.length;
       kz.forEach(([zahl, text], i) => {
         if (i) doc.save().lineWidth(0.4).strokeColor(HAARLINIE).moveTo(L() + i * b, y + 4 * k).lineTo(L() + i * b, y + hoehe - 4 * k).stroke().restore();
-        doc.font(SERIF).fontSize(24 * k).fillColor(farbe).text(zahl, L() + i * b, y, { width: b, align: "center", lineBreak: false });
-        doc.font(SANS).fontSize(7.5 * k).fillColor(GRAU).text(text.toLocaleUpperCase("de"), L() + i * b, y + 28 * k, { width: b, align: "center", characterSpacing: 1 * k, lineBreak: false });
+        doc.font(NORMAL).fontSize(G.h1).fillColor(farbe).text(zahl, L() + i * b, y, { width: b, align: "center", lineBreak: false });
+        doc.font(NORMAL).fontSize(G.klein).fillColor(GRAU).text(text.toLocaleUpperCase("de"), L() + i * b, y + 28 * k, { width: b, align: "center", characterSpacing: 1 * k, lineBreak: false });
       });
       doc.y = y + hoehe;
     }
@@ -179,7 +180,7 @@ export function vorspann(K: KatalogKontext) {
       const sichtbar = (x: (typeof stiftungen)[number]) =>
         x.meldungId != null ? alle.some((e) => e.meldungId === x.meldungId && !e.verdeckt) : !opts.online || x.onlineNennen;
       const stifter = [...new Set(stiftungen.filter(sichtbar).map((x) => x.stifter.trim()).filter((x) => x && x !== "Gelöscht"))];
-      doc.font(SERIF).fontSize(9.5 * k).fillColor(TINTE).text(stifter.join(" · "), L(), doc.y, { width: B(), align: "center", lineGap: 2 });
+      doc.font(NORMAL).fontSize(G.text).fillColor(TINTE).text(stifter.join(" · "), L(), doc.y, { width: B(), align: "center", lineGap: 2 });
       // Mit Ergebnissen: welcher gestiftete Preis an welches Tier ging (Treuhand gegenüber dem Stifter).
       const vergaben = mitErgebnis
         ? stiftungen.filter(sichtbar).flatMap((st) => {
@@ -198,7 +199,7 @@ export function vorspann(K: KatalogKontext) {
     if (spender.length) {
       doc.y += 10 * k;
       zwischentitel("Wir danken unseren Spendern");
-      doc.font(SERIF).fontSize(9.5 * k).fillColor(TINTE).text(spender.join(" · "), L(), doc.y, { width: B(), align: "center", lineGap: 2 });
+      doc.font(NORMAL).fontSize(G.text).fillColor(TINTE).text(spender.join(" · "), L(), doc.y, { width: B(), align: "center", lineGap: 2 });
     }
   }
 
@@ -208,7 +209,7 @@ export function vorspann(K: KatalogKontext) {
     abschnitt("Ausstellungsbestimmungen");
     marke("bestimmungen");
     seitentitel("Ausstellungsbestimmungen");
-    absatz(s.bestimmungen, { groesse: 8.5 * k, schrift: SERIF });
+    absatz(s.bestimmungen, { groesse: G.liste, schrift: NORMAL });
   }
 
   // ── Freie Seiten (Hallenplan, Vereinsgeschichte …) ─────────────────────
@@ -264,7 +265,7 @@ export function vorspann(K: KatalogKontext) {
 
 /** Ehrentafel mit den besten Tieren und den Preisträgern (nur mit Ergebnissen). */
 export function ehrentafel(K: KatalogKontext) {
-  const { preisarten, eintraege, mitErgebnis, k, farbe, ohne, doc, L, B, neueSeite, platz, abschnitt, marke, seitentitel, zwischentitel, spitzePunkte, note } = K;
+  const { G, preisarten, eintraege, mitErgebnis, k, farbe, ohne, doc, L, B, neueSeite, platz, abschnitt, marke, seitentitel, zwischentitel, spitzePunkte, note } = K;
   // ── Ehrentafel (nur mit Ergebnissen) ───────────────────────────────────
   if (mitErgebnis && !ohne.has("ehrentafel")) {
     const spitze = eintraege.filter((e) => e.punkte != null && e.punkte >= spitzePunkte).sort((a, b) => b.punkte! - a.punkte! || a.katalogNr! - b.katalogNr!);
@@ -284,23 +285,23 @@ export function ehrentafel(K: KatalogKontext) {
         const noteB = 11 * MM * k;
         const ausB = B() * 0.3;
         const tierB = B() - nrB - klasseB - noteB - ausB - 3 * MM;
-        const gr = 8.4 * k;
+        const gr = G.liste;
         for (const e of tiere) {
-          doc.font(SANS).fontSize(gr);
+          doc.font(NORMAL).fontSize(gr);
           const aus = ausstellerAnzeige(e, "vorname");
           const h = Math.max(doc.heightOfString(e.bezeichnung, { width: tierB }), doc.heightOfString(aus, { width: ausB }));
           platz(h + 3 * k);
           const y = doc.y;
           let x = L();
-          doc.font(SANS_FETT).fontSize(gr).fillColor(TINTE).text(formatKatalognummer(e), x, y, { width: nrB - 2 * MM, align: "right", lineBreak: false });
+          doc.font(FETT).fontSize(gr).fillColor(TINTE).text(formatKatalognummer(e), x, y, { ...ZIFFERN, width: nrB - 2 * MM, align: "right", lineBreak: false });
           x += nrB;
-          doc.font(SANS).fontSize(gr).fillColor(TINTE).text(e.bezeichnung, x, y, { width: tierB });
+          doc.font(NORMAL).fontSize(gr).fillColor(TINTE).text(e.bezeichnung, x, y, { width: tierB });
           x += tierB + 2 * MM;
           doc.fillColor(GRAU).text(`${e.geschlecht} ${e.alter}`, x, y, { width: klasseB, lineBreak: false });
           x += klasseB;
-          doc.font(SANS_FETT).fillColor(farbe).text(note(e), x, y, { width: noteB, lineBreak: false });
+          doc.font(FETT).fillColor(farbe).text(note(e), x, y, { width: noteB, lineBreak: false });
           x += noteB + 1 * MM;
-          doc.font(SANS).fillColor(TINTE).text(aus, x, y, { width: ausB });
+          doc.font(NORMAL).fillColor(TINTE).text(aus, x, y, { width: ausB });
           doc.y = y + h + 2.6 * k;
         }
         doc.y += 8 * k;

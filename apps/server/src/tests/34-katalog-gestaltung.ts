@@ -3,10 +3,10 @@ import { describe, expect, test } from "bun:test";
 import { KATALOG_SCHRIFTEN, KATALOG_STILE } from "@schau/domain";
 import { adminKontext, m, pdfText } from "./kontext";
 
-/** Kennzeichen der eingebetteten Titelschrift je Schriftpaar (PostScript-Name im PDF). */
+/** Kennzeichen der Schrift des Schaunamens auf der Titelseite je Wahl (PostScript-Name im PDF, Entscheidung 032). */
 /** 4 × 2 Pixel, rot. */
 const JPG = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAACAAQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAABQb/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCKALXj/9k=";
-const TITELSCHRIFT = { klassisch: "Spectral", traditionell: "EBGaramond", lesbar: "AtkinsonHyperlegible", modern: "SourceSans3", buchschmal: "EBGaramond", ausgewogen: "Spectral" } as const;
+const TITELSCHRIFT = { klassisch: "IBMPlexSansCond", traditionell: "EBGaramond", lesbar: "AtkinsonHyperlegible", modern: "SourceSans3", buchschmal: "EBGaramond", ausgewogen: "Spectral" } as const;
 
 describe("Druckkatalog gestalten", () => {
   test("Stiche: jede Sparte hat ihren Stich, alle Dateien sind lesbare PNG", async () => {

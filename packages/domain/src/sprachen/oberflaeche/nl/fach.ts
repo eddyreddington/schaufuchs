@@ -77,12 +77,12 @@ export const fach: OberflaecheTexte["fach"] = {
   KATALOG_FUSSZEILE_INFO: { linie: "Lijn en naam van de show", mittig: "Paginanummer in het midden", marke: "Paginanummer in kleurvlak" },
   KATALOG_LINIEN_INFO: { fein: { name: "Fijn" }, normal: { name: "Normaal" }, kraeftig: { name: "Krachtig" } },
   KATALOG_SCHRIFT_INFO: {
-    klassisch: { name: "Klassiek", beschreibung: "Spectral voor koppen, IBM Plex Sans Condensed voor lijsten – smal, er past veel op een pagina." },
-    traditionell: { name: "Traditioneel", beschreibung: "EB Garamond voor koppen, Source Sans 3 voor lijsten – als een gedrukt boek." },
+    klassisch: { name: "Klassiek", beschreibung: "IBM Plex Sans Condensed overal – smal, er past veel op een pagina." },
+    traditionell: { name: "Traditioneel", beschreibung: "EB Garamond overal – als een gedrukt boek." },
     lesbar: { name: "Goed leesbaar", beschreibung: "Atkinson Hyperlegible overal – ontworpen voor de beste leesbaarheid, iets breder." },
     modern: { name: "Modern", beschreibung: "Source Sans 3 overal – helder en zakelijk." },
-    buchschmal: { name: "Boek, smal", beschreibung: "EB Garamond voor koppen, IBM Plex Sans Condensed voor lijsten – klassiek en ruimtebesparend." },
-    ausgewogen: { name: "Evenwichtig", beschreibung: "Spectral voor koppen, Source Sans 3 voor lijsten – rustig en goed leesbaar." },
+    buchschmal: { name: "Boek, smal", beschreibung: "IBM Plex Sans Condensed overal, alleen de naam van de show op de titelpagina in EB Garamond." },
+    ausgewogen: { name: "Evenwichtig", beschreibung: "Source Sans 3 overal, alleen de naam van de show op de titelpagina in Spectral." },
   },
   KATALOG_STIL_INFO: {
     klassisch: { name: "Klassiek", beschreibung: "Gecentreerd, kleurband bovenaan en kleurvlak met plaats en openingstijden onderaan." },

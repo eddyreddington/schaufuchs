@@ -5,7 +5,8 @@
  * Hilfen ohne PDF in katalog-hilfen.ts.
  */
 import { seitenbereiche } from "@schau/domain";
-import { GRAU, HAARLINIE, MM, SANS, SANS_FETT } from "./basis";
+import { GRAU, HAARLINIE, MM } from "./basis";
+import { FETT, NORMAL } from "./katalog-schrift";
 import { anzeigenSeiten, kommendeSchauenSeite, notizSeiten } from "./katalog-anhang";
 import { katalogKontext, type KatalogOptionen, type Schau } from "./katalog-kontext";
 import { tierteilSetzen } from "./katalog-tierteil";
@@ -29,7 +30,7 @@ export async function katalogPdf(
   opts: KatalogOptionen = {},
 ): Promise<Buffer> {
   const K = await katalogKontext(s, opts);
-  const { gestaltung, k, flaeche, aufFlaeche, akzentText, doc, fertig, seiten, L, B, neueSeite, marken } = K;
+  const { G, gestaltung, k, flaeche, aufFlaeche, akzentText, doc, fertig, seiten, L, B, neueSeite, marken } = K;
 
   titelseite(K);
 
@@ -60,7 +61,7 @@ export async function katalogPdf(
     const yF = doc.page.height - unterRand * 0.55;
     const nr = String(i + 1);
     if (gestaltung.fusszeile === "mittig") {
-      doc.font(SANS_FETT).fontSize(8 * k).fillColor(akzentText).text(nr, L(), yF, { width: B(), align: "center", lineBreak: false });
+      doc.font(FETT).fontSize(G.liste).fillColor(akzentText).text(nr, L(), yF, { width: B(), align: "center", lineBreak: false });
     } else if (gestaltung.fusszeile === "marke") {
       // Seitenzahl weiß (bzw. dunkel) in einem kleinen Feld der Vereinsfarbe am äußeren Rand.
       const mb = 7 * MM * k;
@@ -68,16 +69,16 @@ export async function katalogPdf(
       const mx = gerade ? L() : L() + B() - mb;
       const my = yF - 1.6 * MM * k;
       doc.rect(mx, my, mb, mh).fill(flaeche);
-      doc.font(SANS_FETT).fontSize(8 * k).fillColor(aufFlaeche).text(nr, mx, my + (mh - 8 * k) / 2 + 0.5, { width: mb, align: "center", lineBreak: false });
-      doc.font(SANS).fontSize(7 * k).fillColor(GRAU).text(s.name, L() + (gerade ? mb + 3 * MM : 0), yF + 0.5, { width: B() - mb - 3 * MM, align: gerade ? "right" : "left", lineBreak: false });
+      doc.font(FETT).fontSize(G.liste).fillColor(aufFlaeche).text(nr, mx, my + (mh - G.liste) / 2 + 0.5, { width: mb, align: "center", lineBreak: false });
+      doc.font(NORMAL).fontSize(G.klein).fillColor(GRAU).text(s.name, L() + (gerade ? mb + 3 * MM : 0), yF + 0.5, { width: B() - mb - 3 * MM, align: gerade ? "right" : "left", lineBreak: false });
     } else {
       doc.save().lineWidth(0.4).strokeColor(HAARLINIE).moveTo(L(), yF - 4).lineTo(L() + B(), yF - 4).stroke().restore();
-      doc.font(SANS_FETT).fontSize(8 * k).fillColor(akzentText).text(nr, L(), yF, { width: B(), align: gerade ? "left" : "right", lineBreak: false });
-      doc.font(SANS).fontSize(7 * k).fillColor(GRAU).text(s.name, L(), yF + 0.5, { width: B(), align: gerade ? "right" : "left", lineBreak: false });
+      doc.font(FETT).fontSize(G.liste).fillColor(akzentText).text(nr, L(), yF, { width: B(), align: gerade ? "left" : "right", lineBreak: false });
+      doc.font(NORMAL).fontSize(G.klein).fillColor(GRAU).text(s.name, L(), yF + 0.5, { width: B(), align: gerade ? "right" : "left", lineBreak: false });
     }
     if (info.kopf) {
       const yK = doc.page.margins.top * 0.45;
-      doc.font(SANS).fontSize(7 * k).fillColor(GRAU).text(info.kopf, L(), yK, { width: B(), align: gerade ? "left" : "right", lineBreak: false, ellipsis: true });
+      doc.font(NORMAL).fontSize(G.klein).fillColor(GRAU).text(info.kopf, L(), yK, { width: B(), align: gerade ? "left" : "right", lineBreak: false, ellipsis: true });
     }
     doc.page.margins.bottom = unterRand;
   }

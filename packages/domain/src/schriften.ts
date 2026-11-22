@@ -1,17 +1,18 @@
 /**
- * Schriften für den gedruckten Katalog: je ein Paar aus Titelschrift (Überschriften, Rassen, Farbenschläge) und
- * Textschrift (Listen, Tabellen, Zahlen). Alle unter der SIL Open Font License (apps/server/fonts).
+ * Schriften für den gedruckten Katalog: je Wahl genau eine Familie für alles, bei zwei Wahlen dazu eine Auszeichnung
+ * nur für den Namen der Schau auf der Titelseite (Entscheidung 032, Dateien und Größen in katalog-typografie.ts).
+ * Alle unter der SIL Open Font License (apps/server/fonts).
  */
 export const KATALOG_SCHRIFTEN = ["klassisch", "traditionell", "lesbar", "modern", "buchschmal", "ausgewogen"] as const;
 export type KatalogSchrift = (typeof KATALOG_SCHRIFTEN)[number];
 
 export const KATALOG_SCHRIFT_INFO: Record<KatalogSchrift, { name: string; beschreibung: string }> = {
-  klassisch: { name: "Klassisch", beschreibung: "Spectral für Überschriften, IBM Plex Sans Condensed für Listen – schmal, viel passt auf eine Seite." },
-  traditionell: { name: "Traditionell", beschreibung: "EB Garamond für Überschriften, Source Sans 3 für Listen – wie ein gedrucktes Buch." },
+  klassisch: { name: "Klassisch", beschreibung: "IBM Plex Sans Condensed durchgehend – schmal, viel passt auf eine Seite." },
+  traditionell: { name: "Traditionell", beschreibung: "EB Garamond durchgehend – wie ein gedrucktes Buch." },
   lesbar: { name: "Gut lesbar", beschreibung: "Atkinson Hyperlegible durchgehend – für beste Lesbarkeit entworfen, etwas breiter." },
   modern: { name: "Modern", beschreibung: "Source Sans 3 durchgehend – klar und sachlich." },
-  buchschmal: { name: "Buch, schmal", beschreibung: "EB Garamond für Überschriften, IBM Plex Sans Condensed für Listen – klassisch und platzsparend." },
-  ausgewogen: { name: "Ausgewogen", beschreibung: "Spectral für Überschriften, Source Sans 3 für Listen – ruhig und gut lesbar." },
+  buchschmal: { name: "Buch, schmal", beschreibung: "IBM Plex Sans Condensed durchgehend, nur der Name der Schau auf der Titelseite in EB Garamond." },
+  ausgewogen: { name: "Ausgewogen", beschreibung: "Source Sans 3 durchgehend, nur der Name der Schau auf der Titelseite in Spectral." },
 };
 
 /** Gestaltung von Titelseite, Seiten- und Spartenköpfen des Katalogs (der Tierteil ist bei allen gleich). */

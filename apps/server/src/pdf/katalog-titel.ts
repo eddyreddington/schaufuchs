@@ -1,11 +1,12 @@
 /** Katalog-PDF, Titelseite: Hintergrund, Titel, Logo, Titelbild bzw. Stich und Termine je Stil. */
 import { KATALOG_PAPIERTON, oeffnungszeitenZeilen } from "@schau/domain";
-import { GRAU, MM, SANS, SANS_FETT, SERIF, SERIF_KURSIV, TINTE } from "./basis";
+import { GRAU, MM, TINTE } from "./basis";
+import { AUSZEICHNUNG, FETT, KURSIV, NORMAL } from "./katalog-schrift";
 import type { KatalogKontext } from "./katalog-kontext";
 
 /** Titelseite in den vier Stilen (Rahmen, modern, schlicht, klassisch). */
 export function titelseite(K: KatalogKontext) {
-  const { s, logo, titelbild, mitErgebnis, gestaltung, k, flaeche, aufFlaeche, akzent, akzentText, lk, schlicht, doc, stich, L, B, neueSeite, zierlinie, kicker } = K;
+  const { G, s, logo, titelbild, mitErgebnis, gestaltung, k, flaeche, aufFlaeche, akzent, akzentText, lk, schlicht, doc, stich, L, B, neueSeite, zierlinie, kicker } = K;
   // ── Titelseite ─────────────────────────────────────────────────────────
   neueSeite({ ohneFuss: true });
   {
@@ -67,9 +68,9 @@ export function titelseite(K: KatalogKontext) {
         if (setzen != null) doc.fillColor(farbeZ).text(text, x, y + vor, { width: bw, align });
         y += vor + hz;
       };
-      if (s.ort) zeile(s.ort, SERIF, 14 * k, farbeText);
-      zeiten.forEach((z, i) => zeile(z, SANS, 9.5 * k, farbeText, i === 0 && s.ort ? 4 * k : 0));
-      unterZeilen.forEach((z, i) => zeile(z, SANS, 8 * k, farbeKlein, i === 0 ? 6 * k : 0));
+      if (s.ort) zeile(s.ort, NORMAL, G.h2, farbeText);
+      zeiten.forEach((z, i) => zeile(z, NORMAL, G.text, farbeText, i === 0 && s.ort ? 4 * k : 0));
+      unterZeilen.forEach((z, i) => zeile(z, NORMAL, G.liste, farbeKlein, i === 0 ? 6 * k : 0));
       return y - (setzen ?? 0);
     };
 
@@ -85,10 +86,10 @@ export function titelseite(K: KatalogKontext) {
       y += lh ? lh + 5 * MM * k : 2 * MM * k;
       kicker(kopfzeile, L(), y, B(), "center");
       y = doc.y + 4 * k;
-      doc.font(SERIF).fontSize(30 * k).fillColor(TINTE).text(s.name, L(), y, { width: B(), align: "center", lineGap: -4 });
+      doc.font(AUSZEICHNUNG).fontSize(G.titel).fillColor(TINTE).text(s.name, L(), y, { width: B(), align: "center", lineGap: -4 });
       y = doc.y + 1 * k;
       if (gestaltung.untertitel) {
-        doc.font(SERIF_KURSIV).fontSize(13.5 * k).fillColor(akzentText).text(gestaltung.untertitel, L(), y, { width: B(), align: "center" });
+        doc.font(KURSIV).fontSize(G.h2).fillColor(akzentText).text(gestaltung.untertitel, L(), y, { width: B(), align: "center" });
         y = doc.y;
       }
       zierlinie(y + 7 * k, B() * 0.22);
@@ -110,17 +111,17 @@ export function titelseite(K: KatalogKontext) {
         doc.save().roundedRect(L() - pad, y - pad, lb + 2 * pad, lhoch + 2 * pad, 3).fill("#ffffff").restore();
         logoIn(L(), y, lb, lhoch, "left");
       }
-      doc.font(SERIF).fontSize(34 * k);
+      doc.font(AUSZEICHNUNG).fontSize(G.titel);
       const titelH = doc.heightOfString(s.name, { width: B(), lineGap: -5 });
-      doc.font(SERIF_KURSIV).fontSize(13 * k);
+      doc.font(KURSIV).fontSize(G.h2);
       const unterH = gestaltung.untertitel ? doc.heightOfString(gestaltung.untertitel, { width: B() }) + 2 * k : 0;
-      y = blockH - 11 * MM * k - unterH - titelH - 7 * k * 1.35 - 5 * k;
-      doc.font(SANS_FETT).fontSize(7 * k).fillColor(aufFlaeche).text(kopfzeile.toLocaleUpperCase("de"), L(), y, { width: B(), characterSpacing: 1.4 * k, lineBreak: false });
-      y += 7 * k * 1.35 + 5 * k;
-      doc.font(SERIF).fontSize(34 * k).fillColor(aufFlaeche).text(s.name, L(), y, { width: B(), lineGap: -5 });
+      y = blockH - 11 * MM * k - unterH - titelH - G.klein * 1.35 - 5 * k;
+      doc.font(FETT).fontSize(G.klein).fillColor(aufFlaeche).text(kopfzeile.toLocaleUpperCase("de"), L(), y, { width: B(), characterSpacing: 1.4 * k, lineBreak: false });
+      y += G.klein * 1.35 + 5 * k;
+      doc.font(AUSZEICHNUNG).fontSize(G.titel).fillColor(aufFlaeche).text(s.name, L(), y, { width: B(), lineGap: -5 });
       if (gestaltung.untertitel) {
         doc.save().fillOpacity(0.85);
-        doc.font(SERIF_KURSIV).fontSize(13 * k).fillColor(aufFlaeche).text(gestaltung.untertitel, L(), doc.y + 2 * k, { width: B() });
+        doc.font(KURSIV).fontSize(G.h2).fillColor(aufFlaeche).text(gestaltung.untertitel, L(), doc.y + 2 * k, { width: B() });
         doc.restore();
       }
       const spalte = B() * 0.46;
@@ -137,10 +138,10 @@ export function titelseite(K: KatalogKontext) {
       y += lh ? 29 * MM * k : 4 * MM * k;
       kicker(kopfzeile, L(), y, B(), "center");
       y = doc.y + 4 * k;
-      doc.font(SERIF).fontSize(30 * k).fillColor(TINTE).text(s.name, L(), y, { width: B(), align: "center", lineGap: -4 });
+      doc.font(AUSZEICHNUNG).fontSize(G.titel).fillColor(TINTE).text(s.name, L(), y, { width: B(), align: "center", lineGap: -4 });
       y = doc.y + 1 * k;
       if (gestaltung.untertitel) {
-        doc.font(SERIF_KURSIV).fontSize(13.5 * k).fillColor(akzentText).text(gestaltung.untertitel, L(), y, { width: B(), align: "center" });
+        doc.font(KURSIV).fontSize(G.h2).fillColor(akzentText).text(gestaltung.untertitel, L(), y, { width: B(), align: "center" });
         y = doc.y;
       }
       zierlinie(y + 7 * k, B() * 0.22);
@@ -161,10 +162,10 @@ export function titelseite(K: KatalogKontext) {
       y += lh ? 31 * MM * k : 6 * MM * k;
       kicker(kopfzeile, L(), y, B(), "center");
       y = doc.y + 4 * k;
-      doc.font(SERIF).fontSize(30 * k).fillColor(TINTE).text(s.name, L(), y, { width: B(), align: "center", lineGap: -4 });
+      doc.font(AUSZEICHNUNG).fontSize(G.titel).fillColor(TINTE).text(s.name, L(), y, { width: B(), align: "center", lineGap: -4 });
       y = doc.y + 1 * k;
       if (gestaltung.untertitel) {
-        doc.font(SERIF_KURSIV).fontSize(13.5 * k).fillColor(akzentText).text(gestaltung.untertitel, L(), y, { width: B(), align: "center" });
+        doc.font(KURSIV).fontSize(G.h2).fillColor(akzentText).text(gestaltung.untertitel, L(), y, { width: B(), align: "center" });
         y = doc.y;
       }
       zierlinie(y + 7 * k, B() * 0.22);

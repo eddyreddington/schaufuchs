@@ -2,7 +2,7 @@
  * Katalog-PDF, Grundlage für alle Teile: lädt die Daten der Schau, legt das PDF an und stellt die gemeinsamen
  * Satzhilfen bereit (Seiten, Inhaltsverzeichnis, Gliederung, Seitentitel, Absätze, Angabenlisten, Stiche).
  */
-import { bewertungsText, gruppenAbteilung, istJugendBlock, KATALOG_LINIEN_INFO, type KatalogGliederungsTeil, type KatalogSeitenbereich, STANDARD_NOTENSKALA } from "@schau/domain";
+import { bewertungsText, gruppenAbteilung, istJugendBlock, KATALOG_LINIEN_INFO, katalogGroessen, type KatalogGliederungsTeil, type KatalogSeitenbereich, STANDARD_NOTENSKALA } from "@schau/domain";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import PDFDocument from "pdfkit";
 import { db } from "../db/client";
@@ -13,7 +13,8 @@ import { type Eintrag, ladeEintraege, skalaVon, verdeckeNamen } from "../service
 import { ladeVereinsangaben } from "../services/datenschutz";
 import { zuteilung } from "../services/pruefung";
 import { spenderFuerKatalog } from "../services/spenden";
-import { GRAU, HAARLINIE, kontrast, lesbareFarbe, MM, registriereSchriften, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, textOhnePlatzAuslassen, TINTE } from "./basis";
+import { GRAU, HAARLINIE, kontrast, lesbareFarbe, MM, textOhnePlatzAuslassen, TINTE } from "./basis";
+import { FETT, KURSIV, NORMAL, registriereKatalogSchrift } from "./katalog-schrift";
 import { type Stich, stichBild } from "./illustrationen";
 import { kurzauswahl } from "./katalog-hilfen";
 
@@ -84,6 +85,8 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
   const verein = await ladeVereinsangaben(s.organisationId);
   const a4 = gestaltung.format === "A4";
   const k = a4 ? 1.22 : 1; // Schriftgrößen wachsen mit dem Format mit
+  /** Größenstufen des Katalogs (Entscheidung 032) für dieses Format. */
+  const G = katalogGroessen(k);
   // Flächen und Linien in der Vereinsfarbe (die Stiche immer in Druckfarbe, damit alle gleich aussehen); Schrift in einer lesbaren (notfalls abgedunkelten) Fassung.
   const flaeche = gestaltung.farbe;
   const farbe = lesbareFarbe(flaeche);
@@ -112,7 +115,7 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
     doc.on("end", () => resolve(Buffer.concat(teile)));
     doc.on("error", reject);
   });
-  registriereSchriften(doc, gestaltung.schrift);
+  registriereKatalogSchrift(doc, gestaltung.schrift);
   /** Jeder Stich wird einmal geöffnet und dann wiederverwendet – ein Buffer würde bei jedem Spartenkopf neu eingebettet. */
   const offeneStiche = new Map<Stich, Parameters<typeof doc.image>[0]>();
   const stich = (name: Stich) => {
@@ -158,28 +161,28 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
   };
   /** Kleine Versalzeile über Titeln („KATALOG MIT ERGEBNISSEN“, „ABTEILUNG“). */
   const kicker = (text: string, x: number, y: number, breite: number, align: "left" | "center" = "left") => {
-    doc.font(SANS_FETT).fontSize(7 * k).fillColor(akzentText).text(text.toLocaleUpperCase("de"), x, y, { width: breite, align, characterSpacing: 1.4 * k, lineBreak: false });
-    doc.y = y + 7 * k * 1.35;
+    doc.font(FETT).fontSize(G.klein).fillColor(akzentText).text(text.toLocaleUpperCase("de"), x, y, { width: breite, align, characterSpacing: 1.4 * k, lineBreak: false });
+    doc.y = y + G.klein * 1.35;
   };
   /** Seitentitel je Stil: klassisch mit Farbstrich, mit Rahmen mittig über einer Zierlinie, modern mit Linie über die Breite. */
   const seitentitel = (titel: string, unter?: string) => {
     const y0 = doc.y;
     if (gestaltung.stil === "rahmen") {
-      doc.font(SERIF).fontSize(21 * k).fillColor(TINTE).text(titel, L(), y0, { width: B(), align: "center", lineGap: -2 });
-      if (unter) doc.font(SANS_KURSIV).fontSize(8.5 * k).fillColor(GRAU).text(unter, L(), doc.y + 1, { width: B(), align: "center" });
+      doc.font(NORMAL).fontSize(G.h1).fillColor(TINTE).text(titel, L(), y0, { width: B(), align: "center", lineGap: -2 });
+      if (unter) doc.font(KURSIV).fontSize(G.liste).fillColor(GRAU).text(unter, L(), doc.y + 1, { width: B(), align: "center" });
       zierlinie(doc.y + 6 * k, B() * 0.18);
       doc.y += 16 * k;
     } else if (gestaltung.stil === "modern") {
-      doc.font(SERIF_FETT).fontSize(20 * k).fillColor(farbe).text(titel, L(), y0, { width: B(), lineGap: -2 });
+      doc.font(FETT).fontSize(G.h1).fillColor(farbe).text(titel, L(), y0, { width: B(), lineGap: -2 });
       const yl = doc.y + 2 * k;
       doc.save().rect(L(), yl, B(), 1.4 * lk).fill(akzent).restore();
       doc.y = yl + 5 * k;
-      if (unter) doc.font(SANS_KURSIV).fontSize(8.5 * k).fillColor(GRAU).text(unter, L(), doc.y, { width: B() });
+      if (unter) doc.font(KURSIV).fontSize(G.liste).fillColor(GRAU).text(unter, L(), doc.y, { width: B() });
       doc.y += 9 * k;
     } else {
       doc.save().rect(L(), y0, 14 * MM * k, 1.6 * lk).fill(akzent).restore();
-      doc.font(SERIF).fontSize(21 * k).fillColor(TINTE).text(titel, L(), y0 + 5 * k, { width: B(), lineGap: -2 });
-      if (unter) doc.font(SANS_KURSIV).fontSize(8.5 * k).fillColor(GRAU).text(unter, L(), doc.y + 1, { width: B() });
+      doc.font(NORMAL).fontSize(G.h1).fillColor(TINTE).text(titel, L(), y0 + 5 * k, { width: B(), lineGap: -2 });
+      if (unter) doc.font(KURSIV).fontSize(G.liste).fillColor(GRAU).text(unter, L(), doc.y + 1, { width: B() });
       doc.y += 11 * k;
     }
     doc.fillColor(TINTE);
@@ -187,15 +190,15 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
   /** Zwischentitel innerhalb einer Seite. */
   const zwischentitel = (text: string) => {
     platz(40 * k);
-    doc.font(SERIF_FETT).fontSize(11.5 * k).fillColor(farbe).text(text, L(), doc.y, { width: B() });
+    doc.font(FETT).fontSize(G.h3).fillColor(farbe).text(text, L(), doc.y, { width: B() });
     doc.y += 4 * k;
     doc.fillColor(TINTE);
   };
   const absatz = (text: string, opts: { groesse?: number; schrift?: string; farbe?: string; einzug?: number } = {}) => {
     const x = L() + (opts.einzug ?? 0);
-    const groesse = opts.groesse ?? 9.8 * k;
+    const groesse = opts.groesse ?? G.text;
     for (const teil of text.split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean)) {
-      doc.font(opts.schrift ?? SERIF).fontSize(groesse);
+      doc.font(opts.schrift ?? NORMAL).fontSize(groesse);
       // Kurze Absätze nicht trennen, lange dürfen über die Seite laufen.
       platz(Math.min(doc.heightOfString(teil, { width: B() - (opts.einzug ?? 0), lineGap: 2.4 * k }), 4 * groesse * 1.5));
       doc.fillColor(opts.farbe ?? TINTE).text(teil, x, doc.y, { width: B() - (opts.einzug ?? 0), lineGap: 2.4 * k });
@@ -206,7 +209,7 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
   const angaben = (zeilen: [string, string][], linksBreite = 0.36) => {
     const lb = B() * linksBreite;
     for (const [a, b] of zeilen.filter(([, w]) => w.trim())) {
-      doc.font(SANS).fontSize(8.6 * k);
+      doc.font(NORMAL).fontSize(G.liste);
       const h = Math.max(doc.heightOfString(a || " ", { width: lb - 8 }), doc.heightOfString(b, { width: B() - lb }));
       platz(h + 6 * k);
       const y = doc.y;
@@ -232,7 +235,7 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
   return {
     s, opts, beitraege, bilder, richter, einteilung, preisarten, stiftungen, spender, alle,
     eintraege, tierteilListe, bildDerRasse, geoeffnet, genutzteBilder, bildVon, logo, titelbild, zu, richterName,
-    skala, mitErgebnis, gestaltung, verein, a4, k, flaeche, farbe, aufFlaeche, akzent,
+    skala, mitErgebnis, gestaltung, verein, a4, k, G, flaeche, farbe, aufFlaeche, akzent,
     akzentText, lk, schlicht, ohne, doc, fertig, stich, seiten, inhalt, L,
     B, unten, neueSeite, seitenNr, platz, abschnitt, marken, marke, zierlinie, aufLinie,
     kicker, seitentitel, zwischentitel, absatz, angaben, spitzePunkte, note,

@@ -77,12 +77,12 @@ export const fach: OberflaecheTexte["fach"] = {
   KATALOG_FUSSZEILE_INFO: { linie: "Ligne et nom de l’exposition", mittig: "Numéro de page centré", marke: "Numéro de page dans un encadré coloré" },
   KATALOG_LINIEN_INFO: { fein: { name: "Fin" }, normal: { name: "Normal" }, kraeftig: { name: "Épais" } },
   KATALOG_SCHRIFT_INFO: {
-    klassisch: { name: "Classique", beschreibung: "Spectral pour les titres, IBM Plex Sans Condensed pour les listes – étroit, beaucoup tient sur une page." },
-    traditionell: { name: "Traditionnel", beschreibung: "EB Garamond pour les titres, Source Sans 3 pour les listes – comme un livre imprimé." },
+    klassisch: { name: "Classique", beschreibung: "IBM Plex Sans Condensed partout – étroit, beaucoup tient sur une page." },
+    traditionell: { name: "Traditionnel", beschreibung: "EB Garamond partout – comme un livre imprimé." },
     lesbar: { name: "Bien lisible", beschreibung: "Atkinson Hyperlegible partout – conçu pour une lisibilité optimale, un peu plus large." },
     modern: { name: "Moderne", beschreibung: "Source Sans 3 partout – clair et sobre." },
-    buchschmal: { name: "Livre, étroit", beschreibung: "EB Garamond pour les titres, IBM Plex Sans Condensed pour les listes – classique et compact." },
-    ausgewogen: { name: "Équilibré", beschreibung: "Spectral pour les titres, Source Sans 3 pour les listes – calme et bien lisible." },
+    buchschmal: { name: "Livre, étroit", beschreibung: "IBM Plex Sans Condensed partout, seul le nom de l’exposition en couverture en EB Garamond." },
+    ausgewogen: { name: "Équilibré", beschreibung: "Source Sans 3 partout, seul le nom de l’exposition en couverture en Spectral." },
   },
   KATALOG_STIL_INFO: {
     klassisch: { name: "Classique", beschreibung: "Centré, bandeau de couleur en haut et encadré coloré avec lieu et heures d’ouverture en bas." },

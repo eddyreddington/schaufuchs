@@ -33,6 +33,7 @@ export * from "./preisrichter-zulassung";
 export * from "./preisrichter-druck";
 export * from "./stellvorschlaege";
 export * from "./schriften";
+export * from "./katalog-typografie";
 export * from "./termine";
 export * from "./kommende-schauen";
 export * from "./gesundheitspruefung";

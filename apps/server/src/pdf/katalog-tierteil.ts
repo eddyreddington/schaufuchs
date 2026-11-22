@@ -2,13 +2,17 @@
  * Katalog-PDF, Tierteil: zwei oder drei Spalten bzw. Tabelle, Spartenköpfe mit Stich, Rassenköpfe mit Rassebild,
  * Preisrichter-, Klassen- und Tierzeilen; Teilschauen und Jugend nacheinander. Liefert das Register der Rassen.
  */
-import { formatEuro, formatKatalognummer, gruppenAbteilung, istJugendBlock, JUGEND_KUERZEL, jugendKennzeichen, MELDEART_LABEL } from "@schau/domain";
+import { formatEuro, formatKatalognummer, gruppenAbteilung, istJugendBlock, JUGEND_KUERZEL, jugendKennzeichen, katalogGroessen, MELDEART_LABEL } from "@schau/domain";
 import { oeffneBild } from "../services/rassebild";
 import { ausstellerAnzeige, type Eintrag } from "../services/eintraege";
-import { GRAU, HAARLINIE, MM, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, SERIF_KURSIV, textImFeld, TINTE } from "./basis";
+import { GRAU, HAARLINIE, MM, textImFeld, TINTE } from "./basis";
+import { FETT, KURSIV, NORMAL, ZIFFERN } from "./katalog-schrift";
 import { stichFuer } from "./illustrationen";
 import type { Seite, KatalogKontext } from "./katalog-kontext";
 import { anzahlText } from "./katalog-hilfen";
+
+/** Kurzform von „nicht veröffentlicht“, wenn die lange in der Spalte nicht Platz hat. */
+const NICHT_VEROEFFENTLICHT_KURZ = "nicht veröff.";
 
 // Bereiche mit Unternummer („24a“): Nachmeldungen sortieren hinter ihrer Hauptnummer ein.
 type Nr = { katalogNr: number | null; suffix: string };
@@ -17,7 +21,7 @@ export const nrBereich = (von: Nr, bis: Nr) => (nrVergleich(von, bis) === 0 ? fo
 
 /** Tierteil: Sparten- und Rassenköpfe, Klassen, Tierzeilen; gibt das Register für das Rassenverzeichnis zurück. */
 export function tierteilSetzen(K: KatalogKontext) {
-  const { s, tierteilListe, bildDerRasse, geoeffnet, genutzteBilder, zu, richterName, mitErgebnis, gestaltung, a4, k, flaeche, farbe, aufFlaeche, akzent, lk, schlicht, doc, stich, seiten, L, B, unten, neueSeite, seitenNr, abschnitt, marke, aufLinie, kicker, spitzePunkte, note } = K;
+  const { G, s, tierteilListe, bildDerRasse, geoeffnet, genutzteBilder, zu, richterName, mitErgebnis, gestaltung, a4, k, flaeche, farbe, aufFlaeche, akzent, lk, schlicht, doc, stich, seiten, L, B, unten, neueSeite, seitenNr, abschnitt, marke, aufLinie, kicker, spitzePunkte, note } = K;
   // ── Tierteil: zwei Spalten wie in den Verbandskatalogen, oder Tabelle über die ganze Breite, oder drei Spalten ──
   // Drei Spalten nur auf A4 (auf A5 wären sie zu schmal) – dort mit der Schriftgröße des A5-Hefts.
   const aufteilung = gestaltung.aufteilung === "dreispaltig" && !a4 ? "zweispaltig" : (gestaltung.aufteilung ?? "zweispaltig");
@@ -58,7 +62,8 @@ export function tierteilSetzen(K: KatalogKontext) {
     const preis = note + c.note;
     return { klasse, farbenschlag, aussteller, note, preis };
   };
-  const GR = 8.2 * kt; // Schriftgröße der Tierzeilen
+  const GT = katalogGroessen(kt);
+  const GR = GT.liste; // Schriftgröße der Tierzeilen
   const ZEILE = (tabelle ? 13 : 10.4) * kt; // Tabelle: Luft für die Trennlinie unter jeder Zeile
   /** Luft über einem Rassenkopf bzw. einer neuen Klasse, wenn darüber Tierzeilen stehen (Gruppen sichtbar trennen). */
   const ABSTAND_RASSE = 9 * kt;
@@ -67,7 +72,7 @@ export function tierteilSetzen(K: KatalogKontext) {
     const c = col();
     const y = doc.y;
     const nx = spX() + c.nr + 2 * MM;
-    doc.font(SANS_FETT).fontSize(6 * kt).fillColor(GRAU);
+    doc.font(FETT).fontSize(GT.fein).fillColor(GRAU);
     const opt = { lineBreak: false, characterSpacing: 0.6 * kt } as const;
     doc.text("NR.", spX(), y, { ...opt, width: c.nr, align: "right" });
     if (tabelle) {
@@ -125,7 +130,7 @@ export function tierteilSetzen(K: KatalogKontext) {
     }
     zuletzt = "kopf";
     if (!neueRasse && laufendeRasse) {
-      doc.font(SERIF_KURSIV).fontSize(8.5 * kt).fillColor(farbe);
+      doc.font(KURSIV).fontSize(GT.liste).fillColor(farbe);
       const yf = doc.y;
       doc.text(`${laufendeRasse} (Fortsetzung)`, spX(), yf, { width: spB(), lineBreak: false, ellipsis: true });
       // In der Tabelle folgt gleich die Tierzeile (keine Klassenzeile dazwischen) – nur eine Zeile Abstand.
@@ -259,8 +264,8 @@ export function tierteilSetzen(K: KatalogKontext) {
       // Mittig: Bild, Art, Name der Sparte, Angaben, darunter eine doppelte Linie.
       figur(L() + (B() - fw) / 2, y0, "center");
       kicker(art, L(), y0 + g + 3 * k, B(), "center");
-      doc.font(SERIF).fontSize(23 * k).fillColor(TINTE).text(sparte, L(), doc.y, { width: B(), align: "center", lineGap: -3 });
-      doc.font(SANS).fontSize(8.4 * k).fillColor(GRAU).text(angabe, L(), doc.y + 1, { width: B(), align: "center" });
+      doc.font(NORMAL).fontSize(G.h1).fillColor(TINTE).text(sparte, L(), doc.y, { width: B(), align: "center", lineGap: -3 });
+      doc.font(NORMAL).fontSize(G.liste).fillColor(GRAU).text(angabe, L(), doc.y + 1, { width: B(), align: "center" });
       const y = doc.y + 5 * k;
       doc.save().rect(L(), y, B(), 1.4 * lk).fill(akzent).rect(L(), y + 3, B(), 0.45 * lk).fill(akzent).restore();
       doc.y = y + 12 * k;
@@ -270,17 +275,17 @@ export function tierteilSetzen(K: KatalogKontext) {
       const bandB = B() - fw - 4 * MM;
       doc.rect(L(), y0, bandB, bandH).fill(flaeche);
       figur(L() + B() - fw, y0 + 2 * k, "right");
-      doc.font(SANS_FETT).fontSize(7 * k).fillColor(aufFlaeche).text(art.toLocaleUpperCase("de"), L() + 4 * MM * k, y0 + 4 * k, { width: bandB - 8 * MM * k, characterSpacing: 1.4 * k, lineBreak: false });
-      doc.font(SERIF).fontSize(21 * k).fillColor(aufFlaeche).text(sparte, L() + 4 * MM * k, y0 + 4 * k + 7 * k * 1.5, { width: bandB - 8 * MM * k, lineGap: -3, height: bandH, ellipsis: true });
-      doc.font(SANS).fontSize(8.4 * k).fillColor(GRAU).text(angabe, L(), y0 + bandH + 3 * k, { width: B() });
+      doc.font(FETT).fontSize(G.klein).fillColor(aufFlaeche).text(art.toLocaleUpperCase("de"), L() + 4 * MM * k, y0 + 4 * k, { width: bandB - 8 * MM * k, characterSpacing: 1.4 * k, lineBreak: false });
+      doc.font(NORMAL).fontSize(G.h1).fillColor(aufFlaeche).text(sparte, L() + 4 * MM * k, y0 + 4 * k + G.klein * 1.5, { width: bandB - 8 * MM * k, lineGap: -3, height: bandH, ellipsis: true });
+      doc.font(NORMAL).fontSize(G.liste).fillColor(GRAU).text(angabe, L(), y0 + bandH + 3 * k, { width: B() });
       doc.y += 8 * k;
     } else {
       // Klassisch: kleines Bild rechts, Titel links – die Schrift trägt die Seite, nicht das Bild.
       figur(L() + B() - fw, y0, "right");
       const tb = B() - fw - 6 * MM;
       kicker(art, L(), y0 + 1 * k, tb);
-      doc.font(SERIF).fontSize(23 * k).fillColor(TINTE).text(sparte, L(), doc.y, { width: tb, lineGap: -3 });
-      doc.font(SANS).fontSize(8.4 * k).fillColor(GRAU).text(angabe, L(), doc.y + 1, { width: tb });
+      doc.font(NORMAL).fontSize(G.h1).fillColor(TINTE).text(sparte, L(), doc.y, { width: tb, lineGap: -3 });
+      doc.font(NORMAL).fontSize(G.liste).fillColor(GRAU).text(angabe, L(), doc.y + 1, { width: tb });
       const y = Math.max(doc.y, y0 + g) + 5 * k;
       doc.save().rect(L(), y, B(), 1.4 * lk).fill(akzent).restore();
       doc.y = y + 9 * k;
@@ -325,7 +330,7 @@ export function tierteilSetzen(K: KatalogKontext) {
     // Heller Balken mit Farbkante statt Vollfläche: ruhiger und im Schwarz-Weiß-Druck gut lesbar.
     if (!schlicht) doc.save().fillOpacity(0.12).rect(spX(), y, spB(), h).fill(flaeche).restore();
     doc.save().rect(spX(), y, 2.2 * lk, h).fill(akzent).restore();
-    textImFeld(doc, rasse, spX() + 6, aufLinie(SERIF_FETT, 10.5 * kt, y + h * 0.71), { breite: spB() - 10, groesse: 10.5 * kt, min: 8, schrift: SERIF_FETT, farbe: TINTE });
+    textImFeld(doc, rasse, spX() + 6, aufLinie(FETT, GT.h3, y + h * 0.71), { breite: spB() - 10, groesse: GT.h3, min: 8, schrift: FETT, farbe: TINTE });
     doc.y = y + h + 3.5 * kt;
     zuletzt = "kopf";
     doc.fillColor(TINTE);
@@ -359,15 +364,15 @@ export function tierteilSetzen(K: KatalogKontext) {
     const prefix = `${art}${e.geschlecht} ${e.alter}`;
     const c = col();
     // Klasse unter der Nummernspalte, Farbenschlag auf Höhe der Bewertung – alles fluchtet.
-    doc.fillColor(farbe).text(prefix, spX(), aufLinie(SANS_FETT, 7 * kt, linie), { lineBreak: false });
+    doc.fillColor(farbe).text(prefix, spX(), aufLinie(FETT, GT.klein, linie), { lineBreak: false });
     const pw = Math.max(c.nr + 2 * MM, doc.widthOfString(prefix) + 2 * MM);
-    textImFeld(doc, `${farbschlag || "–"}${zusatz ? ` (${zusatz})` : ""}`, spX() + pw, aufLinie(SERIF_KURSIV, 9.6 * kt, linie), { breite: spB() - pw, groesse: 9.6 * kt, min: 7.5, schrift: SERIF_KURSIV, farbe: TINTE });
+    textImFeld(doc, `${farbschlag || "–"}${zusatz ? ` (${zusatz})` : ""}`, spX() + pw, aufLinie(KURSIV, GT.text, linie), { breite: spB() - pw, groesse: GT.text, min: 7.5, schrift: KURSIV, farbe: TINTE });
     doc.y = linie + 3.2 * kt;
   }
 
   function richterZeile(name: string) {
     const c = col();
-    doc.font(SANS_KURSIV).fontSize(7.2 * kt).fillColor(GRAU).text(`Preisrichter: ${name}`, spX() + c.nr + 2 * MM, doc.y - 1 * kt, { width: spB() - c.nr - 2 * MM, lineBreak: false, ellipsis: true });
+    doc.font(KURSIV).fontSize(GT.klein).fillColor(GRAU).text(`Preisrichter: ${name}`, spX() + c.nr + 2 * MM, doc.y - 1 * kt, { width: spB() - c.nr - 2 * MM, lineBreak: false, ellipsis: true });
     doc.y += 8 * kt;
     zuletzt = "kopf";
     doc.fillColor(TINTE);
@@ -381,27 +386,30 @@ export function tierteilSetzen(K: KatalogKontext) {
    */
   function ausstellerFeld(e: Eintrag, x: number, y: number, breite: number) {
     const min = 6.8 * kt;
+    const w = (t: string, schrift: string, g: number) => doc.font(schrift).fontSize(g).widthOfString(t);
+    // Breite Schrift in schmaler Spalte (Atkinson, dreispaltig): „nicht veröff.“ statt mit „…“ gekürzt.
+    const voll = ausstellerAnzeige(e);
+    const anzeige = e.verdeckt && w(voll, NORMAL, min) > breite ? NICHT_VEROEFFENTLICHT_KURZ : voll;
     if (!jugendKennzeichen(e, s)) {
-      textImFeld(doc, ausstellerAnzeige(e), x, y, { breite, groesse: GR, min, schrift: SANS, farbe: TINTE });
+      textImFeld(doc, anzeige, x, y, { breite, groesse: GR, min, schrift: NORMAL, farbe: TINTE });
       return;
     }
     const luft = 1 * MM;
-    const w = (t: string, schrift: string, g: number) => doc.font(schrift).fontSize(g).widthOfString(t);
     const stufen = (von: number, bis: number) => [...Array.from({ length: Math.max(0, Math.ceil((von - bis) / 0.5)) }, (_, i) => von - i * 0.5), bis];
-    const [ganz, initiale, nachname] = e.verdeckt || !e.vorname ? [ausstellerAnzeige(e)] : [ausstellerAnzeige(e), `${e.nachname}, ${e.vorname.charAt(0)}.`, e.nachname];
+    const [ganz, initiale, nachname] = e.verdeckt || !e.vorname ? [anzeige] : [anzeige, `${e.nachname}, ${e.vorname.charAt(0)}.`, e.nachname];
     const kMin = 5.5 * kt;
     const wahl = [
       ...stufen(GR, min).map((g) => ({ name: ganz!, g, kg: g })),
       ...(initiale ? stufen(GR, min).map((g) => ({ name: initiale, g, kg: g })) : []),
       ...(initiale ? stufen(min, kMin).map((kg) => ({ name: initiale, g: min, kg })) : []),
       ...(nachname ? stufen(min, kMin).map((kg) => ({ name: nachname, g: min, kg })) : []),
-    ].find((v) => w(v.name, SANS, v.g) + luft + w(JUGEND_KUERZEL, SANS_KURSIV, v.kg) <= breite) ?? { name: nachname ?? ganz!, g: min, kg: kMin };
-    const kw = w(JUGEND_KUERZEL, SANS_KURSIV, wahl.kg);
+    ].find((v) => w(v.name, NORMAL, v.g) + luft + w(JUGEND_KUERZEL, KURSIV, v.kg) <= breite) ?? { name: nachname ?? ganz!, g: min, kg: kMin };
+    const kw = w(JUGEND_KUERZEL, KURSIV, wahl.kg);
     const frei = breite - luft - kw;
-    textImFeld(doc, wahl.name, x, y, { breite: frei, groesse: wahl.g, min: wahl.g, schrift: SANS, farbe: TINTE });
-    const grundlinie = y - aufLinie(SANS, wahl.g, 0);
-    const nw = Math.min(frei, w(wahl.name, SANS, wahl.g));
-    doc.font(SANS_KURSIV).fontSize(wahl.kg).fillColor(GRAU).text(JUGEND_KUERZEL, x + nw + luft, aufLinie(SANS_KURSIV, wahl.kg, grundlinie), { width: kw + 1, lineBreak: false });
+    textImFeld(doc, wahl.name, x, y, { breite: frei, groesse: wahl.g, min: wahl.g, schrift: NORMAL, farbe: TINTE });
+    const grundlinie = y - aufLinie(NORMAL, wahl.g, 0);
+    const nw = Math.min(frei, w(wahl.name, NORMAL, wahl.g));
+    doc.font(KURSIV).fontSize(wahl.kg).fillColor(GRAU).text(JUGEND_KUERZEL, x + nw + luft, aufLinie(KURSIV, wahl.kg, grundlinie), { width: kw + 1, lineBreak: false });
     doc.fillColor(TINTE);
   }
 
@@ -410,14 +418,14 @@ export function tierteilSetzen(K: KatalogKontext) {
     const c = col();
     const y = doc.y;
     const x = spX();
-    doc.font(SANS_FETT).fontSize(GR).fillColor(TINTE).text(formatKatalognummer(e), x, y, { width: c.nr, align: "right", lineBreak: false });
+    doc.font(FETT).fontSize(GR).fillColor(TINTE).text(formatKatalognummer(e), x, y, { ...ZIFFERN, width: c.nr, align: "right", lineBreak: false });
     const nx = x + c.nr + 2 * MM;
     if (mitErgebnis) {
       const n = note(e);
       // v und hv fett, damit Spitzentiere auch im Schwarz-Weiß-Druck auffallen.
-      doc.font(e.punkte != null && e.punkte >= spitzePunkte ? SANS_FETT : SANS).fontSize(GR).fillColor(TINTE).text(n, nx, y, { width: c.note, lineBreak: false });
+      doc.font(e.punkte != null && e.punkte >= spitzePunkte ? FETT : NORMAL).fontSize(GR).fillColor(TINTE).text(n, nx, y, { width: c.note, lineBreak: false });
       const preise = e.preise.map((p) => p.kuerzel).join(" ");
-      if (preise) textImFeld(doc, preise, nx + c.note, y, { breite: c.preis - 1.5 * MM, groesse: GR, min: 6.5, schrift: SANS_FETT, farbe });
+      if (preise) textImFeld(doc, preise, nx + c.note, y, { breite: c.preis - 1.5 * MM, groesse: GR, min: 6.5, schrift: FETT, farbe });
     } else {
       // Vorkatalog: feine Schreiblinie für eigene Notizen statt „kt. E.“ in jeder Zeile.
       doc.save().lineWidth(0.3).strokeColor(HAARLINIE).dash(0.8, { space: 1.6 });
@@ -429,7 +437,7 @@ export function tierteilSetzen(K: KatalogKontext) {
     if (e.verkaufspreisCent && e.status !== "fehlt" && !e.gesperrt) {
       const verkauft = mitErgebnis && e.verkauftAn;
       const euro = e.verkaufspreisCent % 100 === 0 ? String(e.verkaufspreisCent / 100) : formatEuro(e.verkaufspreisCent).replace(/\s?€/, "");
-      doc.font(verkauft ? SANS_KURSIV : SANS).fontSize(GR).fillColor(verkauft ? GRAU : TINTE).text(verkauft ? "verk." : euro, x + spB() - c.vk, y, { width: c.vk, align: "right", lineBreak: false });
+      doc.font(verkauft ? KURSIV : NORMAL).fontSize(GR).fillColor(verkauft ? GRAU : TINTE).text(verkauft ? "verk." : euro, x + spB() - c.vk, y, { width: c.vk, align: "right", lineBreak: false });
     }
     doc.fillColor(TINTE);
     doc.y = y + ZEILE;
@@ -445,18 +453,18 @@ export function tierteilSetzen(K: KatalogKontext) {
     const y = y0 + 1.6 * kt; // Text etwas unter der Oberkante, die Trennlinie liegt unter den Unterlängen
     const x = spX();
     // Gemeinsame Grundlinie: der kursive Farbenschlag (Titelschrift) steht auf derselben Linie wie die übrigen Spalten.
-    const grund = y - aufLinie(SANS, GR, 0);
+    const grund = y - aufLinie(NORMAL, GR, 0);
     const farbschlag = e.rasse ? (e.farbenschlag ?? "") : e.freitext;
     const zusatz = [e.istAoc ? "AOC" : "", e.istNeuzuechtung ? "Neuzüchtung" : ""].filter(Boolean).join(", ");
     const art = e.art !== "einzeltier" && !gruppenAbteilung(e.art, s.staemmeVorn) ? `${MELDEART_LABEL[e.art]} ` : "";
-    doc.font(SANS_FETT).fontSize(GR).fillColor(TINTE).text(formatKatalognummer(e), x, y, { width: c.nr, align: "right", lineBreak: false });
-    textImFeld(doc, `${art}${e.geschlecht} ${e.alter}`, t.klasse, y, { breite: c.klasse - 1.5 * MM, groesse: GR, min: 6.5, schrift: SANS_FETT, farbe });
-    textImFeld(doc, `${farbschlag || "–"}${zusatz ? ` (${zusatz})` : ""}`, t.farbenschlag, aufLinie(SERIF_KURSIV, GR * 1.08, grund), { breite: c.farbenschlag, groesse: GR * 1.08, min: 6.5, schrift: SERIF_KURSIV, farbe: TINTE });
+    doc.font(FETT).fontSize(GR).fillColor(TINTE).text(formatKatalognummer(e), x, y, { ...ZIFFERN, width: c.nr, align: "right", lineBreak: false });
+    textImFeld(doc, `${art}${e.geschlecht} ${e.alter}`, t.klasse, y, { breite: c.klasse - 1.5 * MM, groesse: GR, min: 6.5, schrift: FETT, farbe });
+    textImFeld(doc, `${farbschlag || "–"}${zusatz ? ` (${zusatz})` : ""}`, t.farbenschlag, aufLinie(KURSIV, GR, grund), { breite: c.farbenschlag, groesse: GR, min: 6.5, schrift: KURSIV, farbe: TINTE });
     ausstellerFeld(e, t.aussteller, y, c.aussteller - 1.5 * MM);
     if (mitErgebnis) {
-      doc.font(e.punkte != null && e.punkte >= spitzePunkte ? SANS_FETT : SANS).fontSize(GR).fillColor(TINTE).text(note(e), t.note, y, { width: c.note, lineBreak: false });
+      doc.font(e.punkte != null && e.punkte >= spitzePunkte ? FETT : NORMAL).fontSize(GR).fillColor(TINTE).text(note(e), t.note, y, { width: c.note, lineBreak: false });
       const preise = e.preise.map((p) => p.kuerzel).join(" ");
-      if (preise) textImFeld(doc, preise, t.preis, y, { breite: c.preis - 1.5 * MM, groesse: GR, min: 6.5, schrift: SANS_FETT, farbe });
+      if (preise) textImFeld(doc, preise, t.preis, y, { breite: c.preis - 1.5 * MM, groesse: GR, min: 6.5, schrift: FETT, farbe });
     } else {
       doc.save().lineWidth(0.3).strokeColor(HAARLINIE).dash(0.8, { space: 1.6 });
       doc.moveTo(t.note, y + 8 * kt).lineTo(t.note + c.note - 2 * MM, y + 8 * kt).stroke();
@@ -466,7 +474,7 @@ export function tierteilSetzen(K: KatalogKontext) {
     if (e.verkaufspreisCent && e.status !== "fehlt" && !e.gesperrt) {
       const verkauft = mitErgebnis && e.verkauftAn;
       const euro = e.verkaufspreisCent % 100 === 0 ? String(e.verkaufspreisCent / 100) : formatEuro(e.verkaufspreisCent).replace(/\s?€/, "");
-      doc.font(verkauft ? SANS_KURSIV : SANS).fontSize(GR).fillColor(verkauft ? GRAU : TINTE).text(verkauft ? "verk." : euro, x + spB() - c.vk, y, { width: c.vk, align: "right", lineBreak: false });
+      doc.font(verkauft ? KURSIV : NORMAL).fontSize(GR).fillColor(verkauft ? GRAU : TINTE).text(verkauft ? "verk." : euro, x + spB() - c.vk, y, { width: c.vk, align: "right", lineBreak: false });
     }
     // Feine Linie unter jeder Zeile, damit das Auge in der breiten Tabelle die Zeile hält.
     doc.save().lineWidth(0.25).strokeColor(HAARLINIE).moveTo(x, y0 + ZEILE - 0.4 * kt).lineTo(x + spB(), y0 + ZEILE - 0.4 * kt).stroke().restore();

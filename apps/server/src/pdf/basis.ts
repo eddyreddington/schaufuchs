@@ -33,7 +33,8 @@ const PAARE: Record<KatalogSchrift, { titel: readonly string[]; text: readonly s
   ausgewogen: { titel: SPECTRAL, text: SOURCE },
 };
 const dateien = new Map<string, Buffer>();
-const datei = (name: string) => {
+/** Schriftdatei aus apps/server/fonts (einmal gelesen, dann aus dem Speicher). */
+export const schriftDatei = (name: string) => {
   let b = dateien.get(name);
   if (!b) dateien.set(name, (b = readFileSync(join(import.meta.dir, "../../fonts", name))));
   return b;
@@ -48,7 +49,7 @@ export function registriereSchriften(doc: Doc, paar: KatalogSchrift = "klassisch
     [SANS_FETT, text[1]!],
     [SANS_KURSIV, text[2]!],
   ];
-  for (const [rolle, name] of rollen) doc.registerFont(rolle, datei(name));
+  for (const [rolle, name] of rollen) doc.registerFont(rolle, schriftDatei(name));
 }
 
 export const TINTE = "#1d1d1b";

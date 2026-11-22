@@ -4,14 +4,15 @@
  */
 import { formatKatalognummer } from "@schau/domain";
 import { type Eintrag } from "../services/eintraege";
-import { GRAU, HAARLINIE, MM, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, textImFeld, TINTE } from "./basis";
+import { GRAU, HAARLINIE, MM, textImFeld, TINTE } from "./basis";
+import { FETT, KURSIV, NORMAL } from "./katalog-schrift";
 import type { KatalogKontext } from "./katalog-kontext";
 import { anzahlText, bildnachweisTeile } from "./katalog-hilfen";
 import { nrBereich, nrVergleich, type Register } from "./katalog-tierteil";
 
 /** Rassenverzeichnis von A bis Z mit Nummernbereich und Seite. */
 export function rassenverzeichnis(K: KatalogKontext, register: Register) {
-  const { k, ohne, doc, L, B, neueSeite, platz, abschnitt, marke, seitentitel } = K;
+  const { G, k, ohne, doc, L, B, neueSeite, platz, abschnitt, marke, seitentitel } = K;
   // ── Rassenverzeichnis ──────────────────────────────────────────────────
   if (register.size && !ohne.has("rassenverzeichnis")) {
     neueSeite({ kopf: "Rassenverzeichnis" });
@@ -22,15 +23,15 @@ export function rassenverzeichnis(K: KatalogKontext, register: Register) {
     for (const r of zeilen) {
       platz(11 * k);
       const y = doc.y;
-      doc.font(SANS).fontSize(8.5 * k).fillColor(TINTE);
+      doc.font(NORMAL).fontSize(G.liste).fillColor(TINTE);
       const name = `${r.rasse}${r.zusatz ? ` (${r.zusatz})` : ""}`;
       const nrText = nrBereich(r.von, r.bis);
       const w = doc.widthOfString(name);
       doc.text(name, L(), y, { lineBreak: false });
       // Bei Stämmen und Volieren steht die Sparte des Tiers, die Abteilung steckt in „2 Stämme“.
-      textImFeld(doc, `${r.sparte} · ${anzahlText(r.abteilung, r.anzahl)}`, L() + B() * 0.5, y + 0.8, { breite: B() * 0.25, groesse: 7.5 * k, min: 6, schrift: SANS, farbe: GRAU });
-      doc.font(SANS).fontSize(8.5 * k).fillColor(TINTE).text(`Nr. ${nrText}`, L() + B() * 0.76, y, { width: B() * 0.17, lineBreak: false });
-      doc.font(SANS_FETT).text(String(r.seite), L(), y, { width: B(), align: "right", lineBreak: false });
+      textImFeld(doc, `${r.sparte} · ${anzahlText(r.abteilung, r.anzahl)}`, L() + B() * 0.5, y + 0.8, { breite: B() * 0.25, groesse: G.klein, min: 6, schrift: NORMAL, farbe: GRAU });
+      doc.font(NORMAL).fontSize(G.liste).fillColor(TINTE).text(`Nr. ${nrText}`, L() + B() * 0.76, y, { width: B() * 0.17, lineBreak: false });
+      doc.font(FETT).text(String(r.seite), L(), y, { width: B(), align: "right", lineBreak: false });
       if (w < B() * 0.48) {
         doc.save().lineWidth(0.4).strokeColor(HAARLINIE).dash(0.5, { space: 2.5 }).moveTo(L() + w + 3, y + 7.5 * k).lineTo(L() + B() * 0.5 - 3, y + 7.5 * k).stroke().undash().restore();
       }
@@ -41,7 +42,7 @@ export function rassenverzeichnis(K: KatalogKontext, register: Register) {
 
 /** Bildnachweis: Vereinsbilder und genutzte Rassebilder mit Urheber und Lizenz. */
 export function bildnachweisSeite(K: KatalogKontext, register: Register) {
-  const { beitraege, bilder, bildDerRasse, genutzteBilder, k, ohne, doc, L, B, neueSeite, seitenNr, platz, abschnitt, marke } = K;
+  const { G, beitraege, bilder, bildDerRasse, genutzteBilder, k, ohne, doc, L, B, neueSeite, seitenNr, platz, abschnitt, marke } = K;
   // ── Bildnachweis (Urheber und Lizenz, wie § 13 UrhG und die freien Lizenzen es verlangen) ──
   // Bilder des Vereins (Titelbild, Logo, Fotos zu Grußworten und Seiten) mit Angaben; eigene Fotos ohne Angaben fehlen.
   const beitragZu = (id: number) => beitraege.find((x) => x.bildId === id && x.art !== "anzeige");
@@ -58,7 +59,7 @@ export function bildnachweisSeite(K: KatalogKontext, register: Register) {
     doc.y += 10 * k;
     abschnitt("Bildnachweis");
     marke("bildnachweis", !eigeneSeite && seitenNr() === seiteVorher);
-    doc.font(SERIF_FETT).fontSize(10 * k).fillColor(TINTE).text("Bildnachweis", L(), doc.y, { width: B() });
+    doc.font(FETT).fontSize(G.h3).fillColor(TINTE).text("Bildnachweis", L(), doc.y, { width: B() });
     doc.y += 5 * k;
     // Je Bild: Bezeichnung fett, dahinter Foto und Lizenz; darunter klein die Adressen von Quelle und Lizenz.
     const zeilen = [
@@ -66,19 +67,19 @@ export function bildnachweisSeite(K: KatalogKontext, register: Register) {
       ...[...genutzteBilder].sort((a, b) => a.localeCompare(b, "de")).map((name) => ({ name, b: bildDerRasse.get(name)! })),
     ];
     if (anzeigenMitBild) {
-      doc.font(SANS_KURSIV).fontSize(7.2 * k).fillColor(GRAU).text("Für Bilder und Texte der Anzeigen sind die Inserenten verantwortlich.", L(), doc.y, { width: B() });
+      doc.font(KURSIV).fontSize(G.klein).fillColor(GRAU).text("Für Bilder und Texte der Anzeigen sind die Inserenten verantwortlich.", L(), doc.y, { width: B() });
       doc.y += 3 * k;
     }
     for (const { name, b } of zeilen) {
       const { angaben, adressen } = bildnachweisTeile(b);
-      doc.font(SANS).fontSize(7.2 * k);
+      doc.font(NORMAL).fontSize(G.klein);
       const h1 = doc.heightOfString(`${name}  ${angaben}`, { width: B() });
-      doc.font(SANS).fontSize(6.3 * k);
+      doc.font(NORMAL).fontSize(G.fein);
       const h2 = adressen ? doc.heightOfString(adressen, { width: B() }) : 0;
       platz(h1 + h2 + 5 * k);
-      doc.font(SANS_FETT).fontSize(7.2 * k).fillColor(TINTE).text(`${name}  `, L(), doc.y, { width: B(), continued: true });
-      doc.font(SANS).fillColor(TINTE).text(angaben);
-      if (adressen) doc.font(SANS).fontSize(6.3 * k).fillColor(GRAU).text(adressen, L(), doc.y + 0.5 * k, { width: B() });
+      doc.font(FETT).fontSize(G.klein).fillColor(TINTE).text(`${name}  `, L(), doc.y, { width: B(), continued: true });
+      doc.font(NORMAL).fillColor(TINTE).text(angaben);
+      if (adressen) doc.font(NORMAL).fontSize(G.fein).fillColor(GRAU).text(adressen, L(), doc.y + 0.5 * k, { width: B() });
       doc.y += 4 * k;
     }
     doc.fillColor(TINTE);
@@ -87,7 +88,7 @@ export function bildnachweisSeite(K: KatalogKontext, register: Register) {
 
 /** Ausstellerverzeichnis, alphabetisch mit den Katalognummern. */
 export function ausstellerverzeichnis(K: KatalogKontext) {
-  const { tierteilListe, k, farbe, ohne, doc, L, B, neueSeite, platz, abschnitt, marke, seitentitel } = K;
+  const { G, tierteilListe, k, farbe, ohne, doc, L, B, neueSeite, platz, abschnitt, marke, seitentitel } = K;
   // ── Ausstellerverzeichnis ──────────────────────────────────────────────
   if (tierteilListe.some((e) => !e.verdeckt) && !ohne.has("ausstellerverzeichnis")) {
     neueSeite({ kopf: "Ausstellerverzeichnis" });
@@ -103,20 +104,20 @@ export function ausstellerverzeichnis(K: KatalogKontext) {
       const a = t[0]!;
       const b0 = a.nachname.charAt(0).toLocaleUpperCase("de");
       const nummern = t.map((e) => formatKatalognummer(e)).join(", ");
-      doc.font(SANS).fontSize(8 * k);
+      doc.font(NORMAL).fontSize(G.liste);
       const h = 11 * k + doc.heightOfString(nummern, { width: B() * 0.5 });
       if (b0 !== buchstabe) {
         platz(h + 18 * k);
         doc.moveDown(0.3);
-        doc.font(SERIF_FETT).fontSize(13 * k).fillColor(farbe).text(b0, L(), doc.y);
+        doc.font(FETT).fontSize(G.h2).fillColor(farbe).text(b0, L(), doc.y);
         buchstabe = b0;
       }
       platz(h);
       const y = doc.y;
-      doc.font(SANS_FETT).fontSize(8.5 * k).fillColor(TINTE).text(`${a.nachname}, ${a.vorname}`, L(), y, { width: B() * 0.5 - 4 });
-      doc.font(SANS).fontSize(7.8 * k).fillColor(GRAU).text([a.ort, a.verein].filter(Boolean).join(" · "), L(), doc.y, { width: B() * 0.5 - 4 });
+      doc.font(FETT).fontSize(G.liste).fillColor(TINTE).text(`${a.nachname}, ${a.vorname}`, L(), y, { width: B() * 0.5 - 4 });
+      doc.font(NORMAL).fontSize(G.klein).fillColor(GRAU).text([a.ort, a.verein].filter(Boolean).join(" · "), L(), doc.y, { width: B() * 0.5 - 4 });
       const yLinks = doc.y;
-      doc.font(SANS).fontSize(8 * k).fillColor(TINTE).text(nummern, L() + B() * 0.5, y + 0.6 * k, { width: B() * 0.5 });
+      doc.font(NORMAL).fontSize(G.liste).fillColor(TINTE).text(nummern, L() + B() * 0.5, y + 0.6 * k, { width: B() * 0.5 });
       doc.y = Math.max(yLinks, doc.y) + 3 * k;
     }
   }
@@ -124,7 +125,7 @@ export function ausstellerverzeichnis(K: KatalogKontext) {
 
 /** Inhaltsverzeichnis auf der freigehaltenen zweiten Seite nachtragen, unten das Impressum. */
 export function inhaltsverzeichnis(K: KatalogKontext, inhaltSeite: number) {
-  const { s, opts, mitErgebnis, gestaltung, verein, k, doc, inhalt, L, B, unten, seitentitel } = K;
+  const { G, s, opts, mitErgebnis, gestaltung, verein, k, doc, inhalt, L, B, unten, seitentitel } = K;
   // ── Inhaltsverzeichnis nachtragen, unten das Impressum ─────────────────
   doc.switchToPage(inhaltSeite);
   doc.x = L();
@@ -143,7 +144,7 @@ export function inhaltsverzeichnis(K: KatalogKontext, inhaltSeite: number) {
       ? "Angaben ohne Gewähr. Name, Wohnort und Verein stehen hier nur bei Ausstellern, die in die Veröffentlichung im Internet eingewilligt haben."
       : "Angaben ohne Gewähr. Name, Wohnort und Verein der Aussteller stehen nach den Ausstellungsbestimmungen im Katalog – ohne deren Anerkennung (Meldebogen oder Online-Meldung) oder bei Widerspruch nicht.",
   ].filter(Boolean);
-  doc.font(SANS).fontSize(7 * k);
+  doc.font(NORMAL).fontSize(G.klein);
   const impressumH = impressum.reduce((n, t) => n + doc.heightOfString(t, { width: B() }) + 1.5, 0) + 8;
   // Lange Verzeichnisse (viele Sparten, Jugend) enger setzen: Zeilenabstand bis auf die Hälfte, Schrift bis auf 75 %.
   const benoetigt = inhalt.reduce((n, z) => n + (z.ebene ? 14 : 17) * k, 0);
@@ -152,7 +153,7 @@ export function inhaltsverzeichnis(K: KatalogKontext, inhaltSeite: number) {
   for (const z of inhalt) {
     const y = doc.y;
     const einzug = z.ebene ? 8 * MM : 0;
-    doc.font(z.ebene ? SANS : SERIF).fontSize((z.ebene ? 8.8 : 11.5) * k * Math.max(0.75, f)).fillColor(z.ebene ? GRAU : TINTE);
+    doc.font(NORMAL).fontSize((z.ebene ? G.liste : G.h3) * Math.max(0.75, f)).fillColor(z.ebene ? GRAU : TINTE);
     const w = doc.widthOfString(z.titel);
     doc.text(z.titel, L() + einzug, y, { lineBreak: false });
     const nr = String(z.seite);
@@ -170,7 +171,7 @@ export function inhaltsverzeichnis(K: KatalogKontext, inhaltSeite: number) {
     doc.save().lineWidth(0.4).strokeColor(HAARLINIE).moveTo(L(), y).lineTo(L() + B(), y).stroke().restore();
     y += 5;
     for (const t of impressum) {
-      doc.font(SANS).fontSize(7 * k).fillColor(GRAU).text(t, L(), y, { width: B() });
+      doc.font(NORMAL).fontSize(G.klein).fillColor(GRAU).text(t, L(), y, { width: B() });
       y = doc.y + 1.5;
     }
   }

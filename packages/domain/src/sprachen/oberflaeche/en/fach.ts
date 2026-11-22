@@ -77,12 +77,12 @@ export const fach: OberflaecheTexte["fach"] = {
   KATALOG_FUSSZEILE_INFO: { linie: "Line and show name", mittig: "Page number centred", marke: "Page number in colour box" },
   KATALOG_LINIEN_INFO: { fein: { name: "Fine" }, normal: { name: "Normal" }, kraeftig: { name: "Bold" } },
   KATALOG_SCHRIFT_INFO: {
-    klassisch: { name: "Classic", beschreibung: "Spectral for headings, IBM Plex Sans Condensed for lists – narrow, a lot fits on one page." },
-    traditionell: { name: "Traditional", beschreibung: "EB Garamond for headings, Source Sans 3 for lists – like a printed book." },
+    klassisch: { name: "Classic", beschreibung: "IBM Plex Sans Condensed throughout – narrow, a lot fits on one page." },
+    traditionell: { name: "Traditional", beschreibung: "EB Garamond throughout – like a printed book." },
     lesbar: { name: "Easy to read", beschreibung: "Atkinson Hyperlegible throughout – designed for best legibility, slightly wider." },
     modern: { name: "Modern", beschreibung: "Source Sans 3 throughout – clear and factual." },
-    buchschmal: { name: "Book, narrow", beschreibung: "EB Garamond for headings, IBM Plex Sans Condensed for lists – classic and space-saving." },
-    ausgewogen: { name: "Balanced", beschreibung: "Spectral for headings, Source Sans 3 for lists – calm and easy to read." },
+    buchschmal: { name: "Book, narrow", beschreibung: "IBM Plex Sans Condensed throughout, only the show name on the cover in EB Garamond." },
+    ausgewogen: { name: "Balanced", beschreibung: "Source Sans 3 throughout, only the show name on the cover in Spectral." },
   },
   KATALOG_STIL_INFO: {
     klassisch: { name: "Classic", beschreibung: "Centred, colour band at the top and colour box with place and opening hours at the bottom." },

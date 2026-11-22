@@ -1,12 +1,13 @@
 /** Katalog-PDF, Anhang: kommende Schauen, Anzeigen der Förderer und Notizseiten bis zur vollen Heftlage. */
 import { kommendeSchauen, schauTage, TERMIN_EBENE_INFO, zeitraumDe } from "@schau/domain";
 import { ladeKommende } from "../services/termine";
-import { datumDe, GRAU, HAARLINIE, MM, SANS, SANS_FETT, SANS_KURSIV, SERIF, SERIF_FETT, TINTE } from "./basis";
+import { datumDe, GRAU, HAARLINIE, MM, TINTE } from "./basis";
+import { FETT, KURSIV, NORMAL } from "./katalog-schrift";
 import type { Beitrag, KatalogKontext } from "./katalog-kontext";
 
 /** Kommende Schauen nach dieser Schau (Kreis, Land, Bund, Europa). */
 export async function kommendeSchauenSeite(K: KatalogKontext) {
-  const { s, gestaltung, k, ohne, doc, L, B, neueSeite, platz, abschnitt, marke, seitentitel, zwischentitel } = K;
+  const { G, s, gestaltung, k, ohne, doc, L, B, neueSeite, platz, abschnitt, marke, seitentitel, zwischentitel } = K;
   // ── Kommende Schauen ───────────────────────────────────────────────────
   // Termine nach dem letzten Tag dieser Schau: Kreis und Landesverband wie gewählt, Bund und Europa alle (je Ebene gekürzt).
   const schauEnde = schauTage(s.bewertungAm, s.oeffnungszeiten)?.bis;
@@ -26,26 +27,26 @@ export async function kommendeSchauenSeite(K: KatalogKontext) {
       zwischentitel(`${TERMIN_EBENE_INFO[g.ebene].titel}${verband ? ` – ${verband}` : ""}`);
       for (const t of g.termine) {
         const wann = zeitraumDe(t.von, t.bis);
-        doc.font(SANS_FETT).fontSize(8.8 * k);
+        doc.font(FETT).fontSize(G.liste);
         const hName = doc.heightOfString(t.name, { width: B() - datumBreite });
-        doc.font(SANS).fontSize(8 * k);
+        doc.font(NORMAL).fontSize(G.liste);
         const hOrt = t.ort ? doc.heightOfString(t.ort, { width: B() - datumBreite }) : 0;
         const h = Math.max(hName + hOrt, 10 * k);
         platz(h + 6 * k);
         const y = doc.y;
-        doc.font(SANS).fontSize(8.6 * k).fillColor(GRAU).text(wann, L(), y + 0.3 * k, { width: datumBreite - 8 });
-        doc.font(SANS_FETT).fontSize(8.8 * k).fillColor(TINTE).text(t.name, L() + datumBreite, y, { width: B() - datumBreite });
-        if (t.ort) doc.font(SANS).fontSize(8 * k).fillColor(GRAU).text(t.ort, L() + datumBreite, doc.y, { width: B() - datumBreite });
+        doc.font(NORMAL).fontSize(G.liste).fillColor(GRAU).text(wann, L(), y + 0.3 * k, { width: datumBreite - 8 });
+        doc.font(FETT).fontSize(G.liste).fillColor(TINTE).text(t.name, L() + datumBreite, y, { width: B() - datumBreite });
+        if (t.ort) doc.font(NORMAL).fontSize(G.liste).fillColor(GRAU).text(t.ort, L() + datumBreite, doc.y, { width: B() - datumBreite });
         const yl = y + h + 2.6 * k;
         doc.save().lineWidth(0.3).strokeColor(HAARLINIE).moveTo(L(), yl).lineTo(L() + B(), yl).stroke().restore();
         doc.y = yl + 3 * k;
       }
-      if (g.gekuerzt) doc.font(SANS_KURSIV).fontSize(7.8 * k).fillColor(GRAU).text(`… und ${g.gekuerzt} weitere`, L() + datumBreite, doc.y, { width: B() - datumBreite });
+      if (g.gekuerzt) doc.font(KURSIV).fontSize(G.klein).fillColor(GRAU).text(`… und ${g.gekuerzt} weitere`, L() + datumBreite, doc.y, { width: B() - datumBreite });
       doc.y += 4 * k;
     }
     const quellen = [...new Set(kommend.flatMap((g) => g.termine.map((t) => t.quelle)).filter(Boolean))];
     const hinweis = `Stand: ${datumDe(new Date())}${quellen.length ? ` · Quellen: ${quellen.join(", ")}` : ""} · Angaben ohne Gewähr – bitte vor dem Besuch beim Veranstalter nachsehen.`;
-    doc.font(SANS_KURSIV).fontSize(7 * k);
+    doc.font(KURSIV).fontSize(G.klein);
     platz(doc.heightOfString(hinweis, { width: B() }) + 8 * k);
     doc.y += 4 * k;
     doc.fillColor(GRAU).text(hinweis, L(), doc.y, { width: B() });
@@ -55,7 +56,7 @@ export async function kommendeSchauenSeite(K: KatalogKontext) {
 
 /** Anzeigen der Förderer im Raster aus 2 × 2 Feldern. */
 export function anzeigenSeiten(K: KatalogKontext) {
-  const { beitraege, bildVon, k, flaeche, farbe, lk, doc, L, B, unten, neueSeite, abschnitt, marke, seitentitel } = K;
+  const { G, beitraege, bildVon, k, flaeche, farbe, lk, doc, L, B, unten, neueSeite, abschnitt, marke, seitentitel } = K;
   // ── Anzeigen ───────────────────────────────────────────────────────────
   const anzeigen = beitraege.filter((b) => b.art === "anzeige");
   if (anzeigen.length) {
@@ -110,27 +111,27 @@ export function anzeigenSeiten(K: KatalogKontext) {
     // Textanzeige: Inhalt in der Mitte des Feldes, wie eine gesetzte Anzeige.
     const innen = 5 * MM * (w < B() ? 0.6 : 1);
     const ib = w - 2 * innen;
-    const titelGr = (w < B() ? 12.5 : 17) * k;
-    doc.font(SERIF_FETT).fontSize(titelGr);
+    const titelGr = w < B() ? G.h3 : G.h2;
+    doc.font(FETT).fontSize(titelGr);
     const hTitel = doc.heightOfString(a.titel, { width: ib });
-    doc.font(SANS).fontSize(8 * k);
+    doc.font(NORMAL).fontSize(G.liste);
     const hUnter = a.unterzeile ? doc.heightOfString(a.unterzeile, { width: ib }) + 2 : 0;
-    doc.font(SERIF).fontSize(9.5 * k);
+    doc.font(NORMAL).fontSize(G.text);
     const hText = a.text ? Math.min(doc.heightOfString(a.text, { width: ib, lineGap: 1.5 * k }) + 8 * k, h - 2 * innen - hTitel - hUnter) : 0;
     let ty = y + Math.max(innen, (h - hTitel - hUnter - hText) / 2);
-    doc.font(SERIF_FETT).fontSize(titelGr).fillColor(farbe).text(a.titel, x + innen, ty, { width: ib, align: "center" });
+    doc.font(FETT).fontSize(titelGr).fillColor(farbe).text(a.titel, x + innen, ty, { width: ib, align: "center" });
     ty = doc.y;
     if (a.unterzeile) {
-      doc.font(SANS).fontSize(8 * k).fillColor(GRAU).text(a.unterzeile, x + innen, ty + 2, { width: ib, align: "center" });
+      doc.font(NORMAL).fontSize(G.liste).fillColor(GRAU).text(a.unterzeile, x + innen, ty + 2, { width: ib, align: "center" });
       ty = doc.y;
     }
-    if (a.text) doc.font(SERIF).fontSize(9.5 * k).fillColor(TINTE).text(a.text, x + innen, ty + 8 * k, { width: ib, height: Math.max(10, y + h - ty - innen - 8 * k), align: "center", lineGap: 1.5 * k, ellipsis: true });
+    if (a.text) doc.font(NORMAL).fontSize(G.text).fillColor(TINTE).text(a.text, x + innen, ty + 8 * k, { width: ib, height: Math.max(10, y + h - ty - innen - 8 * k), align: "center", lineGap: 1.5 * k, ellipsis: true });
   }
 }
 
 /** Notiz- bzw. Füllseiten bis zur vollen Heftlage. */
 export function notizSeiten(K: KatalogKontext) {
-  const { a4, k, ohne, doc, seiten, L, B, unten, neueSeite, marke, seitentitel } = K;
+  const { G, a4, k, ohne, doc, seiten, L, B, unten, neueSeite, marke, seitentitel } = K;
   // ── Notizen: Heftseiten zählen in Vierern (A5), A4 beidseitig in Zweiern ──
   const teiler = a4 ? 2 : 4;
   // Ohne Notizseiten bleiben die Füllseiten leer – das Heft braucht sie trotzdem.
