@@ -155,6 +155,7 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     vonOben: "Z góry",
     imGang: "W przejściu",
     rundgangAnhalten: "Zatrzymaj obchód",
+    folie: "Folia",
     rundgang: "Obchód",
     herunterladen: "Pobierz model 3D",
     neuLaden: "Odśwież",

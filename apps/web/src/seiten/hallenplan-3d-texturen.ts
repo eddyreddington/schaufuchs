@@ -267,3 +267,38 @@ export function brettTextur(): THREE.CanvasTexture {
   g.strokeRect(61, 46, 58, 45);
   return textur(c, false);
 }
+
+/** Kachel der Bodenfolie (cm): zwei Bahnen zu 2 m. */
+export const FOLIE_KACHEL = 400;
+
+/**
+ * Graue Schutzfolie über dem Hallenboden: matt mittelgrau, zwei Bahnen je Kachel (Bahnen entlang v), jede etwas anders im
+ * Glanz, an den Stößen eine schmale Überlappung, dazu leichte Falten.
+ */
+export function folienTextur(): THREE.CanvasTexture {
+  const [c, g] = leinwand(256, 256);
+  const r = zufall(29);
+  for (let i = 0; i < 2; i++) {
+    g.fillStyle = ton("#8f9193", 0.97 + i * 0.05);
+    g.fillRect(i * 128, 0, 128, 256);
+    // Falten: schwache helle und dunkle Wellen quer zur Bahn.
+    for (let k = 0; k < 6; k++) {
+      const y = r() * 256;
+      const v = g.createLinearGradient(0, y - 6, 0, y + 6);
+      v.addColorStop(0, "rgba(255,255,255,0)");
+      v.addColorStop(0.5, r() < 0.5 ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)");
+      v.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = v;
+      g.fillRect(i * 128, y - 6, 128, 12);
+    }
+  }
+  koernung(g, 256, 256, 1500, 0.06, r);
+  // Überlappung an den Stößen: einige Zentimeter etwas heller, mit dunkler Kante.
+  for (const x of [0, 128]) {
+    g.fillStyle = "rgba(255,255,255,0.07)";
+    g.fillRect(x, 0, 5, 256);
+    g.fillStyle = "rgba(0,0,0,0.18)";
+    g.fillRect(x + 5, 0, 1, 256);
+  }
+  return textur(c);
+}

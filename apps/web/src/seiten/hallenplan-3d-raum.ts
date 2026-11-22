@@ -1,13 +1,14 @@
 /**
- * Der Raum der 3D-Halle nach ihrem Aussehen (Entscheidung 028): Boden mit Belag und Meterraster, Spielfeldlinien,
- * Innenseiten der Wände mit Prallwand, Fenster, Geräte an den Wänden und die Holzdecke mit Bindern und Leuchten. Was an
- * einer Wand hängt, blendet mit ihr aus (`wandStoffe`); die Decke zeigt sich nur von innen (`deckeSichtbar`).
+ * Der Raum der 3D-Halle nach ihrem Aussehen (Entscheidung 028): Boden mit Belag, Folie und Meterraster, Spielfeldlinien,
+ * Innenseiten der Wände mit Prallwand, Fenster, Geräte an den Wänden und die Decke (hallenplan-3d-decke.ts). Was an einer
+ * Wand hängt, blendet mit ihr aus (`wandStoffe`, `wandSchatten`); die Decke zeigt sich nur von innen.
  */
-import { deckenTeile, deckeSichtbar, fensterInWaenden, geraeteAnWaenden, type HallenSzene, LINIEN_BREITE, punktInUmriss, type Quader, spielfeldLinien, type SzeneSeite, wandInnenseiten, type WandGeraet } from "@schau/domain";
+import { fensterInWaenden, geraeteAnWaenden, type HallenSzene, LINIEN_BREITE, punktInUmriss, spielfeldLinien, type SzeneSeite, wandInnenseiten, type WandGeraet } from "@schau/domain";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { innenseitenGeometrie } from "./hallenplan-3d-bausteine";
-import { BODEN_KACHEL, bodenTextur, brettTextur, deckenTextur, FLUEGEL, fensterTextur, WAND_KACHEL, wandTextur } from "./hallenplan-3d-texturen";
+import { baueDecke } from "./hallenplan-3d-decke";
+import { BODEN_KACHEL, bodenTextur, brettTextur, FLUEGEL, fensterTextur, FOLIE_KACHEL, folienTextur, WAND_KACHEL, wandTextur } from "./hallenplan-3d-texturen";
 
 const M = 0.01; // cm → m
 
@@ -17,8 +18,14 @@ export interface Raum {
   boden: THREE.Mesh;
   /** Stoffe je Wandstück (Index in `s.waende`), die mit der Wand aus- und einblenden. */
   wandStoffe: Map<number, THREE.Material[]>;
+  /** Körper an einer Wand (Geräte), die nur Schatten werfen, solange ihre Wand zu sehen ist. */
+  wandSchatten: Map<number, THREE.Mesh[]>;
   /** Decke zeigen oder verbergen (Kamera in Metern). */
   deckeNachfuehren: (kamera: THREE.Vector3) => void;
+  /** Folie über dem Boden zeigen oder nicht (Umschalter in der Ansicht, ohne Neuaufbau). */
+  folie: (an: boolean) => void;
+  /** Für das 3D-Modell vorbereiten (Decke sichtbar); gibt zurück, wie es wieder wird. */
+  fuerExport: () => () => void;
 }
 
 /** Drehung um die Hochachse, damit lokal +z von der Wand in die Halle zeigt (lokal +x entlang der Wand). */
@@ -82,10 +89,15 @@ function sprossenGeometrie(g: WandGeraet): THREE.BufferGeometry {
   return aus;
 }
 
-export function baueRaum(modell: THREE.Group, s: HallenSzene, merk: Merk): Raum {
+/**
+ * Raum bauen. `szene`: Meterraster (nur Anzeige, nicht im heruntergeladenen Modell); `modell`: Boden, Folie, Linien,
+ * Innenwände, Fenster, Geräte, Decke (im Modell die Folie, wie gerade gezeigt, und die Decke immer).
+ */
+export function baueRaum(szene: THREE.Scene, modell: THREE.Group, s: HallenSzene, merk: Merk): Raum {
   const a = s.aussehen;
   const B = s.breite * M, L = s.laenge * M;
   const wandStoffe = new Map<number, THREE.Material[]>();
+  const wandSchatten = new Map<number, THREE.Mesh[]>();
   const zurWand = (wand: number, stoff: THREE.Material) => {
     const l = wandStoffe.get(wand) ?? [];
     l.push(stoff);
@@ -111,16 +123,35 @@ export function baueRaum(modell: THREE.Group, s: HallenSzene, merk: Merk): Raum 
   boden.receiveShadow = true;
   modell.add(boden);
 
+  // Folie: graue Schutzbahnen über dem Boden (deckt Belag und Linien ab), Bahnen entlang der langen Seite.
+  const folienTex = merk(folienTextur());
+  const fk = FOLIE_KACHEL * M;
+  const folienStoff = merk(new THREE.MeshStandardMaterial({ map: folienTex, roughness: 0.6, metalness: 0, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+  const folie = new THREE.Mesh(boden.geometry, folienStoff);
+  folie.name = "Folie"; // bleibt deutsch (Name im 3D-Modell)
+  folie.rotation.copy(boden.rotation);
+  folie.position.copy(boden.position);
+  folie.position.y = 0.0035;
+  folie.receiveShadow = true;
+  // Textur: gedreht wird vor dem Skalieren – bei gedrehter Kachel die Wiederholung über Kreuz.
+  const quer = s.breite >= s.laenge;
+  if (quer) folienTex.rotation = Math.PI / 2;
+  if (s.umriss) folienTex.repeat.set(1 / fk, 1 / fk);
+  else if (quer) folienTex.repeat.set(L / fk, B / fk);
+  else folienTex.repeat.set(B / fk, L / fk);
+  folie.visible = a.abdeckung;
+  modell.add(folie);
+
   // Meterraster: fein, nur innerhalb des Grundrisses – zum Abschätzen von Maßen, ohne den Belag zu überdecken.
   const drin = (x: number, z: number) => !s.umriss || punktInUmriss({ x: x / M, y: z / M }, s.umriss);
   const raster: number[] = [];
-  for (let x = 1; x < B; x++) for (let z = 0; z < L; z++) if (drin(x, z + 0.5)) raster.push(x, 0.002, z, x, 0.002, Math.min(L, z + 1));
-  for (let z = 1; z < L; z++) for (let x = 0; x < B; x++) if (drin(x + 0.5, z)) raster.push(x, 0.002, z, Math.min(B, x + 1), 0.002, z);
+  // Über Folie und Flächen (6 mm), damit es auch auf der Folie zu sehen ist.
+  for (let x = 1; x < B; x++) for (let z = 0; z < L; z++) if (drin(x, z + 0.5)) raster.push(x, 0.006, z, x, 0.006, Math.min(L, z + 1));
+  for (let z = 1; z < L; z++) for (let x = 0; x < B; x++) if (drin(x + 0.5, z)) raster.push(x, 0.006, z, Math.min(B, x + 1), 0.006, z);
   const rasterGeo = merk(new THREE.BufferGeometry());
   rasterGeo.setAttribute("position", new THREE.Float32BufferAttribute(raster, 3));
   const rasterLinien = new THREE.LineSegments(rasterGeo, merk(new THREE.LineBasicMaterial({ color: "#5a4a30", transparent: true, opacity: 0.12, depthWrite: false })));
-  rasterLinien.name = "Meterraster"; // bleibt deutsch (Name im 3D-Modell)
-  modell.add(rasterLinien);
+  szene.add(rasterLinien);
 
   // Spielfeldlinien: je Farbe ein Netz aus flachen Bändern knapp über dem Boden.
   const linien = spielfeldLinien(s);
@@ -199,55 +230,18 @@ export function baueRaum(modell: THREE.Group, s: HallenSzene, merk: Merk): Raum 
         m.castShadow = true;
         modell.add(m);
         zurWand(g.wand, stoff);
+        wandSchatten.set(g.wand, [...(wandSchatten.get(g.wand) ?? []), m]);
       }
     }
   }
 
-  // Decke: Profilbretter, Leimbinder, Leuchtbänder – nur von innen zu sehen, wirft keinen Schatten (die Sonne bleibt).
-  const decke = new THREE.Group();
-  decke.name = "Decke"; // bleibt deutsch (Name im 3D-Modell)
-  decke.visible = false;
-  if (a.decke) {
-    const tex = merk(deckenTextur());
-    const holz = merk(new THREE.MeshStandardMaterial({ map: tex, emissive: "#ffffff", emissiveMap: tex, emissiveIntensity: 0.35, roughness: 0.8, side: THREE.DoubleSide }));
-    let flaeche: THREE.Mesh;
-    // Bretter entlang der langen Seite (Textur: Bretter entlang v).
-    const laengsX = s.breite >= s.laenge;
-    if (s.umriss) {
-      flaeche = new THREE.Mesh(merk(new THREE.ShapeGeometry(new THREE.Shape(s.umriss.map((p) => new THREE.Vector2(p.x * M, -p.y * M))))), holz);
-      tex.repeat.set(1, 1);
-    } else {
-      flaeche = new THREE.Mesh(merk(new THREE.PlaneGeometry(B, L)), holz);
-      flaeche.position.set(B / 2, 0, L / 2);
-      tex.repeat.set(B, L);
-    }
-    if (laengsX) tex.rotation = Math.PI / 2;
-    flaeche.rotation.x = -Math.PI / 2;
-    flaeche.position.y = s.wandHoehe * M;
-    decke.add(flaeche);
-    const { binder, leuchten } = deckenTeile(s);
-    const einheit = merk(new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0));
-    const quader = (liste: Quader[], stoff: THREE.Material) => {
-      const im = new THREE.InstancedMesh(einheit, stoff, Math.max(1, liste.length));
-      const mat = new THREE.Matrix4();
-      liste.forEach((q, i) => im.setMatrixAt(i, mat.makeScale(q.b * M, q.h * M, q.t * M).setPosition((q.x + q.b / 2) * M, q.y * M, (q.z + q.t / 2) * M)));
-      im.count = liste.length;
-      decke.add(im);
-    };
-    quader(binder, merk(new THREE.MeshStandardMaterial({ color: "#e2ad68", emissive: "#5a3a14", roughness: 0.7 })));
-    quader(leuchten, merk(new THREE.MeshStandardMaterial({ color: "#ffffff", emissive: "#fffaf0", emissiveIntensity: 1, roughness: 0.4 })));
-    modell.add(decke);
-  }
-  const k = { x: 0, y: 0, z: 0 };
+  const decke = baueDecke(modell, s, merk, zurWand);
   return {
     boden,
     wandStoffe,
-    deckeNachfuehren: (kamera) => {
-      if (!a.decke) return;
-      k.x = kamera.x / M;
-      k.y = kamera.y / M;
-      k.z = kamera.z / M;
-      decke.visible = deckeSichtbar(s, k);
-    },
+    wandSchatten,
+    deckeNachfuehren: decke.nachfuehren,
+    folie: (an) => void (folie.visible = an),
+    fuerExport: decke.fuerExport,
   };
 }

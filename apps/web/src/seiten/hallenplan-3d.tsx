@@ -4,7 +4,7 @@
  * demselben Plan wie die 2D-Zeichnung; die Szene baut hallenplan-3d-welt.ts. three.js lädt nur mit dieser Seite
  * (dynamischer Import), die übrigen Seiten bleiben klein.
  */
-import { verkleidungVon, hallenSzene, LOCALE, richterFarbe, type Halle, type Hallenplan, type KaefigMasse, type Aufsteller, type SzeneTier, KAEFIG_TYP_LABEL } from "@schau/domain";
+import { aussehenVon, verkleidungVon, hallenSzene, LOCALE, richterFarbe, type Halle, type Hallenplan, type KaefigMasse, type Aufsteller, type SzeneTier, KAEFIG_TYP_LABEL } from "@schau/domain";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOberflaeche, useSprache } from "../sprache";
 import { ot } from "../sprache-jetzt";
@@ -51,6 +51,12 @@ export default function Hallenplan3D({
   const [zeiger, setZeiger] = useState<{ x: number; y: number; text: string[] } | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
   const [rundgang, setRundgang] = useState(false);
+  // Folie über dem Boden: Startwert aus der Einstellung der Halle; der Schalter hier wirkt nur auf die Ansicht (speichert nicht).
+  const folieGespeichert = aussehenVon(halle.aussehen).abdeckung;
+  const [folie, setFolie] = useState(folieGespeichert);
+  useEffect(() => setFolie(folieGespeichert), [folieGespeichert]);
+  const folieRef = useRef(folie);
+  folieRef.current = folie;
   const richterName = useMemo(() => new Map(richter.map((r) => [r.id, r.name])), [richter]);
 
   useEffect(() => {
@@ -64,6 +70,7 @@ export default function Hallenplan3D({
       return;
     }
     welt.current = w;
+    w.folie(folieRef.current);
     w.ansicht(ansichtRef.current);
     const beiZeigen = (e: PointerEvent) => {
       if (e.pointerType === "touch" && e.buttons) return;
@@ -160,6 +167,16 @@ export default function Hallenplan3D({
               {text}
             </Knopf>
           ))}
+          <Knopf
+            variante={folie ? "primaer" : "zweit"}
+            aria-pressed={folie}
+            onClick={() => {
+              setFolie(!folie);
+              welt.current?.folie(!folie);
+            }}
+          >
+            {t.folie}
+          </Knopf>
           <Knopf variante={rundgang ? "primaer" : "zweit"} disabled={szene.rundgang.length < 2} onClick={() => welt.current?.bewegung.rundgang(!rundgang)}>
             {rundgang ? t.rundgangAnhalten : t.rundgang}
           </Knopf>

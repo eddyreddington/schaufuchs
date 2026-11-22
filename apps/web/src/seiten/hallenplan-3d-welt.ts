@@ -24,6 +24,8 @@ export interface Welt {
   bewegung: Bewegung;
   treffer: (e: PointerEvent) => Treffer | null;
   herunterladen: () => Promise<void>;
+  /** Bodenfolie zeigen oder nicht (nur die Ansicht, ohne Neuaufbau und ohne zu speichern). */
+  folie: (an: boolean) => void;
   entsorgen: () => void;
 }
 
@@ -100,7 +102,7 @@ export function baueWelt(
   // Außen: Himmel, Wiese, Hof, Bäume und Hügel (hallenplan-3d-landschaft.ts); innen Boden, Linien, Innenwände, Fenster,
   // Geräte und Decke nach dem Aussehen der Halle (hallenplan-3d-raum.ts).
   baueLandschaft(scene, B, L, merk, vorneSeite(s));
-  const raum = baueRaum(modell, s, merk);
+  const raum = baueRaum(scene, modell, s, merk);
   const boden = raum.boden;
 
   // Flächen am Boden: freier Bereich, Volierenbereich, Eingang.
@@ -125,17 +127,18 @@ export function baueWelt(
     return k;
   };
   // Jede Wand mit eigenem Stoff: Wände, die zwischen Kamera und Halle stehen, blenden sich weich aus (siehe `wandDeckkraft`).
-  const wandTeile: { w: Quader; mesh: THREE.Mesh; stoff: THREE.MeshStandardMaterial; deck: number; mit: THREE.Material[] }[] = [];
+  const wandTeile: { w: Quader; mesh: THREE.Mesh; stoff: THREE.MeshStandardMaterial; deck: number; mit: THREE.Material[]; schatten: THREE.Mesh[] }[] = [];
   for (const w of s.waende) {
     const stoff = merk(wandStoff.clone());
     const k = kiste(w, stoff);
     k.castShadow = true;
     k.receiveShadow = true;
     modell.add(k);
-    wandTeile.push({ w, mesh: k, stoff, deck: -1, mit: [] as THREE.Material[] });
+    wandTeile.push({ w, mesh: k, stoff, deck: -1, mit: [] as THREE.Material[], schatten: [] as THREE.Mesh[] });
   }
-  // Innenseite (Prallwand, Anstrich), Fenster und Geräte blenden mit ihrer Wand aus.
+  // Innenseite (Prallwand, Anstrich), Fenster, Geräte und Giebel blenden mit ihrer Wand aus; Geräte werfen dann keinen Schatten.
   for (const [i, stoffe] of raum.wandStoffe) wandTeile[i]?.mit.push(...stoffe);
+  for (const [i, teile] of raum.wandSchatten) wandTeile[i]?.schatten.push(...teile);
   // Türen auch bei ausgeblendeter Wand erkennbar: Umriss am Boden.
   const tuerLinie = merk(new THREE.LineBasicMaterial({ color: "#2b2f36" }));
   for (const t of s.tueren) {
@@ -193,7 +196,7 @@ export function baueWelt(
       tex.anisotropy = 4;
       tex.repeat.set(1 / kachel.laenge, 1);
       // Leichtes Eigenleuchten aus derselben Kachel: die weiße Plane wirkt auch im Schatten weiß, das Logo bleibt kräftig.
-      const stoff = merk(new THREE.MeshStandardMaterial({ map: tex, emissive: "#ffffff", emissiveMap: tex, emissiveIntensity: 0.35, roughness: 1, metalness: 0, side: THREE.DoubleSide }));
+      const stoff = merk(new THREE.MeshStandardMaterial({ map: tex, emissive: "#ffffff", emissiveMap: tex, emissiveIntensity: 0.35, roughness: 1, metalness: 0, side: THREE.DoubleSide, toneMapped: false }));
       const m = new THREE.Mesh(merk(schuerzenGeometrie(teile)), stoff);
       m.receiveShadow = true;
       modell.add(m);
@@ -266,7 +269,8 @@ export function baueWelt(
   // vorn und oben Gitter. Die Front kommt aus dem Plan (Reihe bzw. Block) – steht etwas falsch herum, sieht man es sofort.
   // Je Käfig eine Instanz, gefärbt nach Preisrichter wie im 2D-Plan; jede Etage gleich gebaut.
   const kastenGeo = merk(offenerKasten());
-  const kaefigStoff = merk(new THREE.MeshStandardMaterial({ color: "#ffffff", side: THREE.DoubleSide, roughness: 0.7 }));
+  // Ohne Tonemapping: die Preisrichterfarben sehen aus wie in der Legende (HTML) und im 2D-Plan.
+  const kaefigStoff = merk(new THREE.MeshStandardMaterial({ color: "#ffffff", side: THREE.DoubleSide, roughness: 0.7, toneMapped: false }));
   const kaefige = new THREE.InstancedMesh(kastenGeo, kaefigStoff, Math.max(1, s.kaefige.length));
   const gitterTex = merk(gitterTextur(8, 1));
   const gitterGeo = merk(new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0.5));
@@ -405,6 +409,7 @@ export function baueWelt(
       }
       t.stoff.depthWrite = t.deck > 0.6;
       t.mesh.castShadow = t.deck > 0.5;
+      for (const m of t.schatten) m.castShadow = t.deck > 0.5;
       // Die Innenseite (Prallwand, Anstrich) geht mit.
       for (const m of t.mit) {
         m.opacity = t.deck;
@@ -463,7 +468,7 @@ export function baueWelt(
     if (a === "oben") {
       // Ganze Halle samt Wänden im Bild; die Wandkronen liegen näher an der Kamera, daher die Wandhöhe obendrauf.
       const rand = 2 * s.wandDicke * M;
-      const h = (Math.max(L + rand, (B + rand) / kamera.aspect) / 2 / Math.tan(THREE.MathUtils.degToRad(kamera.fov / 2))) * 1.06 + s.wandHoehe * M;
+      const h = (Math.max(L + rand, (B + rand) / kamera.aspect) / 2 / Math.tan(THREE.MathUtils.degToRad(kamera.fov / 2))) * 1.06 + s.firstHoehe * M;
       kamera.position.set(mitte.x, h, mitte.z + 0.001);
       steuerung.target.set(mitte.x, 0, mitte.z);
     } else if (a === "gang") {
@@ -497,7 +502,14 @@ export function baueWelt(
 
   const herunterladen = async () => {
     const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
-    const daten = await new GLTFExporter().parseAsync(modell, { binary: true });
+    // Im Modell: die Decke immer (in der Ansicht nur von innen), die Folie wie gerade gezeigt; das Meterraster nicht.
+    const zurueck = raum.fuerExport();
+    let daten: ArrayBuffer | object;
+    try {
+      daten = await new GLTFExporter().parseAsync(modell, { binary: true });
+    } finally {
+      zurueck();
+    }
     const url = URL.createObjectURL(new Blob([daten as ArrayBuffer], { type: "model/gltf-binary" }));
     const a = document.createElement("a");
     a.href = url;
@@ -512,6 +524,10 @@ export function baueWelt(
     bewegung,
     treffer,
     herunterladen,
+    folie: (an) => {
+      raum.folie(an);
+      zeichne();
+    },
     entsorgen: () => {
       entsorgt = true;
       beobachter.disconnect();

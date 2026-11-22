@@ -152,6 +152,7 @@ export const halleBild = {
     vonOben: "Von oben",
     imGang: "Im Gang",
     rundgangAnhalten: "Rundgang anhalten",
+    folie: "Folie",
     rundgang: "Rundgang",
     herunterladen: "3D-Modell herunterladen",
     neuLaden: "Neu laden",

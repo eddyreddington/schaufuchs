@@ -150,6 +150,7 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     vonOben: "Van boven",
     imGang: "In het gangpad",
     rundgangAnhalten: "Rondgang stoppen",
+    folie: "Afdekfolie",
     rundgang: "Rondgang",
     herunterladen: "3D-model downloaden",
     neuLaden: "Opnieuw laden",

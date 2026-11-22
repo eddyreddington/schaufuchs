@@ -154,6 +154,7 @@ export const halleBild: OberflaecheTexte["halleBild"] = {
     vonOben: "Shora",
     imGang: "V uličce",
     rundgangAnhalten: "Zastavit prohlídku",
+    folie: "Fólie",
     rundgang: "Prohlídka",
     herunterladen: "Stáhnout 3D model",
     neuLaden: "Znovu načíst",
