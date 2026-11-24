@@ -37,7 +37,7 @@ Schau. Wo ein anderes Format fachlich sinnvoll ist, wählt die Ausstellungsleitu
 | Abrechnung und Quittung je Aussteller | `/datei/:id/abrechnung.pdf?aussteller=` | `pdf/dokumente.ts` | A4 hoch, DIN 5008 | Briefvorlage | nein – Beleg mit Unterschriften |
 | Abrechnung aller Aussteller | `/datei/:id/abrechnung.pdf` | `pdf/dokumente.ts` | A4 quer | fest | nein – neun Spalten |
 | Zuwendungsbestätigung | `/datei/zuwendungsbestaetigung/:id.pdf` | `pdf/spenden.ts` | A4 hoch, amtliches Muster | fest | nein – amtliches Muster |
-| Serienbrief, Probebrief | `POST /datei/serienbrief.pdf`, `/datei/druckvorlage/brief.pdf` | `pdf/brief.ts` | A4 hoch, DIN 5008 | Briefvorlage | nein |
+| Serienbrief, Probebrief | `POST /datei/serienbrief.pdf`, `/datei/druckvorlage/brief.pdf` (`teil: "verpflichtung"`: Verpflichtung, `pdf/verpflichtung.ts`) | `pdf/brief.ts` | A4 hoch, DIN 5008 | Briefvorlage | nein |
 | Listen für das Veterinäramt | `/datei/:id/tierliste.pdf`, `verkaufsliste.pdf` | `pdf/dokumente-amt.ts` | A4 quer | fest | nein – breite Tabellen |
 | Hallenplan | `/datei/:id/hallenplan.pdf` | `pdf/hallenplan.ts` | A4, ein Blatt, quer oder hoch nach der Zeichnung | **neu:** A4 oder A3 | ja – Aushang, große Hallen |
 | Aufbauliste | `/datei/:id/aufbauliste.pdf` | `pdf/hallenplan.ts` | A4 hoch | fest | nein |

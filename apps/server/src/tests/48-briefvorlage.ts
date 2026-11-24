@@ -101,7 +101,18 @@ describe("Briefvorlage und Serienbrief", () => {
     expect(seiten(pdf)).toBe(1);
     expect(flach(pdfText(pdf))).toContain("Ergebnisse der Briefschau");
     expect(flach(pdfText(pdf))).toContain("Guten Tag Bruno Brief,");
-    expect((await post("/datei/druckvorlage/brief.pdf", { daten: BRIEF_VORGABE })).status).toBe(200);
+    // Vorschau der Vorlage: der Reiter bestimmt den Brief – Serienbrief bzw. Preisrichterverpflichtung mit Abschnitt.
+    const daten = { ...BRIEF_VORGABE, serienbrief: { betreff: "Rundbrief {Schau}", text: "Kurz.", gruss: "" }, verpflichtung: { betreff: "Zusage für die {Schau}", text: "Bitte bewerten Sie bei uns." } };
+    const vorschau = async (teil?: string) => flach(pdfText(Buffer.from(await (await post("/datei/druckvorlage/brief.pdf", { daten, schauId, ...(teil ? { teil } : {}) })).arrayBuffer())));
+    const serien = await vorschau();
+    expect(serien).toContain("Rundbrief Briefschau");
+    expect(serien).not.toContain("hier abtrennen");
+    const verpflichtung = await vorschau("verpflichtung");
+    expect(verpflichtung).toContain("Zusage für die Briefschau");
+    expect(verpflichtung).toContain("Bitte bewerten Sie bei uns.");
+    expect(verpflichtung).toContain("hier abtrennen");
+    expect(verpflichtung).not.toContain("Rundbrief");
+    expect((await post("/datei/druckvorlage/brief.pdf", { daten: BRIEF_VORGABE, teil: "irgendwas" })).status).toBe(400);
     expect((await post("/datei/serienbrief.pdf", { auswahl: "mitglieder" }, false)).status).toBe(403);
     expect((await post("/datei/serienbrief.pdf", { auswahl: "irgendwer" })).status).toBe(400);
     // „Aussteller einer Schau“ ohne Schau: Fehler statt still die neueste Schau.

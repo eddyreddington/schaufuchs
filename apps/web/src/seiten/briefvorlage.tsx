@@ -130,7 +130,7 @@ function Editor({ start, vorgabe, onGeaendert }: { start: BriefVorlage; vorgabe:
           <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setV(start)} onSpeichern={() => senden()} laedt={speichern.isPending} knopf={t.speichern} />
         </form>
         <div className="2xl:sticky 2xl:top-16">
-          <BriefVorschau daten={v} />
+          <BriefVorschau daten={v} teil={aktiv === "verpflichtung" ? "verpflichtung" : "serienbrief"} />
         </div>
       </div>
     </>

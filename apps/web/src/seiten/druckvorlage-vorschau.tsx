@@ -152,8 +152,11 @@ export function KartenVorschau({ daten, schauId }: { daten: KartenVorlage; schau
   );
 }
 
-/** Briefvorlage: Beispielbrief mit dem Serienbrief-Text an eine Beispielperson, nach dem ungespeicherten Stand. */
-export function BriefVorschau({ daten }: { daten: BriefVorlage }) {
+/**
+ * Briefvorlage: Beispielbrief nach dem ungespeicherten Stand – im Reiter „Preisrichterverpflichtung“ dieser Brief mit
+ * Abschnitt an einen Beispiel-Preisrichter, sonst der Serienbrief-Text an eine Beispielperson.
+ */
+export function BriefVorschau({ daten, teil = "serienbrief" }: { daten: BriefVorlage; teil?: "serienbrief" | "verpflichtung" }) {
   const t = useOberflaeche().vorlagen.vorschau;
-  return <PdfLiveVorschau pfad="/datei/druckvorlage/brief.pdf" koerper={{ daten }} unter={t.beispielbrief} />;
+  return <PdfLiveVorschau pfad="/datei/druckvorlage/brief.pdf" koerper={{ daten, teil }} unter={t.beispielbrief} />;
 }

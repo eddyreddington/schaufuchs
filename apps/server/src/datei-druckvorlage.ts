@@ -2,7 +2,8 @@
  * Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung):
  *   POST /datei/druckvorlage/vorschau.pdf    – Beispielkarten nach der (noch nicht gespeicherten) Vorlage
  *   POST /datei/druckvorlage/probedruck.pdf  – Millimeterraster zum Ausmessen am Drucker
- *   POST /datei/druckvorlage/brief.pdf       – Beispielbrief nach der (noch nicht gespeicherten) Briefvorlage
+ *   POST /datei/druckvorlage/brief.pdf       – Beispielbrief nach der (noch nicht gespeicherten) Briefvorlage;
+ *                                              `teil`: „serienbrief“ (Vorgabe) oder „verpflichtung“ (Preisrichter)
  *   POST /datei/serienbrief.pdf              – Serienbrief an Mitglieder, alle Aussteller oder die einer Schau
  * Rumpf: JSON. Mit schauId gelten Vereinsfarbe, Logo, Name und Ort dieser Schau (sonst der neuesten Schau).
  * Schutz wie bei der Katalog-Vorschau: nur JSON, keine fremde Herkunft, Größengrenze, Bremse je Benutzer.
@@ -17,6 +18,7 @@ import { bild, organisation, schau } from "./db/schema";
 import { datumDe, design } from "./pdf/basis";
 import { ladeBriefVorlage, serienbriefPdf } from "./pdf/brief";
 import { BEISPIEL_KARTEN, kartenKopf, probedruckPdf, zeichneKartenPdf } from "./pdf/bewertungskarte";
+import { ladeVerpflichtungsGruppen, verpflichtungsBriefe } from "./pdf/verpflichtung";
 import { ladeGestaltung } from "./routers/katalog-gestaltung";
 import { Bremse } from "./services/bremse";
 import { SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger, type SerienbriefAuswahl } from "./services/serienbrief";
@@ -82,9 +84,18 @@ export function briefDateien(app: Hono<any>) {
   app.post("/datei/druckvorlage/brief.pdf", async (c) => {
     const p = await pruefeAnfrage(c);
     if (p instanceof Response) return p;
+    const teil = p.koerper.teil ?? "serienbrief";
+    if (teil !== "serienbrief" && teil !== "verpflichtung") return c.text("Ungültige Angaben.", 400);
     const v = briefVorlageLesen(p.koerper.daten);
     const { s, d } = await vereinsDesign(p.benutzer.organisationId, p.koerper.schauId);
     const verein = await vereinsname(p.benutzer.organisationId);
+    if (teil === "verpflichtung") {
+      // Wie der echte Brief an die Preisrichter, mit einem Beispiel-Preisrichter; ohne Schau mit Beispielangaben.
+      const beispiel = s ?? { name: "Beispielschau 2026", ort: "Mehrzweckhalle Musterstadt", veranstalter: verein, kontaktEmail: "", bewertungAm: null, preisrichterRueckmeldungBis: null, meldeschluss: null, einlieferung: "" };
+      const gruppen = await ladeVerpflichtungsGruppen(s?.stammdatenVersionId ?? null);
+      const inhalt = await verpflichtungsBriefe(beispiel, [{ id: 0, name: "Karla Muster", anschrift: "Lindenweg 12\n12345 Musterdorf" }], gruppen, d, v);
+      return pdfAntwort(c, inhalt, "briefvorlage.pdf");
+    }
     const heute = datumDe(new Date());
     const inhalt = await serienbriefPdf(
       d,

@@ -5,15 +5,15 @@
  * Betreff und Text aus der Briefvorlage (leer: fester Text) und die Gruppen rechnet packages/domain/src/preisrichter-druck.ts
  * (`verpflichtungBrief`, `verpflichtungGruppen`); „Rückmeldung bis“ aus den Einstellungen der Schau.
  */
-import { briefWerte, fuelle, verpflichtungBrief, verpflichtungGruppen } from "@schau/domain";
+import { type BriefVorlage, briefWerte, fuelle, verpflichtungBrief, verpflichtungGruppen } from "@schau/domain";
 import { asc, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { preisrichter, rasse } from "../db/schema";
-import { datumDe, type Doc, erzeugePdf, GRAU, HAARLINIE, kicker, MM, SANS, SANS_FETT, SERIF, textImFeld, TINTE, unterschrift } from "./basis";
+import { datumDe, type Design, type Doc, erzeugePdf, GRAU, HAARLINIE, kicker, MM, SANS, SANS_FETT, SERIF, textImFeld, TINTE, unterschrift } from "./basis";
 import { BRIEF_RAENDER, briefDesign, briefFuss, briefKopf, ladeBriefVorlage } from "./brief";
 import { breite, fusstext, kopfzeile, ladeDesign, type Schau, unten, verein } from "./dokumente-gemeinsam";
 
-type Richter = { id: number; name: string; anschrift: string };
+export type Richter = { id: number; name: string; anschrift: string };
 
 /** Gruppen je Zeile im Abschnitt und Höhe einer Zeile. */
 const JE_ZEILE = 8;
@@ -22,16 +22,32 @@ const KAESTCHEN = 3.4 * MM;
 
 /** Null: `preisrichterId` gehört nicht zu dieser Schau. */
 export async function preisrichterVerpflichtungPdf(s: Schau, preisrichterId?: number) {
-  const [richter, verzeichnis, dVerein, vorlage] = await Promise.all([
+  const [richter, gruppen, dVerein, vorlage] = await Promise.all([
     db.select({ id: preisrichter.id, name: preisrichter.name, anschrift: preisrichter.anschrift }).from(preisrichter).where(eq(preisrichter.schauId, s.id)).orderBy(asc(preisrichter.name)),
-    s.stammdatenVersionId != null ? db.selectDistinct({ gruppe: rasse.gruppe }).from(rasse).where(eq(rasse.versionId, s.stammdatenVersionId)) : Promise.resolve([]),
+    ladeVerpflichtungsGruppen(s.stammdatenVersionId),
     ladeDesign(s),
     ladeBriefVorlage(s.organisationId),
   ]);
   const auswahl = preisrichterId == null ? richter : richter.filter((r) => r.id === preisrichterId);
   if (preisrichterId != null && !auswahl.length) return null;
+  return verpflichtungsBriefe(s, auswahl, gruppen, dVerein, vorlage);
+}
+
+/** Gruppen zum Ankreuzen aus dem Rassenverzeichnis der Schau (ohne Verzeichnis: die feste Auswahl). */
+export async function ladeVerpflichtungsGruppen(stammdatenVersionId: number | null) {
+  const verzeichnis = stammdatenVersionId != null ? await db.selectDistinct({ gruppe: rasse.gruppe }).from(rasse).where(eq(rasse.versionId, stammdatenVersionId)) : [];
+  return verpflichtungGruppen(verzeichnis.map((v) => v.gruppe));
+}
+
+/** Was der Brief von der Schau braucht (die Vorschau der Briefvorlage setzt ohne Schau Beispielwerte ein). */
+export type VerpflichtungSchau = Pick<Schau, "name" | "ort" | "veranstalter" | "kontaktEmail" | "bewertungAm" | "preisrichterRueckmeldungBis" | "meldeschluss" | "einlieferung">;
+
+/**
+ * Die Briefe selbst: an `richter` mit den Gruppen zum Ankreuzen, nach `vorlage` (auch die noch nicht gespeicherte in der
+ * Vorschau der Briefvorlage, dann mit einem Beispiel-Preisrichter).
+ */
+export function verpflichtungsBriefe(s: VerpflichtungSchau, richter: Richter[], gruppen: string[], dVerein: Design, vorlage: BriefVorlage) {
   const d = briefDesign(dVerein, vorlage);
-  const gruppen = verpflichtungGruppen(verzeichnis.map((v) => v.gruppe));
   const heute = datumDe(new Date());
   const tag = datumDe(s.bewertungAm);
   const rueckmeldung = datumDe(s.preisrichterRueckmeldungBis);
@@ -40,12 +56,12 @@ export async function preisrichterVerpflichtungPdf(s: Schau, preisrichterId?: nu
     `Preisrichterverpflichtung ${s.name}`,
     (doc) => {
       const anfaenge: number[] = [];
-      auswahl.forEach((r, i) => {
+      richter.forEach((r, i) => {
         if (i > 0) doc.addPage();
         anfaenge.push(doc.bufferedPageRange().count - 1);
         brief(doc, r);
       });
-      if (!auswahl.length) doc.font(SANS).fontSize(10).text("Keine Preisrichter angelegt.");
+      if (!richter.length) doc.font(SANS).fontSize(10).text("Keine Preisrichter angelegt.");
       briefFuss(doc, vorlage, fusstext(s), anfaenge);
     },
     { margins: BRIEF_RAENDER },

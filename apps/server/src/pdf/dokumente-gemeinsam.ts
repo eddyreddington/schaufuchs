@@ -29,8 +29,8 @@ export async function ladeDesign(s: Schau): Promise<Design> {
   return design(g.farbe, logo?.daten ?? null);
 }
 
-export const verein = (s: Schau) => s.veranstalter || s.name;
-export const kopfzeile = (s: Schau) => [s.name, s.ort].filter(Boolean).join(" · ");
-export const fusstext = (s: Schau) => [verein(s), s.kontaktEmail].filter(Boolean).join(" · ");
+export const verein = (s: Pick<Schau, "veranstalter" | "name">) => s.veranstalter || s.name;
+export const kopfzeile = (s: Pick<Schau, "name" | "ort">) => [s.name, s.ort].filter(Boolean).join(" · ");
+export const fusstext = (s: Pick<Schau, "veranstalter" | "name" | "kontaktEmail">) => [verein(s), s.kontaktEmail].filter(Boolean).join(" · ");
 export const breite = (doc: Doc) => doc.page.width - doc.page.margins.left - doc.page.margins.right;
 export const unten = (doc: Doc) => doc.page.height - doc.page.margins.bottom;
