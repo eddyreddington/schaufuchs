@@ -1,7 +1,7 @@
 {
   "name": "@schau/domain",
   "private": true,
-  "version": "1.21.5",
+  "version": "1.21.6",
   "license": "EUPL-1.2",
   "type": "module",
   "main": "src/index.ts",

@@ -1124,7 +1124,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (171 Z.)
+### server-schau.ts (172 Z.)
 
 - `serverSchau`
 
@@ -1330,7 +1330,7 @@ Meldungen des Servers zu Meldungen, Zahlungen und Ausstellern (Teil von serverSc
 
 - `serverSchauZusatz` – Weitere Meldungen: Prüfung der Protokollkette (services/protokoll-suche.ts), Katalog-Vorschau (datei-katalog.ts), Mailserver (services/post.ts) – T …
 
-### server-schau.ts (173 Z.)
+### server-schau.ts (174 Z.)
 Meldungen des Servers (Entscheidung 022): Schau anlegen, Einstellungen, Gebühren, Anmeldung, Bremsen, Termine, Verein.
 
 - `serverSchau`
@@ -1522,7 +1522,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (164 Z.)
+### server-schau.ts (165 Z.)
 
 - `serverSchau`
 
@@ -1711,7 +1711,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (164 Z.)
+### server-schau.ts (165 Z.)
 
 - `serverSchau`
 
@@ -1904,7 +1904,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (164 Z.)
+### server-schau.ts (165 Z.)
 
 - `serverSchau`
 
@@ -2094,7 +2094,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (170 Z.)
+### server-schau.ts (171 Z.)
 
 - `serverSchau`
 
@@ -2299,7 +2299,7 @@ Einladungslink: prüfen und annehmen (Passwort selbst festlegen).
 - `auth.einladungPruefen` mutation · öffentlich – Einladungslink öffnen: wer ist eingeladen?
 - `auth.einladungAnnehmen` mutation · öffentlich – Passwort über den Einladungslink festlegen.
 
-### routers/auth/gemeinsam.ts (274 Z.)
+### routers/auth/gemeinsam.ts (286 Z.)
 Gemeinsame Bausteine der Anmeldung und Benutzerverwaltung: Bremsen (ein Zählerstand für alle Prozeduren), Prüfungen, Einladung, Willkommens- und Hi …
 
 Keine Prozeduren (Hilfen für die Router).
@@ -3223,7 +3223,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `07-runde4.ts` (392 Z.) – Audit Runde 4: Speicherflut, Geld, Fachlogik, Datenschutz, Bewertung am PC.
 - `08-betrieb-grenzen.ts` (578 Z.) – Runde 4: Betrieb, Anmeldung und Grenzen; Nachbesserungen zu Größengrenzen, superjson, öffentlichem Katalog.
 - `09-nachbesserung-runde5.ts` (405 Z.) – Nachbesserungen Runde 4 (Geld, Protokoll, Datenschutz, Bremsen) und Audit Runde 5. Teil des Schau-Ablaufs: ablauf.test.ts bindet die Teile in feste …
-- `10-benutzer-zugang.ts` (382 Z.) – Benutzer, Zwei-Faktor-Anmeldung, Verzeichnis ergänzen, Willkommensmail, Einladungslink.
+- `10-benutzer-zugang.ts` (400 Z.) – Benutzer, Zwei-Faktor-Anmeldung, Verzeichnis ergänzen, Willkommensmail, Einladungslink.
 - `11-runde6-bausteine.ts` (239 Z.) – Audit Runde 6, Textbausteine, Zwei-Faktor-Pflicht.
 - `12-runde7-rollen-kasse.ts` (265 Z.) – Audit Runde 7, Rollen (Meldungen, Noten, Preise, Meldegeld), Nachtrag nach dem Tagesabschluss.
 - `13-luecken.ts` (210 Z.) – Prozeduren, die bisher in keinem Test aufgerufen wurden (Code-Review nach Runde 7): je Prozedur Wirkung, Rechte und Grenzen.

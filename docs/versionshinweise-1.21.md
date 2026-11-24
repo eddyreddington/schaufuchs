@@ -1,5 +1,12 @@
 # SchauFUCHS 1.21 – Versionshinweise
 
+## 1.21.6 (24.11.2026)
+
+- **Erster Administrator:** Öffnet er einen alten oder abgelaufenen Link „Passwort setzen“, bevor irgendjemand in der
+  Installation ein Passwort hat, steht dort jetzt „Die Einrichtung ist noch nicht abgeschlossen. Einen neuen Link
+  erzeugt, wer diese SchauFUCHS-Installation betreut (Befehl „schaufuchs einrichten“).“ – statt der Bitte an eine
+  Ausstellungsleitung, die es noch nicht gibt. Danach bleibt alles wie bisher (Entscheidung 026).
+
 ## 1.21.5 (24.11.2026)
 
 - **Kontoauszug:** Kann eine ganz bezahlte Meldung nach dem Buchen nicht automatisch bestätigt werden (sie war gerade
