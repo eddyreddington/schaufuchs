@@ -7,6 +7,7 @@
  */
 import { describe, expect, test } from "bun:test";
 import { fruehesteFaelligkeit } from "@schau/domain";
+import { setzeDatenschluesselFuerTest } from "../db/geheim";
 import { adminKontext, leer, m } from "./kontext";
 
 const al = () => m.appRouter.createCaller(adminKontext);
@@ -381,5 +382,104 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     await vs;
     expect(((await letzter("organisation", "Vereinsangaben")).alt as { name: string }).name).toBe("Zwischenname e. V.");
     await al().verein.speichern({ ...(v as never as Record<string, string>) } as never);
+  });
+});
+
+describe("Gleichzeitig: Nachprüfung (Stand, Sperrreihenfolge, Phase)", () => {
+  const MELS = 0x4d454c53;
+  const bearbeiten = (s: { id: number; fid: number }, a: { meldungId: number; ausstellerId: number }, g: Awaited<ReturnType<ReturnType<typeof al>["meldung"]["get"]>>, extra: Record<string, unknown> = {}) => ({
+    schauId: s.id,
+    meldungId: a.meldungId,
+    aussteller: { ...leerA, id: a.ausstellerId, vorname: g.aussteller.vorname, nachname: "Gleichzeitig", email: "" },
+    eingang: "papier" as const,
+    istJugend: false,
+    bemerkung: "",
+    zustimmung: true,
+    positionen: g.eintraege.map((e) => ({ ...pos(s.fid), id: e.id })),
+    stand: g.stand,
+    ...extra,
+  });
+
+  test("Stand hängt vom Serverschlüssel ab (ohne ihn nicht nachzurechnen)", async () => {
+    const s = await neueSchau("Gleichzeitig Schlüssel");
+    const a = await melde(s.id, s.fid, "Kurt");
+    const g = await al().meldung.get({ id: a.meldungId });
+    setzeDatenschluesselFuerTest(Buffer.alloc(32, 7));
+    try {
+      expect((await al().meldung.get({ id: a.meldungId })).stand).not.toBe(g.stand);
+    } finally {
+      setzeDatenschluesselFuerTest(null);
+    }
+    expect((await al().meldung.get({ id: a.meldungId })).stand).toBe(g.stand);
+  });
+
+  test("Ausstellungsleitung erfasst eine Meldung mit Eingang „online“ auch außerhalb der Meldephase", async () => {
+    const s = await neueSchau("Gleichzeitig Nachmeldung");
+    await m.db.update(m.schema.schau).set({ phase: "katalog" }).where(m.eq(m.schema.schau.id, s.id));
+    expect(await fehlerVon(melde(s.id, s.fid, "Lotte", { eingang: "online" }))).toBeNull();
+  });
+
+  test("Bearbeiten sperrt erst den Aussteller, dann die Meldung (wie der Löschwunsch, keine Verklemmung)", async () => {
+    const s = await neueSchau("Gleichzeitig Reihenfolge");
+    const a = await melde(s.id, s.fid, "Max");
+    const g = await al().meldung.get({ id: a.meldungId });
+    const h = await halten();
+    await h.c`select id from aussteller where id = ${a.ausstellerId} for update`;
+    const speichern = fehlerVon(al().meldung.speichern(bearbeiten(s, a, g, { bemerkung: "nach dem Löschwunsch" })));
+    await Bun.sleep(300);
+    const zweite = await h.c`update meldung set bemerkung = bemerkung where id = ${a.meldungId}`.then(
+      () => null,
+      (e: { code?: string }) => e.code ?? "fehler",
+    );
+    await h.loesen();
+    expect(zweite).toBeNull();
+    expect(await speichern).toBeNull();
+  });
+
+  test("Stand wird erst unter den Sperren von Aussteller und Tieren verglichen", async () => {
+    const s = await neueSchau("Gleichzeitig Stand gesperrt");
+    const a = await melde(s.id, s.fid, "Nora");
+    const g = await al().meldung.get({ id: a.meldungId });
+    // Aussteller: eine noch nicht committete Änderung (z. B. aussteller.speichern) wird nicht still überschrieben.
+    let h = await halten();
+    await h.c`update aussteller set telefon = '0123 45' where id = ${a.ausstellerId}`;
+    let speichern = fehlerVon(al().meldung.speichern(bearbeiten(s, a, g, { bemerkung: "alt" })));
+    await Bun.sleep(300);
+    await h.loesen();
+    expect(await speichern).toContain("inzwischen geändert");
+    const [aus] = await m.db.select().from(m.schema.aussteller).where(m.eq(m.schema.aussteller.id, a.ausstellerId));
+    expect(aus!.telefon).toBe("0123 45");
+    // Tiere: ebenso eine laufende Änderung an einem Tier der Meldung.
+    const g2 = await al().meldung.get({ id: a.meldungId });
+    const tier = g2.eintraege[0]!.id;
+    h = await halten();
+    await h.c`update katalogeintrag set freitext = 'zwischendurch' where id = ${tier}`;
+    speichern = fehlerVon(al().meldung.speichern(bearbeiten(s, a, g2, { aussteller: { ...leerA, id: a.ausstellerId, vorname: "Nora", nachname: "Gleichzeitig", email: "", telefon: "0123 45" } })));
+    await Bun.sleep(300);
+    await h.loesen();
+    expect(await speichern).toContain("inzwischen geändert");
+    const [e] = await m.db.select().from(m.schema.katalogeintrag).where(m.eq(m.schema.katalogeintrag.id, tier));
+    expect(e!.freitext).toBe("zwischendurch");
+  });
+
+  test("Phasenwechsel wartet auf laufende Kassen- und Online-Meldevorgänge", async () => {
+    const s = await neueSchau("Gleichzeitig Phase");
+    const phase = async () => (await m.db.select({ p: m.schema.schau.phase }).from(m.schema.schau).where(m.eq(m.schema.schau.id, s.id)))[0]!.p;
+    for (const [sperre, von, nach] of [
+      [KASSE, "schau", "preise"],
+      [MELS, "meldung", "vorbereitung"],
+    ] as const) {
+      await m.db.update(m.schema.schau).set({ phase: von }).where(m.eq(m.schema.schau.id, s.id));
+      const h = await halten();
+      await h.c`select pg_advisory_xact_lock(${sperre}, ${s.id})`;
+      const wechsel = fehlerVon(al().schau.phaseSetzen({ id: s.id, phase: nach, grund: "Test" }));
+      await Bun.sleep(300);
+      // Ein Verkauf bzw. eine Online-Meldung, die die alte Phase gelesen hat, läuft noch: der Wechsel wartet.
+      const waehrenddessen = await phase();
+      await h.loesen();
+      expect(waehrenddessen).toBe(von);
+      expect(await wechsel).toBeNull();
+      expect(await phase()).toBe(nach);
+    }
   });
 });
