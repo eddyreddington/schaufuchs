@@ -1,5 +1,19 @@
 # SchauFUCHS 1.21 – Versionshinweise
 
+## 1.21.5 (24.11.2026)
+
+- **Kontoauszug:** Kann eine ganz bezahlte Meldung nach dem Buchen nicht automatisch bestätigt werden (sie war gerade
+  anderweitig in Bearbeitung), meldet die Seite das jetzt – „bezahlte Meldung nicht bestätigt – bitte von Hand
+  bestätigen“ – statt still zu schweigen. Die Zahlung ist gebucht.
+- **Briefvorlage:** Im Reiter „Preisrichterverpflichtung“ zeigt die Vorschau rechts jetzt die Verpflichtung mit dem
+  Abschnitt zum Abtrennen (an einen Beispiel-Preisrichter), schon vor dem Speichern – bisher den Serienbrief.
+- **Katalog:** Die Spaltenköpfe „PREIS“ und „AUSSTELLER“ stoßen bei großer Schrift nicht mehr aneinander. Die kleine
+  Versalzeile über einer Sparte bricht bei langen Teilschau-Namen um, statt in Bild oder Titel zu laufen; ebenso die
+  Zeile über dem Titel einer Testschau („modern“, A5). Die Teilschau steht jetzt vor der Art („LANDESSCHAU · SPARTE“)
+  statt angehängt („LANDESSCHAUABTEILUNG“) (Entscheidung 032).
+- **3D-Rundgang:** Volieren aus älteren festen Plänen (ohne festgelegte Front) werden von allen Seiten angesehen.
+- Mehr Tests für gleichzeitiges Arbeiten: Lastschrift buchen im Mischbetrieb, Wartestellen ohne feste Wartezeit.
+
 ## 1.21.4 (24.11.2026)
 
 ### Gleichzeitiges Arbeiten abgesichert

@@ -1,6 +1,6 @@
 # Handbuch für die Ausstellungsleitung
 
-SchauFUCHS 1.21.4 · Stand 22. November 2026
+SchauFUCHS 1.21.5 · Stand 24. November 2026
 
 Dieses Handbuch richtet sich an die Ausstellungsleitung, also an alle, die in SchauFUCHS die Rolle **Administrator** haben. Es führt Sie von der Anmeldung über die Einrichtung des Vereins bis durch eine komplette Schau – vom Anlegen bis zum Abschluss. Wörter in „Anführungszeichen“ stehen genau so auf dem Bildschirm. Was sich mit Version 1.2.1 geändert hat, steht in den Versionshinweisen.
 
@@ -34,7 +34,7 @@ SchauFUCHS erreichen Sie im Browser unter:
 
 Ohne Telefon geht im zweiten Schritt auch ein **Notfallcode** (siehe 1.3).
 
-Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.21.4“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.21.4“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
+Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und darunter klein die Versionsnummer (z. B. „Version 1.21.5“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“, „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“ („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein, Rolle mit der Versionsnummer („SchauFUCHS 1.21.5“), die Darstellung (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy) ist die Seitenleiste eingeklappt: Der Knopf mit den drei Strichen oben links öffnet sie.
 
 > **Tipp:** Melden Sie sich an fremden oder gemeinsam genutzten Rechnern immer mit „Abmelden“ ab.
 
@@ -382,7 +382,7 @@ Die Briefvorlage bestimmt, wie Briefe des Vereins aussehen: Meldebestätigung (B
 - **Fußzeile:** drei Spalten, z. B. Anschrift, Bankverbindung und Vorstand. Sind alle leer, steht unten wie bisher der Vereinsname in einer Zeile.
 - **Meldebestätigung:** Einleitung über der Liste der Tiere, Hinweise zur Einlieferung (je Zeile ein Hinweis, im Kasten „Zur Einlieferung“) und ein Gruß darunter. Wie der B-Bogen damit aussieht, sehen Sie beim Drucken der Ausstellerunterlagen einer Schau.
 - **Serienbrief:** Betreff, Text und Gruß, mit denen jeder neue Serienbrief beginnt.
-- **Preisrichterverpflichtung:** Betreff und Text des Briefs an die Preisrichter (siehe 5.7). Jedes Feld gilt für sich: Ein leeres Feld steht für den festen Betreff bzw. Text von SchauFUCHS, ein gefülltes ersetzt nur diesen Teil. Der feste Text nennt Ort, Bewertungstag und „Rückmeldung bis“ nur, wenn sie in den Einstellungen der Schau stehen. „Muster einsetzen“ füllt die leeren Felder mit diesem Text samt Platzhaltern, den Sie dann ändern. In einem eigenen Text bleibt ein Platzhalter ohne Wert leer – tragen Sie Bewertungstag und Rückmeldetermin also vorher ein. Der Gruß kommt aus dem Serienbrief, der Abschnitt zum Abtrennen bleibt immer gleich. Der Beispielbrief rechts zeigt hier weiter den Serienbrief; wie die Verpflichtung aussieht, sehen Sie nach dem Speichern mit „Verpflichtung“ auf der Seite „Preisrichter“ einer Schau (siehe 5.7).
+- **Preisrichterverpflichtung:** Betreff und Text des Briefs an die Preisrichter (siehe 5.7). Jedes Feld gilt für sich: Ein leeres Feld steht für den festen Betreff bzw. Text von SchauFUCHS, ein gefülltes ersetzt nur diesen Teil. Der feste Text nennt Ort, Bewertungstag und „Rückmeldung bis“ nur, wenn sie in den Einstellungen der Schau stehen. „Muster einsetzen“ füllt die leeren Felder mit diesem Text samt Platzhaltern, den Sie dann ändern. In einem eigenen Text bleibt ein Platzhalter ohne Wert leer – tragen Sie Bewertungstag und Rückmeldetermin also vorher ein. Der Gruß kommt aus dem Serienbrief, der Abschnitt zum Abtrennen bleibt immer gleich. In diesem Reiter zeigt der Beispielbrief rechts die Verpflichtung an einen Beispiel-Preisrichter, mit den Angaben und Gruppen der neuesten Schau des Vereins, schon vor dem Speichern.
 - **Platzhalter:** In allen Texten setzt SchauFUCHS für jeden Empfänger ein: `{Anrede}` („Guten Tag Vorname Nachname“), `{Vorname}`, `{Nachname}`, `{Name}`, `{Verein}`, `{Schau}`, `{Ort}`, `{Meldeschluss}`, `{Einlieferung}`, `{Bewertungstag}`, `{Rückmeldung}` („Rückmeldung der Preisrichter bis“), `{Datum}`. Die Angaben zur Schau sind leer, wo keine Schau dazugehört oder der Termin fehlt. Ein vertippter Platzhalter wie `{Vornahme}` bleibt so im Brief stehen; die Seite warnt davor.
 - „Vorgabe einsetzen“ stellt die Texte eines Briefs wieder so her, wie SchauFUCHS sie mitbringt (bei der Preisrichterverpflichtung: leer, also der feste Text).
 
@@ -505,7 +505,9 @@ Eingänge den Meldungen zu, Sie prüfen und buchen mit einem Klick. Die Software
      prüfen und ankreuzen.
    - Ohne Zuordnung: unter „Meldung“ von Hand wählen, oder so lassen (z. B. Spenden oder fremde Eingänge).
 4. „… Zahlungen buchen“. Jede Gutschrift wird als Zahlung „Überweisung“ mit dem Buchungstag gebucht; ist eine Meldung
-   damit ganz bezahlt, ist sie bestätigt. Danach steht bei diesen Posten „gebucht“.
+   damit ganz bezahlt, ist sie bestätigt. Danach steht bei diesen Posten „gebucht“. Meldet SchauFUCHS „bezahlte
+   Meldung nicht bestätigt – bitte von Hand bestätigen“ (sie war gerade anderweitig in Bearbeitung), ist die Zahlung
+   gebucht; bestätigen Sie die Meldung dann in der Meldungsliste.
 
 Vorgemerkte Umsätze, Lastschriften und Kontostände liest die Software nicht. Wurde eine Meldung inzwischen anders
 bezahlt (bar oder von Hand), bucht sie den Posten nicht und meldet „inzwischen anders bezahlt – bitte neu prüfen“.

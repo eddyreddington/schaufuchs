@@ -253,7 +253,7 @@ Tests: `hallenplan-3d-eingang.test.ts`
 - `vorneSeite()` – Seite mit dem Haupteingang (dort der Parkplatz); ohne Eingang die Längsseite unten (z1).
 - Typen: `Haupteingang`
 
-### hallenplan-3d-rundgang.ts (330 Z.)
+### hallenplan-3d-rundgang.ts (334 Z.)
 Automatischer Rundgang durch die Halle (3D): eine Runde an allen Käfigen.
 Tests: `hallenplan-3d-rundgang.test.ts`
 
@@ -994,7 +994,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch`
 
-### kasse-kontoauszug.ts (36 Z.)
+### kasse-kontoauszug.ts (37 Z.)
 
 - `kontoauszug`
 
@@ -1187,7 +1187,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch` – Texte der Oberfläche: kasse.kassenbuch – Barkasse, Tagesabschluss, Belegarchiv (Entscheidung 022).
 
-### kasse-kontoauszug.ts (32 Z.)
+### kasse-kontoauszug.ts (33 Z.)
 
 - `kontoauszug` – Texte der Oberfläche: kasse.kontoauszug – Kontoauszug-Import fürs Meldegeld (Entscheidungen 022, 023).
 
@@ -1392,7 +1392,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch`
 
-### kasse-kontoauszug.ts (33 Z.)
+### kasse-kontoauszug.ts (34 Z.)
 
 - `kontoauszug`
 
@@ -1581,7 +1581,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch`
 
-### kasse-kontoauszug.ts (33 Z.)
+### kasse-kontoauszug.ts (34 Z.)
 
 - `kontoauszug`
 
@@ -1774,7 +1774,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch`
 
-### kasse-kontoauszug.ts (33 Z.)
+### kasse-kontoauszug.ts (34 Z.)
 
 - `kontoauszug`
 
@@ -1964,7 +1964,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kassenbuch`
 
-### kasse-kontoauszug.ts (36 Z.)
+### kasse-kontoauszug.ts (37 Z.)
 
 - `kontoauszug`
 
@@ -2497,7 +2497,7 @@ Katalog und Halle.
 
 Setzt Teile zu einem Router zusammen.
 
-### routers/kontoauszug.ts (159 Z.) → `kontoauszug`
+### routers/kontoauszug.ts (180 Z.) → `kontoauszug`
 Kontoauszug-Import (Entscheidung 023), nur Administratoren: Datei aus dem Onlinebanking (camt.053 oder CSV) prüfen – Gutschriften mit Vorschlag zur …
 
 - `kontoauszug.pruefen` mutation · admin – Datei lesen und zuordnen – bucht nichts.
@@ -2730,7 +2730,7 @@ Prozeduren: auth.status, bewertung.liste, bewertung.obmannBestaetigen, bewertung
 ### briefvorlage.tsx (281 Z.) – `/verein/briefvorlage`
 Prozeduren: druckvorlage.brief, druckvorlage.briefSpeichern, druckvorlage.serienbriefAnzahl, schau.liste
 
-### druckvorlage-vorschau.tsx (159 Z.)
+### druckvorlage-vorschau.tsx (162 Z.)
 
 ### druckvorlage.tsx (231 Z.) – `/verein/druckvorlagen/:vorlageId`
 Prozeduren: druckvorlage.liste, druckvorlage.speichern, druckvorlage.vorgabe
@@ -2942,7 +2942,7 @@ Prozeduren: auth.status, katalog.gedrucktSetzen, katalog.liste, katalog.nummernN
 ### kommende-schauen.tsx (563 Z.)
 Prozeduren: termine.aboAbrufen, termine.aboLoeschen, termine.aboSpeichern, termine.abweichung, termine.druckenSetzen, termine.laden, termine.loeschen, termine.pruefen, termine.speichern, termine.veroeffentlichenSetzen, termine.wahlSetzen
 
-### kontoauszug.tsx (177 Z.) – `/schau/:schauId/kontoauszug`
+### kontoauszug.tsx (178 Z.) – `/schau/:schauId/kontoauszug`
 Prozeduren: kontoauszug.buchen, kontoauszug.pruefen
 
 ### lastschrift.tsx (218 Z.) – `/schau/:schauId/lastschrift`
@@ -3111,17 +3111,17 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog-anhang.ts` (152 Z.) – Katalog-PDF, Anhang: kommende Schauen, Anzeigen der Förderer und Notizseiten bis zur vollen Heftlage. · kommendeSchauenSeite, anzeigenSeiten, notizSeiten
 - `katalog-hilfen.ts` (65 Z.) – Katalog-PDF, gemeinsame Hilfen ohne PDF: Kurzvorschau-Auswahl, Anzahltexte („3 Stämme“) und der Bildnachweis (Adressen kürzen, Urheber bereinigen, … · KURZ_JE_ABTEILUNG, kurzauswahl, anzahlText, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis
-- `katalog-kontext.ts` (245 Z.) – Katalog-PDF, Grundlage für alle Teile: lädt die Daten der Schau, legt das PDF an und stellt die gemeinsamen Satzhilfen bereit (Seiten, Inhaltsverze … · katalogKontext
+- `katalog-kontext.ts` (256 Z.) – Katalog-PDF, Grundlage für alle Teile: lädt die Daten der Schau, legt das PDF an und stellt die gemeinsamen Satzhilfen bereit (Seiten, Inhaltsverze … · katalogKontext
 - `katalog-schrift.ts` (29 Z.) – Schrift des Katalogs (Entscheidung 032): eine Familie – die gewählte – in drei Schnitten, dazu höchstens die Auszeichnung für den Namen der Schau a … · NORMAL, FETT, KURSIV, AUSZEICHNUNG, ZIFFERN, registriereKatalogSchrift
-- `katalog-tierteil.ts` (562 Z.) – Katalog-PDF, Tierteil: zwei oder drei Spalten bzw. Tabelle, Spartenköpfe mit Stich, Rassenköpfe mit Rassebild, Preisrichter-, Klassen- und Tierzeil … · nrVergleich, nrBereich, tierteilSetzen
-- `katalog-titel.ts` (179 Z.) – Katalog-PDF, Titelseite: Hintergrund, Titel, Logo, Titelbild bzw. Stich und Termine je Stil. · titelseite
+- `katalog-tierteil.ts` (575 Z.) – Katalog-PDF, Tierteil: zwei oder drei Spalten bzw. Tabelle, Spartenköpfe mit Stich, Rassenköpfe mit Rassebild, Preisrichter-, Klassen- und Tierzeil … · nrVergleich, nrBereich, tierteilSetzen
+- `katalog-titel.ts` (181 Z.) – Katalog-PDF, Titelseite: Hintergrund, Titel, Logo, Titelbild bzw. Stich und Termine je Stil. · titelseite
 - `katalog-verzeichnisse.ts` (194 Z.) – Katalog-PDF, Verzeichnisse: Rassenverzeichnis, Bildnachweis, Ausstellerverzeichnis und das am Ende nachgetragene Inhaltsverzeichnis mit Impressum. · rassenverzeichnis, bildnachweisSeite, ausstellerverzeichnis, inhaltsverzeichnis
 - `katalog-vorspann.ts` (313 Z.) – Katalog-PDF, Inhaltsteile vor dem Tierteil: Grußworte, Ausstellungsleitung und Termine, Preisrichter, Kennzahlen, Preise und Stifter, Bestimmungen, … · vorspann, ehrentafel
 - `katalog.ts` (93 Z.) – Katalog-PDF, Einstieg: lädt die Grundlage (katalog-kontext.ts) und setzt die Teile der Reihe nach – Titelseite (katalog-titel.ts), Vorspann und Ehr … · katalogPdf
 - `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
 - `preisverteilung.ts` (114 Z.) – Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und leeren Zeilen zum Eintragen in der … · preisverteilungPdf
 - `spenden.ts` (261 Z.) – Spenden: Zuwendungsbestätigung nach amtlichem Muster (Geld, Sache, Sammelbestätigung mit Anlage) und die einfache Spendenquittung für die Kasse. · zuwendungsbestaetigungPdf, spendenquittungPdf
-- `verpflichtung.ts` (149 Z.) – Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins (Briefkopf, Anschrift im Fenster, Fußzeile wie der B-Bogen) mit der Bitte um Bew … · preisrichterVerpflichtungPdf
+- `verpflichtung.ts` (165 Z.) – Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins (Briefkopf, Anschrift im Fenster, Fußzeile wie der B-Bogen) mit der Bitte um Bew … · preisrichterVerpflichtungPdf, ladeVerpflichtungsGruppen, verpflichtungsBriefe
 
 ### Datenbank `apps/server/src/db`
 
@@ -3153,7 +3153,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `besucher-adresse.ts` (31 Z.) – Adresse des Besuchers für die Bremsen (tRPC-Kontext und öffentliche Dateien), auch hinter einem eigenen Proxy (TRUST_PROXY). · clientIp
 - `config.ts` (34 Z.) · config
 - `csv.ts` (15 Z.) – CSV für Excel: Semikolon, BOM, Schutz vor Formel-Injektion. · csv
-- `datei-druckvorlage.ts` (130 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien, briefDateien
+- `datei-druckvorlage.ts` (141 Z.) – Datei-Adressen des Druckvorlagen-Designers (nur Ausstellungsleitung): POST /datei/druckvorlage/vorschau.pdf – Beispielkarten nach der (noch nicht g … · druckvorlageDateien, briefDateien
 - `datei-exporte.ts` (318 Z.) – Datei-Adressen der Listen und Exporte (angemeldete Benutzer der eigenen Schau): Kassenbuch (CSV), Protokoll mit Hash-Kette (CSV, JSON), Verkaufslis … · exportDateien
 - `datei-hilfen.ts` (49 Z.) – Gemeinsame Bausteine der Datei-Adressen (/datei/...): Zahlen und Daten aus der Adresse prüfen, Schau des angemeldeten Benutzers laden, Datei-Antwor … · zahlAus, datumAus, schauMitBenutzer, schauFuer, datei, pdf, archivPdf
 - `datei-katalog.ts` (131 Z.) – Datei-Adressen für Bilder und Katalog (angemeldete Benutzer der eigenen Schau): GET /datei/:schauId/bild/:bildId – Vorschau hochgeladener Katalogbi … · katalogNacheinander, katalogDateien
@@ -3261,7 +3261,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `45-hallenplan-tier-versetzen.ts` (162 Z.) – Tiere im Halleneditor versetzen (Rückmeldung 15.11.2026: „ich will auch käfige frei zuordnen können im halleneditor und ggf tiere versetzen“): nur …
 - `46-automatische-abmeldung.ts` (64 Z.) – Automatische Abmeldung nach Untätigkeit (Rückmeldung 15.11.2026): Frist je Rolle unter „Verein und Datenschutz“, nur die angebotenen Minuten, Proto …
 - `47-druckvorlagen.ts` (112 Z.) – Druckvorlagen für Bewertungskarten: Vorlagen des Vereins speichern, je Schau wählen, für eine Schau abwandeln, löschen (Schau druckt dann wieder mi …
-- `48-briefvorlage.ts` (116 Z.) – Briefvorlage des Vereins: speichern (Protokoll), eigene Texte im B-Bogen, Serienbrief an Mitglieder, alle Aussteller oder die einer Schau – ohne ge …
+- `48-briefvorlage.ts` (127 Z.) – Briefvorlage des Vereins: speichern (Protokoll), eigene Texte im B-Bogen, Serienbrief an Mitglieder, alle Aussteller oder die einer Schau – ohne ge …
 - `49-spenden.ts` (221 Z.) – Spenden (Entscheidung 013): steuerliche Angaben, Barspende mit Kassenbuch und Quittung, Spende bei der Meldung im offenen Betrag, Zuwendungsbestäti …
 - `50-meisterschaften.ts` (60 Z.) – Meisterschaften (Entscheidung 014): Regeln speichern (Ausstellungsleitung, Protokoll), Wertung aus Katalog und Bewertung, PDF und CSV.
 - `51-import.ts` (116 Z.) – Import aus Altprogrammen (Entscheidung 015): Datei lesen (CSV in Windows-1252, altes .xls abgelehnt), prüfen (Aussteller wiedererkennen, Rassen zuo …
@@ -3273,7 +3273,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `57-sprachen.ts` (91 Z.) – Sprachen der Seiten und Mails für Aussteller (Entscheidung 020): Schauseite, Fehlermeldungen der Online-Meldung, Sprache an der Meldung, Bestätigun …
 - `58-a-bogen.ts` (66 Z.) – A-Bogen (Meldebogen zum Ausfüllen und Unterschreiben): leer öffentlich über die Schauseite, leer und vorausgefüllt für die Ausstellungsleitung.
 - `59-girocode.ts` (146 Z.) – Überweisung mit Referenz und GiroCode (Entscheidung 021): nur mit vollständigem Vereinskonto, Referenz je Meldung im Verwendungszweck, Code über de …
-- `60-kontoauszug.ts` (138 Z.) – Kontoauszug-Import (Entscheidung 023): Datei prüfen (Zuordnung über Referenz bzw. Name und Betrag), ausgewählte Gutschriften buchen, Meldung bestät …
+- `60-kontoauszug.ts` (162 Z.) – Kontoauszug-Import (Entscheidung 023): Datei prüfen (Zuordnung über Referenz bzw. Name und Betrag), ausgewählte Gutschriften buchen, Meldung bestät …
 - `61-oberflaeche-sprache.ts` (62 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
 - `62-gesundheitspruefung.ts` (127 Z.) – Gesundheitsprüfung `/api/gesund` (Entscheidung 024): neben `ok` und `version` die letzte Sicherung, offene Migrationen und laufende Schautage.
 - `63-lesemodus.ts` (137 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an – außer Anmelden, Abmelden, Zwei-Faktor einrichten, eigenes Pass …
@@ -3295,13 +3295,13 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `80-druck-formate.ts` (310 Z.) – Formatvorgaben der Drucke (Entscheidung 029, Rückmeldung „Bei den Druckeinstellungen fehlen die Formatvorgaben“): speichern, ablehnen, Protokoll, R …
 - `81-jugend-kennzeichen.ts` (114 Z.) – Kennzeichen „Jgd.“ für Jugendtiere, wenn die Jugend in der Rasse eingereiht steht: im gedruckten Katalog (zwei Spalten, Tabelle, Kurzkatalog, Legen …
 - `82-katalog-schriften.ts` (112 Z.) – Katalog-Schriften (Entscheidung 032): jedes Katalog-PDF – jede Schriftwahl, jede Aufteilung, A4 und A5, Kurzkatalog und /s/:slug/katalog.pdf – bett …
-- `83-katalog-nicht-kuerzen.ts` (147 Z.) – Katalog kürzt nicht (Entscheidung 032, Rückmeldung eines Vereins: „Im Katalog wird abgekürzt, das darf nicht sein“): Testschau mit sehr langen Name …
+- `83-katalog-nicht-kuerzen.ts` (176 Z.) – Katalog kürzt nicht (Entscheidung 032, Rückmeldung eines Vereins: „Im Katalog wird abgekürzt, das darf nicht sein“): Testschau mit sehr langen Name …
 - `84-gleichzeitig-bewertung.ts` (293 Z.) – Gleichzeitiges Arbeiten bei Bewertung und Preisen (ADR 033): Freigabe gegen Tablet und Preise, Preisvergabe gegen eine gleichzeitig geänderte Note, …
 - `85-gleichzeitig-geld-meldung.ts` (486 Z.) – Gleichzeitiges Arbeiten an Geld und Meldungen (Entscheidung 033): Rücklastschrift gegen Zuwendungsbestätigung und Löschwunsch, Buchungen gegen den …
 - `86-gleichzeitig-katalog.ts` (237 Z.) – Gleichzeitiges Arbeiten in Katalog und Halle (Entscheidung 033): Nummern vergeben, nach Hallenplan vergeben und Festschreibung aufheben gegen eine …
 - `87-gleichzeitig-auth-schau.ts` (377 Z.) – Gleichzeitiges Arbeiten an Schau-Einstellungen, Phase, Postausgang und Benutzern (Entscheidung 033): Stand-Prüfung der Stammangaben, Provision unte …
-- `88-gleichzeitig-gesamt.ts` (216 Z.) – Gleichzeitiges Arbeiten über alle Bereiche (Entscheidung 033, eine Sperrreihenfolge): Schreibwege auf der Schau-Zeile warten nicht auf Einfügungen, …
+- `88-gleichzeitig-gesamt.ts` (231 Z.) – Gleichzeitiges Arbeiten über alle Bereiche (Entscheidung 033, eine Sperrreihenfolge): Schreibwege auf der Schau-Zeile warten nicht auf Einfügungen, …
 - `89-verklemmungen.ts` (154 Z.) – Verklemmungen und Hänger (Entscheidung 033): Ein Protokolleintrag nimmt erst die Protokoll-Kette (eine Zeile für die ganze Installation) und danach …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
-- `sperren-hilfe.ts` (33 Z.) – Hilfen für Tests zum gleichzeitigen Arbeiten (Entscheidung 033): statt fester Wartezeit nachsehen, ob die Gegenseite tatsächlich auf eine Sperre wa …
+- `sperren-hilfe.ts` (36 Z.) – Hilfen für Tests zum gleichzeitigen Arbeiten (Entscheidung 033): statt fester Wartezeit nachsehen, ob die Gegenseite tatsächlich auf eine Sperre wa …
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
