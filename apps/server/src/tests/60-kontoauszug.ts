@@ -67,7 +67,7 @@ describe("Kontoauszug-Import", () => {
     const offen = (id: number) => r.meldungen.find((x) => x.id === id)!.offenCent;
     const gewaehlt = r.posten.filter((p) => p.meldungId).map((p) => ({ schluessel: p.schluessel, meldungId: p.meldungId!, offenCent: offen(p.meldungId!) }));
     const e = await al().kontoauszug.buchen({ schauId, base64: b64(csv()), posten: gewaehlt });
-    expect(e).toEqual({ gebucht: 2, bestaetigt: 2, uebersprungen: [] });
+    expect(e).toEqual({ gebucht: 2, bestaetigt: 2, nichtBestaetigt: 0, uebersprungen: [] });
     const zs = await m.db.select().from(m.schema.zahlung).where(m.inArray(m.schema.zahlung.meldungId, [ids.Anna!, ids.Bruno!]));
     expect(zs.map((z) => [z.betragCent, z.datum, z.art]).sort()).toEqual([[300, "2026-11-03", "ueberweisung"], [300, "2026-11-04", "ueberweisung"]]);
     expect(zs.every((z) => /^[0-9a-f]{64}$/.test(z.bankBuchung ?? ""))).toBe(true);
@@ -134,5 +134,29 @@ describe("Kontoauszug-Import", () => {
     expect(e.gebucht).toBe(2);
     expect((await zahlungen()).map((z) => `${z.meldungId}:${z.betragCent}:${z.art}`).sort()).toEqual([`${ids.Carla}:300:bar`, `${ids.Dora}:100:ueberweisung`, `${ids.Dora}:200:ueberweisung`].sort());
     expect((await m.db.select().from(m.schema.meldung).where(m.eq(m.schema.meldung.id, ids.Dora!)))[0]!.status).toBe("bestaetigt");
+  });
+
+  test("Bestätigen scheitert (Sperre wartet zu lange): Zahlung gebucht, Meldung offen, im Ergebnis gemeldet statt verschluckt", async () => {
+    const r = await melden("Emil", "Eilig", "emil@auszug.test", "06 535 012 0605");
+    ids.Emil = (await m.db.select().from(m.schema.meldung).where(m.eq(m.schema.meldung.zugangsToken, r.token)))[0]!.id;
+    const datei = ["Buchungstag;Betrag;Verwendungszweck;Name Zahlungsbeteiligter", `08.11.2026;3,00;${rfReferenz(ids.Emil!)};Emil Eilig`].join("\n");
+    const p = await al().kontoauszug.pruefen({ schauId, base64: b64(datei) });
+    const vorher = process.env.DB_LOCK_TIMEOUT;
+    process.env.DB_LOCK_TIMEOUT = "300ms";
+    // Eine andere Verbindung hält die Meldungszeile (z. B. eine laufende Bearbeitung): Buchen geht, Bestätigen nicht.
+    const c = await m.sql.reserve();
+    try {
+      await c`begin`;
+      await c`select id from meldung where id = ${ids.Emil!} for no key update`;
+      const e = await al().kontoauszug.buchen({ schauId, base64: b64(datei), posten: [{ schluessel: p.posten[0]!.schluessel, meldungId: ids.Emil!, offenCent: 300 }] });
+      expect(e).toEqual({ gebucht: 1, bestaetigt: 0, nichtBestaetigt: 1, uebersprungen: [] });
+    } finally {
+      if (vorher === undefined) delete process.env.DB_LOCK_TIMEOUT;
+      else process.env.DB_LOCK_TIMEOUT = vorher;
+      await c`rollback`;
+      c.release();
+    }
+    expect((await m.db.select().from(m.schema.zahlung).where(m.eq(m.schema.zahlung.meldungId, ids.Emil!))).map((z) => z.betragCent)).toEqual([300]);
+    expect((await m.db.select().from(m.schema.meldung).where(m.eq(m.schema.meldung.id, ids.Emil!)))[0]!.status).toBe("offen");
   });
 });

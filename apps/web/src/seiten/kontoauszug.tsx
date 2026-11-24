@@ -67,9 +67,10 @@ export function Kontoauszug() {
     const teile = [
       tk.zahlungenGebucht(r.gebucht),
       r.bestaetigt ? tk.meldungenBestaetigt(r.bestaetigt) : "",
+      r.nichtBestaetigt ? tk.nichtBestaetigt(r.nichtBestaetigt) : "",
       r.uebersprungen.length ? tk.uebersprungen(r.uebersprungen.length, [...new Set(r.uebersprungen.map((u) => serverText(u.grund, sprache)))].join(", ")) : "",
     ];
-    meldung(teile.filter(Boolean).join(" · "), r.uebersprungen.length ? "warnung" : "ok");
+    meldung(teile.filter(Boolean).join(" · "), r.uebersprungen.length || r.nichtBestaetigt ? "warnung" : "ok");
     await utils.meldung.liste.invalidate({ schauId });
     await lesen(datei);
   };

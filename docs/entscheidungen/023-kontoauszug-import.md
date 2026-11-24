@@ -24,7 +24,9 @@ Kontoinformationsdienst (siehe `docs/recherche/online-bezahlung.md`).
   bei der Handbuchung. Gleiche Sperren wie dort (Kasse, offene Lastschriftdatei, abgeschlossene Schau). Alle Posten
   werden vorher geprüft; unter der Kassensperre wird der offene Betrag neu gerechnet und mit dem verglichen, den
   „prüfen“ gezeigt hat (abzüglich der Buchungen dieses Laufs) – sonst „inzwischen anders bezahlt“. Bestätigt werden am
-  Ende alle berührten Meldungen, auch nach einem Fehler.
+  Ende alle berührten Meldungen, auch nach einem Fehler. Scheitert das Bestätigen einer offenen, ganz bezahlten Meldung
+  (z. B. Wartegrenze, Entscheidung 033), bleibt die Zahlung gebucht; das Ergebnis zählt sie als `nichtBestaetigt`, die
+  Seite bittet, sie von Hand zu bestätigen (Nachtrag 24.11.2026).
 - Gegen Doppelbuchung je Gutschrift ein Fingerabdruck (SHA-256 aus Verein, Datum, Betrag, IBAN, Name, Zweck und
   laufender Nummer gleicher Posten) in `zahlung.bank_buchung`, eindeutig. Vom Auszug wird sonst nichts gespeichert:
   fremde Umsätze nie, auch nicht IBAN oder Name des Zahlers im Protokoll.

@@ -7,6 +7,7 @@ export const kontoauszug: OberflaecheTexte["kasse"]["kontoauszug"] = {
   zuGross: "The file is too large (at most 4 MB).",
   zahlungenGebucht: (n: number) => (n === 1 ? `${n} payment booked` : `${n} payments booked`),
   meldungenBestaetigt: (n: number) => (n === 1 ? `${n} entry confirmed` : `${n} entries confirmed`),
+  nichtBestaetigt: (n: number) => (n === 1 ? `${n} paid entry not confirmed – please confirm it manually` : `${n} paid entries not confirmed – please confirm them manually`),
   uebersprungen: (n: number, gruende: string) => `${n} skipped (${gruende})`,
   andereDatei: "Choose another file",
   dateiWaehlen: "Choose bank statement (CSV or camt.053)",

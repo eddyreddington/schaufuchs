@@ -10,6 +10,7 @@ export const kontoauszug: OberflaecheTexte["kasse"]["kontoauszug"] = {
   zuGross: "Plik jest za duży (najwyżej 4 MB).",
   zahlungenGebucht: (n: number) => `${platnosci(n)} ${n === 1 ? "zaksięgowana" : "zaksięgowano"}`,
   meldungenBestaetigt: (n: number) => `${liczba(n, "zgłoszenie", "zgłoszenia", "zgłoszeń")} ${n === 1 ? "potwierdzone" : "potwierdzono"}`,
+  nichtBestaetigt: (n: number) => `Niepotwierdzone opłacone zgłoszenia: ${n} – potwierdź ręcznie`,
   uebersprungen: (n: number, gruende: string) => `${n} ${n === 1 ? "pominięta" : "pominięto"} (${gruende})`,
   andereDatei: "Wybierz inny plik",
   dateiWaehlen: "Wybierz wyciąg bankowy (CSV lub camt.053)",

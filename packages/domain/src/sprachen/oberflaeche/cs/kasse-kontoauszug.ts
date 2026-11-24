@@ -10,6 +10,7 @@ export const kontoauszug: OberflaecheTexte["kasse"]["kontoauszug"] = {
   zuGross: "Soubor je příliš velký (nejvýše 4 MB).",
   zahlungenGebucht: (n: number) => `${n === 1 ? "Zaúčtována" : n >= 2 && n <= 4 ? "Zaúčtovány" : "Zaúčtováno"} ${platby(n)}`,
   meldungenBestaetigt: (n: number) => `${n === 1 ? "Potvrzena" : n >= 2 && n <= 4 ? "Potvrzeny" : "Potvrzeno"} ${pocet(n, "přihláška", "přihlášky", "přihlášek")}`,
+  nichtBestaetigt: (n: number) => `Nepotvrzené zaplacené přihlášky: ${n} – potvrďte ručně`,
   uebersprungen: (n: number, gruende: string) => `${n === 1 ? "Přeskočena" : n >= 2 && n <= 4 ? "Přeskočeny" : "Přeskočeno"} ${n} (${gruende})`,
   andereDatei: "Vybrat jiný soubor",
   dateiWaehlen: "Vybrat výpis z účtu (CSV nebo camt.053)",

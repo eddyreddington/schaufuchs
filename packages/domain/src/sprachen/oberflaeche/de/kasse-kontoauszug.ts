@@ -6,6 +6,7 @@ export const kontoauszug = {
   zuGross: "Die Datei ist zu groß (höchstens 4 MB).",
   zahlungenGebucht: (n: number) => (n === 1 ? `${n} Zahlung gebucht` : `${n} Zahlungen gebucht`),
   meldungenBestaetigt: (n: number) => (n === 1 ? `${n} Meldung bestätigt` : `${n} Meldungen bestätigt`),
+  nichtBestaetigt: (n: number) => (n === 1 ? `${n} bezahlte Meldung nicht bestätigt – bitte von Hand bestätigen` : `${n} bezahlte Meldungen nicht bestätigt – bitte von Hand bestätigen`),
   uebersprungen: (n: number, gruende: string) => `${n} übersprungen (${gruende})`,
   andereDatei: "Andere Datei wählen",
   dateiWaehlen: "Kontoauszug wählen (CSV oder camt.053)",

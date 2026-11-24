@@ -11,6 +11,7 @@ import { z } from "zod";
 import { db } from "../db/client";
 import { aussteller, meldung, zahlung } from "../db/schema";
 import { meldebetrag, meldebetraege } from "../services/eintraege";
+import { kurzerFehler } from "../services/fehlertext";
 import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, sperreKasseMitPhase } from "../services/kasse";
 import { protokolliere } from "../services/protokoll";
 import { adminProcedure, dbId, fehler, ladeSchau, router } from "../trpc";
@@ -56,6 +57,14 @@ async function zuordenbareMeldungen(schauId: number) {
     const b = betraege.get(m.id);
     return { id: m.id, vorname: m.vorname, nachname: m.nachname, offenCent: b ? gefordertCent(b) - b.bezahltCent : 0 };
   });
+}
+
+/** Ohne Sperre gelesen: Ist die Meldung noch offen und ganz bezahlt (wäre sie also automatisch bestätigt worden)? */
+async function offenUndBezahlt(meldungId: number) {
+  const [m] = await db.select({ status: meldung.status }).from(meldung).where(eq(meldung.id, meldungId));
+  if (m?.status !== "offen") return false;
+  const b = await meldebetrag(db, meldungId);
+  return b.summeCent > 0 && b.bezahltCent >= b.summeCent;
 }
 
 export const kontoauszugRouter = router({
@@ -119,6 +128,7 @@ export const kontoauszugRouter = router({
       /** Erwarteter offener Betrag je Meldung – sinkt mit jeder Buchung dieses Laufs (zwei Teilzahlungen im Auszug). */
       const erwartet = new Map<number, number>();
       let bestaetigt = 0;
+      let nichtBestaetigt = 0;
       try {
         for (const p of input.posten) {
           const b = nachSchluessel.get(p.schluessel)!;
@@ -151,9 +161,20 @@ export const kontoauszugRouter = router({
           else erwartet.set(p.meldungId, soll - b.betragCent);
         }
       } finally {
-        // Auch nach einem Fehler und für „schon gebucht“: jede berührte, jetzt ganz bezahlte Meldung bestätigen.
-        for (const id of beruehrt) if (await pruefeBezahlt(id, ctx).catch(() => false)) bestaetigt++;
+        // Auch nach einem Fehler und für „schon gebucht“: jede berührte, jetzt ganz bezahlte Meldung bestätigen. Scheitert
+        // das (z. B. Sperre wartet zu lange), ist die Zahlung trotzdem gebucht: zählen, ins Server-Log und im Ergebnis
+        // melden – nicht verschlucken und nicht den Fehler des Buchens überdecken.
+        for (const id of beruehrt) {
+          try {
+            if (await pruefeBezahlt(id, ctx)) bestaetigt++;
+          } catch (e) {
+            console.error(`[kontoauszug] Meldung ${id} nicht bestätigt:`, kurzerFehler(e));
+            // Melden nur, was zu bestätigen gewesen wäre (offen und ganz bezahlt) – nicht eine gesperrte Teilzahlung.
+            // Lässt sich das nicht lesen, lieber melden als schweigen.
+            if (await offenUndBezahlt(id).catch(() => true)) nichtBestaetigt++;
+          }
+        }
       }
-      return { gebucht: input.posten.length - uebersprungen.length, bestaetigt, uebersprungen };
+      return { gebucht: input.posten.length - uebersprungen.length, bestaetigt, nichtBestaetigt, uebersprungen };
     }),
 });
