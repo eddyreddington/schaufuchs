@@ -24,26 +24,47 @@ Beginn committet ist – eine Sperre schützt nur, was nach ihr gelesen wird.
    1. Online-Melde-Sperre (`sperreOnlineMeldung`)
    2. Testschau-Sperre (`sperreTestschauGeteilt`/`Exklusiv`)
    3. Kasse (`sperreKasse`, `sperreKasseMitPhase`)
-   4. Bestätigungen (`sperreBestaetigungen`), danach Sperren je Anfrage, E-Mail oder Name (Advisory)
-   5. Zeilen Aussteller → Meldung (mehrere nach ID, `FOR UPDATE`)
+   4. Bestätigungen (`sperreBestaetigungen`), danach Sperren je Anfrage, E-Mail, Name oder Import (Advisory; erster
+      Schlüssel immer eine feste Kennung, nie die Vereinsnummer – sonst überschnitten sich die Schlüsselräume)
+   5. Vereinszeile (`organisation`, `FOR NO KEY UPDATE`), dann Aussteller → Meldung (mehrere nach ID,
+      `FOR NO KEY UPDATE`; `FOR UPDATE` nur, wo Meldungen gelöscht oder umgehängt werden)
    6. Einteilung (`sperreEinteilung` exklusiv, `sperreEinteilungGeteilt` für Noten und Preise, Advisory 2026111201;
       `sperreEinteilungFuerMeldung` nach der Meldungszeile)
    7. Schau-Zeile: `FOR SHARE` (Note, Preis, Impfnachweis) oder `FOR NO KEY UPDATE` (Phase, Absage, Freigabe, Nummern,
-      Einstellungen, Halle, Käfige). Nie `FOR UPDATE`, wenn die Transaktion danach protokolliert: jede Einfügung mit
-      Fremdschlüssel auf die Schau (Protokoll, Bewertung, Kasse) hält `FOR KEY SHARE` auf ihr, und der Protokolleintrag
-      hält zu diesem Zeitpunkt schon die Kette – beide verklemmten sich. `FOR UPDATE` nur beim Löschen der Schau und
-      beim Bild-Hochladen (ohne Protokoll; wartet dort bewusst auf ein gleichzeitig eingefügtes Bild).
-   8. Tiere (`katalogeintrag`, nach ID `FOR UPDATE`), danach übrige Zeilen der Schau (Preisrichter, Gesundheit, Bild)
+      Einstellungen, Halle, Käfige, Entwürfe)
+   8. Tiere (`katalogeintrag`, nach ID `FOR UPDATE`), danach übrige Zeilen der Schau (Preisrichter nach ID, Gesundheit,
+      Bild, Hallenentwurf)
    9. Benutzer → Sitzung
    10. `protokolliere()` **zuletzt**: der Trigger `aenderung_kette` sperrt eine für die ganze Installation geltende
-       Zeile bis zum Commit. Nach dem ersten Protokolleintrag wartet die Transaktion auf keine Sperre mehr; mehrere
-       Einträge (Absage, Einteilung nach Status) erst, wenn alles geschrieben ist.
+       Zeile bis zum Commit, danach nimmt das Einfügen `FOR KEY SHARE` auf Schau, Benutzer und Preisrichter
+       (Fremdschlüssel). Nach dem ersten Protokolleintrag wartet die Transaktion auf keine Sperre mehr. Wege, die in einer
+       Schleife protokollieren und weiter schreiben, laufen in `protokollZuletzt(tx, …)` (`services/protokoll.ts`): die
+       Einträge werden gesammelt und am Ende in derselben Reihenfolge geschrieben (Meldung speichern, Import, Lastschrift
+       buchen, Löschwunsch, Einteilung, Preisrichter, Benutzerverwaltung, Hallenentwurf entscheiden).
+
+   **Zeilen, auf die Protokoll oder Einfügungen verweisen** (Schau, Benutzer, Preisrichter, Verein, Meldung): nur
+   `FOR SHARE` oder `FOR NO KEY UPDATE`, nie `FOR UPDATE`, wenn danach protokolliert wird – `FOR UPDATE` wartet auf
+   jedes `FOR KEY SHARE`, und wer es hält, hält womöglich schon die Kette. Ausnahmen, bewusst: Löschen der Schau
+   (nur in der Vorbereitung bzw. Testschau), Löschen eines Preisrichters (sperrt erst „no key update“, löscht, protokolliert
+   danach), Bild hochladen (ohne Protokoll). Nicht lösbar, nur selten: Ein UPDATE einer Spalte mit eindeutigem Index
+   sperrt wie `FOR UPDATE` – E-Mail eines Benutzers ändern und eine neue Kurzadresse der Schau (nur in der Vorbereitung).
+   Dort kommt das Protokoll zuletzt; trifft es doch einen gleichzeitigen Eintrag desselben Benutzers, meldet der Server
+   „Bitte noch einmal“.
+
+   **Kein `db` in einer Transaktion, die Sperren hält:** Hilfen bekommen die Transaktion (`ex`/`tx`), etwa
+   `ladeEintraege(…, { ex: tx })`, `planTiere(s, undefined, tx)`, `abrechnungListe(id, tx)`. Eine zweite Verbindung aus
+   dem Pool wartete womöglich auf die eigenen Sperren, und bei vollem Pool (10) hängen alle.
+
+   **Grenze für das Warten:** Jede `db.transaction` setzt `lock_timeout` (`db/client.ts`, 10 s, `DB_LOCK_TIMEOUT`).
+   Wer länger auf eine Sperre wartet, bricht ab (55P03) und bekommt wie bei einer Verklemmung „Bitte noch einmal
+   versuchen“ (SERVICE_UNAVAILABLE). Migrationen, Startskript und Sicherung laufen nicht darüber.
 
    Nie eine Zeile sperren und danach auf die Kasse warten. Meldung vor Einteilung, weil erst die gesperrte Meldung zeigt,
    ob die Einteilung gebraucht wird (Statuswechsel, automatische Bestätigung nach Zahlung); kein Weg sperrt unter der
-   Einteilung eine Meldung. Meldungen vor der Schau-Zeile: Absage, Teilschauen und Testschau-Kennzeichen sperren die
-   betroffenen Meldungen nach ID, bevor sie die Schau sperren (wie der Impfnachweis). Eine Verklemmung (40P01, „Bitte
-   noch einmal versuchen“) ist ein Fehler im Code, keine Behebung.
+   Einteilung eine Meldung. Meldungen vor der Schau-Zeile: Absage, Teilschauen, Testschau-Kennzeichen und Zurücksetzen der
+   Testdaten sperren die betroffenen Meldungen nach ID, bevor sie die Schau sperren (wie der Impfnachweis). Online-Meldung:
+   Online-Melde-Sperre, Testschau (geteilt), dann die Sperre je Adresse. Eine Verklemmung (40P01, „Bitte noch einmal
+   versuchen“) ist ein Fehler im Code, keine Behebung.
 3. **Wer eine Menge prüft, die andere gleichzeitig erweitern, braucht eine gemeinsame Sperre** – eine Zeilensperre
    genügt nicht, weil neue Zeilen sie nicht berühren. Absage und Entfernen einer Teilschau nehmen die Testschau-Sperre
    exklusiv (jede Meldung hält sie geteilt), Online-Meldungen derselben Schau prüfen Halle und Meldephase nacheinander
@@ -66,7 +87,8 @@ Beginn committet ist – eine Sperre schützt nur, was nach ihr gelesen wird.
 Rennen fest nach: eine zweite Verbindung hält die Sperre bzw. eine Transaktion bleibt offen, bis der andere Aufruf
 wartet (`tests/84`–`87-gleichzeitig-*.ts`, Muster auch in `30-einteilung-gegenpruefung.ts`);
 `tests/88-gleichzeitig-gesamt.ts` lässt viele Schreibwege zugleich laufen (Mischbetrieb) und erwartet weder Verklemmung
-noch Hänger. Andere Bereiche verweisen auf diese Entscheidung.
+noch Hänger; `tests/89-verklemmungen.ts` spielt einen Protokolleintrag nach (Kette, dann Fremdschlüssel) und prüft die
+Grenze für das Warten. Andere Bereiche verweisen auf diese Entscheidung.
 
 **Offen:** Das allgemeine Formularmodell (letzter Schreiber gewinnt) gilt weiter für Einstellungen ohne Stand
 (Vereinsangaben, Spender, Gebühren). Wege in `routers/meldung.ts`, die Meldegeld negativ buchen (Erstattung, Storno),
