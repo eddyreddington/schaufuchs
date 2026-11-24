@@ -217,9 +217,10 @@ const basis = t.procedure.use(async ({ getRawInput, path, type, next }) => {
   if (trpcGesperrt(type, path)) throw fehler("FORBIDDEN", NUR_LESEN_MELDUNG);
   pruefeUmfang(await getRawInput(), MAX_LISTE_JE_AUFRUF[path] ?? MAX_LISTE);
   const r = await next();
-  // Zwei gleichzeitige Änderungen derselben Tiere (Deadlock, Serialisierung): kein „Interner Fehler“, sondern ein Hinweis.
+  // Zwei gleichzeitige Änderungen derselben Tiere (Deadlock, Serialisierung) oder zu langes Warten auf eine Sperre
+  // (55P03, lock_timeout, Entscheidung 033): kein „Interner Fehler“, sondern ein Hinweis.
   // Bewusst nicht CONFLICT – damit böten Seiten „trotzdem speichern“ an und überschrieben die andere Änderung.
-  if (!r.ok && ["40P01", "40001"].includes(sqlZustand(r.error.cause))) {
+  if (!r.ok && ["40P01", "40001", "55P03"].includes(sqlZustand(r.error.cause))) {
     throw fehler("SERVICE_UNAVAILABLE", "Gleichzeitig hat jemand dasselbe geändert. Bitte noch einmal versuchen.");
   }
   return r;
