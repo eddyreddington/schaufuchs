@@ -4,7 +4,7 @@ import { heuteDe } from "../services/tiergesundheit";
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { config } from "../config";
-import { db } from "../db/client";
+import { db, type Tx } from "../db/client";
 import { aussteller, gebuehr, meldung, schau } from "../db/schema";
 import { ladeVereinsangaben } from "../services/datenschutz";
 import { ladeEintraege, meldebetrag, skalaVon, verdeckeNamen } from "../services/eintraege";
@@ -34,12 +34,12 @@ function heute(): string {
 /** Sprache der Seiten für Aussteller (Entscheidung 020); fehlt sie, Deutsch. */
 const spracheFeld = z.enum(SPRACHEN).default("de");
 
-async function meldungOffen(s: typeof schau.$inferSelect, sprache: Sprache = "de") {
+async function meldungOffen(s: typeof schau.$inferSelect, sprache: Sprache = "de", ex: Pick<Tx, "select"> = db) {
   const t = texte(sprache).schau;
   if (s.abgesagtAm) return { offen: false, grund: t.abgesagt(s.absageGrund) };
   if (s.phase !== "meldung") return { offen: false, grund: t.meldungZu };
   if (s.meldeschluss && heute() > s.meldeschluss) return { offen: false, grund: t.meldeschlussVorbei };
-  if (s.kapazitaet && (await belegteKaefige(s.id)) >= s.kapazitaet) return { offen: false, grund: t.hallenVoll };
+  if (s.kapazitaet && (await belegteKaefige(s.id, ex)) >= s.kapazitaet) return { offen: false, grund: t.hallenVoll };
   return { offen: true, grund: "" };
 }
 
@@ -62,6 +62,8 @@ const mailsJeAdresse = new Bremse(10, 86_400_000, "An diese E-Mail-Adresse wurde
 const tiereJeAnschluss = new Bremse(30, ONLINE_RESERVIERUNG_STUNDEN * 3_600_000, "Von dieser Adresse wurden schon viele Tiere gemeldet. Weitere Meldungen bitte über die Ausstellungsleitung.");
 /** Kennung der Sperre für gleichzeitige Meldungen mit derselben E-Mail (Doppelklick). */
 const MELDUNG_SPERRE = 0x4d454c44; // "MELD"
+/** Je Schau: Online-Meldungen derselben Schau prüfen Halle, Phase und Meldeschluss nacheinander (Entscheidung 033). */
+const MELDUNG_SCHAU_SPERRE = 0x4d454c53; // "MELS"
 
 const meldeEingabe = z.object({
   slug: z.string().max(100),
@@ -267,6 +269,10 @@ export const oeffentlichRouter = router({
         einwilligungBremse.versuch([`meldung:${m.id}`]);
       }
       await db.transaction(async (tx) => {
+        // Gesperrt neu lesen: ein Doppelklick schreibt keinen zweiten Eintrag, und ein gleichzeitiges Bearbeiten durch die
+        // Ausstellungsleitung liest die Zeile erst danach (Entscheidung 033).
+        const [frisch] = await tx.select({ am: meldung.onlineZustimmungAm }).from(meldung).where(eq(meldung.id, m.id)).for("update");
+        if (!!frisch?.am === input.erlaubt) return;
         await tx
           .update(meldung)
           .set({ onlineZustimmungAm: input.erlaubt ? new Date() : null, ...(input.erlaubt && m.istJugend ? { erziehungsberechtigter: input.erziehungsberechtigter } : {}) })
@@ -374,6 +380,13 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
   const zurueckTiere = s.kapazitaet && !istLokaleAdresse(ip) ? tiereJeAnschluss.menge(`${s.id}:${anschlussSchluessel(ip)}`, input.positionen.length, Math.max(30, Math.ceil(s.kapazitaet / 2))) : () => {};
 
   const r = await db.transaction(async (tx) => {
+    // Die Prüfungen oben sind die schnelle Antwort. Maßgeblich ist der Stand unter der Sperre je Schau: zwei gleichzeitige
+    // Meldungen sähen sonst beide noch Platz in der Halle (oder die Meldephase noch offen).
+    await tx.execute(sql`select pg_advisory_xact_lock(${MELDUNG_SCHAU_SPERRE}::int, ${s.id}::int)`);
+    const [frisch] = await tx.select().from(schau).where(eq(schau.id, s.id));
+    const jetzt = await meldungOffen(frisch!, input.sprache, tx);
+    if (!jetzt.offen) throw fehler("BAD_REQUEST", jetzt.grund);
+    if (frisch!.kapazitaet && (await belegteKaefige(s.id, tx)) + input.positionen.length > frisch!.kapazitaet) throw fehler("BAD_REQUEST", t.fehler.halleVoll);
     // Doppelte Online-Meldung erkennen (gleiche E-Mail und Registriernummer) – unter einer Sperre je Schau und
     // Adresse, damit auch ein Doppelklick (zwei gleichzeitige Anfragen) nur eine Meldung anlegt.
     // Bestehende Ausstellerdaten werden online nie überschrieben – die AL führt Dubletten bei Bedarf zusammen.

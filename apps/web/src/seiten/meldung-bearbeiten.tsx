@@ -11,6 +11,7 @@ import { Symbol } from "../symbole";
 import { trpc, type Ausgabe } from "../trpc";
 import { Abschnitt, Auswahl, Eingabe, Feld, Haken, Hinweis, Kennzahlen, Knopf, knopfKlasse, Laden, Marke, SEITE, Seitenkopf, Speicherleiste, Textfeld, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
 import { STATUS_TON } from "./meldungen";
+import { zahlungAuftrag } from "./meldung-zahlung";
 
 export function MeldungBearbeiten() {
   const schauId = useSchauId();
@@ -52,6 +53,10 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
   const [onlineZustimmung, setOnlineZustimmung] = useState(!!vorhanden?.meldung.onlineZustimmungAm);
   // Stand beim Öffnen, festgehalten: `vorhanden` lädt sich nach (z. B. nach einer Buchung in der Seitenleiste).
   const [onlineBeimOeffnen] = useState(vorhanden ? !!vorhanden.meldung.onlineZustimmungAm : undefined);
+  // Stand beim Öffnen: hat inzwischen jemand anders gespeichert, lehnt der Server ab (statt dessen Änderung zu überschreiben).
+  const [standBeimOeffnen] = useState(vorhanden?.stand);
+  // Neue Meldung: dieselbe Anfrage zweimal (verlorene Antwort) legt nur eine an.
+  const [anfrageId] = useState(() => (vorhanden ? undefined : crypto.randomUUID()));
   const [erziehungsberechtigter, setErziehungsberechtigter] = useState(vorhanden?.meldung.erziehungsberechtigter ?? "");
   const [positionen, setPositionen] = useState<Position[]>(() => (vorhanden ? vorhanden.eintraege.map(ausEintrag) : [neuePosition()]));
   const [fehler, setFehler] = useState<string[]>([]);
@@ -92,6 +97,8 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
       onlineZustimmung,
       // Stand beim Öffnen: ein Widerruf über „Meine Meldung“ in der Zwischenzeit wird so nicht überschrieben.
       onlineZustimmungVorher: onlineBeimOeffnen,
+      stand: standBeimOeffnen,
+      anfrageId,
       erklaerungen,
       erziehungsberechtigter,
       positionen: positionen.map(alsEingabe),
@@ -396,7 +403,7 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
             </ul>
           </div>
           <p className={`font-semibold ${offen > 0 ? "text-kamm" : "text-stall"}`}>{offen > 0 ? ts.offen(formatEuro(offen)) : ts.vollstaendig}</p>
-          <ZahlungErfassen meldungId={m.id} vorschlag={Math.max(offen, 0)} />
+          <ZahlungErfassen meldungId={m.id} vorschlag={Math.max(offen, 0)} offenCent={offen} />
         </div>
       </Abschnitt>
 
@@ -414,7 +421,7 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
   );
 }
 
-function ZahlungErfassen({ meldungId, vorschlag }: { meldungId: number; vorschlag: number }) {
+function ZahlungErfassen({ meldungId, vorschlag, offenCent }: { meldungId: number; vorschlag: number; offenCent: number }) {
   const [betrag, setBetrag] = useState("");
   const [tag, setTag] = useState(heuteIso());
   const istAdmin = useIstAdmin();
@@ -431,7 +438,11 @@ function ZahlungErfassen({ meldungId, vorschlag }: { meldungId: number; vorschla
       utils.meldung.invalidate();
       meldung(r.bestaetigt ? tz.erfasstBestaetigt : tz.erfasst);
     },
-    onError: (e) => meldung(fehlerText(e), "fehler"),
+    onError: (e) => {
+      // Neu laden: nach „inzwischen schon kassiert“ zeigt die Seite den echten offenen Betrag.
+      utils.meldung.invalidate();
+      meldung(fehlerText(e), "fehler");
+    },
   });
   return (
     <form
@@ -446,7 +457,7 @@ function ZahlungErfassen({ meldungId, vorschlag }: { meldungId: number; vorschla
           grund = (await eingabe({ titel: tz.erstattung, text: tz.erstattungText, feld: t.meldung.seitenleiste.grund, mindestens: 3 })) ?? "";
           if (!grund) return;
         }
-        erfassen.mutate({ meldungId, betragCent: cent, datum: tag, art, grund });
+        erfassen.mutate(zahlungAuftrag({ meldungId, betragCent: cent, datum: tag, art, grund, angezeigtOffenCent: offenCent }));
       }}
     >
       <div className="grid grid-cols-2 gap-2">

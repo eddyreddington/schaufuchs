@@ -46,6 +46,7 @@ export const serverSchauMeldung = {
     ibanAdmin: "Eine vorhandene IBAN oder den Kontoinhaber ändert nur die Ausstellungsleitung (Administratoren).",
     sepaBank: "Der Aussteller steht in einer offenen SEPA-Datei – erst die Datei buchen oder verwerfen, dann die Bankdaten ändern.",
     gesperrtNeuLaden: "Die Daten dieses Ausstellers sind gelöscht bzw. gesperrt und lassen sich nicht mehr ändern. Bitte die Seite neu laden.",
+    veraltet: "Die Meldung wurde inzwischen geändert – bitte neu laden und die Änderung noch einmal machen.",
     einverstaendnis: "Jugendmeldung: Die Veröffentlichung im Internet braucht das Einverständnis eines Erziehungsberechtigten – bitte dessen Namen eintragen.",
     doppelt: "Für diesen Aussteller gibt es schon eine Meldung zu dieser Schau.",
     bleibenInMeldung: (nrn: string) =>
