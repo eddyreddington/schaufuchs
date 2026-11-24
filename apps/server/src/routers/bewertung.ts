@@ -13,7 +13,7 @@ import { kurzerFehler } from "../services/fehlertext";
 import { ergaenzeGrundbestand, sperreBausteine, TEXTBAUSTEINE_MAX } from "../services/textbausteine";
 import { protokolliere } from "../services/protokoll";
 import { kontingente, zuteilung } from "../services/pruefung";
-import { adminProcedure, benutzerProcedure, fehler, dbId, ladeSchau, pruefeNachFreigabe, publicProcedure, richterProcedure, router } from "../trpc";
+import { adminProcedure, benutzerProcedure, fehler, dbId, ladeSchau, pruefeNachFreigabe, publicProcedure, richterProcedure, router, sqlZustand } from "../trpc";
 import { pruefeNichtAbgeschlossen } from "../services/kasse";
 
 // PIN-Anmeldung (8 Ziffern, nur in den Phasen mit Tablet):
@@ -177,10 +177,13 @@ async function bestaetige(
   });
 }
 
-/** Vorübergehende Störung der Datenbank (Verbindung, Ressourcen, Verklemmung) – lohnt einen späteren Versuch. */
+/**
+ * Vorübergehende Störung der Datenbank (Verbindung, Ressourcen, Verklemmung, zu langes Warten auf eine Sperre – 55P03,
+ * lock_timeout, Entscheidung 033) – lohnt einen späteren Versuch.
+ */
 function voruebergehend(e: unknown): boolean {
-  const code = String((e as { cause?: { code?: unknown } })?.cause?.code ?? (e as { code?: unknown })?.code ?? "");
-  return /^(08|53|57P|40001|40P01)|^(CONNECTION_|CONNECT_TIMEOUT|ECONNREFUSED|ECONNRESET|ETIMEDOUT)/.test(code);
+  const code = sqlZustand(e) || String((e as { cause?: { code?: unknown } })?.cause?.code ?? (e as { code?: unknown })?.code ?? "");
+  return /^(08|53|57P|55P03|40001|40P01)|^(CONNECTION_|CONNECT_TIMEOUT|ECONNREFUSED|ECONNRESET|ETIMEDOUT)/.test(code);
 }
 
 /** Alles, was der Preisrichter am Tablet braucht. Tiere sind anonym: keine Ausstellernamen. */

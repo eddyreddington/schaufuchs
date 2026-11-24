@@ -6,7 +6,7 @@
  * Teil des Schau-Ablaufs.
  */
 import { describe, expect, test } from "bun:test";
-import { adminKontext, m } from "./kontext";
+import { adminKontext, leer, m } from "./kontext";
 import { wartet } from "./sperren-hilfe";
 
 const al = () => m.appRouter.createCaller(adminKontext);
@@ -96,5 +96,59 @@ describe("Hänger: Grenze für das Warten auf Sperren", () => {
       await c`rollback`;
       c.release();
     }
+  });
+});
+
+describe("Hänger: Tablet und Protokoll", () => {
+  test("Tablet wartet zu lange auf die Einteilung: „spaeter“ statt „Interner Fehler“", async () => {
+    const { id } = await al().schau.anlegen({ name: "Hänger Tablet", ort: "Halle" });
+    const s = await al().schau.get({ id });
+    const [wy] = await al().stammdaten.suche({ versionId: s.stammdatenVersionId!, q: "Wyandotten weiß" });
+    const pos = { farbenschlagId: wy!.id, freitext: "", art: "einzeltier" as const, geschlecht: "1,0", alter: "jung" as const, istAoc: false, istNeuzuechtung: false, eigeneZucht: true, verkaufspreisCent: null };
+    const r = await al().meldung.speichern({ schauId: id, aussteller: { ...person("Tina", "Tablet", "12345"), geburtsdatum: null }, eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, positionen: [pos] });
+    await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
+    await al().katalog.nummernVergeben({ schauId: id });
+    const [tier] = await al().katalog.liste({ schauId: id });
+    await al().preisrichter.speichern({ schauId: id, name: "T Tanne", anschrift: "", telefon: "", email: "", istObmann: false, sparten: [] });
+    const [T] = await m.db.select().from(m.schema.preisrichter).where(m.eq(m.schema.preisrichter.schauId, id));
+    await al().preisrichter.einteilungSetzen({ schauId: id, einteilung: [{ preisrichterId: T!.id, vonNr: 1, bisNr: 9999 }] });
+    await m.db.update(m.schema.schau).set({ phase: "bewertung" }).where(m.eq(m.schema.schau.id, id));
+    await m.db.update(m.schema.katalogeintrag).set({ status: "eingeliefert" }).where(m.eq(m.schema.katalogeintrag.id, tier!.id));
+    const tablet = m.appRouter.createCaller({ ...leer, richter: { id: T!.id, schauId: id, name: T!.name, istObmann: false } });
+    const vorher = process.env.DB_LOCK_TIMEOUT;
+    process.env.DB_LOCK_TIMEOUT = "300ms";
+    const c = await m.sql.reserve();
+    try {
+      await c`begin`;
+      // Eine Einteilung läuft (exklusiv): das Tablet wartet länger als die Grenze.
+      await c`select pg_advisory_xact_lock(2026111201, ${id})`;
+      const a = await tablet.richter.abgleich({ bewertungen: [{ katalogeintragId: tier!.id, punkte: 94, sondernote: null, vorzuege: "", wuensche: "", maengel: "", geraetZeit: new Date(), basisVersion: null }] } as never);
+      expect(a.ergebnisse[0]!.status).toBe("spaeter");
+    } finally {
+      if (vorher === undefined) delete process.env.DB_LOCK_TIMEOUT;
+      else process.env.DB_LOCK_TIMEOUT = vorher;
+      await c`rollback`;
+      c.release();
+    }
+  });
+
+  test("Protokoll zuletzt nur in einer Transaktion (sonst sammelte es Einträge anderer Anfragen)", async () => {
+    const { protokollZuletzt } = await import("../services/protokoll");
+    await expect(protokollZuletzt(m.db as never, async () => 1)).rejects.toThrow("Transaktion");
+  });
+
+  test("Viele gesammelte Einträge: in Reihenfolge, Kette unversehrt", async () => {
+    const { id } = await al().schau.anlegen({ name: "Protokoll gesammelt", ort: "Halle" });
+    const { protokollZuletzt, protokolliere } = await import("../services/protokoll");
+    const N = 1203;
+    await m.db.transaction((tx) =>
+      protokollZuletzt(tx as never, async () => {
+        for (let i = 0; i < N; i++) await protokolliere(tx as never, { schauId: id, tabelle: "test", datensatzId: i, aktion: `Eintrag ${i}`, neu: { i }, akteur: { text: "Test" } });
+      }),
+    );
+    const zeilen = (await m.sql`select id, datensatz_id from aenderung where schau_id = ${id} and tabelle = 'test' order by id`) as unknown as { id: number; datensatz_id: number }[];
+    expect(zeilen.map((z) => z.datensatz_id)).toEqual(Array.from({ length: N }, (_, i) => i));
+    const { pruefeProtokoll } = await import("../services/protokoll-suche");
+    expect((await pruefeProtokoll(id)).fehler).toEqual([]);
   });
 });

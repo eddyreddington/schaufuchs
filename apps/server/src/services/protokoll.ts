@@ -1,4 +1,4 @@
-import type { Tx } from "../db/client";
+import { db, type Tx } from "../db/client";
 import { aenderung } from "../db/schema";
 
 export interface Akteur {
@@ -40,21 +40,29 @@ export async function protokolliere(tx: Tx, e: Eintrag) {
  * Löschwunsch). Verschachtelt: der äußere Aufruf schreibt. Innerhalb von `f` stehen die Einträge noch nicht in der Tabelle.
  */
 export async function protokollZuletzt<T>(tx: Tx, f: () => Promise<T>): Promise<T> {
+  // Nur in einer Transaktion: mit `db` sammelte es die Einträge aller gleichzeitigen Anfragen ein.
+  if (tx === db) throw new Error("protokollZuletzt braucht eine Transaktion, nicht db."); // bleibt deutsch
   if (gesammelt.has(tx)) return f();
   const liste: Eintrag[] = [];
   gesammelt.set(tx, liste);
   try {
     const r = await f();
     gesammelt.delete(tx);
-    for (const e of liste) await schreibe(tx, e);
+    // In Blöcken als ein INSERT: der Trigger läuft je Zeile in der Reihenfolge der VALUES (Kette und Hash wie bei
+    // einzelnen Einträgen), die Kette ist aber nur so kurz gehalten wie nötig.
+    for (let i = 0; i < liste.length; i += BLOCK) await schreibe(tx, ...liste.slice(i, i + BLOCK));
     return r;
   } finally {
     gesammelt.delete(tx);
   }
 }
 
-async function schreibe(tx: Tx, e: Eintrag) {
-  await tx.insert(aenderung).values({
+/** Einträge je INSERT beim Schreiben gesammelter Einträge. */
+const BLOCK = 500;
+
+async function schreibe(tx: Tx, ...eintraege: Eintrag[]) {
+  if (!eintraege.length) return;
+  await tx.insert(aenderung).values(eintraege.map((e) => ({
     schauId: e.schauId,
     tabelle: e.tabelle,
     datensatzId: e.datensatzId,
@@ -65,5 +73,5 @@ async function schreibe(tx: Tx, e: Eintrag) {
     benutzerId: e.akteur.benutzer?.id ?? null,
     preisrichterId: e.akteur.richter?.id ?? null,
     wer: e.akteur.benutzer?.name ?? (e.akteur.richter ? `PR ${e.akteur.richter.name}` : (e.akteur.text ?? "")),
-  });
+  })));
 }
