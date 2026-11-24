@@ -1,5 +1,37 @@
 # SchauFUCHS 1.21 – Versionshinweise
 
+## 1.21.4 (24.11.2026)
+
+### Gleichzeitiges Arbeiten abgesichert
+
+Alle 165 Schreibwege wurden auf gleichzeitiges Arbeiten mehrerer Personen, Tabs und Tablets geprüft; 32 Fälle sind
+behoben, jeder mit einem Test, der das gleichzeitige Arbeiten nachstellt (Entscheidung 033). Im Alltag mit einer Person
+traten sie kaum auf, mit mehreren Helfern und Tablets am Schautag aber schon. Unter anderem:
+
+- **Ergebnisse freigeben, Preise vergeben und Noten** sperren einander richtig: keine Freigabe, während noch eine Note
+  geändert wird, kein Preis an einem Tier, dessen Note gerade sinkt.
+- **Rücklastschrift und Spendenbestätigung** können sich nicht mehr überholen.
+- **Meldung bearbeiten:** Haben zwei Fenster dieselbe Meldung offen, wird das zweite nicht mehr still überschrieben –
+  „wurde inzwischen geändert – bitte neu laden“ mit Knopf „Neu laden“. Eine Meldung wird auch bei wiederholtem
+  Absenden nur einmal angelegt.
+- **Schau-Einstellungen:** Speichert ein anderer Tab zwischendurch, übernimmt das Formular die neuen Werte, die eigenen
+  Eingaben bleiben, und man speichert erneut.
+- **Zahlung auf der Meldungsseite** wird nicht doppelt gebucht; **Schau absagen** nimmt keine Online-Meldung mehr an.
+- **Passwort und Zwei-Faktor**, Postausgang (keine doppelte Mail), Nummernvergabe, Impfnachweis, Logo hochladen u. a.
+- **Verklemmungen:** Eine feste Reihenfolge der Sperren für den ganzen Server; das Protokoll wird am Ende geschrieben.
+  Wartet ein Vorgang länger als 10 Sekunden auf einen anderen, kommt „Bitte noch einmal versuchen“ statt zu hängen
+  (Tablets senden dann später von selbst). Während eines großen Imports können andere Änderungen kurz so melden.
+- **Prüfliste** meldet jetzt auch verdeckte Fronten eingesetzter Volieren.
+
+### 3D-Rundgang
+
+- Der Rundgang beginnt am **Haupteingang**, geht **jede Käfigfront einmal** ab und kehrt zum Eingang zurück; er geht
+  nicht an leeren Wänden entlang und nicht um Bänke und Tische. Der Parkplatz steht vor demselben Eingang.
+
+### Update
+
+Die Datenbank bekommt für Meldungen eine Kennung gegen doppeltes Anlegen (Migration 0072, nur hinzufügend).
+
 ## 1.21.3 (22.11.2026)
 
 - **Katalog kürzt nichts mehr:** Lange Rassen, Farbenschläge, Sparten, Preisrichter, Aussteller, Vereine und Titel
