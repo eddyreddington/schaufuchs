@@ -13,6 +13,8 @@ const FEIN = 5;
 
 const tier = (id: number, typ: PlanTier["typ"] = "huehner"): PlanTier => ({ id, typ, nr: String(id), rasse: typ === "voliere" ? "Fasan" : "Wyandotten", sparte: "Hühner", preisrichterId: null });
 const tiere = (n: number, typ: PlanTier["typ"] = "huehner") => Array.from({ length: n }, (_, i) => tier(i + 1, typ));
+/** Ohne Maß stellt der Plan keine Voliere („keinen Platz“) – für die Volieren-Hallen das übliche Maß. */
+const MASSE = { voliere: { breite: 200, tiefe: 100, hoehe: 180 } };
 
 /** Alle Hindernisse der Szene als Rechtecke (x0, z0, x1, z1). */
 function hindernisse(s: HallenSzene): [number, number, number, number][] {
@@ -143,8 +145,9 @@ const hallen: [string, Halle, PlanTier[]][] = [
 describe("Rundgang durch die Gänge ohne Anstoßen", () => {
   for (const [name, h, t] of hallen) {
     test(name, () => {
-      const plan = planeHalle(h, t, null);
-      const s = hallenSzene(h, plan, null);
+      const plan = planeHalle(h, t, MASSE);
+      expect(plan.warnungen.filter((w) => w.includes("Platz"))).toEqual([]);
+      const s = hallenSzene(h, plan, MASSE);
       expect(s.rundgang.length).toBeGreaterThan(10);
       // Jeder Punkt (fein abgetastet) in der Halle, mit Abstand zu Wänden und Hindernissen, in Augenhöhe, ohne Sprung.
       expect(pruefeRundgang(s, s.rundgang)).toEqual([]);
@@ -317,10 +320,40 @@ describe("Rundgang: eine Runde vom Haupteingang an allen Käfigen", () => {
 
   test("eingesetzte Blöcke und Volieren werden angesehen, Garnitur und Pokaltisch sind kein Ziel", () => {
     const [, h, t] = hallen[7]!;
-    const s = hallenSzene(h, planeHalle(h, t, null), null);
+    const s = hallenSzene(h, planeHalle(h, t, MASSE), MASSE);
     expect(ungesehen(s)).toEqual([]);
     // Nahe an Möbeln nur, wo der Weg ohnehin an Käfigen entlang führt.
     for (const m of s.moebel) expect(s.rundgang.filter((p) => abstandZuQuader(p, m.q) < 80 && naechsterKaefig(s, p) > 135).length).toBe(0);
+  });
+
+  test("freier L-Grundriss: vom Haupteingang zurück, jede Front gesehen, keine öfter als zweimal, nicht unnötig lang", () => {
+    const h: Halle = { ...HALLE_STANDARD, breite: 2000, laenge: 3000, umriss: L_UMRISS, hauptgang: { breite: 300, lage: "anfang" }, flaechen: [eingang("Eingang", 0, 2000, 50, 300), eingang("Notausgang", 1950, 500, 50, 150)] };
+    const plan = planeHalle(h, tiere(140), null);
+    const s = hallenSzene(h, plan, null);
+    const tuer = s.tueren.find((t) => t.name === "Eingang")!;
+    expect(pruefeRundgang(s, s.rundgang)).toEqual([]);
+    expect(abstandZuQuader(s.rundgang[0]!, tuer.q)).toBeLessThan(150);
+    expect(abstandZuQuader(s.rundgang.at(-1)!, tuer.q)).toBeLessThan(150);
+    expect(ungesehen(s)).toEqual([]);
+    const gaenge = gangMeter(h, plan, s.rundgang);
+    for (const g of gaenge) expect(Math.max(0, ...g.durch.values())).toBeLessThanOrEqual(2);
+    // Länge wie bei den Rechteckhallen, dazu der Weg vom Eingang zu den Käfigen und zurück (hier liegt er weit ab).
+    const meter = gaenge.reduce((n, g) => n + g.meter.size * 100, 0), qs = gaenge.map((g) => (g.von + g.bis) / 2);
+    const zurueck = gaenge.length % 2 ? Math.min(...gaenge.map((g) => (Math.max(...g.meter) - Math.min(...g.meter)) * 100)) : 0;
+    expect(gaenge.length).toBeGreaterThan(2);
+    expect(laenge(s.rundgang)).toBeLessThan(1.25 * (meter + 2 * (Math.max(...qs) - Math.min(...qs)) + zurueck + 2 * naechsterKaefig(s, s.rundgang[0]!)));
+  });
+
+  test("Volieren ohne Front (ältere feste Pläne, rundum Gitter): von einer Seite angesehen", () => {
+    const [, h, t] = hallen[6]!;
+    const mit = hallenSzene(h, planeHalle(h, t, MASSE), MASSE);
+    expect(mit.volieren.length).toBeGreaterThan(2);
+    const s: HallenSzene = { ...mit, volieren: mit.volieren.map(({ front: _, ...v }) => v) };
+    s.rundgang = rundgang(s);
+    expect(pruefeRundgang(s, s.rundgang)).toEqual([]);
+    const seiten = ["x+", "x-", "z+", "z-"] as const;
+    const nicht = s.volieren.filter((v) => !seiten.some((front) => ungesehen({ ...s, kaefige: [], volieren: [{ ...v, front }] }).length === 0));
+    expect(nicht.map((v) => v.name)).toEqual([]);
   });
 
   test("Möbel abseits der Wege ändern den Rundgang nicht: nie zwischen Garnitur und Wand hindurch", () => {

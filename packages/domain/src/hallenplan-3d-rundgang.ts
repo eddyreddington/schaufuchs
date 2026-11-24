@@ -1,13 +1,14 @@
 /**
  * Automatischer Rundgang durch die Halle (3D): eine Runde an allen Käfigen. Er beginnt und endet am Haupteingang
  * (hallenplan-3d-eingang.ts; ohne Eingang beginnt er am Gang, der den kürzesten Weg ergibt, und endet am letzten). Ein Gang
- * ist die Linie vor den Käfigfronten (Käfige und Volieren mit Front, auch eingesetzte Blöcke), mittig zwischen zwei Fronten
+ * ist die Linie vor den Käfigfronten (Käfige, eingesetzte Blöcke und Volieren; ohne Front rundum), mittig zwischen zwei Fronten
  * oder knapp einen Meter vor einer Front; er reicht nur so weit, wie dort Käfige stehen. Jeder Gang wird genau einmal
  * abgegangen; Reihenfolge und Richtung ergeben den kürzesten Gesamtweg. Dazwischen führt der kürzeste freie Weg – Wände,
  * Möbel und Sperrflächen sind nur Hindernisse, nie Ziel. Ist ein Gang eine Sackgasse, geht es darin zurück. Immer in
  * Augenhöhe und mit Abstand zu allem (Hinderniskarte und Wegsucher aus hallenplan-3d-wege.ts). Rein (ohne three.js).
  */
 import type { HallenSzene } from "./hallenplan-3d";
+import type { Blick } from "./hallenplan-typen";
 import { haupteingang } from "./hallenplan-3d-eingang";
 import { abkuerzen, abstaende, freieZelleNahe, type Hinderniskarte, hinderniskarte, istFrei, type Raster, rasterVon, runden, type Stelle, streckeFrei, suche, TEUER, type WegSzene, zelleBei, zellMitte } from "./hallenplan-3d-wege";
 
@@ -60,9 +61,12 @@ interface Gang {
 
 const punktAuf = (x: boolean, quer: number, entlang: number): Stelle => (x ? { x: quer, z: entlang } : { x: entlang, z: quer });
 
+/** Alle vier Seiten: Volieren ohne Front (ältere feste Pläne) sind rundum Gitter. */
+const RUNDUM: Blick[] = ["x+", "x-", "z+", "z-"];
+
 /** Fronten aller Käfige und Volieren, je Reihe zusammengefasst (Etagen und Nachbarn: eine Front). */
 function frontenVon(s: WegSzene): Front[] {
-  const roh: Front[] = [...s.kaefige.map((k) => ({ q: k.q, f: k.front })), ...s.volieren.flatMap((v) => (v.front ? [{ q: v.q, f: v.front }] : []))].map(({ q, f }) => {
+  const roh: Front[] = [...s.kaefige.map((k) => ({ q: k.q, f: k.front })), ...s.volieren.flatMap((v) => (v.front ? [v.front] : RUNDUM).map((f) => ({ q: v.q, f })))].map(({ q, f }) => {
     const x = f[0] === "x", plus = f[1] === "+";
     return { x, plus, ebene: x ? (plus ? q.x + q.b : q.x) : plus ? q.z + q.t : q.z, u0: x ? q.z : q.x, u1: x ? q.z + q.t : q.x + q.b };
   });
