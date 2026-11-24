@@ -2,7 +2,7 @@
 import { PHASEN, PHASEN_LABEL, fehlendeVereinsangaben, datumKurz, istSprache, texte } from "@schau/domain";
 import { and, count, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "../../db/client";
+import { db, type Tx } from "../../db/client";
 import { aussteller, gebuehr, katalogeintrag, meldung, preisrichter, schau, sitzung } from "../../db/schema";
 import { ladeEintraege } from "../../services/eintraege";
 import { inOffenerLastschrift, offeneLastschrift, offeneStornoZahlungen, offeneUeberweisungsverkaeufe, offenerLauf, sperreKasse } from "../../services/kasse";
@@ -14,16 +14,16 @@ import { ladeVereinsangaben } from "../../services/datenschutz";
 import { heuteDe } from "../../services/tiergesundheit";
 import { adminProcedure, fehler, ladeSchau, dbId } from "../../trpc";
 
-/** Was einem Abschluss der Schau noch entgegensteht (leer: abschließbar). */
-async function abschlussHindernisse(schauId: number): Promise<string[]> {
+/** Was einem Abschluss der Schau noch entgegensteht (leer: abschließbar); unter der Sperre mit deren Transaktion `ex`. */
+async function abschlussHindernisse(schauId: number, ex: Tx = db): Promise<string[]> {
   const { abrechnungListe } = await import("../kasse");
   const [zeilen, tage, lauf, lastschrift, stornos, ueberweisungen] = await Promise.all([
-    abrechnungListe(schauId),
-    ladeKassenbuch(schauId),
-    offenerLauf(db, schauId),
-    offeneLastschrift(db, schauId),
-    offeneStornoZahlungen(db, schauId),
-    offeneUeberweisungsverkaeufe(db, schauId),
+    abrechnungListe(schauId, ex),
+    ladeKassenbuch(schauId, ex),
+    offenerLauf(ex, schauId),
+    offeneLastschrift(ex, schauId),
+    offeneStornoZahlungen(ex, schauId),
+    offeneUeberweisungsverkaeufe(ex, schauId),
   ]);
   const offen = zeilen.filter((z) => z.nochOffenCent !== 0);
   return [
@@ -51,11 +51,19 @@ export const phasen = {
    */
   absagen: adminProcedure.input(z.object({ id: dbId, grund: z.string().trim().min(3, "Bitte den Grund angeben.").max(500) })).mutation(async ({ ctx, input }) => {
     const s = await ladeSchau(ctx.benutzer.organisationId, input.id);
-    if (s.abgesagtAm) throw fehler("BAD_REQUEST", "Die Schau ist schon abgesagt.");
-    if (!["vorbereitung", "meldung", "katalog"].includes(s.phase))
-      throw fehler("BAD_REQUEST", "Absagen geht nur bis vor der Einlieferung. Sind schon Tiere in der Halle, bitte mit dem Veterinäramt abstimmen und über die normale Abrechnung abschließen.");
+    /** Geprüft vorab und noch einmal auf dem gesperrten Stand. */
+    const pruefe = (x: { abgesagtAm: Date | null; phase: string }) => {
+      if (x.abgesagtAm) throw fehler("BAD_REQUEST", "Die Schau ist schon abgesagt.");
+      if (!["vorbereitung", "meldung", "katalog"].includes(x.phase))
+        throw fehler("BAD_REQUEST", "Absagen geht nur bis vor der Einlieferung. Sind schon Tiere in der Halle, bitte mit dem Veterinäramt abstimmen und über die normale Abrechnung abschließen.");
+    };
+    pruefe(s);
     const betroffen = await db.transaction(async (tx) => {
+      // Erst die Kasse, dann die Zeile (Entscheidung 033): ein gleichzeitiger Phasenwechsel, das Festschreiben der Nummern
+      // oder eine zweite Absage wird so gesehen, statt überschrieben.
       await sperreKasse(tx, s.id);
+      const [jetzt] = await tx.select({ phase: schau.phase, abgesagtAm: schau.abgesagtAm, katalogGedruckt: schau.katalogGedruckt }).from(schau).where(eq(schau.id, s.id)).for("no key update");
+      pruefe(jetzt!);
       const ms = await tx
         .select({ id: meldung.id, status: meldung.status, ausstellerId: meldung.ausstellerId, sprache: meldung.sprache })
         .from(meldung)
@@ -65,11 +73,11 @@ export const phasen = {
       for (const x of ms) {
         await tx.update(meldung).set({ status: "storniert" }).where(eq(meldung.id, x.id));
         // Wie beim einzelnen Storno: vor dem Festschreiben verlieren die Tiere ihre Nummer, danach bleiben sie reserviert.
-        if (!s.katalogGedruckt) await tx.update(katalogeintrag).set({ katalogNr: null, suffix: "", status: "gemeldet" }).where(eq(katalogeintrag.meldungId, x.id));
+        if (!jetzt!.katalogGedruckt) await tx.update(katalogeintrag).set({ katalogNr: null, suffix: "", status: "gemeldet" }).where(eq(katalogeintrag.meldungId, x.id));
         await protokolliere(tx, { schauId: s.id, tabelle: "meldung", datensatzId: x.id, aktion: "Status", alt: x.status, neu: "storniert", grund: `Schau abgesagt: ${input.grund}`, akteur: ctx });
       }
       await tx.update(schau).set({ abgesagtAm: new Date(), absageGrund: input.grund, phase: "abrechnung" }).where(eq(schau.id, s.id));
-      await protokolliere(tx, { schauId: s.id, tabelle: "schau", datensatzId: s.id, aktion: "Schau abgesagt", alt: { phase: s.phase }, neu: { phase: "abrechnung", stornierteMeldungen: ms.length }, grund: input.grund, akteur: ctx });
+      await protokolliere(tx, { schauId: s.id, tabelle: "schau", datensatzId: s.id, aktion: "Schau abgesagt", alt: { phase: jetzt!.phase }, neu: { phase: "abrechnung", stornierteMeldungen: ms.length }, grund: input.grund, akteur: ctx });
       return ms;
     });
     // Nachricht an die Aussteller (nach dem Speichern; ein Mailfehler macht die Absage nicht rückgängig).
@@ -157,14 +165,15 @@ export const phasen = {
         }
         // Zeile sperren und mit dem geprüften Stand vergleichen (Entscheidung 033): eine gleichzeitige Absage oder ein
         // zweiter Wechsel wird gesehen, statt überschrieben. Schon gesetzt (Doppelklick, zweiter Tab): nichts zu tun.
-        const [jetzt] = await tx.select({ phase: schau.phase, abgesagtAm: schau.abgesagtAm }).from(schau).where(eq(schau.id, alt.id)).for("update");
+        const [jetzt] = await tx.select({ phase: schau.phase, abgesagtAm: schau.abgesagtAm }).from(schau).where(eq(schau.id, alt.id)).for("no key update");
         const gleichAbgesagt = !!jetzt?.abgesagtAm === !!alt.abgesagtAm;
         if (jetzt?.phase === input.phase && gleichAbgesagt) return;
         if (jetzt?.phase !== alt.phase || !gleichAbgesagt) throw fehler("CONFLICT", "Die Phase wurde inzwischen geändert (z. B. Schau abgesagt oder von einer zweiten Ausstellungsleitung gewechselt). Bitte die Seite neu laden.");
         if (input.phase === "abgeschlossen" && !(input.trotzdem && input.grund.length >= 3)) {
           // Unter der Kassensperre noch einmal: eine Buchung, die vor der Sperre noch lief, hätte sonst einen Kassentag
-          // ohne Abschluss in der abgeschlossenen Schau hinterlassen.
-          const offen = await abschlussHindernisse(alt.id);
+          // ohne Abschluss in der abgeschlossenen Schau hinterlassen. In der Transaktion gelesen: eine Verbindung statt vieler
+          // aus dem Pool, solange Kasse und Zeile gesperrt sind.
+          const offen = await abschlussHindernisse(alt.id, tx);
           if (offen.length) throw fehler("PRECONDITION_FAILED", `Noch nicht abschließbar: ${offen.join("; ")}.`);
         }
         await tx

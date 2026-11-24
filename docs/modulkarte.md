@@ -1032,7 +1032,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `druckFormate`
 
-### schau-einstellungen.ts (188 Z.)
+### schau-einstellungen.ts (190 Z.)
 
 - `schauEinstellungen`
 
@@ -1230,7 +1230,7 @@ Texte der Oberfläche: preisrichter (Entscheidung 022) – Seite Preisrichter mi
 
 - `druckFormate` – Texte der Oberfläche: schau.einstellungen.druck.formate (Entscheidung 022, 029) – Übersicht der Drucke im Reiter „Druck“.
 
-### schau-einstellungen.ts (196 Z.)
+### schau-einstellungen.ts (198 Z.)
 Texte der Oberfläche: schau.einstellungen (Entscheidung 022) – Seite „Einstellungen“ der Schau und ihre Abschnitte.
 
 - `schauEinstellungen`
@@ -1430,7 +1430,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `druckFormate`
 
-### schau-einstellungen.ts (188 Z.)
+### schau-einstellungen.ts (190 Z.)
 
 - `schauEinstellungen`
 
@@ -1619,7 +1619,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `druckFormate`
 
-### schau-einstellungen.ts (188 Z.)
+### schau-einstellungen.ts (190 Z.)
 
 - `schauEinstellungen`
 
@@ -1812,7 +1812,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `druckFormate`
 
-### schau-einstellungen.ts (188 Z.)
+### schau-einstellungen.ts (190 Z.)
 
 - `schauEinstellungen`
 
@@ -2002,7 +2002,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `druckFormate`
 
-### schau-einstellungen.ts (188 Z.)
+### schau-einstellungen.ts (190 Z.)
 
 - `schauEinstellungen`
 
@@ -2580,7 +2580,7 @@ Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau l�
 - `schau.alsTestschau` mutation · admin – Eine bestehende Schau als Testschau kennzeichnen (z. B. eine zum Üben angelegte mit Demo-Meldungen): ihre Aussteller werden Test-Aussteller und ver …
 - `schau.testschauVorschau` query · admin – Vor dem Kennzeichnen: wer würde Test-Aussteller, wer ist echt (und verhindert es)?
 
-### routers/schau/einstellungen.ts (259 Z.) → `schau`
+### routers/schau/einstellungen.ts (264 Z.) → `schau`
 Einstellungen einer Schau: Felder speichern, Reihenfolge der Katalognummern, Teilschauen und Notenskala.
 
 - `schau.aktualisieren` mutation · admin
@@ -2595,7 +2595,7 @@ Gebühren und Preisarten einer Schau setzen, ändern und löschen (gesperrt, sob
 - `schau.preisartSpeichern` mutation · admin – Preisart anlegen oder ändern.
 - `schau.preisartLoeschen` mutation · admin
 
-### routers/schau/phase.ts (197 Z.) → `schau`
+### routers/schau/phase.ts (206 Z.) → `schau`
 Phase der Schau: absagen und Phase wechseln (mit den Prüfungen vor Meldephase, Schau und Abschluss).
 
 - `schau.absagen` mutation · admin – Schau absagen (z. B. Ausstellungsverbot wegen Tierseuche, § 7 Abs. 5 GeflPestSchV): nur bis vor der Einlieferung.
@@ -2737,8 +2737,8 @@ Prozeduren: schau.notenskalaSetzen
 ### einstellungen-preise.tsx (263 Z.)
 Prozeduren: schau.gebuehrenSetzen, schau.preisartLoeschen, schau.preisartSpeichern
 
-### einstellungen-stammangaben.tsx (340 Z.)
-Prozeduren: schau.aktualisieren, stammdaten.versionen
+### einstellungen-stammangaben.tsx (362 Z.)
+Prozeduren: schau.aktualisieren, schau.get, stammdaten.versionen
 
 ### einstellungen-teilschauen.tsx (73 Z.)
 Prozeduren: schau.teilschauenSetzen
@@ -3045,7 +3045,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `kassenbuch.ts` (241 Z.) · tagDe, ladeKassenbuch, sollBestand, archiviereBeleg, ladeBeleg, zweitschrift, belegListe, archiviereKaufbeleg, archiviereKassenbeleg, archiviereQuittung, archiviereSpendenquittung
 - `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
 - `meldung.ts` (509 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, speichereMeldung, bindungen, hatAuszahlung
-- `post.ts` (188 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, sendeMail, legeMailAb, versendeAbgelegt, sendeMailJetzt, versende, starteMailversand
+- `post.ts` (202 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, sendeMail, legeMailAb, versendeAbgelegt, sendeMailJetzt, setzeUnterbrocheneZurueck, versende, starteMailversand
 - `preise.ts` (180 Z.) · vergebePreis, entfernePreis
 - `preisrichter-speichern.ts` (128 Z.) – Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter Sperre der Preisrichter der S … · gruppenAusEingabe, speicherePreisrichter, loeschePreisrichter
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
@@ -3173,6 +3173,8 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `seitenmenue.tsx` (202 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · schauGruppen, allgemeineGruppen, useKlappzustand, MenueGruppen
 - `sprache-jetzt.ts` (20 Z.) – Sprache der Oberfläche für Code außerhalb von Komponenten (Fehlertexte, Datum, Rückfragen): `SpracheRahmen` setzt sie, Komponenten nehmen besser `u … · setzeAktuelleSprache, aktuelleSprache, ot
 - `sprache.tsx` (199 Z.) – Sprache der Oberfläche. · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, useOberflaeche, SprachWahl, fehlerFuerAussteller
+- `stand-abgleich.test.ts` (16 Z.)
+- `stand-abgleich.ts` (13 Z.) · standAbgleichen
 - `symbole.tsx` (46 Z.) · Symbol
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui-ablage.tsx` (70 Z.) · useAblageAbfangen, DateiAblage
@@ -3273,6 +3275,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `81-jugend-kennzeichen.ts` (114 Z.) – Kennzeichen „Jgd.“ für Jugendtiere, wenn die Jugend in der Rasse eingereiht steht: im gedruckten Katalog (zwei Spalten, Tabelle, Kurzkatalog, Legen …
 - `82-katalog-schriften.ts` (112 Z.) – Katalog-Schriften (Entscheidung 032): jedes Katalog-PDF – jede Schriftwahl, jede Aufteilung, A4 und A5, Kurzkatalog und /s/:slug/katalog.pdf – bett …
 - `83-katalog-nicht-kuerzen.ts` (147 Z.) – Katalog kürzt nicht (Entscheidung 032, Rückmeldung eines Vereins: „Im Katalog wird abgekürzt, das darf nicht sein“): Testschau mit sehr langen Name …
-- `87-gleichzeitig-auth-schau.ts` (243 Z.) – Gleichzeitiges Arbeiten an Schau-Einstellungen, Phase, Postausgang und Benutzern (Entscheidung 033): Stand-Prüfung der Stammangaben, Provision unte …
+- `87-gleichzeitig-auth-schau.ts` (377 Z.) – Gleichzeitiges Arbeiten an Schau-Einstellungen, Phase, Postausgang und Benutzern (Entscheidung 033): Stand-Prüfung der Stammangaben, Provision unte …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

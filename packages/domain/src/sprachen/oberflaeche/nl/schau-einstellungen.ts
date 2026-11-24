@@ -31,6 +31,8 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   stammangaben: {
     keineFrist: "geen termijn",
     gespeichert: "Instellingen opgeslagen.",
+    inzwischenGeaendert: (beide: string) =>
+      `Intussen heeft iemand anders opgeslagen. Diens waarden zijn overgenomen, uw eigen invoer blijft staan${beide ? ` (aan beide kanten gewijzigd, uw invoer geldt: ${beide})` : ""}. Controleer en sla opnieuw op.`,
     name: "Naam van de show",
     veranstalter: "Organisator",
     ort: "Plaats / hal",

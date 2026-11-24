@@ -31,6 +31,8 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   stammangaben: {
     keineFrist: "no deadline",
     gespeichert: "Settings saved.",
+    inzwischenGeaendert: (beide: string) =>
+      `Someone else has saved in the meantime. Their values have been taken over, your own entries remain${beide ? ` (changed on both sides, your entry applies: ${beide})` : ""}. Please check and save again.`,
     name: "Name of the show",
     veranstalter: "Organiser",
     ort: "Place / hall",

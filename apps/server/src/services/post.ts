@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, lt } from "drizzle-orm";
+import { and, eq, gt, inArray, lt, or } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { config } from "../config";
 import { db } from "../db/client";
@@ -114,15 +114,34 @@ export async function sendeMailJetzt(organisationId: number, an: string, betreff
 /** Was versende vom Mailserver braucht (Tests geben einen eigenen mit). */
 export type Versender = { sendMail(mail: { from: string; to: string; subject: string; text: string }): Promise<unknown> };
 
+/** Bis der Versandstand beim Start zurückgesetzt ist, beansprucht niemand eine Mail – sonst erfasste ihn das Zurücksetzen. */
+let versandBereit: Promise<unknown> = Promise.resolve();
+
+/**
+ * Beim Start sendet noch niemand: was auf „sendet“ steht, hat ein Neustart mitten im Versand hinterlassen. Setzt voraus,
+ * dass genau ein Serverprozess die Datenbank bedient (Entscheidung 033). versende wartet, bis das erledigt ist.
+ */
+export function setzeUnterbrocheneZurueck(): Promise<unknown> {
+  versandBereit = db
+    .update(postausgang)
+    .set({ status: "fehler", fehler: "Versand unterbrochen (Neustart des Servers)." })
+    .where(eq(postausgang.status, "sendet"))
+    .catch((e) => console.error("[post] Versandstand:", ohneAdressen(kurzerFehler(e))));
+  return versandBereit;
+}
+
 export async function versende(id: number, versender: Versender | null = transport) {
   if (!versender) return;
   try {
+    await versandBereit;
     // Beanspruchen (Entscheidung 033): nur wer die Zeile von „wartet“ oder „fehler“ auf „sendet“ setzt, schickt sie. So
     // geht eine Mail nicht doppelt hinaus, wenn „Erneut senden“, der Versandlauf oder zwei Administratoren zugleich laufen.
+    // Mit allen Versuchen verbrauchte Fehler (auch eine durch einen neueren Link entwertete Einladung) bleiben liegen;
+    // „Erneut senden“ setzt vorher auf „wartet“.
     const [m] = await db
       .update(postausgang)
       .set({ status: "sendet" })
-      .where(and(eq(postausgang.id, id), inArray(postausgang.status, ["wartet", "fehler"])))
+      .where(and(eq(postausgang.id, id), or(eq(postausgang.status, "wartet"), and(eq(postausgang.status, "fehler"), lt(postausgang.versuche, MAX_VERSUCHE)))))
       .returning();
     if (!m) return;
     try {
@@ -150,12 +169,7 @@ export async function versende(id: number, versender: Versender | null = transpo
 /** Versandlauf: noch nicht versandte Mails erneut versuchen (z. B. nach einer Störung des Mailservers). */
 export function starteMailversand() {
   if (!transport) return;
-  // Beim Start sendet noch niemand: was auf „sendet“ steht, hat ein Neustart mitten im Versand hinterlassen.
-  void db
-    .update(postausgang)
-    .set({ status: "fehler", fehler: "Versand unterbrochen (Neustart des Servers)." })
-    .where(eq(postausgang.status, "sendet"))
-    .catch((e) => console.error("[post] Versandstand:", ohneAdressen(kurzerFehler(e))));
+  void setzeUnterbrocheneZurueck();
   let laeuft = false;
   const lauf = async () => {
     if (laeuft) return;

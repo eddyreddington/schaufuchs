@@ -34,6 +34,8 @@ export const schauEinstellungen = {
   stammangaben: {
     keineFrist: "keine Frist",
     gespeichert: "Einstellungen gespeichert.",
+    inzwischenGeaendert: (beide: string) =>
+      `Inzwischen wurde anderswo gespeichert. Die neuen Werte sind übernommen, die eigenen Eingaben bleiben${beide ? ` (beidseitig geändert, es gilt die eigene Eingabe: ${beide})` : ""}. Bitte prüfen und erneut speichern.`,
     name: "Name der Schau",
     veranstalter: "Veranstalter",
     ort: "Ort / Halle",

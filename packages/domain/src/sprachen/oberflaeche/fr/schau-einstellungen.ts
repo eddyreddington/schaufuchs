@@ -31,6 +31,8 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   stammangaben: {
     keineFrist: "aucun délai",
     gespeichert: "Paramètres enregistrés.",
+    inzwischenGeaendert: (beide: string) =>
+      `Entre-temps, quelqu’un d’autre a enregistré. Ses valeurs ont été reprises, vos saisies sont conservées${beide ? ` (modifié des deux côtés, votre saisie s’applique : ${beide})` : ""}. Veuillez vérifier et enregistrer à nouveau.`,
     name: "Nom de l’exposition",
     veranstalter: "Organisateur",
     ort: "Lieu / salle",

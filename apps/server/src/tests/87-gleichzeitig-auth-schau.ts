@@ -46,6 +46,19 @@ const helfer = async (name: string, email: string, passwort?: string) => {
 };
 const zeile = async (id: number) => (await m.db.select().from(m.schema.benutzer).where(m.eq(m.schema.benutzer.id, id)))[0]!;
 
+/** Ein bestätigtes Tier mit Katalognummer in der Schau. */
+async function meldeTier(id: number) {
+  const versionId = (await al().schau.get({ id })).stammdatenVersionId!;
+  const [f] = (await m.sql`select f.id from farbenschlag f join rasse r on r.id = f.rasse_id where r.version_id = ${versionId} order by f.id limit 1`) as unknown as [{ id: number }];
+  const aussteller = { vorname: "Prov", nachname: "Rennen", strasse: "", plz: "", ort: "", telefon: "", email: "", verein: "", kreisverband: "", registriernummer: "", geburtsdatum: null, istPreisrichter: false, iban: "", kontoinhaber: "" };
+  const pos = { farbenschlagId: f.id, freitext: "", art: "einzeltier" as const, geschlecht: "1,0", alter: "jung" as const, istAoc: false, istNeuzuechtung: false, eigeneZucht: true, verkaufspreisCent: 3000 };
+  const r = await al().meldung.speichern({ schauId: id, aussteller, eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, positionen: [pos] });
+  await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
+  await al().katalog.nummernVergeben({ schauId: id });
+  const [tier] = await al().katalog.liste({ schauId: id });
+  return tier!;
+}
+
 describe("Gleichzeitig: Stammangaben der Schau", () => {
   test("Alter Stand überschreibt nicht still, was eine zweite Ausstellungsleitung gespeichert hat", async () => {
     const { id } = await al().schau.anlegen({ name: "Gleichzeitig Stamm", ort: "Halle" });
@@ -61,14 +74,7 @@ describe("Gleichzeitig: Stammangaben der Schau", () => {
 
   test("Provision: ein gleichzeitiger Verkauf rechnet nie mit einem anderen Satz, als die Schau dann hat", async () => {
     const { id } = await al().schau.anlegen({ name: "Gleichzeitig Provision", ort: "Halle" });
-    const versionId = (await al().schau.get({ id })).stammdatenVersionId!;
-    const [f] = (await m.sql`select f.id from farbenschlag f join rasse r on r.id = f.rasse_id where r.version_id = ${versionId} order by f.id limit 1`) as unknown as [{ id: number }];
-    const aussteller = { vorname: "Prov", nachname: "Rennen", strasse: "", plz: "", ort: "", telefon: "", email: "", verein: "", kreisverband: "", registriernummer: "", geburtsdatum: null, istPreisrichter: false, iban: "", kontoinhaber: "" };
-    const pos = { farbenschlagId: f.id, freitext: "", art: "einzeltier" as const, geschlecht: "1,0", alter: "jung" as const, istAoc: false, istNeuzuechtung: false, eigeneZucht: true, verkaufspreisCent: 3000 };
-    const r = await al().meldung.speichern({ schauId: id, aussteller, eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, positionen: [pos] });
-    await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
-    await al().katalog.nummernVergeben({ schauId: id });
-    const [tier] = await al().katalog.liste({ schauId: id });
+    const tier = await meldeTier(id);
     await verkaufsbereit(id, [tier!.id]);
     const s = await al().schau.get({ id });
 
@@ -78,7 +84,7 @@ describe("Gleichzeitig: Stammangaben der Schau", () => {
     const verkauf = al().kasse.verkaufen({ schauId: id, katalogeintragId: tier!.id, kaeuferName: "Käufer Rennen", kaeuferAnschrift: "", kaeuferRegistriernummer: "065350222222", kaeuferAlter: "ab16" });
     await wartende(1);
     const aendern = al().schau.aktualisieren({ id, daten: { ...(await felder(s)), provisionBp: s.provisionBp + 500 }, stand: s.stand });
-    await Bun.sleep(300);
+    await wartende(2);
     await sperre.fertig();
     const [v, a] = await Promise.allSettled([verkauf, aendern]);
     const jetzt = await al().schau.get({ id });
@@ -215,7 +221,7 @@ describe("Gleichzeitig: Benutzer anlegen und Willkommensmail", () => {
     await sperre`select pg_advisory_xact_lock(4711, ${org()})`;
     await sperre`update benutzer set rolle = 'mitarbeiter' where id = ${r.id}`;
     const anlegen = zweiterAdmin.auth.benutzerAnlegen({ name: "Neu Admin", email: "gleich-neu-admin@test.de", passwort: "neu-admin-12345", rolle: "admin" });
-    await Bun.sleep(300);
+    await wartende(1);
     await sperre.fertig();
     await expect(anlegen).rejects.toThrow("Nur für Administratoren");
     expect(await m.db.select().from(m.schema.benutzer).where(m.eq(m.schema.benutzer.email, "gleich-neu-admin@test.de"))).toHaveLength(0);
@@ -239,5 +245,133 @@ describe("Gleichzeitig: Benutzer anlegen und Willkommensmail", () => {
     expect(gueltig).toHaveLength(1);
     const token = gueltig[0]!.text.match(/\/einladung#([A-Za-z0-9_-]+)/)![1]!;
     expect((await m.appRouter.createCaller({ ...leer, ip: "203.0.113.89" }).auth.einladungPruefen({ token })).email).toBe(email);
+  });
+});
+
+describe("Gleichzeitig: Absage der Schau", () => {
+  test("Phasenwechsel zwischen Lesen und Schreiben: die Absage storniert nichts in der Einlieferung", async () => {
+    const { id } = await al().schau.anlegen({ name: "Gleichzeitig Absage", ort: "Halle" });
+    await al().schau.phaseSetzen({ id, phase: "katalog", trotzdem: true, grund: "Test" });
+    const sperre = await zweite();
+    await sperre`update schau set phase = 'einlieferung' where id = ${id}`;
+    const absagen = al().schau.absagen({ id, grund: "Ausstellungsverbot" });
+    await wartende(1);
+    await sperre.fertig();
+    await expect(absagen).rejects.toThrow("vor der Einlieferung");
+    const s = await al().schau.get({ id });
+    expect([s.phase, !!s.abgesagtAm]).toEqual(["einlieferung", false]);
+  });
+
+  test("Festschreiben zwischen Lesen und Schreiben: die Absage lässt die gedruckten Nummern stehen", async () => {
+    const { id } = await al().schau.anlegen({ name: "Gleichzeitig Absage Katalog", ort: "Halle" });
+    const tier = await meldeTier(id);
+    expect(tier.katalogNr).not.toBeNull();
+    await al().schau.phaseSetzen({ id, phase: "katalog", trotzdem: true, grund: "Test" });
+    const sperre = await zweite();
+    await sperre`update schau set katalog_gedruckt = true where id = ${id}`;
+    const absagen = al().schau.absagen({ id, grund: "Ausstellungsverbot" });
+    await wartende(1);
+    await sperre.fertig();
+    expect((await absagen).storniert).toBe(1);
+    const [e] = await m.db.select().from(m.schema.katalogeintrag).where(m.eq(m.schema.katalogeintrag.id, tier.id));
+    expect(e!.katalogNr).toBe(tier.katalogNr);
+  });
+
+  test("Zweimal gleichzeitig abgesagt: ein Eintrag im Protokoll, sein Grund steht an der Schau", async () => {
+    const { id } = await al().schau.anlegen({ name: "Gleichzeitig Absage doppelt", ort: "Halle" });
+    const sperre = await zweite();
+    await sperre`select pg_advisory_xact_lock(${0x4b415353}::int, ${id}::int)`;
+    const beide = ["Erster Grund", "Zweiter Grund"].map((grund) => al().schau.absagen({ id, grund }));
+    await wartende(2);
+    await sperre.fertig();
+    const r = await Promise.allSettled(beide);
+    expect(r.filter((x) => x.status === "fulfilled")).toHaveLength(1);
+    expect(String((r.find((x) => x.status === "rejected") as PromiseRejectedResult).reason)).toContain("schon abgesagt");
+    const eintraege = (await m.sql`select id, grund from aenderung where schau_id = ${id} and aktion = 'Schau abgesagt' order by id`) as unknown as { id: number; grund: string }[];
+    expect(eintraege).toHaveLength(1);
+    expect((await al().schau.get({ id })).absageGrund).toBe(eintraege[0]!.grund);
+  });
+});
+
+describe("Gleichzeitig: Sperren auf der Schau-Zeile", () => {
+  test("Speichern und Phasenwechsel warten nicht auf Einfügungen, die auf die Schau verweisen", async () => {
+    const { id } = await al().schau.anlegen({ name: "Gleichzeitig Schluessel", ort: "Halle" });
+    const s = await al().schau.get({ id });
+    // Jede Einfügung mit Fremdschlüssel auf die Schau (Protokoll, Bewertung, Kasse) hält FOR KEY SHARE auf ihrer Zeile.
+    const sperre = await zweite();
+    await sperre`select id from schau where id = ${id} for key share`;
+    const ergebnis = (p: Promise<unknown>) => p.then(() => "fertig", (e: unknown) => String(e));
+    const binnen = (p: Promise<string>) => Promise.race([p, Bun.sleep(2000).then(() => "wartet")]);
+    const speichern = ergebnis(al().schau.aktualisieren({ id, daten: { ...(await felder(s)), ort: "Andere Halle" }, stand: s.stand }));
+    const r1 = await binnen(speichern);
+    const phase = ergebnis(al().schau.phaseSetzen({ id, phase: "katalog", trotzdem: true, grund: "Test" }));
+    const r2 = await binnen(phase);
+    await sperre.fertig();
+    await Promise.all([speichern, phase]);
+    expect([r1, r2]).toEqual(["fertig", "fertig"]);
+  });
+
+  test("Zwei Schauen setzen gleichzeitig dieselbe Kurzadresse: die zweite bekommt „vergeben“", async () => {
+    const a = await al().schau.anlegen({ name: "Gleichzeitig Kurz A", ort: "Halle" });
+    const b = await al().schau.anlegen({ name: "Gleichzeitig Kurz B", ort: "Halle" });
+    const s = await al().schau.get({ id: b.id });
+    const sperre = await zweite();
+    await sperre`update schau set slug = 'gleichzeitig-kurz' where id = ${a.id}`;
+    const setzen = al().schau.aktualisieren({ id: b.id, daten: { ...(await felder(s)), slug: "gleichzeitig-kurz" }, stand: s.stand });
+    await wartende(1);
+    await sperre.fertig();
+    await expect(setzen).rejects.toThrow("Kurzadresse ist schon vergeben");
+    expect((await al().schau.get({ id: b.id })).slug).toBe(s.slug);
+  });
+});
+
+describe("Gleichzeitig: Postausgang beim Start und nach dem Entwerten", () => {
+  test("Eine entwertete Einladung (Fehler, alle Versuche verbraucht) geht nicht mehr hinaus", async () => {
+    const { versende, MAX_VERSUCHE } = await import("../services/post");
+    const [mail] = await m.db
+      .insert(m.schema.postausgang)
+      .values({ organisationId: org(), an: "entwertet@test.de", betreff: "Einladung", text: "…/einladung#(durch einen neueren Link ersetzt)", status: "fehler", versuche: MAX_VERSUCHE, fehler: "Nicht versendet: durch einen neueren Link ersetzt." })
+      .returning();
+    let n = 0;
+    await versende(mail!.id, { sendMail: async () => void n++ });
+    expect(n).toBe(0);
+    const [jetzt] = await m.db.select().from(m.schema.postausgang).where(m.eq(m.schema.postausgang.id, mail!.id));
+    expect([jetzt!.status, jetzt!.versuche]).toEqual(["fehler", MAX_VERSUCHE]);
+  });
+
+  test("Neustart: solange der Versandstand zurückgesetzt wird, beansprucht niemand eine Mail", async () => {
+    const { versende, setzeUnterbrocheneZurueck } = await import("../services/post");
+    const [alt] = await m.db.insert(m.schema.postausgang).values({ organisationId: org(), an: "unterbrochen@test.de", betreff: "Alt", text: "Text", status: "sendet", versuche: 1 }).returning();
+    const [neu] = await m.db.insert(m.schema.postausgang).values({ organisationId: org(), an: "frisch@test.de", betreff: "Neu", text: "Text" }).returning();
+    // Die zweite Verbindung hält die unterbrochene Mail: das Zurücksetzen beim Start wartet darauf.
+    const sperre = await zweite();
+    await sperre`select id from postausgang where id = ${alt!.id} for update`;
+    const zuruecksetzen = setzeUnterbrocheneZurueck();
+    await wartende(1);
+    let n = 0;
+    const senden = versende(neu!.id, { sendMail: async () => void n++ });
+    await Bun.sleep(300);
+    const waehrenddessen = n;
+    await sperre.fertig();
+    await Promise.all([zuruecksetzen, senden]);
+    expect([waehrenddessen, n]).toEqual([0, 1]);
+    const zeilen = await m.db.select().from(m.schema.postausgang).where(m.inArray(m.schema.postausgang.id, [alt!.id, neu!.id]));
+    expect(zeilen.sort((x, y) => x.id - y.id).map((x) => x.status)).toEqual(["fehler", "gesendet"]);
+  });
+});
+
+describe("Gleichzeitig: eigene Sitzung beim Passwortwechsel", () => {
+  test("Ist die eigene Sitzung inzwischen beendet, bleibt das alte Passwort", async () => {
+    const { neueSitzung, sitzungsId, pruefePasswort } = await import("../auth");
+    const { b } = await helfer("Gleich Sitzung", "gleich-sitzung@test.de", "eigenes-pw-456");
+    const token = await neueSitzung({ benutzerId: b.id });
+    const als = m.appRouter.createCaller({ ...leer, ip: "203.0.113.90", cookieTokens: { benutzer: token, richter: undefined }, benutzer: { id: b.id, organisationId: b.organisationId, name: b.name, email: b.email, rolle: "mitarbeiter" } });
+    const sperre = await zweite();
+    await sperre`delete from sitzung where id = ${sitzungsId(token)}`;
+    const aendern = als.auth.passwortAendern({ alt: "eigenes-pw-456", neu: "neues-pw-45678" });
+    await wartende(1);
+    await sperre.fertig();
+    await expect(aendern).rejects.toThrow("neu anmelden");
+    expect(await pruefePasswort("eigenes-pw-456", (await zeile(b.id)).passwortHash)).toBe(true);
   });
 });

@@ -111,7 +111,9 @@ export const einstellungen = {
           const kasse = dt.provisionBp !== vorab.provisionBp;
           if (kasse) await sperreKasse(tx, vorab.id);
           // Alle Prüfungen auf dem gesperrten Stand: Festschreiben, Phase und Meldungen warten bzw. werden hier gesehen.
-          const [alt] = await tx.select().from(schau).where(eq(schau.id, vorab.id)).for("update");
+          // NO KEY UPDATE: serialisiert gegen jeden anderen Schreiber der Zeile, hält aber keine Einfügung mit Verweis auf die
+          // Schau auf (Protokoll, Bewertung, Kasse nehmen KEY SHARE). Eine neue Kurzadresse hebt die Sperre beim UPDATE an.
+          const [alt] = await tx.select().from(schau).where(eq(schau.id, vorab.id)).for("no key update");
           if (!alt) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
           if ((input.stand !== undefined && input.stand !== schauStand(alt)) || (!kasse && dt.provisionBp !== alt.provisionBp)) throw fehler("CONFLICT", INZWISCHEN);
           // Der GiroCode trägt Kontoinhaber und IBAN des Vereinskontos – ohne sie gäbe es keinen gültigen Code.
@@ -164,7 +166,10 @@ export const einstellungen = {
               .limit(1);
             if (x) throw fehler("BAD_REQUEST", "Es gibt schon gemeldete Tiere – das Verzeichnis lässt sich nicht mehr wechseln. Fehlende Rassen oder Farbenschläge bitte unter „Rassen und Farbenschläge“ → „Ergänzen“ nachtragen (bei einem für alle Vereine bereitgestellten Verzeichnis: eigenes Verzeichnis einspielen, bevor gemeldet wird).");
           }
-          const [neu] = await tx.update(schau).set(dt).where(eq(schau.id, alt.id)).returning();
+          // Die Kurzadresse nur mitschreiben, wenn sie sich ändert: schon das Setzen auf denselben Wert nähme FOR UPDATE und
+          // wartete auf jede laufende Einfügung mit Verweis auf die Schau (gemessen mit PostgreSQL 16).
+          const { slug: _slug, ...ohneSlug } = dt;
+          const [neu] = await tx.update(schau).set(dt.slug !== alt.slug ? dt : ohneSlug).where(eq(schau.id, alt.id)).returning();
           await protokolliere(tx, { schauId: alt.id, tabelle: "schau", datensatzId: alt.id, aktion: "geändert", alt, neu: dt, akteur: ctx });
           return { ok: true, stand: schauStand(neu!) };
         });
