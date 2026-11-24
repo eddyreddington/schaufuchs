@@ -26,6 +26,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     eigeneRolle: "Uw eigen rol wordt door een andere beheerder gewijzigd.",
     eigenesPasswort: "Wijzig uw eigen wachtwoord onder „Eigen wachtwoord wijzigen”.",
     einladungUngueltig: "Deze uitnodigingslink is ongeldig of verlopen. Vraag de showleiding om een nieuwe uitnodiging.",
+    einrichtungOffen: "De installatie is nog niet voltooid. Wie deze SchauFUCHS-installatie beheert, kan een nieuwe link aanmaken (opdracht „schaufuchs einrichten”).",
     einAdmin: "Er moet minstens één actieve beheerder overblijven.",
     passwortFalsch: "Het wachtwoord klopt niet.",
     zweiFaktorSchon: "De tweestapsaanmelding is al ingesteld.",

@@ -318,7 +318,8 @@ sudo schaufuchs einrichten --verein "GZV Musterstadt" --name "Erika Muster" --em
 Der Ausstellungsleiter bekommt eine Mail mit dem Link „Passwort setzen“. Der Link gilt 7 Tage und nur einmal. Danach
 geht es weiter mit Punkt 3. Das braucht den Mailversand aus Schritt 9. Ohne Mailversand den Befehl mit `--link-zeigen`
 aufrufen: Dann steht der Link im Terminal, zum Weitergeben nur an diese Person. Kam die Mail nicht an oder ist der Link
-abgelaufen, den Befehl noch einmal aufrufen. Der neue Link ersetzt den alten.
+abgelaufen, den Befehl noch einmal aufrufen. Der neue Link ersetzt den alten. Öffnet er einen alten Link, sieht er
+„Die Einrichtung ist noch nicht abgeschlossen …“ mit dem Hinweis auf diesen Befehl.
 
 **Rassen und Farbenschläge:** SchauFUCHS bringt nur eine kleine Beispielliste mit. Die Liste für Ihre Schau spielen Sie
 unter „Rassen und Farbenschläge“ als CSV-Datei ein (Aufbau im Handbuch).

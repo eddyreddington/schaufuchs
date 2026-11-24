@@ -26,6 +26,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     eigeneRolle: "Your own role must be changed by another administrator.",
     eigenesPasswort: "Please change your own password under “Change own password”.",
     einladungUngueltig: "This invitation link is invalid or has expired. Please ask the show management for a new invitation.",
+    einrichtungOffen: "Setup is not complete yet. A new link can be created by whoever looks after this SchauFUCHS installation (command “schaufuchs einrichten”).",
     einAdmin: "At least one active administrator must remain.",
     passwortFalsch: "The password is incorrect.",
     zweiFaktorSchon: "Two-factor sign-in is already set up.",

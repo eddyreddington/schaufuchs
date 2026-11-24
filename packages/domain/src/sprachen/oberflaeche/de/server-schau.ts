@@ -30,6 +30,7 @@ export const serverSchau = {
     eigeneRolle: "Die eigene Rolle ändert ein anderer Administrator.",
     eigenesPasswort: "Das eigene Passwort bitte unter „Eigenes Passwort ändern“ ändern.",
     einladungUngueltig: "Dieser Einladungslink ist ungültig oder abgelaufen. Bitte die Ausstellungsleitung um eine neue Einladung.",
+    einrichtungOffen: "Die Einrichtung ist noch nicht abgeschlossen. Einen neuen Link erzeugt, wer diese SchauFUCHS-Installation betreut (Befehl „schaufuchs einrichten“).",
     einAdmin: "Es muss mindestens ein aktiver Administrator bleiben.",
     passwortFalsch: "Das Passwort stimmt nicht.",
     zweiFaktorSchon: "Die Zwei-Faktor-Anmeldung ist schon eingerichtet.",

@@ -313,6 +313,24 @@ describe("Einladungslink statt Passwort", () => {
     expect(token2).not.toBe(token1);
     await expect(pub.auth.einladungPruefen({ token: token1 })).rejects.toThrow("ungültig oder abgelaufen");
     expect(await pub.auth.einladungPruefen({ token: token2 })).toMatchObject({ name: "Eva Eingeladen", email: "eva@test.de", verein: "Testverein e. V." });
+    // Solange kein Benutzer der Installation ein Passwort hat (erster Administrator per `schaufuchs einrichten`), gibt es
+    // keine Ausstellungsleitung zum Fragen: dann nennt der Hinweis den Befehl. Nachgestellt in einer Transaktion, die
+    // alle Passwörter leert und zurückgerollt wird.
+    const { einladungFehler } = await import("../routers/auth/gemeinsam");
+    expect((await einladungFehler(m.db)).message).toContain("Bitte die Ausstellungsleitung um eine neue Einladung.");
+    let offen = "";
+    await m.db
+      .transaction(async (tx) => {
+        await tx.update(m.schema.benutzer).set({ passwortHash: "-" });
+        offen = (await einladungFehler(tx)).message;
+        tx.rollback();
+      })
+      .catch(() => undefined);
+    expect(offen).toBe("Die Einrichtung ist noch nicht abgeschlossen. Einen neuen Link erzeugt, wer diese SchauFUCHS-Installation betreut (Befehl „schaufuchs einrichten“).");
+    // Zurückgerollt: wieder der gewohnte Hinweis.
+    const danach = await einladungFehler(m.db);
+    expect(danach.code).toBe("NOT_FOUND");
+    expect(danach.message).toContain("Bitte die Ausstellungsleitung um eine neue Einladung.");
 
     // Annehmen: Passwort gesetzt, Sitzung da, Link verbraucht, protokolliert.
     let cookie = "";

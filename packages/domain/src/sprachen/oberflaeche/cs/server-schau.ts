@@ -32,6 +32,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     eigeneRolle: "Vlastní roli mění jiný administrátor.",
     eigenesPasswort: "Vlastní heslo změňte prosím v „Změnit vlastní heslo“.",
     einladungUngueltig: "Tento odkaz s pozvánkou je neplatný nebo vypršel. Požádejte prosím vedení výstavy o novou pozvánku.",
+    einrichtungOffen: "Nastavení ještě není dokončeno. Nový odkaz vytvoří ten, kdo spravuje tuto instalaci SchauFUCHS (příkaz „schaufuchs einrichten“).",
     einAdmin: "Musí zůstat alespoň jeden aktivní administrátor.",
     passwortFalsch: "Heslo nesouhlasí.",
     zweiFaktorSchon: "Dvoufázové přihlášení je již nastaveno.",

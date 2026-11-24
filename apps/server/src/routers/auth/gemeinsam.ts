@@ -246,8 +246,20 @@ export async function ladeEinladung(token: string) {
     .select({ id: benutzer.id, name: benutzer.name, email: benutzer.email, organisationId: benutzer.organisationId, einladungHash: benutzer.einladungHash })
     .from(benutzer)
     .where(and(eq(benutzer.einladungHash, sha256(token)), gt(benutzer.einladungBis, new Date()), eq(benutzer.passwortHash, OHNE_PASSWORT), eq(benutzer.aktiv, true), isNull(benutzer.geloeschtAm)));
-  if (!b) throw fehler("NOT_FOUND", "Dieser Einladungslink ist ungültig oder abgelaufen. Bitte die Ausstellungsleitung um eine neue Einladung.");
+  if (!b) throw await einladungFehler(db);
   return b;
+}
+
+/**
+ * Fehler für einen ungültigen oder abgelaufenen Einladungslink. Solange noch kein Benutzer der Installation ein Passwort
+ * hat, ist die Einrichtung nicht abgeschlossen: Den ersten Administrator legt der Befehl `schaufuchs einrichten` an
+ * (Entscheidung 026), eine Ausstellungsleitung zum Fragen gibt es noch nicht – dann nennt der Hinweis den Befehl.
+ */
+export async function einladungFehler(ex: Tx | typeof db) {
+  const [mitPasswort] = await ex.select({ id: benutzer.id }).from(benutzer).where(ne(benutzer.passwortHash, OHNE_PASSWORT)).limit(1);
+  return mitPasswort
+    ? fehler("NOT_FOUND", "Dieser Einladungslink ist ungültig oder abgelaufen. Bitte die Ausstellungsleitung um eine neue Einladung.")
+    : fehler("NOT_FOUND", "Die Einrichtung ist noch nicht abgeschlossen. Einen neuen Link erzeugt, wer diese SchauFUCHS-Installation betreut (Befehl „schaufuchs einrichten“).");
 }
 
 /** Benutzer eines Vereins mit Rolle, Status, Zwei-Faktor-Stand und angemeldeten Geräten. */

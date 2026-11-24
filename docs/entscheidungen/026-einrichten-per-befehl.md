@@ -26,6 +26,11 @@ der dafür die Seite öffnet.
   Link, der alte gilt nicht mehr. Verein und Name bleiben, wie sie sind; weichen die Angaben ab, sagt der Befehl das.
   So kommt der Administrator auch an sein Konto, wenn die Mail nicht ankam oder der Link abgelaufen ist. In jedem
   anderen Fall gilt: „Die Einrichtung ist bereits erfolgt.“ Nichts wird überschrieben.
+- **Alter oder abgelaufener Link vor dem ersten Passwort** (Nachtrag 24.11.2026): Solange kein Benutzer der Installation
+  ein Passwort hat, sagt SchauFUCHS bei einem ungültigen Einladungslink nicht „Bitte die Ausstellungsleitung um eine
+  neue Einladung“ – die gibt es noch nicht –, sondern „Die Einrichtung ist noch nicht abgeschlossen. Einen neuen Link
+  erzeugt, wer diese SchauFUCHS-Installation betreut (Befehl „schaufuchs einrichten“).“ (`einladungFehler` in
+  `routers/auth/gemeinsam.ts`). Danach gilt wieder der bisherige Text.
 - **Alte Links im Postausgang:** Mit jedem neuen Link (auch bei einer erneuten Willkommensmail) werden noch nicht
   verschickte Mails mit einem älteren Link an dieselbe Adresse nicht mehr versendet, und der Link darin wird
   unkenntlich. Sonst käme Stunden später eine Mail mit totem Link.

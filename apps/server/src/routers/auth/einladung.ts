@@ -5,8 +5,8 @@ import { cookieHeader, hashPasswort, neueSitzung } from "../../auth";
 import { db } from "../../db/client";
 import { benutzer, organisation } from "../../db/schema";
 import { protokolliere } from "../../services/protokoll";
-import { fehler, publicProcedure } from "../../trpc";
-import { passwort, MAX_AGE, einladungBremse, OHNE_PASSWORT, ladeEinladung, ohneEinladung } from "./gemeinsam";
+import { publicProcedure } from "../../trpc";
+import { passwort, MAX_AGE, einladungBremse, einladungFehler, OHNE_PASSWORT, ladeEinladung, ohneEinladung } from "./gemeinsam";
 
 export const einladung = {
   /**
@@ -35,7 +35,7 @@ export const einladung = {
         .set({ passwortHash: hash, ...ohneEinladung })
         .where(and(eq(benutzer.id, b.id), eq(benutzer.einladungHash, b.einladungHash!), eq(benutzer.passwortHash, OHNE_PASSWORT), eq(benutzer.aktiv, true), isNull(benutzer.geloeschtAm)))
         .returning({ id: benutzer.id });
-      if (!ok.length) throw fehler("NOT_FOUND", "Dieser Einladungslink ist ungültig oder abgelaufen. Bitte die Ausstellungsleitung um eine neue Einladung.");
+      if (!ok.length) throw await einladungFehler(tx);
       await protokolliere(tx, { schauId: null, tabelle: "benutzer", datensatzId: b.id, aktion: "Einladung angenommen, Passwort festgelegt", akteur: { benutzer: { id: b.id, name: b.name } } });
       // Sitzung in derselben Transaktion: eine Sperre oder ein Entfernen danach löscht sie mit.
       return neueSitzung({ benutzerId: b.id }, tx);

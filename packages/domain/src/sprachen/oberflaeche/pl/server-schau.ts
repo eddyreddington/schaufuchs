@@ -32,6 +32,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     eigeneRolle: "Własną rolę zmienia inny administrator.",
     eigenesPasswort: "Własne hasło prosimy zmienić w „Zmień własne hasło”.",
     einladungUngueltig: "Ten link z zaproszeniem jest nieważny lub wygasł. Prosimy poprosić kierownictwo wystawy o nowe zaproszenie.",
+    einrichtungOffen: "Konfiguracja nie została jeszcze zakończona. Nowy link utworzy osoba, która zarządza tą instalacją SchauFUCHS (polecenie „schaufuchs einrichten”).",
     einAdmin: "Musi pozostać co najmniej jeden aktywny administrator.",
     passwortFalsch: "Hasło jest nieprawidłowe.",
     zweiFaktorSchon: "Logowanie dwuskładnikowe jest już skonfigurowane.",
