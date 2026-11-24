@@ -97,13 +97,28 @@ export async function rassenEinteilungAnwenden(tx: Tx, schauId: number, akteur: 
   return ergebnis;
 }
 
+/** Hat die Meldung Katalognummern? */
+async function nummeriert(tx: Tx, meldungId: number) {
+  const [x] = await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(and(eq(katalogeintrag.meldungId, meldungId), isNotNull(katalogeintrag.katalogNr))).limit(1);
+  return !!x;
+}
+
+/**
+ * Vor einem Statuswechsel: Hat die Meldung Katalognummern, die Einteilungssperre nehmen – am Anfang der Transaktion, vor
+ * Zeilen und dem ersten `protokolliere()` (ADR 033). Danach hielte die Transaktion schon die Protokoll-Kette und die
+ * Schau (KEY SHARE); ein Tablet mit geteilter Einteilungssperre oder „Nummern nach Plan“ verklemmten sich mit ihr.
+ */
+export async function sperreEinteilungFuerMeldung(tx: Tx, schauId: number, meldungId: number) {
+  if (await nummeriert(tx, meldungId)) await sperreEinteilung(tx, schauId);
+}
+
 /**
  * Nach einem Statuswechsel einer Meldung mit Katalognummern (nach dem Festschreiben behalten sie ihre Nummern): Die
  * Bereiche folgen – eine wieder bestätigte Meldung bekommt ihren Preisrichter, eine zurückgesetzte trennt die Bereiche.
+ * Die Sperre hat der Aufrufer vorher mit `sperreEinteilungFuerMeldung` genommen (hier nur noch einmal, ohne Warten).
  */
 export async function einteilungNachStatus(tx: Tx, schauId: number, meldungId: number, akteur: Akteur) {
-  const [nummeriert] = await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(and(eq(katalogeintrag.meldungId, meldungId), isNotNull(katalogeintrag.katalogNr))).limit(1);
-  if (!nummeriert) return null;
+  if (!(await nummeriert(tx, meldungId))) return null;
   await sperreEinteilung(tx, schauId);
   return rassenEinteilungAnwenden(tx, schauId, akteur);
 }

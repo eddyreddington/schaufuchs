@@ -230,6 +230,8 @@ export const preiseRouter = router({
       const [frisch] = await tx.select().from(schau).where(eq(schau.id, geladen.id)).for("no key update");
       // Freigeben und Zurücknehmen ändern den veröffentlichten Katalog – nach dem Abschluss nicht mehr.
       const s = pruefeNichtAbgeschlossen(frisch!);
+      // Schon so (z. B. ein zweiter Tab mit altem Stand): nichts zu prüfen, nichts zu schreiben, nichts zu protokollieren.
+      if (s.ergebnisseFreigegeben === input.freigegeben) return { ok: true };
       if (input.freigegeben) {
         const eintraege = await ladeEintraege(s.id, { nurBestaetigt: true, ex: tx });
         const offen = eintraege.filter((e) => e.katalogNr != null && e.status !== "fehlt" && !e.bewertet).length;
@@ -275,7 +277,7 @@ export const preiseRouter = router({
           ];
           if (hinweise.length) throw fehler("PRECONDITION_FAILED", `${hinweise.join(" ")} Trotzdem freigeben?`);
         }
-      } else if (s.ergebnisseFreigegeben) {
+      } else {
         // Die Rücknahme öffnet die Bewertung wieder – der Katalog mit Ergebnissen ist dann evtl. schon gedruckt.
         if (input.grund.length < 3) throw fehler("BAD_REQUEST", "Freigabe zurücknehmen nur mit Grund.");
         if (!input.trotzdem) {
@@ -288,9 +290,6 @@ export const preiseRouter = router({
             );
           }
         }
-      } else {
-        // Nicht freigegeben (z. B. ein zweiter Tab hat schon zurückgenommen): nichts zurückzunehmen, nichts zu protokollieren.
-        return { ok: true };
       }
       await tx.update(schau).set({ ergebnisseFreigegeben: input.freigegeben }).where(eq(schau.id, s.id));
       await protokolliere(tx, {

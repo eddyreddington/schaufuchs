@@ -45,10 +45,10 @@ type Wer = { akteur: Akteur; preisrichterId: number | null; quelle: "tablet" | "
  * die Ausstellungsleitung jederzeit, nach der Freigabe aber nur mit Begründung (Reklamation).
  */
 async function ladeZumAendern(tx: Tx, id: number, wer: Wer) {
-  // Sperrfolge Einteilung → Schau → Tier (ADR 033). Das Tablet hält die Einteilung geteilt: eine gleichzeitige Einteilung
-  // hängt das Tier nicht um, während hier die Zuteilung geprüft wird.
+  // Sperrfolge Einteilung → Schau → Tier (ADR 033). Jede Note hält die Einteilung geteilt: eine gleichzeitige Einteilung
+  // hängt das Tier nicht um, während hier die Zuteilung geprüft wird, und übersieht die neue Note nicht („bewertet“).
   const vomTablet = !wer.istAL && wer.preisrichterId != null;
-  if (vomTablet) await sperreEinteilungGeteilt(tx, wer.schauId);
+  await sperreEinteilungGeteilt(tx, wer.schauId);
   // Schau geteilt sperren: Freigabe und Notenskala warten auf diese Note, und die Note sieht eine gleichzeitige Freigabe.
   const [s] = await tx.select().from(schau).where(eq(schau.id, wer.schauId)).for("share");
   if (!s) throw fehler("NOT_FOUND", "Schau nicht gefunden.");

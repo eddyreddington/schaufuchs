@@ -57,12 +57,16 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
   Rasse in die nächste Spalte, dort als „(Forts.)“), kein Kopf allein am Spaltenende; Spalten Nr., Klasse, Note, Pkt.,
   Preis; Obmann im Kopf (der zugeordnete, sonst leer); Seitenzählung; keine Ausstellernamen ([ADR 005](../entscheidungen/005-anonyme-bewertung.md)).
 - Gleichzeitiges Arbeiten bei Bewertung und Preisen ([ADR 033](../entscheidungen/033-gleichzeitiges-arbeiten.md)), Sperrfolge
-  Kasse → Einteilung → Schau → Tier: Eine Note (`ladeZumAendern`) liest die Schau `for share`, das Tablet hält dazu die
-  Einteilungssperre geteilt (`sperreEinteilungGeteilt`) und prüft die Zuteilung unter ihr neu („Tier ist Ihnen nicht
-  zugeteilt.“). `preise.freigeben` läuft ganz in einer Transaktion unter Kassensperre und Schau `for no key update`; eine
-  Rücknahme ohne Freigabe schreibt nichts. `vergebePreis` sperrt nach Kasse und Schau die Tierzeile, die Note gilt so bis
-  zum Eintragen des Preises. `schau.notenskalaSetzen` prüft die Freigabe an der gesperrten Schau. `katalog.nummernNachPlan`
-  nimmt die Einteilungssperre vor der Schau.
+  Kasse → Einteilung → Schau → Tier → `protokolliere()` zuletzt (die Protokoll-Kette ist eine Zeilensperre für die ganze
+  Installation; nach dem ersten `protokolliere()` keine weitere Sperre anfordern). Jede Note (`ladeZumAendern`) hält die
+  Einteilungssperre geteilt (`sperreEinteilungGeteilt`) und liest die Schau `for share`; das Tablet prüft die Zuteilung
+  unter der Sperre neu („Tier ist Ihnen nicht zugeteilt.“). `vergebePreis` (und `entfernePreis` vom Tablet) nehmen nach
+  der Kasse die Einteilung geteilt, `vergebePreis` dazu die Tierzeile – Zuständigkeit, Kontingent und Note gelten bis zum
+  Eintragen. `preise.freigeben` läuft ganz in einer Transaktion unter Kassensperre und Schau `for no key update`; steht die
+  Freigabe schon so (zweiter Tab), schreibt sie nichts. `schau.notenskalaSetzen` prüft die Freigabe an der gesperrten
+  Schau. `katalog.nummernNachPlan` nimmt die Einteilungssperre vor der Schau. Statuswechsel einer nummerierten Meldung
+  (`meldung.statusSetzen`, `pruefeBezahlt`) nehmen die Einteilungssperre vor Statuszeile und Protokoll
+  (`sperreEinteilungFuerMeldung`), dann folgt `einteilungNachStatus`.
 - Keine erfundene Zuordnung Rasse → Gruppe im Repo; Tests nutzen erkennbar erfundene Gruppen (X1, X2); erlaubt ist nur die Liste der Bezeichnungen A–M, Z1–Z3 als Vorgabe zum Ankreuzen – [ADR 027](../entscheidungen/027-bdrg-daten-nutzung.md).
 
 ## Tests

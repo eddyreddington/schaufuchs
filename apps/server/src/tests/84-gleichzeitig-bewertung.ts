@@ -1,8 +1,8 @@
 /**
  * Gleichzeitiges Arbeiten bei Bewertung und Preisen (ADR 033): Freigabe gegen Tablet und Preise, Preisvergabe gegen
  * eine gleichzeitig geänderte Note, Tablet gegen eine gleichzeitig geänderte Einteilung, Notenskala gegen Freigabe.
- * Eine zweite Verbindung hält jeweils die Sperre und schreibt dazwischen – so ist das Rennen im Test deterministisch.
- * Teil des Schau-Ablaufs.
+ * Eine zweite Verbindung hält jeweils die Sperre und schreibt dazwischen; sie bestätigt erst, wenn die Gegenseite
+ * nachweislich auf eine Sperre wartet (pg_locks) – so ist das Rennen im Test deterministisch. Teil des Schau-Ablaufs.
  */
 import { describe, expect, test } from "bun:test";
 import { adminKontext, leer, m } from "./kontext";
@@ -37,19 +37,46 @@ async function baue(name: string) {
 const version = async (tierId: number) => (await m.db.select().from(m.schema.katalogeintrag).where(m.eq(m.schema.katalogeintrag.id, tierId)))[0]!.bewertungVersion;
 const note = async (tierId: number) => (await m.db.select().from(m.schema.bewertung).where(m.eq(m.schema.bewertung.katalogeintragId, tierId)))[0] ?? null;
 const freigegeben = async (id: number) => (await m.db.select().from(m.schema.schau).where(m.eq(m.schema.schau.id, id)))[0]!.ergebnisseFreigegeben;
-/** Zweite Verbindung: offene Transaktion, die `sperren` ausführt; `dann` schreibt nach kurzer Wartezeit und bestätigt. */
+/** Wartet, bis in dieser Datenbank eine Verbindung auf eine Sperre wartet; sonst Fehler (die Gegenseite wartet nicht). */
+async function wartet() {
+  for (let i = 0; i < 100; i++) {
+    const [{ n }] = (await m.sql`select count(*)::int as n from pg_locks l join pg_stat_activity a on a.pid = l.pid where not l.granted and a.datname = current_database()`) as [{ n: number }];
+    if (n > 0) return;
+    await Bun.sleep(50);
+  }
+  throw new Error("Die Gegenseite wartet nicht auf die Sperre.");
+}
+/** Zweite Verbindung: offene Transaktion, die `sperren` ausführt; `fertig` bestätigt, sobald die Gegenseite wartet. */
 async function zweite(sperren: (c: Bun.SQL) => Promise<unknown>) {
   const c = await m.sql.reserve();
   await c`begin`;
   await sperren(c as unknown as Bun.SQL);
   return {
     c,
-    async fertig() {
-      await Bun.sleep(300);
-      await c`commit`;
-      c.release();
+    /** `dann` läuft, während die Gegenseite wartet (z. B. eine weitere Sperre, die sie schon halten könnte). */
+    async fertig(dann?: (c: Bun.SQL) => Promise<unknown>) {
+      try {
+        await wartet();
+        if (dann) await dann(c as unknown as Bun.SQL);
+        await c`commit`;
+      } catch (e) {
+        await c`rollback`;
+        throw e;
+      } finally {
+        c.release();
+      }
     },
   };
+}
+/** Abgelehnt nur mit einer fachlichen Meldung – keine Verklemmung (40P01, auch eingepackt), kein interner Fehler. */
+function nurFachlich(r: PromiseSettledResult<unknown>[]) {
+  for (const x of r) {
+    if (x.status !== "rejected") continue;
+    const codes: unknown[] = [];
+    for (let e: unknown = x.reason, i = 0; e && i < 5; e = (e as { cause?: unknown }).cause, i++) codes.push((e as { code?: unknown }).code);
+    expect(codes).not.toContain("40P01");
+    expect(["BAD_REQUEST", "CONFLICT", "FORBIDDEN", "PRECONDITION_FAILED"]).toContain(String((x.reason as { code?: unknown }).code));
+  }
 }
 
 describe("Gleichzeitig: Bewertung und Preise", () => {
@@ -158,10 +185,109 @@ describe("Gleichzeitig: Bewertung und Preise", () => {
         al().preise.freigeben({ schauId: id, freigegeben: true, trotzdem: true }),
         al().preisrichter.einteilungSetzen({ schauId: id, einteilung: [{ preisrichterId: A.id, vonNr: tiere[0]!.katalogNr!, bisNr: tiere[3]!.katalogNr! }] }),
       ]);
-      for (const x of r) if (x.status === "rejected") expect(String(x.reason)).not.toContain("deadlock");
+      nurFachlich(r);
       const t = r[0].status === "fulfilled" ? r[0].value.ergebnisse[0]! : null;
       if (t) expect(t.status).not.toBe("spaeter");
       if (await freigegeben(id)) await al().preise.freigeben({ schauId: id, freigegeben: false, grund: "Testlauf" , trotzdem: true });
     }
+  });
+});
+
+describe("Gleichzeitig: Meldungsstatus, Preise am Tablet und Einteilung", () => {
+  /** Schau mit festgeschriebenem Katalog, Phase „Bewertung“; je eine Meldung (ein Tier) für Storno und Zahlung. */
+  async function baueMeldungen(name: string) {
+    const { id } = await al().schau.anlegen({ name, ort: "Halle" });
+    const s = await al().schau.get({ id });
+    const [wy] = await al().stammdaten.suche({ versionId: s.stammdatenVersionId!, q: "Wyandotten weiß" });
+    const pos = { farbenschlagId: wy!.id, freitext: "", art: "einzeltier" as const, geschlecht: "1,0", alter: "jung" as const, istAoc: false, istNeuzuechtung: false, eigeneZucht: true, verkaufspreisCent: null };
+    const aussteller = (nachname: string) => ({ vorname: "Mia", nachname, strasse: "", plz: "", ort: "", telefon: "", email: "", verein: "", kreisverband: "", registriernummer: "", geburtsdatum: null, istPreisrichter: false });
+    await al().schau.gebuehrenSetzen({ schauId: id, gebuehren: [{ art: "einzeltier", jugend: false, betragCent: 400, befreitPreisrichter: false }] });
+    const ids: number[] = [];
+    for (const n of ["Storno", "Zahlung"]) {
+      const r = await al().meldung.speichern({ schauId: id, aussteller: aussteller(n), eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, positionen: [pos] });
+      await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
+      ids.push(r.meldungId);
+    }
+    await al().katalog.nummernVergeben({ schauId: id });
+    await al().preisrichter.speichern({ schauId: id, name: "A Ahorn", anschrift: "", telefon: "", email: "", istObmann: false, sparten: [] });
+    const [A] = await m.db.select().from(m.schema.preisrichter).where(m.eq(m.schema.preisrichter.schauId, id));
+    await al().preisrichter.einteilungSetzen({ schauId: id, einteilung: [{ preisrichterId: A!.id, vonNr: 1, bisNr: 9999 }] });
+    await m.db.update(m.schema.schau).set({ katalogGedruckt: true, phase: "bewertung" }).where(m.eq(m.schema.schau.id, id));
+    return { id, storno: ids[0]!, zahlung: ids[1]! };
+  }
+  const status = async (id: number) => (await m.db.select().from(m.schema.meldung).where(m.eq(m.schema.meldung.id, id)))[0]!.status;
+
+  test("Storno einer nummerierten Meldung gegen ein Tablet, das protokolliert: keine Verklemmung", async () => {
+    const { id, storno } = await baueMeldungen("Gleichzeit Storno");
+    // Das Tablet (andere Verbindung) hält die Einteilung geteilt; während der Storno wartet, protokolliert es (Kette).
+    const z = await zweite((c) => c`select pg_advisory_xact_lock_shared(2026111201, ${id})`);
+    const st = al().meldung.statusSetzen({ id: storno, status: "storniert", grund: "nicht erschienen" });
+    await z.fertig((c) => c`select 1 from aenderung_kette where id = 1 for update`);
+    await st;
+    expect(await status(storno)).toBe("storniert");
+  });
+
+  test("Storno gegen Nummern nach Plan (Einteilung, dann Schau): keine Verklemmung", async () => {
+    const { id, storno } = await baueMeldungen("Gleichzeit Storno Plan");
+    const z = await zweite((c) => c`select pg_advisory_xact_lock(2026111201, ${id})`);
+    const st = al().meldung.statusSetzen({ id: storno, status: "storniert", grund: "nicht erschienen" });
+    await z.fertig((c) => c`select 1 from schau where id = ${id} for update`);
+    await st;
+    expect(await status(storno)).toBe("storniert");
+  });
+
+  test("Zahlung bestätigt eine nummerierte Meldung, während ein Tablet protokolliert: keine Verklemmung", async () => {
+    const { id, zahlung } = await baueMeldungen("Gleichzeit Zahlung");
+    await al().meldung.statusSetzen({ id: zahlung, status: "offen" });
+    const { meldebetrag } = await import("../services/eintraege");
+    const b = await meldebetrag(m.db as never, zahlung);
+    expect(b.summeCent).toBeGreaterThan(0);
+    const z = await zweite((c) => c`select pg_advisory_xact_lock_shared(2026111201, ${id})`);
+    const zahlen = al().meldung.zahlungErfassen({ meldungId: zahlung, betragCent: b.summeCent, datum: "2026-11-05", art: "ueberweisung" });
+    await z.fertig((c) => c`select 1 from aenderung_kette where id = 1 for update`);
+    await zahlen;
+    expect(await status(zahlung)).toBe("bestaetigt");
+  });
+
+  test("Preis am Tablet gegen Einteilung: nach dem Umhängen weder vergeben noch entfernt", async () => {
+    const { id, tiere, A, B, art } = await baue("Gleichzeit Preis Einteilung");
+    for (const t of tiere.slice(0, 2)) await al().bewertung.setzen({ schauId: id, katalogeintragId: t.id, punkte: 95, ...leerBew, geraetZeit: new Date(), grund: "" } as never);
+    const [X, Y] = [tiere[0]!.id, tiere[1]!.id];
+    await tablet(A, id).richter.preisVergeben({ katalogeintragId: X, preisartId: art });
+    const umhaengen = (an: number) => zweite(async (c) => {
+      await c`select pg_advisory_xact_lock(2026111201, ${id})`;
+      await c`update pr_einteilung set preisrichter_id = ${an} where schau_id = ${id}`;
+    });
+    // Entfernen: die Einteilung gibt die Tiere gerade an B – A darf den Preis nicht mehr entfernen.
+    let z = await umhaengen(B.id);
+    const weg = tablet(A, id).richter.preisEntfernen({ katalogeintragId: X, preisartId: art });
+    await z.fertig();
+    await expect(weg).rejects.toThrow("Nicht Ihr Preis");
+    const preise = async (t: number) => m.db.select().from(m.schema.preisvergabe).where(m.eq(m.schema.preisvergabe.katalogeintragId, t));
+    expect(await preise(X)).toHaveLength(1);
+    // Vergeben: die Einteilung gibt die Tiere gerade zurück an A – B vergibt nicht mehr (und nicht gegen As Kontingent).
+    z = await umhaengen(A.id);
+    const neu = tablet(B, id).richter.preisVergeben({ katalogeintragId: Y, preisartId: art });
+    await z.fertig();
+    await expect(neu).rejects.toThrow("anderen Preisrichter");
+    expect(await preise(Y)).toHaveLength(0);
+  });
+
+  test("Note der Ausstellungsleitung wartet auf eine laufende Einteilung", async () => {
+    const { id, tiere } = await baue("Gleichzeit AL Einteilung");
+    const X = tiere[0]!.id;
+    const z = await zweite((c) => c`select pg_advisory_xact_lock(2026111201, ${id})`);
+    const setzen = al().bewertung.setzen({ schauId: id, katalogeintragId: X, punkte: 96, ...leerBew, geraetZeit: new Date(), grund: "" } as never);
+    await z.fertig();
+    await setzen;
+    expect((await note(X))!.punkte).toBe(96);
+  });
+
+  test("Zwei Tabs: eine schon freigegebene Schau wird nicht noch einmal freigegeben", async () => {
+    const { id } = await baue("Gleichzeit Freigabe doppelt");
+    await al().preise.freigeben({ schauId: id, freigegeben: true, trotzdem: true });
+    await al().preise.freigeben({ schauId: id, freigegeben: true, trotzdem: true });
+    const prot = (await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, id))).sort((a, b) => a.id - b.id);
+    expect(prot.filter((p) => p.aktion === "Ergebnisse freigegeben")).toHaveLength(1);
   });
 });

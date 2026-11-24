@@ -9,7 +9,7 @@ import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, offeneStornoZahlungen, offener
 import { bindungen, hatAuszahlung, meldungEingabe, speichereMeldung } from "../services/meldung";
 import { sendeMail } from "../services/post";
 import { archiviereKassenbeleg } from "../services/kassenbuch";
-import { einteilungNachStatus } from "../services/einteilung";
+import { einteilungNachStatus, sperreEinteilungFuerMeldung } from "../services/einteilung";
 import { verzeichnisVorschlaegeZwischengespeichert } from "../services/vereinsverzeichnis";
 import { protokolliere, type Akteur } from "../services/protokoll";
 import { heuteDe } from "../services/tiergesundheit";
@@ -33,6 +33,8 @@ export async function pruefeBezahlt(meldungId: number, akteur: Akteur) {
     if (m?.status !== "offen") return false;
     const b = await meldebetrag(tx, meldungId);
     if (!(b.summeCent > 0 && b.bezahltCent >= b.summeCent)) return false;
+    // Einteilungssperre vor Statuszeile und Protokoll (ADR 033: nach dem ersten protokolliere() keine Sperre mehr).
+    await sperreEinteilungFuerMeldung(tx, m.schauId, meldungId);
     await tx.update(meldung).set({ status: "bestaetigt" }).where(and(eq(meldung.id, meldungId), eq(meldung.status, "offen")));
     // Erst mit „bestätigt“ kommt die Meldung in Katalog, Abrechnung und Preisvergabe – das gehört ins Protokoll.
     await protokolliere(tx, { schauId: m.schauId, tabelle: "meldung", datensatzId: meldungId, aktion: "Status", alt: "offen", neu: "bestaetigt", grund: "automatisch nach vollständiger Zahlung", akteur });
@@ -251,6 +253,9 @@ export const meldungRouter = router({
           if (await inOffenerLastschrift(tx, m.schauId, { meldungIds: [m.id] })) gebunden.unshift("Meldegeld steht in der offenen Lastschriftdatei");
           if (gebunden.length) throw fehler("BAD_REQUEST", `Die Meldung kann nicht mehr ${input.status === "storniert" ? "storniert" : input.status === "abgelehnt" ? "abgelehnt" : "zurückgesetzt"} werden: ${gebunden.join("; ")}.`);
         }
+        // Sperrfolge Kasse → Einteilung → Zeilen → protokolliere() (ADR 033): die Einteilungssperre vor Statuszeile und
+        // Protokoll, sonst verklemmt sich der Wechsel mit einem Tablet oder „Nummern nach Plan“.
+        await sperreEinteilungFuerMeldung(tx, m.schauId, m.id);
         await tx.update(meldung).set({ status: input.status }).where(eq(meldung.id, m.id));
         if (input.status === "abgelehnt" || input.status === "storniert") {
           // Abgelehnte Tiere verlieren ihre Katalognummer – außer der Katalog ist festgeschrieben: gedruckte Nummern
