@@ -21,6 +21,7 @@ export const serverSchauPruefung: OberflaecheTexte["serverSchau"]["pruefung"] = 
     sepaAbschluss: "Jest jeszcze otwarty plik SEPA. Prosimy najpierw zaksięgować lub odrzucić, potem zakończyć.",
     lastschriftAbschluss: "Jest jeszcze otwarty plik polecenia zapłaty. Prosimy najpierw zaksięgować lub odrzucić, potem zakończyć.",
     inzwischen: "W międzyczasie utworzono plik SEPA lub polecenia zapłaty – prosimy najpierw zaksięgować lub odrzucić, potem zakończyć.",
+    phaseGeaendert: "Faza została w międzyczasie zmieniona (np. wystawa odwołana lub zmieniona przez drugie kierownictwo). Proszę odświeżyć stronę.",
     nichtAbschliessbar: (offen: string) => `Jeszcze nie można zakończyć: ${offen}.`,
     nochOffen: (phase: string, offen: string) => `Przed „${phase}” jest jeszcze otwarte: ${offen}.`,
     unbewertet: (n: string) => `${n} ${mn(n, "zwierzę jeszcze nieocenione", "zwierzęta jeszcze nieocenione", "zwierząt jeszcze nieocenionych")}`,

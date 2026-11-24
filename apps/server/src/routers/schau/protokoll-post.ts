@@ -1,5 +1,5 @@
 /** Protokoll der Schau (Suche, Prüfung der Hash-Kette) und Postausgang des Vereins. */
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
 import { postausgang } from "../../db/schema";
@@ -40,7 +40,8 @@ export const protokollUndPost = {
       .limit(100);
     return {
       ...mailStatus(),
-      mails: mails.map((m) => ({ ...m, naechsterVersuch: m.status === "gesendet" ? null : naechsterVersuch(m.createdAt, m.versuche) })),
+      // „sendet“ (gerade beim Mailserver) zeigt die Liste als „wartet“.
+      mails: mails.map((m) => ({ ...m, status: m.status === "sendet" ? ("wartet" as const) : m.status, naechsterVersuch: m.status === "gesendet" ? null : naechsterVersuch(m.createdAt, m.versuche) })),
     };
   }),
 
@@ -50,7 +51,7 @@ export const protokollUndPost = {
     const [m] = await db
       .update(postausgang)
       .set({ status: "wartet", fehler: "", versuche: 0 })
-      .where(and(eq(postausgang.id, input.id), eq(postausgang.organisationId, ctx.benutzer.organisationId), ne(postausgang.status, "gesendet")))
+      .where(and(eq(postausgang.id, input.id), eq(postausgang.organisationId, ctx.benutzer.organisationId), inArray(postausgang.status, ["wartet", "fehler"])))
       .returning({ id: postausgang.id });
     if (!m) throw fehler("NOT_FOUND", "Mail nicht gefunden oder schon versendet.");
     await versende(m.id);

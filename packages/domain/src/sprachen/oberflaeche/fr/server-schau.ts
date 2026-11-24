@@ -34,6 +34,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     zweiFaktorNicht: "La connexion à deux facteurs n’est pas configurée.",
     passwortOderCode: "Mot de passe ou code incorrect.",
     zweiFaktorBenutzer: "La connexion à deux facteurs n’est pas configurée pour cet utilisateur.",
+    kontoGeaendert: "Le compte a été modifié entre-temps (p. ex. mot de passe réinitialisé). Veuillez vous reconnecter.",
   },
   bremse: {
     fehlversuche: "Trop de tentatives échouées. Veuillez réessayer plus tard.",
@@ -110,6 +111,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     teilschauenFest: "Les numéros de catalogue sont figés – les parties de l’exposition peuvent seulement être renommées.",
     teilschauBelegt: (name: string, n: string) => `${n} inscriptions appartiennent encore à la partie « ${name} » – veuillez d’abord les attribuer à une autre partie.`,
     notenskalaFest: "Les résultats sont validés – l’échelle des notes ne peut plus être modifiée.",
+    inzwischenGeaendert: "Les paramètres ont été modifiés entre-temps (p. ex. dans une autre fenêtre). Veuillez recharger la page et refaire la modification.",
   },
   gebuehren: {
     auszahlungen: (nr: string) => `Il y a déjà des paiements (quittance ${nr}) – les frais et les prix ne peuvent plus être modifiés.`,

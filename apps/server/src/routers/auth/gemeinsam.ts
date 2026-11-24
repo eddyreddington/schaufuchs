@@ -1,5 +1,5 @@
 /** Gemeinsame Bausteine der Anmeldung und Benutzerverwaltung: Bremsen (ein Zählerstand für alle Prozeduren), Prüfungen, Einladung, Willkommens- und Hinweismails. */
-import { and, asc, count, eq, gt, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNull, ne, sql } from "drizzle-orm";
 import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { hashPasswort, sha256, zufallsToken } from "../../auth";
@@ -7,7 +7,7 @@ import { config } from "../../config";
 import { db } from "../../db/client";
 import { benutzer, organisation, postausgang } from "../../db/schema";
 import { Bremse, Wartezeit } from "../../services/bremse";
-import { MAX_VERSUCHE, sendeMail } from "../../services/post";
+import { legeMailAb, MAX_VERSUCHE, sendeMail, versendeAbgelegt } from "../../services/post";
 import { fehler } from "../../trpc";
 
 export const passwort = z.string().min(10, "Das Passwort braucht mindestens 10 Zeichen.").max(200);
@@ -99,11 +99,10 @@ export type Verwalter = { benutzer: { id: number; organisationId: number; name: 
 
 /**
  * Jede Änderung an Benutzern eines Vereins läuft nacheinander (Sperre je Verein) und prüft innerhalb der Sperre neu:
- * Ist der Handelnde noch aktiver Administrator, gibt es den Zielbenutzer noch? So lässt sich ein gerade entfernter
- * Benutzer nicht durch einen gleichzeitigen Aufruf wiederbeleben, und zwei Administratoren können sich nicht
- * gleichzeitig gegenseitig die Rechte nehmen.
+ * Ist der Handelnde noch aktiver Administrator? So legt eine gerade herabgestufte Ausstellungsleitung niemanden mehr an,
+ * und zwei Administratoren können sich nicht gleichzeitig gegenseitig die Rechte nehmen.
  */
-export async function verwalte<T>(ctx: Verwalter, id: number, arbeit: (tx: Tx, b: typeof benutzer.$inferSelect) => Promise<T>): Promise<T> {
+export async function verwalteVerein<T>(ctx: Verwalter, arbeit: (tx: Tx) => Promise<T>): Promise<T> {
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(4711, ${ctx.benutzer.organisationId})`);
     const [ich] = await tx
@@ -111,6 +110,13 @@ export async function verwalte<T>(ctx: Verwalter, id: number, arbeit: (tx: Tx, b
       .from(benutzer)
       .where(and(eq(benutzer.id, ctx.benutzer.id), eq(benutzer.rolle, "admin"), eq(benutzer.aktiv, true), isNull(benutzer.geloeschtAm)));
     if (!ich) throw fehler("FORBIDDEN", "Nur für Administratoren.");
+    return arbeit(tx);
+  });
+}
+
+/** Wie verwalteVerein, dazu der Zielbenutzer unter der Sperre: ein gerade entfernter lässt sich nicht wiederbeleben. */
+export async function verwalte<T>(ctx: Verwalter, id: number, arbeit: (tx: Tx, b: typeof benutzer.$inferSelect) => Promise<T>): Promise<T> {
+  return verwalteVerein(ctx, async (tx) => {
     const [b] = await tx
       .select()
       .from(benutzer)
@@ -160,7 +166,7 @@ export function istFremdschluesselFehler(e: unknown): boolean {
   return false;
 }
 
-export type Ausfuehrer = Pick<typeof db, "select" | "update">;
+export type Ausfuehrer = Pick<typeof db, "select" | "update" | "insert">;
 
 /**
  * Neuer Einladungslink; ein älterer gilt damit nicht mehr. In der Datenbank steht nur der Hash. Nur für genau diese
@@ -180,7 +186,8 @@ export async function neueEinladung(tx: Ausfuehrer, an: { id: number; email: str
   await tx
     .update(postausgang)
     .set({ text: sql`regexp_replace(${postausgang.text}, ${"(/einladung#)[A-Za-z0-9_-]+"}, ${"\\1(durch einen neueren Link ersetzt)"}, 'g')`, status: "fehler", versuche: MAX_VERSUCHE, fehler: "Nicht versendet: durch einen neueren Link ersetzt." })
-    .where(and(eq(postausgang.an, an.email), ne(postausgang.status, "gesendet"), sql`${postausgang.text} like '%/einladung#%'`));
+    // Was gerade beim Mailserver ist („sendet“), geht noch hinaus; sein Link gilt trotzdem nicht mehr.
+    .where(and(eq(postausgang.an, an.email), inArray(postausgang.status, ["wartet", "fehler"]), sql`${postausgang.text} like '%/einladung#%'`));
   // Hinter "#": der Teil geht nie an den Server und landet so in keinem Protokoll eines Webservers.
   return { link: `${config.publicUrl}/einladung#${token}`, bis };
 }
@@ -195,11 +202,16 @@ export const ohneEinladung = { einladungHash: null, einladungBis: null };
 export interface Willkommen {
   an: string;
   betreff: string;
-  text: string;
   einladung: boolean;
+  /** Schon im Postausgang (in derselben Transaktion abgelegt), versendet wird nach dem Commit. */
+  mailId: number | null;
 }
 
-/** Bereitet die Willkommensmail vor – in der Transaktion, damit der Link genau zu der gelesenen Zeile gehört. */
+/**
+ * Bereitet die Willkommensmail vor und legt sie ab – in der Transaktion, damit der Link genau zu der gelesenen Zeile
+ * gehört und ein gleichzeitiger zweiter Aufruf (wartet auf die Vereinssperre) diese Mail schon sieht und entwertet,
+ * statt dass sie nach dem Commit mit einem überholten Link hinterherkommt (Entscheidung 033).
+ */
 export async function willkommenVorbereiten(
   tx: Ausfuehrer,
   akteur: { organisationId: number; name: string; email: string },
@@ -207,23 +219,20 @@ export async function willkommenVorbereiten(
 ): Promise<Willkommen> {
   const [o] = await tx.select({ name: organisation.name }).from(organisation).where(eq(organisation.id, akteur.organisationId));
   const einladung = an.passwortHash === OHNE_PASSWORT ? ((await neueEinladung(tx, an)) ?? undefined) : undefined;
-  return {
-    an: an.email,
-    betreff: `Ihr Zugang zu SchauFUCHS${o?.name ? ` – ${o.name}` : ""}`,
-    text: willkommensText({ name: an.name, email: an.email, rolle: an.rolle, verein: o?.name ?? "", von: { name: akteur.name, email: akteur.email }, einladung }),
-    einladung: !!einladung,
-  };
+  const betreff = `Ihr Zugang zu SchauFUCHS${o?.name ? ` – ${o.name}` : ""}`;
+  const text = willkommensText({ name: an.name, email: an.email, rolle: an.rolle, verein: o?.name ?? "", von: { name: akteur.name, email: akteur.email }, einladung });
+  return { an: an.email, betreff, einladung: !!einladung, mailId: await legeMailAb(tx, akteur.organisationId, an.email, betreff, text) };
 }
 
 /** Versand erst nach dem Commit – eine abgebrochene Änderung verschickt so keine Mail. */
-export async function versendeWillkommen(organisationId: number, w: Willkommen) {
-  await sendeMail(organisationId, w.an, w.betreff, w.text);
+export function versendeWillkommen(w: Willkommen) {
+  versendeAbgelegt(w.mailId, w.an, w.betreff);
 }
 
 /** Anlegen: vorbereiten und versenden in einem (die Zeile ist gerade erst entstanden). */
 export async function sendeWillkommen(akteur: { organisationId: number; name: string; email: string }, an: Parameters<typeof willkommenVorbereiten>[2]) {
   const w = await db.transaction((tx) => willkommenVorbereiten(tx, akteur, an));
-  await versendeWillkommen(akteur.organisationId, w);
+  versendeWillkommen(w);
   return { einladung: w.einladung };
 }
 

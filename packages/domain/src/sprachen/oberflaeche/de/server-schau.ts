@@ -38,6 +38,7 @@ export const serverSchau = {
     zweiFaktorNicht: "Die Zwei-Faktor-Anmeldung ist nicht eingerichtet.",
     passwortOderCode: "Passwort oder Code stimmt nicht.",
     zweiFaktorBenutzer: "Die Zwei-Faktor-Anmeldung ist für diesen Benutzer nicht eingerichtet.",
+    kontoGeaendert: "Das Konto wurde inzwischen geändert (z. B. Passwort neu gesetzt). Bitte neu anmelden.",
   },
   /** Bremsen gegen Durchprobieren und Massenabrufe (services/bremse.ts). */
   bremse: {
@@ -117,6 +118,7 @@ export const serverSchau = {
     teilschauenFest: "Die Katalognummern sind festgeschrieben – Teilschauen lassen sich nur noch umbenennen.",
     teilschauBelegt: (name: string, n: string) => `Zur Teilschau „${name}“ gehören noch ${n} Meldungen – bitte erst einer anderen Teilschau zuordnen.`,
     notenskalaFest: "Die Ergebnisse sind freigegeben – die Notenskala lässt sich nicht mehr ändern.",
+    inzwischenGeaendert: "Die Einstellungen wurden inzwischen geändert (z. B. in einem anderen Fenster). Bitte die Seite neu laden und die Änderung wiederholen.",
   },
   gebuehren: {
     auszahlungen: (nr: string) => `Es gibt schon Auszahlungen (Quittung ${nr}) – Gebühren und Preise lassen sich nicht mehr ändern.`,

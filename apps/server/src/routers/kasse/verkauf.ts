@@ -3,7 +3,7 @@ import { normalisiereRegistriernummer, provision, REGISTRIERNUMMER_HINWEIS } fro
 import { and, eq, isNull, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
-import { auszahlung, bewertung, gesundheit, katalogeintrag, meldung, verkauf, verkaufZahlungseingang } from "../../db/schema";
+import { auszahlung, bewertung, gesundheit, katalogeintrag, meldung, schau, verkauf, verkaufZahlungseingang } from "../../db/schema";
 import { ladeEintraege } from "../../services/eintraege";
 import { offeneUeberweisungsverkaeufe, offenerLauf, pruefeNichtAbgerechnet, pruefeNichtAbgeschlossen, sperreKasse } from "../../services/kasse";
 import { archiviereKaufbeleg } from "../../services/kassenbuch";
@@ -54,6 +54,8 @@ export const tierverkauf = {
       }
       const v = await db.transaction(async (tx) => {
         await sperreKasse(tx, s.id);
+        // Provisionssatz unter der Kassensperre frisch: eine gleichzeitige Änderung der Einstellungen nimmt dieselbe Sperre.
+        const [{ provisionBp }] = (await tx.select({ provisionBp: schau.provisionBp }).from(schau).where(eq(schau.id, s.id))) as [{ provisionBp: number }];
         const [e] = await tx.select().from(katalogeintrag).where(and(eq(katalogeintrag.id, input.katalogeintragId), eq(katalogeintrag.schauId, s.id)));
         if (!e) throw fehler("NOT_FOUND", "Tier nicht gefunden.");
         if (e.verkaufspreisCent == null || e.verkaufspreisCent <= 0) throw fehler("BAD_REQUEST", "Dieses Tier ist nicht verkäuflich gemeldet.");
@@ -79,8 +81,8 @@ export const tierverkauf = {
             kaeuferUnter16: unter16,
             kaeuferErziehungsberechtigter: unter16 ? input.kaeuferErziehungsberechtigter : "",
             preisCent: e.verkaufspreisCent,
-            provisionCent: provision(e.verkaufspreisCent, s.provisionBp),
-            provisionBp: s.provisionBp,
+            provisionCent: provision(e.verkaufspreisCent, provisionBp),
+            provisionBp,
             zahlart: input.zahlart,
             belegNr: await naechsteBelegNr(tx, s.id),
             verkauftVon: ctx.benutzer.id,

@@ -155,6 +155,18 @@ export const phasen = {
           await sperreKasse(tx, alt.id);
           if ((await offenerLauf(tx, alt.id)) || (await offeneLastschrift(tx, alt.id))) throw fehler("CONFLICT", "Inzwischen wurde eine SEPA- oder Lastschriftdatei erstellt – bitte erst buchen oder verwerfen, dann abschließen.");
         }
+        // Zeile sperren und mit dem geprüften Stand vergleichen (Entscheidung 033): eine gleichzeitige Absage oder ein
+        // zweiter Wechsel wird gesehen, statt überschrieben. Schon gesetzt (Doppelklick, zweiter Tab): nichts zu tun.
+        const [jetzt] = await tx.select({ phase: schau.phase, abgesagtAm: schau.abgesagtAm }).from(schau).where(eq(schau.id, alt.id)).for("update");
+        const gleichAbgesagt = !!jetzt?.abgesagtAm === !!alt.abgesagtAm;
+        if (jetzt?.phase === input.phase && gleichAbgesagt) return;
+        if (jetzt?.phase !== alt.phase || !gleichAbgesagt) throw fehler("CONFLICT", "Die Phase wurde inzwischen geändert (z. B. Schau abgesagt oder von einer zweiten Ausstellungsleitung gewechselt). Bitte die Seite neu laden.");
+        if (input.phase === "abgeschlossen" && !(input.trotzdem && input.grund.length >= 3)) {
+          // Unter der Kassensperre noch einmal: eine Buchung, die vor der Sperre noch lief, hätte sonst einen Kassentag
+          // ohne Abschluss in der abgeschlossenen Schau hinterlassen.
+          const offen = await abschlussHindernisse(alt.id);
+          if (offen.length) throw fehler("PRECONDITION_FAILED", `Noch nicht abschließbar: ${offen.join("; ")}.`);
+        }
         await tx
           .update(schau)
           .set({ phase: input.phase, abgeschlossenAm: input.phase === "abgeschlossen" ? new Date() : null })

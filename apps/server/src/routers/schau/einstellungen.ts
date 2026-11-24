@@ -4,14 +4,17 @@ import { and, count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
 import { katalogeintrag, meldung, preisrichter, schau, verkauf } from "../../db/schema";
-import { pruefeNichtAbgeschlossen } from "../../services/kasse";
+import { sha256 } from "../../auth";
+import { istDoppelt } from "../../services/fehlertext";
+import { pruefeNichtAbgeschlossen, sperreKasse } from "../../services/kasse";
 import { protokolliere } from "../../services/protokoll";
 import { pruefeVersion } from "../stammdaten";
 import { adminProcedure, fehler, ladeSchau, dbId, kalenderdatum } from "../../trpc";
 
 const datum = kalenderdatum().nullable();
+const KURZADRESSE_VERGEBEN = "Diese Kurzadresse ist schon vergeben.";
 
-const schauFelder = z.object({
+export const schauFelder = z.object({
   name: z.string().max(200).min(3),
   slug: z.string().regex(/^[a-z0-9-]{3,60}$/, "Nur Kleinbuchstaben, Ziffern und Bindestriche."),
   veranstalter: z.string().max(500),
@@ -82,77 +85,94 @@ const schauFelder = z.object({
     }),
 });
 
+/**
+ * Stand der Stammangaben, wie das Formular ihn geladen hat (nur dessen Felder): Speichert eine zweite
+ * Ausstellungsleitung inzwischen, weicht er ab – ein alter Tab überschreibt dann nichts still (Entscheidung 033).
+ */
+export function schauStand(s: Record<string, unknown>): string {
+  return sha256(JSON.stringify(Object.keys(schauFelder.shape).map((k) => s[k] ?? null))).slice(0, 24);
+}
+
+const INZWISCHEN = "Die Einstellungen wurden inzwischen geändert (z. B. in einem anderen Fenster). Bitte die Seite neu laden und die Änderung wiederholen.";
+
 export const einstellungen = {
   aktualisieren: adminProcedure
-    .input(z.object({ id: dbId, daten: schauFelder }))
+    /** stand: aus schau.get; fehlt er (ältere Oberfläche, Skript), entfällt nur die Prüfung auf den geladenen Stand. */
+    .input(z.object({ id: dbId, daten: schauFelder, stand: z.string().max(64).optional() }))
     .mutation(async ({ ctx, input }) => {
-      const alt = await ladeSchau(ctx.benutzer.organisationId, input.id);
-      // Der GiroCode trägt Kontoinhaber und IBAN des Vereinskontos – ohne sie gäbe es keinen gültigen Code.
+      const vorab = await ladeSchau(ctx.benutzer.organisationId, input.id);
       const dt = input.daten;
-      if ((dt.girocode ?? alt.girocode) && !dt.zahlungBeiEinlieferung) {
-        if (!dt.vereinIban || !dt.vereinKontoinhaber) throw fehler("BAD_REQUEST", "Für den GiroCode bitte Kontoinhaber und IBAN des Vereinskontos eintragen.");
-        // Im Code stehen höchstens 70 Zeichen; ein gekürzter Name ergäbe bei der Empfängerüberprüfung „ähnlich“.
-        if ([...dt.vereinKontoinhaber].length > 70) throw fehler("BAD_REQUEST", "Für den GiroCode darf der Kontoinhaber höchstens 70 Zeichen haben.");
-        if (!imEwr(dt.vereinIban) && !dt.vereinBic) throw fehler("BAD_REQUEST", "Das Vereinskonto liegt außerhalb des EWR – für den GiroCode bitte auch die BIC eintragen.");
-      }
-      if (input.daten.slug !== alt.slug) {
-        // Ab der Meldung stecken Links in versandten Mails („Meine Meldung“, Widerruf) und in den Tablets der Preisrichter.
-        if (alt.phase !== "vorbereitung") throw fehler("BAD_REQUEST", "Die Kurzadresse lässt sich nur in der Vorbereitung ändern – danach würden versandte Links und angemeldete Tablets ungültig.");
-        // Auch nach „Zurück zur Vorbereitung“: Gibt es schon Meldungen oder Tablet-PINs, hängen Links daran.
-        const [[mel], [pin]] = await Promise.all([
-          db.select({ n: count() }).from(meldung).where(eq(meldung.schauId, alt.id)),
-          db.select({ n: count() }).from(preisrichter).where(and(eq(preisrichter.schauId, alt.id), sql`${preisrichter.pinHash} is not null`)),
-        ]);
-        if ((mel?.n ?? 0) > 0 || (pin?.n ?? 0) > 0)
-          throw fehler("BAD_REQUEST", "Die Kurzadresse lässt sich nicht mehr ändern: Es gibt schon Meldungen oder Tablet-PINs, deren Links daran hängen.");
-        const [x] = await db.select({ id: schau.id }).from(schau).where(eq(schau.slug, input.daten.slug));
-        if (x) throw fehler("CONFLICT", "Diese Kurzadresse ist schon vergeben.");
-      }
-      // Am Bewertungstag hängen Jugendtarif und Speicherfristen – ein vertipptes Jahr fällt hier auf.
-      if (input.daten.bewertungAm && input.daten.bewertungAm !== alt.bewertungAm) {
-        const fruehestens = new Date(alt.createdAt.getTime() - 366 * 86_400_000).toISOString().slice(0, 10);
-        const spaetestens = new Date(Date.now() + 3 * 366 * 86_400_000).toISOString().slice(0, 10);
-        if (input.daten.bewertungAm < fruehestens || input.daten.bewertungAm > spaetestens) throw fehler("BAD_REQUEST", "Der Bewertungstag liegt mehr als ein Jahr vor dem Anlegen der Schau oder mehr als drei Jahre in der Zukunft – bitte das Jahr prüfen.");
-      }
-      const rueckmeldung = rueckmeldungFehler(dt.preisrichterRueckmeldungBis === undefined ? alt.preisrichterRueckmeldungBis : dt.preisrichterRueckmeldungBis, dt.bewertungAm);
-      if (rueckmeldung) throw fehler("BAD_REQUEST", rueckmeldung);
-      if (alt.katalogGedruckt && input.daten.stammdatenVersionId !== alt.stammdatenVersionId) {
-        throw fehler("BAD_REQUEST", "Die Katalognummern sind festgeschrieben – die Stammdaten lassen sich nicht mehr wechseln.");
-      }
-      // Gemeldete Tiere verweisen auf Rassen und Farbenschläge der bisherigen Version: ein Wechsel ließe sich nicht mehr
-      // speichern und mischte die Katalogfolge. Fehlt etwas, das Verzeichnis lieber ergänzen.
-      const versionWechsel = input.daten.stammdatenVersionId !== alt.stammdatenVersionId;
-      // Der Provisionssatz steht auf Kaufbelegen und Quittungen – nach dem ersten Verkauf nicht mehr änderbar.
-      if (input.daten.provisionBp !== alt.provisionBp) {
-        const [v] = await db.select({ id: verkauf.id }).from(verkauf).innerJoin(katalogeintrag, eq(katalogeintrag.id, verkauf.katalogeintragId)).where(eq(katalogeintrag.schauId, alt.id)).limit(1);
-        if (v) throw fehler("BAD_REQUEST", "Es gibt schon Verkäufe – der Provisionssatz lässt sich nicht mehr ändern.");
-      }
-      if (
-        alt.katalogGedruckt &&
-        (input.daten.jugendSeparat !== alt.jugendSeparat || input.daten.staemmeVorn !== alt.staemmeVorn || JSON.stringify(input.daten.kaefigFolge ?? null) !== JSON.stringify(alt.kaefigFolge ?? null))
-      ) {
-        throw fehler("BAD_REQUEST", "Die Katalognummern sind festgeschrieben – die Reihenfolge im Katalog lässt sich nicht mehr ändern.");
-      }
       // Nur eigene oder bereitgestellte Versionen; eine schon gesetzte bleibt erlaubt.
-      const versionId = input.daten.stammdatenVersionId;
-      if (versionId != null && versionId !== alt.stammdatenVersionId) await pruefeVersion(ctx.benutzer.organisationId, versionId);
-      await db.transaction(async (tx) => {
-        if (versionWechsel) {
-          // In derselben Transaktion mit gesperrter Schau prüfen: eine gleichzeitig gespeicherte Meldung wartet so.
-          // Stornierte und abgelehnte Meldungen zählen nicht.
-          await tx.select({ id: schau.id }).from(schau).where(eq(schau.id, input.id)).for("update");
-          const [x] = await tx
-            .select({ id: katalogeintrag.id })
-            .from(katalogeintrag)
-            .innerJoin(meldung, eq(meldung.id, katalogeintrag.meldungId))
-            .where(and(eq(katalogeintrag.schauId, alt.id), inArray(meldung.status, ["offen", "bestaetigt"]), sql`(${katalogeintrag.farbenschlagId} is not null or ${katalogeintrag.rasseId} is not null)`))
-            .limit(1);
-          if (x) throw fehler("BAD_REQUEST", "Es gibt schon gemeldete Tiere – das Verzeichnis lässt sich nicht mehr wechseln. Fehlende Rassen oder Farbenschläge bitte unter „Rassen und Farbenschläge“ → „Ergänzen“ nachtragen (bei einem für alle Vereine bereitgestellten Verzeichnis: eigenes Verzeichnis einspielen, bevor gemeldet wird).");
-        }
-        await tx.update(schau).set(input.daten).where(eq(schau.id, input.id));
-        await protokolliere(tx, { schauId: input.id, tabelle: "schau", datensatzId: input.id, aktion: "geändert", alt, neu: input.daten, akteur: ctx });
-      });
-      return { ok: true };
+      if (dt.stammdatenVersionId != null && dt.stammdatenVersionId !== vorab.stammdatenVersionId) await pruefeVersion(ctx.benutzer.organisationId, dt.stammdatenVersionId);
+      try {
+        return await db.transaction(async (tx) => {
+          // Provision: erst die Kassensperre, dann die Zeile (Reihenfolge wie Verkauf und Meldung). Ein gleichzeitiger
+          // Verkauf liest den Satz unter derselben Sperre – er rechnet so nie mit einem anderen Satz als die Schau.
+          const kasse = dt.provisionBp !== vorab.provisionBp;
+          if (kasse) await sperreKasse(tx, vorab.id);
+          // Alle Prüfungen auf dem gesperrten Stand: Festschreiben, Phase und Meldungen warten bzw. werden hier gesehen.
+          const [alt] = await tx.select().from(schau).where(eq(schau.id, vorab.id)).for("update");
+          if (!alt) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
+          if ((input.stand !== undefined && input.stand !== schauStand(alt)) || (!kasse && dt.provisionBp !== alt.provisionBp)) throw fehler("CONFLICT", INZWISCHEN);
+          // Der GiroCode trägt Kontoinhaber und IBAN des Vereinskontos – ohne sie gäbe es keinen gültigen Code.
+          if ((dt.girocode ?? alt.girocode) && !dt.zahlungBeiEinlieferung) {
+            if (!dt.vereinIban || !dt.vereinKontoinhaber) throw fehler("BAD_REQUEST", "Für den GiroCode bitte Kontoinhaber und IBAN des Vereinskontos eintragen.");
+            // Im Code stehen höchstens 70 Zeichen; ein gekürzter Name ergäbe bei der Empfängerüberprüfung „ähnlich“.
+            if ([...dt.vereinKontoinhaber].length > 70) throw fehler("BAD_REQUEST", "Für den GiroCode darf der Kontoinhaber höchstens 70 Zeichen haben.");
+            if (!imEwr(dt.vereinIban) && !dt.vereinBic) throw fehler("BAD_REQUEST", "Das Vereinskonto liegt außerhalb des EWR – für den GiroCode bitte auch die BIC eintragen.");
+          }
+          if (dt.slug !== alt.slug) {
+            // Ab der Meldung stecken Links in versandten Mails („Meine Meldung“, Widerruf) und in den Tablets der Preisrichter.
+            if (alt.phase !== "vorbereitung") throw fehler("BAD_REQUEST", "Die Kurzadresse lässt sich nur in der Vorbereitung ändern – danach würden versandte Links und angemeldete Tablets ungültig.");
+            // Auch nach „Zurück zur Vorbereitung“: Gibt es schon Meldungen oder Tablet-PINs, hängen Links daran.
+            const [[mel], [pin]] = await Promise.all([
+              tx.select({ n: count() }).from(meldung).where(eq(meldung.schauId, alt.id)),
+              tx.select({ n: count() }).from(preisrichter).where(and(eq(preisrichter.schauId, alt.id), sql`${preisrichter.pinHash} is not null`)),
+            ]);
+            if ((mel?.n ?? 0) > 0 || (pin?.n ?? 0) > 0)
+              throw fehler("BAD_REQUEST", "Die Kurzadresse lässt sich nicht mehr ändern: Es gibt schon Meldungen oder Tablet-PINs, deren Links daran hängen.");
+            const [x] = await tx.select({ id: schau.id }).from(schau).where(eq(schau.slug, dt.slug));
+            if (x) throw fehler("CONFLICT", KURZADRESSE_VERGEBEN);
+          }
+          // Am Bewertungstag hängen Jugendtarif und Speicherfristen – ein vertipptes Jahr fällt hier auf.
+          if (dt.bewertungAm && dt.bewertungAm !== alt.bewertungAm) {
+            const fruehestens = new Date(alt.createdAt.getTime() - 366 * 86_400_000).toISOString().slice(0, 10);
+            const spaetestens = new Date(Date.now() + 3 * 366 * 86_400_000).toISOString().slice(0, 10);
+            if (dt.bewertungAm < fruehestens || dt.bewertungAm > spaetestens) throw fehler("BAD_REQUEST", "Der Bewertungstag liegt mehr als ein Jahr vor dem Anlegen der Schau oder mehr als drei Jahre in der Zukunft – bitte das Jahr prüfen.");
+          }
+          const rueckmeldung = rueckmeldungFehler(dt.preisrichterRueckmeldungBis === undefined ? alt.preisrichterRueckmeldungBis : dt.preisrichterRueckmeldungBis, dt.bewertungAm);
+          if (rueckmeldung) throw fehler("BAD_REQUEST", rueckmeldung);
+          // Gemeldete Tiere verweisen auf Rassen und Farbenschläge der bisherigen Version: ein Wechsel ließe sich nicht mehr
+          // speichern und mischte die Katalogfolge. Fehlt etwas, das Verzeichnis lieber ergänzen.
+          const versionWechsel = dt.stammdatenVersionId !== alt.stammdatenVersionId;
+          if (alt.katalogGedruckt && versionWechsel) throw fehler("BAD_REQUEST", "Die Katalognummern sind festgeschrieben – die Stammdaten lassen sich nicht mehr wechseln.");
+          // Der Provisionssatz steht auf Kaufbelegen und Quittungen – nach dem ersten Verkauf nicht mehr änderbar.
+          if (dt.provisionBp !== alt.provisionBp) {
+            const [v] = await tx.select({ id: verkauf.id }).from(verkauf).innerJoin(katalogeintrag, eq(katalogeintrag.id, verkauf.katalogeintragId)).where(eq(katalogeintrag.schauId, alt.id)).limit(1);
+            if (v) throw fehler("BAD_REQUEST", "Es gibt schon Verkäufe – der Provisionssatz lässt sich nicht mehr ändern.");
+          }
+          if (alt.katalogGedruckt && (dt.jugendSeparat !== alt.jugendSeparat || dt.staemmeVorn !== alt.staemmeVorn || JSON.stringify(dt.kaefigFolge ?? null) !== JSON.stringify(alt.kaefigFolge ?? null))) {
+            throw fehler("BAD_REQUEST", "Die Katalognummern sind festgeschrieben – die Reihenfolge im Katalog lässt sich nicht mehr ändern.");
+          }
+          if (versionWechsel) {
+            // Stornierte und abgelehnte Meldungen zählen nicht; eine gleichzeitig gespeicherte Meldung wartet auf die Zeile.
+            const [x] = await tx
+              .select({ id: katalogeintrag.id })
+              .from(katalogeintrag)
+              .innerJoin(meldung, eq(meldung.id, katalogeintrag.meldungId))
+              .where(and(eq(katalogeintrag.schauId, alt.id), inArray(meldung.status, ["offen", "bestaetigt"]), sql`(${katalogeintrag.farbenschlagId} is not null or ${katalogeintrag.rasseId} is not null)`))
+              .limit(1);
+            if (x) throw fehler("BAD_REQUEST", "Es gibt schon gemeldete Tiere – das Verzeichnis lässt sich nicht mehr wechseln. Fehlende Rassen oder Farbenschläge bitte unter „Rassen und Farbenschläge“ → „Ergänzen“ nachtragen (bei einem für alle Vereine bereitgestellten Verzeichnis: eigenes Verzeichnis einspielen, bevor gemeldet wird).");
+          }
+          const [neu] = await tx.update(schau).set(dt).where(eq(schau.id, alt.id)).returning();
+          await protokolliere(tx, { schauId: alt.id, tabelle: "schau", datensatzId: alt.id, aktion: "geändert", alt, neu: dt, akteur: ctx });
+          return { ok: true, stand: schauStand(neu!) };
+        });
+      } catch (e) {
+        // Zwei Schauen bekommen gleichzeitig dieselbe Kurzadresse: der eindeutige Index entscheidet.
+        if (istDoppelt(e)) throw fehler("CONFLICT", KURZADRESSE_VERGEBEN);
+        throw e;
+      }
     }),
 
   /**

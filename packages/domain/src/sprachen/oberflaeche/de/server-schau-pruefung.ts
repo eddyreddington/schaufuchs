@@ -15,6 +15,7 @@ export const serverSchauPruefung = {
     sepaAbschluss: "Es gibt noch eine offene SEPA-Datei. Bitte erst buchen oder verwerfen, dann abschließen.",
     lastschriftAbschluss: "Es gibt noch eine offene Lastschriftdatei. Bitte erst buchen oder verwerfen, dann abschließen.",
     inzwischen: "Inzwischen wurde eine SEPA- oder Lastschriftdatei erstellt – bitte erst buchen oder verwerfen, dann abschließen.",
+    phaseGeaendert: "Die Phase wurde inzwischen geändert (z. B. Schau abgesagt oder von einer zweiten Ausstellungsleitung gewechselt). Bitte die Seite neu laden.",
     nichtAbschliessbar: (offen: string) => `Noch nicht abschließbar: ${offen}.`,
     nochOffen: (phase: string, offen: string) => `Vor „${phase}“ ist noch offen: ${offen}.`,
     unbewertet: (n: string) => `${n} Tiere sind noch nicht bewertet`,

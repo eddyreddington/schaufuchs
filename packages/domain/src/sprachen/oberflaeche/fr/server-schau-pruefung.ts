@@ -13,6 +13,7 @@ export const serverSchauPruefung: OberflaecheTexte["serverSchau"]["pruefung"] = 
     sepaAbschluss: "Il y a encore un fichier SEPA ouvert. Veuillez d’abord le comptabiliser ou l’annuler, puis clôturer.",
     lastschriftAbschluss: "Il y a encore un fichier de prélèvement ouvert. Veuillez d’abord le comptabiliser ou l’annuler, puis clôturer.",
     inzwischen: "Un fichier SEPA ou de prélèvement a été créé entre-temps – veuillez d’abord le comptabiliser ou l’annuler, puis clôturer.",
+    phaseGeaendert: "La phase a été modifiée entre-temps (p. ex. exposition annulée ou changée par une autre direction). Veuillez recharger la page.",
     nichtAbschliessbar: (offen: string) => `Clôture pas encore possible : ${offen}.`,
     nochOffen: (phase: string, offen: string) => `Encore ouvert avant « ${phase} » : ${offen}.`,
     unbewertet: (n: string) => `${n} animaux ne sont pas encore jugés`,

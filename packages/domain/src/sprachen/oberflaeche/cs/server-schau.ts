@@ -40,6 +40,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     zweiFaktorNicht: "Dvoufázové přihlášení není nastaveno.",
     passwortOderCode: "Heslo nebo kód nesouhlasí.",
     zweiFaktorBenutzer: "Dvoufázové přihlášení není pro tohoto uživatele nastaveno.",
+    kontoGeaendert: "Účet byl mezitím změněn (např. bylo nastaveno nové heslo). Přihlaste se prosím znovu.",
   },
   bremse: {
     fehlversuche: "Příliš mnoho neúspěšných pokusů. Zkuste to prosím později.",
@@ -117,6 +118,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     teilschauenFest: "Katalogová čísla jsou uzavřena – části výstavy lze už jen přejmenovat.",
     teilschauBelegt: (name: string, n: string) => `K části výstavy „${name}“ patří ještě přihlášky (${n}) – přiřaďte je prosím nejprve jiné části.`,
     notenskalaFest: "Výsledky jsou zveřejněny – stupnici známek už nelze změnit.",
+    inzwischenGeaendert: "Nastavení bylo mezitím změněno (např. v jiném okně). Načtěte prosím stránku znovu a změnu zopakujte.",
   },
   gebuehren: {
     auszahlungen: (nr: string) => `Už existují výplaty (stvrzenka ${nr}) – poplatky a ceny už nelze změnit.`,

@@ -78,6 +78,8 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
   const [d, setD] = useState(startwerte);
   // Stand beim letzten Speichern (für die Speicherleiste).
   const [stand, setStand] = useState(() => JSON.stringify(startwerte()));
+  // Stand der Schau beim Laden: hat inzwischen jemand anders gespeichert, lehnt der Server ab, statt still zu überschreiben.
+  const [serverStand, setServerStand] = useState(s.stand);
   /** Zahlenfeld für Tage; leer = keine Frist. */
   const tageFeld = (k: "ndTageMin" | "ndTageMax" | "pmvTageMin" | "pmvTageMax", label: string) => (
     <Feld label={label}>
@@ -88,9 +90,10 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
   );
   const gespeichert = useAenderungenWarnen(d);
   const speichern = trpc.schau.aktualisieren.useMutation({
-    onSuccess: (_r, v) => {
+    onSuccess: (r, v) => {
       gespeichert();
       setStand(JSON.stringify(v.daten));
+      setServerStand(r.stand);
       utils.schau.invalidate();
       meldung(ts.gespeichert);
     },
@@ -103,7 +106,7 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
   );
   const senden = (e: FormEvent) => {
     e.preventDefault();
-    speichern.mutate({ id: s.id, daten: d });
+    speichern.mutate({ id: s.id, daten: d, stand: serverStand });
   };
   const geaendert = JSON.stringify(d) !== stand;
   return (
