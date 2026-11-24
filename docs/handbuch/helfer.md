@@ -253,6 +253,8 @@ Kommt ein Farbenschlag öfter vor, nimmt ihn die Ausstellungsleitung dauerhaft i
 
 Vor dem Speichern prüft die Software jede Zeile. Fehler stehen rot unter dem Formular, z. B. „Zeile 3: Rasse und Farbenschlag auswählen.“, „Zeile 2: Geschlecht als 1,0 / 0,1 / 1,2.“ oder „Zeile 4: Ringnummer … steht schon in Zeile 1.“
 
+Hat inzwischen jemand anders dieselbe Meldung gespeichert (z. B. an einem zweiten Tisch), speichert das Formular nicht: „Die Meldung wurde inzwischen geändert – bitte neu laden …“. Ihre Eingaben bleiben stehen. Merken Sie sich, was Sie ändern wollten, klicken Sie auf „Neu laden“ und tragen Sie die Änderung noch einmal ein.
+
 > **Wichtig:** Erscheint „Für diese Schau ist noch kein Verzeichnis der Rassen und Farbenschläge gewählt (Einstellungen).“, können Sie keine Tiere auswählen. Sagen Sie der Ausstellungsleitung Bescheid.
 
 ### Jugendliche Aussteller

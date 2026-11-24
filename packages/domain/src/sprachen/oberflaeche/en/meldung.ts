@@ -30,6 +30,7 @@ export const meldung: OberflaecheTexte["meldung"] = {
     gespeichert: (betrag: string) => `Entry saved. Amount: ${betrag}`,
     eingegangen: (datum: string, eingang: string) => `Received ${datum} · ${eingang}`,
     hilfe: "Help on entries",
+    neuLaden: "Reload",
     zurueck: "Back to the list",
     meldegeld: "Entry fee",
     plusStiftung: (betrag: string) => `+ ${betrag} sponsorship`,

@@ -32,6 +32,7 @@ export const meldung = {
     gespeichert: (betrag: string) => `Meldung gespeichert. Betrag: ${betrag}`,
     eingegangen: (datum: string, eingang: string) => `Eingegangen ${datum} · ${eingang}`,
     hilfe: "Hilfe zu Meldungen",
+    neuLaden: "Neu laden",
     zurueck: "Zurück zur Liste",
     meldegeld: "Meldegeld",
     plusStiftung: (betrag: string) => `+ ${betrag} Stiftung`,
