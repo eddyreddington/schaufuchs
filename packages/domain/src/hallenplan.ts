@@ -287,8 +287,8 @@ export function planeHalle(eingabe: Halle, tiere: PlanTier[], masse: KaefigMasse
  * Käfigfronten, die nicht zu einem Gang zeigen: Die Front (Gitter) eines Käfigs ist offen, Rück- und Seitenwände sind dicht –
  * vor jeder Front muss ein Gang von mindestens Gangbreite frei sein. Davor darf keine Wand, keine Platte oder Rückwand einer
  * anderen Reihe, kein Block, keine Voliere und keine Fläche stehen; vor einem Block auch kein Tisch und keine Bank (vor den
- * Reihen meldet das schon „… steht im Gang vor R…“). Je Reihe höchstens ein Hinweis, z. B. „R3: Front zu R4“,
- * „Block 40 × 40 × 40 cm: Front zur Wand“.
+ * Reihen meldet das schon „… steht im Gang vor R…“). Geprüft werden Reihen, eingesetzte Blöcke und eingesetzte Volieren.
+ * Je Reihe höchstens ein Hinweis, z. B. „R3: Front zu R4“, „Block 40 × 40 × 40 cm: Front zur Wand“, „Voliere 1: Front zur Wand“.
  */
 export function frontFehler(halle: Pick<Halle, "breite" | "laenge" | "gang" | "flaechen"> & Partial<Pick<Halle, "umriss">>, plan: Pick<Hallenplan, "quer" | "reihen" | "objekte" | "volieren">): string[] {
   const T = 0.5;
@@ -323,7 +323,8 @@ export function frontFehler(halle: Pick<Halle, "breite" | "laenge" | "gang" | "f
     }
   }
   for (const o of plan.objekte) {
-    if (o.art !== "kaefigblock") continue;
+    // Eingesetzte Volieren wie Blöcke: die Ausrichtung beim Stellen dreht beide, die Prüfliste meldet beide (ADR 030).
+    if (o.art !== "kaefigblock" && o.art !== "voliere") continue;
     const f = fehler(o.rechteck, objektFront(o), true);
     if (f) aus.push(`${o.name}: ${f}`);
   }

@@ -1,16 +1,28 @@
 /** Katalognummern: Liste, Stand des Hallenplans, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern. */
 import { mitBelegung, planeHalle, stabilerText, vergleicheFolge, nachmeldungsNummern, planFolge, vergebeKatalognummern } from "@schau/domain";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "../../db/client";
+import { db, type Tx } from "../../db/client";
 import { katalogeintrag, prEinteilung, schau } from "../../db/schema";
 import { alsFolge, ladeEintraege } from "../../services/eintraege";
 import { rassenEinteilungAnwenden, sperreEinteilung } from "../../services/einteilung";
-import { pruefeNichtAbgeschlossen } from "../../services/kasse";
+import { pruefeNichtAbgeschlossen, sperreKasse } from "../../services/kasse";
 import { bindungen } from "../../services/meldung";
 import { protokolliere } from "../../services/protokoll";
 import { adminProcedure, benutzerProcedure, fehler, ladeSchau, dbId } from "../../trpc";
 import { hallenStand, planTiere } from "./gemeinsam";
+
+/**
+ * Sperren vor dem Prüfen, ob etwas an den Nummern hängt (Entscheidung 033): zuerst die Kasse (Verkauf und Preisvergabe
+ * nehmen sie auch zuerst), dann die Schau-Zeile ohne Schlüsselsperre („no key update“ – ein Protokolleintrag einer
+ * gleichzeitigen Note wartet so nicht auf uns, während wir auf ihr Tier warten), dann alle Tiere der Schau nach id. Eine
+ * gleichzeitige Note, Preisvergabe oder ein Verkauf (Fremdschlüssel auf das Tier) ist danach entweder sichtbar oder wartet.
+ */
+async function sperreSchau(tx: Tx, schauId: number) {
+  const [z] = await tx.select({ gedruckt: schau.katalogGedruckt, halle: schau.halle, fest: schau.hallenplanFest, phase: schau.phase }).from(schau).where(eq(schau.id, schauId)).for("no key update");
+  return z!;
+}
+const sperreTiere = (tx: Tx, schauId: number) => tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(eq(katalogeintrag.schauId, schauId)).orderBy(asc(katalogeintrag.id)).for("update");
 
 export const katalogNummern = {
   liste: benutzerProcedure.input(z.object({ schauId: dbId })).query(async ({ ctx, input }) => {
@@ -37,11 +49,14 @@ export const katalogNummern = {
     const folge = (e: Parameters<typeof alsFolge>[0]) => alsFolge(e, s.kaefigRegeln ?? []);
 
     return db.transaction(async (tx) => {
+      await sperreKasse(tx, s.id);
       // Gleichzeitig darf niemand die Preisrichter einteilen (die Bereiche hängen an diesen Nummern).
       await sperreEinteilung(tx, s.id);
       // Festgeschrieben oder nicht: unter Zeilensperre frisch lesen. Schreibt ein zweiter Admin gerade fest, wartet der
       // Aufruf und nummeriert danach nur nach (statt den festgeschriebenen Katalog neu zu nummerieren).
-      const [{ gedruckt }] = (await tx.select({ gedruckt: schau.katalogGedruckt }).from(schau).where(eq(schau.id, s.id)).for("update")) as [{ gedruckt: boolean }];
+      const { gedruckt } = await sperreSchau(tx, s.id);
+      // Vor dem Festschreiben wird umnummeriert: alle Tiere sperren, bevor die Bindungen geprüft werden.
+      if (!gedruckt) await sperreTiere(tx, s.id);
       // Unter der Sperre frisch laden (eine Meldung kann inzwischen bestätigt worden sein).
       const alle = await ladeEintraege(s.id, { nurBestaetigt: true, ex: tx });
       let geaendert = 0;
@@ -106,17 +121,16 @@ export const katalogNummern = {
   nummernNachPlan: adminProcedure.input(z.object({ schauId: dbId })).mutation(async ({ ctx, input }) => {
     const geladen = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.schauId));
     return db.transaction(async (tx) => {
-      // Gleichzeitig darf niemand die Preisrichter einteilen (die Bereiche hängen an den Nummern). Diese Sperre zuerst,
-      // dann die Schau – wie „Katalognummern vergeben“ und die Tablets (ADR 033), sonst verklemmen sie sich.
+      // Reihenfolge wie bei „Katalognummern vergeben“: Kasse, Einteilung (die Bereiche hängen an den Nummern), Schau-Zeile
+      // (ADR 033), sonst verklemmen sie sich mit den Tablets.
+      await sperreKasse(tx, geladen.id);
       await sperreEinteilung(tx, geladen.id);
       // Halle, fester Plan und Druckstand frisch und gesperrt: ein gleichzeitiges Speichern der Halle oder Festschreiben der
       // Nummern wartet, statt mit einem älteren Stand nummeriert zu werden.
-      const [frisch] = await tx
-        .select({ halle: schau.halle, fest: schau.hallenplanFest, gedruckt: schau.katalogGedruckt, phase: schau.phase })
-        .from(schau)
-        .where(eq(schau.id, geladen.id))
-        .for("update");
-      const s = pruefeNichtAbgeschlossen({ ...geladen, phase: frisch!.phase, halle: frisch!.halle, hallenplanFest: frisch!.fest, katalogGedruckt: frisch!.gedruckt });
+      const frisch = await sperreSchau(tx, geladen.id);
+      // Vor dem Festschreiben wird umnummeriert: alle Tiere sperren, bevor die Bindungen geprüft werden.
+      if (!frisch.gedruckt) await sperreTiere(tx, geladen.id);
+      const s = pruefeNichtAbgeschlossen({ ...geladen, phase: frisch.phase, halle: frisch.halle, hallenplanFest: frisch.fest, katalogGedruckt: frisch.gedruckt });
       if (!s.halle) throw fehler("BAD_REQUEST", "Erst unter „Hallenplan“ die Halle anlegen.");
       if (!s.hallenplanFest)
         throw fehler("BAD_REQUEST", "Erst den Plan festschreiben (im Halleneditor eine Reihe oder Platte verschieben) – sonst stellt die Software die Käfige nach den neuen Nummern wieder um.");
@@ -203,6 +217,10 @@ export const katalogNummern = {
     .mutation(async ({ ctx, input }) => {
       pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.schauId));
       await db.transaction(async (tx) => {
+        await sperreKasse(tx, input.schauId);
+        // Aufheben: alle Tiere sperren, bevor die Bindungen geprüft werden (wie beim Umnummerieren).
+        await sperreSchau(tx, input.schauId);
+        if (!input.gedruckt) await sperreTiere(tx, input.schauId);
         if (!input.gedruckt) {
           // Aufheben heißt: beim nächsten Vergeben verschieben sich alle Nummern. Das darf nur, solange nichts
           // an den Nummern hängt – sonst passen Bewertungskarten, Kaufbelege und Preisrichter-Einteilung nicht mehr.

@@ -117,3 +117,4 @@ import "./tests/82-katalog-schriften";
 import "./tests/83-katalog-nicht-kuerzen";
 import "./tests/84-gleichzeitig-bewertung";
 import "./tests/85-gleichzeitig-geld-meldung";
+import "./tests/86-gleichzeitig-katalog";

@@ -271,6 +271,10 @@ export const meldungRouter = router({
           const [sch] = await tx.select({ fest: schau.katalogGedruckt }).from(schau).where(eq(schau.id, m.schauId));
           if (!sch?.fest) await tx.update(katalogeintrag).set({ katalogNr: null, suffix: "", status: "gemeldet" }).where(eq(katalogeintrag.meldungId, m.id));
         }
+        // Nummerierte Meldung (Katalog festgeschrieben): die Preisrichter-Bereiche folgen dem neuen Status. Vor dem
+        // Protokoll: das hält die Kette bis zum Commit – wer danach auf die Einteilungssperre wartet, verklemmt sich mit der
+        // Nummernvergabe (hält die Einteilung, protokolliert zuletzt; Entscheidung 033).
+        await einteilungNachStatus(tx, m.schauId, m.id, ctx);
         await protokolliere(tx, {
           schauId: m.schauId,
           tabelle: "meldung",
@@ -281,8 +285,6 @@ export const meldungRouter = router({
           grund: input.grund,
           akteur: ctx,
         });
-        // Nummerierte Meldung (Katalog festgeschrieben): die Preisrichter-Bereiche folgen dem neuen Status.
-        await einteilungNachStatus(tx, m.schauId, m.id, ctx);
       });
       return { ok: true };
     }),

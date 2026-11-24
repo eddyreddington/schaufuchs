@@ -2,7 +2,7 @@
 import { aussehenBereinigt, flaecheBereinigt, nummerFolgeBereinigt, TUER_ARTEN, FIRST_HOEHE_MAX, HALLEN_BOEDEN, PRALLWAND_HOEHE_MAX, WAND_HOEHE_MAX, WAND_HOEHE_MIN, istRechteckUmriss, pruefeHallenUmriss, pruefeUmriss, umrissNormal, ETAGEN_MAX, etagenNormal, neuSetzen, halleZumNeuSetzen, type Halle, formatKatalognummer, halleSchluessel, type KaefigRegel, stabilerText, GRUNDPLATTE_STANDARD, HAUPTGANG_STANDARD, KAEFIG_TYPEN, kaefigTyp, vergleicheFolge, type PlanTier, type KaefigTyp, type SortierSchritt, planeHalle, richterImPlan, hallenStandVon } from "@schau/domain";
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "../../db/client";
+import { db, type Tx } from "../../db/client";
 import { preisrichter, prEinteilung, schau } from "../../db/schema";
 import { alsFolge, ladeEintraege, type Eintrag } from "../../services/eintraege";
 import { einteilTier, ladeRegeln } from "../../services/einteilung";
@@ -179,10 +179,13 @@ export function umrissEinheitlich(halle: Halle): Halle {
  * unter Sperre. Verschobenes, entfernte Plätze und eingesetzte Teile der bisherigen Aufstellung fallen weg – auch belegte
  * Blöcke, ihre Tiere stellt der neue Plan; was nicht in die Reihen passt, bekommt Käfigblöcke. Der Plan ist danach nicht fest.
  */
-export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<typeof ladeSchau>>, e: { basis?: string; halle?: z.infer<typeof HALLE_EINGABE>; grund: string }) {
+export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<typeof ladeSchau>>, e: { basis?: string; halle?: z.infer<typeof HALLE_EINGABE>; grund: string }, inTx?: Tx) {
   const { tiere } = await planTiere(s);
-  return db.transaction(async (tx) => {
-    const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("update");
+  // `inTx`: in der Transaktion des Aufrufers (Entscheiden für einen Entwurf: Einsetzen und Archivieren zusammen).
+  const setzen = async (tx: Tx) => {
+    const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest, phase: schau.phase }).from(schau).where(eq(schau.id, s.id)).for("update");
+    // Phase unter der Sperre: eine eben abgeschlossene Schau wird nicht mehr geändert.
+    if (aktuell?.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
     if (e.basis !== undefined && e.basis !== halleSchluessel(aktuell?.halle ?? null))
       throw fehler("CONFLICT", "Die Halle wurde inzwischen von jemand anderem geändert – der Plan wird neu geladen, bitte die Änderung noch einmal machen.");
     const vorbereitet: Halle | null = e.halle ? { ...e.halle, plattenMass: e.halle.plattenMass ?? aktuell?.halle?.plattenMass ?? {}, ...etagenAus(e.halle.etagen, aktuell?.halle) } : null;
@@ -209,7 +212,8 @@ export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<type
       akteur,
     });
     return { eingesetzt, ohne };
-  });
+  };
+  return inTx ? setzen(inTx) : db.transaction(setzen);
 }
 
 /**

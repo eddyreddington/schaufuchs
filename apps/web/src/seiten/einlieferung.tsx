@@ -1,5 +1,5 @@
 import { KAEFIG_TYPEN, kaefigMass, serverText, type KaefigMasse, type KaefigTyp, type Nachweisart, type OberflaecheTexte } from "@schau/domain";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { datumZeit, fehlerText, formatEuro, formatKatalognummer, heuteIso, alterLabel } from "../lib";
 import { useSchauId } from "../rahmen";
 import { useOberflaeche, useSprache } from "../sprache";
@@ -121,6 +121,8 @@ function AusstellerKarte({ t, schauId, modus }: { t: Treffer; schauId: number; m
     gz: { datum: m.gzDatum ?? "", nummer: m.gzNummer },
   });
   const geprueft = !!m.vetGeprueftAm;
+  /** Nacheinander senden: der Haken wartet auf das Speichern beim Verlassen eines Feldes (sonst überholt er es). */
+  const nachweisKette = useRef(Promise.resolve());
   /** Speichert die Angaben – beim Verlassen eines Feldes nur, wenn sich etwas geändert hat. */
   const speichereNachweis = (pruefung: boolean, nurBeiAenderung = false) => {
     const geaendert =
@@ -130,7 +132,7 @@ function AusstellerKarte({ t, schauId, modus }: { t: Treffer; schauId: number; m
       nw.kl.datum !== (m.klDatum ?? "") || nw.kl.tierarzt !== m.klTierarzt || nw.gz.datum !== (m.gzDatum ?? "") || nw.gz.nummer !== m.gzNummer;
     if (nurBeiAenderung && !geaendert) return;
     const impf = (x: { datum: string; impfstoff: string; tierarzt: string }) => ({ datum: x.datum || null, impfstoff: x.impfstoff.trim(), tierarzt: x.tierarzt.trim() });
-    vet.mutate({
+    const daten = {
       meldungId: m.id,
       nd: impf(nw.nd),
       pmv: impf(nw.pmv),
@@ -138,10 +140,11 @@ function AusstellerKarte({ t, schauId, modus }: { t: Treffer; schauId: number; m
       kl: { datum: nw.kl.datum || null, tierarzt: nw.kl.tierarzt.trim() },
       gz: { datum: nw.gz.datum || null, nummer: nw.gz.nummer.trim() },
       geprueft: pruefung,
-    });
+    };
+    nachweisKette.current = nachweisKette.current.then(() => vet.mutateAsync(daten).then(() => undefined, () => undefined));
   };
   // Immer speichern, auch wenn der Fokus auf den Haken geht: er speichert nur, wenn er umgeschaltet wird.
-  // Der Blur kommt vor dem Klick, beide Anfragen tragen dieselben Angaben.
+  // Der Blur kommt vor dem Klick, beide Anfragen tragen dieselben Angaben und gehen nacheinander hinaus.
   const beimVerlassen = () => speichereNachweis(geprueft, true);
   const setze = (ids: number[], s: "katalogisiert" | "eingeliefert" | "fehlt" | "ausgesetzt") => status.mutate({ schauId, ids, status: s });
   /** Verkaufte Tiere nur gegen Kaufbeleg ausgeben: die Nummer wird geprüft und protokolliert. */

@@ -3,7 +3,7 @@
  * Katalog-Gestaltung, Vereinsname, Kopf- und Fußzeile, Maße.
  */
 import { formatKatalognummer, MELDEART_LABEL } from "@schau/domain";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { bild, type schau } from "../db/schema";
 import { ladeGestaltung } from "../routers/katalog-gestaltung";
@@ -23,7 +23,8 @@ export const A4_RAENDER = { top: 14 * MM, bottom: 20 * MM, left: 25 * MM, right:
 export async function ladeDesign(s: Schau): Promise<Design> {
   const [g, [logo]] = await Promise.all([
     ladeGestaltung(s.id),
-    db.select({ daten: bild.daten }).from(bild).where(and(eq(bild.schauId, s.id), eq(bild.rolle, "logo"))),
+    // Das neueste Logo (falls es durch ein früheres gleichzeitiges Hochladen zwei gibt).
+    db.select({ daten: bild.daten }).from(bild).where(and(eq(bild.schauId, s.id), eq(bild.rolle, "logo"))).orderBy(desc(bild.id)).limit(1),
   ]);
   return design(g.farbe, logo?.daten ?? null);
 }

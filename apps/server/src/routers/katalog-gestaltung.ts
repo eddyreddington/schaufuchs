@@ -3,7 +3,7 @@ import { inflateSync } from "node:zlib";
 import { KATALOG_AUFTEILUNGEN, KATALOG_FUSSZEILEN, KATALOG_GESTALTUNG_VORGABE, KATALOG_LINIEN, KATALOG_SCHRIFTEN, KATALOG_STILE, KATALOG_TEILE, KATALOG_TITELBILDER, KATALOG_TITELHINTERGRUENDE, pruefeLizenz, type KatalogTeil } from "@schau/domain";
 import { z } from "zod";
 import { db } from "../db/client";
-import { ANZEIGE_GROESSEN, BEITRAG_ARTEN, bild, katalogBeitrag, katalogGestaltung, KATALOG_FORMATE } from "../db/schema";
+import { ANZEIGE_GROESSEN, BEITRAG_ARTEN, bild, katalogBeitrag, katalogGestaltung, KATALOG_FORMATE, schau } from "../db/schema";
 import { oeffentlichSichtbarProcedure, benutzerProcedure, fehler, ladeSchau, router, dbId } from "../trpc";
 
 /** Größte Bilddatei. Fotos aus dem Handy sind meist 2–4 MB; mehr macht nur das PDF schwer. */
@@ -263,7 +263,9 @@ export const katalogGestaltungRouter = router({
       // Nur diese PNG entpackt pdfkit (nebenbei, ohne Fehler zurückzugeben); die übrigen bettet es unverändert ein.
       if (m.entpacken && !pngLesbar(daten)) throw fehler("BAD_REQUEST", "Das Bild lässt sich nicht lesen (beschädigt oder unvollständig). Bitte neu speichern.");
       return db.transaction(async (tx) => {
-        // Logo und Titelbild gibt es nur einmal – das neue ersetzt das alte.
+        // Logo und Titelbild gibt es nur einmal – das neue ersetzt das alte. Die Schau-Zeile sperren (wie beim Sockelbild):
+        // zwei gleichzeitige Uploads folgen so aufeinander, statt dass jeder nur das alte Bild löscht (Entscheidung 033).
+        if (input.rolle !== "beitrag") await tx.select({ id: schau.id }).from(schau).where(eq(schau.id, input.schauId)).for("update");
         if (input.rolle !== "beitrag") await tx.delete(bild).where(and(eq(bild.schauId, input.schauId), eq(bild.rolle, input.rolle)));
         const [b] = await tx.insert(bild).values({ schauId: input.schauId, rolle: input.rolle, mime, name: input.name, daten, ...(input.angaben ?? {}) }).returning({ id: bild.id });
         return { id: b!.id };

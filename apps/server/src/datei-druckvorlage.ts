@@ -68,7 +68,7 @@ const pdfAntwort = (c: Context, inhalt: Buffer, name: string) => c.body(new Uint
 /** Farbe und Logo für Vereinsbriefe: aus der genannten Schau oder der neuesten Schau des Vereins. */
 async function vereinsDesign(organisationId: number, schauId: unknown) {
   const s = typeof schauId === "number" ? await eigeneSchau(organisationId, schauId) : ((await db.select().from(schau).where(eq(schau.organisationId, organisationId)).orderBy(desc(schau.id)).limit(1))[0] ?? null);
-  const [g, logo] = s ? await Promise.all([ladeGestaltung(s.id), db.select({ daten: bild.daten }).from(bild).where(and(eq(bild.schauId, s.id), eq(bild.rolle, "logo")))]) : [null, []];
+  const [g, logo] = s ? await Promise.all([ladeGestaltung(s.id), db.select({ daten: bild.daten }).from(bild).where(and(eq(bild.schauId, s.id), eq(bild.rolle, "logo"))).orderBy(desc(bild.id)).limit(1)]) : [null, []];
   return { s, d: design(g?.farbe, logo[0]?.daten ?? null) };
 }
 

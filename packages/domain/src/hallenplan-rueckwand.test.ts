@@ -161,6 +161,16 @@ describe("Käfige aneinander: Rückwand an Rückwand", () => {
     expect(kurz(mit.a.ruecken)).toEqual([["a", "z-"]]);
   });
 
+  test("Eingesetzte Voliere mit verdeckter Front: die Prüfliste meldet sie (wie einen Block)", () => {
+    // Voliere (200 × 100) mit der Front zur Wand, die Gegenseite verbaut (Block direkt dahinter): sie dreht nicht.
+    const v: HallenObjekt = { id: "v", art: "voliere", x: 300, y: 0, drehung: 0, front: "z-" };
+    const s = stellen([v, block("a", 300, 100, "z+")], ["v"]);
+    expect(s.a).toEqual(nichts);
+    expect(frontFehler(s.h, s.p).filter((f) => f.startsWith("Voliere"))).toEqual(["Voliere 1: Front zur Wand"]);
+    // Mit freiem Gang vor der Front: kein Hinweis.
+    expect(frontFehler(s.h, stellen([{ ...v, y: 300, front: "z-" }], []).p).filter((f) => f.startsWith("Voliere"))).toEqual([]);
+  });
+
   test("Freier Grundriss (L-Halle): Innenwände zählen wie Wände – beim Ausrichten und in der Prüfliste", () => {
     // L: oben 10 m breit (y 0–10 m), unten nur die linke Hälfte (x 0–5 m). Innenwand bei y = 1000 (x 500–1000) und x = 500.
     const l: Halle = { ...leer, umriss: [{ x: 0, y: 0 }, { x: 1000, y: 0 }, { x: 1000, y: 1000 }, { x: 500, y: 1000 }, { x: 500, y: 2000 }, { x: 0, y: 2000 }] };
