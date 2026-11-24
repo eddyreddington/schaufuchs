@@ -2,7 +2,7 @@
 import { PHASEN, PHASEN_LABEL, fehlendeVereinsangaben, datumKurz, istSprache, texte } from "@schau/domain";
 import { and, count, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "../../db/client";
+import { db, type Tx } from "../../db/client";
 import { aussteller, gebuehr, katalogeintrag, meldung, preisrichter, schau, sitzung } from "../../db/schema";
 import { ladeEintraege } from "../../services/eintraege";
 import { inOffenerLastschrift, offeneLastschrift, offeneStornoZahlungen, offeneUeberweisungsverkaeufe, offenerLauf, sperreKasse } from "../../services/kasse";
@@ -12,18 +12,20 @@ import { protokolliere } from "../../services/protokoll";
 import { checkliste } from "../../services/pruefung";
 import { ladeVereinsangaben } from "../../services/datenschutz";
 import { heuteDe } from "../../services/tiergesundheit";
+import { sperreOnlineMeldung } from "../../services/meldung";
+import { sperreTestschauExklusiv } from "../../services/testschau";
 import { adminProcedure, fehler, ladeSchau, dbId } from "../../trpc";
 
 /** Was einem Abschluss der Schau noch entgegensteht (leer: abschließbar). */
-async function abschlussHindernisse(schauId: number): Promise<string[]> {
+async function abschlussHindernisse(schauId: number, ex: Tx | typeof db = db): Promise<string[]> {
   const { abrechnungListe } = await import("../kasse");
   const [zeilen, tage, lauf, lastschrift, stornos, ueberweisungen] = await Promise.all([
-    abrechnungListe(schauId),
-    ladeKassenbuch(schauId),
-    offenerLauf(db, schauId),
-    offeneLastschrift(db, schauId),
-    offeneStornoZahlungen(db, schauId),
-    offeneUeberweisungsverkaeufe(db, schauId),
+    abrechnungListe(schauId, ex),
+    ladeKassenbuch(schauId, ex),
+    offenerLauf(ex, schauId),
+    offeneLastschrift(ex, schauId),
+    offeneStornoZahlungen(ex, schauId),
+    offeneUeberweisungsverkaeufe(ex, schauId),
   ]);
   const offen = zeilen.filter((z) => z.nochOffenCent !== 0);
   return [
@@ -50,12 +52,20 @@ export const phasen = {
    * Aussteller bekommen eine E-Mail. Alles im Protokoll.
    */
   absagen: adminProcedure.input(z.object({ id: dbId, grund: z.string().trim().min(3, "Bitte den Grund angeben.").max(500) })).mutation(async ({ ctx, input }) => {
-    const s = await ladeSchau(ctx.benutzer.organisationId, input.id);
-    if (s.abgesagtAm) throw fehler("BAD_REQUEST", "Die Schau ist schon abgesagt.");
-    if (!["vorbereitung", "meldung", "katalog"].includes(s.phase))
-      throw fehler("BAD_REQUEST", "Absagen geht nur bis vor der Einlieferung. Sind schon Tiere in der Halle, bitte mit dem Veterinäramt abstimmen und über die normale Abrechnung abschließen.");
+    const geladen = await ladeSchau(ctx.benutzer.organisationId, input.id);
+    const pruefe = (x: { abgesagtAm: Date | null; phase: string }) => {
+      if (x.abgesagtAm) throw fehler("BAD_REQUEST", "Die Schau ist schon abgesagt.");
+      if (!["vorbereitung", "meldung", "katalog"].includes(x.phase))
+        throw fehler("BAD_REQUEST", "Absagen geht nur bis vor der Einlieferung. Sind schon Tiere in der Halle, bitte mit dem Veterinäramt abstimmen und über die normale Abrechnung abschließen.");
+    };
+    pruefe(geladen);
     const betroffen = await db.transaction(async (tx) => {
-      await sperreKasse(tx, s.id);
+      // Exklusiv gegen laufende Meldungen (die halten die Sperre geteilt und lesen danach die Absage), dann die Kasse,
+      // dann die Schau gesperrt frisch: keine Meldung rutscht zwischen Auswahl und Absage durch, keine zweite Absage.
+      await sperreTestschauExklusiv(tx, geladen.id);
+      await sperreKasse(tx, geladen.id);
+      const s = (await tx.select().from(schau).where(eq(schau.id, geladen.id)).for("update"))[0]!;
+      pruefe(s);
       const ms = await tx
         .select({ id: meldung.id, status: meldung.status, ausstellerId: meldung.ausstellerId, sprache: meldung.sprache })
         .from(meldung)
@@ -81,10 +91,10 @@ export const phasen = {
       const sprache = betroffen.find((x) => x.ausstellerId === a.id)?.sprache;
       const t = texte(istSprache(sprache) ? sprache : "de").mail;
       await sendeMail(
-        s.organisationId,
+        geladen.organisationId,
         a.email,
-        t.betreffAbsage(s.name),
-        `${t.gutenTag(`${a.vorname} ${a.nachname}`.trim())}\n\n${t.absage(s.name, input.grund)}\n\n${t.gruesse}\n${s.veranstalter || s.name}`,
+        t.betreffAbsage(geladen.name),
+        `${t.gutenTag(`${a.vorname} ${a.nachname}`.trim())}\n\n${t.absage(geladen.name, input.grund)}\n\n${t.gruesse}\n${geladen.veranstalter || geladen.name}`,
         a.id,
       );
     }
@@ -149,11 +159,20 @@ export const phasen = {
         }
       }
       await db.transaction(async (tx) => {
+        // Jeder Wechsel wartet auf laufende Online-Meldungen und Kassenvorgänge (Verkauf, Auszahlung, Zahlung): die lesen
+        // die Phase unter diesen Sperren und buchen sonst noch in der alten (Entscheidung 033). Reihenfolge wie dort.
+        await sperreOnlineMeldung(tx, alt.id);
+        await sperreKasse(tx, alt.id);
         if (input.phase === "abgeschlossen") {
           // Unter der Kassensperre noch einmal: eine gleichzeitig erstellte SEPA- oder Lastschriftdatei bliebe sonst mit
           // IBANs in der abgeschlossenen Schau liegen (erstellen nimmt dieselbe Sperre und liest die Phase frisch).
-          await sperreKasse(tx, alt.id);
           if ((await offenerLauf(tx, alt.id)) || (await offeneLastschrift(tx, alt.id))) throw fehler("CONFLICT", "Inzwischen wurde eine SEPA- oder Lastschriftdatei erstellt – bitte erst buchen oder verwerfen, dann abschließen.");
+          // Die Hindernisse oben liefen ohne Sperre: eine Buchung, die seitdem committet hat (Kassentag ohne Abschluss,
+          // offener Saldo), sieht erst diese Prüfung (Entscheidung 033). Wer auf die Sperre wartet, liest danach die Phase frisch.
+          if (!(input.trotzdem && input.grund.length >= 3)) {
+            const jetzt = await abschlussHindernisse(alt.id, tx);
+            if (jetzt.length) throw fehler("PRECONDITION_FAILED", `Noch nicht abschließbar: ${jetzt.join("; ")}.`);
+          }
         }
         await tx
           .update(schau)

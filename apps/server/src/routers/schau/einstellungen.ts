@@ -6,6 +6,7 @@ import { db } from "../../db/client";
 import { katalogeintrag, meldung, preisrichter, schau, verkauf } from "../../db/schema";
 import { pruefeNichtAbgeschlossen } from "../../services/kasse";
 import { protokolliere } from "../../services/protokoll";
+import { sperreTestschauExklusiv } from "../../services/testschau";
 import { pruefeVersion } from "../stammdaten";
 import { adminProcedure, fehler, ladeSchau, dbId, kalenderdatum } from "../../trpc";
 
@@ -197,6 +198,9 @@ export const einstellungen = {
       const geladen = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.id));
       const neu = teilschauenLesen(input.teilschauen);
       return db.transaction(async (tx) => {
+        // Exklusiv gegen laufende Meldungen (sie halten die Sperre geteilt): eine Meldung, die die alte Liste gelesen hat,
+        // ist danach gezählt, eine spätere liest die neue Liste (Entscheidung 033).
+        await sperreTestschauExklusiv(tx, geladen.id);
         const [s] = await tx.select({ gedruckt: schau.katalogGedruckt, alt: schau.teilschauen }).from(schau).where(eq(schau.id, geladen.id)).for("update");
         const alt = teilschauenLesen(s!.alt);
         if (JSON.stringify(alt) === JSON.stringify(neu)) return { ok: true, geaendert: false };

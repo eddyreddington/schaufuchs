@@ -43,7 +43,8 @@ export const vereinRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await db.transaction(async (tx) => {
-        const [alt] = await tx.select().from(organisation).where(eq(organisation.id, ctx.benutzer.organisationId));
+        // Gesperrt lesen: bei zwei gleichzeitigen Speichern stünde sonst zweimal derselbe alte Stand im Protokoll.
+        const [alt] = await tx.select().from(organisation).where(eq(organisation.id, ctx.benutzer.organisationId)).for("update");
         await tx.update(organisation).set(input).where(eq(organisation.id, ctx.benutzer.organisationId));
         await protokolliere(tx, { schauId: null, tabelle: "organisation", datensatzId: ctx.benutzer.organisationId, aktion: "Vereinsangaben", alt, neu: input, akteur: ctx });
       });

@@ -1,4 +1,4 @@
-import { gefordertCent, type GebuehrArt, type Zahlart } from "@schau/domain";
+import { type GebuehrArt, type Zahlart } from "@schau/domain";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AusstellerFelder, leererAussteller, type AusstellerDaten } from "../komponenten/aussteller";
@@ -9,8 +9,10 @@ import { useIstAdmin } from "../rolle";
 import { useOberflaeche, useTexte } from "../sprache";
 import { Symbol } from "../symbole";
 import { trpc, type Ausgabe } from "../trpc";
-import { Abschnitt, Auswahl, Eingabe, Feld, Haken, Hinweis, Kennzahlen, Knopf, knopfKlasse, Laden, Marke, SEITE, Seitenkopf, Speicherleiste, Textfeld, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
+import { Abschnitt, Auswahl, Eingabe, Feld, Haken, HilfeLink, Hinweis, Kennzahlen, Knopf, knopfKlasse, Laden, Marke, SEITE, Seitenkopf, Speicherleiste, Textfeld, useFrage, useMeldung, useUngespeichertWarnung } from "../ui";
 import { STATUS_TON } from "./meldungen";
+import { offenCent, zahlungAuftrag } from "./meldung-zahlung";
+import { neueAnfrageId } from "./anfrage-kennung";
 
 export function MeldungBearbeiten() {
   const schauId = useSchauId();
@@ -52,6 +54,10 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
   const [onlineZustimmung, setOnlineZustimmung] = useState(!!vorhanden?.meldung.onlineZustimmungAm);
   // Stand beim Öffnen, festgehalten: `vorhanden` lädt sich nach (z. B. nach einer Buchung in der Seitenleiste).
   const [onlineBeimOeffnen] = useState(vorhanden ? !!vorhanden.meldung.onlineZustimmungAm : undefined);
+  // Stand beim Öffnen: hat inzwischen jemand anders gespeichert, lehnt der Server ab (statt dessen Änderung zu überschreiben).
+  const [standBeimOeffnen] = useState(vorhanden?.stand);
+  // Neue Meldung: dieselbe Anfrage zweimal (verlorene Antwort) legt nur eine an.
+  const [anfrageId] = useState(() => (vorhanden ? undefined : neueAnfrageId()));
   const [erziehungsberechtigter, setErziehungsberechtigter] = useState(vorhanden?.meldung.erziehungsberechtigter ?? "");
   const [positionen, setPositionen] = useState<Position[]>(() => (vorhanden ? vorhanden.eintraege.map(ausEintrag) : [neuePosition()]));
   const [fehler, setFehler] = useState<string[]>([]);
@@ -92,6 +98,8 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
       onlineZustimmung,
       // Stand beim Öffnen: ein Widerruf über „Meine Meldung“ in der Zwischenzeit wird so nicht überschrieben.
       onlineZustimmungVorher: onlineBeimOeffnen,
+      stand: standBeimOeffnen,
+      anfrageId,
       erklaerungen,
       erziehungsberechtigter,
       positionen: positionen.map(alsEingabe),
@@ -103,7 +111,7 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
   const formRef = useRef<HTMLFormElement>(null);
   const ungespeichert = gespeichert.current !== stand;
   const b = vorhanden?.betrag;
-  const offen = b ? gefordertCent(b) - b.bezahltCent : 0;
+  const offen = b ? offenCent(b) : 0;
 
   return (
     <div className={SEITE}>
@@ -213,7 +221,27 @@ function Formular({ schauId, vorhanden, nachSpeichern }: { schauId: number; vorh
               <ul className="list-inside list-disc">{fehler.map((f) => <li key={f}>{f}</li>)}</ul>
             </Hinweis>
           )}
-          {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
+          {speichern.error && (
+            <Hinweis ton="fehler">
+              {fehlerText(speichern.error)}
+              {/* Inzwischen von jemand anders gespeichert: die Eingaben bleiben bis zum Neuladen sichtbar (Entscheidung 033). */}
+              {vorhanden && speichern.error.data?.code === "CONFLICT" && (
+                <span className="mt-2 flex flex-wrap items-center gap-3">
+                  <Knopf
+                    onClick={async () => {
+                      await utils.meldung.get.invalidate({ id: vorhanden.meldung.id });
+                      nachSpeichern();
+                    }}
+                  >
+                    {tb.neuLaden}
+                  </Knopf>
+                  <HilfeLink abschnitt={istAdmin ? "papiermeldungen-erfassen" : "eine-neue-meldung-erfassen"} teil={istAdmin ? undefined : "helfer"}>
+                    {tb.hilfe}
+                  </HilfeLink>
+                </span>
+              )}
+            </Hinweis>
+          )}
           <Speicherleiste sichtbar={ungespeichert} laedt={speichern.isPending} knopf={tb.speichern} onSpeichern={() => formRef.current?.requestSubmit()} />
         </form>
 
@@ -274,7 +302,7 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
     onError: (e) => meldung(fehlerText(e), "fehler"),
   });
   const { eingabe, bestaetige } = useFrage();
-  const offen = gefordertCent(daten.betrag) - daten.betrag.bezahltCent;
+  const offen = offenCent(daten.betrag);
   // Storniert oder abgelehnt, aber Geld eingegangen: erstatten oder Verfall – sonst hält es den Abschluss auf.
   const ruht = m.status === "storniert" || m.status === "abgelehnt";
   const nochDa = daten.betrag.bezahltCent - m.verfallenCent;
@@ -396,7 +424,7 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
             </ul>
           </div>
           <p className={`font-semibold ${offen > 0 ? "text-kamm" : "text-stall"}`}>{offen > 0 ? ts.offen(formatEuro(offen)) : ts.vollstaendig}</p>
-          <ZahlungErfassen meldungId={m.id} vorschlag={Math.max(offen, 0)} />
+          <ZahlungErfassen meldungId={m.id} vorschlag={Math.max(offen, 0)} betrag={daten.betrag} />
         </div>
       </Abschnitt>
 
@@ -414,7 +442,7 @@ function Seitenleiste({ daten, schauId }: { daten: Vorhanden; schauId: number })
   );
 }
 
-function ZahlungErfassen({ meldungId, vorschlag }: { meldungId: number; vorschlag: number }) {
+function ZahlungErfassen({ meldungId, vorschlag, betrag: meldebetrag }: { meldungId: number; vorschlag: number; betrag: Vorhanden["betrag"] }) {
   const [betrag, setBetrag] = useState("");
   const [tag, setTag] = useState(heuteIso());
   const istAdmin = useIstAdmin();
@@ -431,7 +459,11 @@ function ZahlungErfassen({ meldungId, vorschlag }: { meldungId: number; vorschla
       utils.meldung.invalidate();
       meldung(r.bestaetigt ? tz.erfasstBestaetigt : tz.erfasst);
     },
-    onError: (e) => meldung(fehlerText(e), "fehler"),
+    onError: (e) => {
+      // Neu laden: nach „inzwischen schon kassiert“ zeigt die Seite den echten offenen Betrag.
+      utils.meldung.invalidate();
+      meldung(fehlerText(e), "fehler");
+    },
   });
   return (
     <form
@@ -446,7 +478,7 @@ function ZahlungErfassen({ meldungId, vorschlag }: { meldungId: number; vorschla
           grund = (await eingabe({ titel: tz.erstattung, text: tz.erstattungText, feld: t.meldung.seitenleiste.grund, mindestens: 3 })) ?? "";
           if (!grund) return;
         }
-        erfassen.mutate({ meldungId, betragCent: cent, datum: tag, art, grund });
+        erfassen.mutate(zahlungAuftrag({ meldungId, betragCent: cent, datum: tag, art, grund, betrag: meldebetrag }));
       }}
     >
       <div className="grid grid-cols-2 gap-2">

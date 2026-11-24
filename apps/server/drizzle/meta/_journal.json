@@ -505,6 +505,13 @@
       "when": 1795350442059,
       "tag": "0071_druck_formate",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1795526995219,
+      "tag": "0072_meldung_anfrage",
+      "breakpoints": true
     }
   ]
 }

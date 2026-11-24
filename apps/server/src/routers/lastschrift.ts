@@ -10,8 +10,9 @@ import { z } from "zod";
 import { db, type Tx } from "../db/client";
 import { aussteller, auszahlung, bestaetigungSpende, lastschriftLauf, type LastschriftLaufDaten, type LastschriftLaufPosten, meldung, organisation, schau, sepaMandat, spende, zahlung, zuwendungsbestaetigung } from "../db/schema";
 import { meldebetraege } from "../services/eintraege";
-import { offeneLastschrift, offeneLastschriftenDesVereins, offenerLauf, sperreKasse } from "../services/kasse";
+import { offeneLastschrift, offeneLastschriftenDesVereins, offenerLauf, sperreKasse, sperreKasseMitPhase } from "../services/kasse";
 import { sendeMail } from "../services/post";
+import { sperreBestaetigungen } from "../services/spenden";
 import { protokolliere } from "../services/protokoll";
 import { adminProcedure, dbId, fehler, kalenderdatum, ladeSchau, router } from "../trpc";
 
@@ -106,7 +107,8 @@ export const lastschriftRouter = router({
       if (f) throw fehler("BAD_REQUEST", f);
     }
     await db.transaction(async (tx) => {
-      const [alt] = await tx.select({ g: organisation.glaeubigerId }).from(organisation).where(eq(organisation.id, ctx.benutzer.organisationId));
+      // Gesperrt lesen: zwei gleichzeitige Änderungen stehen sonst beide mit demselben alten Wert im Protokoll.
+      const [alt] = await tx.select({ g: organisation.glaeubigerId }).from(organisation).where(eq(organisation.id, ctx.benutzer.organisationId)).for("update");
       if (alt?.g === id) return;
       await tx.update(organisation).set({ glaeubigerId: id }).where(eq(organisation.id, ctx.benutzer.organisationId));
       await protokolliere(tx, { schauId: null, tabelle: "organisation", datensatzId: ctx.benutzer.organisationId, aktion: "Gläubiger-ID", alt: alt?.g ?? "", neu: id, akteur: ctx });
@@ -268,7 +270,7 @@ export const lastschriftRouter = router({
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
     if (s.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
     return db.transaction(async (tx) => {
-      await sperreKasse(tx, s.id);
+      if ((await sperreKasseMitPhase(tx, s.id)) === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
       const l = await offeneLastschrift(tx, s.id);
       if (!l || l.nachrichtId !== input.nachrichtId) throw fehler("CONFLICT", "Diese Lastschriftdatei ist nicht mehr offen.");
       for (const p of l.daten.posten) {
@@ -288,12 +290,17 @@ export const lastschriftRouter = router({
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
     if (s.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
     return db.transaction(async (tx) => {
-      await sperreKasse(tx, s.id);
+      if ((await sperreKasseMitPhase(tx, s.id)) === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
+      // Wie spenden.stornieren: erst Kasse, dann Bestätigungen – sonst stellt eine gleichzeitige Anfrage die
+      // Zuwendungsbestätigung aus, während hier die Rückbuchung läuft (Entscheidung 033).
+      await sperreBestaetigungen(tx, ctx.benutzer.organisationId);
       const [l] = await tx.select().from(lastschriftLauf).where(and(eq(lastschriftLauf.id, input.laufId), eq(lastschriftLauf.schauId, s.id))).for("update");
       if (!l || l.status !== "gebucht") throw fehler("BAD_REQUEST", "Nur gebuchte Lastschriften lassen sich zurückbuchen.");
       const p = l.daten.posten.find((x) => x.meldungId === input.meldungId);
       if (!p) throw fehler("NOT_FOUND", "Diese Meldung steht nicht in der Lastschrift.");
-      if (p.zurueck) throw fehler("BAD_REQUEST", "Die Rücklastschrift ist schon gebucht.");
+      // Zweite Sicherung neben dem Kennzeichen im Lauf: die Gegenbuchung selbst.
+      const [schon] = await tx.select({ id: zahlung.id }).from(zahlung).where(and(eq(zahlung.meldungId, p.meldungId), eq(zahlung.art, "lastschrift"), sql`${zahlung.betragCent} < 0`, sql`${zahlung.grund} like ${`Rücklastschrift ${l.nachrichtId}:%`}`)).limit(1);
+      if (p.zurueck || schon) throw fehler("BAD_REQUEST", "Die Rücklastschrift ist schon gebucht.");
       // Eine Spende mit dem Meldegeld gilt mit dem Einzug als eingegangen; ist sie schon bestätigt, wäre die
       // Zuwendungsbestätigung nach der Rückbuchung falsch (§ 10b Abs. 4 EStG) – erst sie stornieren.
       const [zb] = await tx

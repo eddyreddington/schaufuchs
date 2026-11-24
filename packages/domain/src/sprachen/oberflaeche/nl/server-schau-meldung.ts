@@ -43,6 +43,7 @@ export const serverSchauMeldung: OberflaecheTexte["serverSchau"]["meldung"] = {
     ibanAdmin: "Een bestaand IBAN of de rekeninghouder wijzigt alleen de showleiding (beheerders).",
     sepaBank: "De inzender staat in een open SEPA-bestand – boek of verwerp eerst het bestand en wijzig dan de bankgegevens.",
     gesperrtNeuLaden: "De gegevens van deze inzender zijn verwijderd of geblokkeerd en kunnen niet meer worden gewijzigd. Laad de pagina opnieuw.",
+    veraltet: "De inschrijving is intussen gewijzigd – laad opnieuw en voer de wijziging nogmaals uit.",
     einverstaendnis: "Jeugdinschrijving: publicatie op internet vereist toestemming van een ouder of voogd – vul diens naam in.",
     doppelt: "Voor deze inzender bestaat al een inschrijving voor deze show.",
     bleibenInMeldung: (nrn: string) =>

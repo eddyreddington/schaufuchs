@@ -45,6 +45,7 @@ export const serverSchauMeldung: OberflaecheTexte["serverSchau"]["meldung"] = {
     ibanAdmin: "Seule la direction de l’exposition (administrateurs) peut modifier un IBAN existant ou le titulaire du compte.",
     sepaBank: "L’exposant figure dans un fichier SEPA ouvert – comptabilisez ou annulez d’abord le fichier, puis modifiez les coordonnées bancaires.",
     gesperrtNeuLaden: "Les données de cet exposant sont supprimées ou bloquées et ne peuvent plus être modifiées. Veuillez actualiser la page.",
+    veraltet: "L’inscription a été modifiée entre-temps – veuillez recharger et refaire la modification.",
     einverstaendnis: "Inscription jeunes : la publication sur Internet requiert le consentement d’un représentant légal – veuillez indiquer son nom.",
     doppelt: "Cet exposant a déjà une inscription pour cette exposition.",
     bleibenInMeldung: (nrn: string) =>

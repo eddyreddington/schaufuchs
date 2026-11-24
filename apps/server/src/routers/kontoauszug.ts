@@ -11,7 +11,7 @@ import { z } from "zod";
 import { db } from "../db/client";
 import { aussteller, meldung, zahlung } from "../db/schema";
 import { meldebetrag, meldebetraege } from "../services/eintraege";
-import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, sperreKasse } from "../services/kasse";
+import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, sperreKasseMitPhase } from "../services/kasse";
 import { protokolliere } from "../services/protokoll";
 import { adminProcedure, dbId, fehler, ladeSchau, router } from "../trpc";
 import { pruefeBezahlt } from "./meldung";
@@ -129,7 +129,7 @@ export const kontoauszugRouter = router({
           beruehrt.add(p.meldungId);
           const soll = erwartet.get(p.meldungId) ?? p.offenCent;
           const ergebnis = await db.transaction(async (tx) => {
-            await sperreKasse(tx, s.id);
+            if ((await sperreKasseMitPhase(tx, s.id)) === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen – für Buchungen erst mit Grund zurück zur Abrechnung.");
             // Steht das Meldegeld in der offenen Lastschriftdatei, zieht die Bank es ein – nicht zusätzlich buchen.
             if (await inOffenerLastschrift(tx, s.id, { meldungIds: [p.meldungId] })) return LASTSCHRIFT_OFFEN;
             // Schon aus einem früheren Auszug gebucht: das zuerst melden (der offene Betrag hat sich dadurch ja geändert).

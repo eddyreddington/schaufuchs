@@ -106,9 +106,14 @@ export const meldung = pgTable(
     verfallenCent: integer("verfallen_cent").notNull().default(0),
     verfallGrund: text("verfall_grund").notNull().default(""),
     verfallenAm: ts("verfallen_am"),
+    /**
+     * Kennung des Formulars, das die Meldung angelegt hat (beim Öffnen erzeugt). Kommt dieselbe Anfrage noch einmal
+     * (verlorene Antwort, zweiter Klick), liefert der Server die schon angelegte Meldung statt einer zweiten (Entscheidung 033).
+     */
+    anfrageId: text("anfrage_id"),
     createdAt: created(),
   },
-  (t) => [uniqueIndex("meldung_schau_aussteller").on(t.schauId, t.ausstellerId)],
+  (t) => [uniqueIndex("meldung_schau_aussteller").on(t.schauId, t.ausstellerId), uniqueIndex("meldung_schau_anfrage").on(t.schauId, t.anfrageId)],
 );
 
 export const zahlung = pgTable(

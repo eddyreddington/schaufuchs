@@ -79,6 +79,7 @@ gegen dieselbe Datenbank (Einstieg `ablauf.test.ts`); neue Prüfungen als neuer 
 
 - Geld in Cent (integer), Provisionen in Basispunkten – [ADR 004](entscheidungen/004-geld-in-cent.md)
 - Änderungen an Bewertung, Preisen, Verkauf, Geld über `protokolliere()` – [ADR 003](entscheidungen/003-protokoll-hash-kette.md)
+- Gleichzeitiges Arbeiten: erst sperren, dann prüfen; Sperren in fester Reihenfolge (Testschau → Kasse → Bestätigungen → Zeilen); Formulare senden ihren Stand mit – [ADR 033](entscheidungen/033-gleichzeitiges-arbeiten.md)
 - Preisrichter sehen keine Ausstellernamen – [ADR 005](entscheidungen/005-anonyme-bewertung.md)
 - Keine Erklärtexte in der Oberfläche, „Hilfe zu …“ ins Handbuch – [ADR 008](entscheidungen/008-handbuch-statt-erklaertexte.md)
 - BDRG-Daten nur über Pflege und Import, nicht im Repo – [ADR 027](entscheidungen/027-bdrg-daten-nutzung.md)

@@ -56,7 +56,11 @@ export async function loescheLastschriftDaten(tx: Tx, organisationId: number, au
   const heute = tagBerlin(jetzt);
   const mandate = await tx.select({ id: sepaMandat.id, widerrufenAm: sepaMandat.widerrufenAm }).from(sepaMandat).where(eq(sepaMandat.ausstellerId, ausstellerId));
   for (const m of mandate) await tx.update(sepaMandat).set({ iban: "", kontoinhaber: "", widerrufenAm: m.widerrufenAm ?? heute }).where(eq(sepaMandat.id, m.id));
-  for (const { l } of laeufe) {
+  // Je Lauf gesperrt neu lesen (in Reihenfolge der IDs): eine gleichzeitige Rücklastschrift ändert dieselbe Zeile – mit
+  // der Kopie von oben ginge ihr Kennzeichen „zurück“ verloren (Entscheidung 033).
+  for (const { l: ungesperrt } of laeufe) {
+    const [l] = await tx.select().from(lastschriftLauf).where(eq(lastschriftLauf.id, ungesperrt.id)).for("update");
+    if (!l) continue;
     const posten = l.daten.posten.map((p) => (p.ausstellerId === ausstellerId ? { ...p, name: "Gelöscht", kontoinhaber: "", iban: "" } : p));
     await tx.update(lastschriftLauf).set({ daten: { ...l.daten, posten } }).where(eq(lastschriftLauf.id, l.id));
   }

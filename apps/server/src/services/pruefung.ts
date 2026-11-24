@@ -1,6 +1,6 @@
 import { type Phase, type HallenStand, hallenStandVon, gefordertCent, frontFehler, halleNormal, planeHalle, planUnordnung, gewichteteTierzahl, passtZuPreisart, ringjahrPasst, brauchtObmann, fehlendeVereinsangaben, formatKatalognummer, MELDEART_LABEL, normalisiereRegistriernummer, kontingent, hatKontingent, zaehltZumKontingent, stiftungUngedeckt, type KontingentBasis, type Preisart, istAuslaendisch } from "@schau/domain";
 import { and, asc, count, eq, ne, sql } from "drizzle-orm";
-import { db } from "../db/client";
+import { db, type Tx } from "../db/client";
 import { aussteller, auszahlung, gebuehr, katalogeintrag, meldung, preisart, preisrichter, prEinteilung, schau, stiftung } from "../db/schema";
 import { ladeVereinsangaben } from "./datenschutz";
 import { ladeEintraege, meldebetrag, skalaVon, type Eintrag } from "./eintraege";
@@ -30,8 +30,8 @@ export interface Punkt {
 export const ONLINE_RESERVIERUNG_STUNDEN = 14 * 24;
 
 /** Belegte Käfige: bestätigte und noch reservierte Meldungen. */
-export async function belegteKaefige(schauId: number) {
-  const [r] = await db
+export async function belegteKaefige(schauId: number, ex: Pick<Tx, "select"> = db) {
+  const [r] = await ex
     .select({ n: count() })
     .from(katalogeintrag)
     .innerJoin(meldung, eq(meldung.id, katalogeintrag.meldungId))

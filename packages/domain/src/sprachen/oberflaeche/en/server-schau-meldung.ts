@@ -43,6 +43,7 @@ export const serverSchauMeldung: OberflaecheTexte["serverSchau"]["meldung"] = {
     ibanAdmin: "An existing IBAN or the account holder can only be changed by the show management (administrators).",
     sepaBank: "The exhibitor is in an open SEPA file – book or discard the file first, then change the bank details.",
     gesperrtNeuLaden: "This exhibitor’s data has been deleted or locked and can no longer be changed. Please reload the page.",
+    veraltet: "The entry has been changed in the meantime – please reload and make the change again.",
     einverstaendnis: "Youth entry: publication on the internet requires the consent of a parent or guardian – please enter their name.",
     doppelt: "This exhibitor already has an entry for this show.",
     bleibenInMeldung: (nrn: string) =>

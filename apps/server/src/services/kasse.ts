@@ -14,6 +14,17 @@ export async function sperreKasse(tx: Tx, schauId: number) {
   await tx.execute(sql`select pg_advisory_xact_lock(${KASSE_SPERRE}::int, ${schauId}::int)`);
 }
 
+/**
+ * Kassensperre und danach die Phase frisch gelesen (Entscheidung 033): Wer auf die Sperre gewartet hat, sieht einen
+ * inzwischen gebuchten Abschluss (phaseSetzen nimmt dieselbe Sperre). Die Prüfung vor der Transaktion bleibt als
+ * schnelle Antwort; maßgeblich ist diese.
+ */
+export async function sperreKasseMitPhase(tx: Tx, schauId: number) {
+  await sperreKasse(tx, schauId);
+  const [s] = await tx.select({ phase: schau.phase }).from(schau).where(eq(schau.id, schauId));
+  return s!.phase;
+}
+
 // ── SEPA-Datei (Überweisungslauf) ────────────────────────────────────────
 // Die erzeugte Datei liegt mit allen Posten in sepa_lauf – nicht im Protokoll, damit IBANs nicht dauerhaft
 // gespeichert bleiben. Gebucht wird genau dieser Inhalt, nicht der Stand der Liste beim Klick. Je Schau gibt es

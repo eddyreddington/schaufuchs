@@ -929,6 +929,8 @@ Kommt der unterschriebene Bogen zurück, übernehmen Sie an der Meldung, was ang
 
 Über dem Formular stehen Tiere, Meldegeld, Bezahlt und Offen; der Status steht als Marke oben und im Abschnitt „Status“.
 
+Hat inzwischen jemand anders dieselbe Meldung gespeichert (z. B. an einem zweiten Tisch), speichert das Formular nicht: „Die Meldung wurde inzwischen geändert – bitte neu laden …“. Ihre Eingaben bleiben stehen. Merken Sie sich, was Sie ändern wollten, klicken Sie auf „Neu laden“ und tragen Sie die Änderung noch einmal ein.
+
 Je Aussteller gibt es **eine** Meldung pro Schau. Ein zweiter Meldebogen desselben Ausstellers wird in die vorhandene Meldung eingetragen.
 
 #### Zahlungen erfassen und bestätigen

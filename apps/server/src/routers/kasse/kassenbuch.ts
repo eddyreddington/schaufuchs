@@ -3,7 +3,7 @@ import { datumKurz } from "@schau/domain";
 import { z } from "zod";
 import { db } from "../../db/client";
 import { kassenabschluss, kassenbewegung, KASSENBEWEGUNG_ARTEN } from "../../db/schema";
-import { sperreKasse } from "../../services/kasse";
+import { sperreKasse, sperreKasseMitPhase } from "../../services/kasse";
 import { archiviereKassenbeleg, belegListe, ladeKassenbuch, sollBestand } from "../../services/kassenbuch";
 import { protokolliere } from "../../services/protokoll";
 import { heuteDe } from "../../services/tiergesundheit";
@@ -52,7 +52,7 @@ export const barkasse = {
       // Funktionstrennung: Geld aus der Kasse nehmen darf nur die Ausstellungsleitung.
       if (input.art === "entnahme" && ctx.benutzer.rolle !== "admin") throw fehler("FORBIDDEN", "Entnahmen bucht die Ausstellungsleitung (Administratoren).");
       const k = await db.transaction(async (tx) => {
-        await sperreKasse(tx, input.schauId);
+        if ((await sperreKasseMitPhase(tx, input.schauId)) === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen – keine Kassenbuchungen mehr.");
         if (input.art === "entnahme") await pruefeKassenbestand(tx, input.schauId, input.betragCent, ctx.benutzer, input.trotzdem);
         const { trotzdem: _t, ...werte } = input;
         const [k] = await tx.insert(kassenbewegung).values({ ...werte, erfasstVon: ctx.benutzer.id }).returning();

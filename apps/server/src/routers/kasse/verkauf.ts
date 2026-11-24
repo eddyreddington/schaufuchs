@@ -5,7 +5,7 @@ import { z } from "zod";
 import { db } from "../../db/client";
 import { auszahlung, bewertung, gesundheit, katalogeintrag, meldung, verkauf, verkaufZahlungseingang } from "../../db/schema";
 import { ladeEintraege } from "../../services/eintraege";
-import { offeneUeberweisungsverkaeufe, offenerLauf, pruefeNichtAbgerechnet, pruefeNichtAbgeschlossen, sperreKasse } from "../../services/kasse";
+import { offeneUeberweisungsverkaeufe, offenerLauf, pruefeNichtAbgerechnet, pruefeNichtAbgeschlossen, sperreKasseMitPhase } from "../../services/kasse";
 import { archiviereKaufbeleg } from "../../services/kassenbuch";
 import { protokolliere } from "../../services/protokoll";
 import { adminProcedure, benutzerProcedure, fehler, ladeSchau, dbId, kalenderdatum } from "../../trpc";
@@ -45,7 +45,10 @@ export const tierverkauf = {
       if (input.zahlart !== "bar" && ctx.benutzer.rolle !== "admin") {
         throw fehler("FORBIDDEN", "Verkauf auf Karte oder Überweisung nur durch die Ausstellungsleitung (der Erlös stünde sonst ohne bestätigten Geldeingang zur Auszahlung bereit).");
       }
-      if (!VERKAUF_PHASEN.includes(s.phase)) throw fehler("BAD_REQUEST", "Verkauf erst nach der Bewertung, solange die Schau läuft (Phase „Preise“ oder „Schau“).");
+      const pruefePhase = (phase: string) => {
+        if (!VERKAUF_PHASEN.includes(phase as never)) throw fehler("BAD_REQUEST", "Verkauf erst nach der Bewertung, solange die Schau läuft (Phase „Preise“ oder „Schau“).");
+      };
+      pruefePhase(s.phase);
       const registriernummer = normalisiereRegistriernummer(input.kaeuferRegistriernummer);
       if (!registriernummer) throw fehler("BAD_REQUEST", `Registriernummer des Käufers ungültig: ${REGISTRIERNUMMER_HINWEIS}.`);
       const unter16 = input.kaeuferAlter === "unter16";
@@ -53,7 +56,7 @@ export const tierverkauf = {
         throw fehler("BAD_REQUEST", "Käufer unter 16 Jahren: nur mit Einwilligung eines Erziehungsberechtigten (§ 11c TierSchG) – bitte dessen Namen angeben.");
       }
       const v = await db.transaction(async (tx) => {
-        await sperreKasse(tx, s.id);
+        pruefePhase(await sperreKasseMitPhase(tx, s.id));
         const [e] = await tx.select().from(katalogeintrag).where(and(eq(katalogeintrag.id, input.katalogeintragId), eq(katalogeintrag.schauId, s.id)));
         if (!e) throw fehler("NOT_FOUND", "Tier nicht gefunden.");
         if (e.verkaufspreisCent == null || e.verkaufspreisCent <= 0) throw fehler("BAD_REQUEST", "Dieses Tier ist nicht verkäuflich gemeldet.");
@@ -100,7 +103,7 @@ export const tierverkauf = {
       const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
       pruefeNichtAbgeschlossen(s);
       await db.transaction(async (tx) => {
-        await sperreKasse(tx, input.schauId);
+        pruefeNichtAbgeschlossen({ phase: await sperreKasseMitPhase(tx, input.schauId) });
         const [v] = await tx
           .select({ v: verkauf, schauId: katalogeintrag.schauId, ausstellerId: meldung.ausstellerId })
           .from(verkauf)
@@ -175,7 +178,7 @@ export const tierverkauf = {
     .mutation(async ({ ctx, input }) => {
       const s = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.schauId));
       await db.transaction(async (tx) => {
-        await sperreKasse(tx, s.id);
+        pruefeNichtAbgeschlossen({ phase: await sperreKasseMitPhase(tx, s.id) });
         const [v] = await tx
           .select({ v: verkauf, eingang: verkaufZahlungseingang.id })
           .from(verkauf)

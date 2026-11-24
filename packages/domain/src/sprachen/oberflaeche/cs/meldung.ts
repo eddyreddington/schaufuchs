@@ -33,6 +33,7 @@ export const meldung: OberflaecheTexte["meldung"] = {
     gespeichert: (betrag: string) => `Přihláška uložena. Částka: ${betrag}`,
     eingegangen: (datum: string, eingang: string) => `Přijato ${datum} · ${eingang}`,
     hilfe: "Nápověda k přihláškám",
+    neuLaden: "Znovu načíst",
     zurueck: "Zpět na seznam",
     meldegeld: "Přihlašovací poplatek",
     plusStiftung: (betrag: string) => `+ ${betrag} čestná cena`,

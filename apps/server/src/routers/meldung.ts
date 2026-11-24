@@ -5,10 +5,11 @@ import { config } from "../config";
 import { db } from "../db/client";
 import { aussteller, katalogeintrag, meldung, schau, stiftung, zahlung } from "../db/schema";
 import { ladeEintraege, meldebetrag } from "../services/eintraege";
-import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, offeneStornoZahlungen, offenerLauf, pruefeNichtAbgeschlossen, sperreKasse } from "../services/kasse";
+import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, offeneStornoZahlungen, offenerLauf, pruefeNichtAbgeschlossen, sperreKasseMitPhase } from "../services/kasse";
 import { bindungen, hatAuszahlung, meldungEingabe, speichereMeldung } from "../services/meldung";
 import { sendeMail } from "../services/post";
 import { archiviereKassenbeleg } from "../services/kassenbuch";
+import { meldungStand } from "../services/meldung-stand";
 import { einteilungNachStatus } from "../services/einteilung";
 import { verzeichnisVorschlaegeZwischengespeichert } from "../services/vereinsverzeichnis";
 import { protokolliere, type Akteur } from "../services/protokoll";
@@ -161,6 +162,8 @@ export const meldungRouter = router({
       zahlungen,
       betrag,
       stiftung: stiftungen[0] ?? null,
+      /** Für das Formular: beim Speichern zurücksenden (Entscheidung 033). */
+      stand: await meldungStand(db, m.id),
       link: `${config.publicUrl}/s/${s.slug}/meldung/${m.zugangsToken}`,
     };
   }),
@@ -213,15 +216,22 @@ export const meldungRouter = router({
     .input(z.object({ id: dbId, status: z.enum(MELDUNG_STATUS), grund: z.string().max(500).default("") }))
     .mutation(async ({ ctx, input }) => {
       const { m: geladen, s } = await ladeMeldung(ctx.benutzer.organisationId, input.id);
-      if (s.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen – der Status einer Meldung lässt sich nicht mehr ändern.");
-      // Der verfallene Betrag gehört dem Verein – eine wieder aufgenommene Meldung verrechnete ihn noch einmal.
-      if (geladen.verfallenCent > 0 && input.status !== "storniert" && input.status !== "abgelehnt")
-        throw fehler("BAD_REQUEST", "Für diese Meldung ist ein Verfall gebucht – sie bleibt storniert bzw. abgelehnt. Bitte eine neue Meldung erfassen.");
+      // Vorprüfungen als schnelle Antwort; maßgeblich ist der gesperrte Stand in der Transaktion.
+      const pruefe = (phase: string, verfallenCent: number) => {
+        if (phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen – der Status einer Meldung lässt sich nicht mehr ändern.");
+        // Der verfallene Betrag gehört dem Verein – eine wieder aufgenommene Meldung verrechnete ihn noch einmal.
+        if (verfallenCent > 0 && input.status !== "storniert" && input.status !== "abgelehnt")
+          throw fehler("BAD_REQUEST", "Für diese Meldung ist ein Verfall gebucht – sie bleibt storniert bzw. abgelehnt. Bitte eine neue Meldung erfassen.");
+      };
+      pruefe(s.phase, geladen.verfallenCent);
       await db.transaction(async (tx) => {
-        // Status gesperrt neu lesen: Rechte, Bindungen und Protokoll beruhen auf dem aktuellen Stand (kein Wettlauf mit
-        // einer gleichzeitigen Stornierung oder Ablehnung).
+        // Immer zuerst die Kasse, dann die Zeile (wie Zahlung, Verfall und Bearbeiten – sonst verklemmen sich beide;
+        // Entscheidung 033). Danach Phase und Status gesperrt neu lesen: Rechte, Bindungen und Protokoll beruhen auf dem
+        // aktuellen Stand (kein Wettlauf mit Stornierung, Ablehnung, Verfall oder Abschluss).
+        const phase = await sperreKasseMitPhase(tx, geladen.schauId);
         const [frisch] = await tx.select().from(meldung).where(eq(meldung.id, geladen.id)).for("update");
         if (!frisch) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
+        pruefe(phase, frisch.verfallenCent);
         const m = frisch;
         // Helfer bestätigen offene Meldungen (auch ohne Zahlung – bezahlt wird oft erst bei der Einlieferung) und nehmen eine
         // versehentliche Bestätigung zurück (bestätigt → offen, nur solange nichts daran hängt, siehe unten). Ablehnen,
@@ -232,7 +242,6 @@ export const meldungRouter = router({
         }
         // Zurück auf „offen“ nur ohne Zahlung – sonst fiele bezahltes Meldegeld aus der Abrechnung.
         if (m.status === "bestaetigt" && input.status === "offen") {
-          await sperreKasse(tx, m.schauId);
           const b = await meldebetrag(tx, m.id);
           if (b.bezahltCent !== 0) throw fehler("BAD_REQUEST", "Die Meldung hat schon eine Zahlung – sie kann nicht zurück auf „offen“. Erst die Zahlung stornieren (Ausstellungsleitung).");
         }
@@ -241,7 +250,6 @@ export const meldungRouter = router({
         // Auch der Umweg bestätigt → offen → storniert ist gesperrt: geprüft wird jeder Wechsel aus „bestätigt“ und
         // jedes Storno bzw. jede Ablehnung.
         if ((m.status === "bestaetigt" && input.status !== "bestaetigt") || input.status === "storniert" || input.status === "abgelehnt") {
-          await sperreKasse(tx, m.schauId);
           const ids = (await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(eq(katalogeintrag.meldungId, m.id))).map((x) => x.id);
           // Auch eingelieferte Tiere und Einträge im Gesundheitsjournal binden (Tierliste fürs Veterinäramt).
           const gebunden = await bindungen(tx, ids, { statuswechsel: true });
@@ -299,7 +307,7 @@ export const meldungRouter = router({
       const { grund, erwartetOffenCent, ...werte } = input;
       const z = await db.transaction(async (tx) => {
         // Gleiche Sperre wie bei Verkauf und Auszahlung: die Abrechnung sieht immer einen vollständigen Stand.
-        await sperreKasse(tx, m.schauId);
+        if ((await sperreKasseMitPhase(tx, m.schauId)) === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen – für Buchungen erst mit Grund zurück zur Abrechnung.");
         // Steht das Meldegeld in der offenen Lastschriftdatei, zieht die Bank es ein – nicht zusätzlich kassieren.
         if (await inOffenerLastschrift(tx, m.schauId, { meldungIds: [m.id] })) throw fehler("CONFLICT", LASTSCHRIFT_OFFEN);
         // Doppelt kassieren verhindern (zwei Helfer gleichzeitig, erneuter Klick nach Netzfehler): unter der Sperre neu rechnen.
@@ -332,7 +340,7 @@ export const meldungRouter = router({
     .mutation(async ({ ctx, input }) => {
       const s = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.schauId));
       const anzahl = await db.transaction(async (tx) => {
-        await sperreKasse(tx, s.id);
+        pruefeNichtAbgeschlossen({ phase: await sperreKasseMitPhase(tx, s.id) });
         const offen = (await offeneStornoZahlungen(tx, s.id)).filter((x) => input.meldungIds.includes(x.meldungId) && x.restCent > 0);
         for (const x of offen) {
           const werte = { meldungId: x.meldungId, betragCent: -x.restCent, datum: input.datum, art: "ueberweisung" as const };
@@ -374,8 +382,10 @@ export const meldungRouter = router({
       pruefeNichtAbgeschlossen(s);
       if (m.status !== "storniert" && m.status !== "abgelehnt") throw fehler("BAD_REQUEST", "Verfall gibt es nur bei stornierten oder abgelehnten Meldungen.");
       await db.transaction(async (tx) => {
-        await sperreKasse(tx, m.schauId);
+        pruefeNichtAbgeschlossen({ phase: await sperreKasseMitPhase(tx, m.schauId) });
         const [akt] = await tx.select().from(meldung).where(eq(meldung.id, m.id)).for("update");
+        // Gesperrt neu: eine inzwischen wieder aufgenommene Meldung bekommt keinen Verfall.
+        if (akt!.status !== "storniert" && akt!.status !== "abgelehnt") throw fehler("BAD_REQUEST", "Verfall gibt es nur bei stornierten oder abgelehnten Meldungen.");
         const [b] = await tx.select({ s: sum(zahlung.betragCent) }).from(zahlung).where(eq(zahlung.meldungId, m.id));
         const rest = Number(b?.s ?? 0) - akt!.verfallenCent;
         if (rest <= 0) throw fehler("BAD_REQUEST", "Es ist nichts offen, das verfallen könnte (kein Zahlungseingang oder schon erstattet).");
@@ -399,7 +409,7 @@ export const meldungRouter = router({
       // Wie beim Erfassen: in der abgeschlossenen Schau keine Buchung mehr (sonst ein Kassentag ohne Abschluss).
       pruefeNichtAbgeschlossen(s);
       const g = await db.transaction(async (tx) => {
-        await sperreKasse(tx, m.schauId);
+        pruefeNichtAbgeschlossen({ phase: await sperreKasseMitPhase(tx, m.schauId) });
         if (z.stornoVon) throw fehler("BAD_REQUEST", "Eine Gegenbuchung lässt sich nicht stornieren.");
         // Eine Lastschrift kommt nur über die Bank zurück: „Rücklastschrift“ auf der Seite Lastschrift (markiert auch den
         // Posten im Lauf; zwei Wege hießen zweimal zurückbuchen).

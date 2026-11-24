@@ -4,7 +4,7 @@ import { and, eq, gt, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
 import { auszahlung } from "../../db/schema";
-import { LASTSCHRIFT_OFFEN, pruefeNichtAbgeschlossen, sperreKasse } from "../../services/kasse";
+import { LASTSCHRIFT_OFFEN, pruefeNichtAbgeschlossen, sperreKasseMitPhase } from "../../services/kasse";
 import { archiviereQuittung } from "../../services/kassenbuch";
 import { protokolliere } from "../../services/protokoll";
 import { adminProcedure, benutzerProcedure, fehler, ladeSchau, dbId } from "../../trpc";
@@ -38,12 +38,15 @@ export const auszahlungen = {
     )
     .mutation(async ({ ctx, input }) => {
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
-    if (!AUSZAHLUNG_PHASEN.includes(s.phase))
-      throw fehler("BAD_REQUEST", s.phase === "abgeschlossen" ? "Die Schau ist abgeschlossen – für Buchungen erst mit Grund zurück zur Abrechnung." : "Ausgezahlt wird ab der Phase „Schau“. Meldegeld-Erstattungen vorher an der Meldung buchen.");
+    const pruefePhase = (phase: string) => {
+      if (!AUSZAHLUNG_PHASEN.includes(phase as never))
+        throw fehler("BAD_REQUEST", phase === "abgeschlossen" ? "Die Schau ist abgeschlossen – für Buchungen erst mit Grund zurück zur Abrechnung." : "Ausgezahlt wird ab der Phase „Schau“. Meldegeld-Erstattungen vorher an der Meldung buchen.");
+    };
+    pruefePhase(s.phase);
     // Funktionstrennung: eine Überweisung ohne SEPA-Datei bucht nur die Ausstellungsleitung.
     if (input.art === "ueberweisung" && ctx.benutzer.rolle !== "admin") throw fehler("FORBIDDEN", "Überweisungen bucht die Ausstellungsleitung (Administratoren).");
     const a = await db.transaction(async (tx) => {
-      await sperreKasse(tx, s.id);
+      pruefePhase(await sperreKasseMitPhase(tx, s.id));
       const zeile = (await abrechnungListe(s.id, tx, { nurAusstellerId: input.ausstellerId })).find((z) => z.ausstellerId === input.ausstellerId);
       if (!zeile) throw fehler("NOT_FOUND", "Aussteller nicht gefunden.");
       if (zeile.inUeberweisung) throw fehler("CONFLICT", "Aussteller steht in der offenen SEPA-Datei. Erst die Datei buchen oder verwerfen.");
@@ -100,7 +103,7 @@ export const auszahlungen = {
       const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
       pruefeNichtAbgeschlossen(s);
       const a = await db.transaction(async (tx) => {
-        await sperreKasse(tx, input.schauId);
+        pruefeNichtAbgeschlossen({ phase: await sperreKasseMitPhase(tx, input.schauId) });
         const [a] = await tx.select().from(auszahlung).where(and(eq(auszahlung.id, input.id), eq(auszahlung.schauId, input.schauId)));
         if (!a) throw fehler("NOT_FOUND", "Auszahlung nicht gefunden.");
         if (a.storniertAm) throw fehler("CONFLICT", `Quittung ${a.quittungNr} ist bereits storniert.`);

@@ -1,5 +1,5 @@
 import { ALTER, EINGANG, gefordertCent, heuteBerlin, istAuslaendisch, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, normalisiereIban, normalisiereRegistriernummer, pruefeGeschlecht, pruefeIban, REGISTRIERNUMMER_HINWEIS, teilschauenLesen, teilschauVon, texte, type Sprache } from "@schau/domain";
-import { and, eq, inArray, isNull, ne } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { zufallsToken } from "../auth";
 import type { Tx } from "../db/client";
@@ -7,6 +7,7 @@ import { aussteller, auszahlung, bewertung, farbenschlag, gesundheit, katalogein
 import { fehler, dbId, kalenderdatum } from "../trpc";
 import { meldebetrag } from "./eintraege";
 import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, offenerLauf, sperreKasse } from "./kasse";
+import { MELDUNG_VERALTET, meldungStand } from "./meldung-stand";
 import { pruefeAusstellerZurSchau, sperreTestschauGeteilt, testSchauIdFuer } from "./testschau";
 import { protokolliere, type Akteur } from "./protokoll";
 import { meldungsspendeAnlegen } from "./spenden";
@@ -95,6 +96,10 @@ export const meldungEingabe = z.object({
    * dann bleibt der aktuelle Stand (z. B. ein inzwischen über „Meine Meldung“ erklärter Widerruf) erhalten.
    */
   onlineZustimmungVorher: z.boolean().optional(),
+  /** Stand der Meldung beim Öffnen des Formulars (meldung.get): weicht er ab, wird nichts gespeichert (Entscheidung 033). */
+  stand: z.string().max(64).optional(),
+  /** Kennung des Formulars einer neuen Meldung: dieselbe Anfrage zweimal legt nur eine Meldung an. */
+  anfrageId: z.string().uuid().optional(),
   /**
    * Widerspruch gegen die Nennung im Katalog (Art. 21 DSGVO), von der Ausstellungsleitung erfasst. Fehlt die Angabe
    * (öffentliches Formular, ältere Oberfläche), bleibt der gespeicherte Stand.
@@ -110,6 +115,15 @@ export const meldungEingabe = z.object({
 });
 export type MeldungEingabe = z.infer<typeof meldungEingabe>;
 
+/** Je Schau: Online-Meldungen prüfen Halle, Phase und Meldeschluss nacheinander; phaseSetzen wartet darauf (Entscheidung 033). */
+const MELDUNG_SCHAU_SPERRE = 0x4d454c53; // "MELS"
+export async function sperreOnlineMeldung(tx: Pick<Tx, "execute">, schauId: number) {
+  await tx.execute(sql`select pg_advisory_xact_lock(${MELDUNG_SCHAU_SPERRE}::int, ${schauId}::int)`);
+}
+
+/** Kennung der Sperre je Anfrage-Kennung einer neuen Meldung (pg_advisory_xact_lock). */
+const ANFRAGE_SPERRE = 0x4d414e46; // "MANF"
+
 /**
  * Legt eine Meldung an oder ändert sie (samt Aussteller und Positionen).
  * Positionen, die nicht mehr übergeben werden, werden gelöscht – außer sie sind schon bewertet.
@@ -120,8 +134,21 @@ export type MeldungEingabe = z.infer<typeof meldungEingabe>;
  */
 export async function speichereMeldung(tx: Tx, organisationId: number, input: MeldungEingabe, akteur: Akteur, opts: { istAdmin?: boolean; ibanVerdeckt?: boolean; /** Online-Meldung eines bekannten Ausstellers: Stammdaten bleiben, wie sie sind. */ bestehendenNichtAendern?: boolean; /** Online-Meldung: Sprache des Formulars – für Fehlermeldungen und, bei einer neuen Meldung, gespeichert (Entscheidung 020). */ sprache?: Sprache } = {}) {
   await sperreTestschauGeteilt(tx, input.schauId);
+  // Bearbeiten: erst die Kasse, dann Schau und Meldung frisch (Reihenfolge Kasse vor Zeile, Entscheidung 033) – so sehen
+  // Phase, Einwilligung und Stand, was eine Buchung oder ein Abschluss während des Wartens geändert hat.
+  if (input.meldungId) await sperreKasse(tx, input.schauId);
   const [s] = await tx.select().from(schau).where(eq(schau.id, input.schauId));
   if (!s || s.organisationId !== organisationId) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
+  // Dieselbe Anfrage noch einmal (verlorene Antwort, zweiter Klick): die schon angelegte Meldung zurückgeben.
+  if (!input.meldungId && input.anfrageId) {
+    await tx.execute(sql`select pg_advisory_xact_lock(${ANFRAGE_SPERRE}::int, hashtext(${input.anfrageId}))`);
+    const [schon] = await tx.select({ id: meldung.id, ausstellerId: meldung.ausstellerId }).from(meldung).where(and(eq(meldung.schauId, input.schauId), eq(meldung.anfrageId, input.anfrageId)));
+    if (schon) return { meldungId: schon.id, ausstellerId: schon.ausstellerId, betrag: await meldebetrag(tx, schon.id) };
+  }
+  // Abgesagt: unter der geteilten Sperre gelesen – absagen wartet exklusiv darauf, sieht also jede Meldung, die vorher
+  // durchkam. Die Meldephase prüft nur der öffentliche Weg (meldeOnline unter sperreOnlineMeldung); die AL erfasst auch
+  // später noch Meldungen mit Eingang „online“.
+  if (!input.meldungId && s.abgesagtAm) throw fehler("BAD_REQUEST", texte(opts.sprache ?? "de").schau.abgesagt(s.absageGrund));
 
   // Farbenschläge müssen zur Stammdatenversion der Schau gehören.
   const fIds = input.positionen.map((p) => p.farbenschlagId).filter((x): x is number => x != null);
@@ -156,8 +183,18 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
   if (!s.auslandZugelassen && istAuslaendisch(input.aussteller.registriernummer)) {
     throw fehler("BAD_REQUEST", texte(opts.sprache ?? "de").fehler.keinAusland);
   }
-  const vorherige = input.meldungId ? (await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)))[0] : undefined;
-  if (input.meldungId && (!vorherige || vorherige.schauId !== s.id)) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
+  // Bearbeiten: Zeilen in fester Reihenfolge sperren – Aussteller, Meldung, ihre Tiere (wie der Löschwunsch: erst der
+  // Aussteller, dann seine Meldungen; Entscheidung 033) – und erst danach den Stand vergleichen. So wartet das Speichern
+  // auf eine laufende Änderung an Aussteller oder Tier und sieht sie, statt sie mit den Formularwerten zu überschreiben.
+  let vorherige: typeof meldung.$inferSelect | undefined;
+  if (input.meldungId) {
+    const [kopf] = await tx.select({ ausstellerId: meldung.ausstellerId }).from(meldung).where(and(eq(meldung.id, input.meldungId), eq(meldung.schauId, s.id)));
+    if (!kopf) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
+    await tx.select({ id: aussteller.id }).from(aussteller).where(eq(aussteller.id, kopf.ausstellerId)).for("update");
+    vorherige = (await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)).for("update"))[0]!;
+    await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(eq(katalogeintrag.meldungId, vorherige.id)).orderBy(asc(katalogeintrag.id)).for("update");
+    if (input.stand !== undefined && input.stand !== (await meldungStand(tx, vorherige.id))) throw fehler("CONFLICT", MELDUNG_VERALTET);
+  }
   // Der Aussteller einer Meldung bleibt: ein Wechsel ließe Auszahlungen, Belege und Verkäufe beim alten zurück.
   if (vorherige && aid !== vorherige.ausstellerId) {
     throw fehler("BAD_REQUEST", "Der Aussteller einer Meldung lässt sich nicht wechseln. Bitte die Meldung stornieren und für den richtigen Aussteller neu erfassen.");
@@ -180,7 +217,6 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
   let imEinzug = false;
   let vorherBetrag: Awaited<ReturnType<typeof meldebetrag>> | null = null;
   if (vorherige) {
-    await sperreKasse(tx, s.id);
     vorherBetrag = await meldebetrag(tx, vorherige.id);
     abgerechnet = (await hatAuszahlung(tx, s.id, vorherige.ausstellerId)) != null || !!(await offenerLauf(tx, s.id))?.posten.some((p) => p.ausstellerId === vorherige.ausstellerId);
     imEinzug = await inOffenerLastschrift(tx, s.id, { meldungIds: [vorherige.id] });
@@ -330,6 +366,7 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
         erziehungsberechtigter: input.istJugend ? input.erziehungsberechtigter : "",
         erklaerungenAm: input.erklaerungen ? new Date() : null,
         zugangsToken: zufallsToken(18),
+        anfrageId: input.anfrageId ?? null,
         sprache: opts.sprache ?? "de",
       })
       .returning();
