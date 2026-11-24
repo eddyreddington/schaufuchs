@@ -3,7 +3,7 @@ import { gefordertCent, KAEFIG_TYPEN, kaefigName, kaefigTyp } from "@schau/domai
 import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
-import { gesundheit, katalogeintrag, meldung, verkauf, verkaufZahlungseingang } from "../../db/schema";
+import { gesundheit, katalogeintrag, meldung, schau, verkauf, verkaufZahlungseingang } from "../../db/schema";
 import { ladeEintraege, meldebetraege } from "../../services/eintraege";
 import { pruefeNichtAbgeschlossen, sperreKasse } from "../../services/kasse";
 import { bindungen } from "../../services/meldung";
@@ -253,6 +253,10 @@ export const halleEinlieferung = {
       return db.transaction(async (tx) => {
         const [m] = await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)).for("update");
         if (!m) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
+        // Phase frisch und geteilt gesperrt: ein gleichzeitiger Abschluss ist entweder sichtbar oder wartet. Nach der
+        // Meldung, wie bei der Absage (Meldungen, dann Schau) – andersherum verklemmten sich beide.
+        const [ph] = await tx.select({ phase: schau.phase }).from(schau).where(eq(schau.id, m.schauId)).for("share");
+        pruefeNichtAbgeschlossen(ph!);
         const werte = {
           vetImpfdatum: input.nd.datum,
           vetImpfstoff: input.nd.impfstoff.trim(),

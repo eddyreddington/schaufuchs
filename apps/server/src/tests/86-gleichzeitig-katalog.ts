@@ -1,7 +1,8 @@
 /**
- * Gleichzeitiges Arbeiten in Katalog und Halle (Entscheidung 033): Nummern vergeben und Festschreibung aufheben gegen eine
- * gleichzeitige Note, Ausgabe gegen eine gleichzeitige Sperre im Gesundheitsjournal, Impfnachweis von zwei Anfragen,
- * Entscheiden für zwei Entwürfe, zwei Logos, doppelt aufgehobene Sperre. Eine zweite Verbindung hält die Sperre bzw.
+ * Gleichzeitiges Arbeiten in Katalog und Halle (Entscheidung 033): Nummern vergeben, nach Hallenplan vergeben und
+ * Festschreibung aufheben gegen eine gleichzeitige Note, Ausgabe gegen eine gleichzeitige Sperre im Gesundheitsjournal,
+ * Impfnachweis von zwei Anfragen und gegen den Abschluss, Entscheiden für zwei Entwürfe, zwei Logos, doppelt aufgehobene
+ * Sperre, Bestätigen gegen die gehaltene Einteilung (Protokoll zuletzt). Eine zweite Verbindung hält die Sperre bzw.
  * schreibt zwischen Lesen und Schreiben (deterministisch). Teil des Schau-Ablaufs.
  */
 import { describe, expect, test } from "bun:test";
@@ -37,8 +38,15 @@ async function mitOffenerTransaktion<T>(vorher: (s: typeof m.sql) => Promise<unk
       (fehler: Error) => ({ ok: false as const, fehler }),
     );
     await Bun.sleep(300);
-    if (dazwischen) await dazwischen(s as unknown as typeof m.sql);
-    await s`commit`;
+    try {
+      if (dazwischen) await dazwischen(s as unknown as typeof m.sql);
+      await s`commit`;
+    } catch (e) {
+      // Z. B. Verklemmung (40P01) in der zweiten Verbindung: zurückrollen, damit die Verbindung sauber in den Pool geht.
+      await s`rollback`.catch(() => {});
+      await p;
+      throw e;
+    }
     return await p;
   } finally {
     s.release();
@@ -92,7 +100,8 @@ describe("Gleichzeitig in Katalog und Halle", () => {
     await al().halle.statusSetzen({ schauId: id, ids: [x.id], status: "ausgesetzt", uebersteuern: "Tierarzt ordnet an" });
     expect((await protokoll(id, `Status ausgesetzt, gesperrt: ${x.katalogNr}${x.suffix}`)).length).toBe(1);
 
-    // Erfassen wartet auf ein gehaltenes Tier (ordnet sich mit der Ausgabe).
+    // Absicherung (kein Nachweis eines Funds): Erfassen wartet auf ein gehaltenes Tier. Das täte es auch ohne die
+    // ausdrückliche Tiersperre – der Fremdschlüssel gesundheit → katalogeintrag nimmt beim Einfügen FOR KEY SHARE.
     const y = tiere[1]!;
     const s = await m.sql.reserve();
     await s`begin`;
@@ -170,12 +179,58 @@ describe("Gleichzeitig in Katalog und Halle", () => {
     const [g] = await m.db.select().from(m.schema.gesundheit).where(m.eq(m.schema.gesundheit.katalogeintragId, x.id));
     await al().halle.gesundheitFreigeben({ schauId: id, id: g!.id, grund: "Tierarzt A" });
     await al().halle.gesundheitFreigeben({ schauId: id, id: g!.id, grund: "Tierarzt B" });
-    // Gleichzeitig: eine neue Sperre, zweimal zugleich aufgehoben.
-    await al().halle.gesundheitErfassen({ schauId: id, nr: `${x.katalogNr}${x.suffix}`, befund: "Verdacht 2", sperre: true });
-    const [g2] = (await m.db.select().from(m.schema.gesundheit).where(m.eq(m.schema.gesundheit.katalogeintragId, x.id))).filter((y) => y.id !== g!.id);
-    await Promise.all([al().halle.gesundheitFreigeben({ schauId: id, id: g2!.id, grund: "Tierarzt C" }), al().halle.gesundheitFreigeben({ schauId: id, id: g2!.id, grund: "Tierarzt D" })]);
     const [nachher] = await m.db.select().from(m.schema.gesundheit).where(m.eq(m.schema.gesundheit.id, g!.id));
     expect(nachher!.aufhebungGrund).toBe("Tierarzt A");
-    expect((await protokoll(id, "Sperre aufgehoben")).map((p) => p.datensatzId)).toEqual([g!.id, g2!.id]);
+    // Gleichzeitig: eine neue Sperre; die zweite Verbindung hält sie und hebt sie auf, während der Aufruf wartet.
+    await al().halle.gesundheitErfassen({ schauId: id, nr: `${x.katalogNr}${x.suffix}`, befund: "Verdacht 2", sperre: true });
+    const [g2] = (await m.db.select().from(m.schema.gesundheit).where(m.eq(m.schema.gesundheit.katalogeintragId, x.id))).filter((y) => y.id !== g!.id);
+    const r = await mitOffenerTransaktion(
+      (s) => s`select id from gesundheit where id = ${g2!.id} for update`,
+      () => al().halle.gesundheitFreigeben({ schauId: id, id: g2!.id, grund: "Tierarzt D" }),
+      (s) => s`update gesundheit set sperre = false, aufgehoben_am = now(), aufhebung_grund = 'Tierarzt C' where id = ${g2!.id}`,
+    );
+    expect(r.ok).toBe(true);
+    const [nachher2] = await m.db.select().from(m.schema.gesundheit).where(m.eq(m.schema.gesundheit.id, g2!.id));
+    expect(nachher2!.aufhebungGrund).toBe("Tierarzt C");
+    expect((await protokoll(id, "Sperre aufgehoben")).map((p) => p.datensatzId)).toEqual([g!.id]);
+  });
+
+  test("Nach Plan nummerieren: eine gleichzeitige Note verhindert das Umnummerieren", async () => {
+    const { id, tiere } = await schauMitTieren("Nach Plan gleichzeitig");
+    const halle = { breite: 800, laenge: 1000, gang: 150, richtung: "laengs" as const, wandreihen: false, quergang: false, wandBuendig: false, hauptgang: { breite: 0, lage: "keiner" as const }, platte: { laenge: 210, tiefe: 70 }, jePlatte: {}, objekte: [], reihenVersatz: [], plattenVersatz: [], spartenStart: [], flaechen: [] };
+    await al().katalog.halleSetzen({ schauId: id, halle });
+    await al().katalog.planFestschreiben({ schauId: id });
+    const r = await mitOffenerTransaktion(
+      (s) => s`insert into bewertung (katalogeintrag_id, punkte) values (${tiere[1]!.id}, 93)`,
+      () => al().katalog.nummernNachPlan({ schauId: id }),
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.fehler.message).toContain("Neu nummerieren geht nicht mehr");
+    expect(await protokoll(id, "Katalognummern nach Hallenplan vergeben")).toHaveLength(0);
+  });
+
+  test("Meldung bestätigen (Katalog festgeschrieben): erst die Einteilungssperre, dann das Protokoll – keine Verklemmung", async () => {
+    const { id, meldungId } = await schauMitTieren("Bestaetigen Einteilung");
+    await al().katalog.gedrucktSetzen({ schauId: id, gedruckt: true });
+    await al().meldung.statusSetzen({ id: meldungId, status: "offen" });
+    // Die zweite Verbindung hält die Einteilung (wie die Nummernvergabe) und protokolliert danach (Kette).
+    const r = await mitOffenerTransaktion(
+      (s) => s`select pg_advisory_xact_lock(2026111201, ${id})`,
+      () => al().meldung.statusSetzen({ id: meldungId, status: "bestaetigt" }),
+      (s) => s`select letzte_id from aenderung_kette where id = 1 for update`,
+    );
+    expect(r.ok).toBe(true);
+    expect((await protokoll(id, "Status")).map((p) => p.neu)).toEqual(["bestaetigt", "offen", "bestaetigt"]);
+  });
+
+  test("Impfnachweis gegen einen gleichzeitigen Abschluss der Schau", async () => {
+    const { id, meldungId } = await schauMitTieren("Impfnachweis Abschluss");
+    const r = await mitOffenerTransaktion(
+      (s) => s`update schau set phase = 'abgeschlossen' where id = ${id}`,
+      () => al().halle.vetSetzen({ meldungId, nd: { datum: "2026-09-01", impfstoff: "Nobilis ND", tierarzt: "Dr. Huhn" }, pmv: { datum: null, impfstoff: "", tierarzt: "" }, wg: { datum: null, sentinel: false, stelle: "" }, geprueft: false }),
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.fehler.message).toContain("abgeschlossen");
+    expect(await protokoll(id, "Impfnachweis")).toHaveLength(0);
   });
 });

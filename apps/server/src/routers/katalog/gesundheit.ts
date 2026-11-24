@@ -51,8 +51,9 @@ export const halleGesundheit = {
       const { nr: _nr, ...eingabe } = input;
       const werte = { ...eingabe, sperre: eingabe.sperre || eingabe.verendet };
       await db.transaction(async (tx) => {
-        // Das Tier sperren: so ordnet sich das Erfassen mit einer gleichzeitigen Ausgabe (die sperrt das Tier auch und liest
-        // die Sperren danach frisch) – Entscheidung 033.
+        // Erfassen und eine gleichzeitige Ausgabe (sperrt das Tier und liest die Sperren danach frisch) ordnen sich schon über
+        // den Fremdschlüssel (das Einfügen nimmt FOR KEY SHARE auf das Tier); die ausdrückliche Sperre macht das sichtbar –
+        // Entscheidung 033.
         if (katalogeintragId) await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(eq(katalogeintrag.id, katalogeintragId)).for("update");
         const [g] = await tx.insert(gesundheit).values({ ...werte, katalogeintragId, tierText, erfasstVon: ctx.benutzer.id }).returning();
         await protokolliere(tx, { schauId: input.schauId, tabelle: "gesundheit", datensatzId: g!.id, aktion: "erfasst", neu: { ...werte, nr: input.nr }, akteur: ctx });

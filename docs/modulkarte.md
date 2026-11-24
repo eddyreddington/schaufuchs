@@ -2414,7 +2414,7 @@ Kasse: Tierverkauf, Abrechnung und Auszahlung, SEPA-Sammelüberweisung und Kasse
 
 Setzt Teile zu einem Router zusammen.
 
-### routers/katalog/einlieferung.ts (299 Z.) → `halle`
+### routers/katalog/einlieferung.ts (303 Z.) → `halle`
 Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferung, Ausgabe), Impfnachweise.
 
 - `halle.ringnummerSetzen` mutation · angemeldet – Ringnummer bei der Einlieferung nach der Ringkarte eintragen (Kennzeichnung für Kaufbeleg und Veterinärliste).
@@ -2428,7 +2428,7 @@ Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss 
 
 Keine Prozeduren (Hilfen für die Router).
 
-### routers/katalog/gesundheit.ts (80 Z.) → `halle`
+### routers/katalog/gesundheit.ts (81 Z.) → `halle`
 Gesundheitsjournal in der Halle: Liste, Eintrag erfassen, Sperre aufheben.
 
 - `halle.gesundheit` query · angemeldet – Gesundheitsjournal (Art. 25 DelVO (EU) 2019/2035): Krankheit, Verdacht, Todesfall, Maßnahme.
@@ -2513,7 +2513,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `meisterschaft.speichern` mutation · admin
 - `meisterschaft.ergebnisse` query · angemeldet – Ergebnisse aller Meisterschaften (intern, mit allen Namen).
 
-### routers/meldung.ts (450 Z.) → `meldung`
+### routers/meldung.ts (452 Z.) → `meldung`
 
 - `meldung.liste` query · angemeldet
 - `meldung.get` query · angemeldet
@@ -3273,6 +3273,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `81-jugend-kennzeichen.ts` (114 Z.) – Kennzeichen „Jgd.“ für Jugendtiere, wenn die Jugend in der Rasse eingereiht steht: im gedruckten Katalog (zwei Spalten, Tabelle, Kurzkatalog, Legen …
 - `82-katalog-schriften.ts` (112 Z.) – Katalog-Schriften (Entscheidung 032): jedes Katalog-PDF – jede Schriftwahl, jede Aufteilung, A4 und A5, Kurzkatalog und /s/:slug/katalog.pdf – bett …
 - `83-katalog-nicht-kuerzen.ts` (147 Z.) – Katalog kürzt nicht (Entscheidung 032, Rückmeldung eines Vereins: „Im Katalog wird abgekürzt, das darf nicht sein“): Testschau mit sehr langen Name …
-- `86-gleichzeitig-katalog.ts` (181 Z.) – Gleichzeitiges Arbeiten in Katalog und Halle (Entscheidung 033): Nummern vergeben und Festschreibung aufheben gegen eine gleichzeitige Note, Ausgab …
+- `86-gleichzeitig-katalog.ts` (236 Z.) – Gleichzeitiges Arbeiten in Katalog und Halle (Entscheidung 033): Nummern vergeben, nach Hallenplan vergeben und Festschreibung aufheben gegen eine …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
