@@ -4,6 +4,7 @@ import type { Tx } from "../db/client";
 import { katalogeintrag, meldung, preisart, preisrichter, preisvergabe, prEinteilung, schau, stiftung } from "../db/schema";
 import { fehler } from "../trpc";
 import { RICHTER_PHASEN } from "./bewertung";
+import { sperreEinteilungGeteilt } from "./einteilung";
 import { ladeEintraege } from "./eintraege";
 import { pruefeNichtAbgerechnet, pruefeNichtAbgeschlossen, sperreKasse } from "./kasse";
 import { protokolliere, type Akteur } from "./protokoll";
@@ -46,11 +47,16 @@ export async function vergebePreis(
   // Erst sperren, dann lesen: gleichzeitige Vergaben (Tablet und Ausstellungsleitung) laufen nacheinander und sehen
   // jeweils den neuesten Stand – sonst ließen sich Kontingent und „ein Geldpreis je Tier“ überschreiten.
   await sperreKasse(tx, a.schauId);
-  const [s] = await tx.select().from(schau).where(eq(schau.id, a.schauId));
+  // Sperrfolge Kasse → Einteilung → Schau → Tier (ADR 033): Die Einteilung geteilt – zuständiger Preisrichter und
+  // Kontingent gelten bis zum Eintragen, eine gleichzeitige Einteilung wartet (oder die Vergabe auf sie). Das Tier
+  // gesperrt, damit die Note bis zum Eintragen des Preises gilt.
+  await sperreEinteilungGeteilt(tx, a.schauId);
+  const [s] = await tx.select().from(schau).where(eq(schau.id, a.schauId)).for("share");
   if (!s) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
   pruefeNichtAbgeschlossen(s);
   pruefeTablet(s, a.istAL);
   pruefeGrundNachFreigabe(s, a.grund);
+  await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(and(eq(katalogeintrag.id, a.katalogeintragId), eq(katalogeintrag.schauId, a.schauId))).for("update");
   const [art] = await tx.select().from(preisart).where(and(eq(preisart.id, a.preisartId), eq(preisart.schauId, a.schauId)));
   if (!art) throw fehler("NOT_FOUND", "Preisart nicht gefunden.");
   // Gestiftete Preise (Betrag und Vorgabe des Stifters) vergibt die Ausstellungsleitung – das Tablet zeigt sie nicht.
@@ -146,6 +152,8 @@ export async function entfernePreis(
   a: { schauId: number; preisvergabeId: number; preisrichterId: number | null; akteur: Akteur; istAL: boolean; istAdmin?: boolean; grund?: string },
 ) {
   await sperreKasse(tx, a.schauId);
+  // Das Tablet prüft unten die Zuteilung: unter der geteilten Einteilungssperre, wie beim Vergeben (ADR 033).
+  if (a.preisrichterId != null) await sperreEinteilungGeteilt(tx, a.schauId);
   const [s] = await tx.select().from(schau).where(eq(schau.id, a.schauId));
   if (!s) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
   pruefeNichtAbgeschlossen(s);

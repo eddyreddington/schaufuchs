@@ -2,8 +2,9 @@ import { brauchtObmann, pruefeBewertung, pruefeNotenaenderung, SONDERNOTEN } fro
 import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import type { Tx } from "../db/client";
-import { bewertung, katalogeintrag, meldung, preisart, preisvergabe, schau, verkauf } from "../db/schema";
+import { bewertung, katalogeintrag, meldung, preisart, preisvergabe, prEinteilung, schau, verkauf } from "../db/schema";
 import { fehler, dbId } from "../trpc";
+import { sperreEinteilungGeteilt } from "./einteilung";
 import { ladeEintraege, skalaVon } from "./eintraege";
 import { nachweisStand } from "./tiergesundheit";
 import { protokolliere, type Akteur } from "./protokoll";
@@ -44,6 +45,13 @@ type Wer = { akteur: Akteur; preisrichterId: number | null; quelle: "tablet" | "
  * die Ausstellungsleitung jederzeit, nach der Freigabe aber nur mit Begründung (Reklamation).
  */
 async function ladeZumAendern(tx: Tx, id: number, wer: Wer) {
+  // Sperrfolge Einteilung → Schau → Tier (ADR 033). Jede Note hält die Einteilung geteilt: eine gleichzeitige Einteilung
+  // hängt das Tier nicht um, während hier die Zuteilung geprüft wird, und übersieht die neue Note nicht („bewertet“).
+  const vomTablet = !wer.istAL && wer.preisrichterId != null;
+  await sperreEinteilungGeteilt(tx, wer.schauId);
+  // Schau geteilt sperren: Freigabe und Notenskala warten auf diese Note, und die Note sieht eine gleichzeitige Freigabe.
+  const [s] = await tx.select().from(schau).where(eq(schau.id, wer.schauId)).for("share");
+  if (!s) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
   // Zeile sperren: Prüfen und Schreiben des Versionszählers geschehen so ohne Wettlauf (zwei Geräte gleichzeitig).
   const [k] = await tx
     .select({ eintrag: katalogeintrag, meldungStatus: meldung.status })
@@ -52,12 +60,16 @@ async function ladeZumAendern(tx: Tx, id: number, wer: Wer) {
     .where(eq(katalogeintrag.id, id))
     .for("update", { of: katalogeintrag });
   if (!k || k.eintrag.schauId !== wer.schauId) return { ok: false as const, fehler: "Tier nicht gefunden." };
-  const [s] = await tx.select().from(schau).where(eq(schau.id, wer.schauId));
-  if (!s) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
 
   if (k.meldungStatus !== "bestaetigt" || k.eintrag.katalogNr == null) return { ok: false as const, fehler: "Tier ist nicht im Katalog." };
   // Ein fehlendes Tier hat niemand gesehen – eine Note dafür widerspräche Kontingent, Ergebnis und Bewertungskarte.
   if (k.eintrag.status === "fehlt") return { ok: false as const, fehler: "Tier ist als fehlend gemeldet – erst die Einlieferung korrigieren." };
+  if (vomTablet) {
+    // Zuteilung unter der Sperre neu prüfen: die Vorprüfung im Router kann eine inzwischen geänderte Einteilung übersehen.
+    const nr = k.eintrag.katalogNr;
+    const bereiche = await tx.select().from(prEinteilung).where(eq(prEinteilung.schauId, wer.schauId));
+    if (bereiche.find((x) => nr >= x.vonNr && nr <= x.bisNr)?.preisrichterId !== wer.preisrichterId) return { ok: false as const, fehler: "Tier ist Ihnen nicht zugeteilt." };
+  }
   if (s.phase === "abgeschlossen") return { ok: false as const, fehler: "Die Schau ist abgeschlossen – für Korrekturen erst mit Grund zurück zur Abrechnung." };
   if (!wer.istAL) {
     if (!RICHTER_PHASEN.includes(s.phase) || s.ergebnisseFreigegeben) {

@@ -106,6 +106,9 @@ export const katalogNummern = {
   nummernNachPlan: adminProcedure.input(z.object({ schauId: dbId })).mutation(async ({ ctx, input }) => {
     const geladen = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.schauId));
     return db.transaction(async (tx) => {
+      // Gleichzeitig darf niemand die Preisrichter einteilen (die Bereiche hängen an den Nummern). Diese Sperre zuerst,
+      // dann die Schau – wie „Katalognummern vergeben“ und die Tablets (ADR 033), sonst verklemmen sie sich.
+      await sperreEinteilung(tx, geladen.id);
       // Halle, fester Plan und Druckstand frisch und gesperrt: ein gleichzeitiges Speichern der Halle oder Festschreiben der
       // Nummern wartet, statt mit einem älteren Stand nummeriert zu werden.
       const [frisch] = await tx
@@ -117,8 +120,6 @@ export const katalogNummern = {
       if (!s.halle) throw fehler("BAD_REQUEST", "Erst unter „Hallenplan“ die Halle anlegen.");
       if (!s.hallenplanFest)
         throw fehler("BAD_REQUEST", "Erst den Plan festschreiben (im Halleneditor eine Reihe oder Platte verschieben) – sonst stellt die Software die Käfige nach den neuen Nummern wieder um.");
-      // Gleichzeitig darf niemand die Preisrichter einteilen (die Bereiche hängen an den Nummern).
-      await sperreEinteilung(tx, s.id);
       const { tiere } = await planTiere(s);
       const gerechnet = planeHalle(s.halle, tiere, s.kaefigMasse, s.hallenplanFest);
       if (gerechnet.fest?.veraltet) throw fehler("BAD_REQUEST", "Der feste Plan passt nicht mehr zu Halle oder Käfigmaßen – erst „Plan neu setzen“ und den Plan wieder festschreiben.");

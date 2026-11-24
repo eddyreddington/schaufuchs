@@ -222,68 +222,75 @@ export const preiseRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-    // Freigeben und Zurücknehmen ändern den veröffentlichten Katalog – nach dem Abschluss nicht mehr.
-    const s = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.schauId));
-    if (input.freigegeben) {
-      const eintraege = await ladeEintraege(s.id, { nurBestaetigt: true });
-      const offen = eintraege.filter((e) => e.katalogNr != null && e.status !== "fehlt" && !e.bewertet).length;
-      if (offen) throw fehler("BAD_REQUEST", `${offen} Tiere sind noch nicht bewertet.`);
-      const obmann = eintraege.filter((e) => brauchtObmann({ punkte: e.punkte, sondernote: e.sondernote }, skalaVon(s)) && !e.obmannBestaetigtAm).length;
-      if (obmann) throw fehler("BAD_REQUEST", `${obmann} Bewertungen („vorzüglich“ oder u.M.) sind noch nicht vom Obmann bestätigt.`);
-      // Bestätigte Tiere ohne Nummer fehlten im Katalog mit Ergebnissen.
-      const ohneNr = eintraege.filter((e) => e.katalogNr == null).length;
-      if (ohneNr) throw fehler("BAD_REQUEST", `${ohneNr} bestätigte Tiere haben keine Katalognummer – erst nummerieren oder die Meldung bereinigen.`);
-      const [einteilung, richter, arten, stiftungen] = await Promise.all([
-        db.select().from(prEinteilung).where(eq(prEinteilung.schauId, s.id)),
-        db.select({ id: preisrichter.id, name: preisrichter.name }).from(preisrichter).where(eq(preisrichter.schauId, s.id)).orderBy(asc(preisrichter.name)),
-        db.select().from(preisart).where(eq(preisart.schauId, s.id)).orderBy(asc(preisart.folge)),
-        db.select().from(stiftung).where(eq(stiftung.schauId, s.id)),
-      ]);
-      const k = kontingente(eintraege, zuteilung(eintraege, einteilung), richter, arten, s.kontingentJe);
-      const name = (z: { name: string }) => (s.kontingentJe === "schau" ? "" : ` (${z.name})`);
-      // Überzogenes Kontingent (z. B. nach einer Änderung, auch Zusatzpreise je Preisrichter) und zu wenig gestiftete Preise: erst bereinigen.
-      const ueber = k.flatMap((z) => z.arten.filter((a) => a.vergeben > a.verfuegbar).map((a) => `${a.kuerzel} ${a.vergeben} von ${a.verfuegbar}${name(z)}`));
-      if (ueber.length) throw fehler("BAD_REQUEST", `Kontingent überschritten: ${ueber.join(", ")}. Bitte erst Preise entfernen.`);
-      const ungedeckt = arten
-        .filter((a) => a.quelle === "stiftung")
-        .flatMap((a) => {
-          const gestiftet = stiftungen.filter((st) => st.preisartId === a.id).reduce((n, st) => n + st.anzahl, 0);
-          const u = stiftungUngedeckt(a, gestiftet, eintraege.flatMap((e) => e.preise.filter((p) => p.preisartId === a.id)));
-          return u ? [`${a.kuerzel} ${u.vergeben} vergeben, ${u.verfuegbar} gestiftet`] : [];
-        });
-      if (ungedeckt.length) throw fehler("BAD_REQUEST", `Stiftungspreise nicht gedeckt: ${ungedeckt.join(", ")}. Bitte Stiftung ergänzen oder Preise entfernen.`);
-      // Hinweise, keine Sperre: Freie Preise können berechtigt sein (kein Tier mit genug Punkten).
-      if (!input.trotzdem) {
-        // Freie Zusatzpreise (gestiftet, zusätzlich je Preisrichter) sind ein Angebot, kein Hinweis.
-        const frei = k.flatMap((z) => z.arten.filter((a) => !a.zusatz && a.vergeben < a.verfuegbar).map((a) => `${a.kuerzel} ${a.verfuegbar - a.vergeben} von ${a.verfuegbar}${name(z)}`));
-        const ohneEinlieferung = eintraege.filter((e) => e.status === "katalogisiert" && e.bewertet).length;
-        const stiftungFrei = offeneStiftungen(stiftungen, eintraege);
-        const hinweise = [
-          ...(PHASEN.indexOf(s.phase) < PHASEN.indexOf("preise") ? [`Die Schau steht noch in der Phase „${PHASEN_LABEL[s.phase]}“ – die Preisrichter können am Tablet noch Preise vergeben.`] : []),
-          ...(frei.length ? [`Noch freie Preise: ${frei.join(", ")}.`] : []),
-          ...(stiftungFrei.length ? [`Gestiftete Preise noch nicht vergeben: ${stiftungFrei.join("; ")}.`] : []),
-          ...(stiftungen.some((st) => st.preisartId == null)
-            ? [`Stiftung(en) ohne Preisart: ${stiftungen.filter((st) => st.preisartId == null).map((st) => st.stifter).join(", ")} – sie zählen für keinen Preis.`]
-            : []),
-          ...(ohneEinlieferung ? [`${ohneEinlieferung} Tiere sind bewertet, aber nicht als eingeliefert abgehakt (Nachweis prüfen oder mit Grund einliefern).`] : []),
-        ];
-        if (hinweise.length) throw fehler("PRECONDITION_FAILED", `${hinweise.join(" ")} Trotzdem freigeben?`);
-      }
-    } else if (s.ergebnisseFreigegeben) {
-      // Die Rücknahme öffnet die Bewertung wieder – der Katalog mit Ergebnissen ist dann evtl. schon gedruckt.
-      if (input.grund.length < 3) throw fehler("BAD_REQUEST", "Freigabe zurücknehmen nur mit Grund.");
-      if (!input.trotzdem) {
-        const [{ n }] = (await db.select({ n: count() }).from(auszahlung).where(eq(auszahlung.schauId, s.id))) as [{ n: number }];
-        const spaet = PHASEN.indexOf(s.phase) >= PHASEN.indexOf("schau");
-        if (spaet || n > 0) {
-          throw fehler(
-            "PRECONDITION_FAILED",
-            `${spaet ? `Die Schau steht schon in der Phase „${PHASEN_LABEL[s.phase]}“. ` : ""}${n ? `Es gibt schon ${n} Auszahlung(en). ` : ""}Ergebnisse, Preise und Abrechnung können sich danach ändern. Trotzdem zurücknehmen?`,
-          );
+    const geladen = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
+    // Alles in einer Transaktion unter Kasse → Schau (ADR 033): Preise, Noten am Tablet und eine zweite Freigabe warten,
+    // bis hier geprüft und geschrieben ist – oder die Freigabe wartet auf sie und prüft danach den neuen Stand.
+    return db.transaction(async (tx) => {
+      await sperreKasse(tx, geladen.id);
+      const [frisch] = await tx.select().from(schau).where(eq(schau.id, geladen.id)).for("no key update");
+      // Freigeben und Zurücknehmen ändern den veröffentlichten Katalog – nach dem Abschluss nicht mehr.
+      const s = pruefeNichtAbgeschlossen(frisch!);
+      // Schon so (z. B. ein zweiter Tab mit altem Stand): nichts zu prüfen, nichts zu schreiben, nichts zu protokollieren.
+      if (s.ergebnisseFreigegeben === input.freigegeben) return { ok: true };
+      if (input.freigegeben) {
+        const eintraege = await ladeEintraege(s.id, { nurBestaetigt: true, ex: tx });
+        const offen = eintraege.filter((e) => e.katalogNr != null && e.status !== "fehlt" && !e.bewertet).length;
+        if (offen) throw fehler("BAD_REQUEST", `${offen} Tiere sind noch nicht bewertet.`);
+        const obmann = eintraege.filter((e) => brauchtObmann({ punkte: e.punkte, sondernote: e.sondernote }, skalaVon(s)) && !e.obmannBestaetigtAm).length;
+        if (obmann) throw fehler("BAD_REQUEST", `${obmann} Bewertungen („vorzüglich“ oder u.M.) sind noch nicht vom Obmann bestätigt.`);
+        // Bestätigte Tiere ohne Nummer fehlten im Katalog mit Ergebnissen.
+        const ohneNr = eintraege.filter((e) => e.katalogNr == null).length;
+        if (ohneNr) throw fehler("BAD_REQUEST", `${ohneNr} bestätigte Tiere haben keine Katalognummer – erst nummerieren oder die Meldung bereinigen.`);
+        const [einteilung, richter, arten, stiftungen] = await Promise.all([
+          tx.select().from(prEinteilung).where(eq(prEinteilung.schauId, s.id)),
+          tx.select({ id: preisrichter.id, name: preisrichter.name }).from(preisrichter).where(eq(preisrichter.schauId, s.id)).orderBy(asc(preisrichter.name)),
+          tx.select().from(preisart).where(eq(preisart.schauId, s.id)).orderBy(asc(preisart.folge)),
+          tx.select().from(stiftung).where(eq(stiftung.schauId, s.id)),
+        ]);
+        const k = kontingente(eintraege, zuteilung(eintraege, einteilung), richter, arten, s.kontingentJe);
+        const name = (z: { name: string }) => (s.kontingentJe === "schau" ? "" : ` (${z.name})`);
+        // Überzogenes Kontingent (z. B. nach einer Änderung, auch Zusatzpreise je Preisrichter) und zu wenig gestiftete Preise: erst bereinigen.
+        const ueber = k.flatMap((z) => z.arten.filter((a) => a.vergeben > a.verfuegbar).map((a) => `${a.kuerzel} ${a.vergeben} von ${a.verfuegbar}${name(z)}`));
+        if (ueber.length) throw fehler("BAD_REQUEST", `Kontingent überschritten: ${ueber.join(", ")}. Bitte erst Preise entfernen.`);
+        const ungedeckt = arten
+          .filter((a) => a.quelle === "stiftung")
+          .flatMap((a) => {
+            const gestiftet = stiftungen.filter((st) => st.preisartId === a.id).reduce((n, st) => n + st.anzahl, 0);
+            const u = stiftungUngedeckt(a, gestiftet, eintraege.flatMap((e) => e.preise.filter((p) => p.preisartId === a.id)));
+            return u ? [`${a.kuerzel} ${u.vergeben} vergeben, ${u.verfuegbar} gestiftet`] : [];
+          });
+        if (ungedeckt.length) throw fehler("BAD_REQUEST", `Stiftungspreise nicht gedeckt: ${ungedeckt.join(", ")}. Bitte Stiftung ergänzen oder Preise entfernen.`);
+        // Hinweise, keine Sperre: Freie Preise können berechtigt sein (kein Tier mit genug Punkten).
+        if (!input.trotzdem) {
+          // Freie Zusatzpreise (gestiftet, zusätzlich je Preisrichter) sind ein Angebot, kein Hinweis.
+          const frei = k.flatMap((z) => z.arten.filter((a) => !a.zusatz && a.vergeben < a.verfuegbar).map((a) => `${a.kuerzel} ${a.verfuegbar - a.vergeben} von ${a.verfuegbar}${name(z)}`));
+          const ohneEinlieferung = eintraege.filter((e) => e.status === "katalogisiert" && e.bewertet).length;
+          const stiftungFrei = offeneStiftungen(stiftungen, eintraege);
+          const hinweise = [
+            ...(PHASEN.indexOf(s.phase) < PHASEN.indexOf("preise") ? [`Die Schau steht noch in der Phase „${PHASEN_LABEL[s.phase]}“ – die Preisrichter können am Tablet noch Preise vergeben.`] : []),
+            ...(frei.length ? [`Noch freie Preise: ${frei.join(", ")}.`] : []),
+            ...(stiftungFrei.length ? [`Gestiftete Preise noch nicht vergeben: ${stiftungFrei.join("; ")}.`] : []),
+            ...(stiftungen.some((st) => st.preisartId == null)
+              ? [`Stiftung(en) ohne Preisart: ${stiftungen.filter((st) => st.preisartId == null).map((st) => st.stifter).join(", ")} – sie zählen für keinen Preis.`]
+              : []),
+            ...(ohneEinlieferung ? [`${ohneEinlieferung} Tiere sind bewertet, aber nicht als eingeliefert abgehakt (Nachweis prüfen oder mit Grund einliefern).`] : []),
+          ];
+          if (hinweise.length) throw fehler("PRECONDITION_FAILED", `${hinweise.join(" ")} Trotzdem freigeben?`);
+        }
+      } else {
+        // Die Rücknahme öffnet die Bewertung wieder – der Katalog mit Ergebnissen ist dann evtl. schon gedruckt.
+        if (input.grund.length < 3) throw fehler("BAD_REQUEST", "Freigabe zurücknehmen nur mit Grund.");
+        if (!input.trotzdem) {
+          const [{ n }] = (await tx.select({ n: count() }).from(auszahlung).where(eq(auszahlung.schauId, s.id))) as [{ n: number }];
+          const spaet = PHASEN.indexOf(s.phase) >= PHASEN.indexOf("schau");
+          if (spaet || n > 0) {
+            throw fehler(
+              "PRECONDITION_FAILED",
+              `${spaet ? `Die Schau steht schon in der Phase „${PHASEN_LABEL[s.phase]}“. ` : ""}${n ? `Es gibt schon ${n} Auszahlung(en). ` : ""}Ergebnisse, Preise und Abrechnung können sich danach ändern. Trotzdem zurücknehmen?`,
+            );
+          }
         }
       }
-    }
-    await db.transaction(async (tx) => {
       await tx.update(schau).set({ ergebnisseFreigegeben: input.freigegeben }).where(eq(schau.id, s.id));
       await protokolliere(tx, {
         schauId: s.id,
@@ -293,7 +300,7 @@ export const preiseRouter = router({
         grund: input.grund,
         akteur: ctx,
       });
+      return { ok: true };
     });
-    return { ok: true };
   }),
 });

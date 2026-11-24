@@ -56,6 +56,17 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
 - Bewertungsliste: zwei Listen nebeneinander je A4-Seite, laufend; Zwischenkopf je Rasse und Farbenschlag (läuft eine
   Rasse in die nächste Spalte, dort als „(Forts.)“), kein Kopf allein am Spaltenende; Spalten Nr., Klasse, Note, Pkt.,
   Preis; Obmann im Kopf (der zugeordnete, sonst leer); Seitenzählung; keine Ausstellernamen ([ADR 005](../entscheidungen/005-anonyme-bewertung.md)).
+- Gleichzeitiges Arbeiten bei Bewertung und Preisen ([ADR 033](../entscheidungen/033-gleichzeitiges-arbeiten.md)), Sperrfolge
+  Kasse → Einteilung → Schau → Tier → `protokolliere()` zuletzt (die Protokoll-Kette ist eine Zeilensperre für die ganze
+  Installation; nach dem ersten `protokolliere()` keine weitere Sperre anfordern). Jede Note (`ladeZumAendern`) hält die
+  Einteilungssperre geteilt (`sperreEinteilungGeteilt`) und liest die Schau `for share`; das Tablet prüft die Zuteilung
+  unter der Sperre neu („Tier ist Ihnen nicht zugeteilt.“). `vergebePreis` (und `entfernePreis` vom Tablet) nehmen nach
+  der Kasse die Einteilung geteilt, `vergebePreis` dazu die Tierzeile – Zuständigkeit, Kontingent und Note gelten bis zum
+  Eintragen. `preise.freigeben` läuft ganz in einer Transaktion unter Kassensperre und Schau `for no key update`; steht die
+  Freigabe schon so (zweiter Tab), schreibt sie nichts. `schau.notenskalaSetzen` prüft die Freigabe an der gesperrten
+  Schau. `katalog.nummernNachPlan` nimmt die Einteilungssperre vor der Schau. Statuswechsel einer nummerierten Meldung
+  (`meldung.statusSetzen`, `pruefeBezahlt`) nehmen die Einteilungssperre vor Statuszeile und Protokoll
+  (`sperreEinteilungFuerMeldung`), dann folgt `einteilungNachStatus`.
 - Keine erfundene Zuordnung Rasse → Gruppe im Repo; Tests nutzen erkennbar erfundene Gruppen (X1, X2); erlaubt ist nur die Liste der Bezeichnungen A–M, Z1–Z3 als Vorgabe zum Ankreuzen – [ADR 027](../entscheidungen/027-bdrg-daten-nutzung.md).
 
 ## Tests
@@ -66,7 +77,8 @@ Tablet, Bewertung und Preise. Vollständige Liste der Funktionen: [Modulkarte](.
   `71-preisrichter-gegenpruefung` (Auskunft, Bereinigung, Vorlage, Löschen, Sperre), `72-jugend-einteilung` (Jugend separat
   oder eingereiht, Katalog und Einteilung), `73-jugend-gegenpruefung` (Umschalten meldet Tiere ohne Preisrichter,
   Jugendregeln überstehen Speichern bei „mit der Rasse“), `76-verpflichtung-zusage` (Rückmeldetermin, eigener Brieftext,
-  Zusage aus der Vorlage); `src/einteilung.test.ts` (Vorschlag).
+  Zusage aus der Vorlage), `84-gleichzeitig-bewertung` (Freigabe, Preisvergabe, Einteilung und Notenskala gegen
+  gleichzeitige Noten; die zweite Verbindung hält die Sperre); `src/einteilung.test.ts` (Vorschlag).
 
 ## Datenbank
 
