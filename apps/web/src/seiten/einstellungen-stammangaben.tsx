@@ -2,6 +2,7 @@ import { kaefigNameLang, sortierungText, UNTERSUCHUNG_ARTEN, type KaefigMasse, t
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { fehlerText } from "../lib";
+import { standAbgleichen } from "../stand-abgleich";
 import { useOberflaeche } from "../sprache";
 import { VetAmtFeld } from "./einstellungen-vetamt";
 import { trpc, type Ausgabe } from "../trpc";
@@ -29,7 +30,7 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
   const versionen = trpc.stammdaten.versionen.useQuery();
   const utils = trpc.useUtils();
   const meldung = useMeldung();
-  const startwerte = () => ({
+  const werte = (s: Schau) => ({
     name: s.name,
     slug: s.slug,
     veranstalter: s.veranstalter,
@@ -75,9 +76,18 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
     obmannHoechstzahl: s.obmannHoechstzahl,
     erklaerungen: s.erklaerungen,
   });
+  const startwerte = () => werte(s);
   const [d, setD] = useState(startwerte);
   // Stand beim letzten Speichern (für die Speicherleiste).
   const [stand, setStand] = useState(() => JSON.stringify(startwerte()));
+  // Stand der Schau beim Laden: hat inzwischen jemand anders gespeichert, lehnt der Server ab, statt still zu überschreiben.
+  const [serverStand, setServerStand] = useState(s.stand);
+  // Nach „inzwischen geändert“: Felder, die hier und anderswo verschieden geändert wurden (null: kein Abgleich offen).
+  const [beidseitig, setBeidseitig] = useState<string[] | null>(null);
+  const feldName = (k: string) => {
+    const l = (ts as Record<string, unknown>)[k === "slug" ? "kurzadresse" : k];
+    return typeof l === "string" ? l : k;
+  };
   /** Zahlenfeld für Tage; leer = keine Frist. */
   const tageFeld = (k: "ndTageMin" | "ndTageMax" | "pmvTageMin" | "pmvTageMax", label: string) => (
     <Feld label={label}>
@@ -88,11 +98,25 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
   );
   const gespeichert = useAenderungenWarnen(d);
   const speichern = trpc.schau.aktualisieren.useMutation({
-    onSuccess: (_r, v) => {
+    onSuccess: (r, v) => {
       gespeichert();
       setStand(JSON.stringify(v.daten));
+      setServerStand(r.stand);
+      setBeidseitig(null);
       utils.schau.invalidate();
       meldung(ts.gespeichert);
+    },
+    // Hat inzwischen jemand anders gespeichert (Entscheidung 033): dessen Werte übernehmen, wo hier nichts geändert wurde,
+    // die eigenen Eingaben behalten und neu speichern lassen – statt alles beim Neuladen zu verlieren.
+    onError: async (e, v) => {
+      if (e.data?.code !== "CONFLICT" || !/inzwischen/.test(e.message)) return;
+      const frisch = await utils.schau.get.fetch({ id: s.id }, { staleTime: 0 });
+      const neu = werte(frisch);
+      const r = standAbgleichen(JSON.parse(stand) as typeof d, v.daten as typeof d, neu);
+      setD(r.daten);
+      setStand(JSON.stringify(neu));
+      setServerStand(frisch.stand);
+      setBeidseitig(r.beidseitig.map(feldName));
     },
   });
   const set = <K extends keyof typeof d>(k: K, v: (typeof d)[K]) => setD((x) => ({ ...x, [k]: v }));
@@ -101,9 +125,10 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
       {(fid) => <Eingabe id={fid} type={typ} value={(d[k] as string | null) ?? ""} onChange={(e) => set(k, (typ === "date" && !e.target.value ? null : e.target.value) as never)} />}
     </Feld>
   );
+  const sichern = () => speichern.mutate({ id: s.id, daten: d, stand: serverStand });
   const senden = (e: FormEvent) => {
     e.preventDefault();
-    speichern.mutate({ id: s.id, daten: d });
+    sichern();
   };
   const geaendert = JSON.stringify(d) !== stand;
   return (
@@ -280,8 +305,8 @@ export function Stammangaben({ schau: s, abschnitt }: { schau: Schau; abschnitt:
           )}
         </Formular>
       )}
-      {speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
-      <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setD(startwerte())} onSpeichern={() => speichern.mutate({ id: s.id, daten: d })} laedt={speichern.isPending} knopf={ts.speichern} />
+      {beidseitig ? <Hinweis ton="warnung">{ts.inzwischenGeaendert(beidseitig.join(", "))}</Hinweis> : speichern.error && <Hinweis ton="fehler">{fehlerText(speichern.error)}</Hinweis>}
+      <Speicherleiste sichtbar={geaendert} onVerwerfen={() => setD(startwerte())} onSpeichern={sichern} laedt={speichern.isPending} knopf={ts.speichern} />
     </form>
   );
 }

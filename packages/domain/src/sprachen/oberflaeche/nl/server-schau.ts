@@ -34,6 +34,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     zweiFaktorNicht: "De tweestapsaanmelding is niet ingesteld.",
     passwortOderCode: "Wachtwoord of code klopt niet.",
     zweiFaktorBenutzer: "De tweestapsaanmelding is voor deze gebruiker niet ingesteld.",
+    kontoGeaendert: "Het account is intussen gewijzigd (bijv. wachtwoord opnieuw ingesteld). Meld u opnieuw aan.",
   },
   bremse: {
     fehlversuche: "Te veel mislukte pogingen. Probeer het later opnieuw.",
@@ -110,6 +111,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     teilschauenFest: "De catalogusnummers liggen vast – onderdelen van de show kunnen alleen nog worden hernoemd.",
     teilschauBelegt: (name: string, n: string) => `Bij het onderdeel „${name}” horen nog ${n} inschrijvingen – wijs ze eerst aan een ander onderdeel toe.`,
     notenskalaFest: "De resultaten zijn vrijgegeven – de predicaatschaal kan niet meer worden gewijzigd.",
+    inzwischenGeaendert: "De instellingen zijn intussen gewijzigd (bijv. in een ander venster). Laad de pagina opnieuw en voer de wijziging nogmaals uit.",
   },
   gebuehren: {
     auszahlungen: (nr: string) => `Er zijn al uitbetalingen (kwitantie ${nr}) – kosten en prijzen kunnen niet meer worden gewijzigd.`,

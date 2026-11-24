@@ -6,6 +6,7 @@ import { db } from "../../db/client";
 import { gebuehr, meldung, preisart, schau, zahlung } from "../../db/schema";
 import { pruefliste } from "../../services/pruefung";
 import { benutzerProcedure, ladeSchau, dbId } from "../../trpc";
+import { schauStand } from "./einstellungen";
 import type { Veterinaeramt } from "@schau/domain";
 import veterinaeraemter from "../../daten/veterinaeraemter.json";
 
@@ -42,7 +43,8 @@ export const schauLesen = {
       db.select().from(gebuehr).where(eq(gebuehr.schauId, s.id)),
       db.select().from(preisart).where(eq(preisart.schauId, s.id)).orderBy(asc(preisart.folge), asc(preisart.id)),
     ]);
-    return { ...s, notenskala: s.notenskala ?? STANDARD_NOTENSKALA, gebuehren, preisarten };
+    // stand: für „Stammangaben speichern“ – ein alter Tab überschreibt nichts still (Entscheidung 033).
+    return { ...s, notenskala: s.notenskala ?? STANDARD_NOTENSKALA, gebuehren, preisarten, stand: schauStand(s) };
   }),
 
   uebersicht: benutzerProcedure.input(z.object({ id: dbId })).query(async ({ ctx, input }) => {

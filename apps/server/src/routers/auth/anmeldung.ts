@@ -1,6 +1,6 @@
 /** Anmeldung: Status, Ersteinrichtung, Anmelden (auch zweiter Schritt), Abmelden, eigenes Passwort und eigene Sprache. */
 import { abmeldungLesen, SPRACHEN } from "@schau/domain";
-import { and, count, eq, lt, ne, sql } from "drizzle-orm";
+import { and, count, eq, isNull, lt, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { beendeSitzung, cookieHeader, hashPasswort, neueSitzung, pruefePasswort, sitzungsId, sitzungWennUnveraendert } from "../../auth";
 import { config } from "../../config";
@@ -160,9 +160,20 @@ export const anmeldung = {
       zurueck();
       const hash = await hashPasswort(input.neu);
       await db.transaction(async (tx) => {
-        await tx.update(benutzer).set({ passwortHash: hash }).where(eq(benutzer.id, b.id));
-        // Alle anderen Sitzungen beenden (z. B. ein vergessenes Gerät); die aktuelle bleibt.
+        // Nur auf den geprüften Stand (Entscheidung 033): Setzt die Ausstellungsleitung zwischen Prüfen und Speichern ein
+        // neues Passwort oder sperrt das Konto, gilt ihre Änderung – sonst überschriebe ein Angreifer mit bekanntem
+        // Passwort den Reset gleich wieder.
+        const ok = await tx
+          .update(benutzer)
+          .set({ passwortHash: hash })
+          .where(and(eq(benutzer.id, b.id), eq(benutzer.passwortHash, b.passwortHash), eq(benutzer.aktiv, true), isNull(benutzer.geloeschtAm)))
+          .returning({ id: benutzer.id });
+        if (!ok.length) throw fehler("UNAUTHORIZED", "Das Konto wurde inzwischen geändert (z. B. Passwort neu gesetzt). Bitte neu anmelden.");
+        // Alle anderen Sitzungen beenden (z. B. ein vergessenes Gerät); die aktuelle bleibt – wenn es sie noch gibt.
         const eigene = ctx.cookieTokens.benutzer ? sitzungsId(ctx.cookieTokens.benutzer) : "";
+        if (eigene && !(await tx.select({ id: sitzung.id }).from(sitzung).where(eq(sitzung.id, eigene)).for("update")).length) {
+          throw fehler("UNAUTHORIZED", "Das Konto wurde inzwischen geändert (z. B. Passwort neu gesetzt). Bitte neu anmelden.");
+        }
         await tx.delete(sitzung).where(and(eq(sitzung.benutzerId, b.id), ne(sitzung.id, eigene)));
         await protokolliere(tx, { schauId: null, tabelle: "benutzer", datensatzId: b.id, aktion: "Eigenes Passwort geändert", akteur: ctx });
       });

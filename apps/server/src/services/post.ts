@@ -1,4 +1,4 @@
-import { and, eq, gt, lt, ne } from "drizzle-orm";
+import { and, eq, gt, inArray, lt, or } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { config } from "../config";
 import { db } from "../db/client";
@@ -77,12 +77,26 @@ export function naechsterVersuch(createdAt: Date, versuche: number): Date | null
  */
 export async function sendeMail(organisationId: number, an: string, betreff: string, text: string, ausstellerId?: number): Promise<void> {
   if (!an) return;
-  const [m] = await db.insert(postausgang).values({ organisationId, an, betreff, text, ausstellerId: ausstellerId ?? null }).returning({ id: postausgang.id });
-  if (!transport || !m) {
-    if (!config.production) console.log(`[Post] an ${an}: ${betreff}`);
+  versendeAbgelegt(await legeMailAb(db, organisationId, an, betreff, text, ausstellerId), an, betreff);
+}
+
+/**
+ * Nur ablegen – in der Transaktion des Aufrufers, damit die Mail mit ihr steht oder fällt und eine gleichzeitige Änderung
+ * sie schon sieht (z. B. entwertet ein neuerer Einladungslink sie). Versendet wird nach dem Commit (versendeAbgelegt).
+ */
+export async function legeMailAb(ex: Pick<typeof db, "insert">, organisationId: number, an: string, betreff: string, text: string, ausstellerId?: number): Promise<number | null> {
+  if (!an) return null;
+  const [m] = await ex.insert(postausgang).values({ organisationId, an, betreff, text, ausstellerId: ausstellerId ?? null }).returning({ id: postausgang.id });
+  return m?.id ?? null;
+}
+
+/** Versand einer abgelegten Mail im Hintergrund (nach dem Commit); ohne SMTP bleibt sie im Postausgang. */
+export function versendeAbgelegt(id: number | null, an = "", betreff = "") {
+  if (!transport || id == null) {
+    if (!config.production && id != null) console.log(`[Post] an ${an}: ${betreff}`);
     return;
   }
-  void versende(m.id);
+  void versende(id);
 }
 
 /**
@@ -97,15 +111,47 @@ export async function sendeMailJetzt(organisationId: number, an: string, betreff
   return { gesendet: r?.status === "gesendet", fehler: r?.fehler ?? "" };
 }
 
-export async function versende(id: number) {
+/** Was versende vom Mailserver braucht (Tests geben einen eigenen mit). */
+export type Versender = { sendMail(mail: { from: string; to: string; subject: string; text: string }): Promise<unknown> };
+
+/** Bis der Versandstand beim Start zurückgesetzt ist, beansprucht niemand eine Mail – sonst erfasste ihn das Zurücksetzen. */
+let versandBereit: Promise<unknown> = Promise.resolve();
+
+/**
+ * Beim Start sendet noch niemand: was auf „sendet“ steht, hat ein Neustart mitten im Versand hinterlassen. Setzt voraus,
+ * dass genau ein Serverprozess die Datenbank bedient (Entscheidung 033). versende wartet, bis das erledigt ist.
+ */
+export function setzeUnterbrocheneZurueck(): Promise<unknown> {
+  versandBereit = db
+    .update(postausgang)
+    .set({ status: "fehler", fehler: "Versand unterbrochen (Neustart des Servers)." })
+    .where(eq(postausgang.status, "sendet"))
+    .catch((e) => console.error("[post] Versandstand:", ohneAdressen(kurzerFehler(e))));
+  return versandBereit;
+}
+
+export async function versende(id: number, versender: Versender | null = transport) {
+  if (!versender) return;
   try {
-    const [m] = await db.select().from(postausgang).where(eq(postausgang.id, id));
-    if (!m || m.status === "gesendet" || !transport) return;
+    await versandBereit;
+    // Beanspruchen (Entscheidung 033): nur wer die Zeile von „wartet“ oder „fehler“ auf „sendet“ setzt, schickt sie. So
+    // geht eine Mail nicht doppelt hinaus, wenn „Erneut senden“, der Versandlauf oder zwei Administratoren zugleich laufen.
+    // Mit allen Versuchen verbrauchte Fehler (auch eine durch einen neueren Link entwertete Einladung) bleiben liegen;
+    // „Erneut senden“ setzt vorher auf „wartet“.
+    const [m] = await db
+      .update(postausgang)
+      .set({ status: "sendet" })
+      .where(and(eq(postausgang.id, id), or(eq(postausgang.status, "wartet"), and(eq(postausgang.status, "fehler"), lt(postausgang.versuche, MAX_VERSUCHE)))))
+      .returning();
+    if (!m) return;
     try {
-      await transport.sendMail({ from: config.mailFrom, to: m.an, subject: m.betreff, text: m.text });
+      await versender.sendMail({ from: config.mailFrom, to: m.an, subject: m.betreff, text: m.text });
       // Einladungslinks nach dem Versand unkenntlich machen: im Postausgang bleibt nur, dass eine Einladung ging.
       const text = m.text.replace(/(\/einladung#)[A-Za-z0-9_-]+/g, "$1(nach dem Versand entfernt)");
-      await db.update(postausgang).set({ status: "gesendet", gesendetAm: new Date(), fehler: "", versuche: m.versuche + 1, text }).where(eq(postausgang.id, id));
+      await db
+        .update(postausgang)
+        .set({ status: "gesendet", gesendetAm: new Date(), fehler: "", versuche: m.versuche + 1, text })
+        .where(and(eq(postausgang.id, id), eq(postausgang.status, "sendet")));
     } catch (err) {
       const text = String(err instanceof Error ? err.message : err).slice(0, 500);
       // Auch in Produktion ins Log (ohne Empfänger): sonst fällt ein gestörter Mailserver niemandem auf.
@@ -113,7 +159,7 @@ export async function versende(id: number) {
       await db
         .update(postausgang)
         .set({ status: "fehler", fehler: text, versuche: m.versuche + 1 })
-        .where(eq(postausgang.id, id));
+        .where(and(eq(postausgang.id, id), eq(postausgang.status, "sendet")));
     }
   } catch (e) {
     console.error("[post] Versand gescheitert:", ohneAdressen(kurzerFehler(e)));
@@ -123,6 +169,7 @@ export async function versende(id: number) {
 /** Versandlauf: noch nicht versandte Mails erneut versuchen (z. B. nach einer Störung des Mailservers). */
 export function starteMailversand() {
   if (!transport) return;
+  void setzeUnterbrocheneZurueck();
   let laeuft = false;
   const lauf = async () => {
     if (laeuft) return;
@@ -134,7 +181,7 @@ export function starteMailversand() {
         .from(postausgang)
         .where(
           and(
-            ne(postausgang.status, "gesendet"),
+            inArray(postausgang.status, ["wartet", "fehler"]),
             lt(postausgang.versuche, MAX_VERSUCHE),
             gt(postausgang.createdAt, new Date(jetzt - POST_WIEDERHOLEN_MS)),
             // Ganz frische Mails versendet noch sendeMail selbst.

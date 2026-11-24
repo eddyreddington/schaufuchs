@@ -6,9 +6,22 @@ import { hashPasswort, sitzungsId, zufallsToken } from "../../auth";
 import { config } from "../../config";
 import { db } from "../../db/client";
 import { benutzer, sitzung } from "../../db/schema";
+import { istDoppelt } from "../../services/fehlertext";
 import { protokolliere } from "../../services/protokoll";
 import { adminProcedure, fehler, dbId } from "../../trpc";
-import { passwort, bremse, wartezeitJeKonto, codeBremse, zweiFaktorBremse, anlegenBremse, passwortBremse, OHNE_PASSWORT, willkommenBremse, verwalte, adminBleibt, hinweisMail, istFremdschluesselFehler, ohneEinladung, willkommenVorbereiten, versendeWillkommen, sendeWillkommen, benutzerUebersicht } from "./gemeinsam";
+import { passwort, bremse, wartezeitJeKonto, codeBremse, zweiFaktorBremse, anlegenBremse, passwortBremse, OHNE_PASSWORT, willkommenBremse, verwalte, verwalteVerein, adminBleibt, hinweisMail, istFremdschluesselFehler, ohneEinladung, willkommenVorbereiten, versendeWillkommen, sendeWillkommen, benutzerUebersicht } from "./gemeinsam";
+
+const EMAIL_VERGEBEN = "Diese E-Mail-Adresse lässt sich nicht verwenden. Bitte eine andere angeben.";
+
+/** Eindeutiger Index auf der Adresse verletzt (gleichzeitig in einem anderen Verein vergeben): dieselbe Meldung wie sonst. */
+async function alsKonflikt<T>(p: Promise<T>): Promise<T> {
+  try {
+    return await p;
+  } catch (e) {
+    if (istDoppelt(e)) throw fehler("CONFLICT", EMAIL_VERGEBEN);
+    throw e;
+  }
+}
 
 export const benutzerVerwaltung = {
   benutzerListe: adminProcedure.query(async ({ ctx }) =>
@@ -37,13 +50,13 @@ export const benutzerVerwaltung = {
       const email = input.email.toLowerCase();
       const mitMail = !!input.willkommensmail;
       if (mitMail) willkommenBremse.versuch([`admin:${ctx.benutzer.id}`, `an:${input.id}`]);
-      const { b, alteAdresse, willkommen } = await verwalte(ctx, input.id, async (tx, b) => {
+      const { b, alteAdresse, willkommen } = await alsKonflikt(verwalte(ctx, input.id, async (tx, b) => {
         const neueAdresse = email !== b.email;
         if (neueAdresse) {
           // Adressänderungen zählen immer (auch erfolgreiche) – so lässt sich damit keine Mail-Flut auslösen.
           anlegenBremse.versuch([`admin:${ctx.benutzer.id}`]);
           const [schon] = await tx.select({ id: benutzer.id }).from(benutzer).where(eq(benutzer.email, email));
-          if (schon) throw fehler("CONFLICT", "Diese E-Mail-Adresse lässt sich nicht verwenden. Bitte eine andere angeben.");
+          if (schon) throw fehler("CONFLICT", EMAIL_VERGEBEN);
         }
         // Ein Einladungslink an die alte (vielleicht vertippte) Adresse gilt nicht mehr, ebenso alle Sitzungen.
         await tx.update(benutzer).set({ name: input.name, email, ...(neueAdresse ? ohneEinladung : {}) }).where(eq(benutzer.id, b.id));
@@ -56,7 +69,7 @@ export const benutzerVerwaltung = {
           await protokolliere(tx, { schauId: null, tabelle: "benutzer", datensatzId: b.id, aktion: willkommen.einladung ? "Einladung gesendet" : "Willkommensmail gesendet", neu: { benutzer: jetzt.name }, akteur: ctx });
         }
         return { b: jetzt, alteAdresse: neueAdresse ? b.email : null, willkommen };
-      });
+      }));
       // Die bisherige Adresse erfährt von der Änderung – sonst ließe sich ein Konto unbemerkt umleiten. Bei offener
       // Einladung (noch nie angemeldet, oft vertippt) nicht: dann ging schon die Einladung an eine falsche Adresse.
       if (alteAdresse && b.passwortHash !== OHNE_PASSWORT) {
@@ -67,7 +80,7 @@ export const benutzerVerwaltung = {
         ]);
       }
       if (!willkommen) return { ok: true, willkommensmail: false };
-      await versendeWillkommen(ctx.benutzer.organisationId, willkommen);
+      versendeWillkommen(willkommen);
       return { ok: true, willkommensmail: true };
     }),
 
@@ -97,31 +110,31 @@ export const benutzerVerwaltung = {
       // Antwort ist für eigene und fremde Konten gleich; die Bremse verhindert das massenhafte Abfragen von Adressen.
       // Gezählt werden nur Konflikte: erfolgreiche Anlagen werden gutgeschrieben.
       const gutschrift = anlegenBremse.versuch([`admin:${ctx.benutzer.id}`]);
-      const [vorhanden] = await db.select({ id: benutzer.id }).from(benutzer).where(eq(benutzer.email, email));
-      if (vorhanden) throw fehler("CONFLICT", "Diese E-Mail-Adresse lässt sich nicht verwenden. Bitte eine andere angeben.");
-      const [neu] = await db
-        .insert(benutzer)
-        .values({
-          organisationId: ctx.benutzer.organisationId,
-          name: input.name,
-          email,
-          passwortHash: input.passwort ? await hashPasswort(input.passwort) : OHNE_PASSWORT,
-          rolle: input.rolle,
-        })
-        .returning({ id: benutzer.id, passwortHash: benutzer.passwortHash });
-      gutschrift();
-      await db.transaction((tx) =>
-        protokolliere(tx, { schauId: null, tabelle: "benutzer", datensatzId: neu!.id, aktion: "Benutzer angelegt", neu: { name: input.name, email, rolle: input.rolle, einladung: !input.passwort }, akteur: ctx }),
+      const passwortHash = input.passwort ? await hashPasswort(input.passwort) : OHNE_PASSWORT;
+      // Unter der Vereinssperre (Entscheidung 033): Adresse frei, Handelnder noch aktiver Administrator, Anlegen und
+      // Protokoll in einer Transaktion. Dieselbe Adresse in einem anderen Verein zugleich: der eindeutige Index entscheidet.
+      const neu = await alsKonflikt(
+        verwalteVerein(ctx, async (tx) => {
+          const [vorhanden] = await tx.select({ id: benutzer.id }).from(benutzer).where(eq(benutzer.email, email));
+          if (vorhanden) throw fehler("CONFLICT", EMAIL_VERGEBEN);
+          const [neu] = await tx
+            .insert(benutzer)
+            .values({ organisationId: ctx.benutzer.organisationId, name: input.name, email, passwortHash, rolle: input.rolle })
+            .returning({ id: benutzer.id, passwortHash: benutzer.passwortHash });
+          await protokolliere(tx, { schauId: null, tabelle: "benutzer", datensatzId: neu!.id, aktion: "Benutzer angelegt", neu: { name: input.name, email, rolle: input.rolle, einladung: !input.passwort }, akteur: ctx });
+          return neu!;
+        }),
       );
+      gutschrift();
       // Willkommensmail nie mit Passwort: entweder mit Einladungslink oder das Passwort kommt persönlich. Scheitert der
       // Versand, bleibt die Mail im Postausgang – das Anlegen gilt trotzdem; die Einladung lässt sich neu schicken.
       let einladung = false;
       try {
-        einladung = (await sendeWillkommen(ctx.benutzer, { id: neu!.id, name: input.name, email, rolle: input.rolle, passwortHash: neu!.passwortHash })).einladung;
+        einladung = (await sendeWillkommen(ctx.benutzer, { id: neu.id, name: input.name, email, rolle: input.rolle, passwortHash: neu.passwortHash })).einladung;
       } catch (e) {
         console.error("[auth] Willkommensmail nicht abgelegt:", e instanceof Error ? e.message.split("\n")[0] : e);
       }
-      return { ok: true, willkommensmail: true, einladung, id: neu!.id };
+      return { ok: true, willkommensmail: true, einladung, id: neu.id };
     }),
 
   benutzerAktiv: adminProcedure
@@ -151,7 +164,7 @@ export const benutzerVerwaltung = {
       await protokolliere(tx, { schauId: null, tabelle: "benutzer", datensatzId: b.id, aktion: w.einladung ? "Einladung gesendet" : "Willkommensmail gesendet", neu: { benutzer: b.name }, akteur: ctx });
       return w;
     });
-    await versendeWillkommen(ctx.benutzer.organisationId, w);
+    versendeWillkommen(w);
     return { ok: true, an: w.an, einladung: w.einladung };
   }),
 

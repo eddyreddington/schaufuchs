@@ -1,5 +1,5 @@
 /** Zwei-Faktor-Anmeldung: Status, Einrichten, Bestätigen, Abschalten, Zurücksetzen durch die Ausstellungsleitung. */
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, isNull, ne } from "drizzle-orm";
 import { z } from "zod";
 import { pruefePasswort, sitzungsId } from "../../auth";
 import { config } from "../../config";
@@ -24,7 +24,9 @@ export const zweiFaktor = {
     zurueck();
     if (b.totpAktivSeit) throw fehler("BAD_REQUEST", "Die Zwei-Faktor-Anmeldung ist schon eingerichtet.");
     const geheim = neuesGeheimnis();
-    await db.update(benutzer).set({ totpGeheim: geheim, totpLetzterSchritt: 0 }).where(eq(benutzer.id, b.id));
+    // Nur solange nicht eingerichtet: bestätigt ein zweiter Tab gerade, bliebe sonst ein Geheimnis, das keine App kennt.
+    const ok = await db.update(benutzer).set({ totpGeheim: geheim, totpLetzterSchritt: 0 }).where(and(eq(benutzer.id, b.id), isNull(benutzer.totpAktivSeit))).returning({ id: benutzer.id });
+    if (!ok.length) throw fehler("BAD_REQUEST", "Die Zwei-Faktor-Anmeldung ist schon eingerichtet.");
     const [o] = await db.select({ name: organisation.name }).from(organisation).where(eq(organisation.id, b.organisationId));
     return { geheim: lesbar(geheim), adresse: otpauthAdresse(geheim, b.email, o?.name ? `SchauFUCHS ${o.name}` : config.appName) };
   }),
@@ -39,6 +41,11 @@ export const zweiFaktor = {
     zurueck();
     const notfall = neueNotfallcodes();
     await db.transaction(async (tx) => {
+      // Nur für genau das geprüfte Geheimnis und nur einmal (Entscheidung 033): ein zweiter Tab, ein neues Einrichten oder
+      // das Zurücksetzen durch die Ausstellungsleitung dazwischen – dann gilt diese Bestätigung nicht. Gesperrt gelesen und
+      // in JavaScript verglichen: das Geheimnis liegt verschlüsselt (mit Zufallswert) in der Datenbank.
+      const [jetzt] = await tx.select({ geheim: benutzer.totpGeheim, aktiv: benutzer.totpAktivSeit }).from(benutzer).where(eq(benutzer.id, b.id)).for("update");
+      if (!jetzt || jetzt.aktiv || jetzt.geheim !== b.totpGeheim) throw fehler("BAD_REQUEST", "Bitte die Einrichtung neu beginnen.");
       await tx.update(benutzer).set({ totpAktivSeit: new Date(), totpLetzterSchritt: schritt, totpNotfall: notfall.hashes }).where(eq(benutzer.id, b.id));
       // Andere Geräte melden sich neu an – dann schon mit zweitem Faktor.
       const eigene = ctx.cookieTokens.benutzer ? sitzungsId(ctx.cookieTokens.benutzer) : "";

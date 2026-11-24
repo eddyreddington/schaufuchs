@@ -40,6 +40,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     zweiFaktorNicht: "Logowanie dwuskładnikowe nie jest skonfigurowane.",
     passwortOderCode: "Hasło lub kod są nieprawidłowe.",
     zweiFaktorBenutzer: "Logowanie dwuskładnikowe nie jest skonfigurowane dla tego użytkownika.",
+    kontoGeaendert: "Konto zostało w międzyczasie zmienione (np. ustawiono nowe hasło). Proszę zalogować się ponownie.",
   },
   bremse: {
     fehlversuche: "Zbyt wiele nieudanych prób. Prosimy spróbować później.",
@@ -116,6 +117,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     teilschauenFest: "Numery katalogowe są zamknięte – części wystawy można już tylko przemianować.",
     teilschauBelegt: (name: string, n: string) => `Do części wystawy „${name}” należą jeszcze zgłoszenia (${n}) – prosimy najpierw przypisać je do innej części.`,
     notenskalaFest: "Wyniki są udostępnione – skali ocen nie można już zmienić.",
+    inzwischenGeaendert: "Ustawienia zostały w międzyczasie zmienione (np. w innym oknie). Proszę odświeżyć stronę i powtórzyć zmianę.",
   },
   gebuehren: {
     auszahlungen: (nr: string) => `Są już wypłaty (pokwitowanie ${nr}) – opłat i nagród nie można już zmienić.`,

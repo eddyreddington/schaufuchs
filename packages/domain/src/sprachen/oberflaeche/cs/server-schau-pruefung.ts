@@ -20,6 +20,7 @@ export const serverSchauPruefung: OberflaecheTexte["serverSchau"]["pruefung"] = 
     sepaAbschluss: "Ještě existuje otevřený soubor SEPA. Nejprve jej prosím zaúčtujte nebo zahoďte, potom uzavřete.",
     lastschriftAbschluss: "Ještě existuje otevřený soubor inkasa. Nejprve jej prosím zaúčtujte nebo zahoďte, potom uzavřete.",
     inzwischen: "Mezitím byl vytvořen soubor SEPA nebo inkasa – nejprve jej prosím zaúčtujte nebo zahoďte, potom uzavřete.",
+    phaseGeaendert: "Fáze byla mezitím změněna (např. výstava zrušena nebo přepnuta druhým vedením). Načtěte prosím stránku znovu.",
     nichtAbschliessbar: (offen: string) => `Zatím nelze uzavřít: ${offen}.`,
     nochOffen: (phase: string, offen: string) => `Před „${phase}“ je ještě otevřeno: ${offen}.`,
     unbewertet: (n: string) => pocet(n, "zvíře ještě není posouzeno", "zvířata ještě nejsou posouzena", "zvířat ještě není posouzeno"),

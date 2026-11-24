@@ -31,6 +31,8 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   stammangaben: {
     keineFrist: "bez terminu",
     gespeichert: "Ustawienia zapisane.",
+    inzwischenGeaendert: (beide: string) =>
+      `W międzyczasie ktoś inny zapisał zmiany. Jego wartości zostały przejęte, własne wpisy pozostają${beide ? ` (zmienione po obu stronach, obowiązuje własny wpis: ${beide})` : ""}. Proszę sprawdzić i zapisać ponownie.`,
     name: "Nazwa wystawy",
     veranstalter: "Organizator",
     ort: "Miejscowość / hala",

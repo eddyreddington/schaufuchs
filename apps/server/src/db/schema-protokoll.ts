@@ -42,7 +42,8 @@ export const postausgang = pgTable("postausgang", {
   an: text("an").notNull(),
   betreff: text("betreff").notNull(),
   text: text("text").notNull(),
-  status: text("status", { enum: ["wartet", "gesendet", "fehler"] }).notNull().default("wartet"),
+  /** „sendet“: gerade beim Mailserver (beansprucht, damit sie nicht doppelt hinausgeht; Entscheidung 033). */
+  status: text("status", { enum: ["wartet", "sendet", "gesendet", "fehler"] }).notNull().default("wartet"),
   fehler: text("fehler").notNull().default(""),
   /** Versandversuche – der Versandlauf wiederholt fehlgeschlagene Mails einige Male. */
   versuche: integer("versuche").notNull().default(0),

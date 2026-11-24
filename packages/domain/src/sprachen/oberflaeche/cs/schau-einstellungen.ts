@@ -31,6 +31,8 @@ export const schauEinstellungen: OberflaecheTexte["schau"]["einstellungen"] = {
   stammangaben: {
     keineFrist: "bez lhůty",
     gespeichert: "Nastavení uloženo.",
+    inzwischenGeaendert: (beide: string) =>
+      `Mezitím uložil změny někdo jiný. Jeho hodnoty byly převzaty, vlastní zadání zůstávají${beide ? ` (změněno na obou stranách, platí vlastní zadání: ${beide})` : ""}. Zkontrolujte prosím a uložte znovu.`,
     name: "Název výstavy",
     veranstalter: "Pořadatel",
     ort: "Místo / hala",

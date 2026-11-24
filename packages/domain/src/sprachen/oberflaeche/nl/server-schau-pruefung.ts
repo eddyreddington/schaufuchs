@@ -13,6 +13,7 @@ export const serverSchauPruefung: OberflaecheTexte["serverSchau"]["pruefung"] = 
     sepaAbschluss: "Er is nog een open SEPA-bestand. Eerst boeken of verwerpen, dan afsluiten.",
     lastschriftAbschluss: "Er is nog een open incassobestand. Eerst boeken of verwerpen, dan afsluiten.",
     inzwischen: "Intussen is er een SEPA- of incassobestand gemaakt – eerst boeken of verwerpen, dan afsluiten.",
+    phaseGeaendert: "De fase is intussen gewijzigd (bijv. show afgelast of door een tweede tentoonstellingsleiding gewisseld). Laad de pagina opnieuw.",
     nichtAbschliessbar: (offen: string) => `Nog niet af te sluiten: ${offen}.`,
     nochOffen: (phase: string, offen: string) => `Vóór „${phase}” staat nog open: ${offen}.`,
     unbewertet: (n: string) => `${n} dieren zijn nog niet gekeurd`,

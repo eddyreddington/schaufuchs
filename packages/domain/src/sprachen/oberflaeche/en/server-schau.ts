@@ -34,6 +34,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     zweiFaktorNicht: "Two-factor sign-in is not set up.",
     passwortOderCode: "Password or code is incorrect.",
     zweiFaktorBenutzer: "Two-factor sign-in is not set up for this user.",
+    kontoGeaendert: "The account has been changed in the meantime (e.g. password reset). Please sign in again.",
   },
   bremse: {
     fehlversuche: "Too many failed attempts. Please try again later.",
@@ -110,6 +111,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     teilschauenFest: "The catalogue numbers are fixed – sections of the show can only be renamed.",
     teilschauBelegt: (name: string, n: string) => `${n} entries still belong to the section “${name}” – please assign them to another section first.`,
     notenskalaFest: "The results have been released – the grading scale can no longer be changed.",
+    inzwischenGeaendert: "The settings have been changed in the meantime (e.g. in another window). Please reload the page and repeat your change.",
   },
   gebuehren: {
     auszahlungen: (nr: string) => `There are already payouts (voucher ${nr}) – fees and prizes can no longer be changed.`,

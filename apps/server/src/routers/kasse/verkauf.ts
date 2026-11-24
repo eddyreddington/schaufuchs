@@ -3,9 +3,9 @@ import { normalisiereRegistriernummer, provision, REGISTRIERNUMMER_HINWEIS } fro
 import { and, eq, isNull, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
-import { auszahlung, bewertung, gesundheit, katalogeintrag, meldung, verkauf, verkaufZahlungseingang } from "../../db/schema";
+import { auszahlung, bewertung, gesundheit, katalogeintrag, meldung, schau, verkauf, verkaufZahlungseingang } from "../../db/schema";
 import { ladeEintraege } from "../../services/eintraege";
-import { offeneUeberweisungsverkaeufe, offenerLauf, pruefeNichtAbgerechnet, pruefeNichtAbgeschlossen, sperreKasseMitPhase } from "../../services/kasse";
+import { offeneUeberweisungsverkaeufe, offenerLauf, pruefeNichtAbgerechnet, pruefeNichtAbgeschlossen, sperreKasse, sperreKasseMitPhase } from "../../services/kasse";
 import { archiviereKaufbeleg } from "../../services/kassenbuch";
 import { protokolliere } from "../../services/protokoll";
 import { adminProcedure, benutzerProcedure, fehler, ladeSchau, dbId, kalenderdatum } from "../../trpc";
@@ -56,7 +56,12 @@ export const tierverkauf = {
         throw fehler("BAD_REQUEST", "Käufer unter 16 Jahren: nur mit Einwilligung eines Erziehungsberechtigten (§ 11c TierSchG) – bitte dessen Namen angeben.");
       }
       const v = await db.transaction(async (tx) => {
-        pruefePhase(await sperreKasseMitPhase(tx, s.id));
+        await sperreKasse(tx, s.id);
+        // Phase und Provisionssatz unter der Kassensperre frisch (Entscheidung 033): ein gleichzeitiger Abschluss oder eine
+        // Änderung der Einstellungen nimmt dieselbe Sperre.
+        const [frisch] = (await tx.select({ phase: schau.phase, provisionBp: schau.provisionBp }).from(schau).where(eq(schau.id, s.id))) as [{ phase: string; provisionBp: number }];
+        pruefePhase(frisch.phase);
+        const { provisionBp } = frisch;
         const [e] = await tx.select().from(katalogeintrag).where(and(eq(katalogeintrag.id, input.katalogeintragId), eq(katalogeintrag.schauId, s.id)));
         if (!e) throw fehler("NOT_FOUND", "Tier nicht gefunden.");
         if (e.verkaufspreisCent == null || e.verkaufspreisCent <= 0) throw fehler("BAD_REQUEST", "Dieses Tier ist nicht verkäuflich gemeldet.");
@@ -82,8 +87,8 @@ export const tierverkauf = {
             kaeuferUnter16: unter16,
             kaeuferErziehungsberechtigter: unter16 ? input.kaeuferErziehungsberechtigter : "",
             preisCent: e.verkaufspreisCent,
-            provisionCent: provision(e.verkaufspreisCent, s.provisionBp),
-            provisionBp: s.provisionBp,
+            provisionCent: provision(e.verkaufspreisCent, provisionBp),
+            provisionBp,
             zahlart: input.zahlart,
             belegNr: await naechsteBelegNr(tx, s.id),
             verkauftVon: ctx.benutzer.id,

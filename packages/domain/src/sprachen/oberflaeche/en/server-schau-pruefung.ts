@@ -13,6 +13,7 @@ export const serverSchauPruefung: OberflaecheTexte["serverSchau"]["pruefung"] = 
     sepaAbschluss: "There is still an open SEPA file. Please book or discard it first, then close.",
     lastschriftAbschluss: "There is still an open direct debit file. Please book or discard it first, then close.",
     inzwischen: "A SEPA or direct debit file has been created in the meantime – please book or discard it first, then close.",
+    phaseGeaendert: "The phase has been changed in the meantime (e.g. show cancelled or switched by a second show management). Please reload the page.",
     nichtAbschliessbar: (offen: string) => `Cannot be closed yet: ${offen}.`,
     nochOffen: (phase: string, offen: string) => `Still open before “${phase}”: ${offen}.`,
     unbewertet: (n: string) => `${n} animals have not been judged yet`,
