@@ -120,3 +120,4 @@ import "./tests/85-gleichzeitig-geld-meldung";
 import "./tests/86-gleichzeitig-katalog";
 import "./tests/87-gleichzeitig-auth-schau";
 import "./tests/88-gleichzeitig-gesamt";
+import "./tests/89-verklemmungen";

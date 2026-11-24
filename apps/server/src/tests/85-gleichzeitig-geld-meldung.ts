@@ -9,6 +9,7 @@ import { describe, expect, test } from "bun:test";
 import { fruehesteFaelligkeit } from "@schau/domain";
 import { setzeDatenschluesselFuerTest } from "../db/geheim";
 import { adminKontext, leer, m } from "./kontext";
+import { wartet } from "./sperren-hilfe";
 
 const al = () => m.appRouter.createCaller(adminKontext);
 const pub = () => m.appRouter.createCaller(leer);
@@ -185,7 +186,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     const h = await halten();
     await h.c`select pg_advisory_xact_lock(${KASSE}, ${s.id})`;
     const storno = fehlerVon(al().meldung.statusSetzen({ id: a.meldungId, status: "storniert", grund: "Rücktritt" }));
-    await Bun.sleep(300);
+    await wartet();
     // Die andere Verbindung bucht unter der Kasse eine Zahlung (wie zahlungErfassen): Fremdschlüssel auf die Meldung.
     const eingefuegt = await h.c`insert into zahlung (meldung_id, betrag_cent, datum, art, erfasst_von, grund) values (${a.meldungId}, 1100, ${heute}, 'bar', ${adminKontext.benutzer!.id}, '') returning id`.then(
       () => "ok",

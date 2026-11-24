@@ -7,6 +7,7 @@
  */
 import { describe, expect, test } from "bun:test";
 import { adminKontext, m } from "./kontext";
+import { wartetOderFertig } from "./sperren-hilfe";
 
 const al = () => m.appRouter.createCaller(adminKontext);
 const aussteller = (n: string) => ({ vorname: "Gleich", nachname: n, strasse: "", plz: "", ort: "", telefon: "", email: "", verein: "", kreisverband: "", registriernummer: "", geburtsdatum: null, istPreisrichter: false, iban: "", kontoinhaber: "" });
@@ -37,7 +38,7 @@ async function mitOffenerTransaktion<T>(vorher: (s: typeof m.sql) => Promise<unk
       (wert) => ({ ok: true as const, wert }),
       (fehler: Error) => ({ ok: false as const, fehler }),
     );
-    await Bun.sleep(300);
+    await wartetOderFertig(p);
     try {
       if (dazwischen) await dazwischen(s as unknown as typeof m.sql);
       await s`commit`;

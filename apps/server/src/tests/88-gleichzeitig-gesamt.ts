@@ -140,6 +140,33 @@ describe("Gleichzeitig gesamt: Mischbetrieb", () => {
   test("Mischbetrieb ohne Verklemmung: viele Schreibwege zugleich, mehrfach wiederholt", async () => {
     const b = await baue("Gesamt Misch");
     const { id, tiere, A, art } = b;
+    // Ein Tier ist verkäuflich (Verkauf in der Phase „Preise“).
+    await m.db.update(m.schema.katalogeintrag).set({ verkaufspreisCent: 2500 }).where(m.eq(m.schema.katalogeintrag.id, tiere[3]!.id));
+    // Zweite Schau desselben Vereins in der Meldephase: Online-Meldung und Import laufen dort, Protokoll-Kette und
+    // Vereinssperren teilen sie mit der ersten.
+    const { id: oid } = await al().schau.anlegen({ name: "Gesamt Misch Online", ort: "Halle" });
+    await al().schau.gebuehrenSetzen({ schauId: oid, gebuehren: [{ art: "einzeltier", jugend: false, betragCent: 400, befreitPreisrichter: false }] });
+    await m.db.update(m.schema.schau).set({ phase: "meldung" }).where(m.eq(m.schema.schau.id, oid));
+    const o = await al().schau.get({ id: oid });
+    const [wy] = await al().stammdaten.suche({ versionId: o.stammdatenVersionId!, q: "Wyandotten weiß" });
+    const [tierA] = (await al().katalog.liste({ schauId: id })).filter((t) => t.id === tiere[0]!.id);
+    const online = (i: number) =>
+      m.appRouter.createCaller(leer).oeffentlich.melden({
+        slug: o.slug,
+        aussteller: { vorname: `Online${i}`, nachname: "Misch", strasse: "Weg 1", plz: "12345", ort: "Ort", telefon: "", email: `misch${i}@test.de`, verein: "GZV", kreisverband: "", registriernummer: `06535077770${i}`, geburtsdatum: null },
+        istJugend: false,
+        istPreisrichter: false,
+        positionen: [b.pos],
+        zustimmung: true,
+        stiftung: null,
+        bemerkung: "",
+      } as never);
+    const importieren = async (i: number) => {
+      const csv = ["Name;Straße;PLZ Ort;Rasse;Farbenschlag;Geschlecht;Alter;Preis", `Import${i}, Ida;Weg ${i};1234${i} Ort;${wy!.rasse};${wy!.farbenschlag};1,0;jung;`].join("\r\n");
+      const r = await al().datenimport.lesen({ dateiname: "misch.csv", base64: Buffer.from(csv, "latin1").toString("base64") });
+      return al().datenimport.uebernehmen({ art: "meldungen", schauId: oid, dateiname: "misch.csv", tabelle: JSON.stringify(r.tabelle), zuordnung: r.zuordnung, mitKopf: true, rassen: {}, bestaetigen: true, zustimmung: true } as never);
+    };
+    const leerNw = { datum: null, impfstoff: "", tierarzt: "" };
     let gezahlt = 0;
     for (let i = 0; i < 6; i++) {
       const X = tiere[i % 4]!;
@@ -156,11 +183,23 @@ describe("Gleichzeitig gesamt: Mischbetrieb", () => {
         ["Nummern", () => al().katalog.nummernVergeben({ schauId: id })],
         ["Absage", () => al().schau.absagen({ id, grund: "darf nicht gehen" })],
         ["Käfigregel", () => al().katalog.kaefigRegelSetzen({ schauId: id, rasse: "Deutsche Wyandotten", typ: i % 2 ? "grosskaefig" : null })],
+        ["Preisrichter", () => al().preisrichter.speichern({ schauId: id, id: A.id, name: "A Ahorn", anschrift: `Weg ${i}`, telefon: "", email: "", istObmann: i % 2 === 0, sparten: [] } as never)],
+        ["Einteilung Rassen", () => al().preisrichter.zuteilungSetzen({ schauId: id, regeln: [{ preisrichterId: A.id, sparte: tierA?.sparte ?? "", rasse: tierA?.rasse ?? "Wyandotten", farbenschlag: "" }], bestaetigt: true } as never)],
+        ["Impfnachweis", () => al().halle.vetSetzen({ meldungId: b.zahlung, nd: { datum: "2026-09-01", impfstoff: `Nobilis ${i}`, tierarzt: "Dr. Huhn" }, pmv: leerNw, wg: { datum: null, sentinel: false, stelle: "" }, geprueft: false })],
+        ["Einlieferung", () => al().halle.statusSetzen({ schauId: id, ids: [Y.id], status: "eingeliefert", uebersteuern: "Test" } as never)],
+        ["Verkauf", () => al().kasse.verkaufen({ schauId: id, katalogeintragId: tiere[3]!.id, kaeuferName: `Käufer ${i}`, kaeuferAnschrift: "Kaufgasse 2", kaeuferRegistriernummer: "065350111111", kaeuferAlter: "ab16" } as never)],
+        ["Online-Meldung", () => online(i)],
+        ["Import", () => importieren(i)],
       ];
       const r = await Promise.allSettled(wege.map(([, f]) => hoechstens(f())));
       nurFachlich(r, wege.map(([n]) => n));
       // Die Absage wird in der Phase „Preise“ immer verweigert – fachlich, nicht durch eine Verklemmung.
       expect(r[9]!.status).toBe("rejected");
+      // Das Tablet meldet nicht „später“ (so meldet es eine Verklemmung oder Wartezeit des Servers).
+      if (r[0]!.status === "fulfilled") {
+        const t = (r[0] as PromiseFulfilledResult<{ ergebnisse: { status: string }[] }>).value.ergebnisse[0];
+        expect(t?.status).not.toBe("spaeter");
+      }
     }
     // Endstand: Schau nicht abgesagt, Zahlungen vollständig, Protokoll-Kette dieser Schau unversehrt.
     const [s] = await m.db.select().from(m.schema.schau).where(m.eq(m.schema.schau.id, id));
