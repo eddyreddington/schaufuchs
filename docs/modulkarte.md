@@ -244,11 +244,21 @@ Tests: `hallenplan-3d-dach.test.ts`
 - `giebel()` – Giebel an beiden Stirnseiten beim Satteldach (geschlossen bis unter den First); flach: keine.
 - Typen: `Dach`, `DeckenTeile`
 
-### hallenplan-3d-rundgang.ts (119 Z.)
-Automatischer Rundgang durch die Halle (3D): die Gänge zwischen den Reihen in Schlangenlinie, immer in Augenhöhe und mit Abstand zu allem (Hinderni …
+### hallenplan-3d-eingang.ts (43 Z.)
+Haupteingang der 3D-Halle: dort beginnt und endet der Rundgang, davor liegt in der Landschaft der Parkplatz.
+Tests: `hallenplan-3d-eingang.test.ts`
+
+- `tuerSeite()` – Seite des umschließenden Rechtecks, der die Tür am nächsten liegt.
+- `haupteingang()` – Der Haupteingang der Szene; null ohne Eingang (nur Notausgänge oder gar keine Tür).
+- `vorneSeite()` – Seite mit dem Haupteingang (dort der Parkplatz); ohne Eingang die Längsseite unten (z1).
+- Typen: `Haupteingang`
+
+### hallenplan-3d-rundgang.ts (330 Z.)
+Automatischer Rundgang durch die Halle (3D): eine Runde an allen Käfigen.
 Tests: `hallenplan-3d-rundgang.test.ts`
 
 - `RUNDGANG_HOEHE` – Augenhöhe beim Rundgang (cm), überall gleich.
+- `RundgangSzene` (Typ) – Was der Rundgang von der Szene braucht.
 - `rundgang()` – Wegpunkte des Rundgangs in Szene-Koordinaten (cm; x entlang der Breite, z entlang der Länge, y Augenhöhe), vor dem Vertauschen der Achsen (`vertaus …
 - Typen: `RundgangPunkt`
 
@@ -261,7 +271,7 @@ Tests: `hallenplan-3d-rundgang.test.ts`
 - `wandSeiten()` – An welchen Seiten ein Wandstück steht (eine Ecke an zweien).
 - `tuerLage()` – Lage einer Tür in der Szene (cm): Seite ihrer Wand, Ebene der Innenfläche (x bei x0/x1, z bei z0/z1), Mitte und Breite entlang der Wand, Wandstärke.
 
-### hallenplan-3d-wege.ts (340 Z.)
+### hallenplan-3d-wege.ts (397 Z.)
 Wege durch die 3D-Halle ohne Anstoßen: eine Hinderniskarte aus der Szene (Grundplatten und Blöcke, Käfige samt Etagen, Volieren, Möbel, Sperrfläche …
 
 - `KOERPER_RADIUS` – Halber Platzbedarf eines Menschen (cm): so weit bleibt der Weg von Käfigen und Wänden.
@@ -274,8 +284,10 @@ Wege durch die 3D-Halle ohne Anstoßen: eine Hinderniskarte aus der Szene (Grund
 - `zelleBei()` – Zelle an der Stelle (−1 außerhalb des Rasters).
 - `zellMitte()`
 - `freieZelleNahe()` – Nächste freie Zelle bis `weit` cm um die Stelle (−1: keine).
+- `TEUER` – Zellen, die `teuer` markiert, kosten so viel mehr (Rundgang: an Käfigfronten, die schon abgegangen sind bzw. werden).
 - `suche()` – Kürzester Weg (A*) von Zelle zu Zelle; null, wenn es keinen gibt oder er länger als `grenze` (cm) wäre.
-- `abkuerzen()` – Abkürzen: von jedem Punkt so weit voraus, wie die gerade Strecke frei ist (erster und letzter Punkt bleiben).
+- `abstaende()` – Weglängen (cm) von einer Zelle zu den Zielzellen über das Raster (wie `suche`, auch mit `teuer`); Infinity, wo keiner hinführt.
+- `abkuerzen()` – Abkürzen: von jedem Punkt so weit voraus, wie die gerade Strecke frei ist (erster und letzter Punkt bleiben); `erlaubt` kann eine Abkürzung (von Pu …
 - `runden()` – Ecken runden (Bogen bis 1,5 m vor und nach der Ecke, geprüft; wo er anstößt, enger oder gar nicht) und den Weg dicht abtasten, sodass zwei Punkte h …
 - `wegZwischen()` – Freier, geglätteter Weg von Stelle zu Stelle (beide frei, im selben Bereich), sonst null.
 - Typen: `Stelle`, `Raster`, `Hinderniskarte`
@@ -639,7 +651,7 @@ Tests: `import.test.ts`
 - `zeilenAuswerten()` – Zeilen der Tabelle nach der Spaltenzuordnung auswerten.
 - Typen: `ImportFeld`, `ImportAussteller`, `ImportTier`, `ImportZeile`
 
-### index.ts (70 Z.)
+### index.ts (71 Z.)
 Sammelt alle Exporte (`export * from …`).
 
 ### kaefige.ts (174 Z.)
@@ -2787,7 +2799,7 @@ Prozeduren: auth.status, katalog.hallenplan, schau.get
 ### hallenplan-3d-steuerkreuz.tsx (63 Z.)
 Steuerkreuz unten rechts in der 3D-Ansicht – für Tablet und Maus, was am Rechner die Tasten tun: gehen, drehen, zoomen (solange gedrückt) und die g …
 
-### hallenplan-3d-steuerung.ts (347 Z.)
+### hallenplan-3d-steuerung.ts (358 Z.)
 Bewegung der Kamera in der 3D-Ansicht über das Ziehen mit Maus oder Finger hinaus: weiches Auslaufen, Zoom zum Mauszeiger, per Doppelklick sanft hi …
 
 ### hallenplan-3d-texturen.ts (323 Z.)
@@ -2796,7 +2808,7 @@ Texturen der 3D-Halle, aus kleinen Canvas-Bildern gerechnet (keine Bilddateien):
 ### hallenplan-3d-tueren.ts (157 Z.)
 Türen in den Eingängen der 3D-Halle (Entscheidung 028): geschlossen in der Öffnung, leicht zurückgesetzt in der Wand, von beiden Seiten zu sehen – …
 
-### hallenplan-3d-welt.ts (564 Z.)
+### hallenplan-3d-welt.ts (551 Z.)
 Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und Steuerung.
 
 ### hallenplan-3d.tsx (231 Z.)

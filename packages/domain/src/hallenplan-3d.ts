@@ -386,7 +386,7 @@ export function hallenSzene(
     rundgang: [],
   };
   // Rundgang aus den Körpern der Szene: nie durch Käfige, Volieren, Möbel oder Wände.
-  szene.rundgang = rundgang(szene, plan);
+  szene.rundgang = rundgang(szene);
   // Wie der 2D-Plan: liegt die Halle dort quer (lange Seite waagrecht), sind x und y vertauscht – dieselbe Abbildung hier,
   // sonst wäre die Halle in 3D spiegelverkehrt.
   return zeichnungDerHalle(halle).quer ? vertauscht(szene) : szene;
@@ -417,7 +417,7 @@ export function vertauscht(s: HallenSzene): HallenSzene {
     schuerzen: s.schuerzen.map((m) => ({ ...m, q: q(m.q), aussen: blick[m.aussen] })),
     beschriftungen: s.beschriftungen.map((b) => ({ ...b, x: b.z, z: b.x })),
     gang: { von: p(s.gang.von), nach: p(s.gang.nach) },
-    rundgang: s.rundgang.map(p),
+    rundgang: s.rundgang.map((a) => ({ ...p(a), ...(a.zu ? { zu: { x: a.zu.z, z: a.zu.x } } : {}) })),
   };
 }
 

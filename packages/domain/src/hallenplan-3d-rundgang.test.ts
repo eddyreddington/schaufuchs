@@ -63,30 +63,48 @@ export function pruefeRundgang(s: HallenSzene, punkte: RundgangPunkt[]): string[
 }
 
 /**
- * Anteil der Gänge, die der Rundgang abgeht: je Lücke zwischen zwei Reihen (bzw. Reihe und Wand), zu der eine Front zeigt,
- * müssen Punkte des Rundgangs in der Lücke liegen, an mindestens drei Vierteln der Meter, an denen dort Käfige stehen.
+ * Gänge im Reihensystem: je Lücke zwischen zwei Reihen (bzw. Reihe und Wand), zu der eine Front zeigt, die Meter entlang
+ * der Reihen, an denen dort Käfige stehen, und wie oft der Rundgang dort vorbeikommt (Durchgänge).
  */
-function besuchteGaenge(h: Halle, plan: ReturnType<typeof planeHalle>, punkte: RundgangPunkt[]): { gaenge: number; besucht: number } {
+function gangMeter(h: Halle, plan: ReturnType<typeof planeHalle>, punkte: RundgangPunkt[]) {
   const tausch = zeichnungDerHalle(h).quer;
   // Szene vor dem Tauschen, dann ins Reihensystem: q quer zu den Reihen, l entlang.
   const ql = punkte.map((p) => (tausch ? { x: p.z, z: p.x } : { x: p.x, z: p.z })).map((p) => (plan.quer ? { q: p.z, l: p.x } : { q: p.x, l: p.z }));
   const breite = plan.quer ? h.laenge : h.breite;
   const reihen = plan.reihen.filter((r) => r.abschnitte.length).sort((a, b) => a.x - b.x);
-  // Je Lücke die Meter entlang der Reihen, an denen dort Käfige stehen (Abschnitte der Nachbarreihen).
-  const meterVon = (...rs: (typeof reihen)[number][]) => new Set(rs.flatMap((r) => r.abschnitte.flatMap((a) => Array.from({ length: Math.max(0, Math.floor(a.bis / 100) - Math.ceil(a.von / 100)) }, (_, i) => Math.ceil(a.von / 100) + i))));
-  const luecken: { von: number; bis: number; meter: Set<number> }[] = [];
+  // Meter mit Käfigen (Mitte des Meters vor einem Käfig) der Reihen, deren Front zur Lücke zeigt.
+  const meterVon = (...rs: ((typeof reihen)[number] | false | undefined)[]) =>
+    new Set(rs.flatMap((r) => (r ? r.kaefige.flatMap((k) => Array.from({ length: Math.ceil(k.breite / 100) + 1 }, (_, i) => Math.floor(k.y / 100) + i).filter((m) => m * 100 + 50 > k.y && m * 100 + 50 < k.y + k.breite)) : [])));
+  const luecken: { von: number; bis: number; meter: Set<number>; durch: Map<number, number> }[] = [];
+  // Vor den Käfigen heißt: bis 1,5 m vor der Front (in breiten Lücken nur dort; weiter weg ist es nur ein Weg vorbei).
+  const dazu = (von: number, bis: number, links: boolean, rechts: boolean, meter: Set<number>) => {
+    const zone = { von: rechts && !links ? Math.max(von, bis - 150) : von, bis: links && !rechts ? Math.min(bis, von + 150) : bis };
+    if (bis - von >= 120 && meter.size) luecken.push({ ...zone, meter, durch: new Map() });
+  };
   reihen.forEach((r, i) => {
     const vor = reihen[i - 1];
-    const links = vor ? vor.x + vor.tiefe : 0;
-    if (r.x - links >= 120 && (r.front === "links" || vor?.front === "rechts")) luecken.push({ von: links, bis: r.x, meter: meterVon(...(vor ? [vor, r] : [r])) });
+    dazu(vor ? vor.x + vor.tiefe : 0, r.x, vor?.front === "rechts", r.front === "links", meterVon(r.front === "links" && r, vor?.front === "rechts" && vor));
   });
   const letzte = reihen.at(-1);
-  if (letzte?.front === "rechts" && breite - letzte.x - letzte.tiefe >= 120) luecken.push({ von: letzte.x + letzte.tiefe, bis: breite, meter: meterVon(letzte) });
-  const besucht = luecken.filter((g) => {
-    const meter = new Set(ql.filter((p) => p.q > g.von && p.q < g.bis).map((p) => Math.floor(p.l / 100)).filter((m) => g.meter.has(m)));
-    return meter.size >= 0.75 * g.meter.size;
-  }).length;
-  return { gaenge: luecken.length, besucht };
+  if (letzte) dazu(letzte.x + letzte.tiefe, breite, letzte.front === "rechts", false, meterVon(letzte.front === "rechts" && letzte));
+  // Durchgänge: zusammenhängende Folgen von Punkten im selben Meter einer Lücke.
+  const zuletzt = new Map<string, number>();
+  ql.forEach((p, i) => {
+    const m = Math.floor(p.l / 100);
+    luecken.forEach((g, gi) => {
+      if (p.q <= g.von || p.q >= g.bis || !g.meter.has(m)) return;
+      const key = `${gi}/${m}`;
+      if (!zuletzt.has(key) || i - zuletzt.get(key)! > 3) g.durch.set(m, (g.durch.get(m) ?? 0) + 1);
+      zuletzt.set(key, i);
+    });
+  });
+  return luecken;
+}
+
+/** Anteil der Gänge, die der Rundgang abgeht: an mindestens drei Vierteln der Meter, an denen dort Käfige stehen. */
+function besuchteGaenge(h: Halle, plan: ReturnType<typeof planeHalle>, punkte: RundgangPunkt[]): { gaenge: number; besucht: number } {
+  const luecken = gangMeter(h, plan, punkte);
+  return { gaenge: luecken.length, besucht: luecken.filter((g) => g.durch.size >= 0.75 * g.meter.size).length };
 }
 
 const L_UMRISS = [{ x: 0, y: 0 }, { x: 2000, y: 0 }, { x: 2000, y: 1500 }, { x: 1000, y: 1500 }, { x: 1000, y: 3000 }, { x: 0, y: 3000 }];
@@ -173,9 +191,9 @@ describe("Rundgang durch die Gänge ohne Anstoßen", () => {
     const plan = planeHalle(h, tiere(600), null);
     const s = hallenSzene(h, plan, null);
     const vor = zeichnungDerHalle(h).quer ? vertauscht(s) : s;
-    rundgang(vor, plan);
+    rundgang(vor);
     const t0 = performance.now();
-    const r = rundgang(vor, plan);
+    const r = rundgang(vor);
     const dauer = performance.now() - t0;
     expect(s.kaefige.length).toBeGreaterThanOrEqual(600);
     expect(r.length).toBeGreaterThan(100);
@@ -203,9 +221,117 @@ describe("Rundgang durch die Gänge ohne Anstoßen", () => {
     // Mitten in den Käfig hinein: bleibt stehen.
     expect(gleite(k, von, p(u0 - 20, v0))).toEqual(von);
     // Von Gang zu Gang: frei abgetastet, in kleinen Schritten.
-    const a = s.rundgang[0]!, b = s.rundgang.at(-1)!;
+    const a = s.rundgang[0]!, b = s.rundgang[Math.floor(s.rundgang.length / 2)]!;
     const w = wegZwischen(k, { x: a.x, z: a.z }, { x: b.x, z: b.z })!;
     expect(w.length).toBeGreaterThan(2);
     expect(pruefeRundgang(s, w.map((p) => ({ x: p.x, y: RUNDGANG_HOEHE, z: p.z })))).toEqual([]);
+  });
+});
+
+/** Abstand eines Punkts (Szene, Boden) zu einem Quader (Grundriss). */
+const abstandZuQuader = (p: { x: number; z: number }, q: { x: number; z: number; b: number; t: number }) => abstandZuRechteck(p.x, p.z, [q.x, q.z, q.x + q.b, q.z + q.t]);
+const laenge = (r: RundgangPunkt[]) => r.reduce((n, p, i) => (i ? n + Math.hypot(p.x - r[i - 1]!.x, p.z - r[i - 1]!.z) : 0), 0);
+const koerperVon = (s: HallenSzene) => [...s.kaefige.map((k) => k.q), ...s.volieren.map((v) => v.q), ...s.aufsteller];
+const naechsterKaefig = (s: HallenSzene, p: { x: number; z: number }) => Math.min(...koerperVon(s).map((q) => abstandZuQuader(p, q)));
+
+/** Käfige und Volieren mit Front, vor denen kein Punkt des Rundgangs liegt (bis 2,5 m vor der Front, seitlich im Käfig). */
+function ungesehen(s: HallenSzene): string[] {
+  const mitFront = [...s.kaefige.map((k) => ({ q: k.q, front: k.front, name: k.ort })), ...s.volieren.flatMap((v) => (v.front ? [{ q: v.q, front: v.front, name: v.name }] : []))];
+  return mitFront
+    .filter(({ q, front }) => {
+      const x = front[0] === "x", plus = front[1] === "+";
+      const ebene = x ? (plus ? q.x + q.b : q.x) : plus ? q.z + q.t : q.z;
+      const [u0, u1] = x ? [q.z, q.z + q.t] : [q.x, q.x + q.b];
+      return !s.rundgang.some((p) => {
+        const d = (plus ? 1 : -1) * ((x ? p.x : p.z) - ebene), u = x ? p.z : p.x;
+        return d > 0 && d <= 250 && u >= u0 - 30 && u <= u1 + 30;
+      });
+    })
+    .map((k) => `${k.name} ${k.q.x.toFixed(0)}/${k.q.z.toFixed(0)}`);
+}
+
+const BEIDE = { breite: 300, lage: "beide" as const };
+const eingang = (name: string, x: number, y: number, breite: number, tiefe: number) => ({ name, art: "eingang" as const, x, y, breite, tiefe });
+const mitEingang: [string, Halle, string][] = [
+  [
+    "Haupteingang an der Stirnseite",
+    { ...HALLE_STANDARD, richtung: "laengs", breite: 1500, laenge: 3000, hauptgang: BEIDE, flaechen: [eingang("Eingang", 600, 2950, 300, 50), eingang("Notausgang", 1450, 1200, 50, 150)] },
+    "Eingang",
+  ],
+  [
+    "Haupteingang an der Längsseite, mehrere Eingänge",
+    { ...HALLE_STANDARD, breite: 1550, laenge: 2750, hauptgang: BEIDE, flaechen: [eingang("Eingang 1", 0, 800, 50, 250), eingang("Eingang 2", 0, 2000, 50, 150), eingang("Tor", 600, 2700, 300, 50), eingang("Notausgang", 1500, 1300, 50, 150)] },
+    "Eingang 1",
+  ],
+];
+
+describe("Rundgang: eine Runde vom Haupteingang an allen Käfigen", () => {
+  for (const [name, h, haupt] of mitEingang) {
+    test(`${name}: Start und Ende am Haupteingang, jeder Gang genau einmal`, () => {
+      const plan = planeHalle(h, tiere(160), null);
+      const s = hallenSzene(h, plan, null);
+      const tuer = s.tueren.find((t) => t.name === haupt)!;
+      const not = s.tueren.find((t) => t.notausgang)!;
+      expect(pruefeRundgang(s, s.rundgang)).toEqual([]);
+      expect(abstandZuQuader(s.rundgang[0]!, tuer.q)).toBeLessThan(150);
+      expect(abstandZuQuader(s.rundgang.at(-1)!, tuer.q)).toBeLessThan(150);
+      expect(abstandZuQuader(s.rundgang[0]!, not.q)).toBeGreaterThan(300);
+      // Keine Front zweimal (hier gibt es keine Sackgasse), jeder Gang an allen Käfigmetern.
+      const gaenge = gangMeter(h, plan, s.rundgang);
+      expect(gaenge.length).toBeGreaterThan(2);
+      for (const g of gaenge) {
+        expect([...g.durch.entries()].filter(([, n]) => n > 1)).toEqual([]);
+        expect(g.durch.size).toBe(g.meter.size);
+      }
+      // Nicht länger als nötig: untere Schranke sind die Käfigmeter der Gänge, einmal quer über alle Gänge hin und zurück und
+      // bei ungerader Zahl von Gängen einmal die Länge eines Gangs zurück (man kommt am anderen Ende heraus).
+      const meter = gaenge.reduce((n, g) => n + g.meter.size * 100, 0), qs = gaenge.map((g) => (g.von + g.bis) / 2);
+      const zurueck = gaenge.length % 2 ? Math.min(...gaenge.map((g) => (Math.max(...g.meter) - Math.min(...g.meter)) * 100)) : 0;
+      expect(laenge(s.rundgang)).toBeLessThan(1.25 * (meter + 2 * (Math.max(...qs) - Math.min(...qs)) + zurueck));
+      expect(ungesehen(s)).toEqual([]);
+    });
+  }
+
+  test("ohne Eingang: Gänge enden an den Käfigen, nie weiter als 1,35 m von Käfig oder Grundplatte, keine Front zweimal", () => {
+    for (const h of [hallen[2]![1], hallen[4]![1]]) {
+      const plan = planeHalle(h, tiere(160), null);
+      const s = hallenSzene(h, plan, null);
+      expect(s.rundgang.filter((p) => naechsterKaefig(s, p) > 135).slice(0, 3)).toEqual([]);
+      const gaenge = gangMeter(h, plan, s.rundgang);
+      for (const g of gaenge) expect([...g.durch.entries()].filter(([, n]) => n > 1)).toEqual([]);
+      // Offene Runde: höchstens 1,25-mal die Käfigmeter plus einmal quer über alle Gänge.
+      const meter = gaenge.reduce((n, g) => n + g.meter.size * 100, 0), qs = gaenge.map((g) => (g.von + g.bis) / 2);
+      expect(laenge(s.rundgang)).toBeLessThan(1.25 * (meter + Math.max(...qs) - Math.min(...qs)));
+    }
+  });
+
+  test("Sackgassen: hinein bis zum letzten Käfig und zurück, keine Front öfter als zweimal", () => {
+    const h: Halle = { ...HALLE_STANDARD, breite: 1400, laenge: 2000, wandBuendig: true, hauptgang: { breite: 300, lage: "anfang" }, flaechen: [eingang("Eingang", 0, 1000, 50, 200)] };
+    const plan = planeHalle(h, tiere(120), null);
+    const s = hallenSzene(h, plan, null);
+    expect(pruefeRundgang(s, s.rundgang)).toEqual([]);
+    const gaenge = gangMeter(h, plan, s.rundgang);
+    expect(gaenge.length).toBeGreaterThan(2);
+    for (const g of gaenge) expect(Math.max(...g.durch.values())).toBeLessThanOrEqual(2);
+  });
+
+  test("eingesetzte Blöcke und Volieren werden angesehen, Garnitur und Pokaltisch sind kein Ziel", () => {
+    const [, h, t] = hallen[7]!;
+    const s = hallenSzene(h, planeHalle(h, t, null), null);
+    expect(ungesehen(s)).toEqual([]);
+    // Nahe an Möbeln nur, wo der Weg ohnehin an Käfigen entlang führt.
+    for (const m of s.moebel) expect(s.rundgang.filter((p) => abstandZuQuader(p, m.q) < 80 && naechsterKaefig(s, p) > 135).length).toBe(0);
+  });
+
+  test("Möbel abseits der Wege ändern den Rundgang nicht: nie zwischen Garnitur und Wand hindurch", () => {
+    const h = hallen[2]![1];
+    const mit: Halle = { ...h, objekte: [{ id: "g", art: "garnitur", x: 90, y: 1000, drehung: 90 }, { id: "p", art: "pokaltisch", x: 1350, y: 1800, drehung: 0 }] };
+    const ohne = hallenSzene(h, planeHalle(h, tiere(160), null), null), s = hallenSzene(mit, planeHalle(mit, tiere(160), null), null);
+    expect(s.moebel.length).toBeGreaterThan(1);
+    expect(Math.abs(laenge(s.rundgang) - laenge(ohne.rundgang))).toBeLessThan(50);
+    expect(pruefeRundgang(s, s.rundgang)).toEqual([]);
+    // Zwischen Garnitur (Bänke und Tisch) und Wand: kein Punkt.
+    const z0 = Math.min(...s.moebel.slice(0, 3).map((m) => m.q.z)), x0 = Math.min(...s.moebel.slice(0, 3).map((m) => m.q.x)), x1 = Math.max(...s.moebel.slice(0, 3).map((m) => m.q.x + m.q.b));
+    expect(s.rundgang.filter((p) => p.z < z0 && p.x > x0 && p.x < x1)).toEqual([]);
   });
 });

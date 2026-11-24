@@ -2,12 +2,12 @@
  * Die 3D-Szene der Halle: Licht, Landschaft, Boden, Wände, Käfige, Tiere, Volieren, Möbel, Beschriftungen, Kamera und
  * Steuerung. Gezeichnet wird nur bei Bedarf (Bewegung, Zeigen), nicht in Dauerschleife. Maßstab Meter (Fachlogik in cm).
  */
-import { hinderniskarte, POKAL_SKALA, type Verkleidung, type SzeneSchuerze, richterFarbe, wandDeckkraft, type Quader, type Blick, type Figur, type HallenSzene, type SzeneKaefig, type SzeneTier } from "@schau/domain";
+import { hinderniskarte, POKAL_SKALA, vorneSeite, type Verkleidung, type SzeneSchuerze, richterFarbe, wandDeckkraft, type Quader, type Blick, type Figur, type HallenSzene, type SzeneKaefig, type SzeneTier } from "@schau/domain";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { ot } from "../sprache-jetzt";
 import { figurTeile, gitterTextur, hell, ladeBild, offenerKasten, pokalGeometrie, schildSprite, schuerzenGeometrie, stoffKachel, type Teil, wackel } from "./hallenplan-3d-bausteine";
-import { baueLandschaft, type HallenSeite } from "./hallenplan-3d-landschaft";
+import { baueLandschaft } from "./hallenplan-3d-landschaft";
 import { lichtWerte } from "./hallenplan-3d-licht";
 import { baueRaum, BODEN_LAGEN } from "./hallenplan-3d-raum";
 import { baueTueren } from "./hallenplan-3d-tueren";
@@ -34,19 +34,6 @@ export interface Welt {
 
 /** Drehung um die Hochachse, damit die Vorderseite (lokal +z) in Blickrichtung zeigt. */
 const DREHUNG: Record<Blick, number> = { "z+": 0, "x+": Math.PI / 2, "z-": Math.PI, "x-": -Math.PI / 2 };
-
-/** Seite mit den meisten Eingängen (Notausgänge zählen nicht): dort liegt der Parkplatz. Ohne Eingang: die Längsseite unten. */
-function vorneSeite(s: HallenSzene): HallenSeite {
-  const zahl: Record<HallenSeite, number> = { x0: 0, x1: 0, z0: 0, z1: 0 };
-  for (const t of s.tueren) {
-    if (t.notausgang) continue;
-    const cx = t.q.x + t.q.b / 2, cz = t.q.z + t.q.t / 2;
-    const abstand: [HallenSeite, number][] = [["x0", cx], ["x1", s.breite - cx], ["z0", cz], ["z1", s.laenge - cz]];
-    zahl[abstand.sort((a, b) => a[1] - b[1])[0]![0]]++;
-  }
-  const beste = (Object.entries(zahl) as [HallenSeite, number][]).sort((a, b) => b[1] - a[1])[0]!;
-  return beste[1] > 0 ? beste[0] : "z1";
-}
 
 export function baueWelt(
   kasten: HTMLDivElement,

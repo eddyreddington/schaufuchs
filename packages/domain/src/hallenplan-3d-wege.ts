@@ -197,8 +197,14 @@ export function freieZelleNahe(r: Raster, p: Stelle, weit = 100): number {
 
 let puffer: { n: number; g: Float64Array; vor: Int32Array; stempel: Int32Array; zu: Int32Array; runde: number } | null = null;
 
-/** Kürzester Weg (A*) von Zelle zu Zelle; null, wenn es keinen gibt oder er länger als `grenze` (cm) wäre. */
-export function suche(k: Hinderniskarte, von: number, nach: number, grenze = Infinity): { laenge: number; zellen: number[] } | null {
+/** Zellen, die `teuer` markiert, kosten so viel mehr (Rundgang: an Käfigfronten, die schon abgegangen sind bzw. werden). */
+export const TEUER = 3;
+
+/**
+ * Kürzester Weg (A*) von Zelle zu Zelle; null, wenn es keinen gibt oder er länger als `grenze` (cm) wäre. In mit `teuer`
+ * markierte Zellen zu gehen kostet `TEUER`-mal so viel.
+ */
+export function suche(k: Hinderniskarte, von: number, nach: number, grenze = Infinity, teuer?: Uint8Array): { laenge: number; zellen: number[] } | null {
   const r = rasterVon(k), n = r.nx * r.nz;
   if (!r.frei[von] || !r.frei[nach] || r.teil[von] !== r.teil[nach]) return null;
   if (!puffer || puffer.n !== n) puffer = { n, g: new Float64Array(n), vor: new Int32Array(n), stempel: new Int32Array(n), zu: new Int32Array(n), runde: 0 };
@@ -260,7 +266,7 @@ export function suche(k: Hinderniskarte, von: number, nach: number, grenze = Inf
     }
     const gc = p.g[c]!;
     nachbarn(r.nx, r.nz, r.frei, c, (m, d) => {
-      const neu = gc + d * r.g;
+      const neu = gc + d * r.g * (teuer?.[m] ? TEUER : 1);
       if (p.zu[m] === runde || (p.stempel[m] === runde && p.g[m]! <= neu)) return;
       p.stempel[m] = runde;
       p.g[m] = neu;
@@ -271,14 +277,65 @@ export function suche(k: Hinderniskarte, von: number, nach: number, grenze = Inf
   return null;
 }
 
-/** Abkürzen: von jedem Punkt so weit voraus, wie die gerade Strecke frei ist (erster und letzter Punkt bleiben). */
-export function abkuerzen(k: Hinderniskarte, punkte: Stelle[]): Stelle[] {
+/**
+ * Weglängen (cm) von einer Zelle zu den Zielzellen über das Raster (wie `suche`, auch mit `teuer`); Infinity, wo keiner
+ * hinführt. Schnell (Eimer statt Haufen, Schritt 10 bzw. diagonal 14 statt 1 bzw. √2 – auf 1 % genau); hört auf, sobald alle
+ * Ziele erreicht sind. Für Vergleiche von Wegen, nicht für den Weg selbst.
+ */
+export function abstaende(k: Hinderniskarte, von: number, ziele: number[], teuer?: Uint8Array): number[] {
+  const r = rasterVon(k), nx = r.nx, nz = r.nz, n = nx * nz, frei = r.frei;
+  if (!frei[von]) return ziele.map(() => Infinity);
+  const best = new Int32Array(n).fill(0x7fffffff), fertig = new Uint8Array(n);
+  let offen = new Set(ziele.filter((z) => z >= 0 && r.teil[z] === r.teil[von])).size;
+  const ziel = new Uint8Array(n);
+  for (const z of ziele) if (z >= 0) ziel[z] = 1;
+  const RING = 14 * TEUER + 1;
+  const eimer: number[][] = Array.from({ length: RING }, () => []);
+  let im = 1, d = 0;
+  best[von] = 0;
+  eimer[0]!.push(von);
+  const dazu = (m: number, w: number) => {
+    const neu = d + (teuer?.[m] ? w * TEUER : w);
+    if (neu < best[m]!) {
+      best[m] = neu;
+      eimer[neu % RING]!.push(m);
+      im++;
+    }
+  };
+  for (; im && offen; d++) {
+    const e = eimer[d % RING]!;
+    while (e.length) {
+      const c = e.pop()!;
+      im--;
+      if (fertig[c] || best[c] !== d) continue;
+      fertig[c] = 1;
+      if (ziel[c]) offen--;
+      const i = c % nx, j = (c - i) / nx;
+      const l = i > 0 && frei[c - 1], re = i < nx - 1 && frei[c + 1], o = j > 0 && frei[c - nx], u = j < nz - 1 && frei[c + nx];
+      if (l) dazu(c - 1, 10);
+      if (re) dazu(c + 1, 10);
+      if (o) dazu(c - nx, 10);
+      if (u) dazu(c + nx, 10);
+      if (l && o && frei[c - nx - 1]) dazu(c - nx - 1, 14);
+      if (re && o && frei[c - nx + 1]) dazu(c - nx + 1, 14);
+      if (l && u && frei[c + nx - 1]) dazu(c + nx - 1, 14);
+      if (re && u && frei[c + nx + 1]) dazu(c + nx + 1, 14);
+    }
+  }
+  return ziele.map((z) => (z >= 0 && fertig[z] ? (best[z]! * r.g) / 10 : Infinity));
+}
+
+/**
+ * Abkürzen: von jedem Punkt so weit voraus, wie die gerade Strecke frei ist (erster und letzter Punkt bleiben); `erlaubt`
+ * kann eine Abkürzung (von Punkt i zu Punkt j) zusätzlich verbieten.
+ */
+export function abkuerzen(k: Hinderniskarte, punkte: Stelle[], erlaubt?: (i: number, j: number) => boolean): Stelle[] {
   if (punkte.length < 3) return punkte;
   const aus = [punkte[0]!];
   let i = 0;
   while (i < punkte.length - 1) {
     let weit = i + 1;
-    for (let j = i + 2; j < punkte.length && j - weit <= 40; j++) if (streckeFrei(k, punkte[i]!, punkte[j]!)) weit = j;
+    for (let j = i + 2; j < punkte.length && j - weit <= 40; j++) if (streckeFrei(k, punkte[i]!, punkte[j]!) && (!erlaubt || erlaubt(i, j))) weit = j;
     aus.push(punkte[weit]!);
     i = weit;
   }

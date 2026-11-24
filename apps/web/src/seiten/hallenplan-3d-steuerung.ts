@@ -31,6 +31,8 @@ const UEBER_REIHEN = 3.5;
 /** Drehen des Blicks im Rundgang (rad/s) und wie weit voraus (m) die Gehrichtung gilt. */
 const RUNDGANG_DREH = 0.9;
 const RICHTUNG_VORAUS = 1;
+/** Im Käfiggang mit Fronten nur auf einer Seite neigt sich der Blick so stark zu ihnen (Anteil zur Gehrichtung, rund 20°). */
+const NEIGUNG = 0.4;
 /** Der Blick im Rundgang: so weit voraus (m) und so tief unter Augenhöhe (m). */
 const VORAUS = 2.5;
 const SENKUNG = 0.35;
@@ -108,7 +110,8 @@ export function bewegungFuer(o: {
 
   let flug: Flug | null = null;
   const rundgangPunkte = o.punkte.map((p) => new THREE.Vector3(p.x * M, p.y * M, p.z * M));
-  let bahn = bahnAus(rundgangPunkte);
+  const rundgangZu = o.punkte.map((p) => p.zu ?? null);
+  let bahn = bahnAus(rundgangPunkte, rundgangZu);
   const moeglich = bahn.laenge > 0.01;
   let weg: number | null = null; // zurückgelegt (m), solange der Rundgang läuft
   let blick = 0; // Blickrichtung im Rundgang (Winkel um die Hochachse)
@@ -168,7 +171,7 @@ export function bewegungFuer(o: {
   };
   /** Ein Schritt im Rundgang: Blick dreht höchstens `RUNDGANG_DREH` zur Gehrichtung, je größer die Drehung, desto langsamer. */
   const rundgangSchritt = (dt: number) => {
-    const soll = bahnWinkel(bahn, weg! + RICHTUNG_VORAUS);
+    const soll = blickWinkel(bahn, weg! + RICHTUNG_VORAUS);
     const rest = Math.atan2(Math.sin(soll - blick), Math.cos(soll - blick));
     blick += Math.max(-RUNDGANG_DREH * dt, Math.min(RUNDGANG_DREH * dt, rest));
     weg = Math.min(bahn.laenge, weg! + TEMPO * dt * Math.max(0, 1 - Math.abs(rest) / (Math.PI / 2)));
@@ -269,7 +272,7 @@ export function bewegungFuer(o: {
       beruhigen();
       laeuft = true;
       o.beiRundgang(true);
-      bahn = bahnAus(rundgangPunkte);
+      bahn = bahnAus(rundgangPunkte, rundgangZu);
       const start = rundgangPunkte[0]!;
       const los = (winkel: number) => () => {
         blick = winkel;
@@ -278,7 +281,7 @@ export function bewegungFuer(o: {
       // Steht man im Gang: zu Fuß auf freiem Weg zum Anfang (Blick dreht unterwegs mit).
       const zuFuss = imGang() && o.karte ? wegZwischen(o.karte, { x: kamera.position.x / M, z: kamera.position.z / M }, { x: start.x / M, z: start.z / M }) : null;
       if (zuFuss) {
-        bahn = bahnAus([...zuFuss.map((p) => new THREE.Vector3(p.x * M, start.y, p.z * M)), ...rundgangPunkte.slice(1)]);
+        bahn = bahnAus([...zuFuss.map((p) => new THREE.Vector3(p.x * M, start.y, p.z * M)), ...rundgangPunkte.slice(1)], [...zuFuss.map(() => null), ...rundgangZu.slice(1)]);
         const winkel = blickVonKamera(), nachPos = new THREE.Vector3(), nachZiel = new THREE.Vector3();
         stelleAufWeg(0, winkel, nachPos, nachZiel);
         flug = { vonPos: kamera.position.clone(), vonZiel: steuerung.target.clone(), nachPos, nachZiel, t: 0, dauer: 0.4, dann: los(winkel) };
@@ -311,12 +314,14 @@ interface Bahn {
   punkte: THREE.Vector3[];
   bis: number[];
   laenge: number;
+  /** Je Punkt: Richtung zu den Fronten (nur im Käfiggang mit Fronten auf einer Seite). */
+  zu: (RundgangPunkt["zu"] | null)[];
 }
 
-function bahnAus(punkte: THREE.Vector3[]): Bahn {
+function bahnAus(punkte: THREE.Vector3[], zu: Bahn["zu"] = []): Bahn {
   const bis = [0];
   for (let i = 1; i < punkte.length; i++) bis.push(bis[i - 1]! + punkte[i]!.distanceTo(punkte[i - 1]!));
-  return { punkte, bis, laenge: bis.at(-1) ?? 0 };
+  return { punkte, bis, laenge: bis.at(-1) ?? 0, zu };
 }
 
 /** Strecke, in der die Weglänge m liegt (Index des Anfangs). */
@@ -344,4 +349,10 @@ function bahnWinkel(b: Bahn, m: number): number {
   const i = streckeBei(b, Math.max(0, Math.min(b.laenge - 1e-6, m)));
   const a = b.punkte[i]!, e = b.punkte[i + 1]!;
   return Math.atan2(e.x - a.x, e.z - a.z);
+}
+
+/** Blickrichtung nach m Metern: in Gehrichtung, im Käfiggang mit Fronten auf einer Seite leicht zu ihnen. */
+function blickWinkel(b: Bahn, m: number): number {
+  const w = bahnWinkel(b, m), zu = b.zu[streckeBei(b, Math.max(0, Math.min(b.laenge - 1e-6, m)))];
+  return zu ? Math.atan2(Math.sin(w) + NEIGUNG * zu.x, Math.cos(w) + NEIGUNG * zu.z) : w;
 }
