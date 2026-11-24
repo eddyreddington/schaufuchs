@@ -4,7 +4,7 @@
  * sehen sie nie; eine Testschau sieht keine echten Aussteller (keine Übungsmeldungen in Auskunft und Protokoll echter
  * Personen). Mit dem Löschen der Testschau verschwinden ihre Aussteller (Kaskade).
  */
-import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import type { Tx } from "../db/client";
 import { aenderung, aussteller, meldung, schau } from "../db/schema";
 import { fehler } from "../trpc";
@@ -75,7 +75,7 @@ async function geldUndBelege(tx: Pick<Tx, "execute">, schauId: number): Promise<
 async function einordnen(tx: Pick<Tx, "select" | "selectDistinct">, schauId: number, sperren: boolean) {
   const ids = (await tx.selectDistinct({ id: meldung.ausstellerId }).from(meldung).where(eq(meldung.schauId, schauId))).map((x) => x.id);
   if (!ids.length) return { werden: [], kopien: [] };
-  const abfrage = tx.select().from(aussteller).where(inArray(aussteller.id, ids));
+  const abfrage = tx.select().from(aussteller).where(inArray(aussteller.id, ids)).orderBy(asc(aussteller.id));
   const rows = sperren ? await abfrage.for("update") : await abfrage;
   const anderswo = new Set(
     (await tx.selectDistinct({ id: meldung.ausstellerId }).from(meldung).where(and(inArray(meldung.ausstellerId, ids), ne(meldung.schauId, schauId)))).map((x) => x.id),
@@ -124,14 +124,17 @@ export async function kennzeichneAlsTestschau(tx: Tx, organisationId: number, sc
   // Die Kassensperre hält Zahlungen und Kasse fest, bis das Kennzeichen gesetzt ist.
   await sperreTestschauExklusiv(tx, schauId);
   await sperreKasse(tx, schauId);
-  const [s] = await tx.select().from(schau).where(and(eq(schau.id, schauId), eq(schau.organisationId, organisationId))).for("update");
+  // Zeilen in der Reihenfolge Aussteller → Meldungen → Schau (Entscheidung 033): wie Meldung und Impfnachweis, sonst
+  // verklemmten sich beide.
+  const { werden, kopien } = await einordnen(tx, schauId, true);
+  await tx.select({ id: meldung.id }).from(meldung).where(eq(meldung.schauId, schauId)).orderBy(asc(meldung.id)).for("update");
+  const [s] = await tx.select().from(schau).where(and(eq(schau.id, schauId), eq(schau.organisationId, organisationId))).for("no key update");
   if (!s) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
   if (s.test) return { aussteller: 0, kopien: 0 };
   const hindernisse = await geldUndBelege(tx, schauId);
   if (hindernisse.length) {
     throw fehler("BAD_REQUEST", `Die Schau hat schon ${hindernisse.join(", ")} – echte Aufzeichnungen, die nicht mit einer Testschau gelöscht werden dürfen. Sie lässt sich deshalb nicht als Testschau kennzeichnen.`);
   }
-  const { werden, kopien } = await einordnen(tx, schauId, true);
   const liste = (l: { vorname: string; nachname: string }[]) => `${l.slice(0, 10).map(name).join(", ")}${l.length > 10 ? ` und ${l.length - 10} weitere` : ""}`;
   if (opts.anzahl != null && opts.anzahl !== werden.length + kopien.length) throw fehler("CONFLICT", "Inzwischen sind Meldungen dazugekommen – bitte die Vorschau neu öffnen.");
   if (kopien.length && !opts.kopien) {

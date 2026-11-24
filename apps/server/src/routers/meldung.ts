@@ -37,10 +37,11 @@ export async function pruefeBezahlt(meldungId: number, akteur: Akteur) {
     // Einteilungssperre vor Statuszeile und Protokoll (ADR 033: nach dem ersten protokolliere() keine Sperre mehr).
     await sperreEinteilungFuerMeldung(tx, m.schauId, meldungId);
     await tx.update(meldung).set({ status: "bestaetigt" }).where(and(eq(meldung.id, meldungId), eq(meldung.status, "offen")));
+    // Hat die Meldung schon Katalognummern (festgeschrieben), folgen die Preisrichter-Bereiche – vor dem Protokoll wie
+    // beim Statuswechsel von Hand (Entscheidung 033: Protokoll zuletzt).
+    await einteilungNachStatus(tx, m.schauId, meldungId, akteur);
     // Erst mit „bestätigt“ kommt die Meldung in Katalog, Abrechnung und Preisvergabe – das gehört ins Protokoll.
     await protokolliere(tx, { schauId: m.schauId, tabelle: "meldung", datensatzId: meldungId, aktion: "Status", alt: "offen", neu: "bestaetigt", grund: "automatisch nach vollständiger Zahlung", akteur });
-    // Hat die Meldung schon Katalognummern (festgeschrieben), folgen die Preisrichter-Bereiche.
-    await einteilungNachStatus(tx, m.schauId, meldungId, akteur);
     return true;
   });
 }

@@ -1,6 +1,6 @@
 /** Einstellungen einer Schau: Felder speichern, Reihenfolge der Katalognummern, Teilschauen und Notenskala. */
 import { rueckmeldungFehler, teilschauenLesen, TEILSCHAUEN_MAX, KONTINGENT_BASEN, imEwr, normalisiereIban, pruefeBic, pruefeIban, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal } from "@schau/domain";
-import { and, count, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
 import { katalogeintrag, meldung, preisrichter, schau, verkauf } from "../../db/schema";
@@ -202,7 +202,7 @@ export const einstellungen = {
       const neu = istStandardSortierung(input.sortierung) ? null : sortierungNormal(input.sortierung);
       return db.transaction(async (tx) => {
         // Gesperrt gelesen: ein gleichzeitiges Festschreiben der Nummern wartet bzw. wird hier gesehen.
-        const [s] = await tx.select({ gedruckt: schau.katalogGedruckt, alt: schau.katalogSortierung }).from(schau).where(eq(schau.id, geladen.id)).for("update");
+        const [s] = await tx.select({ gedruckt: schau.katalogGedruckt, alt: schau.katalogSortierung }).from(schau).where(eq(schau.id, geladen.id)).for("no key update");
         if (s!.gedruckt) throw fehler("BAD_REQUEST", "Die Katalognummern sind festgeschrieben – die Reihenfolge im Katalog lässt sich nicht mehr ändern.");
         // jsonb ordnet die Schlüssel um: verglichen wird die normalisierte Liste.
         const alt = s!.alt ? sortierungNormal(s!.alt) : null;
@@ -226,7 +226,10 @@ export const einstellungen = {
         // Exklusiv gegen laufende Meldungen (sie halten die Sperre geteilt): eine Meldung, die die alte Liste gelesen hat,
         // ist danach gezählt, eine spätere liest die neue Liste (Entscheidung 033).
         await sperreTestschauExklusiv(tx, geladen.id);
-        const [s] = await tx.select({ gedruckt: schau.katalogGedruckt, alt: schau.teilschauen }).from(schau).where(eq(schau.id, geladen.id)).for("update");
+        // Meldungen vor der Schau-Zeile (Entscheidung 033, wie Absage und Impfnachweis): die ohne Angabe werden unten
+        // womöglich umgehängt.
+        await tx.select({ id: meldung.id }).from(meldung).where(and(eq(meldung.schauId, geladen.id), isNull(meldung.teilschau))).orderBy(asc(meldung.id)).for("update");
+        const [s] = await tx.select({ gedruckt: schau.katalogGedruckt, alt: schau.teilschauen }).from(schau).where(eq(schau.id, geladen.id)).for("no key update");
         const alt = teilschauenLesen(s!.alt);
         if (JSON.stringify(alt) === JSON.stringify(neu)) return { ok: true, geaendert: false };
         if (s!.gedruckt && JSON.stringify(alt.map((t) => t.id)) !== JSON.stringify(neu.map((t) => t.id)))

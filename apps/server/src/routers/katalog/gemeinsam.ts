@@ -183,7 +183,7 @@ export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<type
   const { tiere } = await planTiere(s);
   // `inTx`: in der Transaktion des Aufrufers (Entscheiden für einen Entwurf: Einsetzen und Archivieren zusammen).
   const setzen = async (tx: Tx) => {
-    const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest, phase: schau.phase }).from(schau).where(eq(schau.id, s.id)).for("update");
+    const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest, phase: schau.phase }).from(schau).where(eq(schau.id, s.id)).for("no key update");
     // Phase unter der Sperre: eine eben abgeschlossene Schau wird nicht mehr geändert.
     if (aktuell?.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
     if (e.basis !== undefined && e.basis !== halleSchluessel(aktuell?.halle ?? null))

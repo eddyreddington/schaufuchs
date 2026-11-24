@@ -265,6 +265,8 @@ export const katalogGestaltungRouter = router({
       return db.transaction(async (tx) => {
         // Logo und Titelbild gibt es nur einmal – das neue ersetzt das alte. Die Schau-Zeile sperren (wie beim Sockelbild):
         // zwei gleichzeitige Uploads folgen so aufeinander, statt dass jeder nur das alte Bild löscht (Entscheidung 033).
+        // Hier FOR UPDATE: es wartet auch auf ein gleichzeitiges Einfügen eines Bildes (Fremdschlüssel); ohne Protokoll in
+        // dieser Transaktion verklemmt es sich nicht mit der Protokoll-Kette.
         if (input.rolle !== "beitrag") await tx.select({ id: schau.id }).from(schau).where(eq(schau.id, input.schauId)).for("update");
         if (input.rolle !== "beitrag") await tx.delete(bild).where(and(eq(bild.schauId, input.schauId), eq(bild.rolle, input.rolle)));
         const [b] = await tx.insert(bild).values({ schauId: input.schauId, rolle: input.rolle, mime, name: input.name, daten, ...(input.angaben ?? {}) }).returning({ id: bild.id });

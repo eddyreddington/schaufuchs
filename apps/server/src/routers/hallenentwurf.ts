@@ -51,7 +51,7 @@ async function entwurfEinsetzen(akteur: Akteur, s: Awaited<ReturnType<typeof lad
   if (!HALLE_EINGABE.safeParse(e.halle).success) throw fehler("BAD_REQUEST", "Der Entwurf passt nicht mehr zu dieser Version und lässt sich nicht laden.");
   const fest = e.fest;
   const einsetzen = async (t: Tx) => {
-    const [akt] = await t.select({ halle: schau.halle, fest: schau.hallenplanFest, phase: schau.phase }).from(schau).where(eq(schau.id, s.id)).for("update");
+    const [akt] = await t.select({ halle: schau.halle, fest: schau.hallenplanFest, phase: schau.phase }).from(schau).where(eq(schau.id, s.id)).for("no key update");
     // Phase unter der Sperre: eine eben abgeschlossene Schau wird nicht mehr geändert.
     if (akt?.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
     const vorher = (akt?.halle ?? {}) as Record<string, unknown>;
@@ -95,7 +95,7 @@ export const hallenentwurfRouter = router({
   speichern: adminProcedure.input(z.object({ schauId: dbId, name })).mutation(async ({ ctx, input }) => {
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
     return db.transaction(async (tx) => {
-      const [akt] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("update");
+      const [akt] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("no key update");
       if (!akt?.halle) throw fehler("BAD_REQUEST", "Erst die Halle anlegen.");
       const vorhanden = await tx.select({ id: hallenentwurf.id }).from(hallenentwurf).where(and(eq(hallenentwurf.schauId, s.id), eq(hallenentwurf.archiviert, false)));
       if (vorhanden.length >= ENTWUERFE_MAX) throw fehler("BAD_REQUEST", `Höchstens ${ENTWUERFE_MAX} Entwürfe je Schau – bitte erst einen löschen.`);

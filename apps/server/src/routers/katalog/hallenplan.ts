@@ -86,7 +86,7 @@ export const katalogHallenplan = {
     const { tiere } = await planTiere(s);
     return db.transaction(async (tx) => {
       // Halle frisch und gesperrt: ein gleichzeitiges Speichern der Halle darf nicht verloren gehen.
-      const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("update");
+      const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("no key update");
       if (input.nurWennLose && aktuell?.fest)
         throw fehler("CONFLICT", "Der Plan wurde inzwischen festgeschrieben – er wird neu geladen, bitte die Änderung noch einmal machen.");
       const halle = aktuell?.halle ?? s.halle!;
@@ -146,7 +146,7 @@ export const katalogHallenplan = {
       const geladen = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.schauId));
       const { tiere } = await planTiere(geladen);
       return db.transaction(async (tx) => {
-        const [frisch] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest, gedruckt: schau.katalogGedruckt, phase: schau.phase }).from(schau).where(eq(schau.id, geladen.id)).for("update");
+        const [frisch] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest, gedruckt: schau.katalogGedruckt, phase: schau.phase }).from(schau).where(eq(schau.id, geladen.id)).for("no key update");
         // Phase frisch (gesperrt): eine eben abgeschlossene Schau wird nicht mehr geändert.
         pruefeNichtAbgeschlossen({ ...geladen, phase: frisch!.phase });
         const halle = frisch?.halle;
@@ -259,7 +259,7 @@ export const katalogHallenplan = {
     .mutation(async ({ ctx, input }) => {
       const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
       await db.transaction(async (tx) => {
-        const [alt] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("update");
+        const [alt] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("no key update");
         if (input.basis !== undefined && input.basis !== halleSchluessel(alt?.halle ?? null))
           throw fehler("CONFLICT", "Die Halle wurde inzwischen von jemand anderem geändert – der Plan wird neu geladen, bitte die Änderung noch einmal machen.");
         const { entfernt, ...rest } = input.halle;
@@ -313,7 +313,7 @@ export const katalogHallenplan = {
       const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
       const { tiere } = await planTiere(s);
       return db.transaction(async (tx) => {
-        const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("update");
+        const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest }).from(schau).where(eq(schau.id, s.id)).for("no key update");
         const halle = aktuell?.halle;
         if (!halle) throw fehler("BAD_REQUEST", "Erst die Halle anlegen.");
         if (input.basis !== halleSchluessel(halle)) throw fehler("CONFLICT", "Die Halle wurde inzwischen von jemand anderem geändert – der Plan wird neu geladen, bitte noch einmal.");

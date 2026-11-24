@@ -397,7 +397,7 @@ export const preisrichterRouter = router({
       const s = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.schauId));
       return db.transaction(async (tx) => {
         await sperreEinteilung(tx, input.schauId);
-        const [{ alt }] = (await tx.select({ alt: schau.einteilungJugendSeparat }).from(schau).where(eq(schau.id, s.id)).for("update")) as [{ alt: boolean }];
+        const [{ alt }] = (await tx.select({ alt: schau.einteilungJugendSeparat }).from(schau).where(eq(schau.id, s.id)).for("no key update")) as [{ alt: boolean }];
         const nichts = { bereiche: null, ohne: 0, abweichend: [] as string[] };
         if (alt === input.separat) return nichts;
         const setzen = async (t: Tx) => {

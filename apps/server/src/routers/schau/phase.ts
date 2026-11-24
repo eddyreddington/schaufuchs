@@ -1,6 +1,6 @@
 /** Phase der Schau: absagen und Phase wechseln (mit den Prüfungen vor Meldephase, Schau und Abschluss). */
 import { PHASEN, PHASEN_LABEL, fehlendeVereinsangaben, datumKurz, istSprache, texte } from "@schau/domain";
-import { and, count, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Tx } from "../../db/client";
 import { aussteller, gebuehr, katalogeintrag, meldung, preisrichter, schau, sitzung } from "../../db/schema";
@@ -62,25 +62,29 @@ export const phasen = {
     pruefe(s);
     const betroffen = await db.transaction(async (tx) => {
       // Sperrfolge nach Entscheidung 033: exklusiv gegen laufende Meldungen (die halten die Sperre geteilt und lesen danach
-      // die Absage), dann die Kasse, dann die Schau-Zeile („no key update“, wie Phasenwechsel und Nummern) frisch: keine
-      // Meldung rutscht zwischen Auswahl und Absage durch, ein Phasenwechsel oder eine zweite Absage wird gesehen.
+      // die Absage; neue kommen so nicht dazu), dann die Kasse, dann die Meldungen nach ID und erst danach die Schau-Zeile
+      // („no key update“, wie Phasenwechsel und Nummern) frisch – wie der Impfnachweis (Meldung, dann Schau), sonst
+      // verklemmten sich beide. Ein Phasenwechsel oder eine zweite Absage wird so gesehen, statt überschrieben.
       await sperreTestschauExklusiv(tx, s.id);
       await sperreKasse(tx, s.id);
-      const [jetzt] = await tx.select({ phase: schau.phase, abgesagtAm: schau.abgesagtAm, katalogGedruckt: schau.katalogGedruckt }).from(schau).where(eq(schau.id, s.id)).for("no key update");
-      pruefe(jetzt!);
       const ms = await tx
         .select({ id: meldung.id, status: meldung.status, ausstellerId: meldung.ausstellerId, sprache: meldung.sprache })
         .from(meldung)
-        .where(and(eq(meldung.schauId, s.id), inArray(meldung.status, ["offen", "bestaetigt"])));
+        .where(and(eq(meldung.schauId, s.id), inArray(meldung.status, ["offen", "bestaetigt"])))
+        .orderBy(asc(meldung.id))
+        .for("update");
+      const [jetzt] = await tx.select({ phase: schau.phase, abgesagtAm: schau.abgesagtAm, katalogGedruckt: schau.katalogGedruckt }).from(schau).where(eq(schau.id, s.id)).for("no key update");
+      pruefe(jetzt!);
       // Wie beim einzelnen Storno: was in der offenen Lastschriftdatei steht, zieht die Bank ein – erst verwerfen.
       if (await inOffenerLastschrift(tx, s.id, { meldungIds: ms.map((x) => x.id) })) throw fehler("BAD_REQUEST", "Es gibt eine offene Lastschriftdatei mit Meldegeldern dieser Schau – erst verwerfen (oder nach dem Einzug buchen), dann absagen.");
       for (const x of ms) {
         await tx.update(meldung).set({ status: "storniert" }).where(eq(meldung.id, x.id));
         // Wie beim einzelnen Storno: vor dem Festschreiben verlieren die Tiere ihre Nummer, danach bleiben sie reserviert.
         if (!jetzt!.katalogGedruckt) await tx.update(katalogeintrag).set({ katalogNr: null, suffix: "", status: "gemeldet" }).where(eq(katalogeintrag.meldungId, x.id));
-        await protokolliere(tx, { schauId: s.id, tabelle: "meldung", datensatzId: x.id, aktion: "Status", alt: x.status, neu: "storniert", grund: `Schau abgesagt: ${input.grund}`, akteur: ctx });
       }
       await tx.update(schau).set({ abgesagtAm: new Date(), absageGrund: input.grund, phase: "abrechnung" }).where(eq(schau.id, s.id));
+      // Protokoll zuletzt (Entscheidung 033): der erste Eintrag hält die Protokoll-Kette bis zum Commit.
+      for (const x of ms) await protokolliere(tx, { schauId: s.id, tabelle: "meldung", datensatzId: x.id, aktion: "Status", alt: x.status, neu: "storniert", grund: `Schau abgesagt: ${input.grund}`, akteur: ctx });
       await protokolliere(tx, { schauId: s.id, tabelle: "schau", datensatzId: s.id, aktion: "Schau abgesagt", alt: { phase: jetzt!.phase }, neu: { phase: "abrechnung", stornierteMeldungen: ms.length }, grund: input.grund, akteur: ctx });
       return ms;
     });

@@ -44,7 +44,7 @@ export const druckFormateProzeduren = {
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
     return db.transaction(async (tx) => {
       // Gesperrt gelesen: zwei gleichzeitige Änderungen verschiedener Drucksachen überschreiben sich nicht.
-      const [z0] = await tx.select({ roh: schau.druckFormate }).from(schau).where(eq(schau.id, s.id)).for("update");
+      const [z0] = await tx.select({ roh: schau.druckFormate }).from(schau).where(eq(schau.id, s.id)).for("no key update");
       const alt = druckFormateLesen(z0!.roh);
       const neu = druckFormateLesen({ ...alt, ...input.formate });
       if (JSON.stringify(alt) === JSON.stringify(neu)) return { ok: true, geaendert: false };
