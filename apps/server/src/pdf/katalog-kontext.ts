@@ -161,7 +161,8 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
   };
   /** Zeilen einer Versalzeile: gesperrt in einer Zeile; zu lang (lange Teilschau) ohne Sperrung, notfalls umbrochen. */
   const versalZeilen = (text: string, breite: number) => {
-    const t = text.toLocaleUpperCase("de");
+    // „·“ bleibt am Wort davor (geschütztes Leerzeichen): keine Zeile beginnt mit „· SPARTE“.
+    const t = text.toLocaleUpperCase("de").replaceAll(" · ", "\u00a0· ");
     doc.font(FETT).fontSize(G.klein);
     const sperrung = doc.widthOfString(t, { characterSpacing: 1.4 * k }) <= breite ? 1.4 * k : 0;
     return { zeilen: sperrung ? [t] : zeilenUmbrechen(doc, t, breite), sperrung };

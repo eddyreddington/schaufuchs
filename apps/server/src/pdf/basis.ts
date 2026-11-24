@@ -381,14 +381,15 @@ export function textImFeld(
 }
 
 /**
- * Zerlegt Text in Zeilen der Breite `breite` (aktuelle Schrift und Größe): am Leerzeichen, nach einem Bindestrich,
+ * Zerlegt Text in Zeilen der Breite `breite` (aktuelle Schrift und Größe): am Leerzeichen (nicht am geschützten), nach einem Bindestrich,
  * notfalls mitten im Wort mit Trennstrich. Nichts fällt weg (Entscheidung 032).
  */
 export function zeilenUmbrechen(doc: Doc, text: string, breite: number): string[] {
   const w = (t: string) => doc.widthOfString(t);
   const zeilen: string[] = [];
   let zeile = "";
-  for (const wort of text.split(/\s+/).filter(Boolean)) {
+  // Geschützte Leerzeichen (U+00A0) trennen nicht: So bleibt „·“ in Versalzeilen am Wort davor.
+  for (const wort of text.split(/[^\S\u00a0]+/).filter(Boolean)) {
     // Nach jedem Bindestrich darf umbrochen werden („Zwerg-“ | „Barthühner“).
     (wort.match(/[^-–]+[-–]*|[-–]+/g) ?? [wort]).forEach((teil, i) => {
       const fuge = i === 0 && zeile ? " " : "";
