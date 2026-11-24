@@ -316,6 +316,8 @@ export async function importZuruecknehmen(tx: Tx, organisationId: number, id: nu
     .limit(1);
   const spaeter = (tabelle: string, ids: number[]) =>
     ids.length ? tx.select({ id: aenderung.datensatzId }).from(aenderung).where(and(eq(aenderung.tabelle, tabelle), inArray(aenderung.datensatzId, ids), gt(aenderung.id, importEintrag?.id ?? 0))) : Promise.resolve([]);
+  // Erst die Kasse, dann die Meldungen (Reihenfolge wie Statuswechsel, Zahlung und Bearbeiten – Entscheidung 033).
+  if (lauf.meldungIds.length && lauf.schauId != null) await sperreKasse(tx, lauf.schauId);
   // Die Meldungen sperren: Ein gleichzeitiger Statuswechsel wartet und wird danach nicht still mitgelöscht.
   const meldungen = lauf.meldungIds.length && lauf.schauId != null ? await tx.select({ id: meldung.id, ausstellerId: meldung.ausstellerId }).from(meldung).where(and(inArray(meldung.id, lauf.meldungIds), eq(meldung.schauId, lauf.schauId))).for("update") : [];
   if (meldungen.length) {
@@ -324,7 +326,6 @@ export async function importZuruecknehmen(tx: Tx, organisationId: number, id: nu
     if (!IMPORT_PHASEN.includes(sch!.phase)) throw fehler("BAD_REQUEST", `In der Phase „${PHASEN_LABEL[sch!.phase]}“ lässt sich ein Import nicht mehr zurücknehmen. Einzelne Meldungen bitte von Hand stornieren.`);
     const mIds = meldungen.map((m) => m.id);
     const aIds = meldungen.map((m) => m.ausstellerId);
-    await sperreKasse(tx, sid);
     const eintraege = await tx.select({ id: katalogeintrag.id, nr: katalogeintrag.katalogNr, meldungId: katalogeintrag.meldungId }).from(katalogeintrag).where(inArray(katalogeintrag.meldungId, mIds));
     const [z] = await tx.select({ id: zahlung.id }).from(zahlung).where(inArray(zahlung.meldungId, mIds)).limit(1);
     const [st] = await tx.select({ id: stiftung.id }).from(stiftung).where(inArray(stiftung.meldungId, mIds)).limit(1);

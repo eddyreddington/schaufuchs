@@ -6,9 +6,9 @@
 import { bescheidSperre, bestaetigungsSperren, SACH_HERKUNFT, steuerstatusLesen } from "@schau/domain";
 import { and, asc, desc, eq, ilike, isNull, or } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "../db/client";
+import { db, type Tx } from "../db/client";
 import { bestaetigungSpende, meldung, organisation, spende, spender, zuwendungsbestaetigung } from "../db/schema";
-import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, offenerLauf, pruefeNichtAbgerechnet, sperreKasse } from "../services/kasse";
+import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, offenerLauf, pruefeNichtAbgerechnet, sperreKasseMitPhase } from "../services/kasse";
 import { archiviereSpendenquittung } from "../services/kassenbuch";
 import { protokolliere } from "../services/protokoll";
 import { ladeSpenden, ladeSteuer, sperreBestaetigungen } from "../services/spenden";
@@ -32,8 +32,11 @@ const spenderEingabe = z.object({
 const grund = z.string().trim().min(3, "Bitte einen Grund angeben.").max(500);
 
 /** Spender des Vereins laden – ein fremder gilt als nicht vorhanden. */
-async function ladeSpender(organisationId: number, id: number) {
-  const [s] = await db.select().from(spender).where(and(eq(spender.id, id), eq(spender.organisationId, organisationId)));
+async function ladeSpender(organisationId: number, id: number, tx?: Tx) {
+  // In einer Transaktion gesperrt: der alte Stand fürs Protokoll ist dann der, den das Update überschreibt.
+  const [s] = tx
+    ? await tx.select().from(spender).where(and(eq(spender.id, id), eq(spender.organisationId, organisationId))).for("update")
+    : await db.select().from(spender).where(and(eq(spender.id, id), eq(spender.organisationId, organisationId)));
   if (!s) throw fehler("NOT_FOUND", "Spender nicht gefunden.");
   return s;
 }
@@ -48,7 +51,7 @@ export const spendenRouter = router({
   steuerSpeichern: adminProcedure.input(z.object({ steuer: z.unknown() })).mutation(async ({ ctx, input }) => {
     const neu = steuerstatusLesen(input.steuer);
     await db.transaction(async (tx) => {
-      const [alt] = await tx.select({ steuer: organisation.steuer }).from(organisation).where(eq(organisation.id, ctx.benutzer.organisationId));
+      const [alt] = await tx.select({ steuer: organisation.steuer }).from(organisation).where(eq(organisation.id, ctx.benutzer.organisationId)).for("update");
       await tx.update(organisation).set({ steuer: neu }).where(eq(organisation.id, ctx.benutzer.organisationId));
       await protokolliere(tx, { schauId: null, tabelle: "organisation", datensatzId: ctx.benutzer.organisationId, aktion: "Steuerliche Angaben", alt: alt?.steuer ?? null, neu, akteur: ctx });
     });
@@ -70,7 +73,7 @@ export const spendenRouter = router({
     const org = ctx.benutzer.organisationId;
     return db.transaction(async (tx) => {
       if (input.id) {
-        const alt = await ladeSpender(org, input.id);
+        const alt = await ladeSpender(org, input.id, tx);
         await tx.update(spender).set(input.daten).where(eq(spender.id, input.id));
         await protokolliere(tx, { schauId: null, tabelle: "spender", datensatzId: input.id, aktion: "Spender geändert", alt, neu: input.daten, akteur: ctx });
         return { id: input.id };
@@ -130,7 +133,8 @@ export const spendenRouter = router({
       const datum = bar ? heute : (input.datum ?? heute);
       if (datum > heute) throw fehler("BAD_REQUEST", "Der Tag der Zuwendung liegt in der Zukunft.");
       const sp = await db.transaction(async (tx) => {
-        if (bar) await sperreKasse(tx, s.id);
+        // Immer unter der Kassensperre mit frischer Phase: ein gleichzeitiger Abschluss nimmt dieselbe Sperre.
+        if ((await sperreKasseMitPhase(tx, s.id)) === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen – keine Spenden mehr erfassen.");
         const [neu] = await tx
           .insert(spende)
           .values({
@@ -162,7 +166,7 @@ export const spendenRouter = router({
     if (s.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen – keine Stornos mehr.");
     await db.transaction(async (tx) => {
       // Beide Sperren: Kasse (Barspende) und Bestätigungen (sonst bestätigt eine gleichzeitige Anfrage die Spende noch).
-      await sperreKasse(tx, s.id);
+      if ((await sperreKasseMitPhase(tx, s.id)) === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen – keine Stornos mehr.");
       await sperreBestaetigungen(tx, ctx.benutzer.organisationId);
       // Mit dem Meldegeld zugesagt: steckt im Saldo – nach Quittung oder SEPA-Datei nicht mehr ändern.
       if (z0.spende.weg === "meldung" && z0.spende.meldungId != null) {
