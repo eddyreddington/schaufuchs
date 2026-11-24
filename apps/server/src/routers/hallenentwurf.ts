@@ -7,7 +7,7 @@
  * eingeliefert, kommt beim Laden und Entscheiden für einen Entwurf ohne `bestaetigt` nur die Rückfrage zurück.
  */
 import { entwurfRueckfrage, halleOhneFestenPlan, IN_DER_HALLE, stabilerText } from "@schau/domain";
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Tx } from "../db/client";
 import { hallenentwurf, katalogeintrag, schau } from "../db/schema";
@@ -46,7 +46,7 @@ async function entwurfEinsetzen(akteur: Akteur, s: Awaited<ReturnType<typeof lad
   if (e.schauId !== s.id || !e.fest) {
     const halle = HALLE_EINGABE.safeParse(e.schauId !== s.id ? halleOhneFestenPlan(e.halle) : e.halle);
     if (!halle.success) throw fehler("BAD_REQUEST", "Der Entwurf passt nicht mehr zu dieser Version und lässt sich nicht laden.");
-    return planNeuSetzenIn(akteur, s, { halle: halle.data, grund });
+    return planNeuSetzenIn(akteur, s, { halle: halle.data, grund }, tx);
   }
   if (!HALLE_EINGABE.safeParse(e.halle).success) throw fehler("BAD_REQUEST", "Der Entwurf passt nicht mehr zu dieser Version und lässt sich nicht laden.");
   const fest = e.fest;
@@ -152,16 +152,18 @@ export const hallenentwurfRouter = router({
       gewaehlt = e.name;
       const frage = input.bestaetigt ? null : await rueckfrage(s);
       if (frage) return { rueckfrage: frage };
-      // Ohne festen Plan setzt `planNeuSetzenIn` in eigener Transaktion neu – das geht nur vorher.
-      if (!e.fest) await entwurfEinsetzen(ctx, s, e, `Entschieden für Entwurf „${e.name}“`);
     }
     return db.transaction(async (tx) => {
+      // Zuerst alle offenen Entwürfe der Schau sperren (nach id): zwei gleichzeitige Entscheidungen folgen so aufeinander,
+      // die zweite findet ihren Entwurf archiviert vor (Entscheidung 033). Danach sperrt das Einsetzen die Schau-Zeile.
+      await tx.select({ id: hallenentwurf.id }).from(hallenentwurf).where(and(eq(hallenentwurf.schauId, s.id), eq(hallenentwurf.archiviert, false))).orderBy(asc(hallenentwurf.id)).for("update");
       if (input.id) {
-        // Mit festem Plan: Laden, Entwurf entfernen und Archivieren zusammen – alles oder nichts. Unter der Sperre noch
-        // einmal prüfen, ob der Entwurf noch da und nicht inzwischen archiviert ist.
+        // Laden (mit und ohne festen Plan), Entwurf entfernen und Archivieren zusammen – alles oder nichts. Unter der Sperre
+        // noch einmal prüfen, ob der Entwurf noch da und nicht inzwischen archiviert ist.
         const [e] = await tx.select().from(hallenentwurf).where(and(eq(hallenentwurf.id, input.id), eq(hallenentwurf.organisationId, ctx.benutzer.organisationId))).for("update");
         if (!e || e.archiviert || e.schauId !== s.id) throw fehler("BAD_REQUEST", "Entscheiden lässt sich nur für einen Entwurf dieser Schau.");
-        if (e.fest) await entwurfEinsetzen(ctx, s, e, `Entschieden für Entwurf „${e.name}“`, tx);
+        gewaehlt = e.name;
+        await entwurfEinsetzen(ctx, s, e, `Entschieden für Entwurf „${e.name}“`, tx);
         await tx.delete(hallenentwurf).where(eq(hallenentwurf.id, input.id));
       }
       const archiviert = await tx

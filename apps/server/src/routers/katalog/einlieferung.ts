@@ -1,9 +1,9 @@
 /** Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferung, Ausgabe), Impfnachweise. */
 import { gefordertCent, KAEFIG_TYPEN, kaefigName, kaefigTyp } from "@schau/domain";
-import { and, asc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
-import { katalogeintrag, meldung, verkauf, verkaufZahlungseingang } from "../../db/schema";
+import { gesundheit, katalogeintrag, meldung, verkauf, verkaufZahlungseingang } from "../../db/schema";
 import { ladeEintraege, meldebetraege } from "../../services/eintraege";
 import { pruefeNichtAbgeschlossen, sperreKasse } from "../../services/kasse";
 import { bindungen } from "../../services/meldung";
@@ -196,6 +196,17 @@ export const halleEinlieferung = {
             return e && e.status !== "ausgesetzt" && e.verkaufBelegNr !== v.belegNr;
           });
           if (neuVerkauft.length) throw fehler("CONFLICT", "Ein Tier wurde inzwischen verkauft – bitte neu laden und gegen Kaufbeleg ausgeben.");
+          // Sperren im Gesundheitsjournal frisch lesen: eine inzwischen erfasste Sperre (das Erfassen sperrt das Tier
+          // ebenfalls) braucht wie jede andere einen Grund und steht als Ausnahme im Protokoll (Entscheidung 033).
+          const gesperrtJetzt = new Set(
+            (await tx.select({ id: gesundheit.katalogeintragId }).from(gesundheit).where(and(inArray(gesundheit.katalogeintragId, ids), or(eq(gesundheit.sperre, true), eq(gesundheit.verendet, true))))).map((g) => g.id),
+          );
+          const neuGesperrt = ziel.filter((e) => gesperrtJetzt.has(e.id) && !e.gesperrt && e.status !== "ausgesetzt");
+          if (neuGesperrt.length) {
+            if (grund.length < 3)
+              throw fehler("PRECONDITION_FAILED", `Gesperrt (Gesundheitsjournal): Nr. ${neuGesperrt.map(nr).join(", ")}. Ausgabe nur mit Grund, z. B. Anordnung des Tierarztes.`);
+            ausnahmen.push(`gesperrt: ${neuGesperrt.map(nr).join(", ")}`);
+          }
         }
         await tx
           .update(katalogeintrag)
@@ -233,52 +244,56 @@ export const halleEinlieferung = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [m] = await db.select().from(meldung).where(eq(meldung.id, input.meldungId));
-      if (!m) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
+      const [geladen] = await db.select({ schauId: meldung.schauId }).from(meldung).where(eq(meldung.id, input.meldungId));
+      if (!geladen) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
       // Der Impfnachweis ist eine tierseuchenrechtliche Aufzeichnung: nach dem Abschluss nur noch lesen.
-      const s = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, m.schauId));
-      const werte = {
-        vetImpfdatum: input.nd.datum,
-        vetImpfstoff: input.nd.impfstoff.trim(),
-        vetTierarzt: input.nd.tierarzt.trim(),
-        pmvImpfdatum: input.pmv.datum,
-        pmvImpfstoff: input.pmv.impfstoff.trim(),
-        pmvTierarzt: input.pmv.tierarzt.trim(),
-        wgDatum: input.wg.datum,
-        wgSentinel: input.wg.sentinel,
-        wgStelle: input.wg.stelle.trim(),
-        ...(input.kl ? { klDatum: input.kl.datum, klTierarzt: input.kl.tierarzt.trim() } : {}),
-        ...(input.gz ? { gzDatum: input.gz.datum, gzNummer: input.gz.nummer.trim() } : {}),
-      };
-      const alt = {
-        vetImpfdatum: m.vetImpfdatum,
-        vetImpfstoff: m.vetImpfstoff,
-        vetTierarzt: m.vetTierarzt,
-        pmvImpfdatum: m.pmvImpfdatum,
-        pmvImpfstoff: m.pmvImpfstoff,
-        pmvTierarzt: m.pmvTierarzt,
-        wgDatum: m.wgDatum,
-        wgSentinel: m.wgSentinel,
-        wgStelle: m.wgStelle,
-        ...(input.kl ? { klDatum: m.klDatum, klTierarzt: m.klTierarzt } : {}),
-        ...(input.gz ? { gzDatum: m.gzDatum, gzNummer: m.gzNummer } : {}),
-        geprueft: !!m.vetGeprueftAm,
-      };
-      const neu = { ...werte, geprueft: input.geprueft };
-      // Unverändert (z. B. Feld ohne Änderung verlassen): nichts schreiben, nichts protokollieren.
-      if (JSON.stringify(alt) === JSON.stringify(neu)) return { ok: true, geaendert: false };
-      if (input.geprueft) {
-        const tiere = await ladeEintraege(m.schauId, { nurMeldungId: m.id });
-        const n = nachweisStand({ ...m, ...werte }, tiere.map((t) => t.tierart), s, tiere[0]?.registriernummer);
-        if (n.fehler.length) throw fehler("BAD_REQUEST", `Nachweis nicht vollständig: ${n.fehler.join(" ")}`);
-      }
-      await db.transaction(async (tx) => {
+      const s = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, geladen.schauId));
+      // Vergleich, Prüfung und „alt“ am gesperrten Stand: zwei Anfragen kurz nacheinander (Feld verlassen, dann Haken)
+      // folgen so aufeinander, statt beide denselben alten Stand zu sehen (Entscheidung 033).
+      return db.transaction(async (tx) => {
+        const [m] = await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)).for("update");
+        if (!m) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
+        const werte = {
+          vetImpfdatum: input.nd.datum,
+          vetImpfstoff: input.nd.impfstoff.trim(),
+          vetTierarzt: input.nd.tierarzt.trim(),
+          pmvImpfdatum: input.pmv.datum,
+          pmvImpfstoff: input.pmv.impfstoff.trim(),
+          pmvTierarzt: input.pmv.tierarzt.trim(),
+          wgDatum: input.wg.datum,
+          wgSentinel: input.wg.sentinel,
+          wgStelle: input.wg.stelle.trim(),
+          ...(input.kl ? { klDatum: input.kl.datum, klTierarzt: input.kl.tierarzt.trim() } : {}),
+          ...(input.gz ? { gzDatum: input.gz.datum, gzNummer: input.gz.nummer.trim() } : {}),
+        };
+        const alt = {
+          vetImpfdatum: m.vetImpfdatum,
+          vetImpfstoff: m.vetImpfstoff,
+          vetTierarzt: m.vetTierarzt,
+          pmvImpfdatum: m.pmvImpfdatum,
+          pmvImpfstoff: m.pmvImpfstoff,
+          pmvTierarzt: m.pmvTierarzt,
+          wgDatum: m.wgDatum,
+          wgSentinel: m.wgSentinel,
+          wgStelle: m.wgStelle,
+          ...(input.kl ? { klDatum: m.klDatum, klTierarzt: m.klTierarzt } : {}),
+          ...(input.gz ? { gzDatum: m.gzDatum, gzNummer: m.gzNummer } : {}),
+          geprueft: !!m.vetGeprueftAm,
+        };
+        const neu = { ...werte, geprueft: input.geprueft };
+        // Unverändert (z. B. Feld ohne Änderung verlassen): nichts schreiben, nichts protokollieren.
+        if (JSON.stringify(alt) === JSON.stringify(neu)) return { ok: true, geaendert: false };
+        if (input.geprueft) {
+          const tiere = await ladeEintraege(m.schauId, { nurMeldungId: m.id, ex: tx });
+          const n = nachweisStand({ ...m, ...werte }, tiere.map((t) => t.tierart), s, tiere[0]?.registriernummer);
+          if (n.fehler.length) throw fehler("BAD_REQUEST", `Nachweis nicht vollständig: ${n.fehler.join(" ")}`);
+        }
         await tx
           .update(meldung)
           .set({ ...werte, vetGeprueftAm: input.geprueft ? (m.vetGeprueftAm ?? new Date()) : null })
           .where(eq(meldung.id, m.id));
         await protokolliere(tx, { schauId: m.schauId, tabelle: "meldung", datensatzId: m.id, aktion: "Impfnachweis", alt, neu, akteur: ctx });
+        return { ok: true, geaendert: true };
       });
-      return { ok: true, geaendert: true };
     }),
 };

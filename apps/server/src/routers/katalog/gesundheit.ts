@@ -3,7 +3,7 @@ import { formatKatalognummer } from "@schau/domain";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
-import { gesundheit } from "../../db/schema";
+import { gesundheit, katalogeintrag } from "../../db/schema";
 import { ladeEintraege } from "../../services/eintraege";
 import { protokolliere } from "../../services/protokoll";
 import { adminProcedure, benutzerProcedure, fehler, ladeSchau, dbId } from "../../trpc";
@@ -51,6 +51,9 @@ export const halleGesundheit = {
       const { nr: _nr, ...eingabe } = input;
       const werte = { ...eingabe, sperre: eingabe.sperre || eingabe.verendet };
       await db.transaction(async (tx) => {
+        // Das Tier sperren: so ordnet sich das Erfassen mit einer gleichzeitigen Ausgabe (die sperrt das Tier auch und liest
+        // die Sperren danach frisch) – Entscheidung 033.
+        if (katalogeintragId) await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(eq(katalogeintrag.id, katalogeintragId)).for("update");
         const [g] = await tx.insert(gesundheit).values({ ...werte, katalogeintragId, tierText, erfasstVon: ctx.benutzer.id }).returning();
         await protokolliere(tx, { schauId: input.schauId, tabelle: "gesundheit", datensatzId: g!.id, aktion: "erfasst", neu: { ...werte, nr: input.nr }, akteur: ctx });
       });
@@ -63,9 +66,12 @@ export const halleGesundheit = {
     .mutation(async ({ ctx, input }) => {
       await ladeSchau(ctx.benutzer.organisationId, input.schauId);
       await db.transaction(async (tx) => {
-        const [g] = await tx.select().from(gesundheit).where(and(eq(gesundheit.id, input.id), eq(gesundheit.schauId, input.schauId)));
+        const [g] = await tx.select().from(gesundheit).where(and(eq(gesundheit.id, input.id), eq(gesundheit.schauId, input.schauId))).for("update");
         if (!g) throw fehler("NOT_FOUND", "Eintrag nicht gefunden.");
         if (g.verendet) throw fehler("BAD_REQUEST", "Ein verendetes Tier bleibt gesperrt.");
+        // Schon aufgehoben (zweites Gerät mit älterer Liste, oder gleichzeitig): Zeitpunkt und Grund der ersten Aufhebung
+        // bleiben im Journal stehen, nichts doppelt protokollieren.
+        if (!g.sperre) return;
         await tx.update(gesundheit).set({ sperre: false, aufgehobenAm: new Date(), aufhebungGrund: input.grund }).where(eq(gesundheit.id, g.id));
         await protokolliere(tx, { schauId: input.schauId, tabelle: "gesundheit", datensatzId: g.id, aktion: "Sperre aufgehoben", grund: input.grund, akteur: ctx });
       });
