@@ -30,6 +30,11 @@ describe("Teilschauen", () => {
     ]);
     const prot = await m.db.select().from(m.schema.aenderung).where(m.eq(m.schema.aenderung.schauId, schauId));
     expect(prot.some((x) => x.aktion === "Teilschauen")).toBe(true);
+    // Ein Name über 80 Zeichen wird abgelehnt statt still gekürzt (die Oberfläche erlaubt ohnehin nur 80).
+    await expect(al().schau.teilschauenSetzen({ id: schauId, teilschauen: [{ id: "t1", name: "L".repeat(81) }, { id: "t2", name: "Jugendschau" }] })).rejects.toThrow("Höchstens 80 Zeichen");
+    await al().schau.teilschauenSetzen({ id: schauId, teilschauen: [{ id: "t1", name: `  ${"L".repeat(80)}  ` }, { id: "t2", name: "Jugendschau" }] });
+    expect((await al().schau.get({ id: schauId })).teilschauen[0]!.name).toBe("L".repeat(80));
+    await al().schau.teilschauenSetzen({ id: schauId, teilschauen: [{ id: "t1", name: "Landesschau" }, { id: "t2", name: "Jugendschau" }] });
     await expect(al().meldung.speichern({ schauId, aussteller: { ...leer, vorname: "X", nachname: "Unbekannt" }, eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, teilschau: "t9", positionen: [pos(farben[0]!.id)] })).rejects.toThrow("gibt es in der Schau nicht");
   });
 

@@ -1,4 +1,4 @@
-import { TEILSCHAUEN_MAX } from "@schau/domain";
+import { TEILSCHAU_NAME_MAX, TEILSCHAUEN_MAX } from "@schau/domain";
 import { useState } from "react";
 import { fehlerText } from "../lib";
 import { useOberflaeche } from "../sprache";
@@ -44,7 +44,7 @@ function Bearbeiten({ schauId, start, darfAendern }: { schauId: number; start: T
         {teile.map((teil, i) => (
           <li key={teil.id ?? `neu-${i}`} className="flex flex-wrap items-center gap-2">
             <span className="w-6 text-right tabular-nums text-grau">{i + 1}.</span>
-            <Eingabe aria-label={tt.name(i + 1)} value={teil.name} maxLength={80} onChange={(e) => setze(i, e.target.value)} disabled={!darfAendern} className="max-w-sm flex-1" />
+            <Eingabe aria-label={tt.name(i + 1)} value={teil.name} maxLength={TEILSCHAU_NAME_MAX} onChange={(e) => setze(i, e.target.value)} disabled={!darfAendern} className="max-w-sm flex-1" />
             {darfAendern && (
               <>
                 <Knopf variante="leise" aria-label={tt.nachOben} disabled={i === 0} onClick={() => tausche(i, i - 1)}>

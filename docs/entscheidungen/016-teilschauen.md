@@ -9,7 +9,8 @@ erst die ganze erste Teilschau, dann die nächste.
 **Entscheidung:**
 - Teilschauen sind keine eigenen Schauen, sondern eine Liste je Schau (`schau.teilschauen`, Kennung und Name, in
   Katalogfolge). Jede Meldung verweist auf eine Teilschau (`meldung.teilschau`); ohne Angabe gilt die erste. So bleiben
-  Halle, Kasse, Abrechnung, Preisrichter und Bewertung unverändert eine Schau.
+  Halle, Kasse, Abrechnung, Preisrichter und Bewertung unverändert eine Schau. Ein Name hat höchstens 80 Zeichen
+  (`TEILSCHAU_NAME_MAX`); längere lehnt der Server ab, statt sie still zu kürzen.
 - Die Teilschau ist der erste Schlüssel der Ausstellungsfolge (`vergleicheFolge` in `packages/domain/src/katalog.ts`),
   vor Jugend, Käfigblöcken und Sparten. Damit laufen Nummernvergabe, Nachmeldungen und Plan in derselben Reihenfolge.
 - Kennungen („t1“, „t2“ …) bleiben beim Umbenennen und Umsortieren. Eine Teilschau mit Meldungen lässt sich nicht

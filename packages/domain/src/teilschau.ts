@@ -10,7 +10,8 @@ export interface Teilschau {
 }
 
 export const TEILSCHAUEN_MAX = 12;
-const NAME_MAX = 80;
+/** Längster Name einer Teilschau (Eingabefeld, Server und Bereinigung). */
+export const TEILSCHAU_NAME_MAX = 80;
 
 /** Gespeicherte oder eingegebene Teilschauen lesen: Namen gekürzt, leere und doppelte Kennungen weg, neue nummeriert. */
 export function teilschauenLesen(roh: unknown): Teilschau[] {
@@ -20,7 +21,7 @@ export function teilschauenLesen(roh: unknown): Teilschau[] {
   for (const x of liste) {
     if (vorlaeufig.length >= TEILSCHAUEN_MAX) break;
     const o = (x && typeof x === "object" ? x : {}) as { id?: unknown; name?: unknown };
-    const name = typeof o.name === "string" ? o.name.trim().slice(0, NAME_MAX) : "";
+    const name = typeof o.name === "string" ? o.name.trim().slice(0, TEILSCHAU_NAME_MAX) : "";
     if (!name) continue;
     const id = typeof o.id === "string" && /^t\d{1,4}$/.test(o.id) ? o.id : null;
     if (id && gesehen.has(id)) continue;

@@ -1,5 +1,5 @@
 /** Einstellungen einer Schau: Felder speichern, Reihenfolge der Katalognummern, Teilschauen und Notenskala. */
-import { rueckmeldungFehler, teilschauenLesen, TEILSCHAUEN_MAX, KONTINGENT_BASEN, imEwr, normalisiereIban, pruefeBic, pruefeIban, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal } from "@schau/domain";
+import { rueckmeldungFehler, teilschauenLesen, TEILSCHAU_NAME_MAX, TEILSCHAUEN_MAX, KONTINGENT_BASEN, imEwr, normalisiereIban, pruefeBic, pruefeIban, KAEFIG_TYPEN, UNTERSUCHUNG_ARTEN, SORTIER_KRITERIEN, istStandardSortierung, sortierungNormal } from "@schau/domain";
 import { and, asc, count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../db/client";
@@ -218,7 +218,7 @@ export const einstellungen = {
    * Festschreiben der Katalognummern ändert sich nichts mehr an Folge und Zuordnung.
    */
   teilschauenSetzen: adminProcedure
-    .input(z.object({ id: dbId, teilschauen: z.array(z.object({ id: z.string().max(10).optional(), name: z.string().max(200) })).max(TEILSCHAUEN_MAX) }))
+    .input(z.object({ id: dbId, teilschauen: z.array(z.object({ id: z.string().max(10).optional(), name: z.string().trim().max(TEILSCHAU_NAME_MAX) })).max(TEILSCHAUEN_MAX) }))
     .mutation(async ({ ctx, input }) => {
       const geladen = pruefeNichtAbgeschlossen(await ladeSchau(ctx.benutzer.organisationId, input.id));
       const neu = teilschauenLesen(input.teilschauen);
