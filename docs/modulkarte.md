@@ -2323,7 +2323,7 @@ Betrieb: Zustand der Installation für die Oberfläche (Lesemodus, Entscheidung 
 
 - `betrieb.lesemodus` query · öffentlich – Läuft der Lesemodus?
 
-### routers/bewertung.ts (385 Z.) → `bewertung`, `richter`
+### routers/bewertung.ts (388 Z.) → `bewertung`, `richter`
 
 - `bewertung.liste` query · angemeldet
 - `bewertung.setzen` mutation · admin
@@ -3070,7 +3070,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `preise.ts` (188 Z.) · vergebePreis, entfernePreis
 - `preisrichter-speichern.ts` (133 Z.) – Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter Sperre der Preisrichter der S … · gruppenAusEingabe, speicherePreisrichter, loeschePreisrichter
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
-- `protokoll.ts` (69 Z.) · protokolliere, protokollZuletzt
+- `protokoll.ts` (77 Z.) · protokolliere, protokollZuletzt
 - `pruefung.ts` (390 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste, pruefliste
 - `rassebild.ts` (86 Z.) – Rassebilder für den Katalog: prüfen und speichern (Oberfläche und Einspielen aus dem Netz). · RASSEBILD_MAX_BYTES, jpegAnzeige, oeffneBild, pruefeRassebild, speichereRassebild
 - `serienbrief.ts` (34 Z.) – Empfänger eines Serienbriefs: Vereinsmitglieder, alle Aussteller des Vereins oder die Aussteller mit bestätigter Meldung zu einer Schau. · SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger
@@ -3301,7 +3301,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `86-gleichzeitig-katalog.ts` (237 Z.) – Gleichzeitiges Arbeiten in Katalog und Halle (Entscheidung 033): Nummern vergeben, nach Hallenplan vergeben und Festschreibung aufheben gegen eine …
 - `87-gleichzeitig-auth-schau.ts` (377 Z.) – Gleichzeitiges Arbeiten an Schau-Einstellungen, Phase, Postausgang und Benutzern (Entscheidung 033): Stand-Prüfung der Stammangaben, Provision unte …
 - `88-gleichzeitig-gesamt.ts` (216 Z.) – Gleichzeitiges Arbeiten über alle Bereiche (Entscheidung 033, eine Sperrreihenfolge): Schreibwege auf der Schau-Zeile warten nicht auf Einfügungen, …
-- `89-verklemmungen.ts` (100 Z.) – Verklemmungen und Hänger (Entscheidung 033): Ein Protokolleintrag nimmt erst die Protokoll-Kette (eine Zeile für die ganze Installation) und danach …
+- `89-verklemmungen.ts` (154 Z.) – Verklemmungen und Hänger (Entscheidung 033): Ein Protokolleintrag nimmt erst die Protokoll-Kette (eine Zeile für die ganze Installation) und danach …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - `sperren-hilfe.ts` (33 Z.) – Hilfen für Tests zum gleichzeitigen Arbeiten (Entscheidung 033): statt fester Wartezeit nachsehen, ob die Gegenseite tatsächlich auf eine Sperre wa …
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

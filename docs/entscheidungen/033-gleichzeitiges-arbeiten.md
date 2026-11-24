@@ -39,7 +39,7 @@ Beginn committet ist – eine Sperre schützt nur, was nach ihr gelesen wird.
        Zeile bis zum Commit, danach nimmt das Einfügen `FOR KEY SHARE` auf Schau, Benutzer und Preisrichter
        (Fremdschlüssel). Nach dem ersten Protokolleintrag wartet die Transaktion auf keine Sperre mehr. Wege, die in einer
        Schleife protokollieren und weiter schreiben, laufen in `protokollZuletzt(tx, …)` (`services/protokoll.ts`): die
-       Einträge werden gesammelt und am Ende in derselben Reihenfolge geschrieben (Meldung speichern, Import, Lastschrift
+       Einträge werden gesammelt und am Ende in derselben Reihenfolge geschrieben, nur in einer Transaktion (Meldung speichern, Import, Lastschrift
        buchen, Löschwunsch, Einteilung, Preisrichter, Benutzerverwaltung, Hallenentwurf entscheiden).
 
    **Zeilen, auf die Protokoll oder Einfügungen verweisen** (Schau, Benutzer, Preisrichter, Verein, Meldung): nur
@@ -50,6 +50,15 @@ Beginn committet ist – eine Sperre schützt nur, was nach ihr gelesen wird.
    sperrt wie `FOR UPDATE` – E-Mail eines Benutzers ändern und eine neue Kurzadresse der Schau (nur in der Vorbereitung).
    Dort kommt das Protokoll zuletzt; trifft es doch einen gleichzeitigen Eintrag desselben Benutzers, meldet der Server
    „Bitte noch einmal“.
+
+   **Bekannte Ausnahmen** (enden mit 40P01 oder 55P03, also „Bitte noch einmal versuchen“, nie mit einem Hänger):
+   Benutzer ändern mit neuer E-Mail-Adresse und Benutzer entfernen, Schau löschen, neue Kurzadresse der Schau,
+   Preisrichter löschen – jeweils, wenn gleichzeitig ein Protokolleintrag oder eine Einfügung auf dieselbe Zeile verweist.
+   **Großer Import:** Er sperrt Verein (Import-Sperre), Aussteller und Meldungen bis zum Ende und schreibt sein
+   Protokoll gesammelt am Schluss (in Blöcken zu 500 Zeilen je INSERT). Solange er läuft, warten Anlegen eines Ausstellers
+   mit gleichem Namen, Bearbeiten der betroffenen Aussteller und Meldungen, Vereinsangaben (bei gelernten
+   Rassen-Zuordnungen) und ein zweiter Import desselben Vereins; dauert das länger als die Grenze (10 s), melden sie
+   „Bitte noch einmal“. Während der Import seine Einträge schreibt, warten alle Protokollschreiber der Installation kurz.
 
    **Kein `db` in einer Transaktion, die Sperren hält:** Hilfen bekommen die Transaktion (`ex`/`tx`), etwa
    `ladeEintraege(…, { ex: tx })`, `planTiere(s, undefined, tx)`, `abrechnungListe(id, tx)`. Eine zweite Verbindung aus
