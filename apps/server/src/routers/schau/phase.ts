@@ -12,6 +12,7 @@ import { protokolliere } from "../../services/protokoll";
 import { checkliste } from "../../services/pruefung";
 import { ladeVereinsangaben } from "../../services/datenschutz";
 import { heuteDe } from "../../services/tiergesundheit";
+import { sperreOnlineMeldung } from "../../services/meldung";
 import { sperreTestschauExklusiv } from "../../services/testschau";
 import { adminProcedure, fehler, ladeSchau, dbId } from "../../trpc";
 
@@ -158,10 +159,13 @@ export const phasen = {
         }
       }
       await db.transaction(async (tx) => {
+        // Jeder Wechsel wartet auf laufende Online-Meldungen und Kassenvorgänge (Verkauf, Auszahlung, Zahlung): die lesen
+        // die Phase unter diesen Sperren und buchen sonst noch in der alten (Entscheidung 033). Reihenfolge wie dort.
+        await sperreOnlineMeldung(tx, alt.id);
+        await sperreKasse(tx, alt.id);
         if (input.phase === "abgeschlossen") {
           // Unter der Kassensperre noch einmal: eine gleichzeitig erstellte SEPA- oder Lastschriftdatei bliebe sonst mit
           // IBANs in der abgeschlossenen Schau liegen (erstellen nimmt dieselbe Sperre und liest die Phase frisch).
-          await sperreKasse(tx, alt.id);
           if ((await offenerLauf(tx, alt.id)) || (await offeneLastschrift(tx, alt.id))) throw fehler("CONFLICT", "Inzwischen wurde eine SEPA- oder Lastschriftdatei erstellt – bitte erst buchen oder verwerfen, dann abschließen.");
           // Die Hindernisse oben liefen ohne Sperre: eine Buchung, die seitdem committet hat (Kassentag ohne Abschluss,
           // offener Saldo), sieht erst diese Prüfung (Entscheidung 033). Wer auf die Sperre wartet, liest danach die Phase frisch.

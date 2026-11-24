@@ -1,5 +1,5 @@
 import { ALTER, EINGANG, gefordertCent, heuteBerlin, istAuslaendisch, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, normalisiereIban, normalisiereRegistriernummer, pruefeGeschlecht, pruefeIban, REGISTRIERNUMMER_HINWEIS, teilschauenLesen, teilschauVon, texte, type Sprache } from "@schau/domain";
-import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { zufallsToken } from "../auth";
 import type { Tx } from "../db/client";
@@ -115,6 +115,12 @@ export const meldungEingabe = z.object({
 });
 export type MeldungEingabe = z.infer<typeof meldungEingabe>;
 
+/** Je Schau: Online-Meldungen prüfen Halle, Phase und Meldeschluss nacheinander; phaseSetzen wartet darauf (Entscheidung 033). */
+const MELDUNG_SCHAU_SPERRE = 0x4d454c53; // "MELS"
+export async function sperreOnlineMeldung(tx: Pick<Tx, "execute">, schauId: number) {
+  await tx.execute(sql`select pg_advisory_xact_lock(${MELDUNG_SCHAU_SPERRE}::int, ${schauId}::int)`);
+}
+
 /** Kennung der Sperre je Anfrage-Kennung einer neuen Meldung (pg_advisory_xact_lock). */
 const ANFRAGE_SPERRE = 0x4d414e46; // "MANF"
 
@@ -139,10 +145,10 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
     const [schon] = await tx.select({ id: meldung.id, ausstellerId: meldung.ausstellerId }).from(meldung).where(and(eq(meldung.schauId, input.schauId), eq(meldung.anfrageId, input.anfrageId)));
     if (schon) return { meldungId: schon.id, ausstellerId: schon.ausstellerId, betrag: await meldebetrag(tx, schon.id) };
   }
-  // Abgesagt (oder online nicht mehr in der Meldephase): unter der geteilten Sperre gelesen – absagen wartet exklusiv
-  // darauf, sieht also jede Meldung, die vorher durchkam.
+  // Abgesagt: unter der geteilten Sperre gelesen – absagen wartet exklusiv darauf, sieht also jede Meldung, die vorher
+  // durchkam. Die Meldephase prüft nur der öffentliche Weg (meldeOnline unter sperreOnlineMeldung); die AL erfasst auch
+  // später noch Meldungen mit Eingang „online“.
   if (!input.meldungId && s.abgesagtAm) throw fehler("BAD_REQUEST", texte(opts.sprache ?? "de").schau.abgesagt(s.absageGrund));
-  if (!input.meldungId && input.eingang === "online" && s.phase !== "meldung") throw fehler("BAD_REQUEST", texte(opts.sprache ?? "de").schau.meldungZu);
 
   // Farbenschläge müssen zur Stammdatenversion der Schau gehören.
   const fIds = input.positionen.map((p) => p.farbenschlagId).filter((x): x is number => x != null);
@@ -177,9 +183,18 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
   if (!s.auslandZugelassen && istAuslaendisch(input.aussteller.registriernummer)) {
     throw fehler("BAD_REQUEST", texte(opts.sprache ?? "de").fehler.keinAusland);
   }
-  const vorherige = input.meldungId ? (await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)).for("update"))[0] : undefined;
-  if (input.meldungId && (!vorherige || vorherige.schauId !== s.id)) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
-  if (vorherige && input.stand !== undefined && input.stand !== (await meldungStand(tx, vorherige.id))) throw fehler("CONFLICT", MELDUNG_VERALTET);
+  // Bearbeiten: Zeilen in fester Reihenfolge sperren – Aussteller, Meldung, ihre Tiere (wie der Löschwunsch: erst der
+  // Aussteller, dann seine Meldungen; Entscheidung 033) – und erst danach den Stand vergleichen. So wartet das Speichern
+  // auf eine laufende Änderung an Aussteller oder Tier und sieht sie, statt sie mit den Formularwerten zu überschreiben.
+  let vorherige: typeof meldung.$inferSelect | undefined;
+  if (input.meldungId) {
+    const [kopf] = await tx.select({ ausstellerId: meldung.ausstellerId }).from(meldung).where(and(eq(meldung.id, input.meldungId), eq(meldung.schauId, s.id)));
+    if (!kopf) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
+    await tx.select({ id: aussteller.id }).from(aussteller).where(eq(aussteller.id, kopf.ausstellerId)).for("update");
+    vorherige = (await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)).for("update"))[0]!;
+    await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(eq(katalogeintrag.meldungId, vorherige.id)).orderBy(asc(katalogeintrag.id)).for("update");
+    if (input.stand !== undefined && input.stand !== (await meldungStand(tx, vorherige.id))) throw fehler("CONFLICT", MELDUNG_VERALTET);
+  }
   // Der Aussteller einer Meldung bleibt: ein Wechsel ließe Auszahlungen, Belege und Verkäufe beim alten zurück.
   if (vorherige && aid !== vorherige.ausstellerId) {
     throw fehler("BAD_REQUEST", "Der Aussteller einer Meldung lässt sich nicht wechseln. Bitte die Meldung stornieren und für den richtigen Aussteller neu erfassen.");

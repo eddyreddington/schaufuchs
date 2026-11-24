@@ -8,7 +8,7 @@ import { db, type Tx } from "../db/client";
 import { aussteller, gebuehr, meldung, schau } from "../db/schema";
 import { ladeVereinsangaben } from "../services/datenschutz";
 import { ladeEintraege, meldebetrag, skalaVon, verdeckeNamen } from "../services/eintraege";
-import { ausstellerEingabe, positionEingabe, registriernummerFeld, speichereMeldung } from "../services/meldung";
+import { ausstellerEingabe, positionEingabe, registriernummerFeld, speichereMeldung, sperreOnlineMeldung } from "../services/meldung";
 import { anschlussSchluessel, Bremse, istLokaleAdresse, netz48Schluessel } from "../services/bremse";
 import { sendeMail } from "../services/post";
 import { protokolliere } from "../services/protokoll";
@@ -62,8 +62,6 @@ const mailsJeAdresse = new Bremse(10, 86_400_000, "An diese E-Mail-Adresse wurde
 const tiereJeAnschluss = new Bremse(30, ONLINE_RESERVIERUNG_STUNDEN * 3_600_000, "Von dieser Adresse wurden schon viele Tiere gemeldet. Weitere Meldungen bitte über die Ausstellungsleitung.");
 /** Kennung der Sperre für gleichzeitige Meldungen mit derselben E-Mail (Doppelklick). */
 const MELDUNG_SPERRE = 0x4d454c44; // "MELD"
-/** Je Schau: Online-Meldungen derselben Schau prüfen Halle, Phase und Meldeschluss nacheinander (Entscheidung 033). */
-const MELDUNG_SCHAU_SPERRE = 0x4d454c53; // "MELS"
 
 const meldeEingabe = z.object({
   slug: z.string().max(100),
@@ -382,7 +380,7 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
   const r = await db.transaction(async (tx) => {
     // Die Prüfungen oben sind die schnelle Antwort. Maßgeblich ist der Stand unter der Sperre je Schau: zwei gleichzeitige
     // Meldungen sähen sonst beide noch Platz in der Halle (oder die Meldephase noch offen).
-    await tx.execute(sql`select pg_advisory_xact_lock(${MELDUNG_SCHAU_SPERRE}::int, ${s.id}::int)`);
+    await sperreOnlineMeldung(tx, s.id);
     const [frisch] = await tx.select().from(schau).where(eq(schau.id, s.id));
     const jetzt = await meldungOffen(frisch!, input.sprache, tx);
     if (!jetzt.offen) throw fehler("BAD_REQUEST", jetzt.grund);
