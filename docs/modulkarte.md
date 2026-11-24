@@ -2148,11 +2148,12 @@ Tests: `stellvorschlaege.test.ts`
 - `stellTitel()` – Beschreibung einer Aufstellung.
 - `stellVorschlaege()` – Alle Aufstellungen derselben Halle zum Vergleich: Reihenrichtung (quer, längs), Wandreihen, bündig an Wänden und Lage des Hauptgangs (Anfang, Ende, …
 
-### teilschau.ts (43 Z.)
+### teilschau.ts (44 Z.)
 Tests: `teilschau.test.ts`
 
 - `Teilschau` (Typ) – Teilschauen (Entscheidung 016): Eine Ausstellung kann aus mehreren Teilschauen bestehen, z. B. Landesschau, Kreisschau und Jugendschau in einer Halle.
 - `TEILSCHAUEN_MAX`
+- `TEILSCHAU_NAME_MAX` – Längster Name einer Teilschau (Eingabefeld, Server und Bereinigung).
 - `teilschauenLesen()` – Gespeicherte oder eingegebene Teilschauen lesen: Namen gekürzt, leere und doppelte Kennungen weg, neue nummeriert.
 - `teilschauVon()` – Teilschau einer Meldung: ihre, sonst (ohne Angabe oder gelöscht) die erste; ohne Teilschauen keine.
 - `teilschauFolge()` – Stelle der Teilschau in der Katalogfolge (0 = erste).
@@ -3097,7 +3098,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 - `a-bogen.ts` (324 Z.) – A-Bogen (Meldebogen) zum Ausdrucken: der Aussteller füllt ihn aus, unterschreibt und schickt ihn an die Meldestelle; mit der Unterschrift erkennt e … · aBogenPdf, aBogenFuerAusstellerPdf
 - `auskunft.ts` (296 Z.) · auskunftPdf
-- `basis.ts` (501 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, schriftDatei, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, textOhnePlatzAuslassen, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, teilSeite, seitenzahlen, tabelle, textImFeld, zeilenUmbrechen, textUmbrochen, angaben, hinweisKastenHoehe, hinweisKasten, unterschrift, ueberschrift, datumDe
+- `basis.ts` (502 Z.) · MM, SERIF, SERIF_FETT, SERIF_KURSIV, SANS, SANS_FETT, SANS_KURSIV, schriftDatei, registriereSchriften, TINTE, GRAU, HAARLINIE, STANDARDFARBE, kontrast, lesbareFarbe, logoBild, design, mitVermerk, textOhnePlatzAuslassen, erzeugePdf, aufLinie, kicker, briefkopf, fusszeilen, teilSeite, seitenzahlen, tabelle, textImFeld, zeilenUmbrechen, textUmbrochen, angaben, hinweisKastenHoehe, hinweisKasten, unterschrift, ueberschrift, datumDe
 - `beleg-blatt.ts` (28 Z.) – Papier der Belege (Kaufbeleg, Einzahlungsquittung, Eigenbeleg, Spendenquittung) nach der Formatvorgabe der Schau (Entscheidung 029): A5 quer wie bi … · belegSeite, schnittlinie
 - `bewertungskarte.ts` (325 Z.) – Bewertungskarten nach der Druckvorlage der Schau (Format, Bausteine oder Vordruck-Felder, Versatz) – dazu die Vorschau für den Designer und der Pro … · ladeKartenVorlage, kartenKopf, bewertungskartenPdf, BEISPIEL_KARTEN, zeichneKartenPdf, probedruckPdf
 - `bewertungsliste.ts` (142 Z.) – Bewertungsliste je Preisrichter (zum Mitnehmen in die Käfigreihe) wie die Papiervorlage: zwei Listen nebeneinander je A4-Seite, laufend (Formatvorg … · preisrichterListePdf
@@ -3111,7 +3112,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `illustrationen.ts` (31 Z.) – Historische Stiche für Titelseite und Spartenköpfe (apps/server/stiche, Quellen in QUELLEN.md). · stichBild, stichFuer
 - `katalog-anhang.ts` (152 Z.) – Katalog-PDF, Anhang: kommende Schauen, Anzeigen der Förderer und Notizseiten bis zur vollen Heftlage. · kommendeSchauenSeite, anzeigenSeiten, notizSeiten
 - `katalog-hilfen.ts` (65 Z.) – Katalog-PDF, gemeinsame Hilfen ohne PDF: Kurzvorschau-Auswahl, Anzahltexte („3 Stämme“) und der Bildnachweis (Adressen kürzen, Urheber bereinigen, … · KURZ_JE_ABTEILUNG, kurzauswahl, anzahlText, kurzeAdresse, urheberKurz, bildnachweisTeile, bildnachweis
-- `katalog-kontext.ts` (256 Z.) – Katalog-PDF, Grundlage für alle Teile: lädt die Daten der Schau, legt das PDF an und stellt die gemeinsamen Satzhilfen bereit (Seiten, Inhaltsverze … · katalogKontext
+- `katalog-kontext.ts` (257 Z.) – Katalog-PDF, Grundlage für alle Teile: lädt die Daten der Schau, legt das PDF an und stellt die gemeinsamen Satzhilfen bereit (Seiten, Inhaltsverze … · katalogKontext
 - `katalog-schrift.ts` (29 Z.) – Schrift des Katalogs (Entscheidung 032): eine Familie – die gewählte – in drei Schnitten, dazu höchstens die Auszeichnung für den Namen der Schau a … · NORMAL, FETT, KURSIV, AUSZEICHNUNG, ZIFFERN, registriereKatalogSchrift
 - `katalog-tierteil.ts` (575 Z.) – Katalog-PDF, Tierteil: zwei oder drei Spalten bzw. Tabelle, Spartenköpfe mit Stich, Rassenköpfe mit Rassebild, Preisrichter-, Klassen- und Tierzeil … · nrVergleich, nrBereich, tierteilSetzen
 - `katalog-titel.ts` (181 Z.) – Katalog-PDF, Titelseite: Hintergrund, Titel, Logo, Titelbild bzw. Stich und Termine je Stil. · titelseite
@@ -3121,6 +3122,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `meisterschaften.ts` (54 Z.) – Ergebnisse der Meisterschaften als PDF (A4): je Meisterschaft und Rasse/Farbenschlag die Rangfolge mit den gewerteten Tieren (Katalognummer und Pun … · meisterschaftenPdf
 - `preisverteilung.ts` (114 Z.) – Preisverteilung je Preisrichter als PDF: welche Preise er vergeben darf, mit Katalognummer, sobald vergeben, und leeren Zeilen zum Eintragen in der … · preisverteilungPdf
 - `spenden.ts` (261 Z.) – Spenden: Zuwendungsbestätigung nach amtlichem Muster (Geld, Sache, Sammelbestätigung mit Anlage) und die einfache Spendenquittung für die Kasse. · zuwendungsbestaetigungPdf, spendenquittungPdf
+- `umbruch.test.ts` (23 Z.) – Zeilenumbruch im Katalog (`zeilenUmbrechen`, Entscheidung 032): Ein geschütztes Leerzeichen trennt nicht – so beginnt eine umbrochene Versalzeile n …
 - `verpflichtung.ts` (165 Z.) – Preisrichterverpflichtung: Brief nach der Briefvorlage des Vereins (Briefkopf, Anschrift im Fenster, Fußzeile wie der B-Bogen) mit der Bitte um Bew … · preisrichterVerpflichtungPdf, ladeVerpflichtungsGruppen, verpflichtungsBriefe
 
 ### Datenbank `apps/server/src/db`
@@ -3266,7 +3268,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `50-meisterschaften.ts` (60 Z.) – Meisterschaften (Entscheidung 014): Regeln speichern (Ausstellungsleitung, Protokoll), Wertung aus Katalog und Bewertung, PDF und CSV.
 - `51-import.ts` (116 Z.) – Import aus Altprogrammen (Entscheidung 015): Datei lesen (CSV in Windows-1252, altes .xls abgelehnt), prüfen (Aussteller wiedererkennen, Rassen zuo …
 - `52-import-befunde.ts` (153 Z.) – Import aus Altprogrammen, Befunde der Gegenprüfung (Entscheidung 015): große Dateien, einzelne fehlerhafte Zeilen, gleicher Name mit anderer Regist …
-- `53-teilschauen.ts` (103 Z.) – Teilschauen (Entscheidung 016): anlegen, umbenennen, nicht entfernen solange Meldungen daran hängen; Meldung intern und online einer Teilschau zuor …
+- `53-teilschauen.ts` (108 Z.) – Teilschauen (Entscheidung 016): anlegen, umbenennen, nicht entfernen solange Meldungen daran hängen; Meldung intern und online einer Teilschau zuor …
 - `54-hallenentwuerfe.ts` (126 Z.) – Entwürfe des Hallenplans (Entscheidung 017): speichern, laden, umbenennen, löschen; entscheiden legt die übrigen ins Archiv; aus dem Archiv in eine …
 - `55-lastschrift.ts` (219 Z.) – SEPA-Lastschrift (Entscheidung 018): Gläubiger-ID, Mandate, Lastschriftdatei nur für offenes Meldegeld mit gültigem Mandat, Vorabankündigung, Sperr …
 - `56-grundriss.ts` (62 Z.) – Freier Grundriss der Halle (Entscheidung 019): speichern, prüfen (gültig, passt zu Breite/Länge, nichts außerhalb), ein Rechteck als Grundriss gilt …

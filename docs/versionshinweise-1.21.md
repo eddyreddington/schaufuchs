@@ -1,5 +1,11 @@
 # SchauFUCHS 1.21 – Versionshinweise
 
+## 1.21.7 (24.11.2026)
+
+- **Katalog:** Bricht die kleine Versalzeile über einer Sparte um, beginnt die zweite Zeile nicht mehr mit „· SPARTE“ –
+  das „·“ bleibt beim Wort davor.
+- **Teilschauen:** Ein Name über 80 Zeichen wird abgelehnt statt still gekürzt (das Eingabefeld erlaubte schon nur 80).
+
 ## 1.21.6 (24.11.2026)
 
 - **Erster Administrator:** Öffnet er einen alten oder abgelaufenen Link „Passwort setzen“, bevor irgendjemand in der
