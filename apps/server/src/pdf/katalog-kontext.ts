@@ -13,7 +13,7 @@ import { type Eintrag, ladeEintraege, skalaVon, verdeckeNamen } from "../service
 import { ladeVereinsangaben } from "../services/datenschutz";
 import { zuteilung } from "../services/pruefung";
 import { spenderFuerKatalog } from "../services/spenden";
-import { GRAU, HAARLINIE, kontrast, lesbareFarbe, MM, textOhnePlatzAuslassen, TINTE } from "./basis";
+import { GRAU, HAARLINIE, kontrast, lesbareFarbe, MM, textOhnePlatzAuslassen, TINTE, zeilenUmbrechen } from "./basis";
 import { FETT, KURSIV, NORMAL, registriereKatalogSchrift } from "./katalog-schrift";
 import { type Stich, stichBild } from "./illustrationen";
 import { kurzauswahl } from "./katalog-hilfen";
@@ -159,10 +159,21 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
     doc.font(schrift).fontSize(groesse);
     return grundlinie - ((doc as unknown as { _font: { ascender: number } })._font.ascender / 1000) * groesse;
   };
-  /** Kleine Versalzeile über Titeln („KATALOG MIT ERGEBNISSEN“, „ABTEILUNG“). */
-  const kicker = (text: string, x: number, y: number, breite: number, align: "left" | "center" = "left") => {
-    doc.font(FETT).fontSize(G.klein).fillColor(akzentText).text(text.toLocaleUpperCase("de"), x, y, { width: breite, align, characterSpacing: 1.4 * k, lineBreak: false });
-    doc.y = y + G.klein * 1.35;
+  /** Zeilen einer Versalzeile: gesperrt in einer Zeile; zu lang (lange Teilschau) ohne Sperrung, notfalls umbrochen. */
+  const versalZeilen = (text: string, breite: number) => {
+    const t = text.toLocaleUpperCase("de");
+    doc.font(FETT).fontSize(G.klein);
+    const sperrung = doc.widthOfString(t, { characterSpacing: 1.4 * k }) <= breite ? 1.4 * k : 0;
+    return { zeilen: sperrung ? [t] : zeilenUmbrechen(doc, t, breite), sperrung };
+  };
+  /** Höhe der Versalzeile (alle Zeilen) – für Flächen, die sie umschließen. */
+  const versalHoehe = (text: string, breite: number) => versalZeilen(text, breite).zeilen.length * G.klein * 1.35;
+  /** Kleine Versalzeile über Titeln („KATALOG MIT ERGEBNISSEN“, „ABTEILUNG“); nie über den Rand (Entscheidung 032). */
+  const kicker = (text: string, x: number, y: number, breite: number, align: "left" | "center" = "left", farbe = akzentText) => {
+    const { zeilen, sperrung } = versalZeilen(text, breite);
+    doc.font(FETT).fontSize(G.klein).fillColor(farbe);
+    zeilen.forEach((z, i) => doc.text(z, x, y + i * G.klein * 1.35, { width: breite, align, characterSpacing: sperrung, lineBreak: false }));
+    doc.y = y + zeilen.length * G.klein * 1.35;
   };
   /** Seitentitel je Stil: klassisch mit Farbstrich, mit Rahmen mittig über einer Zierlinie, modern mit Linie über die Breite. */
   const seitentitel = (titel: string, unter?: string) => {
@@ -238,7 +249,7 @@ export async function katalogKontext(s: Schau, opts: KatalogOptionen) {
     skala, mitErgebnis, gestaltung, verein, a4, k, G, flaeche, farbe, aufFlaeche, akzent,
     akzentText, lk, schlicht, ohne, doc, fertig, stich, seiten, inhalt, L,
     B, unten, neueSeite, seitenNr, platz, abschnitt, marken, marke, zierlinie, aufLinie,
-    kicker, seitentitel, zwischentitel, absatz, angaben, spitzePunkte, note,
+    kicker, versalHoehe, seitentitel, zwischentitel, absatz, angaben, spitzePunkte, note,
   };
 }
 

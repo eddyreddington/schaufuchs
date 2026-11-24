@@ -16,6 +16,7 @@ import { adminKontext, m } from "./kontext";
 const al = () => m.appRouter.createCaller(adminKontext);
 const LANG = {
   schau: "Kreisjungtierschau des Kreisverbands Oberes Talgrund-Wiesengebiet mit angeschlossener Jugendschau",
+  teilschau: "Landesverbandsjugendschau des Landesverbands Oberes Talgrund-Wiesengebiet", // höchstens 80 Zeichen
   sparte: "Zwerghühner, Groß- und Wassergeflügel der Sonderabteilung Nordwest",
   rasse: "Niederländische Zwerg-Barthühner mit sehr langem Namen",
   farbenschlag: "silber-schwarzgesäumt mit weißem Bart und Haube",
@@ -41,6 +42,20 @@ function pdf2(pdf: Buffer, ...args: string[]): string {
 /** Ohne Leerraum, Binde- und Trennstriche: so zählen Umbrüche (auch mitten im Wort) nicht. */
 const norm = (t: string) => t.replace(/[\s­\-–]+/g, "");
 const anzahl = (text: string, teil: string) => norm(text).split(norm(teil)).length - 1;
+
+/** Wörter, die über den rechten Rand der Seite hinausragen (weniger als 8 mm Rand; Seitenbreite aus pdftotext -bbox). */
+function ueberRand(pdf: Buffer): string[] {
+  return pdf2(pdf, "-bbox")
+    .split("<page ")
+    .slice(1)
+    .flatMap((seite, i) => {
+      const breite = +(seite.match(/width="([\d.]+)"/)?.[1] ?? 0);
+      return [...seite.matchAll(/xMax="([\d.]+)" yMax="[\d.]+">([^<]*)</g)].filter((x) => +x[1]! > breite - (8 / 25.4) * 72).map((x) => `S. ${i + 1}: „${x[2]}“`);
+    });
+}
+/** Spaltenköpfe, die ohne Luft aneinanderstoßen (pdftotext liest sie dann als ein Wort, z. B. „PREISAUSSTELLER“). */
+const KOEPFE = "NR\\.|KLASSE|FARBENSCHLAG|AUSSTELLER|NOTE|NOTIZ|PREIS|VKPR\\.";
+const KOEPFE_ZUSAMMEN = new RegExp(`(?:${KOEPFE})(?:${KOEPFE})`, "g");
 
 /** Paare von Wörtern auf derselben Seite, deren Kästen sich überschneiden (mehr als ein Drittel der Höhe, > 0,5 pt breit). */
 function ueberlappungen(pdf: Buffer): string[] {
@@ -68,6 +83,8 @@ describe("Katalog kürzt nicht", () => {
     const { id } = await al().schau.anlegen({ name: LANG.schau, ort: "Halle" });
     const s0 = await al().schau.get({ id });
     const vid = s0.stammdatenVersionId!;
+    // Eine Teilschau mit langem Namen: er steht über jeder Abteilung in der Versalzeile.
+    await al().schau.teilschauenSetzen({ id, teilschauen: [{ name: LANG.teilschau }] });
     const [sp] = await m.db.insert(m.schema.sparte).values({ versionId: vid, name: LANG.sparte, folge: 999 }).returning();
     const [ra] = await m.db.insert(m.schema.rasse).values({ versionId: vid, sparteId: sp!.id, name: LANG.rasse, folge: 999 }).returning();
     const [fs] = await m.db.insert(m.schema.farbenschlag).values({ versionId: vid, rasseId: ra!.id, name: LANG.farbenschlag, folge: 1 }).returning();
@@ -132,12 +149,24 @@ describe("Katalog kürzt nicht", () => {
               [LANG.schau, 1],
             ];
             const fehlt = mindestens.filter(([t, n]) => anzahl(text, t) < n).map(([t, n]) => `${t}: ${anzahl(text, t)} statt ${n}`);
+            // Die Teilschau steht in der Versalzeile über jeder Abteilung (in Großbuchstaben) und davor, nicht angehängt.
+            const gross = (t: string) => t.toLocaleUpperCase("de");
+            if (anzahl(gross(text), `${gross(LANG.teilschau)} · SPARTE`) < 1) fehlt.push("Teilschau in der Versalzeile");
             const gekuerzt = text.replace(/… und \d+ weitere/g, "").match(/\S*…\S*/g) ?? [];
             const ueber = ueberlappungen(pdf);
-            if (fehlt.length || gekuerzt.length || ueber.length) fehler.push({ fall, fehlt, gekuerzt, ueber: ueber.slice(0, 4) });
+            const rand = ueberRand(pdf);
+            const koepfe = text.match(KOEPFE_ZUSAMMEN) ?? [];
+            if (fehlt.length || gekuerzt.length || ueber.length || rand.length || koepfe.length) fehler.push({ fall, fehlt, gekuerzt, ueber: ueber.slice(0, 4), rand: rand.slice(0, 4), koepfe: [...new Set(koepfe)] });
           }
         }
       }
+      // Titelseite einer Testschau, vorläufig, A5, Stil „modern“: die lange Versalzeile passt, ohne den Titel zu berühren.
+      const [zeile] = await m.db.select().from(m.schema.schau).where(m.eq(m.schema.schau.id, id));
+      const st = { ...zeile!, ergebnisseFreigegeben: false, test: true, katalogGedruckt: false };
+      const titel = await katalogPdf(st, { kurz: false, vorschau: { schrift: "klassisch", aufteilung: "zweispaltig", format: "A5", stil: "modern" } });
+      const ersteSeite = pdf2(titel, "-f", "1", "-l", "1", "-raw");
+      if (!/TESTSCHAU – KEINE ECHTE AUSSTELLUNG · AUSSTELLUNGSKATALOG · VORLÄUFIG\n/.test(ersteSeite) || ueberRand(titel).length || ueberlappungen(titel).length)
+        fehler.push({ fall: "Testschau/A5/modern", titel: ersteSeite.split("\n").slice(0, 3), rand: ueberRand(titel), ueber: ueberlappungen(titel) });
     } finally {
       console.warn = warn;
     }

@@ -6,7 +6,7 @@ import type { KatalogKontext } from "./katalog-kontext";
 
 /** Titelseite in den vier Stilen (Rahmen, modern, schlicht, klassisch). */
 export function titelseite(K: KatalogKontext) {
-  const { G, s, logo, titelbild, mitErgebnis, gestaltung, k, flaeche, aufFlaeche, akzent, akzentText, lk, schlicht, doc, stich, L, B, neueSeite, zierlinie, kicker } = K;
+  const { G, s, logo, titelbild, mitErgebnis, gestaltung, k, flaeche, aufFlaeche, akzent, akzentText, lk, schlicht, doc, stich, L, B, neueSeite, zierlinie, kicker, versalHoehe } = K;
   // ── Titelseite ─────────────────────────────────────────────────────────
   neueSeite({ ohneFuss: true });
   {
@@ -115,9 +115,11 @@ export function titelseite(K: KatalogKontext) {
       const titelH = doc.heightOfString(s.name, { width: B(), lineGap: -5 });
       doc.font(KURSIV).fontSize(G.h2);
       const unterH = gestaltung.untertitel ? doc.heightOfString(gestaltung.untertitel, { width: B() }) + 2 * k : 0;
-      y = blockH - 11 * MM * k - unterH - titelH - G.klein * 1.35 - 5 * k;
-      doc.font(FETT).fontSize(G.klein).fillColor(aufFlaeche).text(kopfzeile.toLocaleUpperCase("de"), L(), y, { width: B(), characterSpacing: 1.4 * k, lineBreak: false });
-      y += G.klein * 1.35 + 5 * k;
+      // Versalzeile wie überall: zu lang (Testschau, vorläufig, A5) ohne Sperrung, notfalls umbrochen.
+      const kopfH = versalHoehe(kopfzeile, B());
+      y = blockH - 11 * MM * k - unterH - titelH - kopfH - 5 * k;
+      kicker(kopfzeile, L(), y, B(), "left", aufFlaeche);
+      y += kopfH + 5 * k;
       doc.font(AUSZEICHNUNG).fontSize(G.titel).fillColor(aufFlaeche).text(s.name, L(), y, { width: B(), lineGap: -5 });
       if (gestaltung.untertitel) {
         doc.save().fillOpacity(0.85);

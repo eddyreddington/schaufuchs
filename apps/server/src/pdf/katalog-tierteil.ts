@@ -21,7 +21,7 @@ export const nrBereich = (von: Nr, bis: Nr) => (nrVergleich(von, bis) === 0 ? fo
 
 /** Tierteil: Sparten- und Rassenköpfe, Klassen, Tierzeilen; gibt das Register für das Rassenverzeichnis zurück. */
 export function tierteilSetzen(K: KatalogKontext) {
-  const { G, s, tierteilListe, bildDerRasse, geoeffnet, genutzteBilder, zu, richterName, mitErgebnis, gestaltung, a4, k, flaeche, farbe, aufFlaeche, akzent, lk, schlicht, doc, stich, seiten, L, B, unten, neueSeite, seitenNr, abschnitt, marke, aufLinie, kicker, spitzePunkte, note } = K;
+  const { G, s, tierteilListe, bildDerRasse, geoeffnet, genutzteBilder, zu, richterName, mitErgebnis, gestaltung, a4, k, flaeche, farbe, aufFlaeche, akzent, lk, schlicht, doc, stich, seiten, L, B, unten, neueSeite, seitenNr, abschnitt, marke, aufLinie, kicker, versalHoehe, spitzePunkte, note } = K;
   // ── Tierteil: zwei Spalten wie in den Verbandskatalogen, oder Tabelle über die ganze Breite, oder drei Spalten ──
   // Drei Spalten nur auf A4 (auf A5 wären sie zu schmal) – dort mit der Schriftgröße des A5-Hefts.
   const aufteilung = gestaltung.aufteilung === "dreispaltig" && !a4 ? "zweispaltig" : (gestaltung.aufteilung ?? "zweispaltig");
@@ -72,26 +72,33 @@ export function tierteilSetzen(K: KatalogKontext) {
     const c = col();
     const y = doc.y;
     const nx = spX() + c.nr + 2 * MM;
-    doc.font(FETT).fontSize(GT.fein).fillColor(GRAU);
-    const opt = { lineBreak: false, characterSpacing: 0.6 * kt } as const;
-    doc.text("NR.", spX(), y, { ...opt, width: c.nr, align: "right" });
+    /** Kopf einer Spalte; ist er gesperrt breiter als die Spalte (große Schrift), erst ohne Sperrung, dann kleiner. */
+    const kopf = (text: string, x: number, width: number, align: "left" | "right" = "left") => {
+      const platz = width - 1 * MM * kt; // Luft zum Kopf daneben („PREIS“ | „AUSSTELLER“)
+      let gr = GT.fein;
+      doc.font(FETT).fontSize(gr).fillColor(GRAU);
+      const sperrung = doc.widthOfString(text, { characterSpacing: 0.6 * kt }) <= platz ? 0.6 * kt : 0;
+      while (gr > 5 && doc.widthOfString(text, { characterSpacing: sperrung }) > platz) doc.fontSize((gr -= 0.25));
+      doc.text(text, x, y, { lineBreak: false, characterSpacing: sperrung, width, align });
+    };
+    kopf("NR.", spX(), c.nr, "right");
     if (tabelle) {
       const t = tabX();
-      doc.text("KLASSE", t.klasse, y, { ...opt, width: c.klasse });
-      doc.text("FARBENSCHLAG", t.farbenschlag, y, { ...opt, width: c.farbenschlag });
-      doc.text("AUSSTELLER", t.aussteller, y, { ...opt, width: c.aussteller });
-      doc.text(mitErgebnis ? "NOTE" : "NOTIZ", t.note, y, { ...opt, width: c.note });
-      if (mitErgebnis) doc.text("PREIS", t.preis, y, { ...opt, width: c.preis });
-      doc.text("VKPR.", spX() + spB() - c.vk - 4 * MM, y, { ...opt, width: c.vk + 4 * MM, align: "right" });
+      kopf("KLASSE", t.klasse, c.klasse);
+      kopf("FARBENSCHLAG", t.farbenschlag, c.farbenschlag);
+      kopf("AUSSTELLER", t.aussteller, c.aussteller);
+      kopf(mitErgebnis ? "NOTE" : "NOTIZ", t.note, c.note);
+      if (mitErgebnis) kopf("PREIS", t.preis, c.preis);
+      kopf("VKPR.", spX() + spB() - c.vk - 4 * MM, c.vk + 4 * MM, "right");
       doc.save().lineWidth(0.5).strokeColor(TINTE).moveTo(spX(), y + 8.5 * kt).lineTo(spX() + spB(), y + 8.5 * kt).stroke().restore();
       doc.y = y + 12 * kt;
       doc.fillColor(TINTE);
       return;
     }
-    doc.text(mitErgebnis ? "NOTE" : "NOTIZ", nx, y, { ...opt, width: c.note });
-    if (mitErgebnis) doc.text("PREIS", nx + c.note, y, { ...opt, width: c.preis });
-    doc.text("AUSSTELLER", nx + c.note + c.preis, y, { ...opt, width: c.aussteller });
-    doc.text("VKPR.", spX() + spB() - c.vk - 4 * MM, y, { ...opt, width: c.vk + 4 * MM, align: "right" });
+    kopf(mitErgebnis ? "NOTE" : "NOTIZ", nx, c.note);
+    if (mitErgebnis) kopf("PREIS", nx + c.note, c.preis);
+    kopf("AUSSTELLER", nx + c.note + c.preis, c.aussteller);
+    kopf("VKPR.", spX() + spB() - c.vk - 4 * MM, c.vk + 4 * MM, "right");
     doc.save().lineWidth(0.5).strokeColor(TINTE).moveTo(spX(), y + 8.5 * kt).lineTo(spX() + spB(), y + 8.5 * kt).stroke().restore();
     doc.y = y + 12 * kt;
     doc.fillColor(TINTE);
@@ -240,6 +247,10 @@ export function tierteilSetzen(K: KatalogKontext) {
   }
 
   function spartenKopf(sparte: string, zusatz: string, kopf: string, tiere: Eintrag[], ersterBlock: number) {
+    const gruppe = tiere.some((t) => gruppenAbteilung(t.art, s.staemmeVorn) === sparte);
+    // „Jugendabteilung“; eine Teilschau steht davor („Landesschau · Abteilung“), nicht angehängt („Landesschauabteilung“).
+    const ohne = gruppe ? "Abteilung" : "Sparte";
+    const art = !zusatz ? ohne : zusatz === "Jugend" || zusatz.endsWith(" · Jugend") ? `${zusatz}abteilung` : `${zusatz} · ${ohne}`;
     // Neue Sparte unter der vorigen, wenn noch knapp ein Drittel der Seite frei ist und Kopf samt erster Rasse
     // darunter passen – sonst neue Seite (keine Spartenüberschrift allein unten auf der Seite).
     const darunter = Math.max(tiefste, doc.y) + 12 * k;
@@ -249,7 +260,9 @@ export function tierteilSetzen(K: KatalogKontext) {
     const nameB = gestaltung.stil === "rahmen" ? B() : gestaltung.stil === "modern" ? B() - fw0 - 4 * MM - 8 * MM * k : B() - fw0 - 6 * MM;
     doc.font(NORMAL).fontSize(G.h1);
     const nameMehr = Math.max(0, doc.heightOfString(sparte, { width: nameB, lineGap: -3 }) - doc.heightOfString("X", { width: nameB, lineGap: -3 }));
-    const kopfHoehe = 15 * MM * k + (gestaltung.stil === "rahmen" ? 88 * k : gestaltung.stil === "modern" ? 40 * k : 34 * k) + nameMehr;
+    // Die Versalzeile (Art, Teilschau) steht in derselben Breite wie der Name; bricht sie um, zählt jede weitere Zeile.
+    const artMehr = versalHoehe(art, nameB) - G.klein * 1.35;
+    const kopfHoehe = 15 * MM * k + (gestaltung.stil === "rahmen" ? 88 * k : gestaltung.stil === "modern" ? 40 * k : 34 * k) + nameMehr + artMehr;
     if (imTierteil && !gestaltung.sparteNeueSeite && unten() - darunter > Math.max((unten() - doc.page.margins.top) * 0.3, kopfHoehe + ersterBlock)) {
       doc.y = darunter; // Kolumnentitel bleibt bei der ersten Rasse der Seite
     } else neueSeite({ kopf });
@@ -261,11 +274,9 @@ export function tierteilSetzen(K: KatalogKontext) {
     const y0 = doc.y;
     const g = 15 * MM * k; // Höhe des Bildfelds
     const fw = g * 1.6; // Breite des Bildfelds (Stiche sind meist breiter als hoch)
-    const gruppe = tiere.some((t) => gruppenAbteilung(t.art, s.staemmeVorn) === sparte);
     const bild = stich(stichFuer(sparte, gruppe));
     /** Stich der Sparte im Bildfeld fw × g (Stämme und Volieren: Hahn mit Henne). */
     const figur = (x: number, y: number, align: "center" | "right") => doc.image(bild, x, y, { fit: [fw, g], align, valign: "center" });
-    const art = zusatz ? `${zusatz}abteilung` : gruppe ? "Abteilung" : "Sparte";
     const rassen = new Set(tiere.map((t) => t.rasse ?? t.einordnungRasse ?? t.freitext)).size;
     const nummern = [...tiere].sort(nrVergleich);
     const angabe = `${anzahlText(sparte, tiere.length)}  ·  ${rassen} ${rassen === 1 ? "Rasse" : "Rassen"}  ·  Nr. ${nrBereich(nummern[0]!, nummern.at(-1)!)}`;
@@ -282,11 +293,13 @@ export function tierteilSetzen(K: KatalogKontext) {
       // Farbband mit Art und Name in Weiß, der Stich rechts neben dem Band; die Angaben darunter.
       const bandB = B() - fw - 4 * MM;
       // Das Band wächst mit dem Namen der Sparte, statt ihn zu kürzen.
-      const bandH = Math.max(g + 4 * k, 4 * k + G.klein * 1.5 + doc.font(NORMAL).fontSize(G.h1).heightOfString(sparte, { width: bandB - 8 * MM * k, lineGap: -3 }) + 2 * k);
+      const innen = bandB - 8 * MM * k;
+      const ueber = versalHoehe(art, innen) + G.klein * 0.15; // Versalzeile(n) über dem Namen
+      const bandH = Math.max(g + 4 * k, 4 * k + ueber + doc.font(NORMAL).fontSize(G.h1).heightOfString(sparte, { width: innen, lineGap: -3 }) + 2 * k);
       doc.rect(L(), y0, bandB, bandH).fill(flaeche);
       figur(L() + B() - fw, y0 + 2 * k, "right");
-      doc.font(FETT).fontSize(G.klein).fillColor(aufFlaeche).text(art.toLocaleUpperCase("de"), L() + 4 * MM * k, y0 + 4 * k, { width: bandB - 8 * MM * k, characterSpacing: 1.4 * k, lineBreak: false });
-      doc.font(NORMAL).fontSize(G.h1).fillColor(aufFlaeche).text(sparte, L() + 4 * MM * k, y0 + 4 * k + G.klein * 1.5, { width: bandB - 8 * MM * k, lineGap: -3 });
+      kicker(art, L() + 4 * MM * k, y0 + 4 * k, innen, "left", aufFlaeche);
+      doc.font(NORMAL).fontSize(G.h1).fillColor(aufFlaeche).text(sparte, L() + 4 * MM * k, y0 + 4 * k + ueber, { width: innen, lineGap: -3 });
       doc.font(NORMAL).fontSize(G.liste).fillColor(GRAU).text(angabe, L(), y0 + bandH + 3 * k, { width: B() });
       doc.y += 8 * k;
     } else {

@@ -43,6 +43,9 @@ Sans 3) waren schon einheitlich.
   werden höher, Spalten- und Seitenwechsel rechnen damit. Aussteller: erst kleiner, dann der Vorname als Initiale
   („Schmidt, W.“), mit „Jgd.“ dann das Kürzel kleiner und nur der Nachname (wie bisher); passt auch das nicht, bricht
   der ganze Name um. Textanzeigen haben ein festes Feld: dort wird die Schrift kleiner, bis der Text passt.
+  Versalzeilen („ABTEILUNG“, mit Teilschau „LANDESSCHAU · SPARTE“) verlieren zuerst die Sperrung und brechen dann um;
+  Spaltenköpfe der Tierzeilen verlieren die Sperrung und werden kleiner, bis sie mit 1 mm Luft in ihre Spalte passen
+  (bei großer Schrift stießen „PREIS“ und „AUSSTELLER“ sonst aneinander).
   `textImFeld` (kürzt) bleibt für Belege, Karten und Listen mit fester Zeilenhöhe und kommt im Katalog nicht mehr vor.
   Einzige Ausnahme: „… und N weitere“ unter den kommenden Schauen – dort ist die Liste je Ebene fachlich begrenzt, und
   die Zeile nennt, wie viele Termine fehlen; kein Name wird angeschnitten.
