@@ -42,8 +42,10 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
   Entwürfe der Schau (nach id), setzt den Entwurf (auch ohne festen Plan, `planNeuSetzenIn(…, tx)`) und archiviert in einer
   Transaktion – die zweite Entscheidung findet ihren Entwurf archiviert. Einlieferung: die Ausgabe liest die Sperren im
   Gesundheitsjournal unter der Tiersperre frisch (neue Sperre: Grund nötig, Ausnahme im Protokoll), das Erfassen sperrt das
-  Tier; eine schon aufgehobene Sperre bleibt beim zweiten Aufheben unverändert; der Impfnachweis rechnet am gesperrten Stand
-  der Meldung, die Seite sendet Feld und Haken nacheinander.
+  Tier (ordnet sich schon über den Fremdschlüssel); eine schon aufgehobene Sperre bleibt beim zweiten Aufheben unverändert;
+  der Impfnachweis rechnet am gesperrten Stand der Meldung und liest danach die Phase geteilt gesperrt (Meldung, dann Schau
+  wie bei der Absage) – ein gleichzeitiger Abschluss lässt keinen Nachweis mehr durch; die Seite sendet Feld und Haken
+  nacheinander.
 - Ohne Verbindung (keine Antwort: TypeError von fetch, oder 502/503/504) sendet der Editor `halleSetzen` und das automatische
   Festschreiben erneut (1 s, 2 s, 4 s … höchstens 30 s, sofort bei „online“), bis es gelingt oder ein echter Fehler kommt;
   eine unlesbare Antwort (kein JSON) nur bis zu fünfmal (`fehlerArt`, `UNLESBAR_HOECHSTENS`). CONFLICT bei einer
@@ -68,7 +70,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 
 - Web: `apps/web/src/seiten/hallenplan-*.test.ts` (Laden, Speichern, Wiederholen ohne Verbindung, Folie in 3D, Entwurf bereinigt wie der Server, 3D-Modell voll deckend, Ausrichten beim Verschieben, Drehen und Einsetzen).
 - Domain: `packages/domain/src/hallenplan*.test.ts`, `stellvorschlaege.test.ts` (u. a. Zufallshallen, Möbel ohne Einfluss, Aussehen ohne Einfluss).
-- Server (`apps/server/src/tests`): `86-gleichzeitig-katalog` (Entscheiden, Ausgabe gegen Sperre, Impfnachweis, Sperre aufheben), `17-kaefige`, `19-hallenplan`, `24-plan-fest`, `31-stellvorschlaege`, `36-nach-plan-nummerieren`,
+- Server (`apps/server/src/tests`): `86-gleichzeitig-katalog` (Entscheiden, Ausgabe gegen Sperre, Impfnachweis auch gegen Abschluss, Sperre aufheben), `17-kaefige`, `19-hallenplan`, `24-plan-fest`, `31-stellvorschlaege`, `36-nach-plan-nummerieren`,
   `38-hallenplan-entfernen`, `39-hallenplan-druck`, `40-hallenplan-neu-setzen`, `41-hallenplan-3d`, `42-hallenplan-moebel-etagen`,
   `44-pruefliste-hallenplan`, `67-pokaltisch`, `75-halle-aussehen`, `78-tueren`, `79-ablauf-halle` (Farben vor den Nummern, Ablauf).
 

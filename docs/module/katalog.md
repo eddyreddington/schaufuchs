@@ -40,7 +40,8 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 - Gleichzeitig (Entscheidung 033 „Gleichzeitiges Arbeiten: Sperren und Stand-Prüfung“): Vergeben, Nach Hallenplan vergeben und
   Festschreibung aufheben sperren Kasse, Einteilung, Schau-Zeile („no key update“) und – bevor geprüft wird, ob schon
   Noten, Preise oder Verkäufe an den Nummern hängen – alle Tiere der Schau nach id. Eine gleichzeitige Note, Preisvergabe
-  oder ein Verkauf ist dann sichtbar oder wartet. Logo und Titelbild: das Hochladen sperrt die Schau-Zeile (eins je Rolle),
+  oder ein Verkauf ist dann sichtbar oder wartet. Protokoll zuletzt: die Kette hält bis zum Commit, deshalb nimmt auch der
+  Statuswechsel einer nummerierten Meldung (`einteilungNachStatus`) die Einteilungssperre vor seinem Protokoll. Logo und Titelbild: das Hochladen sperrt die Schau-Zeile (eins je Rolle),
   Belege nehmen das neueste Logo.
 - Die Katalognummern kommen nach dem Hallenplan ([ADR 031](../entscheidungen/031-hallenplan-vor-katalognummern.md)):
   Steht ein fester Plan mit Tieren (`nachPlanVergeben`, Stand aus `katalog.nummernStand`), zeigt die Seite „Nach Hallenplan
@@ -61,7 +62,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md).
 ## Tests
 
 - Domain: `domain.test.ts` (Nummern, Nachmeldungen), `katalog-typografie.test.ts` (eine Familie je Wahl, Ersatzschnitt, Größenstufen), `einteilung-jugend.test.ts` (Jugendblock, Kennzeichen), `katalog-sortierung.test.ts` (Vorgabe = alte Folge in Zufallsschauen), `katalog-gliederung.test.ts`.
-- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `86-gleichzeitig-katalog` (Nummern und Festschreibung gegen eine gleichzeitige Note, zwei Logos), `82-katalog-schriften` (pdffonts: nur die gewählte Familie, pdftotext: Text vollständig), `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog), `79-ablauf-halle` (Stand für „Nach Hallenplan vergeben“), `81-jugend-kennzeichen` („Jgd.“ in Druck, Online-Katalog, Ergebnissen), `83-katalog-nicht-kuerzen` (sehr lange Namen in jeder Schrift, Aufteilung, A4/A5, mit und ohne Ergebnisse, Kurzkatalog: vollständig, kein „…“, keine überlappenden Wörter).
+- Server (`apps/server/src/tests`): `01-schau-ablauf`, `04-meldung-katalog-sicherheit`, `34-katalog-gestaltung`, `86-gleichzeitig-katalog` (Nummern, Nach Hallenplan und Festschreibung gegen eine gleichzeitige Note, Bestätigen gegen die Einteilung, zwei Logos), `82-katalog-schriften` (pdffonts: nur die gewählte Familie, pdftotext: Text vollständig), `36-nach-plan-nummerieren`, `43-katalog-sortierung`, `72-jugend-einteilung` (Jugendblock oder eingereiht, Kurzkatalog), `79-ablauf-halle` (Stand für „Nach Hallenplan vergeben“), `81-jugend-kennzeichen` („Jgd.“ in Druck, Online-Katalog, Ergebnissen), `83-katalog-nicht-kuerzen` (sehr lange Namen in jeder Schrift, Aufteilung, A4/A5, mit und ohne Ergebnisse, Kurzkatalog: vollständig, kein „…“, keine überlappenden Wörter).
 
 ## Datenbank
 
