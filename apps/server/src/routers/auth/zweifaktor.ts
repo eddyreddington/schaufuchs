@@ -44,7 +44,7 @@ export const zweiFaktor = {
       // Nur für genau das geprüfte Geheimnis und nur einmal (Entscheidung 033): ein zweiter Tab, ein neues Einrichten oder
       // das Zurücksetzen durch die Ausstellungsleitung dazwischen – dann gilt diese Bestätigung nicht. Gesperrt gelesen und
       // in JavaScript verglichen: das Geheimnis liegt verschlüsselt (mit Zufallswert) in der Datenbank.
-      const [jetzt] = await tx.select({ geheim: benutzer.totpGeheim, aktiv: benutzer.totpAktivSeit }).from(benutzer).where(eq(benutzer.id, b.id)).for("update");
+      const [jetzt] = await tx.select({ geheim: benutzer.totpGeheim, aktiv: benutzer.totpAktivSeit }).from(benutzer).where(eq(benutzer.id, b.id)).for("no key update");
       if (!jetzt || jetzt.aktiv || jetzt.geheim !== b.totpGeheim) throw fehler("BAD_REQUEST", "Bitte die Einrichtung neu beginnen.");
       await tx.update(benutzer).set({ totpAktivSeit: new Date(), totpLetzterSchritt: schritt, totpNotfall: notfall.hashes }).where(eq(benutzer.id, b.id));
       // Andere Geräte melden sich neu an – dann schon mit zweitem Faktor.

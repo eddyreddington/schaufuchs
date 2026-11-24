@@ -272,7 +272,7 @@ export const katalogHallenplan = {
         const neuEntfernt = stabilerText(entfernt ?? []) !== stabilerText(alt?.halle?.entfernt ?? []);
         const teileWeg = !input.zuruecksetzen && (alt?.halle?.objekte ?? []).some((o) => !(halle.objekte ?? []).some((x) => x.id === o.id));
         if (neuEntfernt || teileWeg) {
-          const { tiere } = await planTiere(s);
+          const { tiere } = await planTiere(s, undefined, tx);
           if (neuEntfernt) {
             const plan = planeHalle({ ...halle, entfernt: alt?.halle?.entfernt }, tiere, s.kaefigMasse, alt?.fest);
             const meldung = pruefeEntfernt(alt?.halle?.entfernt, entfernt, alt?.fest, plan);

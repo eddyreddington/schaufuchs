@@ -251,7 +251,7 @@ export const halleEinlieferung = {
       // Vergleich, Prüfung und „alt“ am gesperrten Stand: zwei Anfragen kurz nacheinander (Feld verlassen, dann Haken)
       // folgen so aufeinander, statt beide denselben alten Stand zu sehen (Entscheidung 033).
       return db.transaction(async (tx) => {
-        const [m] = await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)).for("update");
+        const [m] = await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)).for("no key update");
         if (!m) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
         // Phase frisch und geteilt gesperrt: ein gleichzeitiger Abschluss ist entweder sichtbar oder wartet. Nach der
         // Meldung, wie bei der Absage (Meldungen, dann Schau) – andersherum verklemmten sich beide.

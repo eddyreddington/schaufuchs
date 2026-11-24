@@ -134,7 +134,7 @@ export const katalogNummern = {
       if (!s.halle) throw fehler("BAD_REQUEST", "Erst unter „Hallenplan“ die Halle anlegen.");
       if (!s.hallenplanFest)
         throw fehler("BAD_REQUEST", "Erst den Plan festschreiben (im Halleneditor eine Reihe oder Platte verschieben) – sonst stellt die Software die Käfige nach den neuen Nummern wieder um.");
-      const { tiere } = await planTiere(s);
+      const { tiere } = await planTiere(s, undefined, tx);
       const gerechnet = planeHalle(s.halle, tiere, s.kaefigMasse, s.hallenplanFest);
       if (gerechnet.fest?.veraltet) throw fehler("BAD_REQUEST", "Der feste Plan passt nicht mehr zu Halle oder Käfigmaßen – erst „Plan neu setzen“ und den Plan wieder festschreiben.");
       // Nur nummerieren, kein Tier wechselt den Käfig: Tiere, die (noch) nicht im festen Plan stehen (Nachmeldungen), stehen

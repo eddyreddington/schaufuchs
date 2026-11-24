@@ -228,7 +228,7 @@ export const einstellungen = {
         await sperreTestschauExklusiv(tx, geladen.id);
         // Meldungen vor der Schau-Zeile (Entscheidung 033, wie Absage und Impfnachweis): die ohne Angabe werden unten
         // womöglich umgehängt.
-        await tx.select({ id: meldung.id }).from(meldung).where(and(eq(meldung.schauId, geladen.id), isNull(meldung.teilschau))).orderBy(asc(meldung.id)).for("update");
+        await tx.select({ id: meldung.id }).from(meldung).where(and(eq(meldung.schauId, geladen.id), isNull(meldung.teilschau))).orderBy(asc(meldung.id)).for("no key update");
         const [s] = await tx.select({ gedruckt: schau.katalogGedruckt, alt: schau.teilschauen }).from(schau).where(eq(schau.id, geladen.id)).for("no key update");
         const alt = teilschauenLesen(s!.alt);
         if (JSON.stringify(alt) === JSON.stringify(neu)) return { ok: true, geaendert: false };

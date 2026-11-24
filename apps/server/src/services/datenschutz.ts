@@ -7,7 +7,7 @@ import { fehler } from "../trpc";
 import { bereinigeMandate, lastschriftAuskunft, loescheLastschriftDaten } from "./datenschutz-lastschrift";
 import { ladeEintraege } from "./eintraege";
 import { spendenFuerAuskunft } from "./spenden";
-import { protokolliere, type Akteur } from "./protokoll";
+import { protokollZuletzt, protokolliere, type Akteur } from "./protokoll";
 import { testKopienVon } from "./testschau";
 import { kurzerFehler } from "./fehlertext";
 
@@ -317,7 +317,12 @@ async function anonymisiereProtokoll(tx: Tx, a: { id: number; organisationId: nu
  * werden nur die entbehrlichen Daten gelöscht und der Rest bis Fristende gesperrt (Art. 18); danach löscht die
  * tägliche Bereinigung. Die Meldungen bleiben als anonyme Zeilen erhalten, damit Katalog und Abrechnung stimmen.
  */
-export async function loescheAussteller(tx: Tx, organisationId: number, ausstellerId: number, grund: string, akteur: Akteur, jetzt = new Date()) {
+export async function loescheAussteller(...a: Parameters<typeof loescheAusstellerInnen>) {
+  // Protokoll zuletzt (Entscheidung 033): je Schau ein Eintrag, danach werden Aussteller und Meldungen noch geändert.
+  return protokollZuletzt(a[0], () => loescheAusstellerInnen(...a));
+}
+
+async function loescheAusstellerInnen(tx: Tx, organisationId: number, ausstellerId: number, grund: string, akteur: Akteur, jetzt = new Date()) {
   // Zeile sperren: ein gleichzeitiges „Mandat erfassen“ wartet und sieht danach den Löschwunsch.
   const [a] = await tx.select().from(aussteller).where(and(eq(aussteller.id, ausstellerId), eq(aussteller.organisationId, organisationId))).for("update");
   if (!a) throw fehler("NOT_FOUND", "Aussteller nicht gefunden.");

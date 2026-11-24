@@ -180,7 +180,7 @@ export function umrissEinheitlich(halle: Halle): Halle {
  * Blöcke, ihre Tiere stellt der neue Plan; was nicht in die Reihen passt, bekommt Käfigblöcke. Der Plan ist danach nicht fest.
  */
 export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<typeof ladeSchau>>, e: { basis?: string; halle?: z.infer<typeof HALLE_EINGABE>; grund: string }, inTx?: Tx) {
-  const { tiere } = await planTiere(s);
+  const { tiere } = await planTiere(s, undefined, inTx);
   // `inTx`: in der Transaktion des Aufrufers (Entscheiden für einen Entwurf: Einsetzen und Archivieren zusammen).
   const setzen = async (tx: Tx) => {
     const [aktuell] = await tx.select({ halle: schau.halle, fest: schau.hallenplanFest, phase: schau.phase }).from(schau).where(eq(schau.id, s.id)).for("no key update");
@@ -222,14 +222,17 @@ export async function planNeuSetzenIn(akteur: Akteur, s: Awaited<ReturnType<type
  * den Katalognummern, die Farben stehen so schon vorher). `geladen`: schon geladene Einträge der Schau (`ladeEintraege(s.id)`),
  * spart das zweite Laden (Prüfliste).
  */
-export async function planTiere(s: { id: number; kaefigRegeln: KaefigRegel[] | null; katalogStart: number; jugendSeparat: boolean; staemmeVorn: boolean; kaefigFolge: KaefigTyp[] | null; katalogSortierung?: SortierSchritt[] | null; einteilungJugendSeparat?: boolean }, geladen?: Eintrag[]) {
+export async function planTiere(s: { id: number; kaefigRegeln: KaefigRegel[] | null; katalogStart: number; jugendSeparat: boolean; staemmeVorn: boolean; kaefigFolge: KaefigTyp[] | null; katalogSortierung?: SortierSchritt[] | null; einteilungJugendSeparat?: boolean }, geladen?: Eintrag[], tx?: Tx) {
+  // In einer Transaktion, die Sperren hält, über deren Verbindung (Entscheidung 033): eine zweite aus dem Pool wartete
+  // womöglich auf die eigenen Sperren, und bei vollem Pool hängen alle.
+  const ex = tx ?? db;
   const [alle, einteilung, richter, rassenRegeln] = await Promise.all([
     // Alle gemeldeten Tiere (offen und bestätigt) – der Plan dient dem Aufbau vor der Einlieferung. Ein als fehlend
     // gemeldetes Tier behält seinen Käfig (der steht schon); nur abgelehnte und stornierte Meldungen fallen heraus.
-    (geladen ? Promise.resolve(geladen) : ladeEintraege(s.id)).then((l) => l.filter((e) => e.meldungStatus === "offen" || e.meldungStatus === "bestaetigt")),
-    db.select().from(prEinteilung).where(eq(prEinteilung.schauId, s.id)),
-    db.select({ id: preisrichter.id, name: preisrichter.name }).from(preisrichter).where(eq(preisrichter.schauId, s.id)).orderBy(asc(preisrichter.name)),
-    ladeRegeln(db, s.id),
+    (geladen ? Promise.resolve(geladen) : ladeEintraege(s.id, { ex: tx })).then((l) => l.filter((e) => e.meldungStatus === "offen" || e.meldungStatus === "bestaetigt")),
+    ex.select().from(prEinteilung).where(eq(prEinteilung.schauId, s.id)),
+    ex.select({ id: preisrichter.id, name: preisrichter.name }).from(preisrichter).where(eq(preisrichter.schauId, s.id)).orderBy(asc(preisrichter.name)),
+    ladeRegeln(ex, s.id),
   ]);
   const regeln = s.kaefigRegeln ?? [];
   const opts = { start: s.katalogStart, jugendSeparat: s.jugendSeparat, staemmeVorn: s.staemmeVorn, kaefigFolge: s.kaefigFolge, sortierung: s.katalogSortierung };

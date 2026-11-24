@@ -11,7 +11,7 @@ import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Tx } from "../db/client";
 import { hallenentwurf, katalogeintrag, schau } from "../db/schema";
-import { protokolliere } from "../services/protokoll";
+import { protokollZuletzt, protokolliere } from "../services/protokoll";
 import { adminProcedure, benutzerProcedure, dbId, fehler, ladeSchau, router } from "../trpc";
 import { HALLE_EINGABE, planNeuSetzenIn } from "./katalog";
 
@@ -153,9 +153,12 @@ export const hallenentwurfRouter = router({
       const frage = input.bestaetigt ? null : await rueckfrage(s);
       if (frage) return { rueckfrage: frage };
     }
-    return db.transaction(async (tx) => {
-      // Zuerst alle offenen Entwürfe der Schau sperren (nach id): zwei gleichzeitige Entscheidungen folgen so aufeinander,
-      // die zweite findet ihren Entwurf archiviert vor (Entscheidung 033). Danach sperrt das Einsetzen die Schau-Zeile.
+    // Protokoll zuletzt (Entscheidung 033): das Einsetzen protokolliert, danach werden Entwürfe noch gelöscht und archiviert.
+    return db.transaction((tx) => protokollZuletzt(tx, async () => {
+      // Erst die Schau-Zeile, dann alle offenen Entwürfe der Schau (nach id) – Reihenfolge wie beim Speichern eines
+      // Entwurfs (Entscheidung 033): zwei gleichzeitige Entscheidungen folgen so aufeinander, die zweite findet ihren
+      // Entwurf archiviert vor.
+      await tx.select({ id: schau.id }).from(schau).where(eq(schau.id, s.id)).for("no key update");
       await tx.select({ id: hallenentwurf.id }).from(hallenentwurf).where(and(eq(hallenentwurf.schauId, s.id), eq(hallenentwurf.archiviert, false))).orderBy(asc(hallenentwurf.id)).for("update");
       if (input.id) {
         // Laden (mit und ohne festen Plan), Entwurf entfernen und Archivieren zusammen – alles oder nichts. Unter der Sperre
@@ -173,6 +176,6 @@ export const hallenentwurfRouter = router({
         .returning({ id: hallenentwurf.id, name: hallenentwurf.name });
       await protokolliere(tx, { schauId: s.id, tabelle: "schau", datensatzId: s.id, aktion: "Hallenplan entschieden", neu: { gewaehlt: gewaehlt ?? "aktueller Plan", insArchiv: archiviert.map((x) => x.name) }, akteur: ctx });
       return { archiviert: archiviert.length };
-    });
+    }));
   }),
 });

@@ -18,6 +18,7 @@ import { aussteller, benutzer, farbenschlag, gebuehr, katalogBeitrag, katalogGes
 import { meldebetrag } from "./services/eintraege";
 import { protokolliere } from "./services/protokoll";
 import { sperreTestschauExklusiv } from "./services/testschau";
+import { sperreKasse } from "./services/kasse";
 
 export const MERKMAL = "276 16 999";
 
@@ -428,8 +429,13 @@ export async function zuruecksetzen(slug: string, opts: { leise?: boolean } = {}
   await db.transaction(async (tx) => {
     // Laufende Meldungen dieser Schau abwarten, neue warten (wie beim Kennzeichnen und Löschen einer Testschau).
     await sperreTestschauExklusiv(tx, s.id);
-    await tx.execute(sqlText`set local schau.loeschen = 'ja'`);
     const id = s.id;
+    // Sperrreihenfolge nach Entscheidung 033: Kasse, Meldungen (werden gelöscht), dann die Schau-Zeile – Noten, Preise,
+    // Phasenwechsel und Einstellungen dieser Schau warten, statt mitten ins Zurücksetzen zu schreiben.
+    await sperreKasse(tx, id);
+    await tx.execute(sqlText`select id from meldung where schau_id = ${id} order by id for update`);
+    await tx.execute(sqlText`select id from schau where id = ${id} for no key update`);
+    await tx.execute(sqlText`set local schau.loeschen = 'ja'`);
     await tx.execute(sqlText`delete from verkauf where katalogeintrag_id in (select id from katalogeintrag where schau_id = ${id})`);
     // Vergaben gestifteter Preise zeigen auf ihre Stiftung (RESTRICT): vor den Stiftungen löschen.
     await tx.execute(sqlText`delete from preisvergabe where katalogeintrag_id in (select id from katalogeintrag where schau_id = ${id})`);

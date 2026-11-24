@@ -81,7 +81,7 @@ export async function sitzungWennUnveraendert(stand: KontoStand): Promise<string
       .select({ email: benutzer.email, passwortHash: benutzer.passwortHash, aktiv: benutzer.aktiv, geloeschtAm: benutzer.geloeschtAm, totpAktivSeit: benutzer.totpAktivSeit })
       .from(benutzer)
       .where(eq(benutzer.id, stand.id))
-      .for("update");
+      .for("no key update");
     const zeit = (d: Date | null) => d?.getTime() ?? 0;
     if (!b || !b.aktiv || b.geloeschtAm || b.email !== stand.email || b.passwortHash !== stand.passwortHash || zeit(b.totpAktivSeit) !== zeit(stand.totpAktivSeit)) {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "Die Anmeldung ist abgelaufen. Bitte noch einmal anmelden." });

@@ -51,7 +51,7 @@ export const spendenRouter = router({
   steuerSpeichern: adminProcedure.input(z.object({ steuer: z.unknown() })).mutation(async ({ ctx, input }) => {
     const neu = steuerstatusLesen(input.steuer);
     await db.transaction(async (tx) => {
-      const [alt] = await tx.select({ steuer: organisation.steuer }).from(organisation).where(eq(organisation.id, ctx.benutzer.organisationId)).for("update");
+      const [alt] = await tx.select({ steuer: organisation.steuer }).from(organisation).where(eq(organisation.id, ctx.benutzer.organisationId)).for("no key update");
       await tx.update(organisation).set({ steuer: neu }).where(eq(organisation.id, ctx.benutzer.organisationId));
       await protokolliere(tx, { schauId: null, tabelle: "organisation", datensatzId: ctx.benutzer.organisationId, aktion: "Steuerliche Angaben", alt: alt?.steuer ?? null, neu, akteur: ctx });
     });

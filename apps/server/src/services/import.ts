@@ -13,7 +13,7 @@ import { fehler } from "../trpc";
 import { ausstellerVerwaltungEingabe, speichereAussteller } from "./aussteller";
 import { inOffenerLastschrift, offenerLauf, sperreKasse } from "./kasse";
 import { ausstellerEingabe, bindungen, meldungEingabe, positionEingabe, speichereMeldung } from "./meldung";
-import { type Akteur, protokolliere } from "./protokoll";
+import { type Akteur, type Eintrag, protokollZuletzt, protokolliere } from "./protokoll";
 import { ausstellerDerSchau, echteAussteller } from "./testschau";
 
 export interface ImportEingabe {
@@ -31,6 +31,8 @@ type Benutzer = Akteur & { benutzer: { id: number; name: string } };
 
 /** Phasen, in denen noch Meldungen hinzukommen dürfen (und ein Import zurückgenommen werden kann). */
 const IMPORT_PHASEN: string[] = ["vorbereitung", "meldung", "katalog"];
+/** Kennung der Import-Sperre je Verein (pg_advisory_xact_lock, zweiter Schlüssel der Verein) – eigener Schlüsselraum. */
+const IMPORT_SPERRE = 0x494d5054; // "IMPT"
 export const rassenSchluessel = (r: string, f: string) => suchNorm(`${r} ${f}`);
 const namensSchluessel = (a: Pick<ImportAussteller, "vorname" | "nachname" | "plz">) => `name:${a.vorname.trim().toLowerCase()}|${a.nachname.trim().toLowerCase()}|${a.plz.trim()}`;
 const stammdaten = (d: ImportAussteller) => ({ vorname: d.vorname, nachname: d.nachname, strasse: d.strasse, plz: d.plz, ort: d.ort, telefon: d.telefon, email: d.email, verein: d.verein, kreisverband: d.kreisverband, registriernummer: d.registriernummer, istPreisrichter: false, iban: "", kontoinhaber: "" });
@@ -225,10 +227,16 @@ export async function importPruefen(q: Lesen, organisationId: number, e: ImportE
 
 /** Übernimmt den Import in einer Transaktion. Zeilen mit Fehlern gehen nicht mit. */
 export async function importUebernehmen(organisationId: number, e: ImportEingabe & { bestaetigen: boolean; zustimmung: boolean }, akteur: Benutzer) {
-  return db.transaction(async (tx) => {
+  // Protokoll zuletzt (Entscheidung 033): jede Gruppe protokolliert über speichereMeldung, sperrt danach aber weiter
+  // (Aussteller, Namenssperre). Die Einträge werden gesammelt und erst am Ende geschrieben.
+  return db.transaction((tx) => protokollZuletzt(tx, async () => {
     // Zwei gleichzeitige Importe desselben Vereins (Doppelklick) laufen nacheinander – der zweite sieht den ersten.
-    await tx.execute(sql`select pg_advisory_xact_lock(${organisationId}, hashtext('import'))`);
+    await tx.execute(sql`select pg_advisory_xact_lock(${IMPORT_SPERRE}::int, ${organisationId}::int)`);
     const p = await importPruefen(tx, organisationId, e);
+    const gewaehlt = p.rassen.filter((r) => r.quelle === "gewaehlt" && r.farbenschlagId != null);
+    // Die Vereinszeile vor allen Aussteller- und Meldungszeilen (Reihenfolge Organisation → Aussteller → Meldung);
+    // „no key update“: Einfügungen mit Fremdschlüssel auf den Verein warten nicht.
+    const [o] = gewaehlt.length ? await tx.select({ z: organisation.importZuordnungen }).from(organisation).where(eq(organisation.id, organisationId)).for("no key update") : [];
     const gut = new Map(p.zeilen.filter((z) => !z.fehler.length).map((z) => [z.nr, z]));
     const ausstellerIds: number[] = [];
     const meldungIds: number[] = [];
@@ -270,14 +278,12 @@ export async function importUebernehmen(organisationId: number, e: ImportEingabe
       }
     }
     // Von Hand gewählte Zuordnungen lernen – beim nächsten Import stehen sie schon da.
-    const gewaehlt = p.rassen.filter((r) => r.quelle === "gewaehlt" && r.farbenschlagId != null);
     if (gewaehlt.length) {
       const namen = await tx
         .select({ id: farbenschlag.id, rasse: rasse.name, farbenschlag: farbenschlag.name })
         .from(farbenschlag)
         .innerJoin(rasse, eq(rasse.id, farbenschlag.rasseId))
         .where(inArray(farbenschlag.id, gewaehlt.map((r) => r.farbenschlagId!)));
-      const [o] = await tx.select({ z: organisation.importZuordnungen }).from(organisation).where(eq(organisation.id, organisationId)).for("update");
       const neu = { ...(o?.z ?? {}) };
       for (const r of gewaehlt) {
         const n = namen.find((x) => x.id === r.farbenschlagId);
@@ -293,7 +299,7 @@ export async function importUebernehmen(organisationId: number, e: ImportEingabe
     const ergebnis = { aussteller: ausstellerIds.length, meldungen: meldungIds.length, tiere: anzahlTiere, ausgelassen: p.zeilen.length - gut.size };
     await protokolliere(tx, { schauId, tabelle: "importlauf", datensatzId: lauf!.id, aktion: "Import", neu: { datei: e.dateiname, ...ergebnis, meldungIds, ausstellerIds }, akteur });
     return { id: lauf!.id, ...ergebnis };
-  });
+  }));
 }
 
 /**
@@ -319,6 +325,7 @@ export async function importZuruecknehmen(tx: Tx, organisationId: number, id: nu
   // Erst die Kasse, dann die Meldungen (Reihenfolge wie Statuswechsel, Zahlung und Bearbeiten – Entscheidung 033).
   if (lauf.meldungIds.length && lauf.schauId != null) await sperreKasse(tx, lauf.schauId);
   // Die Meldungen sperren: Ein gleichzeitiger Statuswechsel wartet und wird danach nicht still mitgelöscht.
+  const eintraegeZuletzt: Eintrag[] = [];
   const meldungen = lauf.meldungIds.length && lauf.schauId != null ? await tx.select({ id: meldung.id, ausstellerId: meldung.ausstellerId }).from(meldung).where(and(inArray(meldung.id, lauf.meldungIds), eq(meldung.schauId, lauf.schauId))).for("update") : [];
   if (meldungen.length) {
     const sid = lauf.schauId!;
@@ -348,11 +355,12 @@ export async function importZuruecknehmen(tx: Tx, organisationId: number, id: nu
       ...(await bindungen(tx, eintraege.map((x) => x.id), { loeschen: true, statuswechsel: true })),
     ].filter(Boolean);
     if (gruende.length) throw fehler("BAD_REQUEST", `Der Import lässt sich nicht mehr zurücknehmen: ${gruende.join("; ")}. Einzelne Meldungen bitte von Hand stornieren.`);
-    // Je Meldung ein Eintrag im Protokoll – eine spätere Reklamation sieht so, wo die Meldung geblieben ist.
-    for (const m of meldungen) {
-      await protokolliere(tx, { schauId: sid, tabelle: "meldung", datensatzId: m.id, aktion: "Import zurückgenommen", alt: { ausstellerId: m.ausstellerId, tiere: eintraege.filter((x) => x.meldungId === m.id).length }, grund: `Importlauf ${lauf.id}`, akteur });
-    }
     await tx.delete(meldung).where(inArray(meldung.id, mIds));
+    // Je Meldung ein Eintrag im Protokoll – eine spätere Reklamation sieht so, wo die Meldung geblieben ist. Gesammelt
+    // und erst nach allen Löschungen geschrieben (Entscheidung 033: Protokoll zuletzt).
+    for (const m of meldungen) {
+      eintraegeZuletzt.push({ schauId: sid, tabelle: "meldung", datensatzId: m.id, aktion: "Import zurückgenommen", alt: { ausstellerId: m.ausstellerId, tiere: eintraege.filter((x) => x.meldungId === m.id).length }, grund: `Importlauf ${lauf.id}`, akteur });
+    }
   }
   // Neu angelegte Aussteller nur, wenn sie danach niemand bearbeitet hat und nichts mehr auf sie verweist.
   const bearbeitet = new Set((await spaeter("aussteller", lauf.ausstellerIds)).map((x) => x.id));
@@ -369,6 +377,7 @@ export async function importZuruecknehmen(tx: Tx, organisationId: number, id: nu
   }
   await tx.update(importlauf).set({ zurueckgenommenAm: new Date(), zurueckgenommenVon: akteur.benutzer.id }).where(eq(importlauf.id, lauf.id));
   const ergebnis = { meldungen: meldungen.length, aussteller: entfernt.length };
+  for (const x of eintraegeZuletzt) await protokolliere(tx, x);
   await protokolliere(tx, { schauId: lauf.schauId, tabelle: "importlauf", datensatzId: lauf.id, aktion: "Import zurückgenommen", alt: { ...ergebnis, meldungIds: meldungen.map((m) => m.id), ausstellerIds: entfernt }, akteur });
   return ergebnis;
 }

@@ -8,8 +8,8 @@ import { and, asc, eq } from "drizzle-orm";
 import { db, type Tx } from "../db/client";
 import { preisrichter } from "../db/schema";
 import { TRPCError } from "@trpc/server";
-import { fehler } from "../trpc";
-import { protokolliere, type Akteur } from "./protokoll";
+import { fehler, sqlZustand } from "../trpc";
+import { protokollZuletzt, protokolliere, type Akteur } from "./protokoll";
 
 export interface PreisrichterEingabe {
   schauId: number;
@@ -53,7 +53,9 @@ export function gruppenAusEingabe(gruppen: string[]): string[] {
 export async function speicherePreisrichter(input: PreisrichterEingabe, akteur: Akteur): Promise<{ id: number }> {
   const { id, gruppen, ...rest } = input;
   const werte = { ...rest, ...(gruppen ? { gruppen: gruppenAusEingabe(gruppen) } : {}) };
-  return db.transaction(async (tx) => {
+  // „no key update“ und Protokoll zuletzt (Entscheidung 033): ein Protokolleintrag eines Tablets hält die Kette und
+  // danach FOR KEY SHARE auf seinen Preisrichter – mit FOR UPDATE und einem Eintrag mitten drin verklemmten sich beide.
+  return db.transaction((tx) => protokollZuletzt(tx, async () => {
     // Gesperrt (in fester Folge): ändert eine andere Anfrage gleichzeitig den Haken „Obmann“, wartet diese und sieht
     // danach den neuen Stand – sonst zeigte die Zuordnung womöglich auf einen, der kein Obmann mehr ist.
     const derSchau = await tx
@@ -61,7 +63,7 @@ export async function speicherePreisrichter(input: PreisrichterEingabe, akteur: 
       .from(preisrichter)
       .where(eq(preisrichter.schauId, input.schauId))
       .orderBy(asc(preisrichter.id))
-      .for("update");
+      .for("no key update");
     // Beim Ändern zählt der neue Stand des Preisrichters selbst (wird er gerade Obmann, ist er es noch nicht für sich).
     const grund = pruefeObmann(id, werte.obmannId, derSchau);
     if (grund === "selbst") throw fehler("BAD_REQUEST", "Ein Preisrichter kann nicht sein eigener Obmann sein.");
@@ -90,7 +92,7 @@ export async function speicherePreisrichter(input: PreisrichterEingabe, akteur: 
       });
     if (alt.istObmann && !neu!.istObmann) await loeseZuordnungen(tx, input.schauId, id, akteur);
     return { id };
-  });
+  }));
 }
 
 /**
@@ -99,15 +101,18 @@ export async function speicherePreisrichter(input: PreisrichterEingabe, akteur: 
  */
 export async function loeschePreisrichter(schauId: number, id: number, akteur: Akteur): Promise<void> {
   try {
-    await db.transaction(async (tx) => {
-      const [alt] = await tx.select().from(preisrichter).where(and(eq(preisrichter.id, id), eq(preisrichter.schauId, schauId))).for("update");
+    // Erst „no key update“; das Löschen selbst wartet dann auf Einfügungen, die auf ihn verweisen – das Protokoll kommt
+    // erst danach (Entscheidung 033), die Kette hält diese Transaktion beim Warten also nicht.
+    await db.transaction((tx) => protokollZuletzt(tx, async () => {
+      const [alt] = await tx.select().from(preisrichter).where(and(eq(preisrichter.id, id), eq(preisrichter.schauId, schauId))).for("no key update");
       if (!alt) throw fehler("NOT_FOUND", "Preisrichter nicht gefunden.");
       await loeseZuordnungen(tx, schauId, id, akteur);
       await tx.delete(preisrichter).where(eq(preisrichter.id, id));
       await protokolliere(tx, { schauId, tabelle: "preisrichter", datensatzId: id, aktion: "gelöscht", alt: auswahl(alt), akteur });
-    });
+    }));
   } catch (e) {
-    if (e instanceof TRPCError) throw e;
+    // Nur die Fremdschlüssel-Verletzung (23503) heißt „schon bewertet“; Verklemmung oder Sperr-Wartezeit gehen weiter.
+    if (e instanceof TRPCError || sqlZustand(e) !== "23503") throw e;
     throw fehler("CONFLICT", "Der Preisrichter hat schon bewertet und kann nicht gelöscht werden.");
   }
 }

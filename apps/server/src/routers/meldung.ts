@@ -30,7 +30,7 @@ async function ladeMeldung(organisationId: number, meldungId: number) {
 export async function pruefeBezahlt(meldungId: number, akteur: Akteur) {
   // Unter Zeilensperre und nur aus „offen“: eine gleichzeitige Stornierung bleibt bestehen.
   return db.transaction(async (tx) => {
-    const [m] = await tx.select().from(meldung).where(eq(meldung.id, meldungId)).for("update");
+    const [m] = await tx.select().from(meldung).where(eq(meldung.id, meldungId)).for("no key update");
     if (m?.status !== "offen") return false;
     const b = await meldebetrag(tx, meldungId);
     if (!(b.summeCent > 0 && b.bezahltCent >= b.summeCent)) return false;
@@ -232,7 +232,7 @@ export const meldungRouter = router({
         // Entscheidung 033). Danach Phase und Status gesperrt neu lesen: Rechte, Bindungen und Protokoll beruhen auf dem
         // aktuellen Stand (kein Wettlauf mit Stornierung, Ablehnung, Verfall oder Abschluss).
         const phase = await sperreKasseMitPhase(tx, geladen.schauId);
-        const [frisch] = await tx.select().from(meldung).where(eq(meldung.id, geladen.id)).for("update");
+        const [frisch] = await tx.select().from(meldung).where(eq(meldung.id, geladen.id)).for("no key update");
         if (!frisch) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
         pruefe(phase, frisch.verfallenCent);
         const m = frisch;
@@ -391,7 +391,7 @@ export const meldungRouter = router({
       if (m.status !== "storniert" && m.status !== "abgelehnt") throw fehler("BAD_REQUEST", "Verfall gibt es nur bei stornierten oder abgelehnten Meldungen.");
       await db.transaction(async (tx) => {
         pruefeNichtAbgeschlossen({ phase: await sperreKasseMitPhase(tx, m.schauId) });
-        const [akt] = await tx.select().from(meldung).where(eq(meldung.id, m.id)).for("update");
+        const [akt] = await tx.select().from(meldung).where(eq(meldung.id, m.id)).for("no key update");
         // Gesperrt neu: eine inzwischen wieder aufgenommene Meldung bekommt keinen Verfall.
         if (akt!.status !== "storniert" && akt!.status !== "abgelehnt") throw fehler("BAD_REQUEST", "Verfall gibt es nur bei stornierten oder abgelehnten Meldungen.");
         const [b] = await tx.select({ s: sum(zahlung.betragCent) }).from(zahlung).where(eq(zahlung.meldungId, m.id));

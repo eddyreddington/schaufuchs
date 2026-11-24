@@ -17,7 +17,7 @@ import { fehler, publicProcedure, router } from "../trpc";
 import { anrede, eingangsText, meldungsLink } from "./meldung";
 import { sucheFarbenschlag } from "./stammdaten";
 import { oeffentlicherStand } from "../services/zwischenspeicher";
-import { ausstellerDerSchau } from "../services/testschau";
+import { ausstellerDerSchau, sperreTestschauGeteilt } from "../services/testschau";
 import { bankAngabe, ueberweisung } from "../services/ueberweisung";
 
 async function ladeOeffentlich(slug: string) {
@@ -269,7 +269,7 @@ export const oeffentlichRouter = router({
       await db.transaction(async (tx) => {
         // Gesperrt neu lesen: ein Doppelklick schreibt keinen zweiten Eintrag, und ein gleichzeitiges Bearbeiten durch die
         // Ausstellungsleitung liest die Zeile erst danach (Entscheidung 033).
-        const [frisch] = await tx.select({ am: meldung.onlineZustimmungAm }).from(meldung).where(eq(meldung.id, m.id)).for("update");
+        const [frisch] = await tx.select({ am: meldung.onlineZustimmungAm }).from(meldung).where(eq(meldung.id, m.id)).for("no key update");
         if (!!frisch?.am === input.erlaubt) return;
         await tx
           .update(meldung)
@@ -381,6 +381,9 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
     // Die Prüfungen oben sind die schnelle Antwort. Maßgeblich ist der Stand unter der Sperre je Schau: zwei gleichzeitige
     // Meldungen sähen sonst beide noch Platz in der Halle (oder die Meldephase noch offen).
     await sperreOnlineMeldung(tx, s.id);
+    // Testschau-Sperre (geteilt) vor der Sperre je Adresse – Reihenfolge nach Entscheidung 033; speichereMeldung nimmt
+    // sie noch einmal (geteilt, ohne Warten).
+    await sperreTestschauGeteilt(tx, s.id);
     const [frisch] = await tx.select().from(schau).where(eq(schau.id, s.id));
     const jetzt = await meldungOffen(frisch!, input.sprache, tx);
     if (!jetzt.offen) throw fehler("BAD_REQUEST", jetzt.grund);

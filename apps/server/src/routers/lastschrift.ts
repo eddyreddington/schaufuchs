@@ -13,7 +13,7 @@ import { meldebetraege } from "../services/eintraege";
 import { offeneLastschrift, offeneLastschriftenDesVereins, offenerLauf, sperreKasse, sperreKasseMitPhase } from "../services/kasse";
 import { sendeMail } from "../services/post";
 import { sperreBestaetigungen } from "../services/spenden";
-import { protokolliere } from "../services/protokoll";
+import { protokollZuletzt, protokolliere } from "../services/protokoll";
 import { adminProcedure, dbId, fehler, kalenderdatum, ladeSchau, router } from "../trpc";
 
 const datum = kalenderdatum();
@@ -108,7 +108,7 @@ export const lastschriftRouter = router({
     }
     await db.transaction(async (tx) => {
       // Gesperrt lesen: zwei gleichzeitige Änderungen stehen sonst beide mit demselben alten Wert im Protokoll.
-      const [alt] = await tx.select({ g: organisation.glaeubigerId }).from(organisation).where(eq(organisation.id, ctx.benutzer.organisationId)).for("update");
+      const [alt] = await tx.select({ g: organisation.glaeubigerId }).from(organisation).where(eq(organisation.id, ctx.benutzer.organisationId)).for("no key update");
       if (alt?.g === id) return;
       await tx.update(organisation).set({ glaeubigerId: id }).where(eq(organisation.id, ctx.benutzer.organisationId));
       await protokolliere(tx, { schauId: null, tabelle: "organisation", datensatzId: ctx.benutzer.organisationId, aktion: "Gläubiger-ID", alt: alt?.g ?? "", neu: id, akteur: ctx });
@@ -269,7 +269,8 @@ export const lastschriftRouter = router({
   buchen: adminProcedure.input(z.object({ schauId: dbId, nachrichtId: z.string().max(40) })).mutation(async ({ ctx, input }) => {
     const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
     if (s.phase === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
-    return db.transaction(async (tx) => {
+    // Protokoll zuletzt (Entscheidung 033): je Posten ein Eintrag, danach werden noch Mandate geändert.
+    return db.transaction((tx) => protokollZuletzt(tx, async () => {
       if ((await sperreKasseMitPhase(tx, s.id)) === "abgeschlossen") throw fehler("BAD_REQUEST", "Die Schau ist abgeschlossen.");
       const l = await offeneLastschrift(tx, s.id);
       if (!l || l.nachrichtId !== input.nachrichtId) throw fehler("CONFLICT", "Diese Lastschriftdatei ist nicht mehr offen.");
@@ -282,7 +283,7 @@ export const lastschriftRouter = router({
       await tx.update(lastschriftLauf).set({ status: "gebucht", abgeschlossenAm: new Date(), daten: ohneBankdaten(l.daten) }).where(eq(lastschriftLauf.id, l.id));
       await protokolliere(tx, { schauId: s.id, tabelle: "zahlung", datensatzId: null, aktion: "Lastschriften gebucht", neu: { nachrichtId: l.nachrichtId, anzahl: l.daten.posten.length, summeCent: l.daten.summeCent }, akteur: ctx });
       return { anzahl: l.daten.posten.length, summeCent: l.daten.summeCent };
-    });
+    }));
   }),
 
   /** Rücklastschrift: der Betrag kam zurück – Gegenbuchung, das Meldegeld ist wieder offen. */

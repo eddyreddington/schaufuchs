@@ -8,6 +8,7 @@ import { db } from "../../db/client";
 import { benutzer, organisation, postausgang } from "../../db/schema";
 import { Bremse, Wartezeit } from "../../services/bremse";
 import { legeMailAb, MAX_VERSUCHE, sendeMail, versendeAbgelegt } from "../../services/post";
+import { protokollZuletzt } from "../../services/protokoll";
 import { fehler } from "../../trpc";
 
 export const passwort = z.string().min(10, "Das Passwort braucht mindestens 10 Zeichen.").max(200);
@@ -110,7 +111,10 @@ export async function verwalteVerein<T>(ctx: Verwalter, arbeit: (tx: Tx) => Prom
       .from(benutzer)
       .where(and(eq(benutzer.id, ctx.benutzer.id), eq(benutzer.rolle, "admin"), eq(benutzer.aktiv, true), isNull(benutzer.geloeschtAm)));
     if (!ich) throw fehler("FORBIDDEN", "Nur für Administratoren.");
-    return arbeit(tx);
+    // Protokoll zuletzt (Entscheidung 033): Benutzerzeile (E-Mail und Einladung stehen in eindeutigen Indizes – ihr
+    // UPDATE sperrt wie FOR UPDATE und wartet auf Einfügungen, die auf den Benutzer verweisen), Sitzungen und Mail im
+    // Postausgang erst schreiben, dann protokollieren – sonst hielte die Transaktion beim Warten die Protokoll-Kette.
+    return protokollZuletzt(tx, () => arbeit(tx));
   });
 }
 

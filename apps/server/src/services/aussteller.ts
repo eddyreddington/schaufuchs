@@ -41,6 +41,9 @@ const maske = (k: string, v: string) => (k === "iban" && v ? `…${v.slice(-4)}`
 const mitgliedWert = (m: "auto" | "ja" | "nein") => (m === "ja" ? true : m === "nein" ? false : null);
 const mitgliedText = (m: boolean | null) => (m == null ? "automatisch" : m ? "ja" : "nein");
 
+/** Kennung der Sperre je Verein und Name beim Anlegen (erster Schlüssel fest, zweiter aus Verein und Name). */
+const NAMEN_SPERRE = 0x4e414d45; // "NAME"
+
 /** Schreibweisen des eigenen Vereins. */
 export async function eigeneVereinsnamen(tx: Pick<Tx, "select">, organisationId: number): Promise<string[]> {
   const [o] = await tx.select({ n: organisation.vereinsnamen }).from(organisation).where(eq(organisation.id, organisationId));
@@ -53,7 +56,7 @@ export async function speichereAussteller(tx: Tx, organisationId: number, input:
   const mitglied = mitgliedWert(input.mitglied);
   if (!input.id) {
     // Zwei gleichzeitige Anlagen derselben Person: die zweite wartet und sieht dann die erste.
-    await tx.execute(sql`select pg_advisory_xact_lock(${organisationId}, hashtext(lower(${d.vorname} || ' ' || ${d.nachname})))`);
+    await tx.execute(sql`select pg_advisory_xact_lock(${NAMEN_SPERRE}::int, hashtext(lower(${`${organisationId}:${d.vorname} ${d.nachname}`})))`);
     if (!input.trotzdem) {
       const gleich = await tx
         .select({ id: aussteller.id })
@@ -156,7 +159,7 @@ export async function setzeVereinsnamen(tx: Tx, organisationId: number, namen: s
     gesehen.add(k);
     neu.push(n);
   }
-  const [o] = await tx.select({ n: organisation.vereinsnamen }).from(organisation).where(eq(organisation.id, organisationId)).for("update");
+  const [o] = await tx.select({ n: organisation.vereinsnamen }).from(organisation).where(eq(organisation.id, organisationId)).for("no key update");
   const alt = o?.n ?? [];
   if (JSON.stringify(alt) === JSON.stringify(neu)) return { namen: neu };
   await tx.update(organisation).set({ vereinsnamen: neu }).where(eq(organisation.id, organisationId));

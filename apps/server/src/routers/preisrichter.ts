@@ -7,7 +7,7 @@ import { preisrichter, prEinteilung, prZuteilung, schau, sitzung } from "../db/s
 import { ladeEintraege } from "../services/eintraege";
 import { bereicheDerSchau, einteilSchluessel, einteilTier, jugendSeparatEingeteilt, ladeRegeln, sperreEinteilung } from "../services/einteilung";
 import type { Akteur } from "../services/protokoll";
-import { protokolliere } from "../services/protokoll";
+import { protokollZuletzt, protokolliere } from "../services/protokoll";
 import { pinBremse, pinWartezeitJeRichter } from "./bewertung";
 import { zuteilung } from "../services/pruefung";
 import { oeffentlichSichtbarProcedure, benutzerProcedure, fehler, ladeSchau, router, dbId } from "../trpc";
@@ -86,16 +86,19 @@ async function schreibeEinteilung(
     const liste = umgehaengt.slice(0, 10).join(", ") + (umgehaengt.length > 10 ? " …" : "");
     throw fehler("CONFLICT", `Bereits bewertete Tiere wechseln den Preisrichter: Nr. ${liste}.`);
   }
-  if (zusatz) await zusatz(tx);
-  await tx.delete(prEinteilung).where(eq(prEinteilung.schauId, schauId));
-  if (sortiert.length) await tx.insert(prEinteilung).values(sortiert.map((e) => ({ ...e, schauId: schauId })));
-  await protokolliere(tx, {
-    schauId: schauId,
-    tabelle: "pr_einteilung",
-    datensatzId: null,
-    aktion: aktion ?? (zusatz ? "aus Einteilung nach Rassen" : "gesetzt"),
-    neu: umgehaengt.length ? { einteilung: sortiert, umgehaengt } : sortiert,
-    akteur: ctx,
+  // Protokoll zuletzt (Entscheidung 033): `zusatz` protokolliert, danach wird die Einteilung noch geschrieben.
+  await protokollZuletzt(tx, async () => {
+    if (zusatz) await zusatz(tx);
+    await tx.delete(prEinteilung).where(eq(prEinteilung.schauId, schauId));
+    if (sortiert.length) await tx.insert(prEinteilung).values(sortiert.map((e) => ({ ...e, schauId: schauId })));
+    await protokolliere(tx, {
+      schauId: schauId,
+      tabelle: "pr_einteilung",
+      datensatzId: null,
+      aktion: aktion ?? (zusatz ? "aus Einteilung nach Rassen" : "gesetzt"),
+      neu: umgehaengt.length ? { einteilung: sortiert, umgehaengt } : sortiert,
+      akteur: ctx,
+    });
   });
 }
 

@@ -72,7 +72,7 @@ export const phasen = {
         .from(meldung)
         .where(and(eq(meldung.schauId, s.id), inArray(meldung.status, ["offen", "bestaetigt"])))
         .orderBy(asc(meldung.id))
-        .for("update");
+        .for("no key update");
       const [jetzt] = await tx.select({ phase: schau.phase, abgesagtAm: schau.abgesagtAm, katalogGedruckt: schau.katalogGedruckt }).from(schau).where(eq(schau.id, s.id)).for("no key update");
       pruefe(jetzt!);
       // Wie beim einzelnen Storno: was in der offenen Lastschriftdatei steht, zieht die Bank ein – erst verwerfen.

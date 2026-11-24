@@ -9,7 +9,7 @@ import { meldebetrag } from "./eintraege";
 import { inOffenerLastschrift, LASTSCHRIFT_OFFEN, offenerLauf, sperreKasse } from "./kasse";
 import { MELDUNG_VERALTET, meldungStand } from "./meldung-stand";
 import { pruefeAusstellerZurSchau, sperreTestschauGeteilt, testSchauIdFuer } from "./testschau";
-import { protokolliere, type Akteur } from "./protokoll";
+import { protokollZuletzt, protokolliere, type Akteur } from "./protokoll";
 import { meldungsspendeAnlegen } from "./spenden";
 
 /** Registriernummer nach § 26 ViehVerkV, einheitlich geschrieben; leer bleibt leer (Pflicht prüfen die Aufrufer). */
@@ -132,7 +132,13 @@ const ANFRAGE_SPERRE = 0x4d414e46; // "MANF"
  * `ibanVerdeckt`: Das Formular kam mit gekürzter IBAN (Helfer ohne Bankdaten-Recht) – ein leeres IBAN-Feld heißt dann
  * „unverändert“, nicht „löschen“.
  */
-export async function speichereMeldung(tx: Tx, organisationId: number, input: MeldungEingabe, akteur: Akteur, opts: { istAdmin?: boolean; ibanVerdeckt?: boolean; /** Online-Meldung eines bekannten Ausstellers: Stammdaten bleiben, wie sie sind. */ bestehendenNichtAendern?: boolean; /** Online-Meldung: Sprache des Formulars – für Fehlermeldungen und, bei einer neuen Meldung, gespeichert (Entscheidung 020). */ sprache?: Sprache } = {}) {
+export async function speichereMeldung(...a: Parameters<typeof speichereMeldungInnen>) {
+  // Protokoll zuletzt (Entscheidung 033): Bankdaten in anderen Schauen, Aussteller und Meldung werden protokolliert,
+  // während danach noch Tiere geschrieben und gesperrt werden – die Einträge erst am Ende.
+  return protokollZuletzt(a[0], () => speichereMeldungInnen(...a));
+}
+
+async function speichereMeldungInnen(tx: Tx, organisationId: number, input: MeldungEingabe, akteur: Akteur, opts: { istAdmin?: boolean; ibanVerdeckt?: boolean; /** Online-Meldung eines bekannten Ausstellers: Stammdaten bleiben, wie sie sind. */ bestehendenNichtAendern?: boolean; /** Online-Meldung: Sprache des Formulars – für Fehlermeldungen und, bei einer neuen Meldung, gespeichert (Entscheidung 020). */ sprache?: Sprache } = {}) {
   await sperreTestschauGeteilt(tx, input.schauId);
   // Bearbeiten: erst die Kasse, dann Schau und Meldung frisch (Reihenfolge Kasse vor Zeile, Entscheidung 033) – so sehen
   // Phase, Einwilligung und Stand, was eine Buchung oder ein Abschluss während des Wartens geändert hat.
@@ -191,7 +197,7 @@ export async function speichereMeldung(tx: Tx, organisationId: number, input: Me
     const [kopf] = await tx.select({ ausstellerId: meldung.ausstellerId }).from(meldung).where(and(eq(meldung.id, input.meldungId), eq(meldung.schauId, s.id)));
     if (!kopf) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
     await tx.select({ id: aussteller.id }).from(aussteller).where(eq(aussteller.id, kopf.ausstellerId)).for("update");
-    vorherige = (await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)).for("update"))[0]!;
+    vorherige = (await tx.select().from(meldung).where(eq(meldung.id, input.meldungId)).for("no key update"))[0]!;
     await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(eq(katalogeintrag.meldungId, vorherige.id)).orderBy(asc(katalogeintrag.id)).for("update");
     if (input.stand !== undefined && input.stand !== (await meldungStand(tx, vorherige.id))) throw fehler("CONFLICT", MELDUNG_VERALTET);
   }
