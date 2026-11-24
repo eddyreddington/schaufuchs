@@ -1,6 +1,6 @@
 # 033 Gleichzeitiges Arbeiten: Sperren und Stand-Prüfung
 
-**Stand:** gilt (24.11.2026)
+**Stand:** gilt (24.11.2026; Sperrreihenfolge für alle Bereiche vereinheitlicht)
 
 **Kontext:** Eine Gesamt-Gegenprüfung auf gleichzeitiges Arbeiten (mehrere Kassen, Helfer und Ausstellungsleitung
 zugleich, erneuter Klick nach verlorener Antwort, ein alter Browser-Tab) fand im Bereich Geld und Meldung wiederkehrende
@@ -19,10 +19,31 @@ Beginn committet ist – eine Sperre schützt nur, was nach ihr gelesen wird.
    `FOR UPDATE` gelesen und daran geprüft. Jeder Phasenwechsel (`phaseSetzen`) nimmt die Online-Melde-Sperre und die
    Kasse, wartet also auf laufende Online-Meldungen, Verkäufe, Zahlungen und Auszahlungen, die die alte Phase gelesen
    haben; der Abschluss wiederholt darunter seine Hindernisse.
-2. **Feste Sperrreihenfolge:** Online-Melde-Sperre (`sperreOnlineMeldung`) → Testschau-Sperre
-   (`sperreTestschauGeteilt`/`Exklusiv`) → Kasse → Bestätigungen (`sperreBestaetigungen`) → Zeilen. Nie eine Zeile
-   sperren und danach auf die Kasse warten. Bei Zeilen: Aussteller → Meldung → Tiere (wie der Löschwunsch, der erst den
-   Aussteller und dann seine Meldungen ändert); mehrere Zeilen derselben Tabelle nach ID. Eine Verklemmung (40P01, „Bitte noch einmal versuchen“) ist ein Fehler im Code, keine Behebung.
+2. **Feste Sperrreihenfolge** (verbindlich für alle Schreibwege; wer eine Stufe nicht braucht, lässt sie aus, nimmt aber
+   nie eine frühere nach einer späteren):
+   1. Online-Melde-Sperre (`sperreOnlineMeldung`)
+   2. Testschau-Sperre (`sperreTestschauGeteilt`/`Exklusiv`)
+   3. Kasse (`sperreKasse`, `sperreKasseMitPhase`)
+   4. Bestätigungen (`sperreBestaetigungen`), danach Sperren je Anfrage, E-Mail oder Name (Advisory)
+   5. Zeilen Aussteller → Meldung (mehrere nach ID, `FOR UPDATE`)
+   6. Einteilung (`sperreEinteilung` exklusiv, `sperreEinteilungGeteilt` für Noten und Preise, Advisory 2026111201;
+      `sperreEinteilungFuerMeldung` nach der Meldungszeile)
+   7. Schau-Zeile: `FOR SHARE` (Note, Preis, Impfnachweis) oder `FOR NO KEY UPDATE` (Phase, Absage, Freigabe, Nummern,
+      Einstellungen, Halle, Käfige). Nie `FOR UPDATE`, wenn die Transaktion danach protokolliert: jede Einfügung mit
+      Fremdschlüssel auf die Schau (Protokoll, Bewertung, Kasse) hält `FOR KEY SHARE` auf ihr, und der Protokolleintrag
+      hält zu diesem Zeitpunkt schon die Kette – beide verklemmten sich. `FOR UPDATE` nur beim Löschen der Schau und
+      beim Bild-Hochladen (ohne Protokoll; wartet dort bewusst auf ein gleichzeitig eingefügtes Bild).
+   8. Tiere (`katalogeintrag`, nach ID `FOR UPDATE`), danach übrige Zeilen der Schau (Preisrichter, Gesundheit, Bild)
+   9. Benutzer → Sitzung
+   10. `protokolliere()` **zuletzt**: der Trigger `aenderung_kette` sperrt eine für die ganze Installation geltende
+       Zeile bis zum Commit. Nach dem ersten Protokolleintrag wartet die Transaktion auf keine Sperre mehr; mehrere
+       Einträge (Absage, Einteilung nach Status) erst, wenn alles geschrieben ist.
+
+   Nie eine Zeile sperren und danach auf die Kasse warten. Meldung vor Einteilung, weil erst die gesperrte Meldung zeigt,
+   ob die Einteilung gebraucht wird (Statuswechsel, automatische Bestätigung nach Zahlung); kein Weg sperrt unter der
+   Einteilung eine Meldung. Meldungen vor der Schau-Zeile: Absage, Teilschauen und Testschau-Kennzeichen sperren die
+   betroffenen Meldungen nach ID, bevor sie die Schau sperren (wie der Impfnachweis). Eine Verklemmung (40P01, „Bitte
+   noch einmal versuchen“) ist ein Fehler im Code, keine Behebung.
 3. **Wer eine Menge prüft, die andere gleichzeitig erweitern, braucht eine gemeinsame Sperre** – eine Zeilensperre
    genügt nicht, weil neue Zeilen sie nicht berühren. Absage und Entfernen einer Teilschau nehmen die Testschau-Sperre
    exklusiv (jede Meldung hält sie geteilt), Online-Meldungen derselben Schau prüfen Halle und Meldephase nacheinander
@@ -43,8 +64,9 @@ Beginn committet ist – eine Sperre schützt nur, was nach ihr gelesen wird.
 
 **Folgen:** Neue Schreibwege nehmen die Sperren in dieser Reihenfolge und prüfen darunter. Servertests stellen das
 Rennen fest nach: eine zweite Verbindung hält die Sperre bzw. eine Transaktion bleibt offen, bis der andere Aufruf
-wartet (`tests/85-gleichzeitig-geld-meldung.ts`, Muster auch in `30-einteilung-gegenpruefung.ts`). Andere Bereiche
-verweisen auf diese Entscheidung.
+wartet (`tests/84`–`87-gleichzeitig-*.ts`, Muster auch in `30-einteilung-gegenpruefung.ts`);
+`tests/88-gleichzeitig-gesamt.ts` lässt viele Schreibwege zugleich laufen (Mischbetrieb) und erwartet weder Verklemmung
+noch Hänger. Andere Bereiche verweisen auf diese Entscheidung.
 
 **Offen:** Das allgemeine Formularmodell (letzter Schreiber gewinnt) gilt weiter für Einstellungen ohne Stand
 (Vereinsangaben, Spender, Gebühren). Wege in `routers/meldung.ts`, die Meldegeld negativ buchen (Erstattung, Storno),

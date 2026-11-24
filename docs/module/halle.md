@@ -45,7 +45,9 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
   Tier (ordnet sich schon über den Fremdschlüssel); eine schon aufgehobene Sperre bleibt beim zweiten Aufheben unverändert;
   der Impfnachweis rechnet am gesperrten Stand der Meldung und liest danach die Phase geteilt gesperrt (Meldung, dann Schau
   wie bei der Absage) – ein gleichzeitiger Abschluss lässt keinen Nachweis mehr durch; die Seite sendet Feld und Haken
-  nacheinander.
+  nacheinander. Hallenplan, Entwurf, Käfige, Aufsteller und Druckformate sperren die Schau-Zeile `for no key update`
+  (nicht `for update`: sie protokollieren danach und verklemmten sich sonst mit jedem gleichzeitigen Protokolleintrag der
+  Schau; Sperrreihenfolge in ADR 033).
 - Ohne Verbindung (keine Antwort: TypeError von fetch, oder 502/503/504) sendet der Editor `halleSetzen` und das automatische
   Festschreiben erneut (1 s, 2 s, 4 s … höchstens 30 s, sofort bei „online“), bis es gelingt oder ein echter Fehler kommt;
   eine unlesbare Antwort (kein JSON) nur bis zu fünfmal (`fehlerArt`, `UNLESBAR_HOECHSTENS`). CONFLICT bei einer
