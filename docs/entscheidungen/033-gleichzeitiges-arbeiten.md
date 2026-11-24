@@ -16,22 +16,30 @@ Beginn committet ist – eine Sperre schützt nur, was nach ihr gelesen wird.
    Prüfung unter der Sperre am frisch gelesenen Stand. Für Geld: `sperreKasseMitPhase(tx, schauId)`
    (`services/kasse.ts`) nimmt die Kassensperre und liest die Phase neu – wer gewartet hat, sieht einen inzwischen
    gebuchten Abschluss. Zeilen, deren Zustand die Prüfung trägt (Meldungsstatus, Verfall, Lastschriftlauf), werden mit
-   `FOR UPDATE` gelesen und daran geprüft. Der Abschluss (`phaseSetzen`) wiederholt seine Hindernisse unter der Kassensperre.
-2. **Feste Sperrreihenfolge:** Testschau-Sperre (`sperreTestschauGeteilt`/`Exklusiv`) → Kasse → Bestätigungen
-   (`sperreBestaetigungen`) → Zeilen. Nie eine Zeile sperren und danach auf die Kasse warten. Wer mehrere Zeilen sperrt,
-   sperrt sie nach ID. Eine Verklemmung (40P01, „Bitte noch einmal versuchen“) ist ein Fehler im Code, keine Behebung.
+   `FOR UPDATE` gelesen und daran geprüft. Jeder Phasenwechsel (`phaseSetzen`) nimmt die Online-Melde-Sperre und die
+   Kasse, wartet also auf laufende Online-Meldungen, Verkäufe, Zahlungen und Auszahlungen, die die alte Phase gelesen
+   haben; der Abschluss wiederholt darunter seine Hindernisse.
+2. **Feste Sperrreihenfolge:** Online-Melde-Sperre (`sperreOnlineMeldung`) → Testschau-Sperre
+   (`sperreTestschauGeteilt`/`Exklusiv`) → Kasse → Bestätigungen (`sperreBestaetigungen`) → Zeilen. Nie eine Zeile
+   sperren und danach auf die Kasse warten. Bei Zeilen: Aussteller → Meldung → Tiere (wie der Löschwunsch, der erst den
+   Aussteller und dann seine Meldungen ändert); mehrere Zeilen derselben Tabelle nach ID. Eine Verklemmung (40P01, „Bitte noch einmal versuchen“) ist ein Fehler im Code, keine Behebung.
 3. **Wer eine Menge prüft, die andere gleichzeitig erweitern, braucht eine gemeinsame Sperre** – eine Zeilensperre
    genügt nicht, weil neue Zeilen sie nicht berühren. Absage und Entfernen einer Teilschau nehmen die Testschau-Sperre
    exklusiv (jede Meldung hält sie geteilt), Online-Meldungen derselben Schau prüfen Halle und Meldephase nacheinander
-   (Advisory-Sperre je Schau), Rücklastschrift und Zuwendungsbestätigung teilen `sperreBestaetigungen`.
+   (`sperreOnlineMeldung` je Schau; die Meldephase prüft nur dieser öffentliche Weg – die Ausstellungsleitung erfasst
+   auch später Meldungen mit Eingang „online“), Rücklastschrift und Zuwendungsbestätigung teilen `sperreBestaetigungen`.
 4. **Alter Wert fürs Protokoll** wird in derselben Transaktion mit `FOR UPDATE` gelesen (ADR 003): sonst steht bei zwei
    gleichzeitigen Änderungen zweimal derselbe alte Wert im Protokoll.
 5. **Stand-Prüfung für Formulare, die zurückschreiben:** Das Formular bekommt beim Laden einen Stand und sendet ihn
    mit; weicht er unter der Sperre ab, lehnt der Server mit CONFLICT „Inzwischen geändert – bitte neu laden“ ab, statt zu
-   überschreiben. Meldung: `meldungStand()` (`services/meldung-stand.ts`) über Aussteller, Meldungsfelder und Tiere.
+   überschreiben. Meldung: `meldungStand()` (`services/meldung-stand.ts`) über Aussteller, Meldungsfelder und Tiere,
+   verglichen erst, wenn Aussteller, Meldung und Tiere gesperrt sind. Der Stand ist ein HMAC mit einem aus dem
+   Datenschlüssel abgeleiteten Schlüssel, weil er Felder enthält, die nicht jede Rolle sieht. Die Oberfläche bietet
+   nach CONFLICT „Neu laden“ an; die Eingaben bleiben bis dahin sichtbar.
    Geld: der angezeigte Betrag (`erwartetOffenCent`, `erwartetCent`) – jede Oberfläche, die kassiert, sendet ihn.
 6. **Dieselbe Anfrage zweimal** legt nichts doppelt an: eine neue Meldung trägt die Kennung ihres Formulars
    (`meldung.anfrage_id`, eindeutig je Schau, Migration 0072); kommt sie wieder, liefert der Server die schon angelegte.
+   Die Kennung entsteht über `crypto.getRandomValues` (`neueAnfrageId`), also auch beim Betrieb über http://.
 
 **Folgen:** Neue Schreibwege nehmen die Sperren in dieser Reihenfolge und prüfen darunter. Servertests stellen das
 Rennen fest nach: eine zweite Verbindung hält die Sperre bzw. eine Transaktion bleibt offen, bis der andere Aufruf
@@ -40,4 +48,6 @@ verweisen auf diese Entscheidung.
 
 **Offen:** Das allgemeine Formularmodell (letzter Schreiber gewinnt) gilt weiter für Einstellungen ohne Stand
 (Vereinsangaben, Spender, Gebühren). Wege in `routers/meldung.ts`, die Meldegeld negativ buchen (Erstattung, Storno),
-prüfen gültige Zuwendungsbestätigungen nicht – eigenes Ticket.
+prüfen gültige Zuwendungsbestätigungen nicht – eigenes Ticket. `statusSetzen` nimmt bei jedem Wechsel die Kasse
+(auch „offen → bestätigt“ durch Helfer) und hält sie bis zur Einteilung; an Einlieferungstagen beobachten – braucht die
+Einteilung bei großen Schauen merklich Zeit, sie in einen eigenen kurzen Schritt nach dem Statuswechsel legen.

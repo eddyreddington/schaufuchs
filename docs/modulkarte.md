@@ -1008,7 +1008,7 @@ Sammelt alle Exporte (`export * from …`).
 - `aussteller`
 - `mandate`
 
-### meldung.ts (113 Z.)
+### meldung.ts (114 Z.)
 
 - `meldung`
 
@@ -1203,7 +1203,7 @@ Texte der Oberfläche: katalog – Katalognummern, Reihenfolge, Katalog gestalte
 - `aussteller` – Texte der Oberfläche: meldung, Teil Aussteller des Vereins (seiten/aussteller.tsx) und SEPA-Mandate (seiten/aussteller-mandate.tsx).
 - `mandate`
 
-### meldung.ts (114 Z.)
+### meldung.ts (115 Z.)
 Texte der Oberfläche: meldung (Entscheidung 022) – Meldungen erfassen und bearbeiten, Aussteller des Vereins, SEPA-Mandate.
 
 - `meldung`
@@ -1406,7 +1406,7 @@ Sammelt alle Exporte (`export * from …`).
 - `aussteller`
 - `mandate`
 
-### meldung.ts (110 Z.)
+### meldung.ts (111 Z.)
 
 - `meldung`
 
@@ -1595,7 +1595,7 @@ Sammelt alle Exporte (`export * from …`).
 - `aussteller`
 - `mandate`
 
-### meldung.ts (110 Z.)
+### meldung.ts (111 Z.)
 
 - `meldung`
 
@@ -1788,7 +1788,7 @@ Sammelt alle Exporte (`export * from …`).
 - `aussteller`
 - `mandate`
 
-### meldung.ts (110 Z.)
+### meldung.ts (111 Z.)
 
 - `meldung`
 
@@ -1978,7 +1978,7 @@ Sammelt alle Exporte (`export * from …`).
 - `aussteller`
 - `mandate`
 
-### meldung.ts (114 Z.)
+### meldung.ts (115 Z.)
 
 - `meldung`
 
@@ -2529,7 +2529,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `meldung.bestaetigungSenden` mutation · angemeldet
 - `meldung.zuletzt` query · angemeldet
 
-### routers/oeffentlich.ts (464 Z.) → `oeffentlich`
+### routers/oeffentlich.ts (462 Z.) → `oeffentlich`
 
 - `oeffentlich.schau` query · öffentlich
 - `oeffentlich.rechtstexte` query · öffentlich – Impressum (§ 5 DDG) und Datenschutzhinweise (Art. 13 DSGVO) des ausrichtenden Vereins.
@@ -2595,7 +2595,7 @@ Gebühren und Preisarten einer Schau setzen, ändern und löschen (gesperrt, sob
 - `schau.preisartSpeichern` mutation · admin – Preisart anlegen oder ändern.
 - `schau.preisartLoeschen` mutation · admin
 
-### routers/schau/phase.ts (200 Z.) → `schau`
+### routers/schau/phase.ts (204 Z.) → `schau`
 Phase der Schau: absagen und Phase wechseln (mit den Prüfungen vor Meldephase, Schau und Abschluss).
 
 - `schau.absagen` mutation · admin – Schau absagen (z. B. Ausstellungsverbot wegen Tierseuche, § 7 Abs. 5 GeflPestSchV): nur bis vor der Einlieferung.
@@ -2684,6 +2684,10 @@ Route aus `apps/web/src/routes.tsx`, dahinter die aufgerufenen Prozeduren.
 
 ### abrechnung.tsx (443 Z.) – `/schau/:schauId/abrechnung`
 Prozeduren: auth.status, kasse.abrechnung, kasse.auszahlen, kasse.auszahlungStornieren, kasse.ueberweisungenBuchen, kasse.ueberweisungsdatei, kasse.ueberweisungsdateiErstellen, kasse.ueberweisungsdateiVerwerfen, meldung.erstattungenBuchen, meldung.zuErstatten, schau.get
+
+### anfrage-kennung.test.ts (18 Z.)
+
+### anfrage-kennung.ts (13 Z.)
 
 ### aussteller-a-bogen.tsx (57 Z.)
 Prozeduren: druckvorlage.serienbriefAnzahl, schau.liste
@@ -2935,12 +2939,12 @@ Prozeduren: lastschrift.buchen, lastschrift.datei, lastschrift.erstellen, lastsc
 ### meisterschaften.tsx (90 Z.) – `/schau/:schauId/meisterschaften`
 Prozeduren: meisterschaft.ergebnisse
 
-### meldung-bearbeiten.tsx (475 Z.) – `/schau/:schauId/meldungen/neu`, `/schau/:schauId/meldungen/:meldungId`
+### meldung-bearbeiten.tsx (496 Z.) – `/schau/:schauId/meldungen/neu`, `/schau/:schauId/meldungen/:meldungId`
 Prozeduren: meldung.adressVorschlaege, meldung.ausstellerSuche, meldung.bestaetigungSenden, meldung.get, meldung.speichern, meldung.statusSetzen, meldung.verfallBuchen, meldung.zahlungErfassen, meldung.zahlungStornieren, schau.get, stammdaten.suche
 
-### meldung-zahlung.test.ts (11 Z.)
+### meldung-zahlung.test.ts (20 Z.)
 
-### meldung-zahlung.ts (8 Z.)
+### meldung-zahlung.ts (17 Z.)
 
 ### meldungen.tsx (129 Z.) – `/schau/:schauId/meldungen`
 Prozeduren: meldung.liste, schau.get
@@ -3048,8 +3052,8 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `kasse.ts` (149 Z.) · sperreKasse, sperreKasseMitPhase, SEPA_ERSTELLT, SEPA_VERWORFEN, SEPA_GEBUCHT, offenerLauf, schliesseLauf, LASTSCHRIFT_OFFEN, offeneLastschrift, offeneLastschriftenDesVereins, inOffenerLastschrift, offeneStornoZahlungen, offeneUeberweisungsverkaeufe, pruefeNichtAbgeschlossen, pruefeNichtAbgerechnet
 - `kassenbuch.ts` (241 Z.) · tagDe, ladeKassenbuch, sollBestand, archiviereBeleg, ladeBeleg, zweitschrift, belegListe, archiviereKaufbeleg, archiviereKassenbeleg, archiviereQuittung, archiviereSpendenquittung
 - `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
-- `meldung-stand.ts` (26 Z.) – Stand einer Meldung für das Bearbeitungsformular (Entscheidung 033): ein Prüfwert über alles, was das Formular zurückschreibt – Aussteller, Meldung … · MELDUNG_VERALTET, meldungStand
-- `meldung.ts` (531 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, speichereMeldung, bindungen, hatAuszahlung
+- `meldung-stand.ts` (31 Z.) – Stand einer Meldung für das Bearbeitungsformular (Entscheidung 033): ein Prüfwert über alles, was das Formular zurückschreibt – Aussteller, Meldung … · MELDUNG_VERALTET, meldungStand
+- `meldung.ts` (546 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, sperreOnlineMeldung, speichereMeldung, bindungen, hatAuszahlung
 - `post.ts` (155 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, sendeMail, sendeMailJetzt, versende, starteMailversand
 - `preise.ts` (180 Z.) · vergebePreis, entfernePreis
 - `preisrichter-speichern.ts` (128 Z.) – Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter Sperre der Preisrichter der S … · gruppenAusEingabe, speicherePreisrichter, loeschePreisrichter
@@ -3278,6 +3282,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `81-jugend-kennzeichen.ts` (114 Z.) – Kennzeichen „Jgd.“ für Jugendtiere, wenn die Jugend in der Rasse eingereiht steht: im gedruckten Katalog (zwei Spalten, Tabelle, Kurzkatalog, Legen …
 - `82-katalog-schriften.ts` (112 Z.) – Katalog-Schriften (Entscheidung 032): jedes Katalog-PDF – jede Schriftwahl, jede Aufteilung, A4 und A5, Kurzkatalog und /s/:slug/katalog.pdf – bett …
 - `83-katalog-nicht-kuerzen.ts` (147 Z.) – Katalog kürzt nicht (Entscheidung 032, Rückmeldung eines Vereins: „Im Katalog wird abgekürzt, das darf nicht sein“): Testschau mit sehr langen Name …
-- `85-gleichzeitig-geld-meldung.ts` (385 Z.) – Gleichzeitiges Arbeiten an Geld und Meldungen (Entscheidung 033): Rücklastschrift gegen Zuwendungsbestätigung und Löschwunsch, Buchungen gegen den …
+- `85-gleichzeitig-geld-meldung.ts` (485 Z.) – Gleichzeitiges Arbeiten an Geld und Meldungen (Entscheidung 033): Rücklastschrift gegen Zuwendungsbestätigung und Löschwunsch, Buchungen gegen den …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
