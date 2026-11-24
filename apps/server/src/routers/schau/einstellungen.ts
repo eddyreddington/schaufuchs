@@ -227,12 +227,14 @@ export const einstellungen = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const s = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
-      // Nach der Freigabe stehen die Noten in Katalog, Ergebnissen und Karten – die Skala bleibt dann fest.
-      if (s.ergebnisseFreigegeben) throw fehler("BAD_REQUEST", "Die Ergebnisse sind freigegeben – die Notenskala lässt sich nicht mehr ändern.");
+      const geladen = await ladeSchau(ctx.benutzer.organisationId, input.schauId);
       await db.transaction(async (tx) => {
+        // Gesperrt und frisch gelesen (ADR 033): eine gleichzeitige Freigabe wartet, oder die Skala sieht sie.
+        const [s] = await tx.select({ ergebnisseFreigegeben: schau.ergebnisseFreigegeben, notenskala: schau.notenskala }).from(schau).where(eq(schau.id, geladen.id)).for("no key update");
+        // Nach der Freigabe stehen die Noten in Katalog, Ergebnissen und Karten – die Skala bleibt dann fest.
+        if (s!.ergebnisseFreigegeben) throw fehler("BAD_REQUEST", "Die Ergebnisse sind freigegeben – die Notenskala lässt sich nicht mehr ändern.");
         await tx.update(schau).set({ notenskala: input.skala }).where(eq(schau.id, input.schauId));
-        await protokolliere(tx, { schauId: input.schauId, tabelle: "schau", datensatzId: input.schauId, aktion: "Notenskala", alt: s.notenskala, neu: input.skala, akteur: ctx });
+        await protokolliere(tx, { schauId: input.schauId, tabelle: "schau", datensatzId: input.schauId, aktion: "Notenskala", alt: s!.notenskala, neu: input.skala, akteur: ctx });
       });
       return { ok: true };
     }),

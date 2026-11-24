@@ -15,6 +15,14 @@ export async function sperreEinteilung(tx: Tx, schauId: number) {
 }
 
 /**
+ * Dieselbe Sperre geteilt: Tablets prüfen darunter, ob ihnen das Tier noch zugeteilt ist (ADR 033). Mehrere Tablets
+ * zugleich, eine Einteilung oder Nummernvergabe wartet auf sie – und sie auf diese.
+ */
+export async function sperreEinteilungGeteilt(tx: Tx, schauId: number) {
+  await tx.execute(sql`select pg_advisory_xact_lock_shared(2026111201, ${schauId})`);
+}
+
+/**
  * Sparte, Rasse und Farbenschlag eines Tieres für die Einteilung. Ein Farbenschlag außerhalb des Verzeichnisses (freie
  * Angabe mit gewählter Rasse) zählt mit seinem Text; ohne Rasse steht der freie Text als Rasse. Jugend nur, wenn die Schau
  * die Jugend separat einteilt (`jugendSeparat`) – sonst geht sie mit ihrer Rasse.

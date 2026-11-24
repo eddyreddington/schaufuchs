@@ -2460,7 +2460,7 @@ Käfige und Grundplatten: Käfigbedarf, Aufsteller und Sockelbild, Grundplatten,
 - `katalog.kaefigRegelSetzen` mutation · admin – Abweichende Käfiggröße für eine Rasse festlegen (typ null = wieder automatisch).
 - `katalog.kaefigMassSetzen` mutation · admin – Maße der eigenen Käfige je Käfigart (cm); null = wieder Richtwert.
 
-### routers/katalog/nummern.ts (224 Z.) → `katalog`
+### routers/katalog/nummern.ts (225 Z.) → `katalog`
 Katalognummern: Liste, Stand des Hallenplans, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern.
 
 - `katalog.liste` query · angemeldet
@@ -2539,7 +2539,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `oeffentlich.onlineVeroeffentlichung` mutation · öffentlich – Einwilligung in die Online-Veröffentlichung erteilen oder widerrufen (Art. 7 Abs. 3 DSGVO) – so einfach wie die Erteilung.
 - `oeffentlich.ergebnisse` query · öffentlich
 
-### routers/preise.ts (299 Z.) → `preise`
+### routers/preise.ts (307 Z.) → `preise`
 
 - `preise.uebersicht` query · angemeldet
 - `preise.vergeben` mutation · admin
@@ -2580,7 +2580,7 @@ Schau anlegen (leer oder aus einer Vorlage), Demodaten einer Testschau, Schau l�
 - `schau.alsTestschau` mutation · admin – Eine bestehende Schau als Testschau kennzeichnen (z. B. eine zum Üben angelegte mit Demo-Meldungen): ihre Aussteller werden Test-Aussteller und ver …
 - `schau.testschauVorschau` query · admin – Vor dem Kennzeichnen: wer würde Test-Aussteller, wer ist echt (und verhindert es)?
 
-### routers/schau/einstellungen.ts (239 Z.) → `schau`
+### routers/schau/einstellungen.ts (241 Z.) → `schau`
 Einstellungen einer Schau: Felder speichern, Reihenfolge der Katalognummern, Teilschauen und Notenskala.
 
 - `schau.aktualisieren` mutation · admin
@@ -3030,12 +3030,12 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 ### Server-Dienste mit Datenbank `apps/server/src/services`
 
 - `aussteller.ts` (183 Z.) – Aussteller-Verwaltung des Vereins: anlegen, Stammdaten ändern, Vereinsmitglied (ohne Meldung, unter „Verein und Datenschutz“). · ausstellerVerwaltungEingabe, eigeneVereinsnamen, speichereAussteller, setzeVereinsnamen, vereinsangabenUebersicht
-- `bewertung.ts` (193 Z.) · bewertungEingabe, RICHTER_PHASEN, speichereBewertung, setzeBewertungZurueck
+- `bewertung.ts` (205 Z.) · bewertungEingabe, RICHTER_PHASEN, speichereBewertung, setzeBewertungZurueck
 - `bremse.ts` (224 Z.) · Bremse, Wartezeit, anschlussSchluessel, netz48Schluessel, istLokaleAdresse, adressSchluessel
 - `datenschutz-lastschrift.ts` (75 Z.) – SEPA-Lastschrift im Datenschutz (Entscheidung 018): was über Mandate und Einzüge in die Auskunft gehört (Art. 15), was der Löschwunsch entfernt (Ar … · lastschriftAuskunft, loescheLastschriftDaten, bereinigeMandate
 - `datenschutz.ts` (593 Z.) · ladeVereinsangaben, ladeAuskunft, ladeAuskunftPerson, loescheAussteller, bereinige, starteBereinigung
 - `einteilung-vorschlag.ts` (189 Z.) – Vorschlag für die Einteilung nach Nummern (und über Nummern je Farbenschlag auch nach Rassen): Tiere in Katalogfolge auf die Preisrichter verteilen … · schlageEinteilungVor
-- `einteilung.ts` (101 Z.) · sperreEinteilung, einteilTier, einteilSchluessel, ladeRegeln, jugendSeparatEingeteilt, bereicheDerSchau, rassenEinteilungAnwenden, einteilungNachStatus
+- `einteilung.ts` (109 Z.) · sperreEinteilung, sperreEinteilungGeteilt, einteilTier, einteilSchluessel, ladeRegeln, jugendSeparatEingeteilt, bereicheDerSchau, rassenEinteilungAnwenden, einteilungNachStatus
 - `eintraege.ts` (259 Z.) · ladeEintraege, NICHT_VEROEFFENTLICHT, verdeckeNamen, ausstellerAnzeige, bezeichnung, alsFolge, meldebetrag, meldebetraege, skalaVon
 - `ersteinrichtung.ts` (111 Z.) – Ersteinrichtung: Verein und erster Administrator. · ersteinrichtungAngaben, BEREITS_EINGERICHTET, richteEinMitPasswort, richteEinPerBefehl
 - `fehlertext.ts` (5 Z.) · kurzerFehler
@@ -3046,7 +3046,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
 - `meldung.ts` (509 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, speichereMeldung, bindungen, hatAuszahlung
 - `post.ts` (155 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, sendeMail, sendeMailJetzt, versende, starteMailversand
-- `preise.ts` (180 Z.) · vergebePreis, entfernePreis
+- `preise.ts` (183 Z.) · vergebePreis, entfernePreis
 - `preisrichter-speichern.ts` (128 Z.) – Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter Sperre der Preisrichter der S … · gruppenAusEingabe, speicherePreisrichter, loeschePreisrichter
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
 - `protokoll.ts` (37 Z.) · protokolliere
@@ -3273,5 +3273,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `81-jugend-kennzeichen.ts` (114 Z.) – Kennzeichen „Jgd.“ für Jugendtiere, wenn die Jugend in der Rasse eingereiht steht: im gedruckten Katalog (zwei Spalten, Tabelle, Kurzkatalog, Legen …
 - `82-katalog-schriften.ts` (112 Z.) – Katalog-Schriften (Entscheidung 032): jedes Katalog-PDF – jede Schriftwahl, jede Aufteilung, A4 und A5, Kurzkatalog und /s/:slug/katalog.pdf – bett …
 - `83-katalog-nicht-kuerzen.ts` (147 Z.) – Katalog kürzt nicht (Entscheidung 032, Rückmeldung eines Vereins: „Im Katalog wird abgekürzt, das darf nicht sein“): Testschau mit sehr langen Name …
+- `84-gleichzeitig-bewertung.ts` (167 Z.) – Gleichzeitiges Arbeiten bei Bewertung und Preisen (ADR 033): Freigabe gegen Tablet und Preise, Preisvergabe gegen eine gleichzeitig geänderte Note, …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

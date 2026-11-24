@@ -46,11 +46,14 @@ export async function vergebePreis(
   // Erst sperren, dann lesen: gleichzeitige Vergaben (Tablet und Ausstellungsleitung) laufen nacheinander und sehen
   // jeweils den neuesten Stand – sonst ließen sich Kontingent und „ein Geldpreis je Tier“ überschreiten.
   await sperreKasse(tx, a.schauId);
-  const [s] = await tx.select().from(schau).where(eq(schau.id, a.schauId));
+  // Sperrfolge Kasse → Schau → Tier (ADR 033): Das Tier gesperrt, damit die Note bis zum Eintragen des Preises gilt –
+  // eine gleichzeitige Bewertung wartet, oder die Vergabe wartet auf sie und liest danach die neue Note.
+  const [s] = await tx.select().from(schau).where(eq(schau.id, a.schauId)).for("share");
   if (!s) throw fehler("NOT_FOUND", "Schau nicht gefunden.");
   pruefeNichtAbgeschlossen(s);
   pruefeTablet(s, a.istAL);
   pruefeGrundNachFreigabe(s, a.grund);
+  await tx.select({ id: katalogeintrag.id }).from(katalogeintrag).where(and(eq(katalogeintrag.id, a.katalogeintragId), eq(katalogeintrag.schauId, a.schauId))).for("update");
   const [art] = await tx.select().from(preisart).where(and(eq(preisart.id, a.preisartId), eq(preisart.schauId, a.schauId)));
   if (!art) throw fehler("NOT_FOUND", "Preisart nicht gefunden.");
   // Gestiftete Preise (Betrag und Vorgabe des Stifters) vergibt die Ausstellungsleitung – das Tablet zeigt sie nicht.
