@@ -614,7 +614,7 @@ Tests: `hallenplan-wandfront.test.ts`
 - `wandKandidaten()` – Kandidaten aus einem gerechneten Plan (Lage samt Versatz und Drehung): alle Grundplatten, Käfigblöcke und eingesetzten Volieren.
 - `wandDrehungenAnwenden()` – Drehungen in die Halle übernehmen: Grundplatten über ihre Drehung (um die eigene Mitte), Teile über ihre Front.
 
-### hallenplan.ts (331 Z.)
+### hallenplan.ts (332 Z.)
 Hallenplan: Wie stehen die Käfige in der Halle?
 
 - `planeHalle()` – Plan der Halle.
@@ -2351,7 +2351,7 @@ Druckvorlagen (vorerst Bewertungskarte): Vorlagen des Vereins anlegen, ändern, 
 - `druckvorlage.briefSpeichern` mutation · admin
 - `druckvorlage.serienbriefAnzahl` query · admin – Wie viele Empfänger ein Serienbrief mit dieser Auswahl hätte (vor dem Erzeugen anzeigen).
 
-### routers/hallenentwurf.ts (176 Z.) → `hallenentwurf`
+### routers/hallenentwurf.ts (178 Z.) → `hallenentwurf`
 Entwürfe des Hallenplans (Entscheidung 017): den aktuellen Plan einer Schau als Entwurf speichern, einen Entwurf (oder einen archivierten aus einer …
 
 - `hallenentwurf.liste` query · angemeldet – Entwürfe dieser Schau und das Archiv des Vereins (neueste zuerst).
@@ -2414,7 +2414,7 @@ Kasse: Tierverkauf, Abrechnung und Auszahlung, SEPA-Sammelüberweisung und Kasse
 
 Setzt Teile zu einem Router zusammen.
 
-### routers/katalog/einlieferung.ts (284 Z.) → `halle`
+### routers/katalog/einlieferung.ts (299 Z.) → `halle`
 Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferung, Ausgabe), Impfnachweise.
 
 - `halle.ringnummerSetzen` mutation · angemeldet – Ringnummer bei der Einlieferung nach der Ringkarte eintragen (Kennzeichnung für Kaufbeleg und Veterinärliste).
@@ -2423,12 +2423,12 @@ Einlieferung in der Halle: Ringnummer, Käfig je Tier, Suche, Status (Einlieferu
 - `halle.statusSetzen` mutation · angemeldet
 - `halle.vetSetzen` mutation · angemeldet – Nachweise bei der Einlieferung: ND-Impfung (Hühner, Puten), PMV-Impfung (Tauben), Untersuchung Wassergeflügel.
 
-### routers/katalog/gemeinsam.ts (257 Z.)
+### routers/katalog/gemeinsam.ts (261 Z.)
 Gemeinsames für Katalog und Hallenplan: Eingabe der Halle (Schemas), Grundriss prüfen, Plan neu setzen, Tiere für den Plan.
 
 Keine Prozeduren (Hilfen für die Router).
 
-### routers/katalog/gesundheit.ts (74 Z.) → `halle`
+### routers/katalog/gesundheit.ts (80 Z.) → `halle`
 Gesundheitsjournal in der Halle: Liste, Eintrag erfassen, Sperre aufheben.
 
 - `halle.gesundheit` query · angemeldet – Gesundheitsjournal (Art. 25 DelVO (EU) 2019/2035): Krankheit, Verdacht, Todesfall, Maßnahme.
@@ -2460,7 +2460,7 @@ Käfige und Grundplatten: Käfigbedarf, Aufsteller und Sockelbild, Grundplatten,
 - `katalog.kaefigRegelSetzen` mutation · admin – Abweichende Käfiggröße für eine Rasse festlegen (typ null = wieder automatisch).
 - `katalog.kaefigMassSetzen` mutation · admin – Maße der eigenen Käfige je Käfigart (cm); null = wieder Richtwert.
 
-### routers/katalog/nummern.ts (224 Z.) → `katalog`
+### routers/katalog/nummern.ts (242 Z.) → `katalog`
 Katalognummern: Liste, Stand des Hallenplans, Nummern vergeben, nach Hallenplan nummerieren, Festschreibung der Nummern.
 
 - `katalog.liste` query · angemeldet
@@ -2469,7 +2469,7 @@ Katalognummern: Liste, Stand des Hallenplans, Nummern vergeben, nach Hallenplan 
 - `katalog.nummernNachPlan` mutation · admin – Nach dem Umstellen im Hallenplan: Nummern in der Reihenfolge, in der die Käfige jetzt im (festgeschriebenen) Plan stehen (siehe `planFolge`).
 - `katalog.gedrucktSetzen` mutation · admin
 
-### routers/katalog-gestaltung.ts (334 Z.) → `katalogGestaltung`
+### routers/katalog-gestaltung.ts (336 Z.) → `katalogGestaltung`
 
 - `katalogGestaltung.laden` query · angemeldet
 - `katalogGestaltung.speichern` mutation · admin
@@ -2722,7 +2722,7 @@ Prozeduren: druckvorlage.liste, druckvorlage.speichern, druckvorlage.vorgabe
 ### einladung.tsx (101 Z.) – `/einladung`
 Prozeduren: auth.einladungAnnehmen, auth.einladungPruefen, auth.status
 
-### einlieferung.tsx (518 Z.) – `/schau/:schauId/einlieferung`
+### einlieferung.tsx (521 Z.) – `/schau/:schauId/einlieferung`
 Prozeduren: auth.status, halle.gesundheit, halle.gesundheitErfassen, halle.gesundheitFreigeben, halle.kaefigSetzen, halle.ringnummerSetzen, halle.statusSetzen, halle.suche, halle.vetSetzen, meldung.zahlungErfassen, schau.get
 
 ### einstellungen-druck.tsx (147 Z.)
@@ -3082,7 +3082,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `bewertungsliste.ts` (142 Z.) – Bewertungsliste je Preisrichter (zum Mitnehmen in die Käfigreihe) wie die Papiervorlage: zwei Listen nebeneinander je A4-Seite, laufend (Formatvorg … · preisrichterListePdf
 - `brief.ts` (136 Z.) – Briefe nach der Briefvorlage des Vereins (DIN 5008, Form A oder B): Briefkopf, Rücksendeangabe, Anschrift, Informationsblock, Falzmarken und Fußzeile. · BRIEF_RAENDER, ladeBriefVorlage, briefDesign, briefKopf, belegKopf, briefFuss, serienbriefPdf
 - `dokumente-amt.ts` (245 Z.) – Listen für das Veterinäramt: abgegebene Tiere (Verkaufsliste) und Aussteller- und Tierliste. · verkaufslistePdf, tierlistePdf
-- `dokumente-gemeinsam.ts` (35 Z.) – Gemeinsame Hilfen der Dokumente einer Schau (dokumente.ts, dokumente-kasse.ts, dokumente-amt.ts): Design aus der Katalog-Gestaltung, Vereinsname, K … · nr, klasse, tier, A4_RAENDER, ladeDesign, verein, kopfzeile, fusstext, breite, unten
+- `dokumente-gemeinsam.ts` (36 Z.) – Gemeinsame Hilfen der Dokumente einer Schau (dokumente.ts, dokumente-kasse.ts, dokumente-amt.ts): Design aus der Katalog-Gestaltung, Vereinsname, K … · nr, klasse, tier, A4_RAENDER, ladeDesign, verein, kopfzeile, fusstext, breite, unten
 - `dokumente-kasse.ts` (352 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
 - `dokumente.ts` (500 Z.) · bewertungskartenPdf, ausstellerUnterlagenPdf, abrechnungPdf
 - `girocode.ts` (38 Z.) – GiroCode im PDF (Entscheidung 021): QR-Code als Vektorgrafik (scharf in jedem Druck), daneben Bankverbindung und Verwendungszweck. · GIROCODE_GROESSE, qrZeichnen, giroCodeBlock
@@ -3273,5 +3273,6 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `81-jugend-kennzeichen.ts` (114 Z.) – Kennzeichen „Jgd.“ für Jugendtiere, wenn die Jugend in der Rasse eingereiht steht: im gedruckten Katalog (zwei Spalten, Tabelle, Kurzkatalog, Legen …
 - `82-katalog-schriften.ts` (112 Z.) – Katalog-Schriften (Entscheidung 032): jedes Katalog-PDF – jede Schriftwahl, jede Aufteilung, A4 und A5, Kurzkatalog und /s/:slug/katalog.pdf – bett …
 - `83-katalog-nicht-kuerzen.ts` (147 Z.) – Katalog kürzt nicht (Entscheidung 032, Rückmeldung eines Vereins: „Im Katalog wird abgekürzt, das darf nicht sein“): Testschau mit sehr langen Name …
+- `86-gleichzeitig-katalog.ts` (181 Z.) – Gleichzeitiges Arbeiten in Katalog und Halle (Entscheidung 033): Nummern vergeben und Festschreibung aufheben gegen eine gleichzeitige Note, Ausgab …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`

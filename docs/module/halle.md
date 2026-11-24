@@ -27,7 +27,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 - Möbel (Tisch, Bank, Garnitur, Pokaltisch) sind keine Sperrfläche und verschieben nie Käfige ([ADR 002](../entscheidungen/002-moebel-keine-sperrflaeche.md)).
 - Pokale auf dem Pokaltisch (`pokalStellen`, 3D) stehen mit Henkeln (`POKAL_BREITE`) ganz auf der Platte und berühren sich nicht; auf kleinen Tischen werden sie kleiner.
 - Fester Plan vs. „Automatisch planen“ ([ADR 006](../entscheidungen/006-fester-plan.md)): fest = jeder Käfig behält seinen Platz.
-- Jede Käfigfront zeigt zu einem Gang (`frontFehler`), Rückwand an die Wand; vor Ein- und Notausgängen bleibt ein Gang frei.
+- Jede Käfigfront zeigt zu einem Gang (`frontFehler`: Reihen, eingesetzte Blöcke und eingesetzte Volieren), Rückwand an die Wand; vor Ein- und Notausgängen bleibt ein Gang frei.
 - Beim Stellen (Verschieben, Pfeiltasten, Drehen, Einsetzen) dreht nur das gestellte Teil um 180° an Ort und Stelle: Front zur
   Wand (auch Innenwand des Grundrisses) → Rückwand an die Wand, wenn die neue Front nicht direkt an etwas steht; Front an einem
   anderen Teil (bis `WAND_FANG`, mit dessen Front, Rück- oder Seitenwand, ab `UEBERLAPP_MIN`) → Rückwand an Rückwand, wenn vor
@@ -38,6 +38,12 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 - Freier Grundriss ([ADR 019](../entscheidungen/019-freier-grundriss.md)): rechtwinklig; außerhalb wird für Planung und Verschieben Sperrfläche (`mitUmrissSperren`, „Hallenwand“); Wände in Plan, Druck und 3D entlang der Kanten.
 - Helfer sehen den Plan nur an; Ändern nur Ausstellungsleitung (`adminProcedure`), jede Änderung mit `protokolliere()`.
 - Gleichzeitige Änderungen: `halleSchluessel()` als Stand (`basis`), abweichender Stand wird abgewiesen.
+- Gleichzeitig (Entscheidung 033 „Gleichzeitiges Arbeiten: Sperren und Stand-Prüfung“): „Entscheiden“ sperrt zuerst alle offenen
+  Entwürfe der Schau (nach id), setzt den Entwurf (auch ohne festen Plan, `planNeuSetzenIn(…, tx)`) und archiviert in einer
+  Transaktion – die zweite Entscheidung findet ihren Entwurf archiviert. Einlieferung: die Ausgabe liest die Sperren im
+  Gesundheitsjournal unter der Tiersperre frisch (neue Sperre: Grund nötig, Ausnahme im Protokoll), das Erfassen sperrt das
+  Tier; eine schon aufgehobene Sperre bleibt beim zweiten Aufheben unverändert; der Impfnachweis rechnet am gesperrten Stand
+  der Meldung, die Seite sendet Feld und Haken nacheinander.
 - Ohne Verbindung (keine Antwort: TypeError von fetch, oder 502/503/504) sendet der Editor `halleSetzen` und das automatische
   Festschreiben erneut (1 s, 2 s, 4 s … höchstens 30 s, sofort bei „online“), bis es gelingt oder ein echter Fehler kommt;
   eine unlesbare Antwort (kein JSON) nur bis zu fünfmal (`fehlerArt`, `UNLESBAR_HOECHSTENS`). CONFLICT bei einer
@@ -62,7 +68,7 @@ Vollständige Liste der Funktionen: [Modulkarte](../modulkarte.md), Abschnitt `h
 
 - Web: `apps/web/src/seiten/hallenplan-*.test.ts` (Laden, Speichern, Wiederholen ohne Verbindung, Folie in 3D, Entwurf bereinigt wie der Server, 3D-Modell voll deckend, Ausrichten beim Verschieben, Drehen und Einsetzen).
 - Domain: `packages/domain/src/hallenplan*.test.ts`, `stellvorschlaege.test.ts` (u. a. Zufallshallen, Möbel ohne Einfluss, Aussehen ohne Einfluss).
-- Server (`apps/server/src/tests`): `17-kaefige`, `19-hallenplan`, `24-plan-fest`, `31-stellvorschlaege`, `36-nach-plan-nummerieren`,
+- Server (`apps/server/src/tests`): `86-gleichzeitig-katalog` (Entscheiden, Ausgabe gegen Sperre, Impfnachweis, Sperre aufheben), `17-kaefige`, `19-hallenplan`, `24-plan-fest`, `31-stellvorschlaege`, `36-nach-plan-nummerieren`,
   `38-hallenplan-entfernen`, `39-hallenplan-druck`, `40-hallenplan-neu-setzen`, `41-hallenplan-3d`, `42-hallenplan-moebel-etagen`,
   `44-pruefliste-hallenplan`, `67-pokaltisch`, `75-halle-aussehen`, `78-tueren`, `79-ablauf-halle` (Farben vor den Nummern, Ablauf).
 
