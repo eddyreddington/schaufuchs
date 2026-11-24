@@ -85,7 +85,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     const b = offeneTx((tx) => bestaetigeSpende(tx, adminKontext.benutzer!.organisationId, sp.spende.id, adminKontext as never));
     await b.bereit;
     const rueck = fehlerVon(al().lastschrift.ruecklastschrift({ schauId: s.id, laufId: lauf.id, meldungId: r[0]!.meldungId, grund: "Widerspruch" }));
-    await Bun.sleep(300);
+    await wartet();
     b.frei();
     await b.p;
     expect(await rueck).toContain("Zuwendungsbestätigung");
@@ -101,10 +101,10 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     const h = await halten();
     await h.c`select id from lastschrift_lauf where id = ${lauf.id} for update`;
     const rueck = al().lastschrift.ruecklastschrift({ schauId: s.id, laufId: lauf.id, meldungId: x!.meldungId, grund: "Konto erloschen" });
-    await Bun.sleep(300);
+    await wartet();
     const { loescheAussteller } = await import("../services/datenschutz");
     const loeschen = m.db.transaction((tx) => loescheAussteller(tx, adminKontext.benutzer!.organisationId, y!.ausstellerId, "Löschwunsch", adminKontext as never));
-    await Bun.sleep(300);
+    await wartet(2);
     await h.loesen();
     await Promise.all([rueck, loeschen]);
     const [nachher] = await m.db.select().from(m.schema.lastschriftLauf).where(m.eq(m.schema.lastschriftLauf.id, lauf.id));
@@ -124,7 +124,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     const einlage = fehlerVon(al().kasse.kassenbewegung({ schauId: s.id, art: "einlage", betragCent: 100 }));
     const zahlung = fehlerVon(al().meldung.zahlungErfassen({ meldungId: mm.meldungId, betragCent: 1100, datum: heute, art: "bar" }));
     const status = fehlerVon(al().meldung.statusSetzen({ id: b.meldungId, status: "offen", grund: "Versehen" }));
-    await Bun.sleep(300);
+    await wartet(3);
     await h.c`update schau set phase = 'abgeschlossen' where id = ${s.id}`;
     await h.loesen();
     expect(await einlage).toContain("abgeschlossen");
@@ -145,7 +145,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     });
     await b.bereit;
     const abschluss = fehlerVon(al().schau.phaseSetzen({ id: s.id, phase: "abgeschlossen" }));
-    await Bun.sleep(300);
+    await wartet();
     b.frei();
     await b.p;
     expect(await abschluss).toContain("ohne Tagesabschluss");
@@ -164,7 +164,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     let h = await halten();
     await h.c`select id from meldung where id = ${a.meldungId} for update`;
     const wieder = fehlerVon(al().meldung.statusSetzen({ id: a.meldungId, status: "offen", grund: "Versehen" }));
-    await Bun.sleep(300);
+    await wartet();
     await h.c`update meldung set verfallen_cent = 500 where id = ${a.meldungId}`;
     await h.loesen();
     expect(await wieder).toContain("Verfall");
@@ -173,7 +173,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     h = await halten();
     await h.c`select id from meldung where id = ${b.meldungId} for update`;
     const verfall = fehlerVon(al().meldung.verfallBuchen({ id: b.meldungId, grund: "Rücktritt nach Meldeschluss" }));
-    await Bun.sleep(300);
+    await wartet();
     await h.c`update meldung set status = 'offen' where id = ${b.meldungId}`;
     await h.loesen();
     expect(await verfall).toContain("nur bei stornierten");
@@ -247,7 +247,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
       onlineZustimmungVorher: true,
       positionen: g.eintraege.map((e) => ({ ...pos(s.fid), id: e.id })),
     });
-    await Bun.sleep(300);
+    await wartet();
     await pub().oeffentlich.onlineVeroeffentlichung({ slug: s.slug, token, erlaubt: false });
     await h.loesen();
     await speichern;
@@ -310,7 +310,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     const h = await halten();
     await h.c`select pg_advisory_xact_lock(${KASSE}, ${s.id})`;
     const absagen = [fehlerVon(al().schau.absagen({ id: s.id, grund: "Seuchenverbot" })), fehlerVon(al().schau.absagen({ id: s.id, grund: "Seuchenverbot" }))];
-    await Bun.sleep(300);
+    await wartet(2);
     b.frei();
     await b.p;
     await h.loesen();
@@ -336,9 +336,9 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     await h.c`select id from aussteller where id = ${person!.id} for update`;
     const zweite = { schauId: s.id, aussteller: { ...leerA, id: person!.id, vorname: "Max", nachname: "Gleichzeitig", email: "" }, eingang: "papier" as const, istJugend: false, bemerkung: "", zustimmung: true, positionen: [pos(s.fid)], teilschau: jung!.id };
     const meldung = fehlerVon(al().meldung.speichern(zweite));
-    await Bun.sleep(300);
+    await wartet();
     const entfernen = fehlerVon(al().schau.teilschauenSetzen({ id: s.id, teilschauen: [haupt!] }));
-    await Bun.sleep(300);
+    await wartet(2);
     await h.loesen();
     const [em, et] = await Promise.all([meldung, entfernen]);
     const inJung = (await al().meldung.liste({ schauId: s.id })).filter((x) => x.teilschau === jung!.id);
@@ -359,7 +359,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     let h = await halten();
     await h.c`update organisation set glaeubiger_id = 'HALTEWERT' where id = ${org}`;
     const g = al().lastschrift.glaeubigerIdSetzen({ glaeubigerId: "DE98ZZZ09999999999" });
-    await Bun.sleep(300);
+    await wartet();
     await h.loesen();
     await g;
     expect((await letzter("organisation", "Gläubiger-ID")).alt).toBe("HALTEWERT");
@@ -369,7 +369,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     h = await halten();
     await h.c`update spender set ort = 'Zwischenort' where id = ${spenderId}`;
     const sp = al().spenden.spenderSpeichern({ id: spenderId, daten: { vorname: "Paul", nachname: "Spender", strasse: "Weg 1", plz: "12345", ort: "Neuort" } as never });
-    await Bun.sleep(300);
+    await wartet();
     await h.loesen();
     await sp;
     expect(((await letzter("spender", "Spender geändert")).alt as { ort: string }).ort).toBe("Zwischenort");
@@ -378,7 +378,7 @@ describe("Gleichzeitig: Geld und Meldung", () => {
     h = await halten();
     await h.c`update organisation set name = 'Zwischenname e. V.' where id = ${org}`;
     const vs = al().verein.speichern({ ...(v as never as Record<string, string>), name: "Neuer Name e. V." } as never);
-    await Bun.sleep(300);
+    await wartet();
     await h.loesen();
     await vs;
     expect(((await letzter("organisation", "Vereinsangaben")).alt as { name: string }).name).toBe("Zwischenname e. V.");
@@ -427,7 +427,7 @@ describe("Gleichzeitig: Nachprüfung (Stand, Sperrreihenfolge, Phase)", () => {
     const h = await halten();
     await h.c`select id from aussteller where id = ${a.ausstellerId} for update`;
     const speichern = fehlerVon(al().meldung.speichern(bearbeiten(s, a, g, { bemerkung: "nach dem Löschwunsch" })));
-    await Bun.sleep(300);
+    await wartet();
     const zweite = await h.c`update meldung set bemerkung = bemerkung where id = ${a.meldungId}`.then(
       () => null,
       (e: { code?: string }) => e.code ?? "fehler",
@@ -445,7 +445,7 @@ describe("Gleichzeitig: Nachprüfung (Stand, Sperrreihenfolge, Phase)", () => {
     let h = await halten();
     await h.c`update aussteller set telefon = '0123 45' where id = ${a.ausstellerId}`;
     let speichern = fehlerVon(al().meldung.speichern(bearbeiten(s, a, g, { bemerkung: "alt" })));
-    await Bun.sleep(300);
+    await wartet();
     await h.loesen();
     expect(await speichern).toContain("inzwischen geändert");
     const [aus] = await m.db.select().from(m.schema.aussteller).where(m.eq(m.schema.aussteller.id, a.ausstellerId));
@@ -456,7 +456,7 @@ describe("Gleichzeitig: Nachprüfung (Stand, Sperrreihenfolge, Phase)", () => {
     h = await halten();
     await h.c`update katalogeintrag set freitext = 'zwischendurch' where id = ${tier}`;
     speichern = fehlerVon(al().meldung.speichern(bearbeiten(s, a, g2, { aussteller: { ...leerA, id: a.ausstellerId, vorname: "Nora", nachname: "Gleichzeitig", email: "", telefon: "0123 45" } })));
-    await Bun.sleep(300);
+    await wartet();
     await h.loesen();
     expect(await speichern).toContain("inzwischen geändert");
     const [e] = await m.db.select().from(m.schema.katalogeintrag).where(m.eq(m.schema.katalogeintrag.id, tier));
@@ -474,7 +474,7 @@ describe("Gleichzeitig: Nachprüfung (Stand, Sperrreihenfolge, Phase)", () => {
       const h = await halten();
       await h.c`select pg_advisory_xact_lock(${sperre}, ${s.id})`;
       const wechsel = fehlerVon(al().schau.phaseSetzen({ id: s.id, phase: nach, grund: "Test" }));
-      await Bun.sleep(300);
+      await wartet();
       // Ein Verkauf bzw. eine Online-Meldung, die die alte Phase gelesen hat, läuft noch: der Wechsel wartet.
       const waehrenddessen = await phase();
       await h.loesen();

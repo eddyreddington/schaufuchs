@@ -5,11 +5,13 @@
  * Teil des Schau-Ablaufs.
  */
 import { describe, expect, test } from "bun:test";
+import { fruehesteFaelligkeit } from "@schau/domain";
 import { adminKontext, leer, m } from "./kontext";
 
 const al = () => m.appRouter.createCaller(adminKontext);
 const tablet = (r: { id: number; name: string }, schauId: number) => m.appRouter.createCaller({ ...leer, richter: { id: r.id, schauId, name: r.name, istObmann: false } });
 const leerBew = { sondernote: null, vorzuege: "", wuensche: "", maengel: "" };
+const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
 const person = (nachname: string) => ({ vorname: "Gesa", nachname, strasse: "", plz: "", ort: "", telefon: "", email: "", verein: "", kreisverband: "", registriernummer: "", geburtsdatum: null, istPreisrichter: false });
 
 /** Wartet, bis in dieser Datenbank eine Verbindung auf eine Sperre wartet; sonst Fehler. */
@@ -146,7 +148,7 @@ describe("Gleichzeitig gesamt: Mischbetrieb", () => {
     // Vereinssperren teilen sie mit der ersten.
     const { id: oid } = await al().schau.anlegen({ name: "Gesamt Misch Online", ort: "Halle" });
     await al().schau.gebuehrenSetzen({ schauId: oid, gebuehren: [{ art: "einzeltier", jugend: false, betragCent: 400, befreitPreisrichter: false }] });
-    await m.db.update(m.schema.schau).set({ phase: "meldung" }).where(m.eq(m.schema.schau.id, oid));
+    await m.db.update(m.schema.schau).set({ phase: "meldung", vereinIban: "DE02120300000000202051", vereinBic: "BYLADEM1001", vereinKontoinhaber: "Musterverein e. V." }).where(m.eq(m.schema.schau.id, oid));
     const o = await al().schau.get({ id: oid });
     const [wy] = await al().stammdaten.suche({ versionId: o.stammdatenVersionId!, q: "Wyandotten weiß" });
     const [tierA] = (await al().katalog.liste({ schauId: id })).filter((t) => t.id === tiere[0]!.id);
@@ -168,9 +170,18 @@ describe("Gleichzeitig gesamt: Mischbetrieb", () => {
     };
     const leerNw = { datum: null, impfstoff: "", tierarzt: "" };
     let gezahlt = 0;
+    const eingezogen: number[] = [];
     for (let i = 0; i < 6; i++) {
       const X = tiere[i % 4]!;
       const Y = tiere[(i + 1) % 4]!;
+      // Lastschrift in der Online-Schau: je Runde eine Meldung mit Mandat und eine offene Datei, gebucht im Gemenge.
+      const lx = await al().meldung.speichern({ schauId: oid, aussteller: person(`Lastschrift ${i}`), eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, positionen: [b.pos] });
+      await al().meldung.statusSetzen({ id: lx.meldungId, status: "bestaetigt" });
+      await al().lastschrift.mandatAnlegen({ ausstellerId: lx.ausstellerId, unterschriebenAm: "2026-10-01", wiederkehrend: true, iban: "DE02100500000054540402", kontoinhaber: "" });
+      await al().lastschrift.erstellen({ schauId: oid, faelligAm: fruehesteFaelligkeit(heute), vorabankuendigung: false });
+      await m.sql`update lastschrift_lauf set faellig_am = ${heute} where schau_id = ${oid} and status = 'offen'`;
+      const datei = (await al().lastschrift.uebersicht({ schauId: oid })).offen!.nachrichtId;
+      eingezogen.push(lx.meldungId);
       const wege: [string, () => Promise<unknown>][] = [
         ["Note Tablet", async () => tablet(A, id).richter.abgleich({ bewertungen: [{ katalogeintragId: X.id, punkte: 94 + (i % 2), ...leerBew, geraetZeit: new Date(), basisVersion: await version(X.id) }] })],
         ["Note AL", () => al().bewertung.setzen({ schauId: id, katalogeintragId: Y.id, punkte: 95, ...leerBew, geraetZeit: new Date(), grund: "Reklamation geprüft" } as never)],
@@ -190,11 +201,13 @@ describe("Gleichzeitig gesamt: Mischbetrieb", () => {
         ["Verkauf", () => al().kasse.verkaufen({ schauId: id, katalogeintragId: tiere[3]!.id, kaeuferName: `Käufer ${i}`, kaeuferAnschrift: "Kaufgasse 2", kaeuferRegistriernummer: "065350111111", kaeuferAlter: "ab16" } as never)],
         ["Online-Meldung", () => online(i)],
         ["Import", () => importieren(i)],
+        ["Lastschrift buchen", () => al().lastschrift.buchen({ schauId: oid, nachrichtId: datei })],
       ];
       const r = await Promise.allSettled(wege.map(([, f]) => hoechstens(f())));
       nurFachlich(r, wege.map(([n]) => n));
       // Die Absage wird in der Phase „Preise“ immer verweigert – fachlich, nicht durch eine Verklemmung.
       expect(r[9]!.status).toBe("rejected");
+      expect(r.at(-1)!.status).toBe("fulfilled");
       // Das Tablet meldet nicht „später“ (so meldet es eine Verklemmung oder Wartezeit des Servers).
       if (r[0]!.status === "fulfilled") {
         const t = (r[0] as PromiseFulfilledResult<{ ergebnisse: { status: string }[] }>).value.ergebnisse[0];
@@ -207,6 +220,8 @@ describe("Gleichzeitig gesamt: Mischbetrieb", () => {
     expect(s!.phase).toBe("preise");
     const { meldebetrag } = await import("../services/eintraege");
     expect((await meldebetrag(m.db as never, b.zahlung)).bezahltCent).toBe(gezahlt);
+    // Jede eingezogene Meldung genau einmal bezahlt.
+    for (const mid of eingezogen) expect((await meldebetrag(m.db as never, mid)).bezahltCent).toBe(400);
     const { pruefeProtokoll } = await import("../services/protokoll-suche");
     expect((await pruefeProtokoll(id)).fehler).toEqual([]);
     // Jede Note gehört zu einem Tier mit Nummer in einer bestätigten Meldung.
