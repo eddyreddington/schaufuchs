@@ -39,3 +39,8 @@ die Testdateien sind nach den üblichen Spaltennamen erfunden.
 **Wo:** `packages/domain/src/kontoauszug.ts` (Lesen, Schlüssel, Zuordnung; Test `kontoauszug.test.ts`),
 `apps/server/src/routers/kontoauszug.ts` (`pruefen`, `buchen`), Spalte `zahlung.bank_buchung` (Migration
 `0064_kontoauszug`), Web `seiten/kontoauszug.tsx` (Menü „Meldephase“ → „Kontoauszug“). Test: Server `60-kontoauszug`.
+
+**Nachtrag (26.11.2026): Laufzeit linear.** camt.053 wird ohne Regex über die ganze Datei gelesen (Tags per `indexOf`,
+Regex nur auf kurzen Stücken). Eine kaputte Datei (z. B. viele offene `<Ntry>` ohne Schluss-Tag) braucht damit so lange
+wie eine gültige gleicher Größe; vorher wuchs die Zeit mit dem Quadrat der Größe und hielt bei 4 MB den Server minutenlang
+an. Test: `kontoauszug.test.ts`, „große, kaputte Dateien“ (je 1 MB, unter 1 s).

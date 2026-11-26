@@ -47,26 +47,88 @@ function entities(s: string): string {
     .replace(/&amp;/g, "&");
 }
 
-/** Alle Blöcke <tag>…</tag> (ohne Verschachtelung gleichnamiger Tags, die camt nicht kennt). */
-function bloecke(xml: string, tag: string): string[] {
-  return [...xml.matchAll(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, "g"))].map((m) => m[1]!);
+// Alles hier nur mit indexOf und Regex auf kurzen, begrenzten Stücken: Eine Suche per Regex über die ganze Datei setzte
+// bei kaputten Dateien (z. B. 4 MB „<Ntry>“ ohne Schluss-Tag) an jedem offenen Tag neu an und liefe jedes Mal bis zum
+// Dateiende – quadratische Laufzeit, die den ganzen Server minutenlang anhielte.
+
+/** Leerraum wie \s in XML (Leerzeichen, Tab, Zeilenwechsel). */
+const leer = (z: string | undefined) => z === " " || z === "\t" || z === "\n" || z === "\r";
+
+/** Nächstes öffnendes Tag <tag> bzw. <tag …> ab `ab` (nicht <tagXyz>): Anfang und Ende, null, wenn keins mehr kommt. */
+function oeffnendesTag(xml: string, tag: string, ab: number): { anfang: number; ende: number } | null {
+  for (let i = xml.indexOf(`<${tag}`, ab); i >= 0; i = xml.indexOf(`<${tag}`, i + 1)) {
+    const z = xml[i + tag.length + 1];
+    if (z !== ">" && !leer(z)) continue;
+    const ende = xml.indexOf(">", i);
+    return ende < 0 ? null : { anfang: i, ende: ende + 1 };
+  }
+  return null;
+}
+
+/**
+ * Blöcke <tag>…</tag> (ohne Verschachtelung gleichnamiger Tags, die camt nicht kennt), höchstens `anzahl`. Fehlt ein
+ * Schluss-Tag, endet die Suche: Dahinter kann keiner mehr kommen.
+ */
+function bloecke(xml: string, tag: string, anzahl = Infinity): string[] {
+  const ergebnis: string[] = [];
+  const schluss = `</${tag}>`;
+  let ab = 0;
+  while (ergebnis.length < anzahl) {
+    const auf = oeffnendesTag(xml, tag, ab);
+    const zu = auf ? xml.indexOf(schluss, auf.ende) : -1;
+    if (!auf || zu < 0) break;
+    ergebnis.push(xml.slice(auf.ende, zu));
+    ab = zu + schluss.length;
+  }
+  return ergebnis;
+}
+
+/** Text ohne den Bereich vom ersten <tag> bis zum letzten </tag>. */
+function ohneBereich(xml: string, tag: string): string {
+  const auf = xml.indexOf(`<${tag}>`);
+  const schluss = `</${tag}>`;
+  const zu = xml.lastIndexOf(schluss);
+  return auf < 0 || zu < auf + tag.length + 2 ? xml : xml.slice(0, auf) + xml.slice(zu + schluss.length);
 }
 
 function erster(xml: string, ...pfad: string[]): string {
   let teil = xml;
   for (const tag of pfad) {
-    const b = bloecke(teil, tag)[0];
+    const b = bloecke(teil, tag, 1)[0];
     if (b === undefined) return "";
     teil = b;
   }
   return entities(teil.trim());
 }
 
+/** Erster Betrag <Amt Ccy="EUR">12.50</Amt> (ohne Währung: Euro). */
 function betragAus(xml: string): { cent: number; euro: boolean } | null {
-  const m = /<Amt(?:\s[^>]*?Ccy=["']([A-Z]{3})["'])?[^>]*>\s*([0-9]+(?:\.[0-9]{1,2})?)\s*<\/Amt>/.exec(xml);
-  if (!m) return null;
-  const [ganz, nach = ""] = m[2]!.split(".");
-  return { cent: Number(ganz) * 100 + Number(nach.padEnd(2, "0")), euro: (m[1] ?? "EUR") === "EUR" };
+  let zu = -1;
+  for (let auf = oeffnendesTag(xml, "Amt", 0); auf; auf = oeffnendesTag(xml, "Amt", auf.ende)) {
+    // Das nächste Schluss-Tag nur neu suchen, wenn das bisherige schon hinter uns liegt (sonst quadratisch bei vielen
+    // offenen <Amt> vor einem einzigen </Amt>).
+    if (zu < auf.ende) zu = xml.indexOf("</Amt>", auf.ende);
+    if (zu < 0) return null;
+    const wert = /^\s*([0-9]+(?:\.[0-9]{1,2})?)\s*$/.exec(xml.slice(auf.ende, zu));
+    if (!wert) continue;
+    const waehrung = /\sCcy=["']([A-Z]{3})["']/.exec(xml.slice(auf.anfang, auf.ende))?.[1];
+    const [ganz, nach = ""] = wert[1]!.split(".");
+    return { cent: Number(ganz) * 100 + Number(nach.padEnd(2, "0")), euro: (waehrung ?? "EUR") === "EUR" };
+  }
+  return null;
+}
+
+/** Code aus <Sts>BOOK</Sts> bzw. <Sts><Cd>BOOK</Cd></Sts>; leer, wenn keiner angegeben ist. */
+function statusAus(xml: string): string {
+  for (let i = xml.indexOf("<Sts>"); i >= 0; i = xml.indexOf("<Sts>", i + 1)) {
+    let j = i + 5;
+    while (leer(xml[j])) j++;
+    if (xml.startsWith("<Cd>", j)) j += 4;
+    while (leer(xml[j])) j++;
+    const code = xml.slice(j, j + 4);
+    if (/^[A-Z]{4}$/.test(code)) return code;
+  }
+  return "";
 }
 
 function leseCamt(roh: string): Buchung[] {
@@ -77,14 +139,14 @@ function leseCamt(roh: string): Buchung[] {
   for (const eintrag of bloecke(xml, "Ntry")) {
     if (erster(eintrag, "CdtDbtInd") !== "CRDT") continue;
     // Nur gebuchte Umsätze; vorgemerkte (PDNG), Informationen (INFO) und künftige (FUTR) nicht.
-    const status = /<Sts>\s*(?:<Cd>)?\s*([A-Z]{4})/.exec(eintrag)?.[1];
+    const status = statusAus(eintrag);
     if (status && status !== "BOOK") continue;
     const datum = gueltigesDatum((erster(eintrag, "BookgDt", "Dt") || erster(eintrag, "BookgDt", "DtTm") || erster(eintrag, "ValDt", "Dt")).slice(0, 10));
     if (!datum) continue;
-    const gesamt = betragAus(eintrag.replace(/<NtryDtls>[\s\S]*<\/NtryDtls>/, ""));
+    const gesamt = betragAus(ohneBereich(eintrag, "NtryDtls"));
     const details = bloecke(eintrag, "TxDtls");
     const zweckVon = (tx: string) => [...bloecke(tx, "Ustrd").map(entities), ...bloecke(tx, "Ref").map((r) => entities(r.trim()))].join(" ").replace(/\s+/g, " ").trim();
-    const eigene = details.map((tx) => betragAus(tx.replace(/<RmtInf>[\s\S]*<\/RmtInf>/, "")));
+    const eigene = details.map((tx) => betragAus(ohneBereich(tx, "RmtInf")));
     // Sammelbuchung ohne Einzelbeträge: ein Posten über den Gesamtbetrag – nie den Gesamtbetrag je Posten.
     if (details.length > 1 && eigene.some((b) => !b)) {
       if (gesamt?.euro && gesamt.cent > 0) ergebnis.push({ datum, betragCent: gesamt.cent, name: "", iban: "", zweck: details.map(zweckVon).filter(Boolean).join(" / ") });
@@ -93,7 +155,7 @@ function leseCamt(roh: string): Buchung[] {
     details.forEach((tx, i) => {
       const betrag = (details.length > 1 ? eigene[i] : null) ?? gesamt;
       if (!betrag || !betrag.euro || betrag.cent <= 0) return;
-      const dbtr = bloecke(tx, "Dbtr")[0] ?? "";
+      const dbtr = bloecke(tx, "Dbtr", 1)[0] ?? "";
       ergebnis.push({ datum, betragCent: betrag.cent, name: erster(dbtr, "Nm"), iban: erster(tx, "DbtrAcct", "IBAN"), zweck: zweckVon(tx) });
     });
     if (!details.length && gesamt?.euro && gesamt.cent > 0) ergebnis.push({ datum, betragCent: gesamt.cent, name: "", iban: "", zweck: "" });

@@ -187,3 +187,30 @@ describe("Schlüssel gegen Doppelbuchung", () => {
     expect(buchungsSchluessel([x])[0]).toBe(k[0]);
   });
 });
+
+describe("Kontoauszug: große, kaputte Dateien", () => {
+  // Rund 1 MB je Fall. Die Laufzeit muss linear bleiben: Eine Suche, die an jedem offenen Tag neu bis zum Dateiende
+  // läuft, bräuchte hier Sekunden bis Minuten und hielte den ganzen Server an.
+  const MB = 1 << 20;
+  const voll = (stueck: string) => stueck.repeat(Math.ceil(MB / stueck.length));
+  const kopf = "<BkToCstmrStmt><Stmt>";
+  const eintragAnfang = "<Ntry><CdtDbtInd>CRDT</CdtDbtInd><BookgDt><Dt>2026-11-02</Dt></BookgDt>";
+  const faelle: [string, string][] = [
+    ["offene <Ntry> ohne Schluss-Tag", kopf + voll("<Ntry>")],
+    ["offene <Ntry …> ohne >", kopf + voll("<Ntry a")],
+    ["offene <NtryDtls> in einem Eintrag", kopf + eintragAnfang + voll("<NtryDtls>") + "</Ntry>"],
+    ["offene <RmtInf> in einem Posten", kopf + eintragAnfang + "<NtryDtls><TxDtls>" + voll("<RmtInf>") + "</TxDtls></NtryDtls></Ntry>"],
+    ["offene <Amt Ccy=…> ohne >", kopf + eintragAnfang + voll('<Amt Ccy="EUR" ') + "</Ntry>"],
+    ["offene <Amt> ohne Schluss-Tag", kopf + eintragAnfang + voll("<Amt>1") + "</Ntry>"],
+    ["viele <Amt> vor einem einzigen </Amt>", kopf + eintragAnfang + voll("<Amt>1x") + "</Amt></Ntry>"],
+    ["Leerraum nach <Sts>", kopf + "<Ntry><CdtDbtInd>CRDT</CdtDbtInd><Sts>" + " ".repeat(MB) + "</Ntry>"],
+    ["offene <Ustrd>, <Dbtr> und <Ref>", kopf + eintragAnfang + "<NtryDtls><TxDtls>" + voll("<Ustrd><Dbtr><Ref>") + "</TxDtls></NtryDtls></Ntry>"],
+  ];
+  for (const [name, xml] of faelle) {
+    test(name, () => {
+      const start = performance.now();
+      leseKontoauszug(bytes(xml));
+      expect(performance.now() - start).toBeLessThan(1000);
+    });
+  }
+});
