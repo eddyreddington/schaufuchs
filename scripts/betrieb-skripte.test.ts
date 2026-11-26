@@ -1,5 +1,5 @@
 /**
- * Betrieb der fertigen Installation (Entscheidung 034): Prüfsummen und Image-Digests bei Installation, Update und
+ * Betrieb der fertigen Installation (Entscheidung 037): Prüfsummen und Image-Digests bei Installation, Update und
  * Rücknahme, Rechte der .env, Notfallblatt nicht beim Benutzer der Sicherungen, Hinweise in scripts/docker-start.sh.
  * Docker und die Systembefehle werden durch Skripte ersetzt, die jeden Aufruf mitschreiben – es wird nichts gezogen,
  * gestartet oder verlinkt.

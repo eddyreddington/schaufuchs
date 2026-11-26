@@ -57,7 +57,7 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.licenses=EUPL-1.2
       # Prüfsummen der Dateien, die install.sh und „schaufuchs update“ laden, und die Digests der Programme
-      # (Entscheidung 034). Beide prüfen dagegen; ein später in der Registry ersetztes Programm fällt so auf.
+      # (Entscheidung 037). Beide prüfen dagegen; ein später in der Registry ersetztes Programm fällt so auf.
       - name: Prüfsummen
         env:
           DIGEST_APP: ${{ steps.app.outputs.digest }}

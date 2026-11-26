@@ -1,6 +1,6 @@
 /**
  * Stellt Altbestand im Klartext auf verschlüsselte Spalten um und bindet Bankdaten ohne Zeile (`enc1:`) an ihre Zeile
- * (`enc2:`, Entscheidung 034). Läuft bei jedem Start nach den Migrationen; findet es nichts mehr, tut es nichts. Lesen
+ * (`enc2:`, Entscheidung 035). Läuft bei jedem Start nach den Migrationen; findet es nichts mehr, tut es nichts. Lesen
  * über Drizzle reicht den Altbestand unverändert durch, Schreiben verschlüsselt (Bankdaten gebunden).
  */
 import { eq, inArray, sql } from "drizzle-orm";
@@ -29,7 +29,7 @@ export async function pruefeDatenschluessel(db: typeof Db) {
     ["select kontoinhaber as w from sepa_mandat where kontoinhaber ~ '^enc[12]:' limit 1", "sepaMandat.kontoinhaber"],
     ["select daten->>'enc' as w from lastschrift_lauf where daten ? 'enc' limit 1", "lastschriftLauf.daten"],
   ];
-  // Bankdaten ohne Zeile (enc1, vor Entscheidung 034) sind hier noch erlaubt: die Umstellung bindet sie gleich danach.
+  // Bankdaten ohne Zeile (enc1, vor Entscheidung 035) sind hier noch erlaubt: die Umstellung bindet sie gleich danach.
   erlaubeKlartext(true);
   try {
     for (const [q, feld] of proben) {

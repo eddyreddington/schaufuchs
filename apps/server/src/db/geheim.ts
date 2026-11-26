@@ -8,7 +8,7 @@
  * Leere Werte bleiben leer (Abfragen wie „IBAN angegeben?“ funktionieren weiter). Vergleiche mit Inhalt (z. B.
  * `eq(aussteller.iban, "DE…")`) treffen nie – jeder Wert hat einen eigenen Zufalls-IV; nur in der Anwendung vergleichen.
  *
- * Zwei Formen (Entscheidung 034):
+ * Zwei Formen (Entscheidung 035):
  * - `enc1:…` – an das Feld gebunden (Zusatzdaten „aussteller.iban“): passt nur in seine Spalte.
  * - `enc2:<Zeile>:…` – Bankdaten (IBAN, Kontoinhaber von Ausstellern und Mandaten) zusätzlich an ihre Zeile gebunden
  *   (Zusatzdaten „aussteller.iban#42“). Die Zeilennummer steht lesbar davor und ist mit verschlüsselt; ob sie zur Zeile

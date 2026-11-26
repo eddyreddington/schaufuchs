@@ -97,7 +97,7 @@ export function lesbar(geheim: string): string {
 const NOTFALL_ZEICHEN = "abcdefghjkmnpqrstuvwxyz23456789";
 /** Form eines Notfallcodes bei der Eingabe (mit oder ohne Bindestrich). */
 export const NOTFALL_FORM = /^[a-z0-9]{4}-?[a-z0-9]{4}$/i;
-/** Kennung des Hash-Formats mit Schlüssel (Entscheidung 034); Einträge ohne sie stammen aus Versionen bis 1.21. */
+/** Kennung des Hash-Formats mit Schlüssel (Entscheidung 036); Einträge ohne sie stammen aus Versionen bis 1.21. */
 const NOTFALL_PRAEFIX = "h1:";
 const normiert = (code: string) => code.replace(/[\s-]/g, "").toLowerCase();
 

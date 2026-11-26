@@ -26,7 +26,7 @@ export const wartezeitJeKonto = new Wartezeit(10, 5 * 60_000, 60 * 60_000, (min)
 /**
  * Zweiter Faktor: je Konto 10 Fehlversuche in 15 Minuten (über alle Anmeldungen hinweg – ein Code hat nur 6 Ziffern).
  * Bei der Anmeldung zählen Codes aus der App außerdem 24 Stunden lang: nach 30 Fehlversuchen ist die Anmeldung mit Code
- * gesperrt, bis die Ausstellungsleitung die Sperre aufhebt (Entscheidung 034) – sonst probierte jemand mit bekanntem
+ * gesperrt, bis die Ausstellungsleitung die Sperre aufhebt (Entscheidung 036) – sonst probierte jemand mit bekanntem
  * Passwort über Wochen weiter. Ein Notfallcode kommt dann noch hinein. Hinweismails: CODE_HINWEIS_NACH und bei der Sperre.
  */
 export const codeBremse = new Stufenbremse(

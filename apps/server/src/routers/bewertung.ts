@@ -23,7 +23,7 @@ import { pruefeNichtAbgeschlossen } from "../services/kasse";
 // - je Preisrichter eine steigende Wartezeit nach 10 Fehlversuchen von fremden Adressen (höchstens 15 Minuten);
 //   Tablets, die schon angemeldet waren, betrifft sie nicht. Die AL hebt sie auf („Sperre aufheben“ oder neue PIN).
 // Ein Tablet, an dem sich der Preisrichter schon angemeldet hat, erkennt der Server am Gerätekennzeichen (Cookie,
-// Entscheidung 034): Für es gilt eine eigene Bremse statt der Adresse – Fremde im selben Hallen-WLAN sperren es nicht aus.
+// Entscheidung 036): Für es gilt eine eigene Bremse statt der Adresse – Fremde im selben Hallen-WLAN sperren es nicht aus.
 export const pinBremse = new Bremse(8, 15 * 60_000, "Zu viele Fehlversuche. Bitte 15 Minuten warten oder bei der Ausstellungsleitung eine neue PIN holen.");
 export const pinBremseJeAdresse = new Bremse(60, 15 * 60_000, "Zu viele Fehlversuche von diesem Netz. Bitte 15 Minuten warten.");
 export const pinWartezeitJeRichter = new Wartezeit(

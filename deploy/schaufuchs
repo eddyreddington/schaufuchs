@@ -19,10 +19,10 @@ setze() {
     printf '%s=%s\n' "$1" "$2" >> .env
   fi
 }
-# Prüfsummen und Digests (Entscheidung 034): SHA-256 einer Datei, Eintrag in der Datei SHA256SUMS eines Release.
+# Prüfsummen und Digests (Entscheidung 037): SHA-256 einer Datei, Eintrag in der Datei SHA256SUMS eines Release.
 pruefsumme() { if command -v sha256sum > /dev/null 2>&1; then sha256sum "$1"; else shasum -a 256 "$1"; fi | awk '{ print $1 }'; }
 eintrag() { awk -v n="$2" '$2 == n { print $1; exit }' "$1"; }
-# Ist das Programm $1 (Name:Version) mit dem Digest $2 geladen? Ohne Digest (Installation vor 034) gibt es nichts zu prüfen.
+# Ist das Programm $1 (Name:Version) mit dem Digest $2 geladen? Ohne Digest (Installation vor 037) gibt es nichts zu prüfen.
 programm_pruefen() {
   [ -n "$2" ] || return 0
   docker image inspect -f '{{range .RepoDigests}}{{println .}}{{end}}' "$1" 2> /dev/null | grep -qxF "${1%:*}@$2"
@@ -210,7 +210,7 @@ case "$befehl" in
     hole() { case "$quelle" in http*) curl -fsSL "$quelle/$1" -o "$2" ;; *) cp "$quelle/$1" "$2" ;; esac || verwerfen "Konnte $1 nicht laden – nichts verändert."; }
     for d in docker-compose.yml Caddyfile schaufuchs; do hole "deploy/$d" "$d.neu"; done
     hole scripts/wiederherstellen.sh scripts/wiederherstellen.sh.neu
-    # Prüfsummen des Release (Workflow „Veröffentlichen“). Releases vor Entscheidung 034 haben keine (404).
+    # Prüfsummen des Release (Workflow „Veröffentlichen“). Releases vor Entscheidung 037 haben keine (404).
     case "$summen_quelle" in
       http*) code=$(curl -sSL -w '%{http_code}' -o "$summen" "$summen_quelle" 2> /dev/null || true) ;;
       *) if [ -f "$summen_quelle" ]; then cp "$summen_quelle" "$summen" && code=200; else code=404; fi ;;
@@ -271,7 +271,7 @@ case "$befehl" in
     schluessel=$(schluessel_abfragen)
     trap 'rm -f "$schluessel"' EXIT
     # Das vorige Programm liegt meist noch hier. Nur ziehen, wenn nicht (oder ohne gemerkten Digest), und danach prüfen:
-    # Ein in der Registry ersetztes Programm wird nicht zurückgespielt (Entscheidung 034).
+    # Ein in der Registry ersetztes Programm wird nicht zurückgespielt (Entscheidung 037).
     bild=$(wert SCHAUFUCHS_IMAGE)
     d_app=$(wert SCHAUFUCHS_VORHER_DIGEST_APP)
     d_backup=$(wert SCHAUFUCHS_VORHER_DIGEST_BACKUP)

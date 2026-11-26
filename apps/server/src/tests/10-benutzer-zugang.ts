@@ -293,7 +293,7 @@ describe("Einladungslink statt Passwort", () => {
     expect(einladung).toBe(true);
     const linkAus = async (an: string) => {
       const mails = await m.db.select().from(m.schema.postausgang).where(m.eq(m.schema.postausgang.an, an)).orderBy(m.desc(m.schema.postausgang.id));
-      // Im Postausgang steht der Link verschlüsselt (Entscheidung 034).
+      // Im Postausgang steht der Link verschlüsselt (Entscheidung 035).
       return /\/einladung#([A-Za-z0-9_-]{40,})/.exec((await import("../services/post")).einladungEinsetzen(mails[0]!.text))?.[1] ?? "";
     };
     const token1 = await linkAus("eva@test.de");

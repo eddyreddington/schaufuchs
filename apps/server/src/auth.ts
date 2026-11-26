@@ -9,7 +9,7 @@ export const COOKIE = "schau_sitzung";
 /** Eigenes Cookie für Preisrichter, damit Tablet- und Büro-Anmeldung auf einem Gerät nebeneinander bestehen. */
 export const COOKIE_RICHTER = "schau_richter";
 /**
- * Gerätekennzeichen (Entscheidung 034): zufällig, gesetzt bei der ersten erfolgreichen Anmeldung eines Geräts. Daran
+ * Gerätekennzeichen (Entscheidung 036): zufällig, gesetzt bei der ersten erfolgreichen Anmeldung eines Geräts. Daran
  * erkennen die Bremsen ein bekanntes Gerät auch hinter einer gemeinsamen Adresse (Hallen-WLAN, NAT) – Fehlversuche
  * Fremder an derselben Adresse sperren es dann nicht aus. Es meldet niemanden an und ersetzt kein Passwort.
  */

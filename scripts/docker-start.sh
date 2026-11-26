@@ -21,7 +21,7 @@ if [ -z "$(wert BACKUP_EMPFAENGER)" ] && [ "$(wert BACKUP_UNVERSCHLUESSELT)" != 
   echo "BACKUP_EMPFAENGER fehlt in der .env (öffentlicher age-Schlüssel, siehe .env.example) – Update abgebrochen, nichts verändert." >&2
   exit 1
 fi
-# Nur Hinweise, kein Abbruch (Entscheidung 034).
+# Nur Hinweise, kein Abbruch (Entscheidung 037).
 if [ -n "$(find .env -perm -004 2>/dev/null)" ]; then
   echo "Hinweis: Die .env ist für alle Benutzer dieses Rechners lesbar (DATENSCHLUESSEL, Passwörter) – bitte: chmod 600 .env" >&2
 fi

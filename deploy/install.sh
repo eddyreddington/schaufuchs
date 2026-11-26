@@ -124,7 +124,7 @@ hole deploy/schaufuchs "$ZIEL/schaufuchs"
 hole scripts/wiederherstellen.sh "$ZIEL/scripts/wiederherstellen.sh"
 chmod 755 "$ZIEL/schaufuchs"
 
-# Prüfsummen des Release (Entscheidung 034): Dateien hier, Digests der Programme unten. Releases ohne (404): ungeprüft.
+# Prüfsummen des Release (Entscheidung 037): Dateien hier, Digests der Programme unten. Releases ohne (404): ungeprüft.
 pruefsumme() { if command -v sha256sum > /dev/null 2>&1; then sha256sum "$1"; else shasum -a 256 "$1"; fi | awk '{ print $1 }'; }
 eintrag() { awk -v n="$2" '$2 == n { print $1; exit }' "$1"; }
 summen=$(mktemp)
@@ -234,7 +234,7 @@ echo
 # ── Notfallblatt ──────────────────────────────────────────────────────────
 # Im Installationsordner, nur für den Besitzer lesbar – unter Linux root. NICHT beim Benutzer, dem die Sicherungen
 # gehören: Wer dessen Konto übernimmt, könnte sonst mit dem Sicherungsschlüssel alle Sicherungen öffnen (Entscheidung
-# 034). Lesen nur mit sudo; nach dem Ablegen löschen.
+# 037). Lesen nur mit sudo; nach dem Ablegen löschen.
 blatt="$ZIEL/notfallblatt.txt"
 lesen="cat"
 [ "$SYSTEM" != "Linux" ] || lesen="sudo cat"

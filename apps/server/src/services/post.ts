@@ -12,7 +12,7 @@ const TLS_ANGABEN = ["secure", "requireTLS", "ignoreTLS", "opportunisticTLS"];
 /**
  * SMTP_URL (smtp://benutzer:passwort@host:587 oder smtps://…:465) mit kurzen Zeitgrenzen: ein gestörter Mailserver
  * hält keine Anfrage auf. Weitere Angaben als Parameter, z. B. ?tls.rejectUnauthorized=false.
- * Immer verschlüsselt (Entscheidung 034): smtps:// von Anfang an, smtp:// nur mit STARTTLS (requireTLS) – sonst
+ * Immer verschlüsselt (Entscheidung 036): smtps:// von Anfang an, smtp:// nur mit STARTTLS (requireTLS) – sonst
  * genügte es, das STARTTLS-Angebot des Mailservers auf dem Weg zu streichen, und Passwort und Einladungslinks gingen im
  * Klartext hinaus. Abschalten nur ausdrücklich mit SMTP_OHNE_TLS=1 (etwa ein Mailserver im eigenen Netz ohne TLS).
  */
@@ -94,7 +94,7 @@ export function naechsterVersuch(createdAt: Date, versuche: number): Date | null
 }
 
 /**
- * Einladungslinks im Postausgang (Entscheidung 034): der Teil hinter „/einladung#“ steht dort nur verschlüsselt
+ * Einladungslinks im Postausgang (Entscheidung 035): der Teil hinter „/einladung#“ steht dort nur verschlüsselt
  * (Datenschlüssel), eingesetzt wird er erst beim Versand; danach, beim Annehmen oder bei einem neueren Link wird er
  * unkenntlich gemacht. So taugt weder die Datenbank noch eine Sicherung als Zugang.
  */

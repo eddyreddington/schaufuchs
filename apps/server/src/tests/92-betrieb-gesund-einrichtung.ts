@@ -1,6 +1,6 @@
 /**
  * Betrieb: Was `/api/gesund` Besuchern über den Proxy zeigt (Entscheidung 024, Nachtrag) und die Ersteinrichtung im
- * Browser ohne gesetzten EINRICHTUNG_CODE (Entscheidung 034).
+ * Browser ohne gesetzten EINRICHTUNG_CODE (Entscheidung 037).
  */
 import { describe, expect, test } from "bun:test";
 import { config } from "../config";

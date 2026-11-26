@@ -8,7 +8,7 @@ import { schutzEinspielen } from "./db/schutz";
 await migrate(db, { migrationsFolder: join(import.meta.dir, "../drizzle") });
 await schutzEinspielen(sql);
 // IBAN, Kontoinhaber, SEPA-Dateien und Zwei-Faktor-Geheimnisse aus der Zeit vor der Verschlüsselung umstellen; Bankdaten
-// an ihre Zeile binden (Entscheidung 034).
+// an ihre Zeile binden (Entscheidung 035).
 await pruefeDatenschluessel(db);
 const umgestellt = await verschluesseleBestand(db);
 if (umgestellt.aussteller + umgestellt.benutzer + umgestellt.sepa + umgestellt.mandate) {

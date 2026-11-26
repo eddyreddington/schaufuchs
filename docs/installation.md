@@ -275,7 +275,7 @@ Danach prüfen, ob die Absicherung aus Schritt 5 greift (ab SchauFUCHS 1.2.1): `
 Der Installer zeigt am Ende das Notfallblatt mit zwei Schlüsseln an. Ohne sie lässt sich nach einem Ausfall keine
 Sicherung zurückspielen. Bestätigen Sie mit `ja`, dass Sie es abgelegt haben, löscht er die Datei gleich wieder. Sonst
 liegt sie unter `/opt/schaufuchs/notfallblatt.txt`, nur mit `sudo` lesbar – bewusst nicht in Ihrem Benutzerordner, dem
-auch die Sicherungen gehören ([Entscheidung 034](entscheidungen/034-betrieb-pruefsummen-und-schluessel.md)):
+auch die Sicherungen gehören ([Entscheidung 037](entscheidungen/037-betrieb-pruefsummen-und-schluessel.md)):
 
 ```bash
 sudo cat /opt/schaufuchs/notfallblatt.txt
@@ -299,7 +299,7 @@ Das Blatt in den Vereinsunterlagen ablegen, wo es im Notfall jemand findet. Dana
 sudo rm /opt/schaufuchs/notfallblatt.txt
 ```
 
-Solange ein Notfallblatt auf dem Server liegt (auch `~/schaufuchs-notfallblatt.txt` von Installationen vor 034),
+Solange ein Notfallblatt auf dem Server liegt (auch `~/schaufuchs-notfallblatt.txt` von Installationen vor 037),
 warnen `sudo schaufuchs status`, `update` und `pruefen`.
 
 ## Schritt 8 – Verein einrichten
@@ -367,7 +367,7 @@ Anmelden aus dem Vereinsnetz mit `ssh verwalter@192.0.2.20`. Alle `schaufuchs`-B
   gehen dabei verloren. Das Update braucht mindestens 3 GB freien Platz und bricht sonst ab, bevor es etwas ändert.
   Danach behält es nur die neue und die vorige Version, ältere löscht es (ab 1.12.1). Dateien und Programme prüft es
   gegen die Prüfsummen des Release; weicht etwas ab, bricht es ab, bevor es etwas ändert – dann nicht wiederholen,
-  sondern melden ([Entscheidung 034](entscheidungen/034-betrieb-pruefsummen-und-schluessel.md)).
+  sondern melden ([Entscheidung 037](entscheidungen/037-betrieb-pruefsummen-und-schluessel.md)).
 - **Betriebssystem:** Sicherheitsupdates kommen automatisch (Schritt 5.3). Einmal im Monat, nicht am Schautag, auch die
   übrigen Updates einspielen; dazu gehört Docker, das dabei SchauFUCHS kurz neu startet:
 

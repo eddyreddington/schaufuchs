@@ -1,4 +1,4 @@
-# 034 Anmeldung gehärtet: Gerätekennzeichen, Langzeitgrenze für Codes, Notfallcodes mit Schlüssel, SMTP nur mit TLS
+# 036 Anmeldung gehärtet: Gerätekennzeichen, Langzeitgrenze für Codes, Notfallcodes mit Schlüssel, SMTP nur mit TLS
 
 **Stand:** gilt (26.11.2026)
 
