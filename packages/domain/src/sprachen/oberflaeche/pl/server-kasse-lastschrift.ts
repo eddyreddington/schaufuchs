@@ -17,6 +17,8 @@ export const lastschrift: T["lastschrift"] = {
   ibanMandat: "Nieprawidłowy IBAN upoważnienia.",
   kontoAusserhalb: "Konto poza UE/EOG.",
   einmaligAndereDatei: "Jednorazowe upoważnienie jest już w innym pliku polecenia zapłaty.",
+  onlineUnbestaetigt: "Zgłoszenie online nie zostało jeszcze potwierdzone przez wystawcę.",
+  onlineStiftungSpende: "Fundacja nagrody i darowizna ze zgłoszenia online: prosimy przelewem lub gotówką.",
   sperreGlaeubiger: "W „Klub i ochrona danych” brakuje identyfikatora wierzyciela klubu.",
   sperreKonto: "W ustawieniach wystawy brakuje konta klubu (IBAN).",
   nurEwr: "Polecenie zapłaty tylko z kont w UE/EOG – dla innych krajów potrzebny byłby BIC i adres. Prosimy zapłacić gotówką lub przelewem.",

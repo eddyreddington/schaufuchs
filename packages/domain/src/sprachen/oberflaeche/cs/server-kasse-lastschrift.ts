@@ -17,6 +17,8 @@ export const lastschrift: T["lastschrift"] = {
   ibanMandat: "IBAN mandátu je neplatný.",
   kontoAusserhalb: "Účet mimo EU/EHP.",
   einmaligAndereDatei: "Jednorázový mandát už je v jiném souboru inkasa.",
+  onlineUnbestaetigt: "Online přihláška zatím nebyla potvrzena vystavovatelem.",
+  onlineStiftungSpende: "Věnovaná cena a dar z online přihlášky: prosím převodem nebo v hotovosti.",
   sperreGlaeubiger: "V části „Spolek a ochrana údajů“ chybí identifikátor věřitele spolku.",
   sperreKonto: "V nastavení výstavy chybí účet spolku (IBAN).",
   nurEwr: "Inkaso jen z účtů v EU/EHP – pro jiné země by bylo potřeba BIC a adresa. Zaplaťte prosím v hotovosti nebo převodem.",

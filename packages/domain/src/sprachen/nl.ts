@@ -58,6 +58,7 @@ export const nl: Texte = {
     erstNachZahlung: "De inschrijving wordt pas na ontvangst van de betaling verwerkt.",
     bankverbindung: "Bankgegevens:",
     mailUnterwegs: "Er is een bevestiging per e-mail onderweg.",
+    perMail: "De link naar uw inschrijving hebben we naar uw e-mailadres gestuurd. Bevestig de inschrijving daar.",
     meineMeldung: "Mijn inschrijving en uitslagen",
   },
   ueberweisung: {
@@ -195,6 +196,9 @@ export const nl: Texte = {
     widerrufen: "Toestemming intrekken",
     erlauben: "Publicatie toestaan",
     fehlerEltern: "Geef bij een jeugdinschrijving de naam op van een ouder of voogd die akkoord gaat.",
+    bestaetigenHinweis: "Bevestig dat u deze inschrijving hebt ingediend.",
+    bestaetigen: "Inschrijving bevestigen",
+    nichtAktiv: "Deze inschrijving is geannuleerd of afgewezen.",
   },
   ergebnisse: {
     titel: (schau: string) => `Uitslagen: ${schau}`,
@@ -251,6 +255,7 @@ export const nl: Texte = {
     giroCode: "Via de link hieronder vindt u een QR-code voor uw bank-app.",
     erstNachZahlung: "De inschrijving wordt pas na ontvangst van de betaling verwerkt.",
     pruefenLink: "Hier kunt u uw inschrijving controleren en later uw uitslagen bekijken:",
+    bestaetigenLink: "Bevestig uw inschrijving via deze link. Hebt u niet ingeschreven, bevestig dan niet en laat het de showleiding weten:",
     pruefenTiere: "Controleer ras, kleurslag, geslacht en leeftijd van elk dier.",
     online: "U hebt toestemming gegeven dat uw naam, woonplaats en vereniging in de online uitslagen verschijnen. U kunt dat altijd intrekken via de link hierboven.",
     offline: "Op internet verschijnt u zonder naam. Via de link hierboven kunt u de publicatie altijd toestaan.",

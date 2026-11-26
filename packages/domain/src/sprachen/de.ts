@@ -67,6 +67,7 @@ export const de = {
     erstNachZahlung: "Die Meldung wird erst nach Zahlungseingang bearbeitet.",
     bankverbindung: "Bankverbindung:",
     mailUnterwegs: "Eine Bestätigung ist per E-Mail unterwegs.",
+    perMail: "Den Link zu Ihrer Meldung haben wir an Ihre E-Mail-Adresse geschickt. Bitte bestätigen Sie die Meldung dort.",
     meineMeldung: "Meine Meldung und Ergebnisse",
   },
   /** Überweisung mit Referenz und GiroCode (Entscheidung 021). */
@@ -205,6 +206,9 @@ export const de = {
     widerrufen: "Einwilligung widerrufen",
     erlauben: "Veröffentlichung erlauben",
     fehlerEltern: "Bei einer Jugendmeldung bitte den Namen eines Erziehungsberechtigten angeben, der einverstanden ist.",
+    bestaetigenHinweis: "Bitte bestätigen Sie, dass Sie diese Meldung abgegeben haben.",
+    bestaetigen: "Meldung bestätigen",
+    nichtAktiv: "Diese Meldung ist storniert oder abgelehnt.",
   },
   ergebnisse: {
     titel: (schau: string) => `Ergebnisse: ${schau}`,
@@ -261,6 +265,7 @@ export const de = {
     giroCode: "Einen GiroCode für Ihre Banking-App finden Sie unter dem Link unten.",
     erstNachZahlung: "Die Meldung wird erst nach Zahlungseingang bearbeitet.",
     pruefenLink: "Hier können Sie Ihre Meldung prüfen und später Ihre Ergebnisse sehen:",
+    bestaetigenLink: "Bitte bestätigen Sie Ihre Meldung über diesen Link. Haben Sie nicht gemeldet, bestätigen Sie bitte nicht und geben der Ausstellungsleitung Bescheid:",
     pruefenTiere: "Bitte prüfen Sie Rasse, Farbenschlag, Geschlecht und Alter jedes Tieres.",
     online: "Sie haben eingewilligt, dass Name, Wohnort und Verein in den Online-Ergebnissen erscheinen. Widerrufen können Sie das jederzeit über den Link oben.",
     offline: "Im Internet erscheinen Sie ohne Namen. Über den Link oben können Sie die Veröffentlichung jederzeit erlauben.",

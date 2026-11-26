@@ -17,6 +17,8 @@ export const lastschrift: T["lastschrift"] = {
   ibanMandat: "IBAN van de machtiging ongeldig.",
   kontoAusserhalb: "Rekening buiten de EU/EER.",
   einmaligAndereDatei: "De eenmalige machtiging staat al in een ander incassobestand.",
+  onlineUnbestaetigt: "Online-inschrijving nog niet door de inzender bevestigd.",
+  onlineStiftungSpende: "Prijsschenking en gift uit de online-inschrijving: graag per overschrijving of contant.",
   sperreGlaeubiger: "Onder „Vereniging en privacy” ontbreekt het incassant-ID van de vereniging.",
   sperreKonto: "In de instellingen van de show ontbreekt de rekening van de vereniging (IBAN).",
   nurEwr: "Incasso alleen van rekeningen in de EU/EER – voor andere landen zijn BIC en adres nodig. Betaal contant of per overschrijving.",

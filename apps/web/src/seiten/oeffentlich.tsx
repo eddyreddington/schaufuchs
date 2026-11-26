@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { AusstellerFelder, leererAussteller } from "../komponenten/aussteller";
 import { Ueberweisung, type UeberweisungDaten } from "../komponenten/girocode";
 import { useLesemodusAussteller } from "../komponenten/lesemodus";
+import { MeldungBestaetigen } from "./oeffentlich-bestaetigen";
 import { alsEingabe, neuePosition, PositionenEditor, pruefePositionen, type Position } from "../komponenten/positionen";
 import { formatKatalognummer, parseEuro } from "../lib";
 import { fehlerFuerAussteller, SprachWahl, useSprache, useTexte } from "../sprache";
@@ -173,10 +174,15 @@ export function OeffentlicheSchau() {
           ) : (
             bankZeigen && gefordertCent(gemeldet.betrag) > 0 && <p className="mt-2">{tx.dank.bankverbindung} {d.bankverbindung}</p>
           )}
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <p>{tx.dank.mailUnterwegs}</p>
-            <Link to={`meldung/${gemeldet.token}`} className={knopfKlasse("zweit")}>{tx.dank.meineMeldung}</Link>
-          </div>
+          {/* Vorhandener Stammsatz: der Link kommt nur per Mail (Entscheidung 034). */}
+          {gemeldet.token ? (
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <p>{tx.dank.mailUnterwegs}</p>
+              <Link to={`meldung/${gemeldet.token}`} className={knopfKlasse("zweit")}>{tx.dank.meineMeldung}</Link>
+            </div>
+          ) : (
+            <Hinweis className="mt-4">{tx.dank.perMail}</Hinweis>
+          )}
         </Abschnitt>
       ) : d.meldung.offen ? (
         <>
@@ -417,7 +423,7 @@ export function MeineMeldung() {
         {d.ueberweisung && <Ueberweisung bank={d.schau.bankverbindung} ue={d.ueberweisung} />}
       </Abschnitt>
       <OnlineVeroeffentlichung slug={slug} token={token} online={d.online} jugend={d.jugend} />
-      {!d.meldebogen && <Hinweis ton="warnung">{t.keinMeldebogen}</Hinweis>}
+      {d.bestaetigen ? <MeldungBestaetigen slug={slug} token={token} /> : !d.meldebogen && <Hinweis ton="warnung">{t.keinMeldebogen}</Hinweis>}
       {!d.schau.freigegeben && <Hinweis>{t.nachFreigabe}</Hinweis>}
       <TabellenRahmen fuss={<span>{t.tiere(d.tiere.length)}</span>}>
         <table className="tabelle">

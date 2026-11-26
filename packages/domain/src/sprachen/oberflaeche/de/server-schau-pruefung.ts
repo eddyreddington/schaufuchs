@@ -69,6 +69,8 @@ export const serverSchauPruefung = {
     selbst: (n: string) => `${n} Online-Meldungen mit Jugend oder Preisrichter prüfen`,
     bogen1: "1 Meldung ohne unterschriebenen Meldebogen",
     bogen: (n: string) => `${n} Meldungen ohne unterschriebenen Meldebogen`,
+    onlineUnbestaetigt1: "1 Online-Meldung nicht vom Aussteller bestätigt",
+    onlineUnbestaetigt: (n: string) => `${n} Online-Meldungen nicht vom Aussteller bestätigt`,
     registrier1: "1 Meldung ohne gültige Registriernummer",
     registrier: (n: string) => `${n} Meldungen ohne gültige Registriernummer`,
     erklaerungen1: "1 Meldung ohne Pflichterklärungen",

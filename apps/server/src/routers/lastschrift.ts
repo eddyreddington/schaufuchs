@@ -22,10 +22,12 @@ const datum = kalenderdatum();
  * Was jetzt eingezogen würde: bestätigte Meldungen mit offenem Meldegeld und gültigem Mandat zur Fälligkeit. Nicht
  * dabei ist, wessen Meldegeld die Kasse schon verrechnet hat (gültige Auszahlung oder offene SEPA-Überweisung) – das
  * zöge die Bank sonst ein zweites Mal ein. Ein einmaliges Mandat steht in höchstens einer offenen Datei.
+ * Online-Meldungen (Entscheidung 034): erst, wenn der Aussteller sie bestätigt hat (Link aus der Mail, oder die AL setzt
+ * „Meldebogen unterschrieben“), und nur das Meldegeld – online zugesagte Stiftung und Spende zieht kein Mandat ein.
  */
 async function posten(tx: Tx, organisationId: number, schauId: number, faelligAm: string, opts: { sperren?: boolean } = {}) {
   const meldungen = await tx
-    .select({ id: meldung.id, ausstellerId: meldung.ausstellerId, istJugend: meldung.istJugend, istPreisrichter: meldung.istPreisrichter, sprache: meldung.sprache, vorname: aussteller.vorname, nachname: aussteller.nachname, email: aussteller.email })
+    .select({ id: meldung.id, ausstellerId: meldung.ausstellerId, istJugend: meldung.istJugend, istPreisrichter: meldung.istPreisrichter, sprache: meldung.sprache, eingang: meldung.eingang, zustimmungAm: meldung.zustimmungAm, vorname: aussteller.vorname, nachname: aussteller.nachname, email: aussteller.email })
     .from(meldung)
     .innerJoin(aussteller, eq(aussteller.id, meldung.ausstellerId))
     .where(and(eq(meldung.schauId, schauId), eq(meldung.status, "bestaetigt")));
@@ -55,8 +57,17 @@ async function posten(tx: Tx, organisationId: number, schauId: number, faelligAm
       if (eigene.length) ohne.push({ name, grund: grund(eigene[0]!)!, offenCent: offen });
       continue;
     }
+    const online = m.eingang === "online";
+    if (online && !m.zustimmungAm) {
+      ohne.push({ name, grund: "Online-Meldung noch nicht vom Aussteller bestätigt.", offenCent: offen });
+      continue;
+    }
+    // Online nur das Meldegeld (Zahlungen zählen zuerst darauf); der Rest bleibt offen für Überweisung oder Kasse.
+    const betragCent = online ? Math.min(offen, b.summeCent - b.bezahltCent) : offen;
+    if (betragCent < offen) ohne.push({ name, grund: "Stiftung und Spende aus der Online-Meldung: bitte per Überweisung oder bar.", offenCent: offen - Math.max(0, betragCent) });
+    if (betragCent <= 0) continue;
     if (!gueltig.wiederkehrend) einmalVergeben.add(gueltig.id);
-    liste.push({ meldungId: m.id, ausstellerId: m.ausstellerId, mandatId: gueltig.id, name, kontoinhaber: gueltig.kontoinhaber || name, iban: gueltig.iban, betragCent: offen, mandatsreferenz: gueltig.referenz, unterschriebenAm: gueltig.unterschriebenAm, wiederkehrend: gueltig.wiederkehrend, email: m.email, sprache: m.sprache });
+    liste.push({ meldungId: m.id, ausstellerId: m.ausstellerId, mandatId: gueltig.id, name, kontoinhaber: gueltig.kontoinhaber || name, iban: gueltig.iban, betragCent, mandatsreferenz: gueltig.referenz, unterschriebenAm: gueltig.unterschriebenAm, wiederkehrend: gueltig.wiederkehrend, email: m.email, sprache: m.sprache });
   }
   return { liste, ohne };
 }

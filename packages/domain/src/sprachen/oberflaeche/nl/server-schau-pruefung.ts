@@ -65,6 +65,8 @@ export const serverSchauPruefung: OberflaecheTexte["serverSchau"]["pruefung"] = 
     selbst: (n: string) => `${n} online inschrijvingen met jeugd of keurmeester controleren`,
     bogen1: "1 inschrijving zonder ondertekend inschrijfformulier",
     bogen: (n: string) => `${n} inschrijvingen zonder ondertekend inschrijfformulier`,
+    onlineUnbestaetigt1: "1 online-inschrijving niet door de inzender bevestigd",
+    onlineUnbestaetigt: (n: string) => `${n} online-inschrijvingen niet door de inzender bevestigd`,
     registrier1: "1 inschrijving zonder geldig registratienummer",
     registrier: (n: string) => `${n} inschrijvingen zonder geldig registratienummer`,
     erklaerungen1: "1 inschrijving zonder verplichte verklaringen",

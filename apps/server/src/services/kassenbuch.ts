@@ -176,7 +176,8 @@ export async function archiviereKaufbeleg(s: { id: number }, verkaufId: number, 
 
 /**
  * Beleg für bares Meldegeld (Einzahlungsquittung, Nummer = Zahlung) bzw. für Wechselgeld, Einlage und Entnahme
- * (Eigenbeleg, Nummer = Kassenbewegung) – damit jede Barbewegung im Kassenbuch einen archivierten Beleg hat.
+ * (Eigenbeleg, Nummer = Kassenbewegung) – damit jede Barbewegung im Kassenbuch einen archivierten Beleg hat. Für eine
+ * Zahlung, die nicht bar war, entsteht keiner (null).
  */
 export async function archiviereKassenbeleg(s: { id: number }, art: "einzahlung" | "eigenbeleg", nummer: number) {
   try {

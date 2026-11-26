@@ -72,6 +72,8 @@ export const serverSchauPruefung: OberflaecheTexte["serverSchau"]["pruefung"] = 
     selbst: (n: string) => `Zkontrolovat ${pocet(n, "online přihlášku", "online přihlášky", "online přihlášek")} s mládeží nebo posuzovatelem`,
     bogen1: "1 přihláška bez podepsaného přihlašovacího listu",
     bogen: (n: string) => `${pocet(n, "přihláška", "přihlášky", "přihlášek")} bez podepsaného přihlašovacího listu`,
+    onlineUnbestaetigt1: "1 online přihláška nepotvrzená vystavovatelem",
+    onlineUnbestaetigt: (n: string) => `${pocet(n, "online přihláška nepotvrzená", "online přihlášky nepotvrzené", "online přihlášek nepotvrzených")} vystavovatelem`,
     registrier1: "1 přihláška bez platného registračního čísla",
     registrier: (n: string) => `${pocet(n, "přihláška", "přihlášky", "přihlášek")} bez platného registračního čísla`,
     erklaerungen1: "1 přihláška bez povinných prohlášení",

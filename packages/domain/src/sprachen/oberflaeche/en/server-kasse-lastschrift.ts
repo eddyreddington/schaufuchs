@@ -17,6 +17,8 @@ export const lastschrift: T["lastschrift"] = {
   ibanMandat: "IBAN of the mandate invalid.",
   kontoAusserhalb: "Account outside the EU/EEA.",
   einmaligAndereDatei: "The one-off mandate is already in another direct debit file.",
+  onlineUnbestaetigt: "Online entry not yet confirmed by the exhibitor.",
+  onlineStiftungSpende: "Prize donation and donation from the online entry: please by bank transfer or cash.",
   sperreGlaeubiger: "The club’s creditor ID is missing under “Club and data protection”.",
   sperreKonto: "The club account (IBAN) is missing in the show settings.",
   nurEwr: "Direct debit only from accounts in the EU/EEA – other countries would need BIC and address. Please pay in cash or by bank transfer.",

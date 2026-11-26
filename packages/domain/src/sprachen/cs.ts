@@ -64,6 +64,7 @@ export const cs: Texte = {
     erstNachZahlung: "Přihláška bude zpracována až po přijetí platby.",
     bankverbindung: "Bankovní spojení:",
     mailUnterwegs: "Potvrzení vám bylo odesláno e-mailem.",
+    perMail: "Odkaz na vaši přihlášku jsme poslali na vaši e-mailovou adresu. Potvrďte prosím přihlášku tam.",
     meineMeldung: "Moje přihláška a výsledky",
   },
   ueberweisung: {
@@ -201,6 +202,9 @@ export const cs: Texte = {
     widerrufen: "Odvolat souhlas",
     erlauben: "Povolit zveřejnění",
     fehlerEltern: "U přihlášky mládeže uveďte prosím jméno zákonného zástupce, který souhlasí.",
+    bestaetigenHinweis: "Potvrďte prosím, že tuto přihlášku jste podali vy.",
+    bestaetigen: "Potvrdit přihlášku",
+    nichtAktiv: "Tato přihláška je zrušena nebo zamítnuta.",
   },
   ergebnisse: {
     titel: (schau: string) => `Výsledky: ${schau}`,
@@ -257,6 +261,7 @@ export const cs: Texte = {
     giroCode: "QR kód pro bankovní aplikaci najdete na odkazu níže.",
     erstNachZahlung: "Přihláška bude zpracována až po přijetí platby.",
     pruefenLink: "Zde můžete svou přihlášku zkontrolovat a později zobrazit výsledky:",
+    bestaetigenLink: "Potvrďte prosím svou přihlášku tímto odkazem. Pokud jste ji nepodali, nepotvrzujte ji a dejte vědět vedení výstavy:",
     pruefenTiere: "Zkontrolujte prosím plemeno, barevný ráz, pohlaví a věk každého zvířete.",
     online: "Se zveřejněním jména, bydliště a spolku v online výsledcích byl udělen souhlas. Souhlas můžete kdykoli odvolat přes odkaz výše.",
     offline: "Na internetu se zobrazujete bez jména. Přes odkaz výše můžete zveřejnění kdykoli povolit.",

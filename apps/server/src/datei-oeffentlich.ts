@@ -5,7 +5,7 @@
  *   GET /s/:slug/katalog.pdf    – öffentlicher Katalog nach Freigabe der Ergebnisse (zwischengespeichert als Datei)
  */
 import { ONLINE_MONATE, onlineAbgelaufen, schreibeIcal } from "@schau/domain";
-import { and, count, eq, gt, inArray } from "drizzle-orm";
+import { and, count, eq, gt, inArray, ne, or } from "drizzle-orm";
 import type { Hono } from "hono";
 import { mkdirSync } from "node:fs";
 import { rm } from "node:fs/promises";
@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { config } from "./config";
 import { db } from "./db/client";
-import { aenderung, organisation, schau } from "./db/schema";
+import { aenderung, meldung, organisation, schau } from "./db/schema";
 import { aBogenPdf } from "./pdf/a-bogen";
 import { heuteDe } from "./services/tiergesundheit";
 import { eigeneSchauenFuerKalender } from "./services/termine";
@@ -22,6 +22,7 @@ import { oeffentlicherStand } from "./services/zwischenspeicher";
 import { clientIp } from "./besucher-adresse";
 import { katalogNacheinander } from "./datei-katalog";
 import { pdf, zahlAus } from "./datei-hilfen";
+import { AKTEUR_ONLINE, ONLINE_WIDERRUFEN } from "./routers/oeffentlich";
 
 /**
  * Öffentlicher Katalog nach Freigabe der Ergebnisse. Erzeugt wird er nur, wenn sich seit dem letzten Mal etwas
@@ -51,11 +52,25 @@ function katalogVerwerfen(e: KatalogEintrag | undefined) {
   );
 }
 const katalogBremse = new Bremse(20, 60_000, "Zu viele Abrufe. Bitte gleich noch einmal versuchen.");
-async function datenschutzGeaendert(schauId: number, seit: number) {
+/**
+ * Seit dem Eintrag `seit` eine Änderung, die sofort in den Katalog muss? Was die Ausstellungsleitung an Ausstellern,
+ * Meldungen und Stiftern ändert, gilt sofort. Aus dem Netz (Link aus der Mail, ohne Anmeldung) nur der Widerruf der
+ * Online-Veröffentlichung einer bestätigten Meldung – nur deren Namen stehen im Katalog. Ein Erteilen, Bestätigen oder ein
+ * Widerruf an einer anderen Meldung wartet die 10 Minuten ab: sonst erzwänge jedes Umschalten einen ganzen Katalog.
+ */
+export async function datenschutzGeaendert(schauId: number, seit: number) {
   const [x] = await db
     .select({ n: count() })
     .from(aenderung)
-    .where(and(eq(aenderung.schauId, schauId), gt(aenderung.id, seit), inArray(aenderung.tabelle, ["aussteller", "meldung", "stiftung"])));
+    .leftJoin(meldung, and(eq(aenderung.tabelle, "meldung"), eq(meldung.id, aenderung.datensatzId)))
+    .where(
+      and(
+        eq(aenderung.schauId, schauId),
+        gt(aenderung.id, seit),
+        inArray(aenderung.tabelle, ["aussteller", "meldung", "stiftung"]),
+        or(ne(aenderung.wer, AKTEUR_ONLINE), and(eq(aenderung.aktion, ONLINE_WIDERRUFEN), eq(meldung.status, "bestaetigt"))),
+      ),
+    );
   return (x?.n ?? 0) > 0;
 }
 /**

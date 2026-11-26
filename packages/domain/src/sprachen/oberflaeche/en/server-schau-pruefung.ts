@@ -65,6 +65,8 @@ export const serverSchauPruefung: OberflaecheTexte["serverSchau"]["pruefung"] = 
     selbst: (n: string) => `Check ${n} online entries with youth or judge`,
     bogen1: "1 entry without a signed entry form",
     bogen: (n: string) => `${n} entries without a signed entry form`,
+    onlineUnbestaetigt1: "1 online entry not confirmed by the exhibitor",
+    onlineUnbestaetigt: (n: string) => `${n} online entries not confirmed by the exhibitor`,
     registrier1: "1 entry without a valid registration number",
     registrier: (n: string) => `${n} entries without a valid registration number`,
     erklaerungen1: "1 entry without mandatory declarations",

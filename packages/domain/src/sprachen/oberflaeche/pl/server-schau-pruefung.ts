@@ -73,6 +73,8 @@ export const serverSchauPruefung: OberflaecheTexte["serverSchau"]["pruefung"] = 
     selbst: (n: string) => `Sprawdzić zgłoszenia online z młodzieżą lub sędzią: ${n}`,
     bogen1: "1 zgłoszenie bez podpisanego formularza zgłoszeniowego",
     bogen: (n: string) => `Zgłoszenia bez podpisanego formularza zgłoszeniowego: ${n}`,
+    onlineUnbestaetigt1: "1 zgłoszenie online niepotwierdzone przez wystawcę",
+    onlineUnbestaetigt: (n: string) => `Zgłoszenia online niepotwierdzone przez wystawcę: ${n}`,
     registrier1: "1 zgłoszenie bez prawidłowego numeru rejestracyjnego",
     registrier: (n: string) => `Zgłoszenia bez prawidłowego numeru rejestracyjnego: ${n}`,
     erklaerungen1: "1 zgłoszenie bez obowiązkowych oświadczeń",

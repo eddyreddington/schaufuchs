@@ -446,6 +446,9 @@ bleiben. Eingezogen wird nur bei Ausstellern mit unterschriebenem Mandat und nur
   Vorabankündigung (Betrag, Fälligkeit, Mandatsreferenz, Gläubiger-ID) muss den Zahler rechtzeitig erreichen – in der
   Regel 14 Tage vor der Fälligkeit, wenn mit ihm nichts anderes vereinbart ist. Wer keine E-Mail-Adresse hat, bekommt
   sie auf anderem Weg (z. B. mit der Meldebestätigung).
+- **Online-Meldungen:** Eingezogen wird erst, wenn der Aussteller die Meldung bestätigt hat (siehe „Online-Meldung“), und
+  nur das Meldegeld. Eine online zugesagte Stiftung oder Spende zahlt er per Überweisung oder bar. Beides steht über der
+  Vorschau mit Namen und Betrag.
 - **Bei der Bank einreichen:** „Datei herunterladen“ und die XML-Datei im Online-Banking hochladen. Die Datei hält die
   Beträge fest. Solange sie offen ist, geht nichts, was diese Beträge ändert oder die Meldung entfernt: keine weitere
   Zahlung, kein Storno, keine Tiere hinzufügen oder abmelden, keine anderen Gebühren, keine Stiftung oder Spende mit
@@ -673,6 +676,7 @@ Die Prüfliste nennt jeden Punkt nur kurz. Hier steht, was dahintersteckt. Die P
 | … Meldungen nicht bestätigt | Meist fehlt noch die Zahlung. |
 | … Online-Meldungen mit Jugend oder Preisrichter prüfen | Jugendtarif und Katalogbefreiung beruhen online auf der Selbstauskunft des Ausstellers. |
 | … Meldungen ohne unterschriebenen Meldebogen | Diese Aussteller stehen ohne Namen im Katalog. |
+| … Online-Meldungen nicht vom Aussteller bestätigt | Online an einen bekannten Aussteller gemeldet, aber noch nicht über den Link aus der Mail bestätigt (siehe „Online-Meldung“). Ohne Namen im Katalog, kein Lastschrifteinzug. |
 | … Meldungen ohne gültige Registriernummer | Die 12-stellige Registriernummer (§ 26 ViehVerkV) brauchen Verkaufs- und Tierliste. Fehler bis „Preise & Freigabe“. |
 | … Meldungen ohne Pflichterklärungen | Herkunft und Karenzzeit sind nicht bestätigt (nur, wenn Pflichterklärungen eingerichtet sind). |
 | … Jugendmeldungen ohne Geburtsdatum / ohne Erziehungsberechtigten | Ohne Geburtsdatum ist der Jugendtarif nicht belegt. |
@@ -885,6 +889,8 @@ Das Formular ist geschlossen, wenn
 Ausländische Registriernummern nimmt das Formular nur an, wenn in den Einstellungen „Aussteller aus anderen Mitgliedstaaten zugelassen“ angehakt ist.
 
 Online-Meldungen erscheinen von selbst unter „Meldungen“. Der Aussteller bekommt eine Eingangsbestätigung mit Betrag, Bankverbindung und einem persönlichen Link zur Seite „Meine Meldung“. Dort sieht er später auch seine Ergebnisse.
+
+**Bekannte Aussteller** (gleiche E-Mail, Registriernummer, Vor- und Nachname wie ein vorhandener Aussteller): Die Meldung kommt an den vorhandenen Aussteller, dessen Daten bleiben unverändert. Weil das Formular jeder ausfüllen kann, gilt sie erst, wenn der Aussteller sie bestätigt. Der Link geht nur per Mail an die hinterlegte Adresse, die Dankseite zeigt keinen. Auf „Meine Meldung“ klickt er „Meldung bestätigen“. Bis dahin fehlt an der Meldung „Meldebogen ist unterschrieben“, der Name steht nicht im Katalog und ein Lastschriftmandat zieht nichts ein. Bestätigt er am Telefon oder auf Papier, setzen Sie den Haken selbst. Die Prüfliste zeigt „… Online-Meldungen nicht vom Aussteller bestätigt“.
 
 > **Wichtig:** Jugendtarif und Preisrichter-Befreiung beruhen online auf der Angabe des Ausstellers. In der Liste stehen solche Meldungen mit „(Selbstauskunft – prüfen)“; die Prüfliste erinnert daran.
 
@@ -1709,7 +1715,7 @@ Weitere Arten: „Einlage“ und – nur Ausstellungsleitung, mit Zweck – „E
 
 **Kassendifferenz:** Hat ein Abschluss eine Differenz, geht das Kassenbuch danach mit dem gezählten Bestand weiter. Unter dem Soll-Endbestand stehen dann „Kassendifferenz laut Abschluss“ und „Endbestand (gezählt + Nachträge)“ – so auch im Kassenbericht und in der CSV. Wird Meldegeld zusammen mit einer zugesagten Stiftung bar kassiert, steht der Stiftungsanteil im Kassenbuch und auf der Einzahlungsquittung („davon Meldegeld …, Stiftung …“).
 
-„Kassenbericht (PDF)“ (gesamt oder je Tag) und „Kassenbuch (CSV)“ stehen oben. Das „Belegarchiv“ enthält jeden Beleg mit Prüfsumme. Ein Storno erzeugt einen eigenen Beleg; das Original bleibt im Archiv abrufbar.
+„Kassenbericht (PDF)“ (gesamt oder je Tag) und „Kassenbuch (CSV)“ stehen oben. Das „Belegarchiv“ enthält jeden Beleg mit Prüfsumme. Ein Storno erzeugt einen eigenen Beleg; das Original bleibt im Archiv abrufbar. Einzahlungsquittungen gibt es nur für bar gezahltes Meldegeld – Überweisung und Lastschrift stehen nicht im Kassenbuch und bekommen keine.
 
 **Zweitschrift:** Normalerweise entsteht jeder Beleg direkt bei der Buchung und kommt so ins Belegarchiv; jeder Nachdruck ist dann genau dieses Original. Ging das Ablegen bei der Buchung schief, erzeugt die Software den Beleg erst beim Abruf – mit dem Stand zu diesem Zeitpunkt. Entsteht ein Beleg so mehr als 10 Minuten nach der Buchung, gilt er als Zweitschrift: Solche Kaufbelege, Quittungen und Kassenbelege tragen auf jeder Seite oben rechts in Rot den Vermerk „ZWEITSCHRIFT – erzeugt am …, Stand beim Erzeugen (gebucht am …)“. Quittungen aus einer SEPA-Datei zeigen den bei der Buchung festgehaltenen Stand und bleiben Original.
 

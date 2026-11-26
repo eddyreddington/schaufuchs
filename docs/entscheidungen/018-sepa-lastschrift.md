@@ -36,6 +36,10 @@ unterschriebenes Mandat je Zahler, eine Vorabankündigung und die Einreichung al
   Verfall gelöscht (Nachweispflicht bei Widerspruch); Mandate und Einzüge stehen in der Auskunft nach Art. 15. In
   Produktion liest eine verschlüsselte JSON-Spalte keinen Klartext (`geheimJsonLesen`), wie `geheimText`.
 
+**Nachtrag (26.11.2026, Entscheidung 034):** Online-Meldungen zieht ein Mandat erst ein, wenn der Aussteller sie
+bestätigt hat (Link aus der Mail oder Haken „Meldebogen ist unterschrieben“ der AL), und dann nur das Meldegeld. Online
+zugesagte Stiftung und Spende bleiben für Überweisung oder Kasse offen; die Vorschau nennt beides mit Betrag.
+
 **Folgen:** Kein Mandatsformular als PDF (Vordruck der Bank). Keine Änderung eines Mandats (neue IBAN = neues Mandat).
 Keine Prüfung gegen das ISO-Schema in der CI (Aufbau im Domain-Test). FRST wird nicht verwendet (seit 2016 nicht
 mehr nötig).

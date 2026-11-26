@@ -279,7 +279,8 @@ export async function kassenberichtPdf(s: Schau, datum?: string) {
 
 /**
  * Einzahlungsquittung für bares Meldegeld (auch Erstattung/Storno) bzw. Eigenbeleg für Wechselgeld, Einlage und
- * Entnahme (A5 quer, Formatvorgabe A4: oben auf A4). Wird beim Buchen archiviert; null, wenn die Buchung nicht zur Schau gehört.
+ * Entnahme (A5 quer, Formatvorgabe A4: oben auf A4). Wird beim Buchen archiviert; null, wenn die Buchung nicht zur Schau gehört
+ * oder (Einzahlung) nicht bar war.
  */
 export async function kassenbelegPdf(s: Schau, art: "einzahlung" | "eigenbeleg", nummer: number) {
   const [dVerein, brief] = await Promise.all([ladeDesign(s), ladeBriefVorlage(s.organisationId)]);
@@ -295,7 +296,9 @@ export async function kassenbelegPdf(s: Schau, art: "einzahlung" | "eigenbeleg",
       .innerJoin(meldung, eq(meldung.id, zahlung.meldungId))
       .innerJoin(aussteller, eq(aussteller.id, meldung.ausstellerId))
       .where(and(eq(zahlung.id, nummer), eq(meldung.schauId, s.id)));
-    if (!z) return null;
+    // Nur Bargeld bekommt eine Quittung: Überweisung, Lastschrift und „sonstige“ stehen nicht im Kassenbuch – ein
+    // Barbeleg dafür läge sonst dauerhaft im Belegarchiv, ohne dass Bargeld geflossen ist.
+    if (!z || z.z.art !== "bar") return null;
     betragCent = z.z.betragCent;
     // Gegenbuchung (Storno) ist keine Geldübergabe: sie hebt den Ursprungsbeleg auf.
     const storno = z.z.stornoVon != null;

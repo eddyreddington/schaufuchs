@@ -66,6 +66,7 @@ export const pl: Texte = {
     erstNachZahlung: "Zgłoszenie zostanie rozpatrzone dopiero po wpłynięciu płatności.",
     bankverbindung: "Dane bankowe:",
     mailUnterwegs: "Potwierdzenie zostało wysłane e-mailem.",
+    perMail: "Link do zgłoszenia wysłaliśmy na Państwa adres e-mail. Prosimy tam potwierdzić zgłoszenie.",
     meineMeldung: "Moje zgłoszenie i wyniki",
   },
   ueberweisung: {
@@ -203,6 +204,9 @@ export const pl: Texte = {
     widerrufen: "Wycofaj zgodę",
     erlauben: "Zezwól na publikację",
     fehlerEltern: "Przy zgłoszeniu młodzieżowym proszę podać imię i nazwisko opiekuna prawnego, który wyraża zgodę.",
+    bestaetigenHinweis: "Prosimy potwierdzić, że to zgłoszenie pochodzi od Państwa.",
+    bestaetigen: "Potwierdź zgłoszenie",
+    nichtAktiv: "To zgłoszenie zostało anulowane lub odrzucone.",
   },
   ergebnisse: {
     titel: (schau: string) => `Wyniki: ${schau}`,
@@ -259,6 +263,7 @@ export const pl: Texte = {
     giroCode: "Kod QR dla aplikacji bankowej znajdą Państwo pod linkiem poniżej.",
     erstNachZahlung: "Zgłoszenie zostanie rozpatrzone dopiero po wpłynięciu płatności.",
     pruefenLink: "Tutaj mogą Państwo sprawdzić zgłoszenie, a później zobaczyć wyniki:",
+    bestaetigenLink: "Prosimy potwierdzić zgłoszenie za pomocą tego linku. Jeśli nie składali Państwo zgłoszenia, prosimy go nie potwierdzać i poinformować kierownictwo wystawy:",
     pruefenTiere: "Prosimy sprawdzić rasę, odmianę barwną, płeć i wiek każdego zwierzęcia.",
     online: "Udzielono zgody na publikację imienia i nazwiska, miejscowości i związku w wynikach online. Można ją w każdej chwili wycofać przez powyższy link.",
     offline: "W internecie dane pojawiają się bez nazwiska. Przez powyższy link można w każdej chwili zezwolić na publikację.",

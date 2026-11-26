@@ -66,6 +66,8 @@ export const serverSchauPruefung: OberflaecheTexte["serverSchau"]["pruefung"] = 
     selbst: (n: string) => `Vérifier ${n} inscriptions en ligne avec jeunes ou juge`,
     bogen1: "1 inscription sans bulletin d’inscription signé",
     bogen: (n: string) => `${n} inscriptions sans bulletin d’inscription signé`,
+    onlineUnbestaetigt1: "1 inscription en ligne non confirmée par l’exposant",
+    onlineUnbestaetigt: (n: string) => `${n} inscriptions en ligne non confirmées par l’exposant`,
     registrier1: "1 inscription sans numéro d’enregistrement valable",
     registrier: (n: string) => `${n} inscriptions sans numéro d’enregistrement valable`,
     erklaerungen1: "1 inscription sans déclarations obligatoires",

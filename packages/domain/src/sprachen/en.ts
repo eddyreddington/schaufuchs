@@ -58,6 +58,7 @@ export const en: Texte = {
     erstNachZahlung: "Your entry will only be processed once payment has been received.",
     bankverbindung: "Bank details:",
     mailUnterwegs: "A confirmation is on its way by e-mail.",
+    perMail: "We have sent the link to your entry to your e-mail address. Please confirm the entry there.",
     meineMeldung: "My entry and results",
   },
   ueberweisung: {
@@ -195,6 +196,9 @@ export const en: Texte = {
     widerrufen: "Withdraw consent",
     erlauben: "Allow publication",
     fehlerEltern: "For a youth entry please give the name of a parent or guardian who agrees.",
+    bestaetigenHinweis: "Please confirm that you submitted this entry.",
+    bestaetigen: "Confirm entry",
+    nichtAktiv: "This entry has been cancelled or rejected.",
   },
   ergebnisse: {
     titel: (schau: string) => `Results: ${schau}`,
@@ -251,6 +255,7 @@ export const en: Texte = {
     giroCode: "A QR code for your banking app is available via the link below.",
     erstNachZahlung: "Your entry will only be processed once payment has been received.",
     pruefenLink: "Here you can check your entry and later see your results:",
+    bestaetigenLink: "Please confirm your entry using this link. If you did not submit it, please do not confirm and let the show management know:",
     pruefenTiere: "Please check the breed, colour variety, sex and age of each animal.",
     online: "You have agreed that your name, place of residence and club appear in the online results. You can withdraw this at any time via the link above.",
     offline: "On the internet you appear without your name. You can allow publication at any time via the link above.",

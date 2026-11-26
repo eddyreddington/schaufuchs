@@ -239,7 +239,10 @@ export async function pruefliste(schauId: number): Promise<{ punkte: Punkt[]; ei
   const selbst = meldungenMitAussteller.filter((m) => m.eingang === "online" && m.status !== "abgelehnt" && m.status !== "storniert" && (m.istJugend || m.istPreisrichter));
   if (selbst.length) add("hinweis", `${anz(selbst.length, "Online-Meldung", "Online-Meldungen")} mit Jugend oder Preisrichter prüfen`, "meldungen");
   const ohneBogen = meldungen.filter((m) => m.status !== "abgelehnt" && m.status !== "storniert" && !m.zustimmungAm);
-  if (ohneBogen.length) add("hinweis", `${anz(ohneBogen.length, "Meldung", "Meldungen")} ohne unterschriebenen Meldebogen`, "meldungen");
+  // Online an einen vorhandenen Stammsatz gemeldet: erst der Link aus der Mail oder die AL bestätigt sie (Entscheidung 034).
+  const onlineOffen = ohneBogen.filter((m) => m.eingang === "online");
+  if (onlineOffen.length) add("hinweis", `${anz(onlineOffen.length, "Online-Meldung", "Online-Meldungen")} nicht vom Aussteller bestätigt`, "meldungen");
+  if (ohneBogen.length > onlineOffen.length) add("hinweis", `${anz(ohneBogen.length - onlineOffen.length, "Meldung", "Meldungen")} ohne unterschriebenen Meldebogen`, "meldungen");
   // Registriernummer nach § 26 ViehVerkV: ohne sie keine Aufzeichnung der Herkunft.
   const regFalsch = meldungenRoh.filter((x) => x.m.status === "bestaetigt" && !normalisiereRegistriernummer(x.registriernummer));
   if (regFalsch.length) add("fehler", `${anz(regFalsch.length, "Meldung", "Meldungen")} ohne gültige Registriernummer`, "meldungen", "preise");

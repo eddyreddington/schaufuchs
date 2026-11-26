@@ -58,6 +58,7 @@ export const fr: Texte = {
     erstNachZahlung: "L’inscription ne sera traitée qu’après réception du paiement.",
     bankverbindung: "Coordonnées bancaires :",
     mailUnterwegs: "Une confirmation vous a été envoyée par e-mail.",
+    perMail: "Nous avons envoyé le lien vers votre inscription à votre adresse e-mail. Veuillez y confirmer l’inscription.",
     meineMeldung: "Mon inscription et mes résultats",
   },
   ueberweisung: {
@@ -195,6 +196,9 @@ export const fr: Texte = {
     widerrufen: "Retirer le consentement",
     erlauben: "Autoriser la publication",
     fehlerEltern: "Pour une inscription jeune, veuillez indiquer le nom d’un représentant légal qui donne son accord.",
+    bestaetigenHinweis: "Veuillez confirmer que vous avez déposé cette inscription.",
+    bestaetigen: "Confirmer l’inscription",
+    nichtAktiv: "Cette inscription est annulée ou refusée.",
   },
   ergebnisse: {
     titel: (schau: string) => `Résultats : ${schau}`,
@@ -251,6 +255,7 @@ export const fr: Texte = {
     giroCode: "Un code QR pour votre application bancaire est disponible via le lien ci-dessous.",
     erstNachZahlung: "L’inscription ne sera traitée qu’après réception du paiement.",
     pruefenLink: "Ici, vous pouvez vérifier votre inscription et consulter plus tard vos résultats :",
+    bestaetigenLink: "Veuillez confirmer votre inscription par ce lien. Si vous ne l’avez pas déposée, ne la confirmez pas et prévenez la direction de l’exposition :",
     pruefenTiere: "Veuillez vérifier la race, la variété, le sexe et l’âge de chaque animal.",
     online: "Vous avez accepté que votre nom, votre lieu de résidence et votre club figurent dans les résultats en ligne. Vous pouvez retirer ce consentement à tout moment via le lien ci-dessus.",
     offline: "Sur Internet, vous apparaissez sans nom. Vous pouvez autoriser la publication à tout moment via le lien ci-dessus.",

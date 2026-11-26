@@ -21,6 +21,8 @@ export const lastschrift = {
   ibanMandat: "IBAN des Mandats ungültig.",
   kontoAusserhalb: "Konto außerhalb von EU/EWR.",
   einmaligAndereDatei: "Das einmalige Mandat steht schon in einer anderen Lastschriftdatei.",
+  onlineUnbestaetigt: "Online-Meldung noch nicht vom Aussteller bestätigt.",
+  onlineStiftungSpende: "Stiftung und Spende aus der Online-Meldung: bitte per Überweisung oder bar.",
   sperreGlaeubiger: "Unter „Verein und Datenschutz“ fehlt die Gläubiger-ID des Vereins.",
   sperreKonto: "In den Einstellungen der Schau fehlt das Vereinskonto (IBAN).",
   nurEwr: "Lastschrift nur von Konten in EU/EWR – für andere Länder bräuchte sie BIC und Anschrift. Bitte bar oder per Überweisung.",

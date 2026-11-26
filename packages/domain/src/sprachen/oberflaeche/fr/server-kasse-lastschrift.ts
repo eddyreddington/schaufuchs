@@ -17,6 +17,8 @@ export const lastschrift: T["lastschrift"] = {
   ibanMandat: "IBAN du mandat non valable.",
   kontoAusserhalb: "Compte hors de l’UE/EEE.",
   einmaligAndereDatei: "Le mandat ponctuel figure déjà dans un autre fichier de prélèvement.",
+  onlineUnbestaetigt: "Inscription en ligne pas encore confirmée par l’exposant.",
+  onlineStiftungSpende: "Prix offert et don de l’inscription en ligne : par virement ou en espèces, s’il vous plaît.",
   sperreGlaeubiger: "L’ICS du club manque sous « Club et protection des données ».",
   sperreKonto: "Le compte du club (IBAN) manque dans les paramètres de l’exposition.",
   nurEwr: "Prélèvement uniquement depuis des comptes de l’UE/EEE – pour d’autres pays, il faudrait le BIC et l’adresse. Veuillez payer en espèces ou par virement.",

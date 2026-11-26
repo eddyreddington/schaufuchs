@@ -60,6 +60,11 @@ const mailsJeAdresse = new Bremse(10, 86_400_000, "An diese E-Mail-Adresse wurde
 // reserviert bleibt. Sonst füllen wenige Anfragen von einem Anschluss die ganze Halle. Eine Familie oder ein Vereinsheim
 // kommt darunter gut aus; mehr trägt die AL von Hand ein. Die Obergrenze kommt je Aufruf (nach Hallengröße).
 const tiereJeAnschluss = new Bremse(30, ONLINE_RESERVIERUNG_STUNDEN * 3_600_000, "Von dieser Adresse wurden schon viele Tiere gemeldet. Weitere Meldungen bitte über die Ausstellungsleitung.");
+/** Dieselbe Grenze je IPv6-/48: ein /48 (ein Standort) hat sonst 256 Anschlüsse zu je einer halben Halle. */
+const tiereJeNetz = new Bremse(30, ONLINE_RESERVIERUNG_STUNDEN * 3_600_000, "Von dieser Adresse wurden schon viele Tiere gemeldet. Weitere Meldungen bitte über die Ausstellungsleitung.");
+/** Wer im Protokoll ohne Anmeldung über das Formular bzw. den Link aus der Mail handelt. */
+export const AKTEUR_ONLINE = "Aussteller (online)";
+export const ONLINE_WIDERRUFEN = "Online-Veröffentlichung widerrufen";
 /** Kennung der Sperre für gleichzeitige Meldungen mit derselben E-Mail (Doppelklick). */
 const MELDUNG_SPERRE = 0x4d454c44; // "MELD"
 
@@ -216,6 +221,8 @@ export const oeffentlichRouter = router({
       online: !!m.onlineZustimmungAm,
       jugend: m.istJugend,
       meldebogen: !!m.zustimmungAm,
+      /** Online an einen vorhandenen Stammsatz gemeldet: der Inhaber bestätigt sie hier (Entscheidung 034). */
+      bestaetigen: m.eingang === "online" && !m.zustimmungAm && (m.status === "offen" || m.status === "bestaetigt"),
       betrag,
       // Verwendungszweck und GiroCode nur für eine gültige Meldung mit offenem Betrag (Entscheidung 021).
       ueberweisung: await ueberweisung(s, m, a!, betrag),
@@ -257,8 +264,11 @@ export const oeffentlichRouter = router({
       const [m] = await db.select().from(meldung).where(and(eq(meldung.zugangsToken, input.token), eq(meldung.schauId, s.id)));
       if (!m) throw fehler("NOT_FOUND", "Meldung nicht gefunden. Bitte den Link aus der E-Mail verwenden.");
       if (!!m.onlineZustimmungAm === input.erlaubt) return { online: input.erlaubt };
-      // Widerrufen geht immer ohne Hürde (Art. 7 Abs. 3 DSGVO). Nur das Erteilen hat Bedingungen und eine Bremse: jeder
-      // Wechsel erneuert den öffentlichen Katalog sofort – nicht in einer Schleife. Ein Widerruf setzt ein Erteilen voraus.
+      // Erteilen nur an einer gültigen Meldung (eine stornierte steht in keinem Katalog); Widerrufen geht immer.
+      if (input.erlaubt && (m.status === "abgelehnt" || m.status === "storniert")) throw fehler("BAD_REQUEST", texte(input.sprache).meine.nichtAktiv);
+      // Widerrufen geht immer ohne Hürde (Art. 7 Abs. 3 DSGVO). Nur das Erteilen hat Bedingungen und eine Bremse: der
+      // Widerruf an einer bestätigten Meldung erneuert den öffentlichen Katalog sofort (datenschutzGeaendert) – nicht in
+      // einer Schleife. Ein Widerruf setzt ein Erteilen voraus.
       if (input.erlaubt) {
         // Wie im Meldeformular: Minderjährige erlauben die Veröffentlichung nur mit einem Erziehungsberechtigten.
         if (m.istJugend && input.erziehungsberechtigter.length < 3) {
@@ -269,8 +279,9 @@ export const oeffentlichRouter = router({
       await db.transaction(async (tx) => {
         // Gesperrt neu lesen: ein Doppelklick schreibt keinen zweiten Eintrag, und ein gleichzeitiges Bearbeiten durch die
         // Ausstellungsleitung liest die Zeile erst danach (Entscheidung 033).
-        const [frisch] = await tx.select({ am: meldung.onlineZustimmungAm }).from(meldung).where(eq(meldung.id, m.id)).for("no key update");
+        const [frisch] = await tx.select({ am: meldung.onlineZustimmungAm, status: meldung.status }).from(meldung).where(eq(meldung.id, m.id)).for("no key update");
         if (!!frisch?.am === input.erlaubt) return;
+        if (input.erlaubt && (frisch?.status === "abgelehnt" || frisch?.status === "storniert")) throw fehler("BAD_REQUEST", texte(input.sprache).meine.nichtAktiv);
         await tx
           .update(meldung)
           .set({ onlineZustimmungAm: input.erlaubt ? new Date() : null, ...(input.erlaubt && m.istJugend ? { erziehungsberechtigter: input.erziehungsberechtigter } : {}) })
@@ -279,11 +290,34 @@ export const oeffentlichRouter = router({
           schauId: s.id,
           tabelle: "meldung",
           datensatzId: m.id,
-          aktion: input.erlaubt ? "Online-Veröffentlichung erlaubt" : "Online-Veröffentlichung widerrufen",
-          akteur: { text: "Aussteller (online)" },
+          aktion: input.erlaubt ? "Online-Veröffentlichung erlaubt" : ONLINE_WIDERRUFEN,
+          akteur: { text: AKTEUR_ONLINE },
         });
       });
       return { online: input.erlaubt };
+    }),
+
+  /**
+   * Online-Meldung an einen vorhandenen Stammsatz bestätigen (Entscheidung 034): Wer den Link aus der Mail an die
+   * hinterlegte Adresse hat, erkennt damit die AAB an (Meldebogen). Erst dann zieht ein Mandat das Meldegeld ein.
+   * Ein Knopf, kein Aufruf beim Öffnen – Virenscanner öffnen Links in Mails von selbst.
+   */
+  meldungBestaetigen: publicProcedure
+    .input(z.object({ slug: z.string().max(100), token: z.string().max(500).min(10), sprache: spracheFeld }))
+    .mutation(async ({ input }) => {
+      if (config.nurLesen) throw fehler("FORBIDDEN", NUR_LESEN_MELDUNG);
+      const s = await ladeOeffentlich(input.slug);
+      const [m] = await db.select({ id: meldung.id }).from(meldung).where(and(eq(meldung.zugangsToken, input.token), eq(meldung.schauId, s.id)));
+      if (!m) throw fehler("NOT_FOUND", "Meldung nicht gefunden. Bitte den Link aus der E-Mail verwenden.");
+      await db.transaction(async (tx) => {
+        // Gesperrt lesen: ein Doppelklick schreibt keinen zweiten Eintrag (Entscheidung 033).
+        const [frisch] = await tx.select({ am: meldung.zustimmungAm, status: meldung.status }).from(meldung).where(eq(meldung.id, m.id)).for("no key update");
+        if (frisch!.status === "abgelehnt" || frisch!.status === "storniert") throw fehler("BAD_REQUEST", texte(input.sprache).meine.nichtAktiv);
+        if (frisch!.am) return;
+        await tx.update(meldung).set({ zustimmungAm: new Date() }).where(eq(meldung.id, m.id));
+        await protokolliere(tx, { schauId: s.id, tabelle: "meldung", datensatzId: m.id, aktion: "vom Aussteller bestätigt", akteur: { text: AKTEUR_ONLINE } });
+      });
+      return { ok: true };
     }),
 
   ergebnisse: publicProcedure.input(z.object({ slug: z.string().max(100) })).query(async ({ ctx, input }) => {
@@ -375,7 +409,7 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
     throw fehler("BAD_REQUEST", t.fehler.halleVoll);
   }
   // Scheitert die Meldung, zählen ihre Tiere nicht.
-  const zurueckTiere = s.kapazitaet && !istLokaleAdresse(ip) ? tiereJeAnschluss.menge(`${s.id}:${anschlussSchluessel(ip)}`, input.positionen.length, Math.max(30, Math.ceil(s.kapazitaet / 2))) : () => {};
+  const zurueckTiere = s.kapazitaet && !istLokaleAdresse(ip) ? tiereZaehlen(`${s.id}`, ip, input.positionen.length, Math.max(30, Math.ceil(s.kapazitaet / 2))) : () => {};
 
   const r = await db.transaction(async (tx) => {
     // Die Prüfungen oben sind die schnelle Antwort. Maßgeblich ist der Stand unter der Sperre je Schau: zwei gleichzeitige
@@ -435,7 +469,8 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
         istJugend: input.istJugend,
         teilschau: input.teilschau,
         bemerkung: input.bemerkung,
-        zustimmung: true,
+        // Am vorhandenen Stammsatz erkennt der Inhaber die AAB erst über den Link aus der Mail an (Entscheidung 034).
+        zustimmung: !bekannt,
         onlineZustimmung: input.onlineVeroeffentlichung,
         erziehungsberechtigter: input.erziehungsberechtigter,
         erklaerungen: !!s.erklaerungen.trim() && input.erklaerungen,
@@ -443,9 +478,9 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
         stiftung: input.stiftung,
         spende: input.spende,
       },
-      { text: "Aussteller (online)" },
+      { text: AKTEUR_ONLINE },
       { bestehendenNichtAendern: !!bekannt, sprache: input.sprache },
-    );
+    ).then((x) => ({ ...x, bekannt: !!bekannt }));
   }).catch((e) => {
     zurueckTiere();
     throw e;
@@ -453,13 +488,28 @@ async function meldeOnline(input: MeldeInput, email: string, ip: string) {
   const [m] = await db.select().from(meldung).where(eq(meldung.id, r.meldungId));
   const [a] = await db.select({ vorname: aussteller.vorname, nachname: aussteller.nachname }).from(aussteller).where(eq(aussteller.id, r.ausstellerId));
   const ue = await ueberweisung(s, m!, a!, r.betrag);
-  await sendeMail(
-    s.organisationId,
-    email,
-    t.mail.betreffMeldung(s.name),
-    // Anrede nur aus Buchstaben: sie ist frei eingegeben und ginge sonst mit Links als Werbung mit Vereinsabsender hinaus.
-    eingangsText(s, anrede(input.aussteller.vorname, input.aussteller.nachname), r.betrag.summeCent, meldungsLink(s, m!.zugangsToken, input.sprache), input.onlineVeroeffentlichung, r.betrag.stiftungCent, r.betrag.spendeCent, input.sprache, ue),
-    r.ausstellerId,
-  );
+  // Anrede nur aus Buchstaben: sie ist frei eingegeben und ginge sonst mit Links als Werbung mit Vereinsabsender hinaus.
+  const text = eingangsText(s, anrede(input.aussteller.vorname, input.aussteller.nachname), r.betrag.summeCent, meldungsLink(s, m!.zugangsToken, input.sprache), input.onlineVeroeffentlichung, r.betrag.stiftungCent, r.betrag.spendeCent, input.sprache, ue);
+  await sendeMail(s.organisationId, email, t.mail.betreffMeldung(s.name), r.bekannt ? text.split("\n").map((z) => (z === t.mail.pruefenLink ? t.mail.bestaetigenLink : z)).join("\n") : text, r.ausstellerId);
+  // Vorhandener Stammsatz (Entscheidung 034): Link und Überweisungsdaten nur per Mail an die hinterlegte Adresse. Wer
+  // fremde Angaben eingibt, bekommt so keinen Zugang zur Meldung, und die Antwort verrät nichts über ein Mandat.
+  // Leeres token: kein Link in der Antwort.
+  if (r.bekannt) return { token: "", betrag: r.betrag, ueberweisung: null };
   return { token: m!.zugangsToken, betrag: r.betrag, ueberweisung: ue };
+}
+
+/** Tiere je Anschluss und je IPv6-/48 zählen; Rückgabe gibt beide wieder frei. */
+function tiereZaehlen(schau: string, ip: string, menge: number, max: number) {
+  const zurueckAnschluss = tiereJeAnschluss.menge(`${schau}:${anschlussSchluessel(ip)}`, menge, max);
+  const netz = netz48Schluessel(ip);
+  try {
+    const zurueckNetz = netz ? tiereJeNetz.menge(`${schau}:${netz}`, menge, max) : () => {};
+    return () => {
+      zurueckAnschluss();
+      zurueckNetz();
+    };
+  } catch (e) {
+    zurueckAnschluss();
+    throw e;
+  }
 }
