@@ -1,6 +1,6 @@
 /**
  * Code für die Ersteinrichtung im Browser (auth.einrichten, Entscheidung 037). Wer den Verein anlegt, wird
- * Administrator. install.sh und die Cloud setzen EINRICHTUNG_CODE; fehlt er in Produktion (Selbstbau), gilt ein beim
+ * Administrator. install.sh setzt EINRICHTUNG_CODE; fehlt er in Produktion (Selbstbau), gilt ein beim
  * Start erzeugter Zufallscode, den der Server einmal ins Log schreibt. So wird kein anonymer Besucher Administrator,
  * und die Einrichtung im Browser bleibt möglich. Entwicklung und Tests brauchen keinen Code.
  */
