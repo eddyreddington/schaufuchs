@@ -1,7 +1,7 @@
 import { BAUSTEIN_ART_LISTE, BAUSTEIN_KATEGORIEN, bausteinFuerTier, brauchtObmann, passtZuPreisart, STANDARD_NOTENSKALA } from "@schau/domain";
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
-import { beendeSitzung, cookieHeader, COOKIE_RICHTER, neueSitzung, pruefePasswort } from "../auth";
+import { beendeSitzung, cookieHeader, COOKIE_RICHTER, geraetNachAnmeldung, geraetSchluessel, neueSitzung, pruefeAuslastung, pruefePasswort } from "../auth";
 import { config } from "../config";
 import { db } from "../db/client";
 import { bewertung, katalogeintrag, preisart, preisrichter, preisvergabe, prEinteilung, schau, textbaustein } from "../db/schema";
@@ -22,6 +22,8 @@ import { pruefeNichtAbgeschlossen } from "../services/kasse";
 //   Preisrichter zählen dabei nicht mit und werden nicht gesperrt,
 // - je Preisrichter eine steigende Wartezeit nach 10 Fehlversuchen von fremden Adressen (höchstens 15 Minuten);
 //   Tablets, die schon angemeldet waren, betrifft sie nicht. Die AL hebt sie auf („Sperre aufheben“ oder neue PIN).
+// Ein Tablet, an dem sich der Preisrichter schon angemeldet hat, erkennt der Server am Gerätekennzeichen (Cookie,
+// Entscheidung 034): Für es gilt eine eigene Bremse statt der Adresse – Fremde im selben Hallen-WLAN sperren es nicht aus.
 export const pinBremse = new Bremse(8, 15 * 60_000, "Zu viele Fehlversuche. Bitte 15 Minuten warten oder bei der Ausstellungsleitung eine neue PIN holen.");
 export const pinBremseJeAdresse = new Bremse(60, 15 * 60_000, "Zu viele Fehlversuche von diesem Netz. Bitte 15 Minuten warten.");
 export const pinWartezeitJeRichter = new Wartezeit(
@@ -275,16 +277,20 @@ export const richterRouter = router({
       if (!RICHTER_PHASEN.includes(r.phase)) throw fehler("FORBIDDEN", "Die Anmeldung am Tablet ist nur von der Einlieferung bis zu den Preisen möglich.");
       // Erst alle Bremsen prüfen, dann zählen (vor der PIN-Prüfung – parallele Anfragen kommen so nicht vorbei): ein
       // abgewiesener Versuch verbraucht keinen Zähler einer anderen Stufe, sonst sperrten sie am Ende die ganze Halle.
-      const kGeraet = [`pr:${r.r.id}:ip:${ctx.ip}`];
-      const kAdresse = [`ip:${ctx.ip}`];
+      pruefeAuslastung();
       const kRichter = `pr:${r.r.id}:alle`;
-      const ohneAdressSperre = pinWartezeitJeRichter.istAusgenommen(kRichter, ctx.ip);
+      const geraet = geraetSchluessel(ctx.cookieTokens.geraet);
+      const bekanntesGeraet = !!geraet && pinWartezeitJeRichter.istBekannt(kRichter, geraet);
+      const herkunft = bekanntesGeraet ? geraet : ctx.ip;
+      const kGeraet = [`pr:${r.r.id}:ip:${herkunft}`];
+      const kAdresse = [`ip:${ctx.ip}`];
+      const ohneAdressSperre = bekanntesGeraet || pinWartezeitJeRichter.istAusgenommen(kRichter, ctx.ip);
       pinBremse.pruefe(kGeraet);
       if (!ohneAdressSperre) pinBremseJeAdresse.pruefe(kAdresse);
-      pinWartezeitJeRichter.pruefe(kRichter, ctx.ip);
+      pinWartezeitJeRichter.pruefe(kRichter, herkunft);
       const zurueckGeraet = pinBremse.versuch(kGeraet);
       const zurueckAdresse = ohneAdressSperre ? () => {} : pinBremseJeAdresse.versuch(kAdresse);
-      const zurueckRichter = pinWartezeitJeRichter.versuch(kRichter, ctx.ip);
+      const zurueckRichter = pinWartezeitJeRichter.versuch(kRichter, herkunft);
       let ok = false;
       try {
         ok = await pruefePasswort(input.pin, r.r.pinHash);
@@ -298,6 +304,8 @@ export const richterRouter = router({
       zurueckGeraet();
       zurueckAdresse();
       zurueckRichter(true);
+      pinWartezeitJeRichter.merke(kRichter, ctx.ip);
+      pinWartezeitJeRichter.merke(kRichter, geraetNachAnmeldung(ctx));
       ctx.setCookie(cookieHeader(await neueSitzung({ preisrichterId: r.r.id }), config.sessionDays * 86_400, COOKIE_RICHTER));
       return { ok: true };
     }),

@@ -538,6 +538,7 @@ Unter „Preise“ sehen Sie, welche Tiere welche Preise haben und wie viele Pre
 | „Zu viele Fehlversuche von dieser Adresse. Bitte 15 Minuten warten.“ | Alle Geräte im Hallen-WLAN zählen hier zusammen. Warten Sie 15 Minuten. Bitten Sie die anderen, ihr Passwort sorgfältig einzugeben. |
 | „Der Code stimmt nicht. Bitte den aktuellen Code aus der App eingeben.“ | Nehmen Sie den Code, der gerade in der App steht. Prüfen Sie, ob die Uhrzeit des Telefons stimmt. Ohne Telefon: einen Notfallcode eingeben. |
 | „Zu viele falsche Codes. Bitte 15 Minuten warten …“ | 15 Minuten warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben. |
+| „Zu viele falsche Codes. Die Anmeldung mit Code ist gesperrt …“ | Mit einem Notfallcode anmelden oder die Ausstellungsleitung bitten, die Sperre aufzuheben. Haben Sie eine Hinweismail „Anmeldung: Code mehrmals falsch“ bekommen und waren es nicht Sie, ändern Sie sofort Ihr Passwort. |
 | „Die Anmeldung ist abgelaufen. Bitte noch einmal mit Passwort anmelden.“ | Zwischen Passwort und Code ist zu viel Zeit vergangen. Melden Sie sich neu an. |
 | Plötzlich erscheint die Anmeldeseite (Sitzung abgelaufen). | Sie waren länger als 14 Tage angemeldet oder haben Ihr Passwort auf einem anderen Gerät geändert. Melden Sie sich neu an. |
 | Beim Speichern erscheint „Bitte anmelden.“ | Ihre Sitzung ist abgelaufen. Die Eingaben stehen noch im Formular. Öffnen Sie einen zweiten Browser-Tab, melden Sie sich dort an, kehren Sie zurück und klicken Sie noch einmal auf Speichern. |

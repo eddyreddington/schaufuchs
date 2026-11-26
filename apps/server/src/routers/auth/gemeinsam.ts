@@ -6,7 +6,7 @@ import { hashPasswort, sha256, zufallsToken } from "../../auth";
 import { config } from "../../config";
 import { db } from "../../db/client";
 import { benutzer, organisation, postausgang } from "../../db/schema";
-import { Bremse, Wartezeit } from "../../services/bremse";
+import { Bremse, Stufenbremse, Wartezeit } from "../../services/bremse";
 import { EINLADUNG_MUSTER, legeMailAb, MAX_VERSUCHE, sendeMail, versendeAbgelegt } from "../../services/post";
 import { protokollZuletzt } from "../../services/protokoll";
 import { fehler } from "../../trpc";
@@ -23,8 +23,17 @@ export const MAX_AGE = config.sessionDays * 86_400;
 export const bremse = new Bremse(10, 15 * 60_000, "Zu viele Fehlversuche. Bitte später erneut versuchen.");
 export const bremseJeAdresse = new Bremse(30, 15 * 60_000, "Zu viele Fehlversuche von dieser Adresse. Bitte 15 Minuten warten.");
 export const wartezeitJeKonto = new Wartezeit(10, 5 * 60_000, 60 * 60_000, (min) => `Zu viele Fehlversuche für dieses Konto. Bitte bis zu ${min} Minute${min === 1 ? "" : "n"} warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.`);
-/** Zweiter Faktor: je Konto 10 Fehlversuche in 15 Minuten (über alle Anmeldungen hinweg – ein Code hat nur 6 Ziffern). */
-export const codeBremse = new Bremse(10, 15 * 60_000, "Zu viele falsche Codes. Bitte 15 Minuten warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.");
+/**
+ * Zweiter Faktor: je Konto 10 Fehlversuche in 15 Minuten (über alle Anmeldungen hinweg – ein Code hat nur 6 Ziffern).
+ * Bei der Anmeldung zählen Codes aus der App außerdem 24 Stunden lang: nach 30 Fehlversuchen ist die Anmeldung mit Code
+ * gesperrt, bis die Ausstellungsleitung die Sperre aufhebt (Entscheidung 034) – sonst probierte jemand mit bekanntem
+ * Passwort über Wochen weiter. Ein Notfallcode kommt dann noch hinein. Hinweismails: CODE_HINWEIS_NACH und bei der Sperre.
+ */
+export const codeBremse = new Stufenbremse(
+  new Bremse(10, 15 * 60_000, "Zu viele falsche Codes. Bitte 15 Minuten warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben."),
+  new Bremse(30, 24 * 60 * 60_000, "Zu viele falsche Codes. Die Anmeldung mit Code ist gesperrt – bitte einen Notfallcode verwenden oder die Ausstellungsleitung bitten, die Sperre aufzuheben."),
+);
+export const CODE_HINWEIS_NACH = 5;
 /** Passwortabfrage beim Einrichten und Abschalten der Zwei-Faktor-Anmeldung. */
 export const zweiFaktorBremse = new Bremse(5, 15 * 60_000, "Zu viele Fehlversuche. Bitte später erneut versuchen.");
 export const anlegenBremse = new Bremse(30, 60 * 60_000, "Zu viele neue Benutzer in kurzer Zeit. Bitte später weitermachen.");

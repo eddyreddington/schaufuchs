@@ -50,6 +50,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     konto: (min: string) =>
       `Příliš mnoho neúspěšných pokusů pro tento účet. Počkejte prosím až ${min} ${mn(min, "minutu", "minuty", "minut")} nebo požádejte vedení výstavy o zrušení blokace.`,
     codes: "Příliš mnoho chybných kódů. Počkejte prosím 15 minut nebo požádejte vedení výstavy o zrušení blokace.",
+    codesGesperrt: "Příliš mnoho chybných kódů. Přihlášení kódem je zablokováno – použijte prosím nouzový kód nebo požádejte vedení výstavy o zrušení blokace.",
     benutzer: "Příliš mnoho nových uživatelů v krátké době. Pokračujte prosím později.",
     passwort: "Příliš mnoho neúspěšných pokusů. Počkejte prosím 15 minut nebo požádejte vedení výstavy o zrušení blokace.",
     einladung: "Příliš mnoho pokusů s odkazy s pozvánkou. Počkejte prosím 15 minut.",

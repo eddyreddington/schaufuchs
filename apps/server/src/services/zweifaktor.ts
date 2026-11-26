@@ -1,5 +1,6 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { type KontoStand, zufallsToken } from "../auth";
+import { createHmac, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
+import { type KontoStand, sha256, zufallsToken } from "../auth";
+import { datenschluessel } from "../db/geheim";
 
 /**
  * Zwei-Faktor-Anmeldung mit zeitbasierten Einmalcodes (TOTP nach RFC 6238: SHA-1, 30 Sekunden, 6 Ziffern) – passt zu
@@ -94,13 +95,39 @@ export function lesbar(geheim: string): string {
 }
 
 const NOTFALL_ZEICHEN = "abcdefghjkmnpqrstuvwxyz23456789";
+/** Form eines Notfallcodes bei der Eingabe (mit oder ohne Bindestrich). */
+export const NOTFALL_FORM = /^[a-z0-9]{4}-?[a-z0-9]{4}$/i;
+/** Kennung des Hash-Formats mit Schlüssel (Entscheidung 034); Einträge ohne sie stammen aus Versionen bis 1.21. */
+const NOTFALL_PRAEFIX = "h1:";
+const normiert = (code: string) => code.replace(/[\s-]/g, "").toLowerCase();
+
+/**
+ * Hash eines Notfallcodes: HMAC-SHA-256 mit einem Schlüssel aus DATENSCHLUESSEL. Ein Code hat nur rund 40 Bit – ein
+ * bloßer SHA-256 ließe sich aus einem Datenbank-Abzug in Minuten zurückrechnen, ohne den Schlüssel geht das nicht
+ * (wie beim verschlüsselten TOTP-Geheimnis).
+ */
 export function hashNotfallcode(code: string): string {
-  return new Bun.CryptoHasher("sha256").update(code.replace(/[\s-]/g, "").toLowerCase()).digest("hex");
+  const schluessel = createHmac("sha256", datenschluessel()).update("schaufuchs-notfallcode").digest();
+  return NOTFALL_PRAEFIX + createHmac("sha256", schluessel).update(normiert(code)).digest("hex");
 }
+
+/**
+ * Gespeicherter Eintrag, zu dem der Code passt, sonst null. Codes aus Versionen bis 1.21 (SHA-256 ohne Schlüssel, ohne
+ * Kennung) gelten weiter, bis sie verbraucht oder beim nächsten Einrichten ersetzt sind.
+ */
+export function findeNotfallcode(gespeichert: readonly string[], code: string): string | null {
+  if (!NOTFALL_FORM.test(code.trim())) return null;
+  const neu = hashNotfallcode(code);
+  if (gespeichert.includes(neu)) return neu;
+  const alt = sha256(normiert(code));
+  return gespeichert.includes(alt) ? alt : null;
+}
+
 /** Zehn Notfallcodes für ein verlorenes Telefon: im Klartext nur einmal angezeigt, gespeichert nur als Hash. */
 export function neueNotfallcodes(anzahl = 10): { klar: string[]; hashes: string[] } {
   const klar = Array.from({ length: anzahl }, () => {
-    const z = Array.from(randomBytes(8), (b) => NOTFALL_ZEICHEN[b % NOTFALL_ZEICHEN.length]).join("");
+    // randomInt: jedes Zeichen gleich wahrscheinlich (b % 31 bevorzugte die ersten Zeichen ein wenig).
+    const z = Array.from({ length: 8 }, () => NOTFALL_ZEICHEN[randomInt(NOTFALL_ZEICHEN.length)]).join("");
     return `${z.slice(0, 4)}-${z.slice(4)}`;
   });
   return { klar, hashes: klar.map(hashNotfallcode) };
@@ -109,9 +136,13 @@ export function neueNotfallcodes(anzahl = 10): { klar: string[]; hashes: string[
 /**
  * Zwischenstand nach richtigem Passwort: Die Sitzung entsteht erst mit dem zweiten Faktor. Höchstens 5 Minuten und
  * 5 Versuche je Anmeldung; liegt nur im Arbeitsspeicher (ein Neustart verlangt erneut das Passwort).
+ * Über viele Anmeldungen hinweg begrenzt codeBremse (routers/auth/gemeinsam.ts) die Versuche je Konto.
  */
 const zwischen = new Map<string, { benutzerId: number; ip: string; bis: number; fehl: number; stand: KontoStand }>();
-/** stand: Konto beim Prüfen des Passworts – die Sitzung entsteht nur, wenn es sich bis zum Code nicht geändert hat. */
+/**
+ * stand: Konto beim Prüfen des Passworts – die Sitzung entsteht nur, wenn es sich bis zum Code nicht geändert hat.
+ * ip: Adresse beim Passwort; sie gilt nach dem Code als bekannt.
+ */
 export function starteZweiterSchritt(benutzerId: number, ip: string, stand: KontoStand): string {
   const jetzt = Date.now();
   for (const [k, v] of zwischen) if (v.bis < jetzt) zwischen.delete(k);

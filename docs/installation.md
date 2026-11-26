@@ -334,6 +334,10 @@ In der Zeile `SMTP_URL=` die Zugangsdaten des Postfachs eintragen, z. B.
 `SMTP_URL=smtps://schau%40example.org:PASSWORT@mail.example.net:465` (das `@` im Benutzernamen als `%40`),
 und bei `MAIL_FROM=` den Absender. Speichern (bei nano: Strg+O, Enter, Strg+X) – SchauFUCHS startet neu.
 
+SchauFUCHS versendet nur verschlüsselt: `smtps://…:465` oder `smtp://…:587` mit STARTTLS. Bietet der Mailserver kein
+STARTTLS an, bleiben die Mails mit Fehler im Postausgang. Nur für einen Mailserver im eigenen Netz ohne Verschlüsselung
+zusätzlich `SMTP_OHNE_TLS=1` eintragen; Passwort und Mails gehen dann im Klartext (Warnung im Server-Log).
+
 ## Im laufenden Betrieb
 
 Anmelden aus dem Vereinsnetz mit `ssh verwalter@192.0.2.20`. Alle `schaufuchs`-Befehle laufen mit `sudo`.
@@ -475,6 +479,7 @@ Datei und startet SchauFUCHS nach dem Speichern neu.
 | `SCHAUFUCHS_DOMAIN`, `PUBLIC_URL` | Adresse von SchauFUCHS. Bei einem Wechsel zuerst den DNS-Eintrag anlegen, dann beide Zeilen ändern. |
 | `ACME_EMAIL` | E-Mail für das HTTPS-Zertifikat |
 | `SMTP_URL`, `MAIL_FROM` | Mailversand (Schritt 9); leer: Mails bleiben im Postausgang (Verein und Datenschutz) |
+| `SMTP_OHNE_TLS` | Nur `1` für einen Mailserver ohne Verschlüsselung im eigenen Netz (Schritt 9) – sonst nicht eintragen |
 | `BACKUP_INTERVALL_MINUTEN`, `BACKUP_TAGE` | Abstand der Sicherungen (Vorgabe 120 Minuten) und Aufbewahrung (Vorgabe 30 Tage) |
 | `BACKUP_UID`, `BACKUP_GID` | Benutzer, dem die Sicherungsdateien gehören (setzt der Installer); leer: root |
 | `APP_NAME` | Name in der Oberfläche |

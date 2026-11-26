@@ -6,7 +6,7 @@ import { config } from "../../config";
 import { db } from "../../db/client";
 import { benutzer, organisation, sitzung } from "../../db/schema";
 import { protokolliere } from "../../services/protokoll";
-import { hashNotfallcode, lesbar, neueNotfallcodes, neuesGeheimnis, otpauthAdresse, pruefeTotp } from "../../services/zweifaktor";
+import { findeNotfallcode, lesbar, neueNotfallcodes, neuesGeheimnis, otpauthAdresse, pruefeTotp } from "../../services/zweifaktor";
 import { adminProcedure, benutzerProcedure, fehler, dbId } from "../../trpc";
 import { codeBremse, zweiFaktorBremse, eigenerZugang, verwalte, hinweisMail } from "./gemeinsam";
 
@@ -61,7 +61,7 @@ export const zweiFaktor = {
     const zurueck = zweiFaktorBremse.versuch([`konto:${ctx.benutzer.id}`]);
     const [b] = await db.select().from(benutzer).where(eq(benutzer.id, ctx.benutzer.id));
     if (!b?.totpAktivSeit || !b.totpGeheim) throw fehler("BAD_REQUEST", "Die Zwei-Faktor-Anmeldung ist nicht eingerichtet.");
-    const codeOk = pruefeTotp(b.totpGeheim, input.code, b.totpLetzterSchritt) != null || b.totpNotfall.includes(hashNotfallcode(input.code));
+    const codeOk = pruefeTotp(b.totpGeheim, input.code, b.totpLetzterSchritt) != null || findeNotfallcode(b.totpNotfall, input.code) != null;
     if (!(await pruefePasswort(input.passwort, b.passwortHash)) || !codeOk) throw fehler("BAD_REQUEST", "Passwort oder Code stimmt nicht.");
     zurueck();
     await db.transaction(async (tx) => {

@@ -43,6 +43,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     kontoEineMinute: "Te veel mislukte pogingen voor dit account. Wacht maximaal 1 minuut of vraag de showleiding de blokkering op te heffen.",
     konto: (min: string) => `Te veel mislukte pogingen voor dit account. Wacht maximaal ${min} minuten of vraag de showleiding de blokkering op te heffen.`,
     codes: "Te veel verkeerde codes. Wacht 15 minuten of vraag de showleiding de blokkering op te heffen.",
+    codesGesperrt: "Te veel verkeerde codes. Aanmelden met een code is geblokkeerd – gebruik een noodcode of vraag de showleiding de blokkering op te heffen.",
     benutzer: "Te veel nieuwe gebruikers in korte tijd. Ga later verder.",
     passwort: "Te veel mislukte pogingen. Wacht 15 minuten of vraag de showleiding de blokkering op te heffen.",
     einladung: "Te veel pogingen met uitnodigingslinks. Wacht 15 minuten.",

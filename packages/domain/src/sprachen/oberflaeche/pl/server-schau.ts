@@ -49,6 +49,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     kontoEineMinute: "Zbyt wiele nieudanych prób dla tego konta. Prosimy odczekać do 1 minuty lub poprosić kierownictwo wystawy o zdjęcie blokady.",
     konto: (min: string) => `Zbyt wiele nieudanych prób dla tego konta. Prosimy odczekać do ${min} ${mn(min, "minuty", "minut", "minut")} lub poprosić kierownictwo wystawy o zdjęcie blokady.`,
     codes: "Zbyt wiele błędnych kodów. Prosimy odczekać 15 minut lub poprosić kierownictwo wystawy o zdjęcie blokady.",
+    codesGesperrt: "Zbyt wiele błędnych kodów. Logowanie kodem jest zablokowane – prosimy użyć kodu awaryjnego lub poprosić kierownictwo wystawy o zdjęcie blokady.",
     benutzer: "Zbyt wielu nowych użytkowników w krótkim czasie. Prosimy kontynuować później.",
     passwort: "Zbyt wiele nieudanych prób. Prosimy odczekać 15 minut lub poprosić kierownictwo wystawy o zdjęcie blokady.",
     einladung: "Zbyt wiele prób z linkami z zaproszeniem. Prosimy odczekać 15 minut.",

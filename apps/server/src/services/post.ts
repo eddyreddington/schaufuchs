@@ -6,11 +6,17 @@ import { entschluessele, verschluessele } from "../db/geheim";
 import { postausgang } from "../db/schema";
 import { kurzerFehler } from "./fehlertext";
 
+/** Angaben in SMTP_URL, die die Verschlüsselung abschalten könnten – sie gelten nur mit SMTP_OHNE_TLS=1. */
+const TLS_ANGABEN = ["secure", "requireTLS", "ignoreTLS", "opportunisticTLS"];
+
 /**
  * SMTP_URL (smtp://benutzer:passwort@host:587 oder smtps://…:465) mit kurzen Zeitgrenzen: ein gestörter Mailserver
  * hält keine Anfrage auf. Weitere Angaben als Parameter, z. B. ?tls.rejectUnauthorized=false.
+ * Immer verschlüsselt (Entscheidung 034): smtps:// von Anfang an, smtp:// nur mit STARTTLS (requireTLS) – sonst
+ * genügte es, das STARTTLS-Angebot des Mailservers auf dem Weg zu streichen, und Passwort und Einladungslinks gingen im
+ * Klartext hinaus. Abschalten nur ausdrücklich mit SMTP_OHNE_TLS=1 (etwa ein Mailserver im eigenen Netz ohne TLS).
  */
-export function smtpOptionen(url: string) {
+export function smtpOptionen(url: string, ohneTls = smtpOhneTls()) {
   const u = new URL(url);
   const secure = u.protocol === "smtps:";
   const extra: Record<string, unknown> = {};
@@ -30,7 +36,20 @@ export function smtpOptionen(url: string) {
     socketTimeout: 20_000,
     ...(Object.keys(tls).length ? { tls } : {}),
     ...extra,
+    ...(ohneTls ? { requireTLS: extra.requireTLS === true } : { secure, requireTLS: !secure, ignoreTLS: false, opportunisticTLS: false }),
   };
+}
+
+/** SMTP_OHNE_TLS=1: Mailversand auch ohne Verschlüsselung (Warnung im Server-Log). */
+function smtpOhneTls() {
+  return /^(1|true|ja)$/i.test(process.env.SMTP_OHNE_TLS?.trim() ?? "");
+}
+
+/** Warnungen für das Server-Log beim Start: Verschlüsselung abgeschaltet oder Angaben in SMTP_URL übergangen. */
+export function smtpWarnungen(url: string, ohneTls = smtpOhneTls()): string[] {
+  if (ohneTls) return ["SMTP_OHNE_TLS=1: Mails, SMTP-Passwort und Einladungslinks gehen unverschlüsselt hinaus, wenn der Mailserver kein STARTTLS anbietet. Nur für einen Mailserver im eigenen Netz."];
+  const uebergangen = [...new URL(url).searchParams.keys()].filter((k) => TLS_ANGABEN.includes(k));
+  return uebergangen.length ? [`SMTP_URL: ${uebergangen.join(", ")} übergangen – der Versand bleibt verschlüsselt. Abschalten nur mit SMTP_OHNE_TLS=1.`] : [];
 }
 
 /** Für das Server-Log: SMTP-Antworten nennen oft den Empfänger – Personendaten gehören nicht in die Container-Logs. */
@@ -44,7 +63,9 @@ let smtpFehler = "";
 function ladeTransport() {
   if (!config.smtp) return null;
   try {
-    return nodemailer.createTransport(smtpOptionen(config.smtp));
+    const t = nodemailer.createTransport(smtpOptionen(config.smtp));
+    for (const w of smtpWarnungen(config.smtp)) console.warn(`[post] ${w}`);
+    return t;
   } catch {
     smtpFehler =
       "SMTP_URL ist ungültig. Sonderzeichen in Benutzer oder Passwort bitte URL-kodieren (z. B. # → %23, / → %2F, ? → %3F, % → %25, @ → %40). Bis dahin bleiben Mails im Postausgang.";

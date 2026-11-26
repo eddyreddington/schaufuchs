@@ -48,7 +48,8 @@ import { trpcGesperrt } from "./lesemodus";
 export interface Context extends Angemeldet {
   /** Antwort-Header, z. B. für Set-Cookie beim Anmelden. */
   setCookie: (wert: string) => void;
-  cookieTokens: { benutzer: string | undefined; richter: string | undefined };
+  /** geraet: Gerätekennzeichen (auth.ts, COOKIE_GERAET) für die Bremsen der Anmeldung. */
+  cookieTokens: { benutzer: string | undefined; richter: string | undefined; geraet?: string | undefined };
   ip: string;
 }
 

@@ -8,6 +8,13 @@ import { benutzer, organisation, preisrichter, schau, sitzung } from "./db/schem
 export const COOKIE = "schau_sitzung";
 /** Eigenes Cookie für Preisrichter, damit Tablet- und Büro-Anmeldung auf einem Gerät nebeneinander bestehen. */
 export const COOKIE_RICHTER = "schau_richter";
+/**
+ * Gerätekennzeichen (Entscheidung 034): zufällig, gesetzt bei der ersten erfolgreichen Anmeldung eines Geräts. Daran
+ * erkennen die Bremsen ein bekanntes Gerät auch hinter einer gemeinsamen Adresse (Hallen-WLAN, NAT) – Fehlversuche
+ * Fremder an derselben Adresse sperren es dann nicht aus. Es meldet niemanden an und ersetzt kein Passwort.
+ */
+export const COOKIE_GERAET = "schau_geraet";
+const GERAET_TAGE = 365;
 
 export function sha256(text: string): string {
   return new Bun.CryptoHasher("sha256").update(text).digest("hex");
@@ -30,6 +37,18 @@ const MAX_WARTEND = 64;
 let pruefungen = 0;
 const wartend: (() => void)[] = [];
 
+function ausgelastet() {
+  return new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Der Server ist gerade ausgelastet. Bitte gleich noch einmal versuchen." });
+}
+
+/**
+ * Vorab: Ist die Schlange der Passwortprüfungen voll, gleich abweisen – noch bevor eine Bremse etwas zählt oder die
+ * Datenbank gefragt wird. Sonst legten abgewiesene Anfragen mit immer neuen Adressen Einträge an, ohne gebremst zu werden.
+ */
+export function pruefeAuslastung() {
+  if (pruefungen >= MAX_PRUEFUNGEN && wartend.length >= MAX_WARTEND) throw ausgelastet();
+}
+
 /** Ohne gültigen Hash (Einladung noch nicht angenommen, Konto entfernt): gleich lange rechnen, dann ablehnen. */
 let ersatzHash: Promise<string> | null = null;
 
@@ -40,7 +59,7 @@ export async function pruefePasswort(passwort: string, hash: string): Promise<bo
     return false;
   }
   if (pruefungen >= MAX_PRUEFUNGEN) {
-    if (wartend.length >= MAX_WARTEND) throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Der Server ist gerade ausgelastet. Bitte gleich noch einmal versuchen." });
+    if (wartend.length >= MAX_WARTEND) throw ausgelastet();
     await new Promise<void>((weiter) => wartend.push(weiter));
   } else pruefungen++;
   try {
@@ -195,6 +214,23 @@ async function ladeEine(token: string | undefined, eingabeVorMs?: number): Promi
     }
   }
   return leer;
+}
+
+/** Schlüssel des Gerätekennzeichens für die Bremsen, oder null ohne (gültig aussehendes) Kennzeichen. */
+export function geraetSchluessel(token: string | undefined): string | null {
+  return token && /^[A-Za-z0-9_-]{32,64}$/.test(token) ? `geraet-${sha256(token).slice(0, 32)}` : null;
+}
+
+/**
+ * Nach einer erfolgreichen Anmeldung: Schlüssel des Gerätekennzeichens, das der Browser schon hat – oder ein neues, als
+ * Cookie gesetzt. Ob es für ein Konto gilt, entscheidet erst `Wartezeit.merke` (nur im Arbeitsspeicher).
+ */
+export function geraetNachAnmeldung(ctx: { cookieTokens: { geraet?: string | undefined }; setCookie: (wert: string) => void }): string {
+  const vorhanden = geraetSchluessel(ctx.cookieTokens.geraet);
+  if (vorhanden) return vorhanden;
+  const token = zufallsToken(32);
+  ctx.setCookie(cookieHeader(token, GERAET_TAGE * 86_400, COOKIE_GERAET));
+  return geraetSchluessel(token)!;
 }
 
 export function cookieHeader(token: string, maxAgeSeconds: number, name = COOKIE): string {

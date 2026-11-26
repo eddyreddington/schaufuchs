@@ -51,6 +51,7 @@ Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit dem Namen und
 | „E-Mail oder Passwort stimmt nicht.“ | Tippfehler oder falsches Passwort. Die Meldung sagt bewusst nicht, welches von beiden falsch ist. |
 | „Zu viele Fehlversuche für dieses Konto. Bitte bis zu … Minuten warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.“ | Nach mehreren falschen Passwörtern wartet das Konto. Ein anderer Administrator kann die Wartezeit aufheben (siehe 2.4). |
 | „Der Code stimmt nicht. Bitte den aktuellen Code aus der App eingeben.“ | Code abgelaufen oder vertippt. Den gerade angezeigten Code nehmen. |
+| „Zu viele falsche Codes. Die Anmeldung mit Code ist gesperrt …“ | Nach 30 falschen Codes in 24 Stunden. Mit einem Notfallcode anmelden oder einen anderen Administrator bitten, die Sperre aufzuheben (Benutzer → Name). Sie bekommen dazu eine Hinweismail: Kennt jemand Ihr Passwort, ändern Sie es. |
 | „Die Anmeldung ist abgelaufen. Bitte noch einmal mit Passwort anmelden.“ | Zwischen Passwort und Code verging zu viel Zeit. Von vorn beginnen. |
 
 ### 1.2 Zwei-Faktor-Anmeldung: Pflicht für Administratoren

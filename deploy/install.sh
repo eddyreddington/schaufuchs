@@ -163,7 +163,8 @@ BACKUP_TAGE=30
 ${benutzer:+# Sicherungsdateien gehören diesem Benutzer ($benutzer), damit er sie ohne sudo kopieren kann.
 BACKUP_UID=$benutzer_uid
 BACKUP_GID=$benutzer_gid}
-# E-Mail-Versand (leer = Mails bleiben im Postausgang). Format: smtp://benutzer:passwort@server:587
+# E-Mail-Versand (leer = Mails bleiben im Postausgang). Format: smtps://benutzer:passwort@server:465
+# oder smtp://…:587 (nur mit STARTTLS; ohne Verschlüsselung nur mit SMTP_OHNE_TLS=1)
 # Sonderzeichen in Benutzer/Passwort kodieren: @ → %40, # → %23, / → %2F, ? → %3F, % → %25, : → %3A
 SMTP_URL=
 MAIL_FROM="SchauFUCHS <noreply@$domain>"

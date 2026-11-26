@@ -43,6 +43,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     kontoEineMinute: "Trop de tentatives échouées pour ce compte. Veuillez patienter jusqu’à 1 minute ou demander à la direction de l’exposition de lever le blocage.",
     konto: (min: string) => `Trop de tentatives échouées pour ce compte. Veuillez patienter jusqu’à ${min} minutes ou demander à la direction de l’exposition de lever le blocage.`,
     codes: "Trop de codes erronés. Veuillez patienter 15 minutes ou demander à la direction de l’exposition de lever le blocage.",
+    codesGesperrt: "Trop de codes erronés. La connexion par code est bloquée – veuillez utiliser un code de secours ou demander à la direction de l’exposition de lever le blocage.",
     benutzer: "Trop de nouveaux utilisateurs en peu de temps. Veuillez continuer plus tard.",
     passwort: "Trop de tentatives échouées. Veuillez patienter 15 minutes ou demander à la direction de l’exposition de lever le blocage.",
     einladung: "Trop de tentatives avec des liens d’invitation. Veuillez patienter 15 minutes.",

@@ -43,6 +43,7 @@ export const serverSchau: OberflaecheTexte["serverSchau"] = {
     kontoEineMinute: "Too many failed attempts for this account. Please wait up to 1 minute or ask the show management to lift the lock.",
     konto: (min: string) => `Too many failed attempts for this account. Please wait up to ${min} minutes or ask the show management to lift the lock.`,
     codes: "Too many wrong codes. Please wait 15 minutes or ask the show management to lift the lock.",
+    codesGesperrt: "Too many wrong codes. Signing in with a code is locked – please use an emergency code or ask the show management to lift the lock.",
     benutzer: "Too many new users in a short time. Please continue later.",
     passwort: "Too many failed attempts. Please wait 15 minutes or ask the show management to lift the lock.",
     einladung: "Too many attempts with invitation links. Please wait 15 minutes.",

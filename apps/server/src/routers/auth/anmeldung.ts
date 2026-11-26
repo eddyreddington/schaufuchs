@@ -2,15 +2,33 @@
 import { abmeldungLesen, SPRACHEN } from "@schau/domain";
 import { and, count, eq, isNull, lt, ne, sql } from "drizzle-orm";
 import { z } from "zod";
-import { beendeSitzung, cookieHeader, hashPasswort, neueSitzung, pruefePasswort, sitzungsId, sitzungWennUnveraendert } from "../../auth";
+import { beendeSitzung, cookieHeader, geraetNachAnmeldung, geraetSchluessel, hashPasswort, neueSitzung, pruefeAuslastung, pruefePasswort, sitzungsId, sitzungWennUnveraendert } from "../../auth";
 import { config } from "../../config";
 import { db } from "../../db/client";
 import { benutzer, organisation, schau, sitzung } from "../../db/schema";
 import { protokolliere } from "../../services/protokoll";
 import { BEREITS_EINGERICHTET, ersteinrichtungAngaben, richteEinMitPasswort } from "../../services/ersteinrichtung";
-import { beendeZweiterSchritt, hashNotfallcode, ladeZweiterSchritt, pruefeTotp, starteZweiterSchritt, zweiterSchrittFehlgeschlagen } from "../../services/zweifaktor";
+import { beendeZweiterSchritt, findeNotfallcode, ladeZweiterSchritt, NOTFALL_FORM, pruefeTotp, starteZweiterSchritt, zweiterSchrittFehlgeschlagen } from "../../services/zweifaktor";
 import { benutzerProcedure, fehler, publicProcedure } from "../../trpc";
-import { passwort, MAX_AGE, bremse, bremseJeAdresse, wartezeitJeKonto, codeBremse, passwortBremse, dummyHash, gleich } from "./gemeinsam";
+import { passwort, MAX_AGE, bremse, bremseJeAdresse, wartezeitJeKonto, codeBremse, CODE_HINWEIS_NACH, passwortBremse, dummyHash, gleich, hinweisMail } from "./gemeinsam";
+
+/** Hinweismail an den Inhaber: Passwort richtig, Code aus der App mehrmals falsch (bzw. jetzt gesperrt). */
+async function codeHinweis(b: { id: number; organisationId: number; name: string; email: string }, gesperrt: boolean) {
+  await hinweisMail(
+    b,
+    b.email,
+    gesperrt ? "Anmeldung mit Code gesperrt" : "Anmeldung: Code mehrmals falsch",
+    [
+      `Guten Tag ${b.name},`,
+      "",
+      "bei der Anmeldung zu SchauFUCHS wurde Ihr Passwort richtig eingegeben, der Code aus der Authenticator-App aber mehrmals falsch.",
+      ...(gesperrt
+        ? ["Die Anmeldung mit Code ist deshalb gesperrt, bis die Ausstellungsleitung die Sperre aufhebt. Mit einem Ihrer Notfallcodes kommen Sie weiterhin hinein."]
+        : []),
+    ],
+    true,
+  );
+}
 
 export const anmeldung = {
   status: publicProcedure.query(async ({ ctx }) => {
@@ -58,17 +76,27 @@ export const anmeldung = {
     .input(z.object({ email: z.string().max(200), passwort: z.string().max(200) }))
     .mutation(async ({ ctx, input }) => {
       const email = input.email.trim().toLowerCase();
+      const kKonto = `mail:${email}`;
+      // Server ausgelastet: abweisen, bevor etwas gezählt oder gelesen wird.
+      pruefeAuslastung();
+      // Bekanntes Gerät (Gerätekennzeichen, schon erfolgreich mit diesem Konto angemeldet): eigene Bremse statt der
+      // Adresse – Fehlversuche Fremder hinter derselben Adresse (Hallen-WLAN, NAT) sperren es so nicht aus. Ohne oder mit
+      // unbekanntem Kennzeichen gilt die Adresse.
+      const geraet = geraetSchluessel(ctx.cookieTokens.geraet);
+      const bekanntesGeraet = !!geraet && wartezeitJeKonto.istBekannt(kKonto, geraet);
+      const herkunft = bekanntesGeraet ? geraet : ctx.ip;
       // Erst alle Bremsen prüfen, dann zählen: ein abgewiesener Versuch verbraucht so keinen Zähler einer anderen Stufe
-      // (sonst sperrten abgewiesene Anmeldungen am Ende ein ganzes Netz).
-      const kGeraet = [`ip:${ctx.ip}:${email}`];
+      // (sonst sperrten abgewiesene Anmeldungen am Ende ein ganzes Netz). „ip:“ auch beim Gerät: „Sperre aufheben“ der
+      // Ausstellungsleitung leert alle Schlüssel „ip:…:<E-Mail>“.
+      const kGeraet = [`ip:${herkunft}:${email}`];
       const kAdresse = [`ip:${ctx.ip}`];
-      const ohneAdressSperre = wartezeitJeKonto.istAusgenommen(`mail:${email}`, ctx.ip);
+      const ohneAdressSperre = bekanntesGeraet || wartezeitJeKonto.istAusgenommen(kKonto, ctx.ip);
       bremse.pruefe(kGeraet);
       if (!ohneAdressSperre) bremseJeAdresse.pruefe(kAdresse);
-      wartezeitJeKonto.pruefe(`mail:${email}`, ctx.ip);
+      wartezeitJeKonto.pruefe(kKonto, herkunft);
       const zurueckGeraet = bremse.versuch(kGeraet);
       const zurueckAdresse = ohneAdressSperre ? () => {} : bremseJeAdresse.versuch(kAdresse);
-      const zurueckKonto = wartezeitJeKonto.versuch(`mail:${email}`, ctx.ip);
+      const zurueckKonto = wartezeitJeKonto.versuch(kKonto, herkunft);
       let ok = false;
       const [b] = await db.select().from(benutzer).where(eq(benutzer.email, email));
       try {
@@ -91,6 +119,8 @@ export const anmeldung = {
       // Sitzung nur, wenn sich das Konto während der Passwortprüfung nicht geändert hat (Reset, Sperre, 2FA, Adresse).
       const sitzungToken = await sitzungWennUnveraendert(b);
       zurueckKonto(true);
+      wartezeitJeKonto.merke(kKonto, ctx.ip);
+      wartezeitJeKonto.merke(kKonto, geraetNachAnmeldung(ctx));
       ctx.setCookie(cookieHeader(sitzungToken, MAX_AGE));
       return { ok: true as const, zweiterFaktor: false as const, token: "" };
     }),
@@ -102,7 +132,12 @@ export const anmeldung = {
       const z2 = ladeZweiterSchritt(input.token);
       if (!z2) throw fehler("UNAUTHORIZED", "Die Anmeldung ist abgelaufen. Bitte noch einmal mit Passwort anmelden.");
       const kKonto = [`konto:${z2.benutzerId}`];
-      const zurueck = codeBremse.versuch(kKonto);
+      // Codes aus der App zählen auch 24 Stunden lang (Sperre nach 30); ein Notfallcode nicht – mit ihm kommt der echte
+      // Inhaber trotz Sperre hinein, und Durchprobieren lohnt bei rund 40 Bit nicht.
+      const ausDerApp = !NOTFALL_FORM.test(input.code);
+      const zurueck = codeBremse.versuch(kKonto, ausDerApp);
+      // Synchron nach dem Zählen gelesen: der wievielte Versuch in 24 Stunden dieser ist (auch bei parallelen Anfragen eindeutig).
+      const nr = ausDerApp ? codeBremse.lang.anzahl(kKonto[0]!) : 0;
       const [b] = await db.select().from(benutzer).where(eq(benutzer.id, z2.benutzerId));
       if (!b || !b.aktiv || b.geloeschtAm || !b.totpAktivSeit || !b.totpGeheim) {
         beendeZweiterSchritt(input.token);
@@ -114,9 +149,10 @@ export const anmeldung = {
         // Nur einmal annehmen, auch bei zwei gleichzeitigen Anfragen mit demselben Code.
         const n = await db.update(benutzer).set({ totpLetzterSchritt: schritt }).where(and(eq(benutzer.id, b.id), lt(benutzer.totpLetzterSchritt, schritt))).returning({ id: benutzer.id });
         gueltig = n.length === 1;
-      } else if (/^[a-z0-9]{4}-?[a-z0-9]{4}$/i.test(input.code)) {
-        const hash = hashNotfallcode(input.code);
-        if (b.totpNotfall.includes(hash)) {
+      } else {
+        // Neues Format (mit Schlüssel) oder Bestand aus Versionen bis 1.21 (SHA-256) – entfernt wird genau der Eintrag.
+        const hash = findeNotfallcode(b.totpNotfall, input.code);
+        if (hash) {
           // In SQL entfernen, nicht die vorher gelesene Liste zurückschreiben: zwei gleichzeitig eingelöste Codes
           // machten sonst einen schon verbrauchten wieder gültig.
           const n = await db
@@ -129,18 +165,18 @@ export const anmeldung = {
       }
       if (!gueltig) {
         zweiterSchrittFehlgeschlagen(input.token);
+        // Passwort richtig, Code mehrmals falsch: Der Inhaber erfährt es (jemand kennt vielleicht sein Passwort).
+        if (nr === CODE_HINWEIS_NACH || nr === codeBremse.lang.max) await codeHinweis(b, nr === codeBremse.lang.max);
         throw fehler("UNAUTHORIZED", "Der Code stimmt nicht. Bitte den aktuellen Code aus der App eingeben.");
       }
       zurueck();
       beendeZweiterSchritt(input.token);
-      // Jetzt gilt die Adresse als bekannt (Schutz vor Sperren durch Fremde, wie bei der Anmeldung ohne zweiten Faktor).
-      try {
-        wartezeitJeKonto.versuch(`mail:${b.email}`, z2.ip)(true);
-      } catch {
-        /* Wartezeit läuft gerade – die Anmeldung gelingt trotzdem, nur ohne Merken der Adresse. */
-      }
       // Auch hier: nur, wenn sich das Konto seit dem Passwort nicht geändert hat (z. B. Reset durch die AL dazwischen).
-      ctx.setCookie(cookieHeader(await sitzungWennUnveraendert(z2.stand), MAX_AGE));
+      const sitzungToken = await sitzungWennUnveraendert(z2.stand);
+      // Jetzt gelten Adresse und Gerät als bekannt (Schutz vor Sperren durch Fremde, wie bei der Anmeldung ohne zweiten Faktor).
+      wartezeitJeKonto.merke(`mail:${b.email}`, z2.ip);
+      wartezeitJeKonto.merke(`mail:${b.email}`, geraetNachAnmeldung(ctx));
+      ctx.setCookie(cookieHeader(sitzungToken, MAX_AGE));
       return { ok: true as const, notfallUebrig: b.totpNotfall.length - (schritt == null ? 1 : 0) };
     }),
 

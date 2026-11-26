@@ -48,6 +48,7 @@ export const serverSchau = {
     kontoEineMinute: "Zu viele Fehlversuche für dieses Konto. Bitte bis zu 1 Minute warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.",
     konto: (min: string) => `Zu viele Fehlversuche für dieses Konto. Bitte bis zu ${min} Minuten warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.`,
     codes: "Zu viele falsche Codes. Bitte 15 Minuten warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.",
+    codesGesperrt: "Zu viele falsche Codes. Die Anmeldung mit Code ist gesperrt – bitte einen Notfallcode verwenden oder die Ausstellungsleitung bitten, die Sperre aufzuheben.",
     benutzer: "Zu viele neue Benutzer in kurzer Zeit. Bitte später weitermachen.",
     passwort: "Zu viele Fehlversuche. Bitte 15 Minuten warten oder die Ausstellungsleitung bitten, die Sperre aufzuheben.",
     einladung: "Zu viele Versuche mit Einladungslinks. Bitte 15 Minuten warten.",

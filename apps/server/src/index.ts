@@ -13,7 +13,7 @@ import { secureHeaders } from "hono/secure-headers";
 import { sql } from "drizzle-orm";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join, relative } from "node:path";
-import { COOKIE, COOKIE_RICHTER, ladeSitzung, type Angemeldet } from "./auth";
+import { COOKIE, COOKIE_GERAET, COOKIE_RICHTER, ladeSitzung, type Angemeldet } from "./auth";
 import { config } from "./config";
 import { db } from "./db/client";
 import { auskunftPdf } from "./pdf/auskunft";
@@ -195,7 +195,7 @@ app.use(
       if (error.code === "INTERNAL_SERVER_ERROR") console.error(`[trpc] ${path ?? "?"}:`, kurzerFehler(error.cause ?? error));
     },
     createContext: async (_opts, c): Promise<Context & Record<string, unknown>> => {
-      const tokens = { benutzer: getCookie(c, COOKIE), richter: getCookie(c, COOKIE_RICHTER) };
+      const tokens = { benutzer: getCookie(c, COOKIE), richter: getCookie(c, COOKIE_RICHTER), geraet: getCookie(c, COOKIE_GERAET) };
       const sitzung: Angemeldet = await (c.get("sitzung") ?? ladeSitzung(tokens.benutzer, tokens.richter, eingabeVor(c)));
       return {
         ...sitzung,

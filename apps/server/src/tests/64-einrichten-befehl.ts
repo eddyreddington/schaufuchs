@@ -42,7 +42,7 @@ const tokenAus = (text: string) => text.match(/\/einladung#([A-Za-z0-9_-]+)/)?.[
 const zahl = async (tabelle: string) => Number((await db.unsafe(`select count(*) as n from ${tabelle}`))[0]!.n);
 const konto = async () => (await db`select email, name, rolle, passwort_hash, einladung_hash, einladung_bis, aktiv from benutzer`)[0]!;
 
-/** Kleiner SMTP-Server, der jede Mail annimmt und sich merkt. */
+/** Kleiner SMTP-Server ohne TLS, der jede Mail annimmt und sich merkt. */
 function smtpAttrappe() {
   const mails: string[] = [];
   const server = Bun.listen<{ daten: boolean; puffer: string }>({
@@ -173,8 +173,11 @@ describe("Ersteinrichtung über die Kommandozeile", () => {
   test("mit Mailversand: Link geht per Mail hinaus, nicht ins Terminal", async () => {
     const smtp = smtpAttrappe();
     try {
-      const r = await einrichten(ANGABEN, { SMTP_URL: smtp.url });
-      expect(r.fehler).toBe("");
+      // Die Attrappe kann kein STARTTLS – also ausdrücklich ohne Verschlüsselung (sonst verlangt der Server TLS).
+      const r = await einrichten(ANGABEN, { SMTP_URL: smtp.url, SMTP_OHNE_TLS: "1" });
+      // Einzige Ausgabe auf stderr: die Warnung, dass ohne Verschlüsselung versandt wird.
+      expect(r.fehler).toContain("SMTP_OHNE_TLS=1");
+      expect(r.fehler.replace(/^\[post\] SMTP_OHNE_TLS=1.*\n/m, "")).toBe("");
       expect(r.code).toBe(0);
       expect(r.aus).toContain("erika@example.org");
       expect(r.aus).not.toContain("/einladung#");
