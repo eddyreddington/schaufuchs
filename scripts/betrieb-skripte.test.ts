@@ -104,6 +104,17 @@ describe("schaufuchs update und zuruecknehmen: Prüfsummen und Digests", () => {
     expect(r.fehler).toContain("Programm");
   });
 
+  test("update auf eine ältere Version: abgelehnt mit Hinweis auf zuruecknehmen, nichts verändert", () => {
+    for (const aelter of ["1.11.0", "1.9.9", "0.20.0"]) {
+      const r = lauf(["update", aelter]);
+      unveraendert(r);
+      expect(r.fehler + r.aus).toContain("zuruecknehmen");
+      expect(r.aufrufe.join("\n")).not.toContain("vor-update");
+    }
+    // Höhere Versionen (auch zweistellige Teile) gehen weiter.
+    expect(lauf(["update", "1.12.10"]).env).toContain("SCHAUFUCHS_VERSION=1.12.10");
+  });
+
   test("Release ohne Prüfsummen (vor der Umstellung): Update wie bisher, mit Hinweis", () => {
     const r = update();
     expect(r.code).toBe(0);
@@ -185,6 +196,11 @@ describe("install.sh (Linux, aufgerufen mit sudo)", () => {
     expect(r.code).toBe(1);
     expect(r.fehler).toContain("Prüfsumme");
     expect(existsSync(join(ziel(), ".env"))).toBe(false);
+    // Geprüft wird vor dem Ablegen: keine (womöglich veränderte) Datei bleibt liegen, auch keine Zwischendatei.
+    for (const d of ["docker-compose.yml", "Caddyfile", "schaufuchs", "scripts/wiederherstellen.sh"]) {
+      expect(existsSync(join(ziel(), d))).toBe(false);
+      expect(existsSync(join(ziel(), `${d}.neu`))).toBe(false);
+    }
     rmSync(ziel(), { recursive: true, force: true });
     pruefsummen();
     writeFileSync(join(ordner, "digest-backup"), `sha256:${"c".repeat(64)}`);

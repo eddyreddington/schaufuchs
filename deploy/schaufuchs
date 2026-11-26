@@ -184,6 +184,11 @@ case "$befehl" in
     neu="${1:-$(neueste_version)}"
     [ -n "$neu" ] || fehler "Neueste Version nicht gefunden. Bitte angeben, z. B.: schaufuchs update 1.3.0"
     if [ "$neu" = "$alt" ]; then echo "SchauFUCHS $alt ist aktuell."; exit 0; fi
+    # Nur vorwärts: Eine ältere Version versteht neuere Daten nicht (ab 1.22 z. B. an die Zeile gebundene Bankdaten) und
+    # würde sie beim Start verfälschen. Zurück geht es nur mit der Sicherung von vor dem Update (Entscheidung 035).
+    if [ -n "$alt" ] && [ "$(printf '%s\n%s\n' "$alt" "$neu" | sort -V | head -n 1)" = "$neu" ]; then
+      fehler "SchauFUCHS $neu ist älter als $alt – ein Update nur auf neuere Versionen. Zurück auf die vorige Version mit Sicherung: $AUFRUF zuruecknehmen"
+    fi
     frei=$(frei_gb)
     if [ -n "$frei" ] && [ "$frei" -lt 3 ]; then
       # Ältere Installationen haben noch alle früheren Versionen liegen: erst die wegräumen, dann neu messen.

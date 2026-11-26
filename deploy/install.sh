@@ -118,17 +118,19 @@ hole() {
     *) cp "$QUELLE/$1" "$2" ;;
   esac
 }
-hole deploy/docker-compose.yml "$ZIEL/docker-compose.yml"
-hole deploy/Caddyfile "$ZIEL/Caddyfile"
-hole deploy/schaufuchs "$ZIEL/schaufuchs"
-hole scripts/wiederherstellen.sh "$ZIEL/scripts/wiederherstellen.sh"
-chmod 755 "$ZIEL/schaufuchs"
+# Erst als .neu laden und prüfen, dann ablegen: bei einer falschen Prüfsumme bleibt keine geladene Datei liegen.
+DATEIEN="docker-compose.yml Caddyfile schaufuchs scripts/wiederherstellen.sh"
+verwerfen() { for f in $DATEIEN; do rm -f "$ZIEL/$f.neu"; done; }
+hole deploy/docker-compose.yml "$ZIEL/docker-compose.yml.neu"
+hole deploy/Caddyfile "$ZIEL/Caddyfile.neu"
+hole deploy/schaufuchs "$ZIEL/schaufuchs.neu"
+hole scripts/wiederherstellen.sh "$ZIEL/scripts/wiederherstellen.sh.neu"
 
 # Prüfsummen des Release (Entscheidung 037): Dateien hier, Digests der Programme unten. Releases ohne (404): ungeprüft.
 pruefsumme() { if command -v sha256sum > /dev/null 2>&1; then sha256sum "$1"; else shasum -a 256 "$1"; fi | awk '{ print $1 }'; }
 eintrag() { awk -v n="$2" '$2 == n { print $1; exit }' "$1"; }
 summen=$(mktemp)
-trap 'rm -f "$summen"' EXIT
+trap 'rm -f "$summen"; verwerfen' EXIT
 case "$QUELLE" in
   "$STANDARD_QUELLE") code=$(curl -sSL -w '%{http_code}' -o "$summen" "https://github.com/$KONTO/schaufuchs/releases/download/v$VERSION/SHA256SUMS" 2> /dev/null || true) ;;
   http*) code=$(curl -sSL -w '%{http_code}' -o "$summen" "$QUELLE/SHA256SUMS" 2> /dev/null || true) ;;
@@ -139,7 +141,7 @@ digest_backup=""
 case "$code" in
   200)
     for d in deploy/docker-compose.yml deploy/Caddyfile deploy/schaufuchs scripts/wiederherstellen.sh; do
-      case "$d" in deploy/*) datei="$ZIEL/${d#deploy/}" ;; *) datei="$ZIEL/$d" ;; esac
+      case "$d" in deploy/*) datei="$ZIEL/${d#deploy/}.neu" ;; *) datei="$ZIEL/$d.neu" ;; esac
       [ "$(pruefsumme "$datei")" = "$(eintrag "$summen" "$d")" ] || fehler "Prüfsumme von $d stimmt nicht mit dem Release $VERSION überein. Abgebrochen."
     done
     digest_app=$(eintrag "$summen" image/schaufuchs)
@@ -149,6 +151,8 @@ case "$code" in
   404) echo "Hinweis: Release $VERSION ohne Prüfsummen (älteres Release) – Dateien und Programme ungeprüft." ;;
   *) fehler "Prüfsummen des Release $VERSION nicht ladbar (HTTP $code). Abgebrochen." ;;
 esac
+for f in $DATEIEN; do mv "$ZIEL/$f.neu" "$ZIEL/$f"; done
+chmod 755 "$ZIEL/schaufuchs"
 # Sind die geladenen Programme die des Release (gleicher Digest)? Ohne Prüfsummen: nichts zu prüfen.
 programm_pruefen() {
   [ -n "$2" ] || return 0
@@ -276,9 +280,13 @@ if [ "${SCHAUFUCHS_JA:-0}" != "1" ] && (: < /dev/tty) 2> /dev/null; then
   echo
   cat "$blatt"
   echo
-  if [ "$(frage "  Ausgedruckt oder im Passwortmanager abgelegt? Dann wird die Datei gelöscht. [ja/nein]")" = "ja" ]; then
+  # Gelöscht wird die einzige Kopie des Sicherungsschlüssels – deshalb als Beleg dessen letzte 6 Zeichen eintippen lassen.
+  ende=$(printf '%s' "$sicherung_privat" | tail -c 6)
+  if [ "$(frage "  Ausgedruckt oder im Passwortmanager abgelegt? Zum Löschen der Datei die letzten 6 Zeichen des AGE-SECRET-KEY eintippen (sonst Enter):")" = "$ende" ]; then
     rm -f "$blatt"
     echo "  Notfallblatt gelöscht."
+  else
+    echo "  Notfallblatt bleibt liegen."
   fi
 fi
 if [ -f "$blatt" ]; then
