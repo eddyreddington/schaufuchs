@@ -18,7 +18,9 @@ const TLS_ANGABEN = ["secure", "requireTLS", "ignoreTLS", "opportunisticTLS"];
  */
 export function smtpOptionen(url: string, ohneTls = smtpOhneTls()) {
   const u = new URL(url);
-  const secure = u.protocol === "smtps:";
+  // TLS ab Verbindungsbeginn: smtps://, Port 465 oder ausdrücklich ?secure=true (so liefen ältere Installationen schon –
+  // das ist mindestens so streng wie STARTTLS). ?secure=false schaltet dagegen nichts ab (siehe unten).
+  const secure = u.protocol === "smtps:" || u.searchParams.get("secure") === "true" || (u.port === "465" && u.searchParams.get("secure") !== "false");
   const extra: Record<string, unknown> = {};
   const tls: Record<string, unknown> = {};
   for (const [k, roh] of u.searchParams) {
@@ -48,7 +50,7 @@ function smtpOhneTls() {
 /** Warnungen für das Server-Log beim Start: Verschlüsselung abgeschaltet oder Angaben in SMTP_URL übergangen. */
 export function smtpWarnungen(url: string, ohneTls = smtpOhneTls()): string[] {
   if (ohneTls) return ["SMTP_OHNE_TLS=1: Mails, SMTP-Passwort und Einladungslinks gehen unverschlüsselt hinaus, wenn der Mailserver kein STARTTLS anbietet. Nur für einen Mailserver im eigenen Netz."];
-  const uebergangen = [...new URL(url).searchParams.keys()].filter((k) => TLS_ANGABEN.includes(k));
+  const uebergangen = [...new URL(url).searchParams.entries()].filter(([k, v]) => TLS_ANGABEN.includes(k) && !(k === "secure" && v === "true")).map(([k]) => k);
   return uebergangen.length ? [`SMTP_URL: ${uebergangen.join(", ")} übergangen – der Versand bleibt verschlüsselt. Abschalten nur mit SMTP_OHNE_TLS=1.`] : [];
 }
 
