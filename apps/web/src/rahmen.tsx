@@ -150,7 +150,7 @@ export function AppRahmen() {
   );
   const seite = seitenName(ort.pathname, !!schauId, b.rolle === "admin", t);
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)] print:block">
+    <div className="min-h-screen lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] print:block">
       <a href="#inhalt" className="sprunglink nicht-drucken">{ta.zumInhalt}</a>
       {/* Breit: feste Seitenleiste. Schmal: oben eine Zeile mit „Menü“, die Leiste fährt von links herein. */}
       <aside className="nicht-drucken hidden border-r border-linie bg-papier lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">{leiste}</aside>

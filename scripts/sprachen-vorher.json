@@ -4182,9 +4182,7 @@
   "Mein Zugang",
   "benutzer",
   "schaufuchs.menue",
-  "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 no-underline",
-  "bg-weiss font-semibold text-tinte shadow-[0_0_0_1px_var(--color-linie-stark),0_1px_2px_rgb(0_0_0/0.05)] [&>svg]:text-band",
-  "text-grau hover:bg-linie/60 hover:text-tinte"
+  "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 no-underline"
  ],
  "apps/web/src/sprache.tsx": [
   "schaufuchs.sprache",

@@ -150,7 +150,7 @@ export function useKlappzustand() {
 }
 
 const leistenLink = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-2.5 rounded-md px-2.5 py-1.5 no-underline ${isActive ? "bg-weiss font-semibold text-tinte shadow-[0_0_0_1px_var(--color-linie-stark),0_1px_2px_rgb(0_0_0/0.05)] [&>svg]:text-band" : "text-grau hover:bg-linie/60 hover:text-tinte"}`;
+  `flex items-center gap-2.5 rounded-md px-2.5 py-1.5 no-underline ${isActive ? "bg-weiss font-bold text-tinte shadow-[0_0_0_1px_var(--color-linie-stark),0_1px_2px_rgb(0_0_0/0.05)] [&>svg]:text-band" : "font-medium text-tinte/85 hover:bg-linie/60 hover:text-tinte [&>svg]:text-grau"}`;
 export { leistenLink };
 
 /**
@@ -169,7 +169,7 @@ export function MenueGruppen({ gruppen, basis = "", vorgabeOffen, klapp, label, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aktiveGruppe]);
   return (
-    <nav aria-label={label} className="flex flex-col gap-2">
+    <nav aria-label={label} className="flex flex-col gap-3.5">
       {gruppen.map((g) => (
         <Gruppe key={g.id ?? g.seiten[0]!.pfad} g={g} offen={!g.id || (klapp.zustand[g.id] ?? (vorgabeOffen(g) || g.id === aktiveGruppe))} umschalten={(o) => g.id && klapp.setze(g.id, o)}>
           {g.seiten.map((s) => (
@@ -190,11 +190,11 @@ function Gruppe({ g, offen, umschalten, children }: { g: MenueGruppe; offen: boo
   if (!g.id) return <div className="flex flex-col gap-px">{children}</div>;
   return (
     <div className="flex flex-col gap-px">
-      <button type="button" aria-expanded={offen} aria-controls={id} onClick={() => umschalten(!offen)} className="group flex items-center justify-between rounded-md px-2.5 py-1 text-left text-[0.8rem] font-medium text-grau hover:bg-linie/60 hover:text-tinte">
+      <button type="button" aria-expanded={offen} aria-controls={id} onClick={() => umschalten(!offen)} className="group flex items-center justify-between rounded-md px-2.5 py-1 text-left text-[0.95rem] font-bold text-tinte hover:bg-linie/60">
         {g.name}
         <Symbol name="runter" className={`size-3.5 transition-transform ${offen ? "" : "-rotate-90"}`} />
       </button>
-      <div id={id} hidden={!offen} className="flex flex-col gap-px">
+      <div id={id} hidden={!offen} className="ml-3 flex flex-col gap-px border-l border-linie-stark pl-1.5">
         {children}
       </div>
     </div>
