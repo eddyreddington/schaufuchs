@@ -1,5 +1,15 @@
 # SchauFUCHS 1.22 – Versionshinweise
 
+## 1.22.1 (26.11.2026)
+
+- **Signierte Releases:** Ab dieser Version sind die Prüfsummen jedes Release mit einem Schlüssel signiert, der nicht
+  auf GitHub liegt, und nennen die Version. `schaufuchs update` und der Installer nehmen künftige Releases nur mit
+  gültiger Signatur an – auch wer das GitHub-Konto übernähme, könnte keine veränderte oder umbenannte Version
+  unterschieben (Entscheidung 037, Nachtrag). Das gilt ab dem *nächsten* Update: Das Update auf 1.22.1 selbst läuft
+  noch mit dem bisherigen Befehl. Der Server braucht `ssh-keygen` ab OpenSSH 8.1 (Paket `openssh-client`, auf
+  aktuellem Debian und Ubuntu vorhanden).
+- Veröffentlichte Releases und Versions-Tags lassen sich auf GitHub nicht mehr ändern oder löschen.
+
 ## 1.22.0 (26.11.2026)
 
 Dieses Release härtet SchauFUCHS nach einer Sicherheitsprüfung. Wer SchauFUCHS selbst betreibt, sollte bald
