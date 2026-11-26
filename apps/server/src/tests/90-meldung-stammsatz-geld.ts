@@ -151,4 +151,23 @@ describe("Online-Meldung an vorhandenen Stammsatz und Geld", () => {
     // Ein anderes /48: frei.
     await melden(s.slug, person("Cleo", "06 535 012 0920"), {}, "2001:db8:a5a6:100::/64");
   });
+
+  test("Bestätigen per Link nur für Online-Meldungen: eine Papiermeldung ohne Meldebogen bleibt unverändert", async () => {
+    const s = await neueSchau("Bestätigen nur online");
+    const r = await al().meldung.speichern({ schauId: s.id, aussteller: { ...ohne, vorname: "Pia", nachname: "Papier", email: "pia.papier@test.de", registriernummer: "06 535 012 0921" }, eingang: "papier", istJugend: false, bemerkung: "", zustimmung: false, positionen: [pos()] });
+    const token = (await al().meldung.get({ id: r.meldungId })).meldung.zugangsToken;
+    await pub().oeffentlich.meldungBestaetigen({ slug: s.slug, token, sprache: "de" } as never).catch(() => undefined);
+    const [z] = await m.db.select().from(m.schema.meldung).where(m.eq(m.schema.meldung.id, r.meldungId));
+    expect(z!.zustimmungAm).toBeNull();
+  });
+
+  test("Ablehnen mit erwartetem Status: inzwischen bestätigt → Konflikt, nichts geändert", async () => {
+    const s = await neueSchau("Erwarteter Status");
+    const r = await al().meldung.speichern({ schauId: s.id, aussteller: { ...ohne, vorname: "Ewa", nachname: "Erwartet", email: "", registriernummer: "06 535 012 0922" }, eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, positionen: [pos()] });
+    await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
+    await expect(al().meldung.statusSetzen({ id: r.meldungId, status: "abgelehnt", erwartet: "offen" } as never)).rejects.toThrow("inzwischen geändert");
+    expect((await al().meldung.get({ id: r.meldungId })).meldung.status).toBe("bestaetigt");
+    // Passt der Stand, geht es wie bisher.
+    await al().meldung.statusSetzen({ id: r.meldungId, status: "offen", erwartet: "bestaetigt" } as never);
+  });
 });

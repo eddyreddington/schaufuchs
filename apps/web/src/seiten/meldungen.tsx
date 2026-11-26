@@ -44,7 +44,7 @@ export function Meldungen() {
     let fehler = "";
     for (const id of gewaehlt) {
       try {
-        await statusSetzen.mutateAsync({ id, status: "abgelehnt", grund: tm.liste.sammelGrund });
+        await statusSetzen.mutateAsync({ id, status: "abgelehnt", grund: tm.liste.sammelGrund, erwartet: "offen" });
         ok++;
       } catch (e) {
         fehler ||= fehlerText(e);
@@ -93,7 +93,10 @@ export function Meldungen() {
               <Segmente
                 label={t.allgemein.status}
                 wert={status}
-                onChange={setStatus}
+                onChange={(s) => {
+                  setStatus(s);
+                  setAuswahl(new Set());
+                }}
                 optionen={[{ wert: "" as const, label: t.allgemein.alle, anzahl: alle.data?.length }, ...MELDUNG_STATUS.map((s) => ({ wert: s, label: tm.status[s], anzahl: anzahl(s) }))]}
               />
             </>

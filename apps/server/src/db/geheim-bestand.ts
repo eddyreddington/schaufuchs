@@ -62,7 +62,16 @@ async function umstellen(db: typeof Db) {
       const zeilen = (await tx.execute(sql.raw(`select id, iban, kontoinhaber from ${name} where ${ungebunden("iban")} or ${ungebunden("kontoinhaber")} for update`))) as unknown as { id: number; iban: string; kontoinhaber: string }[];
       for (const z of zeilen) {
         const neu: { iban?: string; kontoinhaber?: string } = {};
-        for (const k of ["iban", "kontoinhaber"] as const) if (z[k] && !z[k].startsWith(PRAEFIX_ZEILE)) neu[k] = entschluessele(z[k], `${tabelle}.${k}`);
+        for (const k of ["iban", "kontoinhaber"] as const) {
+          if (!z[k] || z[k].startsWith(PRAEFIX_ZEILE)) continue;
+          try {
+            neu[k] = entschluessele(z[k], `${tabelle}.${k}`);
+          } catch (e) {
+            // Mit Zeile, damit sich ein einzelner unlesbarer Altwert finden lässt; die Transaktion ändert dann nichts.
+            // bleibt deutsch: Betreiberfehler beim Start, nie in der Oberfläche
+            throw new Error(`Umstellung abgebrochen, nichts geändert: ${name}.${k} in Zeile ${z.id} lässt sich nicht lesen (${e instanceof Error ? e.message : String(e)}).`);
+          }
+        }
         await tx.update(t).set(bankdatenFuer(tabelle, z.id, neu)).where(eq(t.id, z.id));
       }
       return zeilen.length;

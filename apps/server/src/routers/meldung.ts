@@ -216,7 +216,8 @@ export const meldungRouter = router({
   }),
 
   statusSetzen: benutzerProcedure
-    .input(z.object({ id: dbId, status: z.enum(MELDUNG_STATUS), grund: z.string().max(500).default("") }))
+    // `erwartet`: Stand, den die Oberfläche gezeigt hat (Sammel-Ablehnung) – inzwischen anders, dann nichts ändern.
+    .input(z.object({ id: dbId, status: z.enum(MELDUNG_STATUS), grund: z.string().max(500).default(""), erwartet: z.enum(MELDUNG_STATUS).optional() }))
     .mutation(async ({ ctx, input }) => {
       const { m: geladen, s } = await ladeMeldung(ctx.benutzer.organisationId, input.id);
       // Vorprüfungen als schnelle Antwort; maßgeblich ist der gesperrte Stand in der Transaktion.
@@ -234,6 +235,7 @@ export const meldungRouter = router({
         const phase = await sperreKasseMitPhase(tx, geladen.schauId);
         const [frisch] = await tx.select().from(meldung).where(eq(meldung.id, geladen.id)).for("no key update");
         if (!frisch) throw fehler("NOT_FOUND", "Meldung nicht gefunden.");
+        if (input.erwartet && frisch.status !== input.erwartet) throw fehler("CONFLICT", "Die Meldung wurde inzwischen geändert – bitte neu laden und die Änderung noch einmal machen.");
         pruefe(phase, frisch.verfallenCent);
         const m = frisch;
         // Helfer bestätigen offene Meldungen (auch ohne Zahlung – bezahlt wird oft erst bei der Einlieferung) und nehmen eine

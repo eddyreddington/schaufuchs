@@ -311,9 +311,10 @@ export const oeffentlichRouter = router({
       if (!m) throw fehler("NOT_FOUND", "Meldung nicht gefunden. Bitte den Link aus der E-Mail verwenden.");
       await db.transaction(async (tx) => {
         // Gesperrt lesen: ein Doppelklick schreibt keinen zweiten Eintrag (Entscheidung 033).
-        const [frisch] = await tx.select({ am: meldung.zustimmungAm, status: meldung.status }).from(meldung).where(eq(meldung.id, m.id)).for("no key update");
+        const [frisch] = await tx.select({ am: meldung.zustimmungAm, status: meldung.status, eingang: meldung.eingang }).from(meldung).where(eq(meldung.id, m.id)).for("no key update");
         if (frisch!.status === "abgelehnt" || frisch!.status === "storniert") throw fehler("BAD_REQUEST", texte(input.sprache).meine.nichtAktiv);
-        if (frisch!.am) return;
+        // Nur Online-Meldungen (wie das Feld „bestaetigen“): Papier- und AL-Meldungen erkennt die AL mit dem Meldebogen an.
+        if (frisch!.am || frisch!.eingang !== "online") return;
         await tx.update(meldung).set({ zustimmungAm: new Date() }).where(eq(meldung.id, m.id));
         await protokolliere(tx, { schauId: s.id, tabelle: "meldung", datensatzId: m.id, aktion: "vom Aussteller bestätigt", akteur: { text: AKTEUR_ONLINE } });
       });
