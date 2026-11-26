@@ -2,6 +2,7 @@ import { and, eq, gt, inArray, lt, or } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { config } from "../config";
 import { db } from "../db/client";
+import { entschluessele, verschluessele } from "../db/geheim";
 import { postausgang } from "../db/schema";
 import { kurzerFehler } from "./fehlertext";
 
@@ -72,6 +73,25 @@ export function naechsterVersuch(createdAt: Date, versuche: number): Date | null
 }
 
 /**
+ * Einladungslinks im Postausgang (Entscheidung 034): der Teil hinter „/einladung#“ steht dort nur verschlüsselt
+ * (Datenschlüssel), eingesetzt wird er erst beim Versand; danach, beim Annehmen oder bei einem neueren Link wird er
+ * unkenntlich gemacht. So taugt weder die Datenbank noch eine Sicherung als Zugang.
+ */
+const EINLADUNG_FELD = "postausgang.einladung";
+/** Link im Text: verschlüsselt (enc1:…) oder aus der Zeit davor im Klartext. Auch für regexp_replace in PostgreSQL. */
+export const EINLADUNG_MUSTER = "(/einladung#)(enc1:[A-Za-z0-9+/=]+|[A-Za-z0-9_-]+)";
+export function einladungVerbergen(text: string): string {
+  return text.replace(/(\/einladung#)(?!enc1:)([A-Za-z0-9_-]+)/g, (_, a: string, t: string) => a + verschluessele(t, EINLADUNG_FELD));
+}
+export function einladungEinsetzen(text: string): string {
+  return text.replace(/(\/einladung#)(enc1:[A-Za-z0-9+/=]+)/g, (_, a: string, c: string) => a + entschluessele(c, EINLADUNG_FELD));
+}
+/** Link unkenntlich machen; `grund` steht danach in Klammern hinter „/einladung#“. */
+export function einladungEntfernen(text: string, grund: string): string {
+  return text.replace(new RegExp(EINLADUNG_MUSTER, "g"), `$1(${grund})`);
+}
+
+/**
  * Legt eine E-Mail in den Postausgang und versendet sie im Hintergrund, wenn SMTP eingerichtet ist – die Anfrage
  * wartet nicht auf den Mailserver. Ohne SMTP bleibt sie dort sichtbar (Entwicklung, Testbetrieb).
  */
@@ -86,7 +106,7 @@ export async function sendeMail(organisationId: number, an: string, betreff: str
  */
 export async function legeMailAb(ex: Pick<typeof db, "insert">, organisationId: number, an: string, betreff: string, text: string, ausstellerId?: number): Promise<number | null> {
   if (!an) return null;
-  const [m] = await ex.insert(postausgang).values({ organisationId, an, betreff, text, ausstellerId: ausstellerId ?? null }).returning({ id: postausgang.id });
+  const [m] = await ex.insert(postausgang).values({ organisationId, an, betreff, text: einladungVerbergen(text), ausstellerId: ausstellerId ?? null }).returning({ id: postausgang.id });
   return m?.id ?? null;
 }
 
@@ -104,7 +124,7 @@ export function versendeAbgelegt(id: number | null, an = "", betreff = "") {
  * endet. Misslingt der Versand, bleibt die Mail im Postausgang und der laufende Server versucht es weiter.
  */
 export async function sendeMailJetzt(organisationId: number, an: string, betreff: string, text: string): Promise<{ gesendet: boolean; fehler: string }> {
-  const [m] = await db.insert(postausgang).values({ organisationId, an, betreff, text }).returning({ id: postausgang.id });
+  const [m] = await db.insert(postausgang).values({ organisationId, an, betreff, text: einladungVerbergen(text) }).returning({ id: postausgang.id });
   if (!transport) return { gesendet: false, fehler: smtpFehler || "Mailversand ist nicht eingerichtet (SMTP_URL)." };
   await versende(m!.id);
   const [r] = await db.select({ status: postausgang.status, fehler: postausgang.fehler }).from(postausgang).where(eq(postausgang.id, m!.id));
@@ -145,9 +165,9 @@ export async function versende(id: number, versender: Versender | null = transpo
       .returning();
     if (!m) return;
     try {
-      await versender.sendMail({ from: config.mailFrom, to: m.an, subject: m.betreff, text: m.text });
+      await versender.sendMail({ from: config.mailFrom, to: m.an, subject: m.betreff, text: einladungEinsetzen(m.text) });
       // Einladungslinks nach dem Versand unkenntlich machen: im Postausgang bleibt nur, dass eine Einladung ging.
-      const text = m.text.replace(/(\/einladung#)[A-Za-z0-9_-]+/g, "$1(nach dem Versand entfernt)");
+      const text = einladungEntfernen(m.text, "nach dem Versand entfernt");
       await db
         .update(postausgang)
         .set({ status: "gesendet", gesendetAm: new Date(), fehler: "", versuche: m.versuche + 1, text })

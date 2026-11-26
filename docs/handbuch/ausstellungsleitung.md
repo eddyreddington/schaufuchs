@@ -249,6 +249,7 @@ Der Reiter „Postausgang“ zeigt die letzten 100 Mails von SchauFUCHS – Eing
 - Der Server versucht eine nicht versendete Mail bis zu 2 Tage lang immer wieder.
 - Danach prüfen Sie mit dem Betreuer der Technik die Mailserver-Einstellungen und klicken bei der Mail auf „Erneut senden“.
 - Ist der Mailversand auf dem Server gar nicht eingerichtet, weist ein Hinweis darauf hin („Der Mailversand ist nicht eingerichtet …“). Die Mails bleiben dann hier liegen und lassen sich nicht versenden; das richtet der Betreuer der Technik ein.
+- Eine Einladung, die noch hier liegt, geht nicht mehr hinaus, sobald die Person die Einladung angenommen hat oder einen neueren Link bekommen hat („Nicht versendet: Einladung angenommen“ bzw. „… durch einen neueren Link ersetzt“). Den Link selbst speichert SchauFUCHS nur verschlüsselt und entfernt ihn nach dem Versand.
 
 ### 3.4 Textbausteine für die Bewertung
 

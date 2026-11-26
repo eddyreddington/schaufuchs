@@ -6,7 +6,7 @@ import { db } from "../../db/client";
 import { benutzer, organisation } from "../../db/schema";
 import { protokolliere } from "../../services/protokoll";
 import { publicProcedure } from "../../trpc";
-import { passwort, MAX_AGE, einladungBremse, einladungFehler, OHNE_PASSWORT, ladeEinladung, ohneEinladung } from "./gemeinsam";
+import { passwort, MAX_AGE, einladungBremse, einladungFehler, entwerteEinladungsmails, OHNE_PASSWORT, ladeEinladung, ohneEinladung } from "./gemeinsam";
 
 export const einladung = {
   /**
@@ -36,6 +36,8 @@ export const einladung = {
         .where(and(eq(benutzer.id, b.id), eq(benutzer.einladungHash, b.einladungHash!), eq(benutzer.passwortHash, OHNE_PASSWORT), eq(benutzer.aktiv, true), isNull(benutzer.geloeschtAm)))
         .returning({ id: benutzer.id });
       if (!ok.length) throw await einladungFehler(tx);
+      // Liegengebliebene Mails mit dem Link (ohne Mailserver, gestört): er taugt nicht mehr, steht aber in Sicherungen.
+      await entwerteEinladungsmails(tx, b.email, "Einladung angenommen");
       await protokolliere(tx, { schauId: null, tabelle: "benutzer", datensatzId: b.id, aktion: "Einladung angenommen, Passwort festgelegt", akteur: { benutzer: { id: b.id, name: b.name } } });
       // Sitzung in derselben Transaktion: eine Sperre oder ein Entfernen danach löscht sie mit.
       return neueSitzung({ benutzerId: b.id }, tx);

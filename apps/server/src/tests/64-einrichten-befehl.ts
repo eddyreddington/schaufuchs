@@ -10,6 +10,7 @@ import postgres from "postgres";
 import { sha256 } from "../auth";
 import { config } from "../config";
 import { ersteinrichtungAngaben } from "../services/ersteinrichtung";
+import { einladungEinsetzen } from "../services/post";
 import { leer, m, SRC } from "./kontext";
 
 const SERVER = join(SRC, "..");
@@ -202,7 +203,7 @@ describe("Ersteinrichtung über die Kommandozeile", () => {
     const [post] = await db`select id, status, text from postausgang order by id desc limit 1`;
     expect(post!.status).toBe("fehler");
     // Ein neuer Link (hier über --link-zeigen) verwirft die nicht verschickte Mail mit dem alten.
-    const alt = tokenAus(post!.text)!;
+    const alt = tokenAus(einladungEinsetzen(post!.text))!;
     expect(alt.length).toBeGreaterThan(40);
     const neu = await einrichten([...ANGABEN, "--link-zeigen"]);
     expect(neu.code).toBe(0);

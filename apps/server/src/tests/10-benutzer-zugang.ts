@@ -293,7 +293,8 @@ describe("Einladungslink statt Passwort", () => {
     expect(einladung).toBe(true);
     const linkAus = async (an: string) => {
       const mails = await m.db.select().from(m.schema.postausgang).where(m.eq(m.schema.postausgang.an, an)).orderBy(m.desc(m.schema.postausgang.id));
-      return /\/einladung#([A-Za-z0-9_-]{40,})/.exec(mails[0]!.text)?.[1] ?? "";
+      // Im Postausgang steht der Link verschlüsselt (Entscheidung 034).
+      return /\/einladung#([A-Za-z0-9_-]{40,})/.exec((await import("../services/post")).einladungEinsetzen(mails[0]!.text))?.[1] ?? "";
     };
     const token1 = await linkAus("eva@test.de");
     expect(token1.length).toBeGreaterThan(40);
@@ -355,7 +356,7 @@ describe("Einladungslink statt Passwort", () => {
     const neuerLink = async (id: number, an: string) => {
       await al.auth.benutzerWillkommen({ id });
       const [mail] = await m.db.select().from(m.schema.postausgang).where(m.eq(m.schema.postausgang.an, an)).orderBy(m.desc(m.schema.postausgang.id));
-      return /\/einladung#([A-Za-z0-9_-]+)/.exec(mail!.text)![1]!;
+      return /\/einladung#([A-Za-z0-9_-]+)/.exec((await import("../services/post")).einladungEinsetzen(mail!.text))![1]!;
     };
     const { id } = await al.auth.benutzerAnlegen({ name: "Vertippt", email: "vertipt@test.de", rolle: "admin" });
 
@@ -396,5 +397,53 @@ describe("Einladungslink statt Passwort", () => {
     // Mit selbst vergebenem Passwort: keine Einladung.
     const { einladung } = await al.auth.benutzerAnlegen({ name: "Selbst Vergeben", email: "selbst-pw@test.de", passwort: "selbst-vergeben-1", rolle: "mitarbeiter" });
     expect(einladung).toBe(false);
+  });
+});
+
+describe("Einladungslink im Postausgang", () => {
+  const mailAn = async (an: string) => (await m.db.select().from(m.schema.postausgang).where(m.eq(m.schema.postausgang.an, an)).orderBy(m.desc(m.schema.postausgang.id)))[0]!;
+  const tokenAus = (text: string) => /\/einladung#([A-Za-z0-9_-]{40,})/.exec(text)?.[1] ?? "";
+  const merke = (liste: string[]) => ({ sendMail: async (x: { text: string }) => void liste.push(x.text) });
+
+  test("liegt nur verschlüsselt im Postausgang; nach dem Annehmen unkenntlich und nicht mehr versendet", async () => {
+    const al = m.appRouter.createCaller(adminKontext);
+    const pub = m.appRouter.createCaller({ ...leer, ip: "203.0.113.201" });
+    const post = await import("../services/post");
+    await al.auth.benutzerAnlegen({ name: "Rita Ruhend", email: "rita-ruhend@test.de", rolle: "mitarbeiter" });
+    // Ohne Mailserver bleibt die Mail liegen (und steht in jeder Sicherung): der Link ist dort nicht nutzbar.
+    const mail = await mailAn("rita-ruhend@test.de");
+    expect(mail.text).toContain("/einladung#");
+    expect(tokenAus(mail.text)).toBe("");
+    const token = tokenAus(post.einladungEinsetzen(mail.text));
+    expect((await pub.auth.einladungPruefen({ token })).email).toBe("rita-ruhend@test.de");
+    await pub.auth.einladungAnnehmen({ token, passwort: "rita-eigenes-123" });
+    // Angenommen: die liegengebliebene Mail geht nicht mehr hinaus, der Link darin ist entfernt.
+    const [danach] = await m.db.select().from(m.schema.postausgang).where(m.eq(m.schema.postausgang.id, mail.id));
+    expect(danach!.text).not.toContain(mail.text.match(/\/einladung#(\S+)/)![1]!);
+    expect(danach!.text).toContain("/einladung#(Einladung angenommen)");
+    expect(danach!.status).toBe("fehler");
+    const gesendet: string[] = [];
+    await post.versende(mail.id, merke(gesendet));
+    expect(gesendet).toHaveLength(0);
+  });
+
+  test("beim Versand wird der Link eingesetzt, danach steht er nicht mehr im Postausgang", async () => {
+    const al = m.appRouter.createCaller(adminKontext);
+    const { versende } = await import("../services/post");
+    const { sha256 } = await import("../auth");
+    await al.auth.benutzerAnlegen({ name: "Vera Versand", email: "vera-versand@test.de", rolle: "mitarbeiter" });
+    const mail = await mailAn("vera-versand@test.de");
+    const gesendet: string[] = [];
+    await versende(mail.id, merke(gesendet));
+    expect(gesendet).toHaveLength(1);
+    const token = tokenAus(gesendet[0]!);
+    expect(token.length).toBeGreaterThan(40);
+    const [b] = await m.db.select().from(m.schema.benutzer).where(m.eq(m.schema.benutzer.email, "vera-versand@test.de"));
+    expect(b!.einladungHash).toBe(sha256(token));
+    const [danach] = await m.db.select().from(m.schema.postausgang).where(m.eq(m.schema.postausgang.id, mail.id));
+    expect(danach!.status).toBe("gesendet");
+    expect(danach!.text).toContain("/einladung#(nach dem Versand entfernt)");
+    expect(danach!.text).not.toContain(token);
+    expect(danach!.text).not.toContain("enc1:");
   });
 });

@@ -7,7 +7,7 @@ import { config } from "../../config";
 import { db } from "../../db/client";
 import { benutzer, organisation, postausgang } from "../../db/schema";
 import { Bremse, Wartezeit } from "../../services/bremse";
-import { legeMailAb, MAX_VERSUCHE, sendeMail, versendeAbgelegt } from "../../services/post";
+import { EINLADUNG_MUSTER, legeMailAb, MAX_VERSUCHE, sendeMail, versendeAbgelegt } from "../../services/post";
 import { protokollZuletzt } from "../../services/protokoll";
 import { fehler } from "../../trpc";
 
@@ -187,13 +187,21 @@ export async function neueEinladung(tx: Ausfuehrer, an: { id: number; email: str
   if (!ok.length) return null;
   // Noch nicht verschickte Mails mit einem älteren Link (z. B. Mailserver gestört): nicht mehr versenden und den Link
   // unkenntlich machen – er gilt ab jetzt nicht mehr, und die Mail führte nur auf eine Fehlerseite.
-  await tx
-    .update(postausgang)
-    .set({ text: sql`regexp_replace(${postausgang.text}, ${"(/einladung#)[A-Za-z0-9_-]+"}, ${"\\1(durch einen neueren Link ersetzt)"}, 'g')`, status: "fehler", versuche: MAX_VERSUCHE, fehler: "Nicht versendet: durch einen neueren Link ersetzt." })
-    // Was gerade beim Mailserver ist („sendet“), geht noch hinaus; sein Link gilt trotzdem nicht mehr.
-    .where(and(eq(postausgang.an, an.email), inArray(postausgang.status, ["wartet", "fehler"]), sql`${postausgang.text} like '%/einladung#%'`));
+  await entwerteEinladungsmails(tx, an.email, "durch einen neueren Link ersetzt");
   // Hinter "#": der Teil geht nie an den Server und landet so in keinem Protokoll eines Webservers.
   return { link: `${config.publicUrl}/einladung#${token}`, bis };
+}
+
+/**
+ * Noch nicht verschickte Einladungsmails an diese Adresse: nicht mehr versenden, den Link darin unkenntlich machen
+ * (neuerer Link, Einladung angenommen). Was gerade beim Mailserver ist („sendet“), geht noch hinaus; versende macht den
+ * Link danach unkenntlich.
+ */
+export async function entwerteEinladungsmails(tx: Pick<typeof db, "update">, an: string, grund: string) {
+  await tx
+    .update(postausgang)
+    .set({ text: sql`regexp_replace(${postausgang.text}, ${EINLADUNG_MUSTER}, ${`\\1(${grund})`}, 'g')`, status: "fehler", versuche: MAX_VERSUCHE, fehler: `Nicht versendet: ${grund}.` })
+    .where(and(eq(postausgang.an, an), inArray(postausgang.status, ["wartet", "fehler"]), sql`${postausgang.text} like '%/einladung#%'`));
 }
 
 /** Einladung gilt nicht mehr (Adresse geändert, gesperrt, Passwort gesetzt, entfernt). */

@@ -241,9 +241,10 @@ describe("Gleichzeitig: Benutzer anlegen und Willkommensmail", () => {
     await sperre.fertig();
     await Promise.all([erste, zweiteMail]);
     const mails = await m.db.select().from(m.schema.postausgang).where(m.eq(m.schema.postausgang.an, email));
-    const gueltig = mails.filter((x) => x.status !== "fehler" && /\/einladung#[A-Za-z0-9_-]{20,}/.test(x.text)).sort((a, b) => a.id - b.id);
+    const { einladungEinsetzen } = await import("../services/post");
+    const gueltig = mails.filter((x) => x.status !== "fehler" && /\/einladung#[A-Za-z0-9_-]{20,}/.test(einladungEinsetzen(x.text))).sort((a, b) => a.id - b.id);
     expect(gueltig).toHaveLength(1);
-    const token = gueltig[0]!.text.match(/\/einladung#([A-Za-z0-9_-]+)/)![1]!;
+    const token = einladungEinsetzen(gueltig[0]!.text).match(/\/einladung#([A-Za-z0-9_-]+)/)![1]!;
     expect((await m.appRouter.createCaller({ ...leer, ip: "203.0.113.89" }).auth.einladungPruefen({ token })).email).toBe(email);
   });
 });
