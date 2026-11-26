@@ -1,2 +1,2 @@
 /** Version von SchauFUCHS (Oberfläche, Server, Handbuch). Bei jeder Auslieferung mit Versionshinweisen erhöhen. */
-export const VERSION = "1.21.7";
+export const VERSION = "1.22.0";

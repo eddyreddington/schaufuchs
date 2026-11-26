@@ -2527,7 +2527,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `meisterschaft.speichern` mutation · admin
 - `meisterschaft.ergebnisse` query · angemeldet – Ergebnisse aller Meisterschaften (intern, mit allen Namen).
 
-### routers/meldung.ts (468 Z.) → `meldung`
+### routers/meldung.ts (470 Z.) → `meldung`
 
 - `meldung.liste` query · angemeldet
 - `meldung.get` query · angemeldet
@@ -2543,7 +2543,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `meldung.bestaetigungSenden` mutation · angemeldet
 - `meldung.zuletzt` query · angemeldet
 
-### routers/oeffentlich.ts (515 Z.) → `oeffentlich`
+### routers/oeffentlich.ts (516 Z.) → `oeffentlich`
 
 - `oeffentlich.schau` query · öffentlich
 - `oeffentlich.rechtstexte` query · öffentlich – Impressum (§ 5 DDG) und Datenschutzhinweise (Art. 13 DSGVO) des ausrichtenden Vereins.
@@ -2961,7 +2961,7 @@ Prozeduren: meldung.adressVorschlaege, meldung.ausstellerSuche, meldung.bestaeti
 
 ### meldung-zahlung.ts (17 Z.)
 
-### meldungen.tsx (175 Z.) – `/schau/:schauId/meldungen`
+### meldungen.tsx (178 Z.) – `/schau/:schauId/meldungen`
 Prozeduren: meldung.liste, meldung.statusSetzen, schau.get
 
 ### oeffentlich-bestaetigen.tsx (25 Z.)
@@ -3073,7 +3073,8 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
 - `meldung-stand.ts` (31 Z.) – Stand einer Meldung für das Bearbeitungsformular (Entscheidung 033): ein Prüfwert über alles, was das Formular zurückschreibt – Aussteller, Meldung … · MELDUNG_VERALTET, meldungStand
 - `meldung.ts` (556 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, sperreOnlineMeldung, speichereMeldung, bindungen, hatAuszahlung
-- `post.ts` (243 Z.) · smtpOptionen, smtpWarnungen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, EINLADUNG_MUSTER, einladungVerbergen, einladungEinsetzen, einladungEntfernen, sendeMail, legeMailAb, versendeAbgelegt, sendeMailJetzt, setzeUnterbrocheneZurueck, versende, starteMailversand
+- `post-smtp.test.ts` (18 Z.) – SMTP-Angaben bestehender Installationen (Entscheidung 036): wer TLS ab Verbindungsbeginn nutzt (Port 465 oder ?secure=true), behält es – der Zwang …
+- `post.ts` (245 Z.) · smtpOptionen, smtpWarnungen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, EINLADUNG_MUSTER, einladungVerbergen, einladungEinsetzen, einladungEntfernen, sendeMail, legeMailAb, versendeAbgelegt, sendeMailJetzt, setzeUnterbrocheneZurueck, versende, starteMailversand
 - `preise.ts` (188 Z.) · vergebePreis, entfernePreis
 - `preisrichter-speichern.ts` (133 Z.) – Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter Sperre der Preisrichter der S … · gruppenAusEingabe, speicherePreisrichter, loeschePreisrichter
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
@@ -3134,7 +3135,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 ### Datenbank `apps/server/src/db`
 
 - `client.ts` (27 Z.) · sql, db, sperrGrenze
-- `geheim-bestand.ts` (85 Z.) – Stellt Altbestand im Klartext auf verschlüsselte Spalten um und bindet Bankdaten ohne Zeile (`enc1:`) an ihre Zeile (`enc2:`, Entscheidung 035). · pruefeDatenschluessel, verschluesseleBestand
+- `geheim-bestand.ts` (94 Z.) – Stellt Altbestand im Klartext auf verschlüsselte Spalten um und bindet Bankdaten ohne Zeile (`enc1:`) an ihre Zeile (`enc2:`, Entscheidung 035). · pruefeDatenschluessel, verschluesseleBestand
 - `geheim.ts` (188 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, PRAEFIX_ZEILE, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, zeileVon, entschluessele, geheimText, gebunden, bankdatenFuer, inEigenerZeile, verlangeEigeneZeile, geheimJsonLesen, geheimJson
 - `schema-aufzaehlungen.ts` (20 Z.) – Aufzählungstypen der Datenbank (pgEnum) – Phasen, Meldearten, Status, Zahlarten u. a. Über schema.ts exportiert. · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum, zusageEnum
 - `schema-betrieb.ts` (12 Z.) – Betrieb: Angaben für die Gesundheitsprüfung (Entscheidung 024). · sicherung
@@ -3310,7 +3311,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `87-gleichzeitig-auth-schau.ts` (378 Z.) – Gleichzeitiges Arbeiten an Schau-Einstellungen, Phase, Postausgang und Benutzern (Entscheidung 033): Stand-Prüfung der Stammangaben, Provision unte …
 - `88-gleichzeitig-gesamt.ts` (231 Z.) – Gleichzeitiges Arbeiten über alle Bereiche (Entscheidung 033, eine Sperrreihenfolge): Schreibwege auf der Schau-Zeile warten nicht auf Einfügungen, …
 - `89-verklemmungen.ts` (154 Z.) – Verklemmungen und Hänger (Entscheidung 033): Ein Protokolleintrag nimmt erst die Protokoll-Kette (eine Zeile für die ganze Installation) und danach …
-- `90-meldung-stammsatz-geld.ts` (154 Z.) – Online-Meldung an einen vorhandenen Stammsatz (Entscheidung 034): kein Zugangslink in der Antwort, die Meldung gilt erst nach Bestätigung über den …
+- `90-meldung-stammsatz-geld.ts` (173 Z.) – Online-Meldung an einen vorhandenen Stammsatz (Entscheidung 034): kein Zugangslink in der Antwort, die Meldung gilt erst nach Bestätigung über den …
 - `91-anmeldung-haertung.ts` (232 Z.) – Anmeldung: Langzeitgrenze für den zweiten Faktor mit Hinweismail, Notfallcodes mit Schlüssel, Gerätekennzeichen gegen Aussperren hinter derselben A …
 - `92-betrieb-gesund-einrichtung.ts` (72 Z.) – Betrieb: Was `/api/gesund` Besuchern über den Proxy zeigt (Entscheidung 024, Nachtrag) und die Ersteinrichtung im Browser ohne gesetzten EINRICHTUN …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).

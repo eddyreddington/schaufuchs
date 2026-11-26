@@ -293,7 +293,8 @@ Den Text in den Passwortmanager des Vereins kopieren **oder** ausdrucken. Ergän
 | Wo die Sicherungen außer Haus liegen | Wiederherstellung nach einem Totalausfall |
 | Wer Zugang hat (Namen der Betreuer) | Vertretung, Schlüssel entfernen |
 
-Das Blatt in den Vereinsunterlagen ablegen, wo es im Notfall jemand findet. Danach die Datei auf dem Rechner löschen:
+Das Blatt in den Vereinsunterlagen ablegen, wo es im Notfall jemand findet. Der Installer fragt danach am Bildschirm
+nach den letzten 6 Zeichen des `AGE-SECRET-KEY` und löscht die Datei nur dann. Sonst von Hand löschen:
 
 ```bash
 sudo rm /opt/schaufuchs/notfallblatt.txt

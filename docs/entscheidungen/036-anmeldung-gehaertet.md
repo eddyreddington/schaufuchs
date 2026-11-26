@@ -27,8 +27,10 @@ wuchsen ohne Grenze. `smtp://` nutzte STARTTLS nur, wenn der Mailserver es anbot
 4. **Speicher:** Jede Bremse und jede Wartezeit hält höchstens 50.000 Einträge. Ist das erreicht, wird zuerst Abgelaufenes
    verworfen, dann das Älteste, was nicht sperrt. Ein auf null zurückgegebener Versuch löscht seinen Eintrag. Ist die
    Schlange der Passwortprüfungen voll, weist `pruefeAuslastung()` die Anfrage ab, bevor gezählt oder gelesen wird.
-5. **SMTP:** `smtp://` verlangt STARTTLS (`requireTLS`). `requireTLS`, `ignoreTLS`, `secure` und `opportunisticTLS` in
-   `SMTP_URL` werden übergangen. Abschalten geht nur ausdrücklich mit `SMTP_OHNE_TLS=1`, dann mit Warnung im Server-Log.
+5. **SMTP:** `smtp://` verlangt STARTTLS (`requireTLS`). `requireTLS`, `ignoreTLS`, `opportunisticTLS` und
+   `secure=false` in `SMTP_URL` werden übergangen. TLS ab Verbindungsbeginn gilt bei `smtps://`, Port 465 oder
+   `?secure=true` (so liefen ältere Installationen schon weiter). Abschalten geht nur ausdrücklich mit
+   `SMTP_OHNE_TLS=1`, dann mit Warnung im Server-Log.
 
 **Folgen:** Ein Mailserver ohne STARTTLS stellt nach dem Update nicht mehr zu. Die Mails bleiben dann mit Fehler im
 Postausgang, bis `smtps://…:465` oder `SMTP_OHNE_TLS=1` eingetragen ist. Wer die Code-Sperre auslöst, kennt das

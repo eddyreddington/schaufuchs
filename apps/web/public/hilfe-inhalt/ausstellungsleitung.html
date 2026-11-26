@@ -1,6 +1,6 @@
 <h1 id="handbuch-für-die-ausstellungsleitung">Handbuch für die
 Ausstellungsleitung</h1>
-<p>SchauFUCHS 1.21.7 · Stand 24. November 2026</p>
+<p>SchauFUCHS 1.22.0 · Stand 26. November 2026</p>
 <p>Dieses Handbuch richtet sich an die Ausstellungsleitung, also an
 alle, die in SchauFUCHS die Rolle <strong>Administrator</strong> haben.
 Es führt Sie von der Anmeldung über die Einrichtung des Vereins bis
@@ -39,12 +39,12 @@ Authenticator-App ein und klicken Sie erneut auf „Anmelden“.</li>
 <strong>Notfallcode</strong> (siehe 1.3).</p>
 <p>Nach der Anmeldung steht links die Seitenleiste: oben das Logo mit
 dem Namen und darunter klein die Versionsnummer (z. B. „Version
-1.21.7“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“,
+1.22.0“), dann „Alle Schauen“, der Gruppe „Verein“ („Aussteller“,
 „Spender“, „Import“, „Verein und Datenschutz“), der Gruppe „Einrichtung“
 („Rassen und Farbenschläge“, „Benutzer“) und „Hilfe“; Gruppen klappen
 per Klick auf die Überschrift zu und auf (siehe 5.1). Ganz unten steht
 ein Knopf mit Ihren Initialen und Ihrem Namen; er klappt Name, Verein,
-Rolle mit der Versionsnummer („SchauFUCHS 1.21.7“), die Darstellung
+Rolle mit der Versionsnummer („SchauFUCHS 1.22.0“), die Darstellung
 (siehe 1.5), „Mein Zugang“ und „Abmelden“ auf. Über dem Inhalt zeigt
 eine schmale Zeile, wo Sie gerade sind, zum Beispiel „Demo-Vereinsschau
 2026 / Meldungen“. Auf schmalen Bildschirmen (Tablet hochkant, Handy)
@@ -105,6 +105,13 @@ Administrator kann die Wartezeit aufheben (siehe 2.4).</td>
 eingeben.“</td>
 <td>Code abgelaufen oder vertippt. Den gerade angezeigten Code
 nehmen.</td>
+</tr>
+<tr>
+<td>„Zu viele falsche Codes. Die Anmeldung mit Code ist gesperrt …“</td>
+<td>Nach 30 falschen Codes in 24 Stunden. Mit einem Notfallcode anmelden
+oder einen anderen Administrator bitten, die Sperre aufzuheben (Benutzer
+→ Name). Sie bekommen dazu eine Hinweismail: Kennt jemand Ihr Passwort,
+ändern Sie es.</td>
 </tr>
 <tr>
 <td>„Die Anmeldung ist abgelaufen. Bitte noch einmal mit Passwort
@@ -507,6 +514,11 @@ senden“.</li>
 Hinweis darauf hin („Der Mailversand ist nicht eingerichtet …“). Die
 Mails bleiben dann hier liegen und lassen sich nicht versenden; das
 richtet der Betreuer der Technik ein.</li>
+<li>Eine Einladung, die noch hier liegt, geht nicht mehr hinaus, sobald
+die Person die Einladung angenommen hat oder einen neueren Link bekommen
+hat („Nicht versendet: Einladung angenommen“ bzw. „… durch einen neueren
+Link ersetzt“). Den Link selbst speichert SchauFUCHS nur verschlüsselt
+und entfernt ihn nach dem Versand.</li>
 </ul>
 <h3 id="textbausteine-für-die-bewertung">3.4 Textbausteine für die
 Bewertung</h3>
@@ -1096,6 +1108,11 @@ muss den Zahler rechtzeitig erreichen – in der Regel 14 Tage vor der
 Fälligkeit, wenn mit ihm nichts anderes vereinbart ist. Wer keine
 E-Mail-Adresse hat, bekommt sie auf anderem Weg (z. B. mit der
 Meldebestätigung).</li>
+<li><strong>Online-Meldungen:</strong> Eingezogen wird erst, wenn der
+Aussteller die Meldung bestätigt hat (siehe „Online-Meldung“), und nur
+das Meldegeld. Eine online zugesagte Stiftung oder Spende zahlt er per
+Überweisung oder bar. Beides steht über der Vorschau mit Namen und
+Betrag.</li>
 <li><strong>Bei der Bank einreichen:</strong> „Datei herunterladen“ und
 die XML-Datei im Online-Banking hochladen. Die Datei hält die Beträge
 fest. Solange sie offen ist, geht nichts, was diese Beträge ändert oder
@@ -1668,6 +1685,12 @@ Selbstauskunft des Ausstellers.</td>
 <td>Diese Aussteller stehen ohne Namen im Katalog.</td>
 </tr>
 <tr>
+<td>… Online-Meldungen nicht vom Aussteller bestätigt</td>
+<td>Online an einen bekannten Aussteller gemeldet, aber noch nicht über
+den Link aus der Mail bestätigt (siehe „Online-Meldung“). Ohne Namen im
+Katalog, kein Lastschrifteinzug.</td>
+</tr>
+<tr>
 <td>… Meldungen ohne gültige Registriernummer</td>
 <td>Die 12-stellige Registriernummer (§ 26 ViehVerkV) brauchen Verkaufs-
 und Tierliste. Fehler bis „Preise &amp; Freigabe“.</td>
@@ -1691,7 +1714,8 @@ Fehler.</td>
 <tr>
 <td>Online-Meldung ist geschlossen</td>
 <td>Die Halle ist voll, ein Teil davon nur durch unbestätigte Meldungen.
-Unbekannte Meldungen prüfen und ablehnen.</td>
+Unbekannte Meldungen prüfen und ablehnen, viele auf einmal: Filter
+„offen“, ankreuzen, „… Meldungen ablehnen“.</td>
 </tr>
 <tr>
 <td>… Tiere ohne Katalognummer</td>
@@ -2401,6 +2425,17 @@ angehakt ist.</p>
 Aussteller bekommt eine Eingangsbestätigung mit Betrag, Bankverbindung
 und einem persönlichen Link zur Seite „Meine Meldung“. Dort sieht er
 später auch seine Ergebnisse.</p>
+<p><strong>Bekannte Aussteller</strong> (gleiche E-Mail,
+Registriernummer, Vor- und Nachname wie ein vorhandener Aussteller): Die
+Meldung kommt an den vorhandenen Aussteller, dessen Daten bleiben
+unverändert. Weil das Formular jeder ausfüllen kann, gilt sie erst, wenn
+der Aussteller sie bestätigt. Der Link geht nur per Mail an die
+hinterlegte Adresse, die Dankseite zeigt keinen. Auf „Meine Meldung“
+klickt er „Meldung bestätigen“. Bis dahin fehlt an der Meldung
+„Meldebogen ist unterschrieben“, der Name steht nicht im Katalog und ein
+Lastschriftmandat zieht nichts ein. Bestätigt er am Telefon oder auf
+Papier, setzen Sie den Haken selbst. Die Prüfliste zeigt „…
+Online-Meldungen nicht vom Aussteller bestätigt“.</p>
 <blockquote>
 <p><strong>Wichtig:</strong> Jugendtarif und Preisrichter-Befreiung
 beruhen online auf der Angabe des Ausstellers. In der Liste stehen
@@ -2565,9 +2600,14 @@ abgerechnet ist. Nach dem Abschluss der Schau ändert sich der Status
 einer Meldung nicht mehr.</li>
 <li>„Ablehnen“ – offene Meldung ablehnen, mit Grund (nur
 Administratoren).</li>
-<li>„Stornieren“ – bestätigte Meldung zurückziehen, mit Grund (nur
-Administratoren).</li>
 </ul>
+<p><strong>Mehrere auf einmal ablehnen:</strong> In der Liste
+„Meldungen“ den Filter auf „offen“ stellen, die Meldungen ankreuzen
+(oder oben alle) und „… Meldungen ablehnen“ klicken. Das hilft, wenn
+viele unbekannte, unbezahlte Online-Meldungen die Halle belegen. Jede
+Ablehnung steht einzeln im Protokoll; was nicht geht (z. B. schon in der
+Lastschriftdatei), nennt die Meldung danach. - „Stornieren“ – bestätigte
+Meldung zurückziehen, mit Grund (nur Administratoren).</p>
 <p>Bitte bei Gründen keine Personennamen eintragen; sie stehen im
 Protokoll.</p>
 <p><strong>Storniert oder abgelehnt, aber schon bezahlt:</strong> Ist
@@ -5149,7 +5189,9 @@ steht der Stiftungsanteil im Kassenbuch und auf der Einzahlungsquittung
 <p>„Kassenbericht (PDF)“ (gesamt oder je Tag) und „Kassenbuch (CSV)“
 stehen oben. Das „Belegarchiv“ enthält jeden Beleg mit Prüfsumme. Ein
 Storno erzeugt einen eigenen Beleg; das Original bleibt im Archiv
-abrufbar.</p>
+abrufbar. Einzahlungsquittungen gibt es nur für bar gezahltes Meldegeld
+– Überweisung und Lastschrift stehen nicht im Kassenbuch und bekommen
+keine.</p>
 <p><strong>Zweitschrift:</strong> Normalerweise entsteht jeder Beleg
 direkt bei der Buchung und kommt so ins Belegarchiv; jeder Nachdruck ist
 dann genau dieses Original. Ging das Ablegen bei der Buchung schief,

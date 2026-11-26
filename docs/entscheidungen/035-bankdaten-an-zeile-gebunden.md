@@ -43,8 +43,10 @@ wegen der Hash-Kette nicht nachträglich ändern lässt.
 
 - Keine Migration des Schemas. Beim ersten Start nach dem Update schreibt die Umstellung alle Bankdaten einmal neu
   (eine Transaktion, im Log „Verschlüsselt: … Aussteller, … SEPA-Mandate“).
-- Ein älterer Programmstand liest `enc2:` nicht. Zurücknehmen daher nur mit der Sicherung von vor dem Update
-  (`wiederherstellen.sh --vorherige-version`, wie bei jeder Migration).
+- Ein älterer Programmstand liest `enc2:` nicht und würde die Werte bei seinem Start als Klartext ansehen und noch
+  einmal verschlüsseln – die IBANs wären danach verfälscht. Zurück daher nur mit der Sicherung von vor dem Update
+  (`schaufuchs zuruecknehmen` bzw. `wiederherstellen.sh --vorherige-version`); `schaufuchs update` lehnt eine ältere
+  Version ab.
 - Bestehende Protokolleinträge mit Kontoinhaber, Telefon oder E-Mail im Klartext bleiben (Hash-Kette); sie verschwinden
   mit der regulären Bereinigung bzw. Anonymisierung.
 - Eine Einladungsmail aus der Zeit davor (Klartext-Link) wird weiter versendet und ebenso unkenntlich gemacht.
