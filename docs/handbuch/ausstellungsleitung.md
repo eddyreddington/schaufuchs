@@ -683,7 +683,7 @@ Die Prüfliste nennt jeden Punkt nur kurz. Hier steht, was dahintersteckt. Die P
 | … Meldungen ohne Pflichterklärungen | Herkunft und Karenzzeit sind nicht bestätigt (nur, wenn Pflichterklärungen eingerichtet sind). |
 | … Jugendmeldungen ohne Geburtsdatum / ohne Erziehungsberechtigten | Ohne Geburtsdatum ist der Jugendtarif nicht belegt. |
 | … stornierte oder abgelehnte Meldungen mit Zahlung | Das Geld fällt aus der Abrechnung: erstatten (Zahlung mit negativem Betrag) oder in der Meldung „Verfall buchen“. In der Abrechnung ein Fehler. |
-| Online-Meldung ist geschlossen | Die Halle ist voll, ein Teil davon nur durch unbestätigte Meldungen. Unbekannte Meldungen prüfen und ablehnen. |
+| Online-Meldung ist geschlossen | Die Halle ist voll, ein Teil davon nur durch unbestätigte Meldungen. Unbekannte Meldungen prüfen und ablehnen, viele auf einmal: Filter „offen“, ankreuzen, „… Meldungen ablehnen“. |
 | … Tiere ohne Katalognummer | Bestätigte Tiere ohne Nummer. Erst ab der Phase „Halle & Katalog“ (nach dem Meldeschluss) und dort ein Fehler bis zur Einlieferung; vorher kommen laufend Meldungen dazu. |
 | … Tiere ohne Platz (Hallenplan) | Im Hallenplan finden so viele Tiere keinen Käfig. Halle, Grundplatten oder Käfigblöcke anpassen, „Plan neu setzen“ oder „Fehlende Käfige einsetzen“ (siehe Hallenplan). |
 | Käfigfront zur Wand oder zu einer Reihe (Hallenplan) | Eine Reihe, Platte oder ein Block steht mit der offenen Seite zur Wand oder zu einer anderen Reihe; rechts steht, welche (z. B. „R3: Front zu R4“). Im Hallenplan umdrehen, z. B. mit „Käfige an den Wänden ausrichten …“. |
@@ -957,6 +957,8 @@ Weitere Möglichkeiten im Abschnitt „Status“:
 - „Bestätigen“ – Meldung von Hand bestätigen (z. B. Zahlung bei der Einlieferung) oder eine abgelehnte bzw. stornierte Meldung wieder aufnehmen. Offene Meldungen dürfen auch Helfer bestätigen.
 - „Bestätigung zurücknehmen“ – eine versehentlich bestätigte Meldung wieder auf „offen“ setzen (auch Helfer). Geht nicht mehr, sobald eine Zahlung gebucht ist (erst die Zahlung stornieren), ein Tier eingeliefert, bewertet, prämiert oder verkauft oder der Aussteller abgerechnet ist. Nach dem Abschluss der Schau ändert sich der Status einer Meldung nicht mehr.
 - „Ablehnen“ – offene Meldung ablehnen, mit Grund (nur Administratoren).
+
+**Mehrere auf einmal ablehnen:** In der Liste „Meldungen“ den Filter auf „offen“ stellen, die Meldungen ankreuzen (oder oben alle) und „… Meldungen ablehnen“ klicken. Das hilft, wenn viele unbekannte, unbezahlte Online-Meldungen die Halle belegen. Jede Ablehnung steht einzeln im Protokoll; was nicht geht (z. B. schon in der Lastschriftdatei), nennt die Meldung danach.
 - „Stornieren“ – bestätigte Meldung zurückziehen, mit Grund (nur Administratoren).
 
 Bitte bei Gründen keine Personennamen eintragen; sie stehen im Protokoll.

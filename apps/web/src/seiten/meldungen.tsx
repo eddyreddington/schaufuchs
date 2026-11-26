@@ -1,11 +1,12 @@
 import { MELDUNG_STATUS, type MeldungStatus } from "@schau/domain";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { datum, formatEuro } from "../lib";
+import { datum, fehlerText, formatEuro } from "../lib";
 import { useSchauId } from "../rahmen";
+import { useIstAdmin } from "../rolle";
 import { useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
-import { FehlerAnzeige, knopfKlasse, KnopfLink, Laden, Marke, SEITE, Seitenkopf, Segmente, Suchfeld, TabellenRahmen } from "../ui";
+import { FehlerAnzeige, Knopf, knopfKlasse, KnopfLink, Laden, Marke, SEITE, Seitenkopf, Segmente, Suchfeld, TabellenRahmen, useFrage, useMeldung } from "../ui";
 
 export const STATUS_TON = { offen: "warnung", bestaetigt: "ok", abgelehnt: "fehler", storniert: "neutral" } as const;
 
@@ -24,6 +25,36 @@ export function Meldungen() {
   const anzahl = (s: MeldungStatus) => alle.data?.filter((m) => m.status === s).length ?? 0;
   const summe = (liste.data ?? []).reduce((s, m) => ({ tiere: s.tiere + m.tiere, betrag: s.betrag + m.betragCent, bezahlt: s.bezahlt + m.bezahltCent }), { tiere: 0, betrag: 0, bezahlt: 0 });
   const gesamtTiere = (alle.data ?? []).reduce((s, m) => s + m.tiere, 0);
+  // Mehrere offene Meldungen auf einmal ablehnen (z. B. viele unbestätigte Online-Meldungen, die Plätze belegen) – nur
+  // die Ausstellungsleitung, je Meldung über statusSetzen mit Protokoll; was nicht geht, meldet der Server je Meldung.
+  const istAdmin = useIstAdmin();
+  const waehlbar = istAdmin && status === "offen";
+  const [auswahl, setAuswahl] = useState<Set<number>>(new Set());
+  const gewaehlt = (liste.data ?? []).map((m) => m.id).filter((id) => auswahl.has(id));
+  const umschalten = (id: number) => setAuswahl((a) => new Set(a.has(id) ? [...a].filter((x) => x !== id) : [...a, id]));
+  const meldung = useMeldung();
+  const { bestaetige } = useFrage();
+  const utils = trpc.useUtils();
+  const statusSetzen = trpc.meldung.statusSetzen.useMutation();
+  const [laeuft, setLaeuft] = useState(false);
+  const ablehnen = async () => {
+    if (!(await bestaetige({ titel: tm.liste.ablehnenFrage(gewaehlt.length), text: tm.liste.ablehnenText, knopf: tm.liste.ablehnen(gewaehlt.length), gefahr: true }))) return;
+    setLaeuft(true);
+    let ok = 0;
+    let fehler = "";
+    for (const id of gewaehlt) {
+      try {
+        await statusSetzen.mutateAsync({ id, status: "abgelehnt", grund: tm.liste.sammelGrund });
+        ok++;
+      } catch (e) {
+        fehler ||= fehlerText(e);
+      }
+    }
+    setLaeuft(false);
+    setAuswahl(new Set());
+    await utils.meldung.liste.invalidate();
+    meldung([tm.liste.abgelehnt(ok), fehler && tm.liste.nichtAbgelehnt(gewaehlt.length - ok, fehler)].filter(Boolean).join(" · "), fehler ? "warnung" : "ok");
+  };
 
   return (
     <div className={SEITE}>
@@ -39,6 +70,11 @@ export function Meldungen() {
             <KnopfLink href={`/datei/${schauId}/aussteller.pdf`} target="_blank" rel="noreferrer">
               {tm.liste.bBoegenAlle}
             </KnopfLink>
+            {waehlbar && gewaehlt.length > 0 && (
+              <Knopf variante="gefahr" laedt={laeuft} onClick={ablehnen}>
+                {tm.liste.ablehnen(gewaehlt.length)}
+              </Knopf>
+            )}
             <Link to="neu" className={knopfKlasse("primaer")}>
               {tm.meldungErfassen}
             </Link>
@@ -77,6 +113,11 @@ export function Meldungen() {
             <table className="tabelle">
               <thead>
                 <tr>
+                  {waehlbar && (
+                    <th className="w-8">
+                      <input type="checkbox" aria-label={tm.liste.alleAuswaehlen} className="size-[1.05rem] accent-band" checked={!!liste.data?.length && gewaehlt.length === liste.data.length} onChange={(e) => setAuswahl(new Set(e.target.checked ? (liste.data ?? []).map((m) => m.id) : []))} />
+                    </th>
+                  )}
                   <th>{t.allgemein.aussteller}</th>
                   <th>{tm.verein}</th>
                   <th>{tm.liste.eingang}</th>
@@ -89,6 +130,11 @@ export function Meldungen() {
               <tbody>
                 {liste.data?.map((m) => (
                   <tr key={m.id}>
+                    {waehlbar && (
+                      <td>
+                        <input type="checkbox" aria-label={tm.liste.auswaehlen(m.name)} className="size-[1.05rem] accent-band" checked={auswahl.has(m.id)} onChange={() => umschalten(m.id)} />
+                      </td>
+                    )}
                     <td>
                       <Link to={String(m.id)} className="font-semibold text-tinte no-underline hover:text-band hover:underline">
                         {m.name}

@@ -26,6 +26,14 @@ export const meldung = {
     preisrichter: ", Preisrichter",
     selbstauskunft: "Selbstauskunft prüfen",
     ohneRegistriernummer: "ohne Registriernummer",
+    alleAuswaehlen: "Alle auswählen",
+    auswaehlen: (name: string) => `${name} auswählen`,
+    ablehnen: (n: number) => (n === 1 ? "1 Meldung ablehnen" : `${n} Meldungen ablehnen`),
+    ablehnenFrage: (n: number) => (n === 1 ? "1 Meldung ablehnen?" : `${n} Meldungen ablehnen?`),
+    ablehnenText: "Die Plätze werden frei. Rückgängig: Meldung öffnen und wieder aufnehmen.",
+    sammelGrund: "mehrere offene Meldungen abgelehnt",
+    abgelehnt: (n: number) => (n === 1 ? "1 Meldung abgelehnt" : `${n} Meldungen abgelehnt`),
+    nichtAbgelehnt: (n: number, grund: string) => `${n} nicht: ${grund}`,
   },
   /** seiten/meldung-bearbeiten.tsx: Formular */
   bearbeiten: {
