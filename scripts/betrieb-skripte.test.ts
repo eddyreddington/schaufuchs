@@ -25,9 +25,11 @@ const aufrufe = () => (existsSync(join(ordner, "aufrufe")) ? readFileSync(join(o
 const sha256 = (datei: string) => new Bun.CryptoHasher("sha256").update(readFileSync(datei)).digest("hex");
 
 /** Prüfsummen der Release-Dateien und Digests der Programme, wie der Workflow „Veröffentlichen“ sie anhängt. */
-function pruefsummen(aendern: Record<string, string> = {}) {
+function pruefsummen(aendern: Record<string, string> = {}, release?: string) {
   const zeilen = DATEIEN.map((d) => `${aendern[d] ?? sha256(join(quelle, d))}  ${d}`);
   zeilen.push(`${aendern["image/schaufuchs"] ?? DIGEST_APP}  image/schaufuchs`, `${aendern["image/schaufuchs-backup"] ?? DIGEST_BACKUP}  image/schaufuchs-backup`);
+  // Ab 1.22.1 nennt die signierte Datei die Version (sonst ließe sie sich unter eine andere Version kopieren).
+  if (release) zeilen.push(`${release}  release`);
   writeFileSync(join(quelle, "SHA256SUMS"), zeilen.join("\n") + "\n");
 }
 
@@ -115,6 +117,72 @@ describe("schaufuchs update und zuruecknehmen: Prüfsummen und Digests", () => {
     expect(lauf(["update", "1.12.10"]).env).toContain("SCHAUFUCHS_VERSION=1.12.10");
   });
 
+  // Ab 1.22.1 signiert der Maintainer SHA256SUMS außerhalb von GitHub (Entscheidung 037, Nachtrag): ohne gültige
+  // Signatur kein Update – auch nicht, wenn jemand Release und Prüfsummen auf GitHub austauscht.
+  function schluessel(name: string) {
+    const k = join(ordner, name);
+    Bun.spawnSync(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "schaufuchs-release", "-f", k], { stdin: "ignore" });
+    return { privat: k, oeffentlich: readFileSync(`${k}.pub`, "utf8").trim().split(" ").slice(0, 2).join(" ") };
+  }
+  // ssh-keygen fragt vor dem Überschreiben einer vorhandenen Signatur nach – daher vorher löschen, ohne Eingabe.
+  const signieren = (privat: string) => {
+    rmSync(join(quelle, "SHA256SUMS.sig"), { force: true });
+    // Ohne SSH-Agent: ein Agent (z. B. aus dem Passwortmanager) würde auf eine Bestätigung warten.
+    const { SSH_AUTH_SOCK: _, ...ohneAgent } = process.env;
+    Bun.spawnSync(["ssh-keygen", "-Y", "sign", "-f", privat, "-n", "schaufuchs-release", join(quelle, "SHA256SUMS")], { stdin: "ignore", env: ohneAgent });
+  };
+  const signiert = (env: Record<string, string>, version = "1.23.0") => lauf(["update", version], env);
+
+  test("signiertes Release ab 1.22.1: mit gültiger Signatur Update, ohne oder mit fremder Signatur nichts verändert", () => {
+    const echt = schluessel("echt");
+    const fremd = schluessel("fremd");
+    const env = { SCHAUFUCHS_RELEASE_SCHLUESSEL: echt.oeffentlich };
+    pruefsummen({}, "v1.23.0");
+    // Ohne Signatur: abgelehnt.
+    let r = signiert(env);
+    unveraendert(r);
+    expect(r.fehler + r.aus).toContain("Signatur");
+    // Signatur mit einem anderen Schlüssel: abgelehnt.
+    signieren(fremd.privat);
+    r = signiert(env);
+    unveraendert(r);
+    expect(r.fehler + r.aus).toContain("Signatur");
+    // Gültig: Update.
+    signieren(echt.privat);
+    r = signiert(env);
+    expect(r.code).toBe(0);
+    expect(r.env).toContain("SCHAUFUCHS_VERSION=1.23.0");
+  });
+
+  test("gültig signierte Prüfsummen einer anderen Version (kopiert): nichts verändert", () => {
+    const echt = schluessel("echt");
+    pruefsummen({}, "v1.23.0");
+    signieren(echt.privat);
+    const r = signiert({ SCHAUFUCHS_RELEASE_SCHLUESSEL: echt.oeffentlich }, "9.0.0");
+    unveraendert(r);
+    expect(r.fehler + r.aus).toContain("9.0.0");
+  });
+
+  test("Versionen außerhalb des Schemas (rc, zweistellig, mit v): Signatur trotzdem Pflicht", () => {
+    for (const v of ["1.23.0-rc1", "2.0", "2.0.0a", "v1.23.0"]) {
+      pruefsummen();
+      const r = signiert({ SCHAUFUCHS_RELEASE_SCHLUESSEL: schluessel(`k${v}`).oeffentlich }, v);
+      unveraendert(r);
+    }
+  });
+
+  test("öffentlicher Release-Schlüssel in schaufuchs und install.sh gleich", () => {
+    const k = (d: string) => /^RELEASE_SCHLUESSEL="(ssh-ed25519 [A-Za-z0-9+/=]+)"$/m.exec(readFileSync(join(REPO, "deploy", d), "utf8"))?.[1];
+    expect(k("schaufuchs")).toBeTruthy();
+    expect(k("schaufuchs")).toBe(k("install.sh"));
+  });
+
+  test("Release ab 1.22.1 ganz ohne Prüfsummen: nichts verändert (kein Rückfall auf ungeprüft)", () => {
+    const r = signiert({ SCHAUFUCHS_RELEASE_SCHLUESSEL: schluessel("echt").oeffentlich });
+    unveraendert(r);
+    expect(r.fehler + r.aus).toContain("Prüfsummen");
+  });
+
   test("Release ohne Prüfsummen (vor der Umstellung): Update wie bisher, mit Hinweis", () => {
     const r = update();
     expect(r.code).toBe(0);
@@ -156,7 +224,7 @@ describe("install.sh (Linux, aufgerufen mit sudo)", () => {
     ausfuehrbar(join(bin, "ln"), `#!/bin/sh\necho "ln $*" >> "${ordner}/aufrufe"\n`);
   });
 
-  function installieren() {
+  function installieren(extra: Record<string, string> = {}) {
     const r = Bun.spawnSync(["sh", join(REPO, "deploy", "install.sh")], {
       env: {
         ...process.env,
@@ -169,6 +237,7 @@ describe("install.sh (Linux, aufgerufen mit sudo)", () => {
         SCHAUFUCHS_ADRESSE: "localhost",
         SCHAUFUCHS_EMAIL: "probe@example.org",
         SCHAUFUCHS_JA: "1",
+        ...extra,
       },
       stdin: "ignore",
     });
@@ -208,6 +277,24 @@ describe("install.sh (Linux, aufgerufen mit sudo)", () => {
     expect(r.code).toBe(1);
     expect(r.fehler).toContain("Programm");
     expect(existsSync(join(ziel(), ".env"))).toBe(false);
+  });
+
+  test("Installation ab 1.22.1: nur mit gültiger Signatur der Prüfsummen, sonst Abbruch vor dem Ablegen", () => {
+    const k = join(ordner, "sig-schluessel");
+    Bun.spawnSync(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "schaufuchs-release", "-f", k], { stdin: "ignore" });
+    const env = { SCHAUFUCHS_VERSION: "1.23.0", SCHAUFUCHS_RELEASE_SCHLUESSEL: readFileSync(`${k}.pub`, "utf8").trim().split(" ").slice(0, 2).join(" ") };
+    pruefsummen({}, "v1.23.0");
+    let r = installieren(env);
+    expect(r.code).toBe(1);
+    expect(r.fehler).toContain("Signatur");
+    expect(existsSync(join(ziel(), ".env"))).toBe(false);
+    expect(existsSync(join(ziel(), "schaufuchs"))).toBe(false);
+    rmSync(ziel(), { recursive: true, force: true });
+    const { SSH_AUTH_SOCK: _, ...ohneAgent } = process.env;
+    Bun.spawnSync(["ssh-keygen", "-Y", "sign", "-f", k, "-n", "schaufuchs-release", join(quelle, "SHA256SUMS")], { stdin: "ignore", env: ohneAgent });
+    r = installieren(env);
+    expect(r.fehler).toBe("");
+    expect(r.code).toBe(0);
   });
 
   test("Digests landen in der .env (für die Rücknahme)", () => {

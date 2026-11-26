@@ -23,7 +23,7 @@ set -eu
 {
 
 KONTO="eddyreddington"
-VERSION="${SCHAUFUCHS_VERSION:-1.22.0}"
+VERSION="${SCHAUFUCHS_VERSION:-1.22.1}"
 IMAGE="${SCHAUFUCHS_IMAGE:-ghcr.io/$KONTO/schaufuchs}"
 STANDARD_QUELLE="https://raw.githubusercontent.com/$KONTO/schaufuchs/v$VERSION"
 QUELLE="${SCHAUFUCHS_QUELLE:-$STANDARD_QUELLE}"
@@ -126,7 +126,39 @@ hole deploy/Caddyfile "$ZIEL/Caddyfile.neu"
 hole deploy/schaufuchs "$ZIEL/schaufuchs.neu"
 hole scripts/wiederherstellen.sh "$ZIEL/scripts/wiederherstellen.sh.neu"
 
-# Prüfsummen des Release (Entscheidung 037): Dateien hier, Digests der Programme unten. Releases ohne (404): ungeprüft.
+# Öffentlicher Schlüssel, mit dem der Maintainer SHA256SUMS ab 1.22.1 außerhalb von GitHub signiert (wie in
+# deploy/schaufuchs, Entscheidung 037 Nachtrag).
+RELEASE_SCHLUESSEL="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHRCEYVXc4f7a8cwHcWEMUdTNUdXPo4RmQKmypsczYvV"
+# Signatur Pflicht – außer bei einer reinen Versionsnummer (1.2.3) unter 1.22.1, den älteren, unsignierten Releases.
+# Andere Schreibweisen (rc, zweistellig, mit v …) und ein versagendes sort -V verlangen sie also immer.
+signatur_noetig() {
+  case "$1" in '' | *[!0-9.]*) return 0 ;; esac
+  printf '%s\n' "$1" | grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+' || return 0
+  [ "$1" != "1.22.1" ] && [ "$(printf '1.22.1\n%s\n' "$1" | sort -V | head -n 1)" = "$1" ] && return 1
+  return 0
+}
+# Signatur $2 zu den Prüfsummen $1 gültig, und nennen diese die Version $3? Probeläufe aus einem lokalen Repo dürfen
+# einen eigenen Schlüssel nutzen.
+signatur_gueltig() {
+  release_schluessel="$RELEASE_SCHLUESSEL"
+  [ -n "${SCHAUFUCHS_QUELLE:-}" ] && [ -n "${SCHAUFUCHS_RELEASE_SCHLUESSEL:-}" ] && release_schluessel="$SCHAUFUCHS_RELEASE_SCHLUESSEL"
+  command -v ssh-keygen > /dev/null 2>&1 || return 1
+  release_erlaubt=$(mktemp)
+  printf 'schaufuchs-release %s\n' "$release_schluessel" > "$release_erlaubt"
+  release_ok=0
+  ssh-keygen -Y verify -f "$release_erlaubt" -I schaufuchs-release -n schaufuchs-release -s "$2" < "$1" > /dev/null 2>&1 || release_ok=1
+  rm -f "$release_erlaubt"
+  [ "$release_ok" = 0 ] && [ "$(awk '$2 == "release" { print $1; exit }' "$1")" = "v$3" ]
+}
+# ssh-keygen ohne -Y verify (OpenSSH vor 8.1): eigener Hinweis statt „Signatur ungültig“.
+ssh_alt() {
+  ssh_version=$(ssh -V 2>&1 | sed -n 's/^OpenSSH_\([0-9][0-9]*\)\.\([0-9][0-9]*\).*/\1 \2/p')
+  [ -n "$ssh_version" ] || return 1
+  set -- $ssh_version
+  [ "$1" -lt 8 ] || { [ "$1" -eq 8 ] && [ "$2" -lt 1 ]; }
+}
+# Prüfsummen des Release (Entscheidung 037): Dateien hier, Digests der Programme unten. Releases ohne (404): ungeprüft,
+# ab 1.22.1 Pflicht und signiert.
 pruefsumme() { if command -v sha256sum > /dev/null 2>&1; then sha256sum "$1"; else shasum -a 256 "$1"; fi | awk '{ print $1 }'; }
 eintrag() { awk -v n="$2" '$2 == n { print $1; exit }' "$1"; }
 summen=$(mktemp)
@@ -136,6 +168,22 @@ case "$QUELLE" in
   http*) code=$(curl -sSL -w '%{http_code}' -o "$summen" "$QUELLE/SHA256SUMS" 2> /dev/null || true) ;;
   *) if [ -f "$QUELLE/SHA256SUMS" ]; then cp "$QUELLE/SHA256SUMS" "$summen" && code=200; else code=404; fi ;;
 esac
+# Probeläufe aus einem lokalen Repo (SCHAUFUCHS_QUELLE=/pfad, SCHAUFUCHS_VERSION=test) haben keine Signatur.
+probe=0
+case "$QUELLE" in /*) case "$VERSION" in *[!0-9.]*) probe=1 ;; esac ;; esac
+if [ "$probe" = 0 ] && signatur_noetig "$VERSION"; then
+  [ "$code" = 200 ] || fehler "Prüfsummen des Release $VERSION fehlen (HTTP $code). Abgebrochen."
+  sig=$(mktemp)
+  case "$QUELLE" in
+    "$STANDARD_QUELLE") curl -fsSL -o "$sig" "https://github.com/$KONTO/schaufuchs/releases/download/v$VERSION/SHA256SUMS.sig" 2> /dev/null || : > "$sig" ;;
+    http*) curl -fsSL -o "$sig" "$QUELLE/SHA256SUMS.sig" 2> /dev/null || : > "$sig" ;;
+    *) cp "$QUELLE/SHA256SUMS.sig" "$sig" 2> /dev/null || : > "$sig" ;;
+  esac
+  command -v ssh-keygen > /dev/null 2>&1 || { rm -f "$sig"; fehler "ssh-keygen fehlt (Paket openssh-client) – ohne kann die Signatur nicht geprüft werden."; }
+  ssh_alt && { rm -f "$sig"; fehler "ssh-keygen ist zu alt für die Prüfung der Signatur (OpenSSH ab 8.1 nötig). Bitte das System aktualisieren."; }
+  signatur_gueltig "$summen" "$sig" "$VERSION" || { rm -f "$sig"; fehler "Signatur der Prüfsummen von $VERSION fehlt, ist ungültig oder gehört zu einer anderen Version. Abgebrochen – bitte melden."; }
+  rm -f "$sig"
+fi
 digest_app=""
 digest_backup=""
 case "$code" in

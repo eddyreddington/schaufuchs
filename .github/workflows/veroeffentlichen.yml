@@ -65,6 +65,8 @@ jobs:
         run: |
           sha256sum deploy/docker-compose.yml deploy/Caddyfile deploy/schaufuchs scripts/wiederherstellen.sh > SHA256SUMS
           printf '%s  image/schaufuchs\n%s  image/schaufuchs-backup\n' "$DIGEST_APP" "$DIGEST_BACKUP" >> SHA256SUMS
+          # Die Version gehört in die signierte Datei: sonst ließe sie sich unter eine andere Version kopieren.
+          printf '%s  release\n' "$GITHUB_REF_NAME" >> SHA256SUMS
           grep -Eqx 'sha256:[0-9a-f]{64}  image/schaufuchs' SHA256SUMS
           grep -Eqx 'sha256:[0-9a-f]{64}  image/schaufuchs-backup' SHA256SUMS
           cat SHA256SUMS
@@ -74,4 +76,6 @@ jobs:
         run: |
           hinweise="docs/versionshinweise-$(echo '${{ steps.v.outputs.version }}' | cut -d. -f1,2).md"
           [ -f "$hinweise" ] || hinweise=/dev/null
-          gh release create "$GITHUB_REF_NAME" SHA256SUMS --title "SchauFUCHS ${{ steps.v.outputs.version }}" --notes-file "$hinweise"
+          # Nur als Entwurf: veröffentlicht wird erst nach der Signatur außerhalb von GitHub
+          # (scripts/release-signieren.sh, Entscheidung 037 Nachtrag).
+          gh release create "$GITHUB_REF_NAME" SHA256SUMS --draft --title "SchauFUCHS ${{ steps.v.outputs.version }}" --notes-file "$hinweise"

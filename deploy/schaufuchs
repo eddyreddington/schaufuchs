@@ -19,6 +19,37 @@ setze() {
     printf '%s=%s\n' "$1" "$2" >> .env
   fi
 }
+# Öffentlicher Schlüssel, mit dem der Maintainer SHA256SUMS ab 1.22.1 außerhalb von GitHub signiert (Entscheidung 037,
+# Nachtrag): Wer Release und Prüfsummen auf GitHub austauscht, hat diesen Schlüssel nicht.
+RELEASE_SCHLUESSEL="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHRCEYVXc4f7a8cwHcWEMUdTNUdXPo4RmQKmypsczYvV"
+# Signatur Pflicht – außer bei einer reinen Versionsnummer (1.2.3) unter 1.22.1, den älteren, unsignierten Releases.
+# Andere Schreibweisen (rc, zweistellig, mit v …) und ein versagendes sort -V verlangen sie also immer.
+signatur_noetig() {
+  case "$1" in '' | *[!0-9.]*) return 0 ;; esac
+  printf '%s\n' "$1" | grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+' || return 0
+  [ "$1" != "1.22.1" ] && [ "$(printf '1.22.1\n%s\n' "$1" | sort -V | head -n 1)" = "$1" ] && return 1
+  return 0
+}
+# Signatur $2 zu den Prüfsummen $1 gültig, und nennen diese die Version $3? Probeläufe aus einem lokalen Repo dürfen
+# einen eigenen Schlüssel nutzen.
+signatur_gueltig() {
+  release_schluessel="$RELEASE_SCHLUESSEL"
+  [ -n "${SCHAUFUCHS_QUELLE:-}" ] && [ -n "${SCHAUFUCHS_RELEASE_SCHLUESSEL:-}" ] && release_schluessel="$SCHAUFUCHS_RELEASE_SCHLUESSEL"
+  command -v ssh-keygen > /dev/null 2>&1 || return 1
+  release_erlaubt=$(mktemp)
+  printf 'schaufuchs-release %s\n' "$release_schluessel" > "$release_erlaubt"
+  release_ok=0
+  ssh-keygen -Y verify -f "$release_erlaubt" -I schaufuchs-release -n schaufuchs-release -s "$2" < "$1" > /dev/null 2>&1 || release_ok=1
+  rm -f "$release_erlaubt"
+  [ "$release_ok" = 0 ] && [ "$(awk '$2 == "release" { print $1; exit }' "$1")" = "v$3" ]
+}
+# ssh-keygen ohne -Y verify (OpenSSH vor 8.1): eigener Hinweis statt „Signatur ungültig“.
+ssh_alt() {
+  ssh_version=$(ssh -V 2>&1 | sed -n 's/^OpenSSH_\([0-9][0-9]*\)\.\([0-9][0-9]*\).*/\1 \2/p')
+  [ -n "$ssh_version" ] || return 1
+  set -- $ssh_version
+  [ "$1" -lt 8 ] || { [ "$1" -eq 8 ] && [ "$2" -lt 1 ]; }
+}
 # Prüfsummen und Digests (Entscheidung 037): SHA-256 einer Datei, Eintrag in der Datei SHA256SUMS eines Release.
 pruefsumme() { if command -v sha256sum > /dev/null 2>&1; then sha256sum "$1"; else shasum -a 256 "$1"; fi | awk '{ print $1 }'; }
 eintrag() { awk -v n="$2" '$2 == n { print $1; exit }' "$1"; }
@@ -220,6 +251,19 @@ case "$befehl" in
       http*) code=$(curl -sSL -w '%{http_code}' -o "$summen" "$summen_quelle" 2> /dev/null || true) ;;
       *) if [ -f "$summen_quelle" ]; then cp "$summen_quelle" "$summen" && code=200; else code=404; fi ;;
     esac
+    # Ab 1.22.1: Prüfsummen Pflicht und vom Maintainer signiert – kein Rückfall auf „ungeprüft“.
+    if signatur_noetig "$neu"; then
+      [ "$code" = 200 ] || verwerfen "Prüfsummen des Release $neu fehlen (HTTP $code) – nichts verändert."
+      sig=$(mktemp)
+      case "$summen_quelle" in
+        http*) curl -fsSL -o "$sig" "$summen_quelle.sig" 2> /dev/null || : > "$sig" ;;
+        *) cp "$summen_quelle.sig" "$sig" 2> /dev/null || : > "$sig" ;;
+      esac
+      command -v ssh-keygen > /dev/null 2>&1 || { rm -f "$sig"; verwerfen "ssh-keygen fehlt (Paket openssh-client) – ohne kann die Signatur nicht geprüft werden. Nichts verändert."; }
+      if ssh_alt; then rm -f "$sig"; verwerfen "ssh-keygen ist zu alt für die Prüfung der Signatur (OpenSSH ab 8.1 nötig) – nichts verändert. Bitte das System aktualisieren."; fi
+      if ! signatur_gueltig "$summen" "$sig" "$neu"; then rm -f "$sig"; verwerfen "Signatur der Prüfsummen von $neu fehlt, ist ungültig oder gehört zu einer anderen Version – nichts verändert. Bitte melden."; fi
+      rm -f "$sig"
+    fi
     digest_app=""
     digest_backup=""
     case "$code" in
