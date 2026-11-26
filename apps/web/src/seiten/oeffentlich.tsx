@@ -7,6 +7,7 @@ import { useLesemodusAussteller } from "../komponenten/lesemodus";
 import { MeldungBestaetigen } from "./oeffentlich-bestaetigen";
 import { alsEingabe, neuePosition, PositionenEditor, pruefePositionen, type Position } from "../komponenten/positionen";
 import { formatKatalognummer, parseEuro } from "../lib";
+import { SchriftgroesseWahl } from "../schrift";
 import { fehlerFuerAussteller, SprachWahl, useSprache, useTexte } from "../sprache";
 import { trpc } from "../trpc";
 import { Abschnitt, Auswahl, Eingabe, Feld, Haken, Hinweis, Knopf, knopfKlasse, KnopfLink, Laden, LESEBREITE, Marke, Suchfeld, TabellenRahmen, useSeitentitel, useUngespeichertWarnung } from "../ui";
@@ -33,12 +34,16 @@ function OeffentlicherRahmen({ titel, unter, children, ohneFuss, test }: { titel
   return (
     <div className="flex min-h-screen flex-col">
       <header className="bg-kopf text-auf-kopf">
-        <div className={`${LESEBREITE} flex items-start justify-between gap-4 py-7`}>
+        {/* Schmal: Sprache und Schriftgröße in einer Zeile über dem Titel, sonst reicht bei großer Schrift die Breite nicht. */}
+        <div className={`${LESEBREITE} flex flex-col-reverse gap-4 py-7 sm:flex-row sm:items-start sm:justify-between`}>
           <div className="min-w-0">
             <h1 className="text-[1.9rem] font-bold leading-tight text-auf-kopf sm:text-4xl">{titel}</h1>
             {unter && <div className="mt-1.5 text-auf-kopf/75">{unter}</div>}
           </div>
-          <SprachWahl className="shrink-0" />
+          <div className="flex shrink-0 items-center justify-end gap-2 sm:flex-col sm:items-end">
+            <SprachWahl />
+            <SchriftgroesseWahl knapp aufKopf />
+          </div>
         </div>
       </header>
       <main id="inhalt" className={`${LESEBREITE} flex flex-1 flex-col gap-6 py-8`}>

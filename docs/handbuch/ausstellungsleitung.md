@@ -112,6 +112,8 @@ Unten in der Seitenleiste auf Ihren Namen klicken, dann unter „Darstellung“ 
 
 Die Wahl gilt nur für dieses Gerät und diesen Browser. Gedruckt wird immer hell. Der Hallenplan bleibt auch im dunklen Modus ein helles Blatt, damit er aussieht wie gedruckt.
 
+Darunter wählen Sie die **Schriftgröße**: „Normal“, „Groß“ oder „Sehr groß“. Schrift, Knöpfe und Abstände wachsen mit, gedruckt wird unverändert. Dieselbe Wahl steht schon auf der Anmeldeseite unter dem Formular, bei den Preisrichtern auf der PIN-Anmeldung und oben im Tablet, bei den Ausstellern als drei „A“ oben rechts unter der Sprache. Auch diese Wahl merkt sich nur dieses Gerät.
+
 ### 1.6 Sprache der Oberfläche
 
 SchauFUCHS gibt es auf Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niederländisch, Polnisch und Tschechisch. Jede Sprache steht in der Auswahl unter ihrem eigenen Namen (z. B. „Polski“).
@@ -902,7 +904,7 @@ Online-Meldungen erscheinen von selbst unter „Meldungen“. Der Aussteller bek
 
 #### Online-Meldung in anderen Sprachen
 
-Die Seiten für Aussteller gibt es auf Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niederländisch, Polnisch und Tschechisch: Schauseite, Meldeformular, „Meine Meldung“, Ergebnisse, Impressum und Datenschutz. Die Seite öffnet in der Sprache des Browsers; oben rechts kann der Aussteller umstellen. Für einen Link in einer bestimmten Sprache hängen Sie `?sprache=en` an (ebenso `de-CH`, `fr`, `nl`, `pl`, `cs`).
+Die Seiten für Aussteller gibt es auf Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niederländisch, Polnisch und Tschechisch: Schauseite, Meldeformular, „Meine Meldung“, Ergebnisse, Impressum und Datenschutz. Die Seite öffnet in der Sprache des Browsers; oben rechts kann der Aussteller umstellen. Darunter vergrößern drei „A“ die Schrift („Normal“, „Groß“, „Sehr groß“), etwa für ältere Züchter. Für einen Link in einer bestimmten Sprache hängen Sie `?sprache=en` an (ebenso `de-CH`, `fr`, `nl`, `pl`, `cs`).
 
 - Die Sprache des Formulars wird mit der Meldung gespeichert. Eingangsbestätigung, „Eingangsbestätigung mailen“, Absage der Schau und SEPA-Vorabankündigung gehen in dieser Sprache hinaus; Papiermeldungen bleiben deutsch.
 - Was Sie selbst schreiben, bleibt, wie Sie es schreiben: Schauname, Termine als Text, Sonderbestimmungen, Erklärungen zur Herkunft, Bankverbindung, Grund einer Absage. Impressum und Datenschutzhinweise gibt es nur auf Deutsch; die Seiten sagen das in der Sprache des Ausstellers. Die Kurzfassung des Datenschutzes im Formular ist übersetzt.

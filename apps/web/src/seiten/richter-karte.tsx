@@ -263,7 +263,8 @@ function PunktKnopf({ aktiv, onClick, text, klein }: { aktiv: boolean; onClick: 
       className={`nummer flex min-h-16 flex-col items-center justify-center rounded-lg border text-2xl ${aktiv ? "border-band bg-band text-auf-band" : "border-linie-stark bg-weiss text-tinte hover:border-band"}`}
     >
       {text}
-      {klein && <span className="px-1 text-center font-sans text-xs leading-tight font-normal">{klein}</span>}
+      {/* Lange Wörter („ungenügend“, „Bewertungsnote“) trennen, statt bei großer Schrift aus dem Knopf zu laufen. */}
+      {klein && <span className="max-w-full px-1 text-center font-sans text-xs leading-tight font-normal hyphens-auto [overflow-wrap:anywhere]">{klein}</span>}
     </button>
   );
 }

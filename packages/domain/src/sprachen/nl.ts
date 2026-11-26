@@ -2,6 +2,7 @@ import type { Texte } from ".";
 
 export const nl: Texte = {
   sprache: "Taal",
+  schrift: { titel: "Tekstgrootte", normal: "Normaal", gross: "Groot", sehrGross: "Zeer groot" },
   rahmen: {
     testschau: "Testshow – geen echte tentoonstelling. Schrijf geen echte dieren in.",
     nurLesen: "Inschrijvingen kunnen op dit moment niet worden ingediend of gewijzigd.",

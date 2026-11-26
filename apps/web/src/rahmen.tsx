@@ -6,6 +6,7 @@ import { LesemodusLeiste } from "./komponenten/lesemodus";
 import { fehlerText } from "./lib";
 import { useFarbmodus, type Farbmodus } from "./modus";
 import { allgemeineGruppen, leistenLink, MenueGruppen, schauGruppen, useKlappzustand } from "./seitenmenue";
+import { SchriftgroesseWahl } from "./schrift";
 import { SprachWahl, useOberflaeche } from "./sprache";
 import { Symbol, type SymbolName } from "./symbole";
 import { direkt, trpc } from "./trpc";
@@ -281,7 +282,7 @@ const MODI: { wert: Farbmodus; symbol: SymbolName }[] = [
   { wert: "dunkel", symbol: "mond" },
 ];
 
-/** Angemeldeter Benutzer unten in der Leiste; ein Klick zeigt Verein, Farbmodus, „Mein Zugang“ und „Abmelden“. */
+/** Angemeldeter Benutzer unten in der Leiste; ein Klick zeigt Verein, Farbmodus, Schriftgröße, Sprache, „Mein Zugang“ und „Abmelden“. */
 function BenutzerMenue({ name, verein, rolle, abmelden, meldetAb }: { name: string; verein: string; rolle: string; abmelden: () => void; meldetAb: boolean }) {
   const { offen, setOffen, ref } = useAufklapper();
   const [modus, setModus] = useFarbmodus();
@@ -327,6 +328,7 @@ function BenutzerMenue({ name, verein, rolle, abmelden, meldetAb }: { name: stri
               ))}
             </div>
           </div>
+          <SchriftgroesseWahl className="mt-3" />
           <SprachWahl hell mitLabel className="mt-3 border-t border-linie pt-3" />
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-linie pt-3">
             <NavLink to="/benutzer" onClick={() => setOffen(false)} className="rounded px-1 py-1">
@@ -466,6 +468,7 @@ export function Anmelden() {
             {t.hilfe}
           </a>
           <SprachWahl hell className="mx-auto w-44" />
+          <SchriftgroesseWahl className="mx-auto w-56" />
         </div>
       </form>
     </AnmeldeFlaeche>

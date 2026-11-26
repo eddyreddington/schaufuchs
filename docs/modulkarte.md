@@ -932,26 +932,26 @@ Tests: `spenden.test.ts`
 - `sammelbestaetigung()` – Sammelbestätigung eines Kalenderjahres: alle Geldzuwendungen des Spenders aus diesem Jahr, die bestätigt werden dürfen (Sachzuwendungen nie – sie b …
 - Typen: `SpendeArt`, `SpendeWeg`, `SachHerkunft`, `Sachangaben`, `SpendeFuerBestaetigung`, `SpenderAnschrift`
 
-### cs.ts (289 Z.)
+### cs.ts (290 Z.)
 
 - `cs`
 
-### de.ts (295 Z.)
+### de.ts (296 Z.)
 
 - `de` – Texte der Seiten für Aussteller (öffentliche Schauseite, Online-Meldung, Meine Meldung, Ergebnisse) und der Mails an Aussteller – Deutsch ist die G …
 
-### en.ts (283 Z.)
+### en.ts (284 Z.)
 
 - `en`
 
-### fr.ts (283 Z.)
+### fr.ts (284 Z.)
 
 - `fr`
 
 ### index.ts (79 Z.)
 Sammelt alle Exporte (`export * from …`).
 
-### nl.ts (283 Z.)
+### nl.ts (284 Z.)
 
 - `nl`
 
@@ -2121,7 +2121,7 @@ Meldungen des Servers (Fehler, Prüfungen, Hinweise) in der Sprache der Oberflä
 
 - `serverText()` – Meldung des Servers in der Sprache der Oberfläche.
 
-### pl.ts (291 Z.)
+### pl.ts (292 Z.)
 
 - `pl`
 
@@ -2967,7 +2967,7 @@ Prozeduren: meldung.liste, meldung.statusSetzen, schau.get
 ### oeffentlich-bestaetigen.tsx (25 Z.)
 Prozeduren: oeffentlich.meldungBestaetigen
 
-### oeffentlich.tsx (584 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
+### oeffentlich.tsx (589 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
 Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.meineMeldung, oeffentlich.melden, oeffentlich.onlineVeroeffentlichung, oeffentlich.rechtstexte, oeffentlich.schau
 
 ### preise.tsx (490 Z.) – `/schau/:schauId/preise`
@@ -2989,20 +2989,20 @@ Prozeduren: schau.protokoll, schau.protokollPruefen
 ### rassebilder.tsx (282 Z.)
 Prozeduren: rassebild.angabenSetzen, rassebild.hochladen, rassebild.liste, rassebild.loeschen
 
-### richter-anmeldung.tsx (170 Z.)
+### richter-anmeldung.tsx (172 Z.)
 Preisrichter-Tablet: Anmeldung mit Name und PIN, Hinweis auf noch nicht übertragene Bewertungen im Gerät.
 Prozeduren: richter.anmeldeInfo, richter.anmelden
 
 ### richter-geraet.ts (97 Z.)
 Preisrichter-Tablet: Datentypen und was im Gerät liegt (Schlüssel in IndexedDB/localStorage, gemerkter Preisrichter, Aufräumen).
 
-### richter-karte.tsx (269 Z.)
+### richter-karte.tsx (270 Z.)
 Preisrichter-Tablet: Bewertungskarte eines Tieres (Note, Texte mit Bausteinen, Preise).
 
 ### richter-obmann.tsx (43 Z.)
 Preisrichter-Tablet: Ansicht für den Obmann zum Bestätigen von Noten.
 
-### richter-tablet.tsx (552 Z.)
+### richter-tablet.tsx (554 Z.)
 Preisrichter-Tablet nach der Anmeldung: Tierliste, Ausgang und Abgleich mit dem Server, abgelehnte Bewertungen.
 
 ### richter.tsx (55 Z.) – `/richter/:slug`
@@ -3195,11 +3195,12 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `main.tsx` (22 Z.)
 - `modus.ts` (46 Z.) · setzeFarbmodus, useFarbmodus
 - `pdf-anzeige.tsx` (43 Z.) – PDF im Browser anzeigen (pdf.js), gemeinsam für die Live-Vorschauen von Katalog und Druckvorlagen. · pdfjs, PdfSeite
-- `rahmen.tsx` (473 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
+- `rahmen.tsx` (476 Z.) · useSchauId, AppRahmen, SchauRahmen, AnmeldeFlaeche, Anmelden
 - `reiter-anker.test.ts` (23 Z.)
 - `reiter-anker.ts` (14 Z.) · reiterAusAnker
 - `rolle.ts` (9 Z.) · useIstAdmin
 - `routes.tsx` (122 Z.) · router
+- `schrift.tsx` (98 Z.) – Schriftgröße der Oberfläche für ältere Menschen: vergrößert über die Grundschrift (html font-size) alles, was in rem gebaut ist – Schrift, Knöpfe, … · setzeSchriftgroesse, useSchriftgroesse, SchriftgroesseWahl
 - `seitenmenue.tsx` (202 Z.) – Seitenmenü (linke Leiste): Seiten der Schau nach dem Ablauf gruppiert, darunter Verein und Einrichtung. · schauGruppen, allgemeineGruppen, useKlappzustand, MenueGruppen
 - `sprache-jetzt.ts` (20 Z.) – Sprache der Oberfläche für Code außerhalb von Komponenten (Fehlertexte, Datum, Rückfragen): `SpracheRahmen` setzt sie, Komponenten nehmen besser `u … · setzeAktuelleSprache, aktuelleSprache, ot
 - `sprache.tsx` (199 Z.) – Sprache der Oberfläche. · istAusstellerSeite, SpracheRahmen, useSprache, useTexte, useOberflaeche, SprachWahl, fehlerFuerAussteller

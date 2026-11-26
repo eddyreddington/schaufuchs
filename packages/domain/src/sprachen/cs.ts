@@ -8,6 +8,7 @@ function mnozne(n: number, jedno: string, nekolik: string, mnoho: string): strin
 
 export const cs: Texte = {
   sprache: "Jazyk",
+  schrift: { titel: "Velikost písma", normal: "Normální", gross: "Velké", sehrGross: "Velmi velké" },
   rahmen: {
     testschau: "Testovací výstava – nejde o skutečnou výstavu. Nepřihlašujte prosím skutečná zvířata.",
     nurLesen: "Přihlášky teď nelze podávat ani měnit.",

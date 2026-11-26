@@ -3,6 +3,7 @@ import { bewertungsText } from "@schau/domain";
 import { del, get } from "idb-keyval";
 import { useEffect, useState } from "react";
 import { fehlerText } from "../lib";
+import { SchriftgroesseWahl } from "../schrift";
 import { SprachWahl, useOberflaeche } from "../sprache";
 import { trpc } from "../trpc";
 import { Hinweis, Knopf, Laden, Leer, useFrage } from "../ui";
@@ -161,6 +162,7 @@ export function RichterAnmeldung({ slug, andereSchau, fertig }: { slug: string; 
       )}
       <div className="mt-10 flex w-full max-w-xs flex-col items-center gap-3">
         <SprachWahl hell />
+        <SchriftgroesseWahl className="w-full" />
         <a href="/hilfe/preisrichter#anmelden" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center px-3 text-grau underline hover:text-tinte">
           {t.hilfe}
         </a>

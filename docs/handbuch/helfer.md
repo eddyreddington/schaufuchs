@@ -113,7 +113,7 @@ Die Seitenleiste links enthält (auf dem Handy und am Tablet hochkant öffnet si
 - „Alle Schauen“ – die Liste aller Ausstellungen Ihres Vereins,
 - unter „Einrichtung“: „Rassen und Farbenschläge“ – das Verzeichnis zum Nachschlagen (Einspielen und Ändern nur durch die Ausstellungsleitung) – und „Mein Zugang“ – Passwort und Zwei-Faktor-Anmeldung,
 - „Hilfe“ – die Handbücher zum Nachlesen, in einem eigenen Tab: Reiter „Helfer“ für dieses Handbuch, „Drucken“ druckt das geöffnete Handbuch, „Als PDF“ öffnet die Druckfassung, die Leiste „Handbücher zum Ausdrucken“ lädt jedes Handbuch als PDF herunter; „Schließen“ schließt den Tab wieder,
-- ganz unten Ihren Namen; ein Klick zeigt den Verein, Ihre Rolle mit der Versionsnummer („SchauFUCHS 1.22.1“), die Darstellung („System“, „Hell“, „Dunkel“) und den Knopf „Abmelden“.
+- ganz unten Ihren Namen; ein Klick zeigt den Verein, Ihre Rolle mit der Versionsnummer („SchauFUCHS 1.22.1“), die Darstellung („System“, „Hell“, „Dunkel“), die Schriftgröße („Normal“, „Groß“, „Sehr groß“: Schrift, Knöpfe und Abstände wachsen mit, auch schon auf der Anmeldeseite wählbar) und den Knopf „Abmelden“.
 
 In einer Schau steht oben in der Leiste die Schau mit Ort und Phase, darunter ihre Seiten, gruppiert nach dem Ablauf: „Vorbereitung“, „Meldephase“, „Nach dem Meldeschluss“, „Schautage“ und „Kasse und Abrechnung“. Das Protokoll steht in den Einstellungen der Schau.
 

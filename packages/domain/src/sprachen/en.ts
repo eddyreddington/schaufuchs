@@ -2,6 +2,7 @@ import type { Texte } from ".";
 
 export const en: Texte = {
   sprache: "Language",
+  schrift: { titel: "Text size", normal: "Normal", gross: "Large", sehrGross: "Very large" },
   rahmen: {
     testschau: "Test show – not a real exhibition. Please do not enter real animals.",
     nurLesen: "Entries cannot be submitted or changed at the moment.",

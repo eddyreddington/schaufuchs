@@ -4,6 +4,7 @@ import { del, get, set, update } from "idb-keyval";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AbmeldeHinweis, useAutoAbmeldung } from "../abmeldung";
 import { fehlerText, formatKatalognummer } from "../lib";
+import { SchriftgroesseWahl } from "../schrift";
 import { useOberflaeche, useSprache } from "../sprache";
 import { ot } from "../sprache-jetzt";
 import { direkt } from "../trpc";
@@ -427,6 +428,7 @@ export function Tablet({ slug, richter, abmeldung }: { slug: string; richter: Ri
             {ansicht === "obmann" ? tt.zurueckZumBewerten : tt.obmann(daten.obmannListe.length)}
           </button>
         )}
+        <SchriftgroesseWahl knapp />
         <a href="/hilfe/preisrichter" target="_blank" rel="noreferrer" className={knopfKlasse("zweit", false, "min-h-11 text-sm")}>{o.allgemein.hilfe}</a>
         <button type="button" onClick={abmelden} className={knopfKlasse("zweit", false, "min-h-11 text-sm")}>{tt.abmelden}</button>
       </header>

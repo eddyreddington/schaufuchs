@@ -6,6 +6,7 @@
  */
 export const de = {
   sprache: "Sprache",
+  schrift: { titel: "Schriftgröße", normal: "Normal", gross: "Groß", sehrGross: "Sehr groß" },
   rahmen: {
     testschau: "Testschau – keine echte Ausstellung. Bitte keine echten Tiere melden.",
     nurLesen: "Meldungen können zurzeit nicht abgegeben oder geändert werden.",

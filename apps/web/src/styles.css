@@ -135,6 +135,13 @@
   html {
     font-size: 15px;
   }
+  /* Schriftgröße für ältere Menschen (schrift.tsx, public/modus.js): alles in rem wächst mit. */
+  html[data-groesse="gross"] {
+    font-size: 17.5px;
+  }
+  html[data-groesse="sehr-gross"] {
+    font-size: 20px;
+  }
   /* Tablet: jeder Knopf mindestens 44 px hoch. */
   html.tablet button {
     min-height: 2.75rem;
@@ -142,6 +149,12 @@
   /* Preisrichter-Tablet: größere Grundschrift, damit Ziele mindestens 44 px groß sind. */
   html.tablet {
     font-size: 17px;
+  }
+  html.tablet[data-groesse="gross"] {
+    font-size: 19px;
+  }
+  html.tablet[data-groesse="sehr-gross"] {
+    font-size: 21px;
   }
   body {
     @apply bg-weiss text-tinte font-sans antialiased;

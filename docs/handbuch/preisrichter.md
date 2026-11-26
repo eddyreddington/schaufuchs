@@ -65,6 +65,8 @@ Falschen Namen gewählt? Tippen Sie auf „Anderer Name“.
 
 **Sprache:** Auf der Anmeldeseite stellen Sie die Sprache des Tablets ein (Deutsch, Deutsch (Schweiz), Englisch, Französisch, Niederländisch, Polnisch, Tschechisch). Das Tablet merkt sich die Wahl, unabhängig davon, wer sonst an diesem Gerät angemeldet ist. Rassen, Farbenschläge und Textbausteine bleiben deutsch, ebenso die gedruckte Bewertungskarte.
 
+**Schriftgröße:** Darunter wählen Sie „Normal“, „Groß“ oder „Sehr groß“. Schrift, Knöpfe und Felder wachsen mit. Während der Bewertung stellen Sie die Größe oben in der Kopfzeile mit den drei „A“ um. Das Tablet merkt sich die Wahl; die gedruckte Bewertungskarte bleibt gleich.
+
 Ganz unten auf der Anmeldeseite führt der Link „Hilfe für Preisrichter“ zu diesem Handbuch. Es öffnet in einem eigenen Tab; mit „Schließen“ kommen Sie zurück.
 
 ![… dann die 8-stellige PIN über das Zahlenfeld eingeben.](bilder/tablet-pin.jpg)

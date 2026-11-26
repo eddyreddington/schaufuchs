@@ -10,6 +10,7 @@ function mnoga(n: number, jeden: string, kilka: string, wiele: string): string {
 
 export const pl: Texte = {
   sprache: "Język",
+  schrift: { titel: "Rozmiar tekstu", normal: "Normalny", gross: "Duży", sehrGross: "Bardzo duży" },
   rahmen: {
     testschau: "Wystawa testowa – nie jest to prawdziwa wystawa. Prosimy nie zgłaszać prawdziwych zwierząt.",
     nurLesen: "Zgłoszeń nie można obecnie składać ani zmieniać.",
