@@ -23,8 +23,8 @@ export const sepaMandat = pgTable(
     unterschriebenAm: date("unterschrieben_am").notNull(),
     /** Wiederkehrend (jede Schau) oder einmalig. */
     wiederkehrend: boolean("wiederkehrend").notNull().default(true),
-    iban: geheimText("iban", "sepaMandat.iban").notNull(),
-    kontoinhaber: geheimText("kontoinhaber", "sepaMandat.kontoinhaber").notNull(),
+    iban: geheimText("iban", "sepaMandat.iban", { zeile: true }).notNull(),
+    kontoinhaber: geheimText("kontoinhaber", "sepaMandat.kontoinhaber", { zeile: true }).notNull(),
     widerrufenAm: date("widerrufen_am"),
     /** Fälligkeit der letzten eingezogenen Lastschrift (36 Monate ohne Nutzung: Mandat verfällt). */
     letzteNutzungAm: date("letzte_nutzung_am"),

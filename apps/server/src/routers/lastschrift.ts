@@ -5,9 +5,10 @@
  * Überweisung bleiben daneben möglich; wer schon bezahlt hat, steht nicht in der Datei.
  */
 import { bankarbeitstag, datumIn, EingabeFehler, erzeugeSepaLastschrift, euroIn, istSprache, texte, fruehesteFaelligkeit, gefordertCent, heuteBerlin, imEwr, mandatGueltig, normalisiereGlaeubigerId, normalisiereIban, pruefeGlaeubigerId, pruefeIban, pruefeMandatsreferenz, verdeckeIban, vorgeschlageneFaelligkeit, datumKurz } from "@schau/domain";
-import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, type Tx } from "../db/client";
+import { bankdatenFuer, inEigenerZeile, verlangeEigeneZeile } from "../db/geheim";
 import { aussteller, auszahlung, bestaetigungSpende, lastschriftLauf, type LastschriftLaufDaten, type LastschriftLaufPosten, meldung, organisation, schau, sepaMandat, spende, zahlung, zuwendungsbestaetigung } from "../db/schema";
 import { meldebetraege } from "../services/eintraege";
 import { offeneLastschrift, offeneLastschriftenDesVereins, offenerLauf, sperreKasse, sperreKasseMitPhase } from "../services/kasse";
@@ -35,7 +36,10 @@ async function posten(tx: Tx, organisationId: number, schauId: number, faelligAm
   // Beim Erstellen unter Zeilensperre: ein gleichzeitiger Widerruf wartet und sieht danach die offene Datei, eine
   // gleichzeitige Datei einer anderen Schau sieht danach das schon vergebene Einmal-Mandat.
   const mandatWo = and(eq(sepaMandat.organisationId, organisationId), inArray(sepaMandat.ausstellerId, meldungen.map((m) => m.ausstellerId)));
-  const mandate = !meldungen.length ? [] : opts.sperren ? await tx.select().from(sepaMandat).where(mandatWo).for("update") : await tx.select().from(sepaMandat).where(mandatWo);
+  // Mit Prüfung, ob die Bankdaten in ihrer eigenen Zeile stehen (db/geheim.ts) – sonst zöge die Bank vom falschen Konto ein.
+  const spalten = { ...getTableColumns(sepaMandat), inEigenerZeile: inEigenerZeile([sepaMandat.iban, sepaMandat.kontoinhaber], sepaMandat.id) };
+  const mandate = !meldungen.length ? [] : opts.sperren ? await tx.select(spalten).from(sepaMandat).where(mandatWo).for("update") : await tx.select(spalten).from(sepaMandat).where(mandatWo);
+  verlangeEigeneZeile(mandate, "Lastschrift");
   const abgerechnet = new Set([
     ...(await tx.select({ id: auszahlung.ausstellerId }).from(auszahlung).where(and(eq(auszahlung.schauId, schauId), isNull(auszahlung.storniertAm)))).map((x) => x.id),
     ...((await offenerLauf(tx, schauId))?.posten.map((p) => p.ausstellerId) ?? []),
@@ -157,7 +161,7 @@ export const lastschriftRouter = router({
       if (doppelt) throw fehler("CONFLICT", `Die Mandatsreferenz „${referenz}“ gibt es schon.`);
       const [m] = await tx
         .insert(sepaMandat)
-        .values({ id, organisationId: org, ausstellerId: a.id, referenz, unterschriebenAm: input.unterschriebenAm, wiederkehrend: input.wiederkehrend, iban, kontoinhaber: input.kontoinhaber || `${a.vorname} ${a.nachname}`, erstelltVon: ctx.benutzer.id })
+        .values({ id, organisationId: org, ausstellerId: a.id, referenz, unterschriebenAm: input.unterschriebenAm, wiederkehrend: input.wiederkehrend, ...bankdatenFuer("sepaMandat", id, { iban, kontoinhaber: input.kontoinhaber || `${a.vorname} ${a.nachname}` }), erstelltVon: ctx.benutzer.id })
         .returning({ id: sepaMandat.id });
       await protokolliere(tx, { schauId: a.testSchauId, tabelle: "aussteller", datensatzId: a.id, aktion: "SEPA-Mandat erfasst", neu: { referenz, unterschriebenAm: input.unterschriebenAm, wiederkehrend: input.wiederkehrend, iban: verdeckeIban(iban) }, akteur: ctx });
       return { id: m!.id, referenz };

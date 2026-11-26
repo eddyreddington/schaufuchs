@@ -35,9 +35,9 @@ export const aussteller = pgTable(
      */
     testSchauId: integer("test_schau_id").references(() => schau.id, { onDelete: "cascade" }),
     /** Für die Überweisung von Preisgeld und Verkaufserlös (freiwillig). */
-    // Verschlüsselt gespeichert (db/geheim.ts) – in der Datenbank und in Sicherungen nicht lesbar.
-    iban: geheimText("iban", "aussteller.iban").notNull().default(""),
-    kontoinhaber: geheimText("kontoinhaber", "aussteller.kontoinhaber").notNull().default(""),
+    // Verschlüsselt und an die Zeile gebunden (db/geheim.ts) – schreiben nur über bankdatenFuer().
+    iban: geheimText("iban", "aussteller.iban", { zeile: true }).notNull().default(""),
+    kontoinhaber: geheimText("kontoinhaber", "aussteller.kontoinhaber", { zeile: true }).notNull().default(""),
     /** Löschung verlangt, aber Aufbewahrungsfrist läuft: Daten gesperrt (Art. 18 DSGVO), gelöscht ab loeschenAb. */
     gesperrtAm: ts("gesperrt_am"),
     loeschenAb: date("loeschen_ab"),

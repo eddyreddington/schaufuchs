@@ -137,7 +137,7 @@ describe("Testschau", () => {
     expect((await ausstellerVon(gm.meldungId)).testSchauId).toBeNull();
     expect(await al().schau.testschauVorschau({ id: gemischt.id })).toEqual({ werden: ["Gerd Gemischtdemo"], kopien: ["Rudi Realaussteller"], hindernisse: [] });
     // Bestätigt: Rudis Meldung in der Übung geht auf eine Test-Kopie über (ohne Bankdaten), Rudi selbst bleibt echt.
-    await m.db.update(m.schema.aussteller).set({ iban: "DE89370400440532013000" }).where(m.eq(m.schema.aussteller.id, rudi.id));
+    await m.db.update(m.schema.aussteller).set({ iban: (await import("../db/geheim")).gebunden("aussteller.iban", "DE89370400440532013000", rudi.id) }).where(m.eq(m.schema.aussteller.id, rudi.id));
     const rmUebung = (await m.db.select().from(m.schema.meldung).where(m.eq(m.schema.meldung.schauId, gemischt.id))).find((x) => x.ausstellerId === rudi.id)!;
     expect(await al().schau.alsTestschau({ id: gemischt.id, name: "Übung gemischt", kopien: true })).toEqual({ aussteller: 1, kopien: 1 });
     const kopie = await ausstellerVon(rmUebung.id);

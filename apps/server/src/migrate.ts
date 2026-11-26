@@ -7,11 +7,12 @@ import { schutzEinspielen } from "./db/schutz";
 
 await migrate(db, { migrationsFolder: join(import.meta.dir, "../drizzle") });
 await schutzEinspielen(sql);
-// IBAN, Kontoinhaber, SEPA-Dateien und Zwei-Faktor-Geheimnisse aus der Zeit vor der Verschlüsselung umstellen.
+// IBAN, Kontoinhaber, SEPA-Dateien und Zwei-Faktor-Geheimnisse aus der Zeit vor der Verschlüsselung umstellen; Bankdaten
+// an ihre Zeile binden (Entscheidung 034).
 await pruefeDatenschluessel(db);
 const umgestellt = await verschluesseleBestand(db);
-if (umgestellt.aussteller + umgestellt.benutzer + umgestellt.sepa) {
-  console.log(`Verschlüsselt: ${umgestellt.aussteller} Aussteller, ${umgestellt.benutzer} Benutzer (Zwei-Faktor), ${umgestellt.sepa} SEPA-Dateien.`);
+if (umgestellt.aussteller + umgestellt.benutzer + umgestellt.sepa + umgestellt.mandate) {
+  console.log(`Verschlüsselt: ${umgestellt.aussteller} Aussteller, ${umgestellt.mandate} SEPA-Mandate, ${umgestellt.benutzer} Benutzer (Zwei-Faktor), ${umgestellt.sepa} SEPA-Dateien.`);
 }
 console.log("Datenbank ist aktuell.");
 await sql.end();

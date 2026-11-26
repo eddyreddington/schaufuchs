@@ -1,8 +1,9 @@
 /** Aussteller-Verwaltung des Vereins: anlegen, Stammdaten ändern, Vereinsmitglied (ohne Meldung, unter „Verein und Datenschutz“). */
-import { istEigenerVerein, vereinsSchluessel } from "@schau/domain";
+import { istEigenerVerein, stammdatumImProtokoll, vereinsSchluessel } from "@schau/domain";
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Tx } from "../db/client";
+import { bankdatenFuer } from "../db/geheim";
 import { aussteller, meldung, organisation, schau, sepaLauf } from "../db/schema";
 import { fehler, dbId } from "../trpc";
 import { sperreKasse } from "./kasse";
@@ -37,7 +38,7 @@ const FELDER = ["vorname", "nachname", "strasse", "plz", "ort", "telefon", "emai
  * Im Protokoll steht die IBAN nur gekürzt; Telefon, E-Mail und Kontoinhaber gar nicht – sie werden bei einem
  * Löschwunsch sofort gelöscht, das Protokoll aber erst nach Ablauf der Aufbewahrungsfrist geleert.
  */
-const maske = (k: string, v: string) => (k === "iban" && v ? `…${v.slice(-4)}` : (k === "telefon" || k === "email" || k === "kontoinhaber") && v ? "(angegeben)" : v);
+const maske = stammdatumImProtokoll;
 const mitgliedWert = (m: "auto" | "ja" | "nein") => (m === "ja" ? true : m === "nein" ? false : null);
 const mitgliedText = (m: boolean | null) => (m == null ? "automatisch" : m ? "ja" : "nein");
 
@@ -75,7 +76,9 @@ export async function speichereAussteller(tx: Tx, organisationId: number, input:
         .limit(1);
       if (gleich.length) throw fehler("CONFLICT", `${d.vorname} ${d.nachname} mit PLZ ${d.plz || "(leer)"} gibt es schon. Bitte den vorhandenen Eintrag bearbeiten – oder bewusst ein zweites Mal anlegen.`);
     }
-    const [a] = await tx.insert(aussteller).values({ ...d, mitglied, organisationId }).returning({ id: aussteller.id });
+    // Nummer vorab: die Bankdaten sind an sie gebunden (db/geheim.ts).
+    const [{ id: neu }] = (await tx.execute(sql`select nextval(pg_get_serial_sequence('aussteller', 'id'))::int as id`)) as unknown as [{ id: number }];
+    const [a] = await tx.insert(aussteller).values({ ...d, ...bankdatenFuer("aussteller", neu, d), id: neu, mitglied, organisationId }).returning({ id: aussteller.id });
     await protokolliere(tx, {
       schauId: null,
       tabelle: "aussteller",
@@ -134,7 +137,7 @@ export async function speichereAussteller(tx: Tx, organisationId: number, input:
     }
   }
 
-  await tx.update(aussteller).set({ ...d, mitglied }).where(eq(aussteller.id, a.id));
+  await tx.update(aussteller).set({ ...d, ...bankdatenFuer("aussteller", a.id, d), mitglied }).where(eq(aussteller.id, a.id));
   const alt = Object.fromEntries(aenderungen.map((x) => [x.feld, x.alt]));
   const neu = Object.fromEntries(aenderungen.map((x) => [x.feld, x.neu]));
   const aktion = "Stammdaten geändert (Aussteller-Verwaltung)";

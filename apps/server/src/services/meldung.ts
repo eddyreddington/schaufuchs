@@ -1,8 +1,9 @@
-import { ALTER, EINGANG, gefordertCent, heuteBerlin, istAuslaendisch, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, normalisiereIban, normalisiereRegistriernummer, pruefeGeschlecht, pruefeIban, REGISTRIERNUMMER_HINWEIS, teilschauenLesen, teilschauVon, texte, type Sprache } from "@schau/domain";
+import { ALTER, EINGANG, gefordertCent, stammdatumImProtokoll, heuteBerlin, istAuslaendisch, istJugendlich, JUGEND_ALTERSGRENZE, MELDEARTEN, normalisiereIban, normalisiereRegistriernummer, pruefeGeschlecht, pruefeIban, REGISTRIERNUMMER_HINWEIS, teilschauenLesen, teilschauVon, texte, type Sprache } from "@schau/domain";
 import { and, asc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { zufallsToken } from "../auth";
 import type { Tx } from "../db/client";
+import { bankdatenFuer } from "../db/geheim";
 import { aussteller, auszahlung, bewertung, farbenschlag, gesundheit, katalogeintrag, meldung, preisvergabe, schau, sepaLauf, stiftung, rasse, verkauf } from "../db/schema";
 import { fehler, dbId, kalenderdatum } from "../trpc";
 import { meldebetrag } from "./eintraege";
@@ -290,8 +291,9 @@ async function speichereMeldungInnen(tx: Tx, organisationId: number, input: Meld
         throw fehler("BAD_REQUEST", "Der Aussteller steht in einer offenen SEPA-Datei – erst die Datei buchen oder verwerfen, dann die Bankdaten ändern.");
       }
     }
-    // Was sich an den Stammdaten ändert, steht im Protokoll (Bankdaten nur gekürzt).
-    const maske = (k: string, v: string) => (k === "iban" && v ? `…${v.slice(-4)}` : k === "geburtsdatum" && v ? "(angegeben)" : v);
+    // Was sich an den Stammdaten ändert, steht im Protokoll – IBAN gekürzt, Kontoinhaber, Telefon, E-Mail und
+    // Geburtsdatum nur als „(angegeben)“ (wie in der Aussteller-Verwaltung).
+    const maske = stammdatumImProtokoll;
     for (const k of ["vorname", "nachname", "strasse", "plz", "ort", "telefon", "email", "verein", "registriernummer", "iban", "kontoinhaber", "istPreisrichter", "geburtsdatum"] as const) {
       const alt = String(a[k] ?? "");
       const neu = String(adaten[k] ?? "");
@@ -306,9 +308,11 @@ async function speichereMeldungInnen(tx: Tx, organisationId: number, input: Meld
     }
     if (gesperrt) {
       if (aenderungen.length) throw fehler("BAD_REQUEST", "Die Daten dieses Ausstellers sind gelöscht bzw. gesperrt und lassen sich nicht mehr ändern. Bitte die Seite neu laden.");
-    } else await tx.update(aussteller).set(adaten).where(eq(aussteller.id, ausstellerId));
+    } else await tx.update(aussteller).set({ ...adaten, ...bankdatenFuer("aussteller", ausstellerId, adaten) }).where(eq(aussteller.id, ausstellerId));
   } else {
-    const [a] = await tx.insert(aussteller).values({ ...adaten, organisationId, testSchauId: testSchauIdFuer(s) }).returning();
+    // Nummer vorab: die Bankdaten sind an sie gebunden (db/geheim.ts).
+    const [{ id: neu }] = (await tx.execute(sql`select nextval(pg_get_serial_sequence('aussteller', 'id'))::int as id`)) as unknown as [{ id: number }];
+    const [a] = await tx.insert(aussteller).values({ ...adaten, ...bankdatenFuer("aussteller", neu, adaten), id: neu, organisationId, testSchauId: testSchauIdFuer(s) }).returning();
     ausstellerId = a!.id;
   }
 

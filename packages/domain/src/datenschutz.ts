@@ -200,3 +200,14 @@ export function aufbewahrenBis(verkaeufe: Date[], belege: Date[]): Date | null {
   if (!enden.length) return null;
   return new Date(Math.max(...enden.map((d) => d.getTime())));
 }
+
+/**
+ * Stammdatum, wie es im Änderungsprotokoll steht: die IBAN gekürzt; Kontoinhaber, Telefon, E-Mail und Geburtsdatum nur
+ * als „(angegeben)“ – sie werden bei einem Löschwunsch sofort gelöscht, das Protokoll erst nach der Aufbewahrungsfrist
+ * (und es lässt sich wegen der Hash-Kette nicht nachträglich ändern).
+ */
+export function stammdatumImProtokoll(feld: string, wert: string): string {
+  if (!wert) return wert;
+  if (feld === "iban") return `…${wert.slice(-4)}`;
+  return ["kontoinhaber", "telefon", "email", "geburtsdatum"].includes(feld) ? "(angegeben)" : wert;
+}

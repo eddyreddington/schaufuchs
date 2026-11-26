@@ -408,7 +408,7 @@ describe("Nachbesserung Gesamtprüfung: Kurzadresse, Jugend, Ring, Fristen", () 
   test("Bankdaten und Geburtsdatum bleiben bis 30 Tage nach dem Ende der Reklamationsfrist", async () => {
     const { al, s, meldungId } = await schauMitTieren("Reklamation IBAN", 1);
     const { ausstellerId } = (await al.meldung.get({ id: meldungId })).meldung;
-    await m.db.update(m.schema.aussteller).set({ iban: "DE02120300000000202051" }).where(m.eq(m.schema.aussteller.id, ausstellerId));
+    await m.db.update(m.schema.aussteller).set({ iban: (await import("../db/geheim")).gebunden("aussteller.iban", "DE02120300000000202051", ausstellerId) }).where(m.eq(m.schema.aussteller.id, ausstellerId));
     const abgeschlossen = new Date(Date.UTC(2026, 0, 10));
     await m.db.update(m.schema.schau).set({ phase: "abgeschlossen", abgeschlossenAm: abgeschlossen, reklamationsfrist: "2026-03-01" }).where(m.eq(m.schema.schau.id, s.id));
     const { bereinige } = await import("../services/datenschutz");

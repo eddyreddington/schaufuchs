@@ -158,4 +158,21 @@ describe("Aussteller-Verwaltung", () => {
     expect(geloescht!.mitglied).toBeNull();
     expect((await al().verein.aussteller({ q: "", filter: "geloescht", gruppe: "externe" })).map((x) => x.id)).toContain(weg.id);
   });
+
+  test("über die Meldung geändert: Kontoinhaber, Telefon und E-Mail stehen nicht im Protokoll, die IBAN nur gekürzt", async () => {
+    const { id: schauId } = await al().schau.anlegen({ name: "Maske Schau", ort: "Halle" });
+    const s = await al().schau.get({ id: schauId });
+    const [farbe] = await al().stammdaten.suche({ versionId: s.stammdatenVersionId!, q: "Wyandotten" });
+    const pos = { farbenschlagId: farbe!.id, freitext: "", art: "einzeltier" as const, geschlecht: "1,0", alter: "jung" as const, istAoc: false, istNeuzuechtung: false, eigeneZucht: true, verkaufspreisCent: null };
+    const vorher = await al().verein.ausstellerSpeichern({ daten: { ...leer, vorname: "Mia", nachname: "Maske", telefon: "0170 1112223", email: "mia.alt@test.de", kontoinhaber: "Mia Altkonto" }, trotzdem: true });
+    const [{ ab }] = (await m.sql`select coalesce(max(id), 0)::int as ab from aenderung`) as unknown as [{ ab: number }];
+    const neu = { telefon: "0170 9998887", email: "mia.neu@test.de", iban: "DE89 3704 0044 0532 0130 00", kontoinhaber: "Mia Neukonto" };
+    await al().meldung.speichern({ schauId, aussteller: { ...leer, id: vorher.id, vorname: "Mia", nachname: "Maske", geburtsdatum: null, ...neu }, eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, positionen: [pos] });
+    const p = (await protokoll(vorher.id, ab)).find((x) => x.aktion === "Stammdaten geändert");
+    expect(p).toBeDefined();
+    const text = JSON.stringify([p!.alt, p!.neu]);
+    for (const klar of ["0170 1112223", "0170 9998887", "mia.alt@test.de", "mia.neu@test.de", "Mia Altkonto", "Mia Neukonto", "DE89"]) expect(text).not.toContain(klar);
+    expect(p!.neu).toMatchObject({ telefon: "(angegeben)", email: "(angegeben)", kontoinhaber: "(angegeben)", iban: "…3000" });
+    expect(p!.alt).toMatchObject({ telefon: "(angegeben)", email: "(angegeben)", kontoinhaber: "(angegeben)", iban: "" });
+  });
 });

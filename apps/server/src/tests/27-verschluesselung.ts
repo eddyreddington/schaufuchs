@@ -13,13 +13,14 @@ describe("Verschlüsselung", () => {
     // Was die übrigen Teile des Ablaufs angelegt haben (SEPA-Dateien in Teil 02, Zwei-Faktor in Teil 10), steht verschlüsselt da.
     const [z] = (await m.sql`select (select count(*)::int from sepa_lauf) as sepa, (select count(*)::int from sepa_lauf where not (daten ? 'enc')) as sepa_klar,
       (select count(*)::int from benutzer where totp_geheim is not null and totp_geheim not like 'enc1:%') as totp_klar,
-      (select count(*)::int from aussteller where iban <> '' and iban not like 'enc1:%') as iban_klar`) as unknown as { sepa: number; sepa_klar: number; totp_klar: number; iban_klar: number }[];
+      (select count(*)::int from aussteller where iban <> '' and iban not like 'enc2:%') as iban_klar`) as unknown as { sepa: number; sepa_klar: number; totp_klar: number; iban_klar: number }[];
     expect(z!.sepa).toBeGreaterThan(0);
     expect(z).toMatchObject({ sepa_klar: 0, totp_klar: 0, iban_klar: 0 });
     const a = await al().verein.ausstellerSpeichern({ daten: { ...leer, vorname: "Geheim", nachname: "Konto", iban: "DE89 3704 0044 0532 0130 00", kontoinhaber: "Gerda Geheim" }, trotzdem: true });
     const r = await roh(a.id);
-    expect(r.iban.startsWith("enc1:")).toBe(true);
-    expect(r.kontoinhaber.startsWith("enc1:")).toBe(true);
+    // Bankdaten an Feld und Zeile gebunden: enc2:<Nummer des Ausstellers>:…
+    expect(r.iban.startsWith(`enc2:${a.id}:`)).toBe(true);
+    expect(r.kontoinhaber.startsWith(`enc2:${a.id}:`)).toBe(true);
     expect(JSON.stringify(r)).not.toContain("DE89");
     expect(JSON.stringify(r)).not.toContain("Gerda");
     expect(await al().verein.ausstellerDaten({ id: a.id })).toMatchObject({ iban: "DE89370400440532013000", kontoinhaber: "Gerda Geheim" });
@@ -97,7 +98,7 @@ describe("Verschlüsselung", () => {
     expect(n.aussteller).toBeGreaterThanOrEqual(1);
     expect(n.benutzer).toBeGreaterThanOrEqual(1);
     expect(n.sepa).toBeGreaterThanOrEqual(1);
-    expect((await roh(a.id)).iban.startsWith("enc1:")).toBe(true);
+    expect((await roh(a.id)).iban.startsWith(`enc2:${a.id}:`)).toBe(true);
     const [tb] = (await m.sql`select totp_geheim from benutzer where id = ${b!.id}`) as unknown as { totp_geheim: string }[];
     expect(tb!.totp_geheim.startsWith("enc1:")).toBe(true);
     const [sl] = (await m.sql`select daten::text as t from sepa_lauf where nachricht_id = ${"geheim-alt-" + a.id}`) as unknown as { t: string }[];
@@ -110,7 +111,108 @@ describe("Verschlüsselung", () => {
     const [s2] = await m.db.select({ d: m.schema.sepaLauf.daten }).from(m.schema.sepaLauf).where(m.eq(m.schema.sepaLauf.nachrichtId, "geheim-alt-" + a.id));
     expect((s2!.d as { posten: { iban: string }[] }).posten[0]!.iban).toBe("DE02120300000000202051");
     // Zweiter Lauf: nichts mehr zu tun.
-    expect(await verschluesseleBestand(m.db)).toEqual({ aussteller: 0, benutzer: 0, sepa: 0 });
+    expect(await verschluesseleBestand(m.db)).toEqual({ aussteller: 0, benutzer: 0, sepa: 0, mandate: 0 });
     await m.sql`update benutzer set totp_geheim = ${vorher!.totp_geheim} where id = ${b!.id}`;
+  });
+
+  test("Altbestand verschlüsselt ohne Zeile (enc1) bleibt lesbar und wird beim Start an seine Zeile gebunden", async () => {
+    const { verschluesseleBestand } = await import("../db/geheim-bestand");
+    const g = await import("../db/geheim");
+    // Mit dem Entwicklungsschlüssel und dem Programmstand vor der Zeilenbindung erzeugt – so steht es in jeder
+    // bestehenden Installation (nur das Feld in den Zusatzdaten).
+    const ALT = {
+      iban: "enc1:N33iJIeLpJMfys6xg4pUa09sfRPLeJ5fsV5tKg11S6WzM0zAZk9Bp8ZECvFl2D0A9hs=",
+      kontoinhaber: "enc1:DaCd5qO6wChl+yAOdIar9LfUB0xUAUH+wGi+HY/A97ZXJ3/rZ1hH",
+      mandatIban: "enc1:p99xro3PqWAuz+U3UafG+Z4M0MNnYuQbJJTsRO0UPXJaYHya2Q6IhObiqthiCcl5tb8=",
+      mandatInhaber: "enc1:jvuIVbdsXEIJ1GuHPvVkGNGZoemFlVbFwM3pFTHFl0wIKd7nBmU=",
+    };
+    const a = await al().verein.ausstellerSpeichern({ daten: { ...leer, vorname: "Alt", nachname: "Verschluesselt" }, trotzdem: true });
+    const mandat = await al().lastschrift.mandatAnlegen({ ausstellerId: a.id, unterschriebenAm: "2026-10-01", wiederkehrend: true, iban: "DE89370400440532013000", kontoinhaber: "" });
+    await m.sql`update aussteller set iban = ${ALT.iban}, kontoinhaber = ${ALT.kontoinhaber} where id = ${a.id}`;
+    await m.sql`update sepa_mandat set iban = ${ALT.mandatIban}, kontoinhaber = ${ALT.mandatInhaber} where id = ${mandat.id}`;
+    const erwartet = { iban: "DE02120300000000202051", kontoinhaber: "Alt Bestand" };
+    expect(await al().verein.ausstellerDaten({ id: a.id })).toMatchObject(erwartet);
+    // Ein gebundener Wert aus einer fremden Zeile wird beim Umstellen nicht an diese Zeile gebunden (auch wenn daneben
+    // noch Klartext steht) – sonst wüsche der Neustart eine kopierte IBAN rein.
+    const fremd = await al().verein.ausstellerSpeichern({ daten: { ...leer, vorname: "Fremd", nachname: "Gebunden", iban: "DE89370400440532013000" }, trotzdem: true });
+    const kopie = (await roh(fremd.id)).iban;
+    const c = await al().verein.ausstellerSpeichern({ daten: { ...leer, vorname: "Kopie", nachname: "Gebunden" }, trotzdem: true });
+    await m.sql`update aussteller set iban = ${kopie}, kontoinhaber = 'Kopie Klartext' where id = ${c.id}`;
+    expect((await al().lastschrift.mandate({ ausstellerId: a.id }))[0]!.kontoinhaber).toBe("Alt Mandat");
+
+    g.erlaubeKlartext(false);
+    let n: Awaited<ReturnType<typeof verschluesseleBestand>>;
+    try {
+      // In Produktion gilt ein Bankwert ohne Zeile als von außen geschrieben (er könnte aus einer anderen Zeile stammen).
+      await expect(al().verein.ausstellerDaten({ id: a.id })).rejects.toThrow("nicht an seine Zeile gebunden");
+      n = await verschluesseleBestand(m.db);
+      expect(await al().verein.ausstellerDaten({ id: a.id })).toMatchObject(erwartet);
+      expect((await al().lastschrift.mandate({ ausstellerId: a.id }))[0]!.kontoinhaber).toBe("Alt Mandat");
+    } finally {
+      g.erlaubeKlartext(null);
+    }
+    expect(n.aussteller).toBe(2);
+    expect(n.mandate).toBe(1);
+    expect((await roh(c.id)).iban).toBe(kopie);
+    expect((await roh(c.id)).kontoinhaber.startsWith(`enc2:${c.id}:`)).toBe(true);
+    await m.sql`update aussteller set iban = '' where id = ${c.id}`;
+    const r = await roh(a.id);
+    expect(r.iban.startsWith(`enc2:${a.id}:`)).toBe(true);
+    expect(r.kontoinhaber.startsWith(`enc2:${a.id}:`)).toBe(true);
+    const [mr] = (await m.sql`select iban, kontoinhaber from sepa_mandat where id = ${mandat.id}`) as unknown as { iban: string; kontoinhaber: string }[];
+    expect(mr!.iban.startsWith(`enc2:${mandat.id}:`)).toBe(true);
+    expect(g.entschluessele(mr!.iban, "sepaMandat.iban")).toBe("DE02100500000054540402");
+    expect(await verschluesseleBestand(m.db)).toEqual({ aussteller: 0, benutzer: 0, sepa: 0, mandate: 0 });
+  });
+
+  test("Bankdaten an ihre Zeile gebunden: ein in eine andere Zeile kopierter Geheimtext fällt auf", async () => {
+    const g = await import("../db/geheim");
+    const { id: schauId } = await al().schau.anlegen({ name: "Bindung Schau", ort: "Halle" });
+    const s = await al().schau.get({ id: schauId });
+    await al().schau.gebuehrenSetzen({ schauId, gebuehren: [{ art: "einzeltier", jugend: false, betragCent: 900, befreitPreisrichter: false }] });
+    const [farbe] = await al().stammdaten.suche({ versionId: s.stammdatenVersionId!, q: "Wyandotten" });
+    const pos = { farbenschlagId: farbe!.id, freitext: "", art: "einzeltier" as const, geschlecht: "1,0", alter: "jung" as const, istAoc: false, istNeuzuechtung: false, eigeneZucht: true, verkaufspreisCent: null };
+    const melde = async (vorname: string, iban: string) => {
+      const r = await al().meldung.speichern({ schauId, aussteller: { ...leer, vorname, nachname: "Bindung", geburtsdatum: null, iban, kontoinhaber: `${vorname} Bindung` }, eingang: "papier", istJugend: false, bemerkung: "", zustimmung: true, positionen: [pos] });
+      await al().meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
+      return r;
+    };
+    const opfer = await melde("Olga", "DE89370400440532013000");
+    const anderer = await melde("Theo", "DE02120300000000202051");
+    const ro = await roh(opfer.ausstellerId);
+    const rt = await roh(anderer.ausstellerId);
+    expect(ro.iban.startsWith(`enc2:${opfer.ausstellerId}:`)).toBe(true);
+    const ibanVon = async (id: number) => (await al().kasse.abrechnung({ schauId })).find((z) => z.ausstellerId === id)?.iban;
+    expect(await ibanVon(opfer.ausstellerId)).toBe("DE89370400440532013000");
+
+    // Schreibzugriff auf die Datenbank, aber kein Schlüssel: die eigene IBAN in die Zeile eines anderen kopiert.
+    await m.sql`update aussteller set iban = ${rt.iban}, kontoinhaber = ${rt.kontoinhaber} where id = ${opfer.ausstellerId}`;
+    try {
+      await expect(al().kasse.abrechnung({ schauId })).rejects.toThrow("fremden Zeile");
+      // Die Zeilenangabe umschreiben hilft nicht: sie ist mit verschlüsselt.
+      const umgeschrieben = rt.iban.replace(`enc2:${anderer.ausstellerId}:`, `enc2:${opfer.ausstellerId}:`);
+      expect(() => g.entschluessele(umgeschrieben, "aussteller.iban")).toThrow("DATENSCHLUESSEL");
+    } finally {
+      await m.sql`update aussteller set iban = ${ro.iban}, kontoinhaber = ${ro.kontoinhaber} where id = ${opfer.ausstellerId}`;
+    }
+    expect(await ibanVon(opfer.ausstellerId)).toBe("DE89370400440532013000");
+
+    // Lastschrift: die IBAN eines anderen Mandats kopiert – sonst zöge die Bank vom falschen Konto ein.
+    const mandat = (ausstellerId: number, iban: string) => al().lastschrift.mandatAnlegen({ ausstellerId, unterschriebenAm: "2026-10-01", wiederkehrend: true, iban, kontoinhaber: "" });
+    const mo = await mandat(opfer.ausstellerId, "DE02100500000054540402");
+    const mt = await mandat(anderer.ausstellerId, "DE89370400440532013000");
+    const mroh = async (id: number) => ((await m.sql`select iban from sepa_mandat where id = ${id}`) as unknown as { iban: string }[])[0]!.iban;
+    const io = await mroh(mo.id);
+    const it = await mroh(mt.id);
+    expect(io.startsWith(`enc2:${mo.id}:`)).toBe(true);
+    expect((await al().lastschrift.uebersicht({ schauId })).vorschau).toHaveLength(2);
+    await m.sql`update sepa_mandat set iban = ${io} where id = ${mt.id}`;
+    try {
+      await expect(al().lastschrift.uebersicht({ schauId })).rejects.toThrow("fremden Zeile");
+    } finally {
+      await m.sql`update sepa_mandat set iban = ${it} where id = ${mt.id}`;
+    }
+    expect((await al().lastschrift.uebersicht({ schauId })).vorschau).toHaveLength(2);
+    for (const x of [mo, mt]) await al().lastschrift.mandatWiderrufen({ id: x.id, am: "2026-10-15" });
   });
 });

@@ -138,7 +138,7 @@ describe("Runde 4: Geld, Kasse, Funktionstrennung, Protokoll", () => {
   test("Abschluss bei offener SEPA-Datei nie „trotzdem“; Löschschalter ändert keine Kassendaten", async () => {
     await m.db.update(m.schema.schau).set({ phase: "abrechnung", vereinIban: "DE89370400440532013000" }).where(m.eq(m.schema.schau.id, schauId));
     const r = await melden("Sepa", 1);
-    await m.db.update(m.schema.aussteller).set({ iban: "DE02120300000000202051" }).where(m.eq(m.schema.aussteller.id, r.ausstellerId));
+    await m.db.update(m.schema.aussteller).set({ iban: (await import("../db/geheim")).gebunden("aussteller.iban", "DE02120300000000202051", r.ausstellerId) }).where(m.eq(m.schema.aussteller.id, r.ausstellerId));
     await al.meldung.zahlungErfassen({ meldungId: r.meldungId, betragCent: r.betrag.summeCent + 1000, datum: "2026-10-01", art: "ueberweisung" });
     await al.meldung.statusSetzen({ id: r.meldungId, status: "bestaetigt" });
     await al.kasse.ueberweisungsdateiErstellen({ schauId, ausfuehrungAm: "2030-01-02" });

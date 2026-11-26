@@ -5,6 +5,7 @@
 import { berechneAbrechnung, gefordertCent, erzeugeSepaUeberweisung, imEwr, pruefeIban, type Phase } from "@schau/domain";
 import { and, asc, eq, inArray, isNull, max, sql } from "drizzle-orm";
 import { db, type Tx } from "../../db/client";
+import { inEigenerZeile, verlangeEigeneZeile } from "../../db/geheim";
 import { aenderung, aussteller, auszahlung, katalogeintrag, meldung, schau, verkauf, verkaufZahlungseingang } from "../../db/schema";
 import { ladeEintraege, meldebetrag } from "../../services/eintraege";
 import { offeneLastschrift, offenerLauf, type UeberweisungsLauf } from "../../services/kasse";
@@ -82,6 +83,7 @@ export async function abrechnungListe(schauId: number, ex: Tx = db, opts: { nurA
         ort: aussteller.ort,
         iban: aussteller.iban,
         kontoinhaber: aussteller.kontoinhaber,
+        inEigenerZeile: inEigenerZeile([aussteller.iban, aussteller.kontoinhaber], aussteller.id),
       })
       .from(meldung)
       .innerJoin(aussteller, eq(aussteller.id, meldung.ausstellerId))
@@ -90,6 +92,8 @@ export async function abrechnungListe(schauId: number, ex: Tx = db, opts: { nurA
     offenerLauf(ex, schauId),
     offeneLastschrift(ex, schauId),
   ]);
+  // Überweisungen gehen an diese IBAN: eine aus einer anderen Zeile kopierte fällt hier auf (db/geheim.ts).
+  verlangeEigeneZeile(meldungen, "Abrechnung");
   const alleVerkaeufe = await ex
     .select({ v: verkauf, schauId: katalogeintrag.schauId, eingang: verkaufZahlungseingang.id })
     .from(verkauf)
