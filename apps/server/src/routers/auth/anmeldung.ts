@@ -7,6 +7,7 @@ import { config } from "../../config";
 import { db } from "../../db/client";
 import { benutzer, organisation, schau, sitzung } from "../../db/schema";
 import { protokolliere } from "../../services/protokoll";
+import { einrichtungsCode } from "../../services/einrichtungscode";
 import { BEREITS_EINGERICHTET, ersteinrichtungAngaben, richteEinMitPasswort } from "../../services/ersteinrichtung";
 import { beendeZweiterSchritt, findeNotfallcode, ladeZweiterSchritt, NOTFALL_FORM, pruefeTotp, starteZweiterSchritt, zweiterSchrittFehlgeschlagen } from "../../services/zweifaktor";
 import { benutzerProcedure, fehler, publicProcedure } from "../../trpc";
@@ -51,7 +52,7 @@ export const anmeldung = {
       richter: ctx.richter ? { ...ctx.richter, slug: richterSlug } : null,
       organisationName,
       appName: config.appName,
-      einrichtungsCodeNoetig: !!config.einrichtungsCode,
+      einrichtungsCodeNoetig: !!einrichtungsCode(),
       /** Administrator ohne 2FA: die Oberfläche führt zuerst zur Einrichtung. */
       zweiFaktorPflicht: !!ctx.benutzer?.zweiFaktorPflicht,
       /** Automatische Abmeldung nach so vielen Minuten ohne Eingabe (Büro bzw. Tablet). */
@@ -64,7 +65,8 @@ export const anmeldung = {
     .input(ersteinrichtungAngaben.extend({ passwort, code: z.string().max(200).default("") }))
     .mutation(async ({ ctx, input }) => {
       const erfolg = bremse.versuch([`ip:${ctx.ip}`]);
-      if (config.einrichtungsCode && !gleich(input.code, config.einrichtungsCode)) throw fehler("FORBIDDEN", "Der Einrichtungscode stimmt nicht.");
+      const code = einrichtungsCode();
+      if (code && !gleich(input.code, code)) throw fehler("FORBIDDEN", "Der Einrichtungscode stimmt nicht.");
       erfolg();
       const b = await richteEinMitPasswort(input);
       if (!b) throw fehler("FORBIDDEN", BEREITS_EINGERICHTET);

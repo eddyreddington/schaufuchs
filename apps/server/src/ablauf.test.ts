@@ -123,3 +123,4 @@ import "./tests/88-gleichzeitig-gesamt";
 import "./tests/89-verklemmungen";
 import "./tests/90-meldung-stammsatz-geld";
 import "./tests/91-anmeldung-haertung";
+import "./tests/92-betrieb-gesund-einrichtung";

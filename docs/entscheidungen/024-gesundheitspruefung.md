@@ -42,3 +42,18 @@ Weil `migrationenOffen` wie das Einspielen nur nach `when` zählt, muss das Jour
 `when` jünger als bei der Migration davor, je Eintrag eine SQL-Datei und eine Kette der Schnappschüsse.
 `migrationsverzeichnisFehler()` prüft das im Servertest `62-gesundheitspruefung`, so fällt eine nach einem Merge nur
 umbenannte Migration in `bun run pruefen` auf (Vorgehen beim Merge: `docs/architektur.md`, Datenbank).
+
+**Nachtrag (26.11.2026): Angaben nur direkt oder mit Token.** Über den Proxy antwortet `/api/gesund` nur noch mit
+`{ "ok": true }` (bzw. Status 503) – ohne Version, Sicherung, Migrationen, Schautage und `nurLesen`. Eine öffentlich
+lesbare Version zeigt jedem, welche Installation noch nicht aktualisiert ist, und das Alter der Sicherung, wann sie
+ausfällt. Die volle Antwort gibt es weiter
+- **direkt am Container** (keine der Kopfzeilen `X-Forwarded-For`, `Forwarded`, `X-Real-IP`, `X-Forwarded-Proto`,
+  `X-Forwarded-Host`): Docker-Prüfung, `install.sh`, Befehl `schaufuchs` und Überwachungen auf demselben Rechner
+  fragen so. Besucher aus dem Netz kommen immer über den Proxy (Caddy setzt `X-Forwarded-For` selbst; die App ist nur lokal
+  gebunden). Wer die App ohne Proxy direkt ins Netz stellt (`APP_BIND=0.0.0.0`), gibt die Angaben dort weiter preis;
+- **mit Token**: `GESUND_TOKEN` in der `.env` setzen und `Authorization: Bearer <Token>` mitschicken (z. B. Uptime Kuma
+  über die öffentliche Adresse).
+
+`ok` und Status bleiben für alle gleich; über den Proxy fallen auch die Abfragen der Zusatzangaben weg. Wer viele
+Installationen betreibt und sie direkt am Port abfragt, muss nichts ändern; wer über einen Proxy abfragt, setzt
+`GESUND_TOKEN`.

@@ -20,7 +20,8 @@ import { auskunftPdf } from "./pdf/auskunft";
 import { appRouter } from "./router";
 import { ladeAuskunft, ladeVereinsangaben, starteBereinigung } from "./services/datenschutz";
 import { kurzerFehler } from "./services/fehlertext";
-import { GESUND_UNBEKANNT, gesundAngaben } from "./services/gesundheitspruefung";
+import { einrichtungsCodeMelden } from "./services/einrichtungscode";
+import { GESUND_UNBEKANNT, gesundAngaben, gesundAngabenErlaubt } from "./services/gesundheitspruefung";
 import { starteMailversand } from "./services/post";
 import { starteTerminabruf } from "./services/termine";
 import { briefDateien, druckvorlageDateien } from "./datei-druckvorlage";
@@ -75,15 +76,19 @@ if (config.production && !process.env.PUBLIC_URL) {
 // Gesundheitsprüfung (Docker, Überwachung): Server und Datenbank antworten; dazu Sicherung, Migrationen und Schautage
 // (Entscheidung 024). Fehlen nur diese Angaben, bleibt die Prüfung bestanden – sie sind Zusatz, kein Lebenszeichen.
 // Fristen: 3 s für die Datenbank, 1 s für die Zusatzangaben – zusammen unter den 5 s der Docker-Prüfung (Dockerfile).
+// Über den Proxy (Besucher aus dem Netz) nur ok; Version und Zusatzangaben nur direkt (Docker, Befehl schaufuchs)
+// oder mit GESUND_TOKEN (Nachtrag zu 024).
 const mitFrist = <T>(p: Promise<T>, ms: number) =>
   // bleibt deutsch: nur für die Gesundheitsprüfung
   Promise.race([p, new Promise<never>((_, nein) => setTimeout(() => nein(new Error("Zeitüberschreitung")), ms))]);
 app.get("/api/gesund", async (c) => {
+  const alles = gesundAngabenErlaubt((name) => c.req.header(name));
   try {
     await mitFrist(db.execute(sql`select 1`), 3000);
   } catch {
     return c.json({ ok: false, fehler: "Datenbank antwortet nicht" }, 503);
   }
+  if (!alles) return c.json({ ok: true });
   const angaben = await mitFrist(gesundAngaben(), 1000).catch((e: unknown) => {
     console.error("[gesund] Zusatzangaben fehlen:", e instanceof Error ? e.message : e);
     return GESUND_UNBEKANNT;
@@ -271,6 +276,7 @@ if (import.meta.main) {
   starteBereinigung();
   starteMailversand();
   starteTerminabruf();
+  einrichtungsCodeMelden().catch((e: unknown) => console.error("[einrichtung]", e instanceof Error ? e.message : e));
 }
 
 // idleTimeout: große PDFs (Katalog, B-Bögen) brauchen bei vielen Tieren länger als Buns Standard von 10 s.

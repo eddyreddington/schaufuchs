@@ -5,6 +5,7 @@
  */
 import { heuteBerlin, offeneMigrationen, schautageLaufen } from "@schau/domain";
 import { and, eq, ne, sql } from "drizzle-orm";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { db } from "../db/client";
@@ -19,6 +20,25 @@ export interface GesundAngaben {
   migrationenOffen: number | null;
   /** Läuft gerade eine Schau (Einlieferung bis letzter Öffnungstag)? null = nicht feststellbar. */
   schautage: boolean | null;
+}
+
+/** Kopfzeilen, die ein Reverse-Proxy (Caddy, nginx) setzt. */
+const PROXY_KOPF = ["x-forwarded-for", "forwarded", "x-real-ip", "x-forwarded-proto", "x-forwarded-host"];
+
+/**
+ * Darf die Antwort Version und Zusatzangaben enthalten (Nachtrag zu Entscheidung 024)? Ja, wenn die Anfrage nicht über
+ * einen Proxy kam – die Docker-Prüfung und der Befehl schaufuchs fragen den Container direkt – oder das
+ * Token aus GESUND_TOKEN mitbringt (`Authorization: Bearer …`, für Überwachung von außen). Besucher aus dem Netz
+ * kommen immer über den Proxy; der setzt X-Forwarded-For selbst, sie können es nicht entfernen.
+ */
+export function gesundAngabenErlaubt(kopf: (name: string) => string | undefined): boolean {
+  const token = process.env.GESUND_TOKEN ?? "";
+  if (token) {
+    const mit = /^Bearer\s+(.+)$/i.exec(kopf("authorization") ?? "")?.[1]?.trim() ?? "";
+    const hash = (s: string) => createHash("sha256").update(s).digest();
+    if (mit && timingSafeEqual(hash(mit), hash(token))) return true;
+  }
+  return !PROXY_KOPF.some((name) => kopf(name) !== undefined);
 }
 
 /** Antwort, wenn die Angaben nicht zu ermitteln sind (Fehler, Zeitüberschreitung): gleiche Form, alles unbekannt. */
