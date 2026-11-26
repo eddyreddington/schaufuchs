@@ -46,7 +46,7 @@ schritt "Sprachen (Reste, Deutsch unverändert, Servermeldungen)"
 bun test scripts/sprachen-scan.test.ts
 
 schritt "Updates (Platz prüfen, aufräumen, zurücknehmen)"
-bun test scripts/update-platz.test.ts
+bun test scripts/update-platz.test.ts scripts/betrieb-skripte.test.ts
 
 schritt "Oberfläche (Reiter aus dem Anker, Hallenplan laden und speichern)"
 (cd apps/web && bun test src)

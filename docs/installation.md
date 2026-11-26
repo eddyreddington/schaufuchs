@@ -272,12 +272,13 @@ Danach prüfen, ob die Absicherung aus Schritt 5 greift (ab SchauFUCHS 1.2.1): `
 
 ## Schritt 7 – Notfallblatt sichern (wichtig!)
 
-Der Installer hat in Ihrem Benutzerordner die Datei `schaufuchs-notfallblatt.txt` mit zwei Schlüsseln angelegt
-(bei einer Installation als root: `/root/schaufuchs-notfallblatt.txt`). Ohne sie lässt sich nach einem Ausfall keine
-Sicherung zurückspielen.
+Der Installer zeigt am Ende das Notfallblatt mit zwei Schlüsseln an. Ohne sie lässt sich nach einem Ausfall keine
+Sicherung zurückspielen. Bestätigen Sie mit `ja`, dass Sie es abgelegt haben, löscht er die Datei gleich wieder. Sonst
+liegt sie unter `/opt/schaufuchs/notfallblatt.txt`, nur mit `sudo` lesbar – bewusst nicht in Ihrem Benutzerordner, dem
+auch die Sicherungen gehören ([Entscheidung 034](entscheidungen/034-betrieb-pruefsummen-und-schluessel.md)):
 
 ```bash
-cat ~/schaufuchs-notfallblatt.txt
+sudo cat /opt/schaufuchs/notfallblatt.txt
 ```
 
 Den Text in den Passwortmanager des Vereins kopieren **oder** ausdrucken. Ergänzen Sie dabei die Zeilen zum Ausfüllen:
@@ -295,8 +296,11 @@ Den Text in den Passwortmanager des Vereins kopieren **oder** ausdrucken. Ergän
 Das Blatt in den Vereinsunterlagen ablegen, wo es im Notfall jemand findet. Danach die Datei auf dem Rechner löschen:
 
 ```bash
-rm ~/schaufuchs-notfallblatt.txt
+sudo rm /opt/schaufuchs/notfallblatt.txt
 ```
+
+Solange ein Notfallblatt auf dem Server liegt (auch `~/schaufuchs-notfallblatt.txt` von Installationen vor 034),
+warnen `sudo schaufuchs status`, `update` und `pruefen`.
 
 ## Schritt 8 – Verein einrichten
 
@@ -361,7 +365,9 @@ Anmelden aus dem Vereinsnetz mit `ssh verwalter@192.0.2.20`. Alle `schaufuchs`-B
   Unterbrechung). Nicht am Schautag und nicht während der Bewertung. Läuft die neue Version nicht, bringt
   `sudo schaufuchs zuruecknehmen` die alte Version mit der Sicherung von vor dem Update zurück – Eingaben seit dem Update
   gehen dabei verloren. Das Update braucht mindestens 3 GB freien Platz und bricht sonst ab, bevor es etwas ändert.
-  Danach behält es nur die neue und die vorige Version, ältere löscht es (ab 1.12.1).
+  Danach behält es nur die neue und die vorige Version, ältere löscht es (ab 1.12.1). Dateien und Programme prüft es
+  gegen die Prüfsummen des Release; weicht etwas ab, bricht es ab, bevor es etwas ändert – dann nicht wiederholen,
+  sondern melden ([Entscheidung 034](entscheidungen/034-betrieb-pruefsummen-und-schluessel.md)).
 - **Betriebssystem:** Sicherheitsupdates kommen automatisch (Schritt 5.3). Einmal im Monat, nicht am Schautag, auch die
   übrigen Updates einspielen; dazu gehört Docker, das dabei SchauFUCHS kurz neu startet:
 
@@ -486,6 +492,8 @@ Datei und startet SchauFUCHS nach dem Speichern neu.
 | `APP_SPEICHER` | Arbeitsspeicher-Grenze der Anwendung (Vorgabe `2g`) |
 | `ZWEI_FAKTOR_PFLICHT` | Nur im Notfall `0` (siehe [betrieb.md](betrieb.md)) – sonst nicht eintragen |
 | `DATENSCHLUESSEL`, `POSTGRES_PASSWORD`, `BACKUP_EMPFAENGER`, `EINRICHTUNG_CODE` | Vom Installer erzeugt – nicht ändern. Sicherungs- und Datenschlüssel stehen auf dem Notfallblatt (Schritt 7). |
+| `SCHAUFUCHS_DIGEST_APP`, `SCHAUFUCHS_DIGEST_BACKUP` (und `…_VORHER_…`) | Von Installer und Update gesetzt: Digest der geprüften Programme, für `zuruecknehmen` – nicht ändern. |
+| `GESUND_TOKEN` | Leer lassen, außer eine Überwachung fragt `https://…/api/gesund` von außen ab und braucht Version und Sicherungsalter: dann einen langen Zufallswert setzen und als `Authorization: Bearer …` mitschicken. |
 
 ## Zum Ausprobieren: auf dem Laptop (Mac oder Windows)
 
@@ -522,7 +530,8 @@ ohne Netz (App auf dem Startbildschirm) nicht. Für eine Schau nehmen Sie den Re
    ```
 
 4. Als Adresse `localhost` eingeben. SchauFUCHS ist dann im Windows-Browser unter `https://localhost` erreichbar. Das
-   Notfallblatt liegt in Ubuntu unter `~/schaufuchs-notfallblatt.txt`, die Befehle laufen mit `sudo schaufuchs …`.
+   Notfallblatt liegt in Ubuntu unter `/opt/schaufuchs/notfallblatt.txt` (`sudo cat …`), die Befehle laufen mit
+   `sudo schaufuchs …`.
 
 Beim ersten Öffnen warnt der Browser vor dem selbst ausgestellten Zertifikat; für `localhost` ist das unbedenklich.
 Docker Desktop muss laufen, damit SchauFUCHS erreichbar ist.

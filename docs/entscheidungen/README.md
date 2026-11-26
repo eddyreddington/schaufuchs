@@ -40,3 +40,4 @@ Entscheidung bekommt eine neue Datei; die alte erhält „Stand: ersetzt durch N
 | [034](034-online-meldung-an-vorhandenen-stammsatz.md) | Online-Meldung an vorhandenen Stammsatz erst nach Bestätigung; online nur Meldegeld per Lastschrift |
 | [035](035-bankdaten-an-zeile-gebunden.md) | Bankdaten an ihre Zeile gebunden, Einladungslinks verschlüsselt im Postausgang |
 | [036](036-anmeldung-gehaertet.md) | Anmeldung gehärtet: Gerätekennzeichen, Langzeitgrenze für Codes, Notfallcodes mit Schlüssel, SMTP nur mit TLS |
+| [037](037-betrieb-pruefsummen-und-schluessel.md) | Betrieb: Prüfsummen und Digests, Notfallblatt, Einrichtungscode im Selbstbau |

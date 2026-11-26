@@ -6,7 +6,7 @@
 #   Mac:                    curl -fsSL https://raw.githubusercontent.com/eddyreddington/schaufuchs/main/deploy/install.sh | sh
 #
 # Linux: als eigener Benutzer mit sudo aufrufen, nicht als root angemeldet (Anleitung: docs/installation.md). Dieser
-# Benutzer bekommt das Notfallblatt in seinen Ordner und darf die verschlüsselten Sicherungen lesen und kopieren.
+# Benutzer darf die verschlüsselten Sicherungen lesen und kopieren; das Notfallblatt liest er nur mit sudo.
 #
 # Fragt Adresse und E-Mail, installiert bei Bedarf Docker, erzeugt alle Schlüssel, startet SchauFUCHS mit HTTPS und
 # zeigt am Ende den Einrichtungscode und das Notfallblatt (Schlüssel zum Aufheben).
@@ -25,7 +25,8 @@ set -eu
 KONTO="eddyreddington"
 VERSION="${SCHAUFUCHS_VERSION:-1.21.7}"
 IMAGE="${SCHAUFUCHS_IMAGE:-ghcr.io/$KONTO/schaufuchs}"
-QUELLE="${SCHAUFUCHS_QUELLE:-https://raw.githubusercontent.com/$KONTO/schaufuchs/v$VERSION}"
+STANDARD_QUELLE="https://raw.githubusercontent.com/$KONTO/schaufuchs/v$VERSION"
+QUELLE="${SCHAUFUCHS_QUELLE:-$STANDARD_QUELLE}"
 SYSTEM="$(uname -s)"
 # Mac: im eigenen Benutzerordner, ohne root (Docker Desktop/OrbStack laufen als Benutzer).
 if [ "$SYSTEM" = "Darwin" ]; then ZIEL="${SCHAUFUCHS_ZIEL:-$HOME/SchauFUCHS}"; else ZIEL="${SCHAUFUCHS_ZIEL:-/opt/schaufuchs}"; fi
@@ -122,6 +123,43 @@ hole deploy/Caddyfile "$ZIEL/Caddyfile"
 hole deploy/schaufuchs "$ZIEL/schaufuchs"
 hole scripts/wiederherstellen.sh "$ZIEL/scripts/wiederherstellen.sh"
 chmod 755 "$ZIEL/schaufuchs"
+
+# Prüfsummen des Release (Entscheidung 034): Dateien hier, Digests der Programme unten. Releases ohne (404): ungeprüft.
+pruefsumme() { if command -v sha256sum > /dev/null 2>&1; then sha256sum "$1"; else shasum -a 256 "$1"; fi | awk '{ print $1 }'; }
+eintrag() { awk -v n="$2" '$2 == n { print $1; exit }' "$1"; }
+summen=$(mktemp)
+trap 'rm -f "$summen"' EXIT
+case "$QUELLE" in
+  "$STANDARD_QUELLE") code=$(curl -sSL -w '%{http_code}' -o "$summen" "https://github.com/$KONTO/schaufuchs/releases/download/v$VERSION/SHA256SUMS" 2> /dev/null || true) ;;
+  http*) code=$(curl -sSL -w '%{http_code}' -o "$summen" "$QUELLE/SHA256SUMS" 2> /dev/null || true) ;;
+  *) if [ -f "$QUELLE/SHA256SUMS" ]; then cp "$QUELLE/SHA256SUMS" "$summen" && code=200; else code=404; fi ;;
+esac
+digest_app=""
+digest_backup=""
+case "$code" in
+  200)
+    for d in deploy/docker-compose.yml deploy/Caddyfile deploy/schaufuchs scripts/wiederherstellen.sh; do
+      case "$d" in deploy/*) datei="$ZIEL/${d#deploy/}" ;; *) datei="$ZIEL/$d" ;; esac
+      [ "$(pruefsumme "$datei")" = "$(eintrag "$summen" "$d")" ] || fehler "Prüfsumme von $d stimmt nicht mit dem Release $VERSION überein. Abgebrochen."
+    done
+    digest_app=$(eintrag "$summen" image/schaufuchs)
+    digest_backup=$(eintrag "$summen" image/schaufuchs-backup)
+    printf '%s\n%s\n' "$digest_app" "$digest_backup" | grep -Eqvx 'sha256:[0-9a-f]{64}' && fehler "Prüfsummen des Release $VERSION unvollständig. Abgebrochen."
+    ;;
+  404) echo "Hinweis: Release $VERSION ohne Prüfsummen (älteres Release) – Dateien und Programme ungeprüft." ;;
+  *) fehler "Prüfsummen des Release $VERSION nicht ladbar (HTTP $code). Abgebrochen." ;;
+esac
+# Sind die geladenen Programme die des Release (gleicher Digest)? Ohne Prüfsummen: nichts zu prüfen.
+programm_pruefen() {
+  [ -n "$2" ] || return 0
+  docker image inspect -f '{{range .RepoDigests}}{{println .}}{{end}}' "$1" 2> /dev/null | grep -qxF "${1%:*}@$2" \
+    || fehler "Programm $1 in der Registry weicht vom Release ab (anderer Digest). Abgebrochen – bitte melden."
+}
+programme_pruefen() {
+  case "$IMAGE" in */*) ;; *) return 0 ;; esac
+  programm_pruefen "$IMAGE:$VERSION" "$digest_app"
+  programm_pruefen "$IMAGE-backup:$VERSION" "$digest_backup"
+}
 # Befehl „schaufuchs“ überall aufrufbar – auf dem Mac nur, wenn /usr/local/bin ohne root beschreibbar ist.
 if [ "$SYSTEM" = "Linux" ] || [ -w /usr/local/bin ]; then
   ln -sf "$ZIEL/schaufuchs" /usr/local/bin/schaufuchs
@@ -135,7 +173,8 @@ if [ "$SYSTEM" = "Linux" ]; then befehl="sudo $befehl"; fi
 echo
 echo "Lade die Programme (einmalig einige hundert MB) …"
 export SCHAUFUCHS_IMAGE="$IMAGE" SCHAUFUCHS_VERSION="$VERSION"
-case "$IMAGE" in */*) docker pull -q "$IMAGE-backup:$VERSION" < /dev/null > /dev/null ;; esac
+case "$IMAGE" in */*) docker pull -q "$IMAGE-backup:$VERSION" < /dev/null > /dev/null && docker pull -q "$IMAGE:$VERSION" < /dev/null > /dev/null ;; esac
+programme_pruefen
 schluesselpaar=$(docker run --rm --entrypoint age-keygen "$IMAGE-backup:$VERSION" < /dev/null 2> /dev/null) || fehler "Sicherungsschlüssel ließ sich nicht erzeugen."
 sicherung_privat=$(printf '%s\n' "$schluesselpaar" | grep '^AGE-SECRET-KEY-')
 sicherung_oeffentlich=$(printf '%s\n' "$schluesselpaar" | sed -n 's/^# public key: //p')
@@ -150,6 +189,8 @@ cat > "$ZIEL/.env" << ENV
 # Nach Änderungen: schaufuchs neustart
 SCHAUFUCHS_IMAGE=$IMAGE
 SCHAUFUCHS_VERSION=$VERSION
+SCHAUFUCHS_DIGEST_APP=$digest_app
+SCHAUFUCHS_DIGEST_BACKUP=$digest_backup
 SCHAUFUCHS_DOMAIN=$domain
 ACME_EMAIL=$email
 PUBLIC_URL=$oeffentlich
@@ -175,6 +216,7 @@ umask 022
 echo "Starte SchauFUCHS …"
 cd "$ZIEL"
 case "$IMAGE" in */*) docker compose pull -q < /dev/null ;; esac
+programme_pruefen
 docker compose up -d < /dev/null
 printf 'Warte auf den Start '
 bereit=""
@@ -190,15 +232,12 @@ echo
 [ -n "$bereit" ] || fehler "SchauFUCHS ist nicht gestartet. Hinweise: $befehl logs"
 
 # ── Notfallblatt ──────────────────────────────────────────────────────────
-# Linux: im Ordner des Benutzers, der sudo aufgerufen hat (sonst root); Mac: im Installationsordner. Nur für den
-# Besitzer lesbar.
-if [ "$SYSTEM" = "Darwin" ]; then
-  blatt="$ZIEL/notfallblatt.txt"
-elif [ -n "$benutzer" ]; then
-  blatt="$(getent passwd "$benutzer" | cut -d: -f6)/schaufuchs-notfallblatt.txt"
-else
-  blatt=/root/schaufuchs-notfallblatt.txt
-fi
+# Im Installationsordner, nur für den Besitzer lesbar – unter Linux root. NICHT beim Benutzer, dem die Sicherungen
+# gehören: Wer dessen Konto übernimmt, könnte sonst mit dem Sicherungsschlüssel alle Sicherungen öffnen (Entscheidung
+# 034). Lesen nur mit sudo; nach dem Ablegen löschen.
+blatt="$ZIEL/notfallblatt.txt"
+lesen="cat"
+[ "$SYSTEM" != "Linux" ] || lesen="sudo cat"
 umask 077
 cat > "$blatt" << BLATT
 SchauFUCHS – Notfallblatt für $domain (erstellt $(date '+%d.%m.%Y'))
@@ -223,7 +262,6 @@ Zum Ausfüllen von Hand (Anleitung: docs/installation.md, Schritt „Notfallblat
   Sicherungen außer Haus liegen bei:                 ______________________________________________
 BLATT
 umask 022
-[ -z "$benutzer" ] || chown "$benutzer_uid:$benutzer_gid" "$blatt"
 
 echo
 fett "SchauFUCHS läuft."
@@ -232,11 +270,23 @@ echo "  1. Öffnen Sie $oeffentlich"
 echo "  2. Legen Sie Verein und ersten Administrator an. Einrichtungscode: $einrichtung"
 echo
 fett "  WICHTIG – Notfallblatt:"
-echo "  Die Schlüssel für Sicherungen stehen in $blatt"
-echo "  Bitte ausdrucken oder im Passwortmanager ablegen und die Datei danach löschen:"
-echo "      cat $blatt      (anzeigen)"
-echo "      rm $blatt       (danach löschen)"
 echo "  Ohne diese Schlüssel lässt sich keine Sicherung zurückspielen."
+# Am Bildschirm (nicht bei SCHAUFUCHS_JA): Blatt zeigen und nach dem Ablegen gleich löschen.
+if [ "${SCHAUFUCHS_JA:-0}" != "1" ] && (: < /dev/tty) 2> /dev/null; then
+  echo
+  cat "$blatt"
+  echo
+  if [ "$(frage "  Ausgedruckt oder im Passwortmanager abgelegt? Dann wird die Datei gelöscht. [ja/nein]")" = "ja" ]; then
+    rm -f "$blatt"
+    echo "  Notfallblatt gelöscht."
+  fi
+fi
+if [ -f "$blatt" ]; then
+  echo "  Die Schlüssel für Sicherungen stehen in $blatt"
+  echo "  Bitte ausdrucken oder im Passwortmanager ablegen und die Datei danach löschen:"
+  echo "      $lesen $blatt      (anzeigen)"
+  echo "      ${lesen%cat}rm $blatt       (danach löschen)"
+fi
 echo
 if [ "$domain" = "localhost" ]; then
   echo "  Der Browser warnt einmal vor dem selbst ausgestellten Zertifikat – für localhost unbedenklich."

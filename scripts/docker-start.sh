@@ -21,6 +21,13 @@ if [ -z "$(wert BACKUP_EMPFAENGER)" ] && [ "$(wert BACKUP_UNVERSCHLUESSELT)" != 
   echo "BACKUP_EMPFAENGER fehlt in der .env (öffentlicher age-Schlüssel, siehe .env.example) – Update abgebrochen, nichts verändert." >&2
   exit 1
 fi
+# Nur Hinweise, kein Abbruch (Entscheidung 034).
+if [ -n "$(find .env -perm -004 2>/dev/null)" ]; then
+  echo "Hinweis: Die .env ist für alle Benutzer dieses Rechners lesbar (DATENSCHLUESSEL, Passwörter) – bitte: chmod 600 .env" >&2
+fi
+if [ -z "$(wert EINRICHTUNG_CODE | tr -d '"')" ]; then
+  echo "Hinweis: EINRICHTUNG_CODE ist leer. Vor der Ersteinrichtung steht der Code für die Einrichtung im Browser nach dem Start im Log: docker compose logs app | grep Einrichtungscode" >&2
+fi
 # Platz: Jeder Neubau hinterlässt Build-Cache und ältere Programme ohne Namen. Ohne Aufräumen läuft die Platte voll,
 # und dann bleibt die Datenbank stehen (sie kann nicht mehr schreiben). Deshalb vor dem Bau prüfen und nach dem Start
 # aufräumen. Gemessen wird dort, wo Docker seine Daten ablegt (unter Linux /var/lib/docker; mit Docker Desktop oder
