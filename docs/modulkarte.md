@@ -77,7 +77,7 @@ Tests: `briefvorlage.test.ts`
 - `briefVorlageLesen()` – Gespeicherten Wert in eine gültige Vorlage bringen; Fehlendes gilt als Vorgabe.
 - Typen: `BriefPlatzhalter`, `BriefVorlage`
 
-### datenschutz.ts (202 Z.)
+### datenschutz.ts (213 Z.)
 Datenschutz und Anbieterkennzeichnung: Speicherfristen und Mustertexte für Impressum und Datenschutzhinweise.
 
 - `AUFBEWAHRUNG_VERKAUF_JAHRE` – Verkaufsaufzeichnungen (Herkunft, Bestimmung, Registriernummer) für das Veterinäramt.
@@ -94,6 +94,7 @@ Datenschutz und Anbieterkennzeichnung: Speicherfristen und Mustertexte für Impr
 - `datenschutzAbschnitte()` – Vollständige Datenschutzhinweise.
 - `alsText()` – Abschnitte als schlichter Text, z. B. um das Muster als eigenen Text zu übernehmen.
 - `aufbewahrenBis()` – Bis wann die Daten eines Ausstellers aufbewahrt werden müssen: Verkaufsaufzeichnungen ab Verkauf, Belege (Zahlungen, Auszahlungen, Kaufbelege) bis …
+- `stammdatumImProtokoll()` – Stammdatum, wie es im Änderungsprotokoll steht: die IBAN gekürzt; Kontoinhaber, Telefon, E-Mail und Geburtsdatum nur als „(angegeben)“ – sie werden …
 - Typen: `Vereinsangaben`, `Textabschnitt`
 
 ### datum.ts (21 Z.)
@@ -737,7 +738,7 @@ Tests: `kommende-schauen.test.ts`
 - `gleicheAb()` – Vergleicht die gespeicherten Termine eines Abos mit dem neu abgerufenen Kalender.
 - Typen: `TerminEbene`, `KommenderTermin`, `KommendeWahl`, `GespeicherterTermin`, `Abgleich`
 
-### kontoauszug.ts (291 Z.)
+### kontoauszug.ts (353 Z.)
 Kontoauszug-Import (Entscheidung 023): Der Kassierer lädt den Auszug aus dem Onlinebanking hoch (camt.053 oder Bank-CSV); SchauFUCHS liest die Guts …
 Tests: `kontoauszug.test.ts`
 
@@ -931,26 +932,26 @@ Tests: `spenden.test.ts`
 - `sammelbestaetigung()` – Sammelbestätigung eines Kalenderjahres: alle Geldzuwendungen des Spenders aus diesem Jahr, die bestätigt werden dürfen (Sachzuwendungen nie – sie b …
 - Typen: `SpendeArt`, `SpendeWeg`, `SachHerkunft`, `Sachangaben`, `SpendeFuerBestaetigung`, `SpenderAnschrift`
 
-### cs.ts (284 Z.)
+### cs.ts (289 Z.)
 
 - `cs`
 
-### de.ts (290 Z.)
+### de.ts (295 Z.)
 
 - `de` – Texte der Seiten für Aussteller (öffentliche Schauseite, Online-Meldung, Meine Meldung, Ergebnisse) und der Mails an Aussteller – Deutsch ist die G …
 
-### en.ts (278 Z.)
+### en.ts (283 Z.)
 
 - `en`
 
-### fr.ts (278 Z.)
+### fr.ts (283 Z.)
 
 - `fr`
 
 ### index.ts (79 Z.)
 Sammelt alle Exporte (`export * from …`).
 
-### nl.ts (278 Z.)
+### nl.ts (283 Z.)
 
 - `nl`
 
@@ -1020,7 +1021,7 @@ Sammelt alle Exporte (`export * from …`).
 - `aussteller`
 - `mandate`
 
-### meldung.ts (114 Z.)
+### meldung.ts (122 Z.)
 
 - `meldung`
 
@@ -1068,7 +1069,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kontoauszug`
 
-### server-kasse-lastschrift.ts (82 Z.)
+### server-kasse-lastschrift.ts (84 Z.)
 
 - `lastschrift`
 - `spenden`
@@ -1116,7 +1117,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauMeldung`
 
-### server-schau-pruefung.ts (138 Z.)
+### server-schau-pruefung.ts (140 Z.)
 
 - `serverSchauPruefung`
 
@@ -1124,7 +1125,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (172 Z.)
+### server-schau.ts (173 Z.)
 
 - `serverSchau`
 
@@ -1215,7 +1216,7 @@ Texte der Oberfläche: katalog – Katalognummern, Reihenfolge, Katalog gestalte
 - `aussteller` – Texte der Oberfläche: meldung, Teil Aussteller des Vereins (seiten/aussteller.tsx) und SEPA-Mandate (seiten/aussteller-mandate.tsx).
 - `mandate`
 
-### meldung.ts (115 Z.)
+### meldung.ts (123 Z.)
 Texte der Oberfläche: meldung (Entscheidung 022) – Meldungen erfassen und bearbeiten, Aussteller des Vereins, SEPA-Mandate.
 
 - `meldung`
@@ -1269,7 +1270,7 @@ Meldungen des Servers zur Kasse (routers/kasse/*, services/kasse.ts) mit SEPA-Ü
 
 - `kontoauszug` – Meldungen des Servers zum Kontoauszug-Import (routers/kontoauszug.ts und die dort weitergereichten Fehler der Domain, Entscheidung 023) – Teil von …
 
-### server-kasse-lastschrift.ts (90 Z.)
+### server-kasse-lastschrift.ts (92 Z.)
 Meldungen des Servers zu SEPA-Lastschrift (routers/lastschrift.ts, domain lastschrift.ts) und Spenden (routers/spenden.ts, services/zuwendungsbesta …
 
 - `lastschrift` – Gläubiger-ID, Mandate, Lastschriftdatei, Rücklastschrift.
@@ -1322,7 +1323,7 @@ Meldungen des Servers zu Meldungen, Zahlungen und Ausstellern (Teil von serverSc
 
 - `serverSchauMeldung`
 
-### server-schau-pruefung.ts (136 Z.)
+### server-schau-pruefung.ts (138 Z.)
 
 - `serverSchauPruefung` – Prüfliste der Übersicht (services/pruefung.ts) und Phasenwechsel (routers/schau/phase.ts) – Teil von serverSchau.
 
@@ -1330,7 +1331,7 @@ Meldungen des Servers zu Meldungen, Zahlungen und Ausstellern (Teil von serverSc
 
 - `serverSchauZusatz` – Weitere Meldungen: Prüfung der Protokollkette (services/protokoll-suche.ts), Katalog-Vorschau (datei-katalog.ts), Mailserver (services/post.ts) – T …
 
-### server-schau.ts (174 Z.)
+### server-schau.ts (175 Z.)
 Meldungen des Servers (Entscheidung 022): Schau anlegen, Einstellungen, Gebühren, Anmeldung, Bremsen, Termine, Verein.
 
 - `serverSchau`
@@ -1418,7 +1419,7 @@ Sammelt alle Exporte (`export * from …`).
 - `aussteller`
 - `mandate`
 
-### meldung.ts (111 Z.)
+### meldung.ts (119 Z.)
 
 - `meldung`
 
@@ -1466,7 +1467,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kontoauszug`
 
-### server-kasse-lastschrift.ts (82 Z.)
+### server-kasse-lastschrift.ts (84 Z.)
 
 - `lastschrift`
 - `spenden`
@@ -1514,7 +1515,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauMeldung`
 
-### server-schau-pruefung.ts (131 Z.)
+### server-schau-pruefung.ts (133 Z.)
 
 - `serverSchauPruefung`
 
@@ -1522,7 +1523,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (165 Z.)
+### server-schau.ts (166 Z.)
 
 - `serverSchau`
 
@@ -1607,7 +1608,7 @@ Sammelt alle Exporte (`export * from …`).
 - `aussteller`
 - `mandate`
 
-### meldung.ts (111 Z.)
+### meldung.ts (119 Z.)
 
 - `meldung`
 
@@ -1655,7 +1656,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kontoauszug`
 
-### server-kasse-lastschrift.ts (82 Z.)
+### server-kasse-lastschrift.ts (84 Z.)
 
 - `lastschrift`
 - `spenden`
@@ -1703,7 +1704,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauMeldung`
 
-### server-schau-pruefung.ts (132 Z.)
+### server-schau-pruefung.ts (134 Z.)
 
 - `serverSchauPruefung`
 
@@ -1711,7 +1712,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (165 Z.)
+### server-schau.ts (166 Z.)
 
 - `serverSchau`
 
@@ -1800,7 +1801,7 @@ Sammelt alle Exporte (`export * from …`).
 - `aussteller`
 - `mandate`
 
-### meldung.ts (111 Z.)
+### meldung.ts (119 Z.)
 
 - `meldung`
 
@@ -1848,7 +1849,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kontoauszug`
 
-### server-kasse-lastschrift.ts (82 Z.)
+### server-kasse-lastschrift.ts (84 Z.)
 
 - `lastschrift`
 - `spenden`
@@ -1896,7 +1897,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauMeldung`
 
-### server-schau-pruefung.ts (131 Z.)
+### server-schau-pruefung.ts (133 Z.)
 
 - `serverSchauPruefung`
 
@@ -1904,7 +1905,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (165 Z.)
+### server-schau.ts (166 Z.)
 
 - `serverSchau`
 
@@ -1990,7 +1991,7 @@ Sammelt alle Exporte (`export * from …`).
 - `aussteller`
 - `mandate`
 
-### meldung.ts (115 Z.)
+### meldung.ts (123 Z.)
 
 - `meldung`
 
@@ -2038,7 +2039,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `kontoauszug`
 
-### server-kasse-lastschrift.ts (82 Z.)
+### server-kasse-lastschrift.ts (84 Z.)
 
 - `lastschrift`
 - `spenden`
@@ -2086,7 +2087,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauMeldung`
 
-### server-schau-pruefung.ts (139 Z.)
+### server-schau-pruefung.ts (141 Z.)
 
 - `serverSchauPruefung`
 
@@ -2094,7 +2095,7 @@ Sammelt alle Exporte (`export * from …`).
 
 - `serverSchauZusatz`
 
-### server-schau.ts (171 Z.)
+### server-schau.ts (172 Z.)
 
 - `serverSchau`
 
@@ -2120,7 +2121,7 @@ Meldungen des Servers (Fehler, Prüfungen, Hinweise) in der Sprache der Oberflä
 
 - `serverText()` – Meldung des Servers in der Sprache der Oberfläche.
 
-### pl.ts (286 Z.)
+### pl.ts (291 Z.)
 
 - `pl`
 
@@ -2262,13 +2263,13 @@ Tests: `zuwendungsbestaetigung.test.ts`
 - `betragFelder()` – Betrag in Ziffern und Buchstaben (BMF Nr. 5).
 - `sachSaetze()` – Text der Sachzuwendung: Bezeichnung und die zutreffenden Sätze zur Herkunft und zu den Unterlagen.
 
-Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `einteilung-jugend.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-nummerfolge.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `oberflaeche.test.ts`, `preisbindung.test.ts`, `sprachen.test.ts`, `stammdaten-gruppe.test.ts`, `stiftung.test.ts`, `zusatzpreise.test.ts`
+Weitere Tests: `abrechnung-gesamt.test.ts`, `domain.test.ts`, `einteilung-jugend.test.ts`, `fristen.test.ts`, `hallenplan-3d-umriss.test.ts`, `hallenplan-etagen.test.ts`, `hallenplan-frei.test.ts`, `hallenplan-lueckenlos.test.ts`, `hallenplan-nummerfolge.test.ts`, `hallenplan-ueberlappt.test.ts`, `katalog-gliederung.test.ts`, `katalog-sortierung.test.ts`, `oberflaeche.test.ts`, `preisbindung.test.ts`, `protokoll-maske.test.ts`, `sprachen.test.ts`, `stammdaten-gruppe.test.ts`, `stiftung.test.ts`, `zusatzpreise.test.ts`
 
 ## tRPC-Prozeduren `apps/server/src/routers`
 
 Aufruf im Web als `trpc.<bereich>.<prozedur>`. Rolle: öffentlich (ohne Anmeldung), angemeldet (jede Rolle), admin (Ausstellungsleitung, mit Zwei-Faktor), richter (Tablet). Feinere Rechte prüft die Prozedur selbst.
 
-### routers/auth/anmeldung.ts (188 Z.) → `auth`
+### routers/auth/anmeldung.ts (226 Z.) → `auth`
 Anmeldung: Status, Ersteinrichtung, Anmelden (auch zweiter Schritt), Abmelden, eigenes Passwort und eigene Sprache.
 
 - `auth.status` query · öffentlich
@@ -2294,13 +2295,13 @@ Benutzerverwaltung durch die Ausstellungsleitung: Liste, Angaben, Anlegen, Sperr
 - `auth.benutzerPasswortSetzen` mutation · admin – Neues Passwort durch die Ausstellungsleitung (vergessen).
 - `auth.sperreAufheben` mutation · admin – Hebt Wartezeit und Sperren nach Fehlversuchen für ein Konto auf (z. B. wenn jemand Fremdes es aufhält).
 
-### routers/auth/einladung.ts (47 Z.) → `auth`
+### routers/auth/einladung.ts (49 Z.) → `auth`
 Einladungslink: prüfen und annehmen (Passwort selbst festlegen).
 
 - `auth.einladungPruefen` mutation · öffentlich – Einladungslink öffnen: wer ist eingeladen?
 - `auth.einladungAnnehmen` mutation · öffentlich – Passwort über den Einladungslink festlegen.
 
-### routers/auth/gemeinsam.ts (286 Z.)
+### routers/auth/gemeinsam.ts (303 Z.)
 Gemeinsame Bausteine der Anmeldung und Benutzerverwaltung: Bremsen (ein Zählerstand für alle Prozeduren), Prüfungen, Einladung, Willkommens- und Hi …
 
 Keine Prozeduren (Hilfen für die Router).
@@ -2324,7 +2325,7 @@ Betrieb: Zustand der Installation für die Oberfläche (Lesemodus, Entscheidung 
 
 - `betrieb.lesemodus` query · öffentlich – Läuft der Lesemodus?
 
-### routers/bewertung.ts (388 Z.) → `bewertung`, `richter`
+### routers/bewertung.ts (396 Z.) → `bewertung`, `richter`
 
 - `bewertung.liste` query · angemeldet
 - `bewertung.setzen` mutation · admin
@@ -2390,7 +2391,7 @@ Abrechnung je Aussteller, Auszahlung (bar oder Überweisung, auch Nachzahlung un
 - `kasse.auszahlen` mutation · angemeldet – Bucht die Auszahlung.
 - `kasse.auszahlungStornieren` mutation · admin – Storniert eine Buchung, bei der kein Geld geflossen ist (Fehlbuchung, Überweisung von der Bank zurückgebucht).
 
-### routers/kasse/gemeinsam.ts (187 Z.)
+### routers/kasse/gemeinsam.ts (191 Z.)
 Gemeinsame Hilfen der Kasse: Beleg- und Quittungsnummern, SEPA-XML aus einem Lauf, die Abrechnungsliste aller Aussteller, die erlaubten Phasen für …
 
 Keine Prozeduren (Hilfen für die Router).
@@ -2504,7 +2505,7 @@ Kontoauszug-Import (Entscheidung 023), nur Administratoren: Datei aus dem Online
 - `kontoauszug.pruefen` mutation · admin – Datei lesen und zuordnen – bucht nichts.
 - `kontoauszug.buchen` mutation · admin – Ausgewählte Gutschriften buchen.
 
-### routers/lastschrift.ts (326 Z.) → `lastschrift`
+### routers/lastschrift.ts (341 Z.) → `lastschrift`
 SEPA-Lastschrift für das Standgeld (Entscheidung 018), nur Administratoren: Gläubiger-ID des Vereins, Mandate der Aussteller, je Schau eine Lastsch …
 
 - `lastschrift.einstellungen` query · admin
@@ -2542,7 +2543,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `meldung.bestaetigungSenden` mutation · angemeldet
 - `meldung.zuletzt` query · angemeldet
 
-### routers/oeffentlich.ts (465 Z.) → `oeffentlich`
+### routers/oeffentlich.ts (515 Z.) → `oeffentlich`
 
 - `oeffentlich.schau` query · öffentlich
 - `oeffentlich.rechtstexte` query · öffentlich – Impressum (§ 5 DDG) und Datenschutzhinweise (Art. 13 DSGVO) des ausrichtenden Vereins.
@@ -2550,6 +2551,7 @@ Meisterschaften einer Schau (Entscheidung 014): Regeln lesen und speichern (Auss
 - `oeffentlich.melden` mutation · öffentlich
 - `oeffentlich.meineMeldung` query · öffentlich
 - `oeffentlich.onlineVeroeffentlichung` mutation · öffentlich – Einwilligung in die Online-Veröffentlichung erteilen oder widerrufen (Art. 7 Abs. 3 DSGVO) – so einfach wie die Erteilung.
+- `oeffentlich.meldungBestaetigen` mutation · öffentlich – Online-Meldung an einen vorhandenen Stammsatz bestätigen (Entscheidung 034): Wer den Link aus der Mail an die hinterlegte Adresse hat, erkennt dami …
 - `oeffentlich.ergebnisse` query · öffentlich
 
 ### routers/preise.ts (306 Z.) → `preise`
@@ -2959,10 +2961,13 @@ Prozeduren: meldung.adressVorschlaege, meldung.ausstellerSuche, meldung.bestaeti
 
 ### meldung-zahlung.ts (17 Z.)
 
-### meldungen.tsx (129 Z.) – `/schau/:schauId/meldungen`
-Prozeduren: meldung.liste, schau.get
+### meldungen.tsx (175 Z.) – `/schau/:schauId/meldungen`
+Prozeduren: meldung.liste, meldung.statusSetzen, schau.get
 
-### oeffentlich.tsx (578 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
+### oeffentlich-bestaetigen.tsx (25 Z.)
+Prozeduren: oeffentlich.meldungBestaetigen
+
+### oeffentlich.tsx (584 Z.) – `/s/:slug`, `/s/:slug/meldung/:token`, `/s/:slug/ergebnisse`, `/s/:slug/impressum`, `/s/:slug/datenschutz`
 Prozeduren: oeffentlich.ergebnisse, oeffentlich.farbenschlagSuche, oeffentlich.meineMeldung, oeffentlich.melden, oeffentlich.onlineVeroeffentlichung, oeffentlich.rechtstexte, oeffentlich.schau
 
 ### preise.tsx (490 Z.) – `/schau/:schauId/preise`
@@ -3050,29 +3055,30 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 ### Server-Dienste mit Datenbank `apps/server/src/services`
 
-- `aussteller.ts` (186 Z.) – Aussteller-Verwaltung des Vereins: anlegen, Stammdaten ändern, Vereinsmitglied (ohne Meldung, unter „Verein und Datenschutz“). · ausstellerVerwaltungEingabe, eigeneVereinsnamen, speichereAussteller, setzeVereinsnamen, vereinsangabenUebersicht
+- `aussteller.ts` (189 Z.) – Aussteller-Verwaltung des Vereins: anlegen, Stammdaten ändern, Vereinsmitglied (ohne Meldung, unter „Verein und Datenschutz“). · ausstellerVerwaltungEingabe, eigeneVereinsnamen, speichereAussteller, setzeVereinsnamen, vereinsangabenUebersicht
 - `bewertung.ts` (205 Z.) · bewertungEingabe, RICHTER_PHASEN, speichereBewertung, setzeBewertungZurueck
-- `bremse.ts` (224 Z.) · Bremse, Wartezeit, anschlussSchluessel, netz48Schluessel, istLokaleAdresse, adressSchluessel
+- `bremse.ts` (316 Z.) · Bremse, Stufenbremse, Wartezeit, anschlussSchluessel, netz48Schluessel, istLokaleAdresse, adressSchluessel
 - `datenschutz-lastschrift.ts` (79 Z.) – SEPA-Lastschrift im Datenschutz (Entscheidung 018): was über Mandate und Einzüge in die Auskunft gehört (Art. 15), was der Löschwunsch entfernt (Ar … · lastschriftAuskunft, loescheLastschriftDaten, bereinigeMandate
 - `datenschutz.ts` (598 Z.) · ladeVereinsangaben, ladeAuskunft, ladeAuskunftPerson, loescheAussteller, bereinige, starteBereinigung
+- `einrichtungscode.ts` (27 Z.) – Code für die Ersteinrichtung im Browser (auth.einrichten, Entscheidung 037). · einrichtungsCode, einrichtungsCodeMelden
 - `einteilung-vorschlag.ts` (189 Z.) – Vorschlag für die Einteilung nach Nummern (und über Nummern je Farbenschlag auch nach Rassen): Tiere in Katalogfolge auf die Preisrichter verteilen … · schlageEinteilungVor
 - `einteilung.ts` (124 Z.) · sperreEinteilung, sperreEinteilungGeteilt, einteilTier, einteilSchluessel, ladeRegeln, jugendSeparatEingeteilt, bereicheDerSchau, rassenEinteilungAnwenden, sperreEinteilungFuerMeldung, einteilungNachStatus
 - `eintraege.ts` (259 Z.) · ladeEintraege, NICHT_VEROEFFENTLICHT, verdeckeNamen, ausstellerAnzeige, bezeichnung, alsFolge, meldebetrag, meldebetraege, skalaVon
 - `ersteinrichtung.ts` (111 Z.) – Ersteinrichtung: Verein und erster Administrator. · ersteinrichtungAngaben, BEREITS_EINGERICHTET, richteEinMitPasswort, richteEinPerBefehl
 - `fehlertext.ts` (13 Z.) · kurzerFehler, istDoppelt
-- `gesundheitspruefung.ts` (66 Z.) – Angaben der Gesundheitsprüfung `GET /api/gesund` neben `ok` und `version` (Entscheidung 024): wann die letzte Sicherung lief, ob Migrationen offen … · GESUND_UNBEKANNT, gesundAngaben
+- `gesundheitspruefung.ts` (86 Z.) – Angaben der Gesundheitsprüfung `GET /api/gesund` neben `ok` und `version` (Entscheidung 024): wann die letzte Sicherung lief, ob Migrationen offen … · gesundAngabenErlaubt, GESUND_UNBEKANNT, gesundAngaben
 - `import.ts` (394 Z.) – Import aus Altprogrammen (Entscheidung 015): Tabelle prüfen (Zeilen, Aussteller wiedererkennen, Rassen abgleichen), übernehmen (über dieselben Wege … · rassenSchluessel, importPruefen, importUebernehmen, importZuruecknehmen, importLaeufe
 - `kasse.ts` (149 Z.) · sperreKasse, sperreKasseMitPhase, SEPA_ERSTELLT, SEPA_VERWORFEN, SEPA_GEBUCHT, offenerLauf, schliesseLauf, LASTSCHRIFT_OFFEN, offeneLastschrift, offeneLastschriftenDesVereins, inOffenerLastschrift, offeneStornoZahlungen, offeneUeberweisungsverkaeufe, pruefeNichtAbgeschlossen, pruefeNichtAbgerechnet
-- `kassenbuch.ts` (241 Z.) · tagDe, ladeKassenbuch, sollBestand, archiviereBeleg, ladeBeleg, zweitschrift, belegListe, archiviereKaufbeleg, archiviereKassenbeleg, archiviereQuittung, archiviereSpendenquittung
+- `kassenbuch.ts` (242 Z.) · tagDe, ladeKassenbuch, sollBestand, archiviereBeleg, ladeBeleg, zweitschrift, belegListe, archiviereKaufbeleg, archiviereKassenbeleg, archiviereQuittung, archiviereSpendenquittung
 - `meisterschaften.ts` (76 Z.) – Meisterschaftswertungen einer Schau (Entscheidung 014): Tiere aus Katalog und Bewertung für die Fachregel (packages/domain/src/meisterschaft.ts) au … · meisterschaftTiere, meisterschaftErgebnisse
 - `meldung-stand.ts` (31 Z.) – Stand einer Meldung für das Bearbeitungsformular (Entscheidung 033): ein Prüfwert über alles, was das Formular zurückschreibt – Aussteller, Meldung … · MELDUNG_VERALTET, meldungStand
-- `meldung.ts` (552 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, sperreOnlineMeldung, speichereMeldung, bindungen, hatAuszahlung
-- `post.ts` (202 Z.) · smtpOptionen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, sendeMail, legeMailAb, versendeAbgelegt, sendeMailJetzt, setzeUnterbrocheneZurueck, versende, starteMailversand
+- `meldung.ts` (556 Z.) · registriernummerFeld, ausstellerEingabe, positionEingabe, meldungEingabe, sperreOnlineMeldung, speichereMeldung, bindungen, hatAuszahlung
+- `post.ts` (243 Z.) · smtpOptionen, smtpWarnungen, ohneAdressen, mailStatus, POST_WIEDERHOLEN_MS, MAX_VERSUCHE, naechsterVersuch, EINLADUNG_MUSTER, einladungVerbergen, einladungEinsetzen, einladungEntfernen, sendeMail, legeMailAb, versendeAbgelegt, sendeMailJetzt, setzeUnterbrocheneZurueck, versende, starteMailversand
 - `preise.ts` (188 Z.) · vergebePreis, entfernePreis
 - `preisrichter-speichern.ts` (133 Z.) – Preisrichter anlegen, ändern und löschen (`preisrichter.speichern`, `.loeschen`): Prüfung der Obmann-Zuordnung (unter Sperre der Preisrichter der S … · gruppenAusEingabe, speicherePreisrichter, loeschePreisrichter
 - `protokoll-suche.ts` (136 Z.) · sucheProtokoll, pruefeProtokoll, eigenerKopf, kettenkopf
 - `protokoll.ts` (77 Z.) · protokolliere, protokollZuletzt
-- `pruefung.ts` (390 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste, pruefliste
+- `pruefung.ts` (393 Z.) · ONLINE_RESERVIERUNG_STUNDEN, belegteKaefige, zuteilung, offeneStiftungen, GESAMT, ausgestellt, kontingente, checkliste, pruefliste
 - `rassebild.ts` (86 Z.) – Rassebilder für den Katalog: prüfen und speichern (Oberfläche und Einspielen aus dem Netz). · RASSEBILD_MAX_BYTES, jpegAnzeige, oeffneBild, pruefeRassebild, speichereRassebild
 - `serienbrief.ts` (34 Z.) – Empfänger eines Serienbriefs: Vereinsmitglieder, alle Aussteller des Vereins oder die Aussteller mit bestätigter Meldung zu einer Schau. · SERIENBRIEF_AUSWAHL, serienbriefEmpfaenger
 - `spenden-quittung.ts` (34 Z.) – Spendenquittung einer Spende erzeugen (für das Belegarchiv, services/kassenbuch.ts): Briefkopf und Farbe aus der Briefvorlage des Vereins, Hinweis … · spendenquittung
@@ -3091,7 +3097,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `vereinsverzeichnis.ts` (90 Z.) · verzeichnisVorschlaegeZwischengespeichert, verzeichnisVergessen, vereineEinspielen
 - `verkaufsliste.ts` (55 Z.) · ladeVerkaufsliste
 - `zuwendungsbestaetigung.ts` (95 Z.) – Zuwendungsbestätigungen ausstellen und stornieren (Entscheidung 013). · bestaetigeSpende, sammelbestaetige, storniereBestaetigung
-- `zweifaktor.ts` (137 Z.) · base32, ausBase32, neuesGeheimnis, zeitschritt, totp, pruefeTotp, otpauthAdresse, lesbar, hashNotfallcode, neueNotfallcodes, starteZweiterSchritt, ladeZweiterSchritt, zweiterSchrittFehlgeschlagen, beendeZweiterSchritt
+- `zweifaktor.ts` (168 Z.) · base32, ausBase32, neuesGeheimnis, zeitschritt, totp, pruefeTotp, otpauthAdresse, lesbar, NOTFALL_FORM, hashNotfallcode, findeNotfallcode, neueNotfallcodes, starteZweiterSchritt, ladeZweiterSchritt, zweiterSchrittFehlgeschlagen, beendeZweiterSchritt
 - `zwischenspeicher.ts` (38 Z.) · oeffentlichGeaendert, rassebilderGeaendert, termineGeaendert, oeffentlicherStand
 
 ### PDFs `apps/server/src/pdf`
@@ -3105,7 +3111,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `brief.ts` (136 Z.) – Briefe nach der Briefvorlage des Vereins (DIN 5008, Form A oder B): Briefkopf, Rücksendeangabe, Anschrift, Informationsblock, Falzmarken und Fußzeile. · BRIEF_RAENDER, ladeBriefVorlage, briefDesign, briefKopf, belegKopf, briefFuss, serienbriefPdf
 - `dokumente-amt.ts` (245 Z.) – Listen für das Veterinäramt: abgegebene Tiere (Verkaufsliste) und Aussteller- und Tierliste. · verkaufslistePdf, tierlistePdf
 - `dokumente-gemeinsam.ts` (36 Z.) – Gemeinsame Hilfen der Dokumente einer Schau (dokumente.ts, dokumente-kasse.ts, dokumente-amt.ts): Design aus der Katalog-Gestaltung, Vereinsname, K … · nr, klasse, tier, A4_RAENDER, ladeDesign, verein, kopfzeile, fusstext, breite, unten
-- `dokumente-kasse.ts` (352 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
+- `dokumente-kasse.ts` (355 Z.) – Belege der Kasse: Kaufbeleg mit Ausgabeschein (Verkauf), Kassenbericht der Barkasse, Einzahlungsquittung und Eigenbeleg. · kaufbelegPdf, kassenberichtPdf, kassenbelegPdf
 - `dokumente.ts` (500 Z.) · bewertungskartenPdf, ausstellerUnterlagenPdf, abrechnungPdf
 - `girocode.ts` (38 Z.) – GiroCode im PDF (Entscheidung 021): QR-Code als Vektorgrafik (scharf in jedem Druck), daneben Bankverbindung und Verwendungszweck. · GIROCODE_GROESSE, qrZeichnen, giroCodeBlock
 - `hallenplan.ts` (445 Z.) – Hallenplan als PDF: genau ein Blatt DIN A4 oder A3 (Formatvorgabe der Schau, Entscheidung 029) – der Plan füllt es (Querformat, wenn die Zeichnung … · hallenplanPdf, aufbaulistePdf
@@ -3128,8 +3134,8 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 ### Datenbank `apps/server/src/db`
 
 - `client.ts` (27 Z.) · sql, db, sperrGrenze
-- `geheim-bestand.ts` (64 Z.) – Stellt Altbestand im Klartext auf verschlüsselte Spalten um (läuft bei jedem Start nach den Migrationen; findet es nichts mehr, tut es nichts). · pruefeDatenschluessel, verschluesseleBestand
-- `geheim.ts` (112 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, entschluessele, geheimText, geheimJsonLesen, geheimJson
+- `geheim-bestand.ts` (85 Z.) – Stellt Altbestand im Klartext auf verschlüsselte Spalten um und bindet Bankdaten ohne Zeile (`enc1:`) an ihre Zeile (`enc2:`, Entscheidung 035). · pruefeDatenschluessel, verschluesseleBestand
+- `geheim.ts` (188 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, Bankdaten in SEPA-Dateien, Zwei-Faktor-Geheimnis. · PRAEFIX, PRAEFIX_ZEILE, erlaubeKlartext, datenschluessel, setzeDatenschluesselFuerTest, verschluessele, zeileVon, entschluessele, geheimText, gebunden, bankdatenFuer, inEigenerZeile, verlangeEigeneZeile, geheimJsonLesen, geheimJson
 - `schema-aufzaehlungen.ts` (20 Z.) – Aufzählungstypen der Datenbank (pgEnum) – Phasen, Meldearten, Status, Zahlarten u. a. Über schema.ts exportiert. · phaseEnum, meldeartEnum, gebuehrArtEnum, alterEnum, eingangEnum, meldungStatusEnum, eintragStatusEnum, sondernoteEnum, preisQuelleEnum, rolleEnum, zahlartEnum, erfasstAufEnum, rundungEnum, kontingentBasisEnum, zusageEnum
 - `schema-betrieb.ts` (12 Z.) – Betrieb: Angaben für die Gesundheitsprüfung (Entscheidung 024). · sicherung
 - `schema-bewertung.ts` (116 Z.) – Preisrichter und Bewertung: Vereinsverzeichnis, Preisrichter, Einteilung, Bewertung, Textbausteine. · vereinsverzeichnis, preisrichter, prEinteilung, prZuteilung, bewertung, textbaustein
@@ -3151,7 +3157,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 
 ### Server sonst `apps/server/src`
 
-- `auth.ts` (203 Z.) · COOKIE, COOKIE_RICHTER, sha256, zufallsToken, hashPasswort, pruefePasswort, neueSitzung, sitzungWennUnveraendert, spracheDerSitzung, sitzungsId, beendeSitzung, ladeSitzung, cookieHeader
+- `auth.ts` (239 Z.) · COOKIE, COOKIE_RICHTER, COOKIE_GERAET, sha256, zufallsToken, hashPasswort, pruefeAuslastung, pruefePasswort, neueSitzung, sitzungWennUnveraendert, spracheDerSitzung, sitzungsId, beendeSitzung, ladeSitzung, geraetSchluessel, geraetNachAnmeldung, cookieHeader
 - `besucher-adresse.ts` (31 Z.) – Adresse des Besuchers für die Bremsen (tRPC-Kontext und öffentliche Dateien), auch hinter einem eigenen Proxy (TRUST_PROXY). · clientIp
 - `config.ts` (34 Z.) · config
 - `csv.ts` (15 Z.) – CSV für Excel: Semikolon, BOM, Schutz vor Formel-Injektion. · csv
@@ -3160,19 +3166,19 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `datei-hilfen.ts` (49 Z.) – Gemeinsame Bausteine der Datei-Adressen (/datei/...): Zahlen und Daten aus der Adresse prüfen, Schau des angemeldeten Benutzers laden, Datei-Antwor … · zahlAus, datumAus, schauMitBenutzer, schauFuer, datei, pdf, archivPdf
 - `datei-katalog.ts` (131 Z.) – Datei-Adressen für Bilder und Katalog (angemeldete Benutzer der eigenen Schau): GET /datei/:schauId/bild/:bildId – Vorschau hochgeladener Katalogbi … · katalogNacheinander, katalogDateien
 - `datei-meisterschaften.ts` (47 Z.) – Datei-Adressen der Meisterschaften (angemeldete Benutzer der eigenen Schau): GET /datei/:schauId/meisterschaften.pdf – Ergebnisse zum Aushängen, Na … · meisterschaftDateien
-- `datei-oeffentlich.ts` (141 Z.) – Öffentliche Dateien ohne Anmeldung, jeweils mit Bremse je Adresse: GET /o/:id/schauen.ics – eigene Schauen des Vereins als Kalender (iCal) GET /s/: … · katalogVerzeichnis, oeffentlicheDateien
+- `datei-oeffentlich.ts` (156 Z.) – Öffentliche Dateien ohne Anmeldung, jeweils mit Bremse je Adresse: GET /o/:id/schauen.ics – eigene Schauen des Vereins als Kalender (iCal) GET /s/: … · katalogVerzeichnis, datenschutzGeaendert, oeffentlicheDateien
 - `datei-spenden.ts` (32 Z.) – Datei-Adresse der Zuwendungsbestätigungen (nur Ausstellungsleitung, nur eigener Verein): GET /datei/zuwendungsbestaetigung/:id.pdf – das beim Ausst … · spendenDateien
 - `datei-sprache.ts` (37 Z.) – Fehlertexte der Datei-Adressen (/datei/…, /s/…, /o/…) in der Sprache der Oberfläche (Entscheidung 022). · DATEI_PFADE, dateiFehlerUebersetzen
 - `datei-unterlagen.ts` (163 Z.) – Datei-Adressen der Unterlagen als PDF (angemeldete Benutzer der eigenen Schau): Bewertungskarten und -listen, Preisverteilung, Preisrichterverpflic … · unterlagenDateien
 - `einrichten.ts` (68 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026), im Container aufgerufen von `schaufuchs einrichten`: bun src/einrichten.ts --verein "GZV …
-- `index.ts` (278 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
+- `index.ts` (284 Z.) – Einstieg des Servers (Hono): Sicherheits-Kopfzeilen, Gesundheitsprüfung, Schutz und Grenzen der tRPC-Anfragen, dann die Datei-Adressen (eigene Modu …
 - `lesemodus.ts` (48 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an, z. B. während einer Wartung oder wenn der Betreiber eine Instal … · IM_LESEMODUS_ERLAUBT, trpcGesperrt, lesemodusSperre
-- `migrate.ts` (17 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
+- `migrate.ts` (18 Z.) – Spielt ausstehende Datenbank-Migrationen ein (Produktion, Docker-Start).
 - `rassebilder-import.ts` (73 Z.) – Rassebilder aus einem Verzeichnis einspielen (z. B. aus Wikimedia Commons gesammelt): `ergebnis.json` mit {rasse, datei, urheber, lizenz, lizenzUrl … · rassebilderEinspielen
 - `router.ts` (52 Z.) · appRouter
 - `seed.ts` (552 Z.) – Demo-Daten für Entwicklung, Tests und Vorführung. · DEMO, demoEntfernen, seed, bisZurBewertung, komplett
 - `testschau.ts` (525 Z.) – Testdaten für eine vorhandene, leere Schau: füllt sie wie eine echte Lokalschau bis nach der Einlieferung, damit die Ausstellungsleitung den Rest ( … · MERKMAL, DEMO_TIERE_HOECHSTENS, mitDemoSperre, fuellen, zuruecksetzen, entfernen
-- `trpc.ts` (295 Z.) · kurzerPruefText, pruefeMeta, pruefeUmfang, strukturZuGross, sqlZustand, router, publicProcedure, fehler, dbId, kalenderdatum, benutzerProcedure, adminProcedure, richterProcedure, oeffentlichSichtbarProcedure, ladeSchau, pruefeNachFreigabe
+- `trpc.ts` (296 Z.) · kurzerPruefText, pruefeMeta, pruefeUmfang, strukturZuGross, sqlZustand, router, publicProcedure, fehler, dbId, kalenderdatum, benutzerProcedure, adminProcedure, richterProcedure, oeffentlichSichtbarProcedure, ladeSchau, pruefeNachFreigabe
 - `vereinsverzeichnis-import.ts` (27 Z.) – Vereinsverzeichnis einspielen (Namen der Rassegeflügelzuchtvereine aus öffentlichen Verbandsseiten): bun src/vereinsverzeichnis-import.ts --datei < …
 
 ### Web-Bausteine `apps/web/src`
@@ -3225,7 +3231,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `07-runde4.ts` (392 Z.) – Audit Runde 4: Speicherflut, Geld, Fachlogik, Datenschutz, Bewertung am PC.
 - `08-betrieb-grenzen.ts` (578 Z.) – Runde 4: Betrieb, Anmeldung und Grenzen; Nachbesserungen zu Größengrenzen, superjson, öffentlichem Katalog.
 - `09-nachbesserung-runde5.ts` (405 Z.) – Nachbesserungen Runde 4 (Geld, Protokoll, Datenschutz, Bremsen) und Audit Runde 5. Teil des Schau-Ablaufs: ablauf.test.ts bindet die Teile in feste …
-- `10-benutzer-zugang.ts` (400 Z.) – Benutzer, Zwei-Faktor-Anmeldung, Verzeichnis ergänzen, Willkommensmail, Einladungslink.
+- `10-benutzer-zugang.ts` (449 Z.) – Benutzer, Zwei-Faktor-Anmeldung, Verzeichnis ergänzen, Willkommensmail, Einladungslink.
 - `11-runde6-bausteine.ts` (239 Z.) – Audit Runde 6, Textbausteine, Zwei-Faktor-Pflicht.
 - `12-runde7-rollen-kasse.ts` (265 Z.) – Audit Runde 7, Rollen (Meldungen, Noten, Preise, Meldegeld), Nachtrag nach dem Tagesabschluss.
 - `13-luecken.ts` (210 Z.) – Prozeduren, die bisher in keinem Test aufgerufen wurden (Code-Review nach Runde 7): je Prozedur Wirkung, Rechte und Grenzen.
@@ -3241,8 +3247,8 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `23-preisrichter-sparten.ts` (52 Z.) – Preisrichter bewerten nur ihre Sparten: Einteilung (Vorschlag und von Hand) beachtet das.
 - `24-plan-fest.ts` (57 Z.) – Hallenplan festschreiben: Lage bleibt, Storno macht frei, Nachmeldung rückt nach; nur Ausstellungsleitung.
 - `25-rassebilder.ts` (196 Z.) – Rassebilder: pflegen (nur Ausstellungsleitung), je Verein getrennt, ungeprüfte nicht im Katalog; Einspielen überschreibt nichts.
-- `26-aussteller-verwaltung.ts` (161 Z.) – Aussteller-Verwaltung: anlegen, bearbeiten, Mitglieder und Externe getrennt (Schreibweisen des Vereins), Rechte, Protokoll, Bankdaten-Sperre.
-- `27-verschluesselung.ts` (116 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, SEPA-Datei, Zwei-Faktor-Geheimnis; Umstellung des Altbestands; falscher Schlüssel.
+- `26-aussteller-verwaltung.ts` (178 Z.) – Aussteller-Verwaltung: anlegen, bearbeiten, Mitglieder und Externe getrennt (Schreibweisen des Vereins), Rechte, Protokoll, Bankdaten-Sperre.
+- `27-verschluesselung.ts` (218 Z.) – Verschlüsselte Spalten: IBAN, Kontoinhaber, SEPA-Datei, Zwei-Faktor-Geheimnis; Umstellung des Altbestands; falscher Schlüssel.
 - `28-testschau.ts` (313 Z.) – Testschauen: eigene Aussteller, nie in echten Schauen, Vorschlägen oder der Verwaltung; Kennzeichnen und Löschen.
 - `29-einteilung-rassen.ts` (101 Z.) – Preisrichter nach Rassen einteilen, vor den Katalognummern; die Bereiche folgen der Nummernvergabe.
 - `30-einteilung-gegenpruefung.ts` (159 Z.) – Einteilung nach Rassen nach der Gegenprüfung: Sperre gegen gleichzeitige Nummernvergabe, Lücken, bewertete Tiere bei Nachmeldungen, Unternummern an …
@@ -3279,7 +3285,7 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `61-oberflaeche-sprache.ts` (62 Z.) – Sprache der Oberfläche (Entscheidung 022): am Konto gespeichert, nur die eigenen Sprachen, nur angemeldet.
 - `62-gesundheitspruefung.ts` (127 Z.) – Gesundheitsprüfung `/api/gesund` (Entscheidung 024): neben `ok` und `version` die letzte Sicherung, offene Migrationen und laufende Schautage.
 - `63-lesemodus.ts` (137 Z.) – Lesemodus (Entscheidung 025): Mit NUR_LESEN=1 nimmt der Server keine Änderungen an – außer Anmelden, Abmelden, Zwei-Faktor einrichten, eigenes Pass …
-- `64-einrichten-befehl.ts` (249 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026): `schaufuchs einrichten` ruft im Container `bun src/einrichten.ts` auf.
+- `64-einrichten-befehl.ts` (253 Z.) – Ersteinrichtung über die Kommandozeile (Entscheidung 026): `schaufuchs einrichten` ruft im Container `bun src/einrichten.ts` auf.
 - `65-a-bogen-mitglieder.ts` (103 Z.) – A-Bögen für die Vereinsmitglieder (Vereinsverwaltung, „Aussteller“): je Mitglied ein A-Bogen zur gewählten Schau, vorausgefüllt mit Name und Anschr …
 - `66-preisverteilung.ts` (130 Z.) – Preisverteilung je Preisrichter als PDF (/datei/:schauId/preisverteilung.pdf): je Preisart so viele Zeilen wie sein Kontingent, vergebene mit Katal …
 - `67-pokaltisch.ts` (38 Z.) – Hallenplan: Pokaltisch (Tisch für die Ehrenpreise) als eingesetztes Möbel – gespeichert mit Maßen, kein Käfigplatz, bleibt beim Neu-Setzen, im gedr …
@@ -3301,9 +3307,12 @@ Laufen nacheinander gegen eine Datenbank (Einstieg `apps/server/src/ablauf.test.
 - `84-gleichzeitig-bewertung.ts` (293 Z.) – Gleichzeitiges Arbeiten bei Bewertung und Preisen (ADR 033): Freigabe gegen Tablet und Preise, Preisvergabe gegen eine gleichzeitig geänderte Note, …
 - `85-gleichzeitig-geld-meldung.ts` (486 Z.) – Gleichzeitiges Arbeiten an Geld und Meldungen (Entscheidung 033): Rücklastschrift gegen Zuwendungsbestätigung und Löschwunsch, Buchungen gegen den …
 - `86-gleichzeitig-katalog.ts` (237 Z.) – Gleichzeitiges Arbeiten in Katalog und Halle (Entscheidung 033): Nummern vergeben, nach Hallenplan vergeben und Festschreibung aufheben gegen eine …
-- `87-gleichzeitig-auth-schau.ts` (377 Z.) – Gleichzeitiges Arbeiten an Schau-Einstellungen, Phase, Postausgang und Benutzern (Entscheidung 033): Stand-Prüfung der Stammangaben, Provision unte …
+- `87-gleichzeitig-auth-schau.ts` (378 Z.) – Gleichzeitiges Arbeiten an Schau-Einstellungen, Phase, Postausgang und Benutzern (Entscheidung 033): Stand-Prüfung der Stammangaben, Provision unte …
 - `88-gleichzeitig-gesamt.ts` (231 Z.) – Gleichzeitiges Arbeiten über alle Bereiche (Entscheidung 033, eine Sperrreihenfolge): Schreibwege auf der Schau-Zeile warten nicht auf Einfügungen, …
 - `89-verklemmungen.ts` (154 Z.) – Verklemmungen und Hänger (Entscheidung 033): Ein Protokolleintrag nimmt erst die Protokoll-Kette (eine Zeile für die ganze Installation) und danach …
+- `90-meldung-stammsatz-geld.ts` (154 Z.) – Online-Meldung an einen vorhandenen Stammsatz (Entscheidung 034): kein Zugangslink in der Antwort, die Meldung gilt erst nach Bestätigung über den …
+- `91-anmeldung-haertung.ts` (232 Z.) – Anmeldung: Langzeitgrenze für den zweiten Faktor mit Hinweismail, Notfallcodes mit Schlüssel, Gerätekennzeichen gegen Aussperren hinter derselben A …
+- `92-betrieb-gesund-einrichtung.ts` (72 Z.) – Betrieb: Was `/api/gesund` Besuchern über den Proxy zeigt (Entscheidung 024, Nachtrag) und die Ersteinrichtung im Browser ohne gesetzten EINRICHTUN …
 - `kontext.ts` (55 Z.) – Gemeinsamer Zustand und Hilfen für den Schau-Ablauf (ablauf.test.ts und die Teile in diesem Ordner).
 - `sperren-hilfe.ts` (36 Z.) – Hilfen für Tests zum gleichzeitigen Arbeiten (Entscheidung 033): statt fester Wartezeit nachsehen, ob die Gegenseite tatsächlich auf eine Sperre wa …
 - Außerdem: `einteilung.test.ts`, `veterinaeraemter.test.ts`
