@@ -3,6 +3,7 @@
  * (ohne Sprachkontext): Texte deshalb über ot() in der aktuellen Sprache.
  */
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ot } from "./sprache-jetzt";
 import { cx } from "./ui-basis";
 import { Eingabe, Feld, Textfeld } from "./ui-felder";
@@ -22,9 +23,16 @@ export function Dialog({ offen, onSchliessen, titel, children, breit }: { offen:
     }
     if (!offen && d.open) d.close();
   }, [offen]);
-  return (
+  // Direkt unter <body> (Portal), nicht an der Stelle im Seitenbaum: Sonst läge ein Formular im Dialog (z. B. Grußwort
+  // in „Katalog gestalten“) in einem Formular der Seite. Chrome lässt das submit eines inneren Formulars nicht über das
+  // äußere hinaus aufsteigen, React (lauscht an #root bzw. am Portal-Ziel) bekäme es nie, der Browser schickte das
+  // Formular selbst ab und lüde die Seite neu – „Seite verlassen?“, nichts gespeichert. React reicht Ereignisse aus dem
+  // Portal trotzdem an die Komponenten darüber weiter; submit hält der Dialog deshalb an, damit nicht zusätzlich das
+  // Formular der Seite speichert.
+  return createPortal(
     <dialog
       ref={ref}
+      onSubmit={(e) => e.stopPropagation()}
       // Das close-Ereignis kommt verzögert: Ist der Dialog bis dahin wieder offen (z. B. direkt die nächste Rückfrage),
       // gehört es zum vorigen Schließen und darf den neuen Inhalt nicht abbrechen.
       onClose={(e) => {
@@ -39,7 +47,8 @@ export function Dialog({ offen, onSchliessen, titel, children, breit }: { offen:
         </button>
       </div>
       <div className="p-5">{offen && children}</div>
-    </dialog>
+    </dialog>,
+    document.body,
   );
 }
 

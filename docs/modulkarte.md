@@ -3210,7 +3210,7 @@ Je Datei: Zeilen, Beschreibung, exportierte Namen.
 - `trpc.ts` (56 Z.) · trpc, queryClient, trpcClient, direkt
 - `ui-ablage.tsx` (70 Z.) · useAblageAbfangen, DateiAblage
 - `ui-basis.ts` (11 Z.) · cx, TON
-- `ui-dialog.tsx` (128 Z.) – Dialog und Rückfragen als eigener Dialog (useFrage statt prompt/confirm). · Dialog, FragenAnbieter, useFrage
+- `ui-dialog.tsx` (137 Z.) – Dialog und Rückfragen als eigener Dialog (useFrage statt prompt/confirm). · Dialog, FragenAnbieter, useFrage
 - `ui-felder.tsx` (71 Z.) – Formularfelder: Feld mit Beschriftung, Eingabe, Textfeld, Auswahl, Haken. · feldKlasse, Feld, Eingabe, Textfeld, Auswahl, Haken
 - `ui-knoepfe.tsx` (45 Z.) – Knöpfe: Knopf, Link im Aussehen eines Knopfs und ihre Klassen. · knopfKlasse, Knopf, KnopfLink
 - `ui-meldungen.tsx` (43 Z.) – Rückmeldungen als Toast unten rechts (useMeldung). · MeldungenAnbieter, useMeldung
