@@ -23,7 +23,7 @@ set -eu
 {
 
 KONTO="eddyreddington"
-VERSION="${SCHAUFUCHS_VERSION:-1.23.0}"
+VERSION="${SCHAUFUCHS_VERSION:-1.23.1}"
 IMAGE="${SCHAUFUCHS_IMAGE:-ghcr.io/$KONTO/schaufuchs}"
 STANDARD_QUELLE="https://raw.githubusercontent.com/$KONTO/schaufuchs/v$VERSION"
 QUELLE="${SCHAUFUCHS_QUELLE:-$STANDARD_QUELLE}"

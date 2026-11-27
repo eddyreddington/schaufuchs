@@ -1,6 +1,6 @@
 # Handbuch für Preisrichter
 
-SchauFUCHS 1.23.0 · Stand 26. November 2026
+SchauFUCHS 1.23.1 · Stand 27. November 2026
 
 Dieses Handbuch erklärt Schritt für Schritt, wie Sie auf der Schau Ihre Tiere am Tablet bewerten. Sie brauchen dafür keine Computerkenntnisse. Wörter in „Anführungszeichen“ stehen genau so auf dem Bildschirm.
 

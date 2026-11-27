@@ -1,5 +1,11 @@
 # SchauFUCHS 1.23 – Versionshinweise
 
+## 1.23.1 (27.11.2026)
+
+- **Dialoge speichern wieder:** Ein Grußwort, eine Seite oder eine Anzeige in „Katalog gestalten“ ließ sich nicht
+  speichern – stattdessen fragte der Browser „Seite verlassen?“ und lud die Seite neu. Formulare in Dialogen
+  speichern jetzt zuverlässig, ohne die Einstellungen der Seite mitzuspeichern.
+
 ## 1.23.0 (26.11.2026)
 
 - **Schriftgröße:** Unter „Darstellung“ im Benutzermenü lässt sich die Schrift auf „Groß“ oder „Sehr groß“ stellen.

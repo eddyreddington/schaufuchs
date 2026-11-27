@@ -9,7 +9,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: Steht im Benutzermenü unten links, z. B. „SchauFUCHS 1.23.0“
+      description: Steht im Benutzermenü unten links, z. B. „SchauFUCHS 1.23.1“
     validations:
       required: true
   - type: textarea
